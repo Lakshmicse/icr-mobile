@@ -1,0 +1,135 @@
+{
+ "id": "design-mkt-v-vikasha",
+ "companyId": "design-mkt-co-vikasha",
+ "headline": "AI-Guided Robotic High-Rise Maintenance & Drone Facade Engineering Solutions for Tier-1 Commercial Campuses.",
+ "categories": [
+  "HOUSEKEEPING",
+  "HVAC"
+ ],
+ "verticals": [],
+ "serviceAreas": [
+  "Bengaluru",
+  "Hyderabad",
+  "Pune",
+  "Chennai"
+ ],
+ "yearsExperience": 7,
+ "rating": 4.9,
+ "ratingCount": 84,
+ "isPremium": false,
+ "planPriority": true,
+ "verificationStatus": "VERIFIED",
+ "verificationLevel": "ELITE",
+ "pendingLevel": null,
+ "verifiedAt": "2026-10-26T10:24:00.814Z",
+ "verifiedByCompanyKyc": false,
+ "verificationSubmittedAt": null,
+ "latitude": 12.9716,
+ "longitude": 77.5946,
+ "onboardedAt": null,
+ "profileViews": 0,
+ "responseTime": "WITHIN_4H",
+ "acceptingWork": true,
+ "msmeNumber": "CIN-U74999KA2019PTC1",
+ "priceRange": "PREMIUM",
+ "projectsCompleted": 150,
+ "deletedAt": null,
+ "createdAt": "2026-10-26T10:24:00.917Z",
+ "updatedAt": "2026-10-26T10:24:00.917Z",
+ "company": {
+  "id": "design-mkt-co-vikasha",
+  "name": "Vikasha Aero Tech",
+  "type": "SUPPLIER",
+  "description": "Revolutionizing commercial facility maintenance through DGCA-licensed robotic and drone-based cleaning solutions, completely eliminating human rigging risk on high-rise glass facades. Our certified pilots and robotics engineers deliver audited, insured and fully documented service across four operational hubs.\n\nSince 2019 we have maintained more than 150 commercial towers across the technology parks of Bengaluru, Hyderabad, Pune and Chennai, with a two-hour dispatch commitment from each hub.",
+  "logoUrl": null,
+  "website": "https://vikasha.example.in",
+  "city": "Bengaluru",
+  "state": "Karnataka",
+  "country": "India",
+  "size": "51-200",
+  "industry": null,
+  "foundedYear": 2019,
+  "gallery": [],
+  "verificationStatus": "VERIFIED",
+  "verificationLevel": "ELITE",
+  "membershipTier": "FREE",
+  "ratingAvg": null,
+  "ratingCount": 0,
+  "createdAt": "2026-10-26T10:24:00.914Z",
+  "legalStructure": "PRIVATE_LIMITED",
+  "branches": [
+   {
+    "id": "design-mkt-br-vikasha-blr",
+    "name": "Bengaluru HQ",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "addressLine": null,
+    "phone": "+91 80 4000 1100",
+    "latitude": 12.9716,
+    "longitude": 77.5946,
+    "isHeadOffice": true
+   },
+   {
+    "id": "design-mkt-br-vikasha-hyd",
+    "name": "Hyderabad Hub",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "addressLine": null,
+    "phone": "+91 40 4000 1200",
+    "latitude": 17.385,
+    "longitude": 78.4867,
+    "isHeadOffice": false
+   },
+   {
+    "id": "design-mkt-br-vikasha-pnq",
+    "name": "Pune Hub",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "addressLine": null,
+    "phone": "+91 20 4000 1300",
+    "latitude": 18.5204,
+    "longitude": 73.8567,
+    "isHeadOffice": false
+   },
+   {
+    "id": "design-mkt-br-vikasha-maa",
+    "name": "Chennai Hub",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "addressLine": null,
+    "phone": "+91 44 4000 1400",
+    "latitude": 13.0827,
+    "longitude": 80.2707,
+    "isHeadOffice": false
+   }
+  ],
+  "gstRegistered": true,
+  "panOnRecord": false
+ },
+ "ratings": [
+  {
+   "id": "cmvp404al0005myqozbji8t4n",
+   "vendorId": "design-mkt-v-vikasha",
+   "authorId": "cmuy2lzcg001xmy1kgwrechhi",
+   "score": 5,
+   "comment": "Transitioned our 14-tower glass facade cleaning to Vikasha Aero Tech drones..",
+   "createdAt": "2026-10-05T10:24:00.814Z"
+  },
+  {
+   "id": "cmvp404as0007myqozp46tcu2",
+   "vendorId": "design-mkt-v-vikasha",
+   "authorId": "cmuy2m1r50036my1kpd4nfzwg",
+   "score": 5,
+   "comment": "Their robotic duct inspection system uncovered and resolved microbial build-ups that manual inspection teams missed completely..",
+   "createdAt": "2026-09-16T10:24:00.814Z"
+  }
+ ],
+ "clientsServed": 0,
+ "lastActiveAt": null,
+ "verifiedCertifications": [
+  "DGCA Commercial Drone License",
+  "ISO 9001:2015 Quality Management",
+  "ISO 45001 Occupational Safety",
+  "Escrow & Trade Assurance Policy"
+ ]
+}

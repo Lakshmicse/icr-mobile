@@ -1,0 +1,1296 @@
+{
+ "id": "cmv6lufcc05njmyt8h3xtzuey",
+ "title": "Time Value of Money",
+ "slug": "time-value-of-money",
+ "description": null,
+ "kind": "FORMULA",
+ "planLevel": "FREE",
+ "icon": null,
+ "imageUrl": "/uploads/f6e2675fa72ae1cd049d70af.jpeg",
+ "active": true,
+ "sortOrder": 0,
+ "createdAt": "2026-10-13T11:35:51.085Z",
+ "updatedAt": "2026-10-13T11:35:51.085Z",
+ "deletedAt": null,
+ "cards": [
+  {
+   "id": "cmv6lufcj05nkmyt8vkq8oyji",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Present Value (PV)",
+   "back": "$$PV = FV\\div (1+r)^{n}$$\n\nPV=Present Value\nFV=Future Value\nr=Discount Rate\nn=Number of Years",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Future Building Value",
+       "value": "₹25 Crores"
+      },
+      {
+       "label": "Discount Rate",
+       "value": "10%"
+      },
+      {
+       "label": "Years",
+       "value": "8"
+      }
+     ],
+     "result": "PV = ₹11.66 Crores",
+     "working": "PV = 25/(1.10)^8",
+     "analysis": "The future value of ₹25 Cr is worth only ₹11.66 Cr today.",
+     "decision": "If purchase cost today is less than ₹11.66 Cr, investment is financially attractive."
+    },
+    {
+     "given": [
+      {
+       "label": "Future cash flow",
+       "value": "₹50 lakh"
+      },
+      {
+       "label": "Discount rate",
+       "value": "10%"
+      },
+      {
+       "label": "Period",
+       "value": "5 years"
+      }
+     ],
+     "result": "PV = ₹31.05 lakh",
+     "working": "PV = 50/(1.10)^5",
+     "analysis": "₹50 lakh received five years from now has a present value of approximately ₹31.05 lakh at a 10% discount rate.",
+     "decision": "If the investment opportunity requires less than ₹31.05 lakh today for this future ₹50 lakh benefit, it passes the PV comparison on this assumption.\n\nThe source formula and its examples are consistent with the standard PV calculation."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 0,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufcj05nlmyt82f6jl0pj",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Future Value (FV)",
+   "back": "$$FV=PV(1+r)^{n}$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Current Investment",
+       "value": "₹3 Crores"
+      },
+      {
+       "label": "Interest",
+       "value": "12%"
+      },
+      {
+       "label": "Years",
+       "value": "10"
+      },
+      {
+       "label": "FV",
+       "value": "3(1.12)^10"
+      }
+     ],
+     "result": "₹9.32 Crores",
+     "analysis": "Compound growth increases the ₹3 crore investment to approximately ₹9.32 crore.",
+     "decision": "This formula can be used to estimate future reserve requirements and investment accumulation."
+    },
+    {
+     "given": [
+      {
+       "label": "Current investment",
+       "value": "₹20 lakh"
+      },
+      {
+       "label": "Interest rate",
+       "value": "8%"
+      },
+      {
+       "label": "Period",
+       "value": "7 years"
+      },
+      {
+       "label": "FV",
+       "value": "20(1.08)^7"
+      }
+     ],
+     "result": "₹34.27 lakh",
+     "analysis": "₹20 lakh grows to approximately ₹34.27 lakh after seven years at an 8% annual compound rate.",
+     "decision": "For a required future fund of ₹34.27 lakh in seven years, an initial investment of ₹20 lakh is sufficient under these assumptions."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 1,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufcj05nmmyt82txiw0md",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Net Present Value (NPV)",
+   "back": "$$NPV=t=1∑n​(1+r)tCFt​​−Initial Investment$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Investment",
+       "value": "₹100 Lakhs"
+      },
+      {
+       "label": "Savings",
+       "value": "₹30 Lakhs annually"
+      },
+      {
+       "label": "Years",
+       "value": "5"
+      },
+      {
+       "label": "Discount Rate",
+       "value": "10%"
+      },
+      {
+       "label": "PV of Savings",
+       "value": "₹113.72 Lakhs"
+      },
+      {
+       "label": "NPV",
+       "value": "₹13.72 Lakhs"
+      }
+     ],
+     "analysis": "The project generates positive NPV of ₹13.72 lakh.",
+     "decision": "Under the source's decision rule, a positive NPV supports acceptance."
+    },
+    {
+     "given": [
+      {
+       "label": "Initial investment",
+       "value": "₹80 lakh"
+      },
+      {
+       "label": "Annual cash inflow",
+       "value": "₹25 lakh"
+      },
+      {
+       "label": "Period",
+       "value": "5 years"
+      },
+      {
+       "label": "Discount rate",
+       "value": "10%"
+      },
+      {
+       "label": "PV of Savings",
+       "value": "₹94.77 lakh"
+      },
+      {
+       "label": "NPV",
+       "value": "₹14.77 lakh"
+      }
+     ],
+     "analysis": "The project generates a positive NPV of ₹14.77 lakh after discounting future cash flows at 10%.",
+     "decision": "Accept, based on the NPV criterion, because NPV > 0."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 2,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufcj05nnmyt8pyznu6ln",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Internal Rate of Return (IRR)",
+   "back": "$$NPV=0$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Investment",
+       "value": "₹150 Lakhs"
+      },
+      {
+       "label": "Cash inflows",
+       "value": "₹45 Lakhs/year"
+      },
+      {
+       "label": "5 Years",
+       "value": "IRR"
+      }
+     ],
+     "working": "≈16.8%",
+     "analysis": "The IRR definition is correct, but the stated 16.8% does not correspond to the stated ₹150 lakh investment and ₹45 lakh annual cash flows for five years.",
+     "decision": "The source's conclusion should be recalculated using the correct IRR of approximately 15.24%. It still exceeds the stated 12% required return."
+    },
+    {
+     "given": [
+      {
+       "label": "Initial investment",
+       "value": "₹100 lakh"
+      },
+      {
+       "label": "Annual cash inflow",
+       "value": "₹30 lakh"
+      },
+      {
+       "label": "Period",
+       "value": "5 years"
+      },
+      {
+       "label": "The IRR is approximately",
+       "value": "15.24%"
+      }
+     ],
+     "analysis": "IRR is the project's implied annual return at which the present value of inflows equals the initial investment.",
+     "decision": "If the required return/WACC is 12%, an IRR of 15.24% is above the required return, so the project passes the IRR criterion."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 3,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufcj05nomyt8my1hoj5f",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Modified Internal Rate of Return (MIRR)",
+   "back": "$$MIRR=(FV positive cash flow\\div -PV negative cash flows)^{1/n}-1$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Investment",
+       "value": "₹100 Lakhs"
+      },
+      {
+       "label": "Positive Cash Flow Future Value",
+       "value": "₹180 Lakhs"
+      },
+      {
+       "label": "5 Years",
+       "value": "MIRR"
+      }
+     ],
+     "working": "12.47%",
+     "analysis": "The positive cash flows are assumed to be reinvested at the specified reinvestment rate when calculating MIRR.",
+     "decision": "If the company's required return is below 12.47%, the project passes the MIRR criterion."
+    },
+    {
+     "given": [
+      {
+       "label": "Initial investment",
+       "value": "₹200 lakh"
+      },
+      {
+       "label": "Future value of positive cash flows",
+       "value": "₹300 lakh"
+      },
+      {
+       "label": "Period",
+       "value": "6 years"
+      }
+     ],
+     "working": "6.99%",
+     "analysis": "MIRR separates the financing/negative cash-flow side from the reinvestment of positive cash flows and produces a return based on the specified terminal value of positive cash flows.",
+     "decision": "Use MIRR when evaluating projects where the conventional IRR assumption about reinvestment is considered unsuitable. Compare MIRR with the organization's required return or benchmark."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 4,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufcj05npmyt8jmxfsmbd",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Discounted Cash Flow (DCF)",
+   "back": "$$DCF= Cash Flow\\div (1+r)^{n} ​$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Future Cash Flow",
+       "value": "₹80 Lakhs"
+      },
+      {
+       "label": "Discount Rate",
+       "value": "10%"
+      },
+      {
+       "label": "Years",
+       "value": "4"
+      },
+      {
+       "label": "DCF",
+       "value": "₹54.64 Lakhs"
+      }
+     ],
+     "analysis": "The future ₹80 lakh has a present value of approximately ₹54.64 lakh.",
+     "decision": "DCF should be used to compare future cash flows on a common present-value basis."
+    },
+    {
+     "given": [
+      {
+       "label": "Future cash flow",
+       "value": "₹100 lakh"
+      },
+      {
+       "label": "Discount rate",
+       "value": "9%"
+      },
+      {
+       "label": "Period",
+       "value": "6 years"
+      },
+      {
+       "label": "DCF",
+       "value": "₹59.68 lakh"
+      }
+     ],
+     "analysis": "₹100 lakh received six years later is worth approximately ₹59.68 lakh today at a 9% discount rate.",
+     "decision": "Use the discounted value when comparing future cash flows with current investment requirements or alternatives."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 5,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufcj05nqmyt8sckanf62",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Discount Factor",
+   "back": "$$DF=1\\div (1+r)^{n}$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Discount Rate",
+       "value": "8%"
+      },
+      {
+       "label": "Year",
+       "value": "5"
+      },
+      {
+       "label": "DF",
+       "value": "0.6806"
+      }
+     ],
+     "analysis": "Each ₹1 of year-5 cash flow has a present value of approximately ₹0.6806.",
+     "decision": "Multiply the year-5 cash flow by 0.6806 to obtain its present value."
+    },
+    {
+     "given": [
+      {
+       "label": "Discount rate",
+       "value": "10%"
+      },
+      {
+       "label": "Year",
+       "value": "4"
+      },
+      {
+       "label": "DF",
+       "value": "0.6830"
+      }
+     ],
+     "analysis": "A future cash flow multiplied by 0.6830 gives its present value at a 10% discount rate over four years.",
+     "decision": "Use the discount factor to convert future cash flows into today's monetary value."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 6,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufcj05nrmyt8y8nc91kr",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Capital Recovery Factor (CRF)",
+   "back": "$$CRF=r(1+r)^{n}\\div (1+r)^{n}-1 ​$$\n\n​\n​\n\n\t ​\n\n\t​",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Interest rate",
+       "value": "10%"
+      },
+      {
+       "label": "Life",
+       "value": "10 years"
+      },
+      {
+       "label": "CRF",
+       "value": "0.1627"
+      },
+      {
+       "label": "Annual Recovery",
+       "value": "₹32.54 lakh"
+      }
+     ],
+     "analysis": "The capital investment can be annualized at approximately ₹32.54 lakh per year.",
+     "decision": "Use this annualized capital cost in lifecycle and alternative-comparison analysis."
+    },
+    {
+     "given": [
+      {
+       "label": "Interest rate",
+       "value": "8%"
+      },
+      {
+       "label": "Life",
+       "value": "15 years"
+      },
+      {
+       "label": "CRF",
+       "value": "0.1168"
+      },
+      {
+       "label": "Annual Recovery",
+       "value": "₹58.4 lakh"
+      }
+     ],
+     "analysis": "CRF converts an initial capital investment into an equivalent annual recovery amount over a specified life and discount rate.",
+     "decision": "Use CRF when comparing capital projects with different useful lives on an equivalent annual-cost or annual-recovery basis."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 7,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufcj05nsmyt88j15p0sy",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Compound Interest",
+   "back": "$$CI=P(1+r)^{n}−P$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Investment",
+       "value": "₹10 Lakhs"
+      },
+      {
+       "label": "Interest",
+       "value": "8%"
+      },
+      {
+       "label": "Years",
+       "value": "5"
+      },
+      {
+       "label": "Compound Interest",
+       "value": "₹4.69 Lakhs"
+      }
+     ],
+     "analysis": "The investment earns ₹4.69 lakh of compound interest over five years.",
+     "decision": "Compound interest should be considered when estimating long-term investment growth and reserve accumulation."
+    },
+    {
+     "given": [
+      {
+       "label": "Principal",
+       "value": "₹15 lakh"
+      },
+      {
+       "label": "Rate",
+       "value": "9%"
+      },
+      {
+       "label": "Period",
+       "value": "4 years"
+      },
+      {
+       "label": "CI",
+       "value": "₹6.35 lakh"
+      }
+     ],
+     "analysis": "The total accumulated value is approximately ₹21.35 lakh, of which ₹6.35 lakh represents compound interest.",
+     "decision": "Use compound interest when returns are reinvested and future value must reflect compounding."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 8,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufcj05ntmyt85pb4416h",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Effective Annual Rate (EAR)",
+   "back": "$$EAR = (1+r\\div m)^{m}-1$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Nominal Rate",
+       "value": "12%"
+      },
+      {
+       "label": "Monthly Compounding",
+       "value": "EAR : 12.68%"
+      }
+     ],
+     "analysis": "Monthly compounding makes the effective annual cost/return higher than the 12% nominal rate.",
+     "decision": "Use EAR when comparing financing or investment products with different compounding frequencies."
+    },
+    {
+     "given": [
+      {
+       "label": "Nominal rate",
+       "value": "10%"
+      }
+     ],
+     "working": "Monthly compounding:\nEAR : 10.47%",
+     "analysis": "Although the nominal rate is 10%, monthly compounding produces an effective annual rate of approximately 10.47%.",
+     "decision": "Use EAR when comparing financial products with different compounding frequencies."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 9,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufck05numyt89yo2zxpb",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Nominal vs Effective Interest",
+   "back": "$$Effective Rate = (1+r\\div m)^{m}-1$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Nominal Rate",
+       "value": "10%"
+      },
+      {
+       "label": "Quarterly Compounding",
+       "value": "Effective Rate : 10.38%"
+      }
+     ],
+     "analysis": "More frequent compounding increases the effective annual rate above the nominal rate.",
+     "decision": "Compare financing alternatives using effective rates rather than nominal rates alone."
+    },
+    {
+     "given": [
+      {
+       "label": "Nominal rate",
+       "value": "12%"
+      }
+     ],
+     "working": "Quarterly compounding:\nEffective Rate : 12.55%",
+     "analysis": "Quarterly compounding causes the effective annual rate to exceed the 12% nominal rate.",
+     "decision": "Compare investments or financing arrangements using effective rates when their compounding frequencies differ."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 10,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufck05nvmyt8s1l0t2o1",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Inflation Adjustment (Real Interest Rate)",
+   "back": "$$Real Rate=1+Nominal Rate \\div 1+Inflation-1$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Nominal return",
+       "value": "10%"
+      },
+      {
+       "label": "Inflation",
+       "value": "6%"
+      },
+      {
+       "label": "Real Rate",
+       "value": "3.77%"
+      }
+     ],
+     "analysis": "After adjusting for 6% inflation, the real return is approximately 3.77%.",
+     "decision": "Long-term investment appraisal should consider this inflation-adjusted return where real purchasing power is relevant."
+    },
+    {
+     "given": [],
+     "working": "Nominal return = 12%\nInflation = 5%\nReal Rate= 6.67%",
+     "analysis": "The real rate measures the return after accounting for the erosion of purchasing power caused by inflation.",
+     "decision": "Use the real rate when assessing long-term investment returns, particularly where inflation materially affects future purchasing power."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 11,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufck05nwmyt8q8u00x8g",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Perpetuity",
+   "back": "$$PV = C\\div r$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Annual Rental Income",
+       "value": "₹50 Lakhs"
+      },
+      {
+       "label": "Discount Rate",
+       "value": "10%"
+      },
+      {
+       "label": "PV",
+       "value": "₹5 Crores"
+      }
+     ],
+     "analysis": "A constant ₹50 lakh annual cash flow indefinitely has a present value of ₹5 crore at 10%.",
+     "decision": "The formula can be used for assets with stable perpetual cash flows, subject to the assumption of constant cash flow."
+    },
+    {
+     "given": [
+      {
+       "label": "Annual rental income",
+       "value": "₹80 lakh"
+      },
+      {
+       "label": "Discount rate",
+       "value": "8%"
+      },
+      {
+       "label": "PV",
+       "value": "₹10 crore"
+      }
+     ],
+     "analysis": "If ₹80 lakh is received every year indefinitely and the required return is 8%, the theoretical perpetuity value is ₹10 crore.",
+     "decision": "Use this model only when the cash flow is assumed to continue indefinitely at a constant amount."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 12,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufck05nxmyt81nrtzxcr",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Growing Perpetuity",
+   "back": "$$PV = C\\div r-g$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Cash Flow",
+       "value": "₹40 Lakhs"
+      },
+      {
+       "label": "Growth",
+       "value": "3%"
+      },
+      {
+       "label": "Discount",
+       "value": "10%"
+      },
+      {
+       "label": "PV",
+       "value": "₹5.71 Crores"
+      }
+     ],
+     "analysis": "The value reflects an indefinitely growing cash flow.",
+     "decision": "This formula is appropriate only when the long-term growth rate is below the discount rate."
+    },
+    {
+     "given": [
+      {
+       "label": "Annual cash flow",
+       "value": "₹60 lakh"
+      },
+      {
+       "label": "Growth rate",
+       "value": "3%"
+      },
+      {
+       "label": "Discount rate",
+       "value": "9%"
+      },
+      {
+       "label": "PV",
+       "value": "₹10 crore"
+      }
+     ],
+     "analysis": "The value increases because the annual cash flow grows indefinitely at 3%.",
+     "decision": "Use this model only where the long-term growth rate is below the discount rate and the constant-growth assumption is reasonable."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 13,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufck05nymyt8uhgnsgh0",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Present Value of an Annuity",
+   "back": "$$PV=C[1−(1+r)^{-n}\\div r]$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Annual Savings",
+       "value": "₹20 Lakhs"
+      },
+      {
+       "label": "Years",
+       "value": "8"
+      },
+      {
+       "label": "Discount Rate",
+       "value": "8%"
+      },
+      {
+       "label": "PV",
+       "value": "₹114.90 Lakhs"
+      }
+     ],
+     "analysis": "The eight annual savings have a present value of approximately ₹1.149 crore.",
+     "decision": "This PV can be compared with the investment required to generate those savings."
+    },
+    {
+     "given": [
+      {
+       "label": "Annual savings",
+       "value": "₹25 lakh"
+      },
+      {
+       "label": "Discount rate",
+       "value": "10%"
+      },
+      {
+       "label": "Period",
+       "value": "6 years"
+      },
+      {
+       "label": "PV",
+       "value": "₹108.88 lakh"
+      }
+     ],
+     "analysis": "Six annual savings of ₹25 lakh have a present value of approximately ₹108.88 lakh at a 10% discount rate.",
+     "decision": "If the investment required to generate these savings is below ₹108.88 lakh, the savings have a positive present-value relationship under this assumption."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 14,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufck05nzmyt8xdzmfier",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Future Value of an Annuity",
+   "back": "$$FV=C[(1+r)^{n}−1​\\div r]$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Annual Investment",
+       "value": "₹10 Lakhs"
+      },
+      {
+       "label": "Interest",
+       "value": "8%"
+      },
+      {
+       "label": "Years",
+       "value": "10"
+      },
+      {
+       "label": "FV",
+       "value": "₹144.87 Lakhs"
+      }
+     ],
+     "analysis": "Regular ₹10 lakh annual contributions accumulate to approximately ₹1.449 crore.",
+     "decision": "This formula can be used to establish future reserve requirements for planned asset replacement."
+    },
+    {
+     "given": [
+      {
+       "label": "Annual investment",
+       "value": "₹12 lakh"
+      },
+      {
+       "label": "Rate",
+       "value": "8%"
+      },
+      {
+       "label": "Period",
+       "value": "10 years"
+      },
+      {
+       "label": "FV",
+       "value": "173.84 lakh"
+      }
+     ],
+     "analysis": "Ten annual investments of ₹12 lakh accumulate to approximately ₹173.84 lakh at an 8% annual return.",
+     "decision": "Use this formula for reserve funds, sinking funds and planned future capital requirements."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 15,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufck05o0myt8ic6r7h59",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Growing Annuity",
+   "back": "$$PV=C\\div r−g​[1−(1+g\\div 1+r​)^{n}]$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "First-year maintenance saving",
+       "value": "₹15 lakh"
+      },
+      {
+       "label": "Growth",
+       "value": "4%"
+      },
+      {
+       "label": "Discount rate",
+       "value": "10%"
+      },
+      {
+       "label": "Period",
+       "value": "10 years"
+      },
+      {
+       "label": "PV",
+       "value": "₹96.98 lakh"
+      }
+     ],
+     "analysis": "Because the annual cash flow grows at 4%, the PV is higher than it would be for a level ₹15 lakh annuity.",
+     "decision": "Use ₹96.98 lakh as the present value of the projected growing cash-flow stream under these assumptions."
+    },
+    {
+     "given": [
+      {
+       "label": "First-year saving",
+       "value": "₹20 lakh"
+      },
+      {
+       "label": "Growth",
+       "value": "3%"
+      },
+      {
+       "label": "Discount rate",
+       "value": "9%"
+      },
+      {
+       "label": "Period",
+       "value": "8 years"
+      },
+      {
+       "label": "PV",
+       "value": "₹105.94 lakh"
+      }
+     ],
+     "analysis": "A growing annuity accounts for cash flows that increase at a constant growth rate during a finite period. The source's displayed formula is malformed, and its ₹115 lakh example does not match the standard growing-annuity calculation for the stated inputs",
+     "decision": "Use the growing-annuity model when recurring savings, costs or revenues grow over a defined finite period."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 16,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufck05o1myt8y7v6islf",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Lease vs Buy Analysis",
+   "back": "$$Net Benefit=PV(Buy)−PV(Lease)$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "PV of Buying",
+       "value": "₹8.5 Crores"
+      },
+      {
+       "label": "PV of Leasing",
+       "value": "₹7.2 Crores"
+      },
+      {
+       "label": "Difference",
+       "value": "₹1.3 Crores"
+      }
+     ],
+     "analysis": "The PV of buying exceeds the PV of leasing by ₹1.3 crore under this definition.",
+     "decision": "Since leasing has the lower PV cost in this example, the source identifies leasing as financially preferable, assuming operational requirements are met."
+    },
+    {
+     "given": [
+      {
+       "label": "PV of buying",
+       "value": "₹12 crore"
+      },
+      {
+       "label": "PV of leasing",
+       "value": "₹14 crore"
+      },
+      {
+       "label": "Net Benefit",
+       "value": "−₹2 crore"
+      }
+     ],
+     "analysis": "The negative result means the PV of buying is ₹2 crore lower than leasing under the stated assumptions.",
+     "decision": "On PV cost alone, buying would have the lower present-value cost in this example. Other operational, tax, financing and strategic considerations should also be considered."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 17,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufck05o2myt83sxgsthb",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Mortgage Payment (EMI)",
+   "back": "$$EMI=P \\times r(1+r)^{n}\\div(1+r)^{n}-1$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Loan",
+       "value": "₹5 Crores"
+      },
+      {
+       "label": "Interest",
+       "value": "9%"
+      },
+      {
+       "label": "Years",
+       "value": "20"
+      },
+      {
+       "label": "EMI",
+       "value": "Approximately ₹44.98 Lakhs per year (or equivalent monthly installments if calculated monthly)"
+      }
+     ],
+     "analysis": "The formula itself is correct, but the source's numerical result does not correspond to the stated annual payment assumptions.",
+     "decision": "Use approximately ₹54.77 lakh/year for an annual-payment schedule. If installments are monthly, the formula must use a monthly interest rate and 240 monthly periods."
+    },
+    {
+     "given": [
+      {
+       "label": "Loan",
+       "value": "₹1 crore"
+      },
+      {
+       "label": "Annual interest",
+       "value": "8%"
+      },
+      {
+       "label": "Term",
+       "value": "15 years"
+      }
+     ],
+     "working": "Assuming annual payments:\nEMI : ₹11.68 lakh/year",
+     "analysis": "The formula calculates the constant periodic payment required to amortize the loan over the specified term.",
+     "decision": "Use the calculated EMI to assess whether the property's financing cash flow is affordable within the organization's debt-service capacity."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 18,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufck05o3myt8efkky0jp",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Loan Amortization",
+   "back": "$$Interest = Outstanding Loan × Interest Rate Principal = EMI − Interest Closing Balance = Opening Balance − Principal$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Loan",
+       "value": "₹100 Lakhs"
+      },
+      {
+       "label": "Year 1 Interest",
+       "value": "₹9 Lakhs"
+      },
+      {
+       "label": "Annual EMI",
+       "value": "₹15 Lakhs"
+      },
+      {
+       "label": "Principal Repaid",
+       "value": "₹6 Lakhs"
+      },
+      {
+       "label": "Closing Loan Balance",
+       "value": "₹94 Lakhs"
+      }
+     ],
+     "analysis": "Each payment contains both interest and principal components.",
+     "decision": "Use the amortization schedule to forecast outstanding debt and future financing obligations."
+    },
+    {
+     "given": [
+      {
+       "label": "Opening loan",
+       "value": "₹80 lakh"
+      },
+      {
+       "label": "Interest rate",
+       "value": "10%"
+      },
+      {
+       "label": "Annual EMI",
+       "value": "₹13 lakh"
+      },
+      {
+       "label": "Interest",
+       "value": "₹8 lakh"
+      },
+      {
+       "label": "Principal",
+       "value": "₹5 lakh"
+      },
+      {
+       "label": "Closing Balance",
+       "value": "₹75 lakh"
+      }
+     ],
+     "analysis": "Each payment is divided between interest expense and principal repayment. As the outstanding principal declines, the interest component generally declines as well.",
+     "decision": "Use the amortization schedule to forecast debt-service cash flows and outstanding loan balances."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 19,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufck05o4myt8i4p78dkx",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Capital Budgeting Decision ",
+   "back": "$$Accept if:NPV>0 AND IRR>WACC AND PI>1 ​$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "NPV",
+       "value": "₹25 lakh"
+      },
+      {
+       "label": "IRR",
+       "value": "15%"
+      },
+      {
+       "label": "WACC",
+       "value": "11%"
+      },
+      {
+       "label": "PI",
+       "value": "1.18"
+      }
+     ],
+     "working": "All three conditions are satisfied:\nNPV > 0\nIRR > WACC\nPI > 1",
+     "analysis": "The project produces positive NPV, an IRR above WACC, and a PI above 1",
+     "decision": "Accept under the stated multi-criteria rule."
+    },
+    {
+     "given": [
+      {
+       "label": "NPV",
+       "value": "−₹8 lakh"
+      },
+      {
+       "label": "IRR",
+       "value": "9%"
+      },
+      {
+       "label": "WACC",
+       "value": "11%"
+      },
+      {
+       "label": "PI",
+       "value": "0.94"
+      }
+     ],
+     "working": "All three indicators are below their respective acceptance thresholds.",
+     "analysis": "The project has negative NPV, IRR below WACC and PI below 1.",
+     "decision": "Reject/reconsider under the stated rule."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 20,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  },
+  {
+   "id": "cmv6lufck05o5myt8akfxcme4",
+   "topicId": "cmv6lufcc05njmyt8h3xtzuey",
+   "front": "Weighted Average Cost of Capital (WACC)",
+   "back": "$$WACC=(E\\div V​×R_{e}​)+(D\\div V​×R_{d}×(1−T))$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Equity",
+       "value": "₹60 Crores"
+      },
+      {
+       "label": "Debt",
+       "value": "₹40 Crores"
+      },
+      {
+       "label": "Cost of Equity",
+       "value": "14%"
+      },
+      {
+       "label": "Cost of Debt",
+       "value": "8%"
+      },
+      {
+       "label": "Tax Rate",
+       "value": "25%"
+      },
+      {
+       "label": "WACC",
+       "value": "(0.60 × 14%) + (0.40 × 8% × 0.75)"
+      }
+     ],
+     "result": "10.8%",
+     "analysis": "WACC represents the organization's minimum acceptable return on investment. For capital projects such as office developments, energy retrofits, or workplace transformations:\nIf IRR > WACC, the investment generally creates shareholder value.\nIf IRR < WACC, the investment may destroy value and should be reconsidered.",
+     "decision": "For a conventional NPV appraisal using this WACC as the hurdle/discount rate, project returns should be assessed relative to 10.8%."
+    },
+    {
+     "given": [],
+     "result": "Equity = 9.10%+1.80%=10.90%",
+     "working": "Equity = ₹70 crore\nDebt = ₹30 crore\nCost of equity = 13%\nCost of debt = 8%\nTax rate = 25%\nV : 70+30=100\nWACC : (0.70 × 13%) + (0.30 × 8% × 0.75)",
+     "analysis": "The WACC is approximately 10.90%, representing the weighted financing cost after considering the tax effect on debt.",
+     "decision": "For a conventional project evaluated against WACC, a project IRR above 10.90% satisfies the IRR-versus-WACC criterion, while NPV should also be evaluated."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 21,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:51.091Z",
+   "updatedAt": "2026-10-13T11:35:51.091Z"
+  }
+ ],
+ "cardCount": 22
+}

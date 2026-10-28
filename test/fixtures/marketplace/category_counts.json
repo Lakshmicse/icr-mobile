@@ -1,0 +1,77 @@
+[
+ {
+  "key": "PEST_CONTROL",
+  "all": 32,
+  "verified": 32
+ },
+ {
+  "key": "FACILITY_MANAGEMENT",
+  "all": 174,
+  "verified": 172
+ },
+ {
+  "key": "COMMISSIONING",
+  "all": 30,
+  "verified": 29
+ },
+ {
+  "key": "MEP",
+  "all": 30,
+  "verified": 29
+ },
+ {
+  "key": "HOUSEKEEPING",
+  "all": 35,
+  "verified": 34
+ },
+ {
+  "key": "AMC",
+  "all": 30,
+  "verified": 29
+ },
+ {
+  "key": "PHYSICAL_SECURITY",
+  "all": 38,
+  "verified": 37
+ },
+ {
+  "key": "SECURITY",
+  "all": 72,
+  "verified": 70
+ },
+ {
+  "key": "ELECTRICAL",
+  "all": 30,
+  "verified": 30
+ },
+ {
+  "key": "ELECTRONIC_SECURITY",
+  "all": 34,
+  "verified": 33
+ },
+ {
+  "key": "HVAC",
+  "all": 27,
+  "verified": 27
+ },
+ {
+  "key": "HORTICULTURE",
+  "all": 27,
+  "verified": 27
+ },
+ {
+  "key": "PLUMBING",
+  "all": 26,
+  "verified": 26
+ },
+ {
+  "key": "WASTE_MANAGEMENT",
+  "all": 26,
+  "verified": 26
+ },
+ {
+  "key": "CIVIL",
+  "all": 26,
+  "verified": 26
+ }
+]

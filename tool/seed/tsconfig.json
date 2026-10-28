@@ -1,0 +1,12 @@
+{
+  "//": "Used by `ts-node --transpile-only` when it runs a script from this folder (ts-node looks for tsconfig.json next to the script, not in the cwd). Types are not checked at run time; @prisma/client resolves through NODE_PATH.",
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2022",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "resolveJsonModule": true
+  },
+  "include": ["*.ts"]
+}

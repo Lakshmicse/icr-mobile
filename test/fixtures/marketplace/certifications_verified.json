@@ -1,0 +1,98 @@
+[
+ {
+  "id": "design-mkt-cert-dgca",
+  "companyId": "design-mkt-co-vikasha",
+  "certificationTypeId": "cmvp4049y0000myqouzmvzvw5",
+  "status": "VERIFIED",
+  "documentUrls": [],
+  "note": null,
+  "reviewNote": null,
+  "reviewedById": null,
+  "reviewedAt": null,
+  "validFrom": "2025-09-21T10:24:00.814Z",
+  "expiresAt": "2028-09-25T10:24:00.814Z",
+  "supersededAt": null,
+  "issuer": "Directorate General of Civil Aviation",
+  "issuedOn": "2025-09-21T10:24:00.814Z",
+  "certificateNumber": "DGCA-KA-2024-UAV-781",
+  "certificateUrl": null,
+  "createdAt": "2026-10-26T10:24:00.937Z",
+  "updatedAt": "2026-10-26T10:24:00.937Z",
+  "certificationType": {
+   "id": "cmvp4049y0000myqouzmvzvw5",
+   "name": "DGCA Commercial Drone License"
+  }
+ },
+ {
+  "id": "design-mkt-cert-iso9001",
+  "companyId": "design-mkt-co-vikasha",
+  "certificationTypeId": "cmvp404a60001myqodxzg2ss9",
+  "status": "VERIFIED",
+  "documentUrls": [],
+  "note": null,
+  "reviewNote": null,
+  "reviewedById": null,
+  "reviewedAt": null,
+  "validFrom": "2025-09-21T10:24:00.814Z",
+  "expiresAt": "2028-09-25T10:24:00.814Z",
+  "supersededAt": null,
+  "issuer": "TUV Rheinland",
+  "issuedOn": "2025-09-21T10:24:00.814Z",
+  "certificateNumber": null,
+  "certificateUrl": null,
+  "createdAt": "2026-10-26T10:24:00.944Z",
+  "updatedAt": "2026-10-26T10:24:00.944Z",
+  "certificationType": {
+   "id": "cmvp404a60001myqodxzg2ss9",
+   "name": "ISO 9001:2015 Quality Management"
+  }
+ },
+ {
+  "id": "design-mkt-cert-iso45001",
+  "companyId": "design-mkt-co-vikasha",
+  "certificationTypeId": "cmvp404a90002myqo6tjexftu",
+  "status": "VERIFIED",
+  "documentUrls": [],
+  "note": "Zero-Elevation Worker Hazard Compliant",
+  "reviewNote": null,
+  "reviewedById": null,
+  "reviewedAt": null,
+  "validFrom": "2025-09-21T10:24:00.814Z",
+  "expiresAt": "2028-09-25T10:24:00.814Z",
+  "supersededAt": null,
+  "issuer": "TUV Rheinland",
+  "issuedOn": "2025-09-21T10:24:00.814Z",
+  "certificateNumber": null,
+  "certificateUrl": null,
+  "createdAt": "2026-10-26T10:24:00.946Z",
+  "updatedAt": "2026-10-26T10:24:00.946Z",
+  "certificationType": {
+   "id": "cmvp404a90002myqo6tjexftu",
+   "name": "ISO 45001 Occupational Safety"
+  }
+ },
+ {
+  "id": "design-mkt-cert-escrow",
+  "companyId": "design-mkt-co-vikasha",
+  "certificationTypeId": "cmvp404ab0003myqo4vgzppt5",
+  "status": "VERIFIED",
+  "documentUrls": [],
+  "note": "₹10 Crore Comprehensive Aviation Risk Coverage",
+  "reviewNote": null,
+  "reviewedById": null,
+  "reviewedAt": null,
+  "validFrom": "2025-09-21T10:24:00.814Z",
+  "expiresAt": "2028-09-25T10:24:00.814Z",
+  "supersededAt": null,
+  "issuer": "ICR Trade Assurance",
+  "issuedOn": "2025-09-21T10:24:00.814Z",
+  "certificateNumber": null,
+  "certificateUrl": null,
+  "createdAt": "2026-10-26T10:24:00.949Z",
+  "updatedAt": "2026-10-26T10:24:00.949Z",
+  "certificationType": {
+   "id": "cmvp404ab0003myqo4vgzppt5",
+   "name": "Escrow & Trade Assurance Policy"
+  }
+ }
+]

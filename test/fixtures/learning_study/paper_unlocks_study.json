@@ -1,0 +1,25 @@
+{
+ "allOpen": false,
+ "paperIds": [],
+ "creditPaperIds": [],
+ "icrCredits": 10,
+ "rupeesPerCredit": 100,
+ "plan": {
+  "assessmentCourses": {
+   "limit": 3,
+   "openedCourseIds": []
+  },
+  "mockExams": {
+   "limit": 0,
+   "openedTopicIds": []
+  },
+  "flashCardDecks": {
+   "limit": 3,
+   "openedDeckIds": [
+    "cmv6lubc001demyt83o222rgr"
+   ]
+  },
+  "upgradePlan": null,
+  "mockUpgradePlan": null
+ }
+}

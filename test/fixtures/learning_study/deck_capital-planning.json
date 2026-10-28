@@ -1,0 +1,270 @@
+{
+ "id": "cmv6lubc001demyt83o222rgr",
+ "title": "Capital Planning",
+ "slug": "capital-planning",
+ "description": null,
+ "kind": "QNA",
+ "planLevel": "FREE",
+ "icon": null,
+ "imageUrl": "/uploads/b96d6af5be14f45c088dc6d0.png",
+ "active": true,
+ "sortOrder": 0,
+ "createdAt": "2026-10-13T11:35:45.889Z",
+ "updatedAt": "2026-10-13T11:35:45.889Z",
+ "deletedAt": null,
+ "cards": [
+  {
+   "id": "cmv6lubcf01dfmyt8t4g9it5d",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "What is capital planning in CRE & FM?",
+   "back": "A structured process for forecasting, prioritising, funding and governing investments in buildings, infrastructure, workplace systems and facility assets.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Beginner"
+   ],
+   "sortOrder": 0,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  },
+  {
+   "id": "cmv6lubcf01dgmyt8c5dng02n",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "What is the difference between CapEx and OpEx?",
+   "back": "CapEx creates or materially improves an asset; OpEx covers recurring operating costs required to run and maintain the facility.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Beginner"
+   ],
+   "sortOrder": 1,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  },
+  {
+   "id": "cmv6lubcf01dhmyt8u9cblw0i",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "Why is capital planning important?",
+   "back": "It aligns asset investments with business strategy, protects asset value, manages risk and supports predictable long-term funding.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Beginner"
+   ],
+   "sortOrder": 2,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  },
+  {
+   "id": "cmv6lubcf01dimyt8o6ht6lex",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "What is a capital plan?",
+   "back": "A multi-year roadmap of proposed capital projects, costs, timing, priorities, funding and expected business outcomes.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Beginner"
+   ],
+   "sortOrder": 3,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  },
+  {
+   "id": "cmv6lubcf01djmyt820tovbfw",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "What is a capital budget?",
+   "back": "The approved financial allocation for capital investments during a defined budget period.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Beginner"
+   ],
+   "sortOrder": 4,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  },
+  {
+   "id": "cmv6lubcf01dkmyt89abkpbhn",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "What is a capital project?",
+   "back": "A planned investment that creates, replaces, upgrades or materially extends the useful life or capability of an asset.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Beginner"
+   ],
+   "sortOrder": 5,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  },
+  {
+   "id": "cmv6lubcf01dlmyt8hz8wk301",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "What is asset lifecycle planning?",
+   "back": "Planning investments from acquisition or construction through operation, renewal, replacement and eventual disposal.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Beginner"
+   ],
+   "sortOrder": 6,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  },
+  {
+   "id": "cmv6lubcf01dmmyt8egysh9zt",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "What is a strategic capital plan?",
+   "back": "A capital plan explicitly linked to business growth, workplace strategy, operational resilience, sustainability and portfolio objectives.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Intermediate"
+   ],
+   "sortOrder": 7,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  },
+  {
+   "id": "cmv6lubcf01dnmyt8u0w6eyfw",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "What is portfolio-level capital planning?",
+   "back": "Prioritising investments across multiple sites and asset classes rather than optimising each facility independently.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Intermediate"
+   ],
+   "sortOrder": 8,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  },
+  {
+   "id": "cmv6lubcf01domyt8iokm36gh",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "What is site-level capital planning?",
+   "back": "Developing investment requirements and priorities for one building, campus or facility.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Beginner"
+   ],
+   "sortOrder": 9,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  },
+  {
+   "id": "cmv6lubcf01dpmyt8nln0ugcv",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "What is a capital planning horizon?",
+   "back": "The future period covered by the plan, commonly 3, 5, 10 or more years depending on asset and business needs.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Beginner"
+   ],
+   "sortOrder": 10,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  },
+  {
+   "id": "cmv6lubcf01dqmyt8xt667drk",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "Why should capital planning be multi-year?",
+   "back": "Many building systems have long life cycles, so decisions made today can create funding and risk consequences for many future years.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Beginner"
+   ],
+   "sortOrder": 11,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  },
+  {
+   "id": "cmv6lubcf01drmyt80whkho2u",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "What is a capital needs assessment?",
+   "back": "A structured assessment of current and future investment requirements based on asset condition, compliance, business demand and risk.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Intermediate"
+   ],
+   "sortOrder": 12,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  },
+  {
+   "id": "cmv6lubcf01dsmyt8tzb72fcj",
+   "topicId": "cmv6lubc001demyt83o222rgr",
+   "front": "What is a capital backlog?",
+   "back": "The accumulated value of identified investment needs that have not yet been funded or completed.",
+   "example": null,
+   "examples": null,
+   "resourceUrl": null,
+   "resourceLabel": null,
+   "category": "Strategy & Fundamentals",
+   "tags": [
+    "Intermediate"
+   ],
+   "sortOrder": 13,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:45.902Z",
+   "updatedAt": "2026-10-13T11:35:45.902Z"
+  }
+ ],
+ "cardCount": 14
+}

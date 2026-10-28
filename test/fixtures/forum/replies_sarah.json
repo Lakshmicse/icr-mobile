@@ -1,0 +1,419 @@
+{
+ "data": [
+  {
+   "id": "design-home-reply-sarah-r1",
+   "threadId": "design-home-thread-sarah",
+   "parentId": null,
+   "bodyHtml": "<p>Spot on Priya. Niagara framework BACnet/IP telemetry cut vendor lock-in completely across our commercial assets.</p>",
+   "moderation": "APPROVED",
+   "author": {
+    "id": "design-home-user-arvind",
+    "firstName": "Arvind",
+    "lastName": "Swamy",
+    "avatarUrl": "/uploads/design-home-avatar_arvind.jpg",
+    "headline": "General Counsel at Brookfield Properties",
+    "reputation": 0
+   },
+   "score": 3,
+   "likes": 3,
+   "accepted": false,
+   "attachment": null,
+   "myVote": null,
+   "myReaction": null,
+   "reactions": {
+    "LIKE": 3
+   },
+   "canEdit": false,
+   "createdAt": "2026-10-23T11:56:24.050Z",
+   "updatedAt": "2026-10-23T12:38:36.223Z",
+   "children": [
+    {
+     "id": "design-home-reply-sarah-r2",
+     "threadId": "design-home-thread-sarah",
+     "parentId": "design-home-reply-sarah-r1",
+     "bodyHtml": "<p>Spot on Priya. Niagara framework BACnet/IP telemetry cut vendor lock-in completely across our commercial assets.</p>",
+     "moderation": "APPROVED",
+     "author": {
+      "id": "design-home-user-arvind",
+      "firstName": "Arvind",
+      "lastName": "Swamy",
+      "avatarUrl": "/uploads/design-home-avatar_arvind.jpg",
+      "headline": "General Counsel at Brookfield Properties",
+      "reputation": 0
+     },
+     "score": 3,
+     "likes": 3,
+     "accepted": false,
+     "attachment": null,
+     "myVote": null,
+     "myReaction": null,
+     "reactions": {
+      "LIKE": 3
+     },
+     "canEdit": false,
+     "createdAt": "2026-10-23T11:56:54.050Z",
+     "updatedAt": "2026-10-23T12:38:36.223Z",
+     "children": [
+      {
+       "id": "design-home-reply-sarah-r3",
+       "threadId": "design-home-thread-sarah",
+       "parentId": "design-home-reply-sarah-r2",
+       "bodyHtml": "<p>Thanks Arvind. Did you keep the legacy controllers or replace them?</p>",
+       "moderation": "APPROVED",
+       "author": {
+        "id": "design-home-user-priya",
+        "firstName": "Priya",
+        "lastName": "Nambiar",
+        "avatarUrl": null,
+        "headline": "Facilities Lead at Infosys",
+        "reputation": 0
+       },
+       "score": 0,
+       "likes": 0,
+       "accepted": false,
+       "attachment": null,
+       "myVote": null,
+       "myReaction": null,
+       "reactions": {},
+       "canEdit": false,
+       "createdAt": "2026-10-23T12:05:36.050Z",
+       "updatedAt": "2026-10-23T12:38:36.223Z",
+       "children": [
+        {
+         "id": "design-home-reply-sarah-r4",
+         "threadId": "design-home-thread-sarah",
+         "parentId": "design-home-reply-sarah-r3",
+         "bodyHtml": "<p>Kept them. Niagara supervises the old controllers and maps their points over BACnet/IP, so nothing had to be ripped out.</p>",
+         "moderation": "APPROVED",
+         "author": {
+          "id": "design-home-user-arvind",
+          "firstName": "Arvind",
+          "lastName": "Swamy",
+          "avatarUrl": "/uploads/design-home-avatar_arvind.jpg",
+          "headline": "General Counsel at Brookfield Properties",
+          "reputation": 0
+         },
+         "score": 0,
+         "likes": 0,
+         "accepted": false,
+         "attachment": null,
+         "myVote": null,
+         "myReaction": null,
+         "reactions": {},
+         "canEdit": false,
+         "createdAt": "2026-10-23T12:09:36.050Z",
+         "updatedAt": "2026-10-23T12:38:36.223Z",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "design-home-reply-sarah-r5",
+       "threadId": "design-home-thread-sarah",
+       "parentId": "design-home-reply-sarah-r2",
+       "bodyHtml": "<p>Same approach on our retrofit. Point mapping took longer than the sensors did.</p>",
+       "moderation": "APPROVED",
+       "author": {
+        "id": "cmvar8d3x000jmymk87mpculi",
+        "firstName": "Vikram",
+        "lastName": "Desai",
+        "avatarUrl": "/uploads/seed-avatar-male-16.jpg",
+        "headline": "Smart buildings, BMS and the IoT retrofit nobody warned you about",
+        "reputation": 0
+       },
+       "score": 0,
+       "likes": 0,
+       "accepted": false,
+       "attachment": null,
+       "myVote": null,
+       "myReaction": null,
+       "reactions": {},
+       "canEdit": false,
+       "createdAt": "2026-10-23T12:12:36.050Z",
+       "updatedAt": "2026-10-23T12:38:36.223Z",
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": "design-home-reply-sarah-r6",
+     "threadId": "design-home-thread-sarah",
+     "parentId": "design-home-reply-sarah-r1",
+     "bodyHtml": "<p>Ask each vendor for their BACnet PICS before you shortlist. It saves a lot of arguing later.</p>",
+     "moderation": "APPROVED",
+     "author": {
+      "id": "cmvar8d2r0007mymkx6nyyq5j",
+      "firstName": "Rajesh",
+      "lastName": "Menon",
+      "avatarUrl": "/uploads/seed-avatar-male-13.jpg",
+      "headline": "Corporate real estate strategy and portfolio economics",
+      "reputation": 0
+     },
+     "score": 0,
+     "likes": 0,
+     "accepted": false,
+     "attachment": null,
+     "myVote": null,
+     "myReaction": null,
+     "reactions": {},
+     "canEdit": false,
+     "createdAt": "2026-10-23T12:16:36.050Z",
+     "updatedAt": "2026-10-23T12:38:36.223Z",
+     "children": []
+    },
+    {
+     "id": "design-home-reply-sarah-r7",
+     "threadId": "design-home-thread-sarah",
+     "parentId": "design-home-reply-sarah-r1",
+     "bodyHtml": "<p>And budget for sensor re-baselining. We recalibrated twice in the first year.</p>",
+     "moderation": "APPROVED",
+     "author": {
+      "id": "cmvar8d3d000dmymk454r2id9",
+      "firstName": "Fatima",
+      "lastName": "Sheikh",
+      "avatarUrl": "/uploads/seed-avatar-female-13.jpg",
+      "headline": "ESG and net-zero for buildings — reporting that survives an audit",
+      "reputation": -5
+     },
+     "score": 0,
+     "likes": 0,
+     "accepted": false,
+     "attachment": null,
+     "myVote": null,
+     "myReaction": null,
+     "reactions": {},
+     "canEdit": false,
+     "createdAt": "2026-10-23T12:20:36.050Z",
+     "updatedAt": "2026-10-23T12:38:36.223Z",
+     "children": []
+    },
+    {
+     "id": "design-home-reply-sarah-r8",
+     "threadId": "design-home-thread-sarah",
+     "parentId": "design-home-reply-sarah-r1",
+     "bodyHtml": "<p>Put data ownership in the contract, not just the integration scope.</p>",
+     "moderation": "APPROVED",
+     "author": {
+      "id": "cmvar8d64000vmymk0l4qsyop",
+      "firstName": "Sanjay",
+      "lastName": "Kulkarni",
+      "avatarUrl": "/uploads/seed-avatar-male-14.jpg",
+      "headline": "Workplace procurement and contract negotiation",
+      "reputation": 10
+     },
+     "score": 0,
+     "likes": 0,
+     "accepted": false,
+     "attachment": null,
+     "myVote": null,
+     "myReaction": null,
+     "reactions": {},
+     "canEdit": false,
+     "createdAt": "2026-10-23T12:25:36.050Z",
+     "updatedAt": "2026-10-23T12:38:36.223Z",
+     "children": []
+    },
+    {
+     "id": "design-home-reply-sarah-r9",
+     "threadId": "design-home-thread-sarah",
+     "parentId": "design-home-reply-sarah-r1",
+     "bodyHtml": "<p>Phase it: one AHU zone first, prove the savings, then roll out.</p>",
+     "moderation": "APPROVED",
+     "author": {
+      "id": "cmvkdmw1l0001myfg1nt64hih",
+      "firstName": "Karthik",
+      "lastName": "Subramaniam",
+      "avatarUrl": "/uploads/seed-avatar-showcase-male-03.jpg",
+      "headline": "Workplace & facilities leader — APAC portfolio operations, ex-aerospace plant facilities",
+      "reputation": 0
+     },
+     "score": 0,
+     "likes": 0,
+     "accepted": false,
+     "attachment": null,
+     "myVote": null,
+     "myReaction": null,
+     "reactions": {},
+     "canEdit": false,
+     "createdAt": "2026-10-23T12:29:36.050Z",
+     "updatedAt": "2026-10-23T12:38:36.223Z",
+     "children": []
+    },
+    {
+     "id": "design-home-reply-sarah-r10",
+     "threadId": "design-home-thread-sarah",
+     "parentId": "design-home-reply-sarah-r1",
+     "bodyHtml": "<p>Great tips everyone. The PICS point is going straight into our RFP.</p>",
+     "moderation": "APPROVED",
+     "author": {
+      "id": "design-home-user-priya",
+      "firstName": "Priya",
+      "lastName": "Nambiar",
+      "avatarUrl": null,
+      "headline": "Facilities Lead at Infosys",
+      "reputation": 0
+     },
+     "score": 0,
+     "likes": 0,
+     "accepted": false,
+     "attachment": null,
+     "myVote": null,
+     "myReaction": null,
+     "reactions": {},
+     "canEdit": false,
+     "createdAt": "2026-10-23T12:32:36.050Z",
+     "updatedAt": "2026-10-23T12:38:36.223Z",
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": "design-home-reply-sarah-f4",
+   "threadId": "design-home-thread-sarah",
+   "parentId": null,
+   "bodyHtml": "<p>Vendor-neutral protocols first, dashboards second. We've been burned by a pretty UI on a closed stack.</p>",
+   "moderation": "APPROVED",
+   "author": {
+    "id": "cmvar8d3x000jmymk87mpculi",
+    "firstName": "Vikram",
+    "lastName": "Desai",
+    "avatarUrl": "/uploads/seed-avatar-male-16.jpg",
+    "headline": "Smart buildings, BMS and the IoT retrofit nobody warned you about",
+    "reputation": 0
+   },
+   "score": 2,
+   "likes": 2,
+   "accepted": false,
+   "attachment": null,
+   "myVote": null,
+   "myReaction": null,
+   "reactions": {
+    "LIKE": 2
+   },
+   "canEdit": false,
+   "createdAt": "2026-10-23T10:46:27.479Z",
+   "updatedAt": "2026-10-23T12:38:36.223Z",
+   "children": []
+  },
+  {
+   "id": "design-home-reply-sarah-f11",
+   "threadId": "design-home-thread-sarah",
+   "parentId": null,
+   "bodyHtml": "<p>A shortlist of two or three integrators who have done your BMS brand before is worth more than any feature list.</p>",
+   "moderation": "APPROVED",
+   "author": {
+    "id": "cmvar8d6l0010mymk19peyyqp",
+    "firstName": "Deepa",
+    "lastName": "Iyer",
+    "avatarUrl": "/uploads/seed-avatar-female-12.jpg",
+    "headline": "Health, safety and business continuity for industrial facilities",
+    "reputation": 0
+   },
+   "score": 2,
+   "likes": 2,
+   "accepted": false,
+   "attachment": null,
+   "myVote": null,
+   "myReaction": null,
+   "reactions": {
+    "LIKE": 2
+   },
+   "canEdit": false,
+   "createdAt": "2026-10-23T10:58:27.479Z",
+   "updatedAt": "2026-10-23T12:38:36.223Z",
+   "children": []
+  },
+  {
+   "id": "design-home-reply-sarah-f2",
+   "threadId": "design-home-thread-sarah",
+   "parentId": null,
+   "bodyHtml": "<p>Check whether your BMS exposes BACnet/IP or only MS/TP. That decides whether you need a gateway or can integrate directly.</p>",
+   "moderation": "APPROVED",
+   "author": {
+    "id": "design-home-user-arvind",
+    "firstName": "Arvind",
+    "lastName": "Swamy",
+    "avatarUrl": "/uploads/design-home-avatar_arvind.jpg",
+    "headline": "General Counsel at Brookfield Properties",
+    "reputation": 0
+   },
+   "score": 1,
+   "likes": 1,
+   "accepted": false,
+   "attachment": null,
+   "myVote": null,
+   "myReaction": null,
+   "reactions": {
+    "LIKE": 1
+   },
+   "canEdit": false,
+   "createdAt": "2026-10-23T10:43:01.764Z",
+   "updatedAt": "2026-10-23T12:38:36.223Z",
+   "children": []
+  },
+  {
+   "id": "design-home-reply-sarah-f7",
+   "threadId": "design-home-thread-sarah",
+   "parentId": null,
+   "bodyHtml": "<p>Ask who owns the data and where it lives. Several of the cheaper vendors keep it in their own cloud.</p>",
+   "moderation": "APPROVED",
+   "author": {
+    "id": "cmvar8d64000vmymk0l4qsyop",
+    "firstName": "Sanjay",
+    "lastName": "Kulkarni",
+    "avatarUrl": "/uploads/seed-avatar-male-14.jpg",
+    "headline": "Workplace procurement and contract negotiation",
+    "reputation": 10
+   },
+   "score": 1,
+   "likes": 1,
+   "accepted": false,
+   "attachment": null,
+   "myVote": null,
+   "myReaction": null,
+   "reactions": {
+    "LIKE": 1
+   },
+   "canEdit": false,
+   "createdAt": "2026-10-23T10:51:36.050Z",
+   "updatedAt": "2026-10-23T12:38:36.223Z",
+   "children": []
+  },
+  {
+   "id": "design-home-reply-sarah-f12",
+   "threadId": "design-home-thread-sarah",
+   "parentId": null,
+   "bodyHtml": "<p>Peak-hour control needs demand forecasting, not just sensors. Ask vendors how they handle pre-cooling.</p>",
+   "moderation": "APPROVED",
+   "author": {
+    "id": "cmvar8d81001amymkyhk9gdr6",
+    "firstName": "Lakshmi",
+    "lastName": "Prasad",
+    "avatarUrl": "/uploads/seed-avatar-female-17.jpg",
+    "headline": "Data centre facilities — uptime, cooling and capacity planning",
+    "reputation": 0
+   },
+   "score": 1,
+   "likes": 1,
+   "accepted": false,
+   "attachment": null,
+   "myVote": null,
+   "myReaction": null,
+   "reactions": {
+    "LIKE": 1
+   },
+   "canEdit": false,
+   "createdAt": "2026-10-23T11:00:10.336Z",
+   "updatedAt": "2026-10-23T12:38:36.223Z",
+   "children": []
+  }
+ ],
+ "meta": {
+  "page": 1,
+  "limit": 100,
+  "total": 52,
+  "totalPages": 1,
+  "hasNext": false,
+  "hasPrev": false
+ }
+}

@@ -1,0 +1,46 @@
+[
+ {
+  "id": "cmupai5ws00gimyzcjc5ib3fg",
+  "name": "Technology",
+  "slug": "technology",
+  "description": "BMS, IWMS, IoT, smart-building and workplace software.",
+  "icon": "Laptop",
+  "order": 2,
+  "published": true,
+  "threadCount": 4,
+  "lastActivityAt": "2026-12-21T12:38:36.050Z"
+ },
+ {
+  "id": "cmupai5wt00gumyzcdgbdjrrg",
+  "name": "ESG & Sustainability",
+  "slug": "esg-sustainability",
+  "description": "Carbon, net zero, social impact and ESG reporting.",
+  "icon": "Grass",
+  "order": 14,
+  "published": true,
+  "threadCount": 3,
+  "lastActivityAt": "2026-12-22T12:38:36.050Z"
+ },
+ {
+  "id": "cmupai5wt00gwmyzcl1fvijts",
+  "name": "Procurement & Supply Chain",
+  "slug": "procurement-supply-chain",
+  "description": "Sourcing, vendor management, warehousing and logistics.",
+  "icon": "Inventory2",
+  "order": 16,
+  "published": true,
+  "threadCount": 1,
+  "lastActivityAt": "2026-10-19T00:58:36.050Z"
+ },
+ {
+  "id": "cmupai5wt00hhmyzcrxvfy87u",
+  "name": "Other / Specialty Services",
+  "slug": "other-specialty-services",
+  "description": "Specialty and niche workplace services.",
+  "icon": "Category",
+  "order": 37,
+  "published": true,
+  "threadCount": 1,
+  "lastActivityAt": "2026-10-23T12:14:11.101Z"
+ }
+]

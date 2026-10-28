@@ -1,0 +1,156 @@
+{
+ "data": [
+  {
+   "id": "design-mkt-pr-1",
+   "name": "Biometric Access Terminal",
+   "description": "Fingerprint and card access terminal with a 7-inch display, door relay and an audit log of every entry.",
+   "price": "18500",
+   "unit": "piece",
+   "imageUrl": null,
+   "availability": "IN_STOCK",
+   "warrantyMonths": 24,
+   "returnDays": 7,
+   "freeDeliveryOver": 25000,
+   "bulkPricingMinQty": 10,
+   "companyId": "design-mkt-co-securetech",
+   "categoryId": "cmupai5zb00ulmyzcuv1kr2os",
+   "source": null,
+   "sourceId": null,
+   "deletedAt": null,
+   "createdAt": "2026-10-26T10:24:00.814Z",
+   "updatedAt": "2026-10-26T10:24:00.970Z",
+   "category": {
+    "id": "cmupai5zb00ulmyzcuv1kr2os",
+    "name": "Access Control",
+    "slug": "electronic-security-access-control",
+    "key": "ELECTRONIC_SECURITY_ACCESS_CONTROL",
+    "kind": "BOTH",
+    "active": true,
+    "sortOrder": 3,
+    "icon": null,
+    "blurb": null,
+    "level": 3,
+    "groupLabel": null,
+    "parentId": "cmupai5xe00j3myzcyo48g5or",
+    "createdAt": "2026-10-01T08:46:18.301Z",
+    "updatedAt": "2026-10-01T08:46:18.301Z"
+   },
+   "company": {
+    "id": "design-mkt-co-securetech",
+    "name": "SecureTech",
+    "logoUrl": "/uploads/design-mkt-logo_securetech.png",
+    "verificationStatus": "VERIFIED",
+    "verificationLevel": "ELITE",
+    "vendor": {
+     "id": "design-mkt-v-securetech",
+     "rating": 4.7,
+     "ratingCount": 150
+    }
+   }
+  },
+  {
+   "id": "design-mkt-pr-2",
+   "name": "IP CCTV Dome Camera, 4 MP",
+   "description": "Day and night dome camera with 30 m infrared range, PoE power and onboard motion detection.",
+   "price": "4200",
+   "unit": "piece",
+   "imageUrl": null,
+   "availability": "IN_STOCK",
+   "warrantyMonths": 36,
+   "returnDays": 7,
+   "freeDeliveryOver": 0,
+   "bulkPricingMinQty": 20,
+   "companyId": "design-mkt-co-securetech",
+   "categoryId": "cmupai5za00uimyzcs5oaocb4",
+   "source": null,
+   "sourceId": null,
+   "deletedAt": null,
+   "createdAt": "2026-10-26T10:23:00.814Z",
+   "updatedAt": "2026-10-26T10:24:00.988Z",
+   "category": {
+    "id": "cmupai5za00uimyzcs5oaocb4",
+    "name": "CCTV",
+    "slug": "electronic-security-cctv",
+    "key": "ELECTRONIC_SECURITY_CCTV",
+    "kind": "BOTH",
+    "active": true,
+    "sortOrder": 0,
+    "icon": null,
+    "blurb": null,
+    "level": 3,
+    "groupLabel": null,
+    "parentId": "cmupai5xe00j3myzcyo48g5or",
+    "createdAt": "2026-10-01T08:46:18.301Z",
+    "updatedAt": "2026-10-01T08:46:18.301Z"
+   },
+   "company": {
+    "id": "design-mkt-co-securetech",
+    "name": "SecureTech",
+    "logoUrl": "/uploads/design-mkt-logo_securetech.png",
+    "verificationStatus": "VERIFIED",
+    "verificationLevel": "ELITE",
+    "vendor": {
+     "id": "design-mkt-v-securetech",
+     "rating": 4.7,
+     "ratingCount": 150
+    }
+   }
+  },
+  {
+   "id": "design-mkt-pr-3",
+   "name": "Command Centre Video Wall Controller",
+   "description": "Eight-input controller for a campus control room, with layouts saved per shift.",
+   "price": "285000",
+   "unit": "set",
+   "imageUrl": null,
+   "availability": "MADE_TO_ORDER",
+   "warrantyMonths": 12,
+   "returnDays": null,
+   "freeDeliveryOver": null,
+   "bulkPricingMinQty": null,
+   "companyId": "design-mkt-co-securetech",
+   "categoryId": "cmupai5zb00uqmyzcl924vsn8",
+   "source": null,
+   "sourceId": null,
+   "deletedAt": null,
+   "createdAt": "2026-10-26T10:22:00.814Z",
+   "updatedAt": "2026-10-26T10:24:00.990Z",
+   "category": {
+    "id": "cmupai5zb00uqmyzcl924vsn8",
+    "name": "Command Centers",
+    "slug": "electronic-security-command-centers",
+    "key": "ELECTRONIC_SECURITY_COMMAND_CENTERS",
+    "kind": "BOTH",
+    "active": true,
+    "sortOrder": 8,
+    "icon": null,
+    "blurb": null,
+    "level": 3,
+    "groupLabel": null,
+    "parentId": "cmupai5xe00j3myzcyo48g5or",
+    "createdAt": "2026-10-01T08:46:18.301Z",
+    "updatedAt": "2026-10-01T08:46:18.301Z"
+   },
+   "company": {
+    "id": "design-mkt-co-securetech",
+    "name": "SecureTech",
+    "logoUrl": "/uploads/design-mkt-logo_securetech.png",
+    "verificationStatus": "VERIFIED",
+    "verificationLevel": "ELITE",
+    "vendor": {
+     "id": "design-mkt-v-securetech",
+     "rating": 4.7,
+     "ratingCount": 150
+    }
+   }
+  }
+ ],
+ "meta": {
+  "page": 1,
+  "limit": 50,
+  "total": 3,
+  "totalPages": 1,
+  "hasNext": false,
+  "hasPrev": false
+ }
+}

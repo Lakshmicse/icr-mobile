@@ -1,0 +1,20 @@
+VISITOR MANAGEMENT POLICY
+=========================
+
+1. Purpose
+Every visitor is registered, badged and escorted so the building knows who is inside at all times.
+
+2. Before arrival
+- The host pre-registers the visitor (name, company, vehicle, purpose, time).
+- Contractors need a permit to work before they are admitted.
+
+3. At the desk
+- Photo ID is checked and logged; the badge shows the host, the floor and the expiry time.
+- Devices that record are declared; restricted floors need a second approval.
+
+4. Inside
+- Visitors are escorted or badge-restricted to the floors they were approved for.
+- Badges are returned at exit and the log is closed.
+
+5. Review
+The security lead reviews tailgating and unreturned-badge incidents monthly.

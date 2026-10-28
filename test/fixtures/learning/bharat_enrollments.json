@@ -1,0 +1,30 @@
+[
+ {
+  "id": "design-lj-cals-enrolment-bharat",
+  "courseId": "design-lj-course-cals",
+  "batchId": "design-lj-cals-run-1",
+  "userId": "bharat",
+  "status": "CONFIRMED",
+  "batchStartsAt": "2027-08-23T12:00:00.000Z",
+  "note": null,
+  "decidedAt": "2026-10-23T07:30:10.974Z",
+  "decidedById": null,
+  "completedAt": null,
+  "createdAt": "2026-10-23T07:30:11.380Z",
+  "updatedAt": "2026-10-23T07:30:11.380Z",
+  "batch": {
+   "id": "design-lj-cals-run-1",
+   "title": "Riyadh - August",
+   "mode": "IN_PERSON",
+   "status": "OPEN",
+   "startsAt": "2027-08-23T12:00:00.000Z",
+   "endsAt": "2027-08-27T12:00:00.000Z",
+   "durationLabel": "5 days",
+   "schedule": null,
+   "location": "Riyadh, KSA",
+   "instructor": null
+  },
+  "modulesTotal": 2,
+  "modulesDone": 0
+ }
+]

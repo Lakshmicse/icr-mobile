@@ -1,0 +1,805 @@
+{
+ "id": "cmv6lucsg0342myt8nhfm267o",
+ "title": "Depreciation Analysis ",
+ "slug": "depreciation-analysis",
+ "description": null,
+ "kind": "FORMULA",
+ "planLevel": "FREE",
+ "icon": null,
+ "imageUrl": "/uploads/8cb98aff1aecd1dbe030f2dc.jpeg",
+ "active": true,
+ "sortOrder": 0,
+ "createdAt": "2026-10-13T11:35:47.776Z",
+ "updatedAt": "2026-10-13T11:35:47.776Z",
+ "deletedAt": null,
+ "cards": [
+  {
+   "id": "cmv6lucsl0343myt8zbag29uw",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Straight Line Depreciation (SLM)",
+   "back": "$$Annual Depreciation = Asset Cost−Salvage Value​\\div Useful Life$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Asset Cost",
+       "value": "₹1,20,00,000"
+      },
+      {
+       "label": "Salvage Value",
+       "value": "₹20,00,000"
+      },
+      {
+       "label": "Useful Life",
+       "value": "10 Years"
+      },
+      {
+       "label": "Annual Depreciation",
+       "value": "(120−20)/10"
+      }
+     ],
+     "working": ": ₹10,00,000/year",
+     "analysis": "₹70 Lakhs of depreciable cost is distributed equally across 5 years",
+     "decision": "₹10 lakh per year as depreciation under the stated SLM assumptions."
+    },
+    {
+     "given": [],
+     "working": "Asset cost = ₹80 lakh\nSalvage value = ₹8 lakh\nUseful life = 8 years\nAnnual Depreciation : (80−8)/8\n: ₹9L/year​",
+     "analysis": "₹72 lakh of depreciable cost is distributed equally across eight years.",
+     "decision": "Annual SLM depreciation should be ₹9 lakh."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 0,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm0344myt86n67w3bg",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Double Declining Balance (DDB)",
+   "back": "$$Depreciation=(2 \\div Useful Life​)×Opening Book Value$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Equipment Cost",
+       "value": "₹100 Lakhs"
+      },
+      {
+       "label": "Life",
+       "value": "10 Years"
+      },
+      {
+       "label": "Rate",
+       "value": "20%"
+      },
+      {
+       "label": "Year 1",
+       "value": "100×20% :  ₹20 Lakhs"
+      },
+      {
+       "label": "Book Value",
+       "value": "₹80 Lakhs"
+      }
+     ],
+     "analysis": "DDB applies the accelerated 20% rate to the opening book value. This creates higher depreciation in the earlier years.",
+     "decision": "Year 1 depreciation = ₹20 lakh, with closing book value of ₹80 lakh."
+    },
+    {
+     "given": [
+      {
+       "label": "Opening book value",
+       "value": "₹80 lakh"
+      },
+      {
+       "label": "Useful life",
+       "value": "10 years"
+      },
+      {
+       "label": "DDB rate",
+       "value": "20%"
+      },
+      {
+       "label": "Depreciation",
+       "value": "80×20% : ₹16L"
+      },
+      {
+       "label": "Closing book value",
+       "value": "80−16 : ₹64L"
+      }
+     ],
+     "working": "​\n​",
+     "analysis": "The depreciation expense falls because DDB applies the same rate to a declining book value.",
+     "decision": "Year 2 depreciation = ₹16 lakh, with closing book value of ₹64 lakh."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 1,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm0345myt8o62e3r7d",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Written Down Value (WDV)",
+   "back": "$$Depreciation=Book Value×Depreciation Rate$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Book Value",
+       "value": "₹50 Lakhs"
+      },
+      {
+       "label": "Rate",
+       "value": "15%"
+      },
+      {
+       "label": "Depreciation",
+       "value": "₹7.50 Lakhs"
+      },
+      {
+       "label": "Closing Value",
+       "value": "₹42.50 Lakhs"
+      }
+     ],
+     "analysis": "Depreciation reduces every year because the asset value decreases.",
+     "decision": "Record ₹7.50 lakh depreciation and carry forward ₹42.50 lakh."
+    },
+    {
+     "given": [],
+     "working": "Opening book value = ₹80 lakh\nWDV rate = 12%\nDepreciation : ₹9.60L\nClosing value : ₹70.40L\n​",
+     "analysis": "The 12% rate is applied to the current book value, not the original acquisition cost.",
+     "decision": "Record ₹9.60 lakh depreciation and closing book value of ₹70.40 lakh."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 2,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm0346myt8yocc1kaz",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Sum of Years' Digits (SYD)",
+   "back": "$$Depreciation = Remaining Life​ \\div SYD ×(Cost−Salvage Value)$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Cost",
+       "value": "₹60 Lakhs"
+      },
+      {
+       "label": "Life",
+       "value": "5 Years"
+      },
+      {
+       "label": "SYD",
+       "value": "15"
+      },
+      {
+       "label": "Year 1",
+       "value": "5/15 ×60 : ₹20 Lakhs"
+      },
+      {
+       "label": "Year 2",
+       "value": "4/15 ×60 :  ₹16 Lakhs"
+      }
+     ],
+     "analysis": "SYD allocates a larger proportion of the depreciable amount to the early years.",
+     "decision": "Year 1 depreciation = ₹16.67 lakh."
+    },
+    {
+     "given": [
+      {
+       "label": "Cost",
+       "value": "₹60 lakh"
+      },
+      {
+       "label": "Salvage value",
+       "value": "₹10 lakh"
+      },
+      {
+       "label": "Useful life",
+       "value": "5 years."
+      },
+      {
+       "label": "Year 2 remaining life",
+       "value": "4"
+      },
+      {
+       "label": "Depreciation",
+       "value": "₹13.33L"
+      }
+     ],
+     "working": "​",
+     "analysis": "Year 2 depreciation is lower than Year 1 because the remaining-life fraction decreases from \\(5/15\\) to \\(4/15\\).",
+     "decision": "Year 2 depreciation = ₹13.33 lakh."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 3,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm0347myt80e7nkg02",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Units of Production Method",
+   "back": "$$Depreciation= Units Produced \\div Total Expected Units ​×(Cost−Salvage)$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Generator Cost",
+       "value": "₹50 Lakhs"
+      },
+      {
+       "label": "Useful Hours",
+       "value": "20,000 hrs"
+      },
+      {
+       "label": "Current Year",
+       "value": "2,500 hrs"
+      },
+      {
+       "label": "Depreciation",
+       "value": "2,500/20,000×50 : ₹6.25 Lakhs"
+      }
+     ],
+     "analysis": "The asset has consumed 12.5% of its expected useful hours, so 12.5% of the stated depreciable amount is recognized.",
+     "decision": "Record ₹6.25 lakh depreciation for the period."
+    },
+    {
+     "given": [
+      {
+       "label": "Cost",
+       "value": "₹90 lakh"
+      },
+      {
+       "label": "Salvage",
+       "value": "₹10 lakh"
+      },
+      {
+       "label": "Expected production",
+       "value": "40,000 units"
+      },
+      {
+       "label": "Actual production",
+       "value": "5,000 units"
+      },
+      {
+       "label": "Depreciation",
+       "value": "5,000/40,000(90-10) : ₹10L"
+      }
+     ],
+     "working": "​",
+     "analysis": "The asset produced 12.5% of its expected total output, so 12.5% of its ₹80 lakh depreciable amount is charged.",
+     "decision": "Record ₹10 lakh depreciation."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 4,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm0348myt82e11reoq",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Book Value",
+   "back": "$$Book Value=Asset Cost−Accumulated Depreciation$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Cost",
+       "value": "₹2 Crores"
+      },
+      {
+       "label": "Accumulated Depreciation",
+       "value": "₹80 Lakhs"
+      },
+      {
+       "label": "Book Value",
+       "value": "₹1.20 Crores"
+      }
+     ],
+     "analysis": "Book Value is used to assess carrying value on the balance sheet and inform replacement planning.",
+     "decision": "The asset's book value is ₹1.20 crore."
+    },
+    {
+     "given": [
+      {
+       "label": "Asset cost",
+       "value": "₹75 lakh"
+      },
+      {
+       "label": "Accumulated depreciation",
+       "value": "₹30 lakh"
+      },
+      {
+       "label": "Book Value",
+       "value": "₹45L"
+      }
+     ],
+     "working": "​",
+     "analysis": "₹30 lakh of the original cost has been accumulated as depreciation.",
+     "decision": "Book value = ₹45 lakh."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 5,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm0349myt8bkj1ip2v",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Accumulated Depreciation",
+   "back": "$$Accumulated Depreciation = ∑Annual Depreciation$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Annual",
+       "value": "₹12 Lakhs"
+      },
+      {
+       "label": "Years",
+       "value": "6"
+      },
+      {
+       "label": "Accumulated",
+       "value": "₹72 Lakhs"
+      }
+     ],
+     "analysis": "Represents the total depreciation charged since the asset was acquired.",
+     "decision": "Recognize ₹72 lakh as accumulated depreciation"
+    },
+    {
+     "given": [],
+     "working": "Annual depreciation for four years:\n₹9L+₹9L+₹9L+₹9L : ₹36L\n​",
+     "analysis": "Each year's depreciation is added to the cumulative balance.",
+     "decision": "Accumulated depreciation after four years = ₹36 lakh."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 6,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm034amyt8l38z9ujy",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Depreciation Rate",
+   "back": "$$Rate= Annual Depreciation \\div Asset Cost ​× 100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Annual Depreciation",
+       "value": "₹10 Lakhs"
+      },
+      {
+       "label": "Asset Cost",
+       "value": "₹100 Lakhs"
+      },
+      {
+       "label": "Rate",
+       "value": "10%"
+      }
+     ],
+     "analysis": "Annual depreciation represents 10% of the stated asset cost.",
+     "decision": "Depreciation rate = 10%."
+    },
+    {
+     "given": [
+      {
+       "label": "Annual depreciation",
+       "value": "₹12 lakh"
+      },
+      {
+       "label": "Asset cost",
+       "value": "₹120 lakh"
+      },
+      {
+       "label": "Rate",
+       "value": "10%"
+      }
+     ],
+     "working": "​\n​",
+     "analysis": "The annual depreciation charge equals 10% of original asset cost.",
+     "decision": "Use 10% as the calculated depreciation rate."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 7,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm034bmyt86vk9rs2a",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Asset Remaining Value (%)",
+   "back": "$$Remaining Value = Book Value​ \\div Original Cost × 100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Original Cost",
+       "value": "₹1 Crore"
+      },
+      {
+       "label": "Book Value",
+       "value": "₹35 Lakhs"
+      },
+      {
+       "label": "Remaining Value",
+       "value": "35%"
+      }
+     ],
+     "analysis": "A low remaining value may indicate the need for replacement planning.",
+     "decision": "Remaining asset value percentage = 35%."
+    },
+    {
+     "given": [
+      {
+       "label": "Original cost",
+       "value": "₹200 lakh"
+      },
+      {
+       "label": "Book value",
+       "value": "₹60 lakh"
+      },
+      {
+       "label": "Remaining Value",
+       "value": "30%"
+      }
+     ],
+     "working": "​",
+     "analysis": "30% of the original cost remains as book value.",
+     "decision": "Remaining value ratio = 30%."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 8,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm034cmyt862y6aqpd",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Residual (Salvage) Value Ratio",
+   "back": "$$Residual Ratio = Salvage Value \\div Original Cost ​×100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Salvage",
+       "value": "₹8 Lakhs"
+      },
+      {
+       "label": "Original Cost",
+       "value": "₹80 Lakhs"
+      },
+      {
+       "label": "Residual Ratio",
+       "value": "10%"
+      }
+     ],
+     "analysis": "Indicates the percentage of value expected to remain at the end of the asset's useful life.",
+     "decision": "Residual value ratio = 10%."
+    },
+    {
+     "given": [],
+     "working": "Original cost = ₹150 lakh\nSalvage value = ₹15 lakh\nResidual Ratio : 10%",
+     "analysis": "The expected residual value equals 10% of the original investment.",
+     "decision": "Residual value ratio = 10%."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 9,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm034dmyt8ver55yso",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Annual Asset Consumption Rate",
+   "back": "$$Consumption = Annual Depreciation​ \\div Original Cost ×100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Annual Depreciation",
+       "value": "₹5 Lakhs"
+      },
+      {
+       "label": "Cost",
+       "value": "₹50 Lakhs"
+      },
+      {
+       "label": "Consumption",
+       "value": "10%"
+      }
+     ],
+     "analysis": "Represents how quickly an asset's economic value is being consumed.",
+     "decision": "Annual asset consumption rate = 10%."
+    },
+    {
+     "given": [
+      {
+       "label": "Annual depreciation",
+       "value": "₹7.5 lakh"
+      },
+      {
+       "label": "Original cost",
+       "value": "₹75 lakh"
+      },
+      {
+       "label": "Consumption",
+       "value": "10%"
+      }
+     ],
+     "analysis": "The annual depreciation charge equals 10% of original cost.",
+     "decision": "Asset consumption rate = 10% per year."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 10,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm034emyt8q3nw4d78",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Replacement Reserve Requirement",
+   "back": "$$Reserve = Replacement Cost​\\div  Remaining Useful Life ​ ​$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Replacement Cost",
+       "value": "₹5 Crores"
+      },
+      {
+       "label": "Remaining Life",
+       "value": "10 Years"
+      },
+      {
+       "label": "Reserve",
+       "value": "₹50 Lakhs/year"
+      }
+     ],
+     "analysis": "₹5 crore is spread evenly across the remaining 10 years to establish the annual reserve requirement.",
+     "decision": "Set an annual replacement reserve of ₹50 lakh."
+    },
+    {
+     "given": [
+      {
+       "label": "Replacement cost",
+       "value": "₹12 crore"
+      },
+      {
+       "label": "Remaining useful life",
+       "value": "8 years"
+      },
+      {
+       "label": "Reserve",
+       "value": "₹1.5Cr/year​"
+      }
+     ],
+     "analysis": "The organization would need to accumulate ₹1.5 crore per year to build the stated replacement reserve over eight years, assuming no investment return or other funding adjustment.",
+     "decision": "Annual reserve requirement = ₹1.5 crore."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 11,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm034fmyt8oubi416w",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Depreciation Expense Ratio",
+   "back": "$$Ratio = Revenue\\div Depreciation​×100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Depreciation",
+       "value": "₹40 Lakhs"
+      },
+      {
+       "label": "Revenue",
+       "value": "₹10 Crores"
+      },
+      {
+       "label": "Ratio",
+       "value": "4%"
+      }
+     ],
+     "analysis": "Helps measure the impact of depreciation on business performance.",
+     "decision": "Depreciation expense ratio = 4%."
+    },
+    {
+     "given": [],
+     "working": "Depreciation = ₹60 lakh\nRevenue = ₹15 crore\nRatio : 4%",
+     "analysis": "Depreciation consumes 4% of revenue under this ratio.",
+     "decision": "Depreciation expense ratio = 4%."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 12,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm034gmyt85lewz8sd",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Asset Renewal Ratio (ISO 55001)",
+   "back": "$$Renewal Ratio= Asset Renewal Investment​ \\div Annual Depreciation$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Renewal Investment",
+       "value": "₹3 Crores"
+      },
+      {
+       "label": "Annual Depreciation",
+       "value": "₹2 Crores"
+      },
+      {
+       "label": "Ratio",
+       "value": "1.5"
+      }
+     ],
+     "analysis": ">1\nAssets being renewed faster than they depreciate\n=1\nSustainable renewal\n<1\nAsset renewal backlog increasing",
+     "decision": "Asset renewal ratio = 1.5; under the source's framework, this indicates renewal investment is above annual depreciation"
+    },
+    {
+     "given": [
+      {
+       "label": "Renewal investment",
+       "value": "₹1.5 crore"
+      },
+      {
+       "label": "Annual depreciation",
+       "value": "₹2 crore"
+      },
+      {
+       "label": "Ratio",
+       "value": "0.75"
+      }
+     ],
+     "working": "​",
+     "analysis": "Renewal investment is 75% of annual depreciation. Under the source's stated interpretation, a ratio below 1 indicates an increasing asset-renewal backlog.",
+     "decision": "Asset renewal ratio = 0.75; under the source's framework, this signals the need to examine the renewal funding gap."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 13,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  },
+  {
+   "id": "cmv6lucsm034hmyt8m40yc4md",
+   "topicId": "cmv6lucsg0342myt8nhfm267o",
+   "front": "Depreciated Replacement Cost (DRC)",
+   "back": "$$DRC=Replacement Cost× Remaining Useful Life​ \\div Total Useful Life$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Replacement Cost",
+       "value": "₹10 Crores"
+      },
+      {
+       "label": "Useful Life",
+       "value": "25 Years"
+      },
+      {
+       "label": "Remaining Life",
+       "value": "10 Years"
+      },
+      {
+       "label": "DRC",
+       "value": "10×10/25 : ₹4 Crores"
+      }
+     ],
+     "analysis": "DRC estimates the current value of an existing asset after considering depreciation. It is widely used for insurance, asset valuation, capital planning, and public infrastructure.",
+     "decision": "DRC under the formula provided = ₹4 crore."
+    },
+    {
+     "given": [],
+     "working": "Replacement cost = ₹20 crore\nTotal useful life = 20 years\nRemaining useful life = 8 years\nDRC : 20×8/20 : ₹8 Crores\n​",
+     "analysis": "The remaining-life proportion is 8/20=40%, so 40% of replacement cost is recognized as DRC.",
+     "decision": "DRC = ₹8 crore."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 14,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.782Z",
+   "updatedAt": "2026-10-13T11:35:47.782Z"
+  }
+ ],
+ "cardCount": 15
+}

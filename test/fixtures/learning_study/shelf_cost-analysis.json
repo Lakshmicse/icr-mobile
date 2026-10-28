@@ -1,0 +1,1402 @@
+{
+ "id": "cmv6lucp2033cmyt8m194omru",
+ "title": "Cost Analysis ",
+ "slug": "cost-analysis",
+ "description": null,
+ "kind": "FORMULA",
+ "planLevel": "FREE",
+ "icon": null,
+ "imageUrl": "/uploads/7ed44d3b271693158a20fa9e.jpeg",
+ "active": true,
+ "sortOrder": 0,
+ "createdAt": "2026-10-13T11:35:47.654Z",
+ "updatedAt": "2026-10-13T11:35:47.654Z",
+ "deletedAt": null,
+ "cards": [
+  {
+   "id": "cmv6lucp8033dmyt84gcgbdqk",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Fixed Cost (FC)",
+   "back": "$$Fixed Cost = Total Cost − Variable Cost$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Total Cost",
+       "value": "₹80,00,000"
+      },
+      {
+       "label": "Variable Cost",
+       "value": "₹25,00,000"
+      },
+      {
+       "label": "Fixed Cost",
+       "value": "80 − 25"
+      }
+     ],
+     "result": "₹55,00,000",
+     "analysis": "₹55 lakh remains even if activity or occupancy decreases.",
+     "decision": "Management should ensure that expected utilization/revenue is sufficient to cover this fixed-cost burden."
+    },
+    {
+     "given": [
+      {
+       "label": "Total Cost",
+       "value": "₹1.20 Cr"
+      },
+      {
+       "label": "Variable Cost",
+       "value": "₹45 Lakh"
+      },
+      {
+       "label": "FC",
+       "value": "1.20Cr−0.45Cr"
+      }
+     ],
+     "result": "₹75 Lakh",
+     "analysis": "₹75 lakh is the fixed component of total cost.",
+     "decision": "Before expanding the facility, management should assess whether the additional activity can adequately absorb the ₹75 lakh fixed-cost base."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 0,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp8033emyt8xojy1yk8",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Variable Cost (VC)",
+   "back": "$$Variable Cost = Cost per Unit × Number of Units$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Cleaning Cost per sq.ft",
+       "value": "₹4"
+      },
+      {
+       "label": "Area",
+       "value": "2,00,000 sq.ft"
+      },
+      {
+       "label": "VC",
+       "value": "4 × 2,00,000"
+      }
+     ],
+     "working": ": ₹8,00,000",
+     "analysis": "The cost changes with the amount of area serviced.",
+     "decision": "Management can use this relationship to estimate cleaning costs when facility area changes."
+    },
+    {
+     "given": [
+      {
+       "label": "Energy cost",
+       "value": "₹7/kWh"
+      },
+      {
+       "label": "Consumption",
+       "value": "80,000 kWh"
+      },
+      {
+       "label": "VC",
+       "value": "7×80,000"
+      }
+     ],
+     "working": ": ₹5,60,000",
+     "analysis": "Energy expenditure increases as consumption increases.",
+     "decision": "If energy consumption can be reduced by efficiency measures, the variable cost should decline proportionately."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 1,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp8033fmyt8xrinspie",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Semi-Variable (Mixed) Cost",
+   "back": "$$Semi-Variable Cost = Fixed Portion + (Variable Rate × Activity)$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [],
+     "result": "Electricity Fixed Charge = ₹5,00,000",
+     "working": "Electricity Fixed Charge = ₹2,00,000\nVariable Energy Charge = ₹6/kWh\nConsumption = 50,000 kWh\nTotal Cost = 2,00,000 + (6 × 50,000)",
+     "analysis": "₹2 lakh is independent of consumption, while ₹3 lakh varies with electricity usage.",
+     "decision": "Management should address both components: negotiate fixed charges and reduce consumption to lower the variable component."
+    },
+    {
+     "given": [],
+     "result": "Fixed maintenance charge = ₹6,00,000",
+     "working": "Fixed maintenance charge = ₹3,00,000\nVariable charge = ₹2,000 per service visit\nService visits = 150\n​",
+     "analysis": "₹3 lakh is fixed and ₹3 lakh is activity-dependent.",
+     "decision": "If service demand increases significantly, management should examine whether a different maintenance contract structure would be more economical."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 2,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp8033gmyt8ylicodfo",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Marginal Cost",
+   "back": "$$Marginal Cost = Change in Total Cost ÷ Change in Output$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Cost increases",
+       "value": "₹12,00,000 → ₹12,80,000"
+      },
+      {
+       "label": "Production",
+       "value": "2,000 → 2,200 meals"
+      }
+     ],
+     "result": "Marginal Cost = ₹400 per additional meal batch",
+     "working": "Marginal Cost = 80,000 ÷ 200",
+     "analysis": "Each additional meal in this incremental range adds ₹400 to total cost.",
+     "decision": "Management should compare the ₹400 marginal cost with the incremental revenue generated by an additional meal before increasing output."
+    },
+    {
+     "given": [],
+     "result": "₹300/unit",
+     "working": "Total cost rises from ₹10,00,000 to ₹11,20,000.\nOutput rises from 5,000 to 5,400 units.\nMC : 1,20,000/400\n​",
+     "analysis": "The additional output costs ₹300 per unit.",
+     "decision": "Expansion is economically attractive only if incremental revenue per additional unit exceeds ₹300, after considering other relevant costs."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 3,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp8033hmyt8vbiz67za",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Opportunity Cost",
+   "back": "$$Opportunity Cost = Return_{Best Alternative} − Return_{Selected Alternative}$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Solar Plant ROI",
+       "value": "18%"
+      },
+      {
+       "label": "Office Renovation ROI",
+       "value": "12%"
+      },
+      {
+       "label": "Opportunity Cost",
+       "value": "18 − 12"
+      }
+     ],
+     "result": "6%",
+     "analysis": "Selecting renovation means giving up the incremental 6% return represented by the alternative.",
+     "decision": "The decision should consider the 6% opportunity cost along with risk, strategic requirements, liquidity, and other relevant factors."
+    },
+    {
+     "given": [
+      {
+       "label": "Alternative A return",
+       "value": "15%"
+      },
+      {
+       "label": "Selected project return",
+       "value": "10%"
+      },
+      {
+       "label": "OC",
+       "value": "15%−10% = 5%"
+      }
+     ],
+     "working": "​",
+     "analysis": "The selected project has a 5-percentage-point return disadvantage relative to the identified alternative.",
+     "decision": "Management should proceed only after considering whether the selected project provides other strategic benefits that justify the forgone return."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 4,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp8033imyt829og93vm",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Sunk Cost",
+   "back": "$$Sunk Cost = Irrecoverable Past Expenditure$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Consultancy Fees",
+       "value": "₹25 Lakhs"
+      },
+      {
+       "label": "Project Cancelled",
+       "value": "Sunk Cost : ₹25 Lakhs"
+      }
+     ],
+     "analysis": "The ₹25 lakh has already been spent and cannot be recovered.",
+     "decision": "The ₹25 lakh should not be treated as a future incremental cost when deciding whether to pursue another project."
+    },
+    {
+     "given": [
+      {
+       "label": "Feasibility study already completed",
+       "value": "₹8 lakh."
+      },
+      {
+       "label": "The project is subsequently reconsidered.",
+       "value": "Sunk Cost : ₹8 lakh"
+      }
+     ],
+     "working": "​",
+     "analysis": "The expenditure is historical and cannot be recovered through the new decision.",
+     "decision": "Evaluate the new decision using future costs and benefits rather than allowing the ₹8 lakh to determine the choice."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 5,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp8033jmyt8yhsm8zuo",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Alternate Cost",
+   "back": "$$Alternate Cost = Cost of the Next Best Feasible Alternative$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Buying Building",
+       "value": "₹30 Cr"
+      },
+      {
+       "label": "Leasing Building",
+       "value": "₹2 Cr annually"
+      }
+     ],
+     "working": "Alternative cost analysis compares total lifecycle costs to determine the more economical option.",
+     "analysis": "The alternative cost concept requires comparison with the feasible alternative rather than looking only at the purchase price",
+     "decision": "Management should compare the full economic cost of ownership and leasing over the relevant period."
+    },
+    {
+     "given": [
+      {
+       "label": "Option A",
+       "value": "Lease = ₹1.5 Cr/year"
+      },
+      {
+       "label": "Option B",
+       "value": "Buy = ₹20 Cr."
+      }
+     ],
+     "working": "If the next-best feasible alternative to buying is leasing, the alternative cost should be based on the relevant leasing opportunity over the decision horizon.",
+     "analysis": "Alternative cost is decision-dependent and must be evaluated over a comparable period.",
+     "decision": "Use a consistent lifecycle/time horizon before selecting between alternatives."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 6,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp8033kmyt8zp20mwdi",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Avoidable Cost",
+   "back": "$$Avoidable Cost = Costs Eliminated if an Activity Stops$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [],
+     "working": "Closing one cafeteria saves:\nStaff : ₹20 Lakhs\nUtilities : ₹8 Lakhs\nConsumables : ₹12 Lakhs\nAvoidable Cost : ₹40 Lakhs/year",
+     "analysis": "These costs disappear if the cafeteria operation is discontinued.",
+     "decision": "The ₹40 lakh represents the relevant annual cost saving to consider in a shutdown or outsourcing decision."
+    },
+    {
+     "given": [],
+     "working": "Closing a small facility eliminates:\nSecurity : ₹12 lakh\nCleaning : ₹8 lakh\nUtilities : ₹5 lakh\nAvoidable Cost : ₹25 lakh/year",
+     "analysis": "₹25 lakh is the annual cost that can actually be eliminated.",
+     "decision": "Compare this ₹25 lakh saving with the operational and strategic consequences of closing the facility."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 7,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033lmyt8hy7eg3c8",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Unavoidable Cost",
+   "back": "$$Unavoidable Cost = Costs that Continue Even if Operations Stop$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Building Lease",
+       "value": "₹1 Crore/year"
+      },
+      {
+       "label": "Insurance",
+       "value": "₹20 Lakhs"
+      },
+      {
+       "label": "Property Tax",
+       "value": "₹30 Lakhs"
+      },
+      {
+       "label": "Unavoidable Cost",
+       "value": "₹1.50 Crores/year"
+      }
+     ],
+     "analysis": "These costs remain despite stopping operations.",
+     "decision": "A shutdown decision should not treat these costs as immediate savings unless the underlying obligations can actually be terminated."
+    },
+    {
+     "given": [
+      {
+       "label": "Property lease",
+       "value": "₹60 lakh"
+      },
+      {
+       "label": "Insurance",
+       "value": "₹10 lakh"
+      },
+      {
+       "label": "Property tax",
+       "value": "₹15 lakh"
+      },
+      {
+       "label": "Unavoidable Cost",
+       "value": "₹85 lakh/year"
+      }
+     ],
+     "analysis": "₹85 lakh continues despite cessation of operating activity.",
+     "decision": "Management should identify whether these obligations can be renegotiated or terminated before assuming they will disappear."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 8,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033mmyt84k3bja99",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Life Cycle Cost (LCC)",
+   "back": "$$LCC = Acquisition + Operation + Maintenance + Replacement + Disposal$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Acquisition",
+       "value": "₹5 Cr"
+      },
+      {
+       "label": "Operation",
+       "value": "₹2 Cr"
+      },
+      {
+       "label": "Maintenance",
+       "value": "₹1 Cr"
+      },
+      {
+       "label": "Replacement",
+       "value": "₹50 Lakhs"
+      },
+      {
+       "label": "Disposal",
+       "value": "₹20 Lakhs"
+      },
+      {
+       "label": "LCC",
+       "value": "₹8.70 Crores"
+      }
+     ],
+     "analysis": "LCC captures expenditure across the asset's entire life.",
+     "decision": "Compare assets using lifecycle cost rather than purchase price alone."
+    },
+    {
+     "given": [
+      {
+       "label": "Acquisition",
+       "value": "₹4 Cr"
+      },
+      {
+       "label": "Operation",
+       "value": "₹2.5 Cr"
+      },
+      {
+       "label": "Maintenance",
+       "value": "₹0.8 Cr"
+      },
+      {
+       "label": "Replacement",
+       "value": "₹0.6 Cr"
+      },
+      {
+       "label": "Disposal",
+       "value": "₹0.1 Cr"
+      },
+      {
+       "label": "LCC",
+       "value": "₹8.0 Cr"
+      }
+     ],
+     "working": "​",
+     "analysis": "The asset requires ₹8 crore over its complete lifecycle under these assumptions.",
+     "decision": "Use ₹8 crore as the lifecycle-cost benchmark when comparing competing asset alternatives."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 9,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033nmyt8zfcia4xu",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Total Cost of Ownership (TCO)",
+   "back": "$$TCO = Purchase + Installation + Training + Maintenance + Energy + Repairs + Disposal$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Equipment Purchase",
+       "value": "₹80 Lakhs"
+      },
+      {
+       "label": "Installation",
+       "value": "₹5 Lakhs"
+      },
+      {
+       "label": "Energy",
+       "value": "₹15 Lakhs"
+      },
+      {
+       "label": "Maintenance",
+       "value": "₹10 Lakhs"
+      },
+      {
+       "label": "Repairs",
+       "value": "₹5 Lakhs"
+      },
+      {
+       "label": "Disposal",
+       "value": "₹2 Lakhs"
+      },
+      {
+       "label": "TCO",
+       "value": "₹1.17 Crores"
+      }
+     ],
+     "analysis": "The purchase price is only one component of ownership cost.",
+     "decision": "Compare competing equipment using TCO rather than purchase price alone."
+    },
+    {
+     "given": [
+      {
+       "label": "Purchase",
+       "value": "₹50 lakh"
+      },
+      {
+       "label": "Installation",
+       "value": "₹4 lakh"
+      },
+      {
+       "label": "Training",
+       "value": "₹2 lakh"
+      },
+      {
+       "label": "Maintenance",
+       "value": "₹8 lakh"
+      },
+      {
+       "label": "Energy",
+       "value": "₹12 lakh"
+      },
+      {
+       "label": "Repairs",
+       "value": "₹3 lakh"
+      },
+      {
+       "label": "Disposal",
+       "value": "₹1 lakh"
+      },
+      {
+       "label": "TCO",
+       "value": "₹80 lakh"
+      }
+     ],
+     "working": "​",
+     "analysis": "The equipment's total ownership burden is ₹80 lakh.",
+     "decision": "An alternative costing less than ₹50 lakh initially should not automatically be considered cheaper; its TCO must also be calculated"
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 10,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033omyt8unf5ro8u",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Cost of Acquisition",
+   "back": "$$Cost of Acquisition = Purchase Price + Registration + Taxes + Legal Fees + Fit-Out + Installation$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Purchase",
+       "value": "₹25 Cr"
+      },
+      {
+       "label": "Registration",
+       "value": "₹1 Cr"
+      },
+      {
+       "label": "Legal",
+       "value": "₹25 Lakhs"
+      },
+      {
+       "label": "Fit-Out",
+       "value": "₹3 Cr"
+      },
+      {
+       "label": "Total Acquisition Cost",
+       "value": "₹29.25 Crores"
+      }
+     ],
+     "analysis": "Acquisition cost exceeds the headline purchase price because transaction and setup costs are included.",
+     "decision": "Budget approval should use the full acquisition cost rather than the purchase price alone."
+    },
+    {
+     "given": [
+      {
+       "label": "Purchase",
+       "value": "₹10 Cr"
+      },
+      {
+       "label": "Registration",
+       "value": "₹0.40 Cr"
+      },
+      {
+       "label": "Taxes",
+       "value": "₹0.30 Cr"
+      },
+      {
+       "label": "Legal",
+       "value": "₹0.10 Cr"
+      },
+      {
+       "label": "Fit-out",
+       "value": "₹0.80 Cr"
+      },
+      {
+       "label": "Total Acquisition Cost",
+       "value": "₹11.80 Cr"
+      }
+     ],
+     "working": "​",
+     "analysis": "Additional acquisition expenses add ₹1.80 crore to the purchase price.",
+     "decision": "The investment appraisal should use ₹11.80 crore as the initial acquisition requirement."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 11,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033pmyt8481k565r",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Cost of Ownership",
+   "back": "$$Cost of Ownership = Operating Cost + Maintenance + Utilities + Taxes + Insurance + Financing$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Annual Operating Costs",
+       "value": "₹2.5 Crores"
+      }
+     ],
+     "analysis": "Ownership cost captures recurring costs associated with holding and operating the property/asset.",
+     "decision": "Management should include these recurring costs in annual property and asset budgeting."
+    },
+    {
+     "given": [
+      {
+       "label": "Operating",
+       "value": "₹1.2 Cr"
+      },
+      {
+       "label": "Maintenance",
+       "value": "₹0.3 Cr"
+      },
+      {
+       "label": "Utilities",
+       "value": "₹0.4 Cr"
+      },
+      {
+       "label": "Taxes",
+       "value": "₹0.2 Cr"
+      },
+      {
+       "label": "Insurance",
+       "value": "₹0.1 Cr"
+      },
+      {
+       "label": "Financing",
+       "value": "₹0.3 Cr"
+      }
+     ],
+     "working": "Annual Operating Costs = ₹2.50 Cr/year\n​",
+     "analysis": "Total recurring ownership burden is ₹2.50 crore annually.",
+     "decision": "This figure can be used for annual budgeting and comparison between owned assets."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 12,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033qmyt88mnt5clp",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Cost of Repair",
+   "back": "$$Cost of Repair = Labour + Materials + Contractor + Downtime Cost$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Labour",
+       "value": "₹80,000"
+      },
+      {
+       "label": "Materials",
+       "value": "₹1,50,000"
+      },
+      {
+       "label": "Downtime",
+       "value": "₹70,000"
+      },
+      {
+       "label": "Total Repair Cost",
+       "value": "₹3,00,000"
+      }
+     ],
+     "analysis": "The economic repair cost includes downtime, not just direct repair expenditure.",
+     "decision": "Compare ₹3 lakh with replacement cost and remaining asset life before deciding whether to repair."
+    },
+    {
+     "given": [
+      {
+       "label": "Labour",
+       "value": "₹50,000"
+      },
+      {
+       "label": "Materials",
+       "value": "₹90,000"
+      },
+      {
+       "label": "Contractor",
+       "value": "₹40,000"
+      },
+      {
+       "label": "Downtime",
+       "value": "₹20,000"
+      },
+      {
+       "label": "Total Repair Cost",
+       "value": "₹2,00,000"
+      }
+     ],
+     "working": "​",
+     "analysis": "The complete economic repair cost is ₹2 lakh.",
+     "decision": "Repair should be evaluated against replacement cost, reliability expectations, and remaining useful life."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 13,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033rmyt8tolama2b",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Cost of Replacement",
+   "back": "$$Cost of Replacement = Purchase + Installation + Disposal − Salvage Value$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "New Chiller",
+       "value": "₹1.8 Cr"
+      },
+      {
+       "label": "Installation",
+       "value": "₹15 Lakhs"
+      },
+      {
+       "label": "Old Chiller Salvage",
+       "value": "₹10 Lakhs"
+      },
+      {
+       "label": "Replacement Cost",
+       "value": "₹1.85 Crores"
+      }
+     ],
+     "analysis": "Salvage proceeds reduce the net replacement requirement.",
+     "decision": "Compare ₹1.85 crore with repair cost and expected future performance before replacement."
+    },
+    {
+     "given": [
+      {
+       "label": "New HVAC system",
+       "value": "₹2.50 Cr"
+      },
+      {
+       "label": "Installation",
+       "value": "₹20 lakh"
+      },
+      {
+       "label": "Old system salvage",
+       "value": "₹15 lakh"
+      },
+      {
+       "label": "Replacement Cost",
+       "value": "₹2.55 Cr"
+      }
+     ],
+     "working": "​",
+     "analysis": "The net replacement expenditure is ₹2.55 crore.",
+     "decision": "Replacement should be evaluated against the existing system's repair costs, operating costs, reliability, and remaining useful life."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 14,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033smyt8boeihw3i",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Cost Avoidance",
+   "back": "$$Cost Avoidance = Projected Cost Without Action − Actual Cost After Action$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Predicted Breakdown Cost",
+       "value": "₹50 Lakhs"
+      },
+      {
+       "label": "Predictive Maintenance Cost",
+       "value": "₹12 Lakhs"
+      },
+      {
+       "label": "Cost Avoidance",
+       "value": "₹38 Lakhs"
+      }
+     ],
+     "analysis": "The proactive action prevents an estimated ₹38 lakh of expenditure relative to the stated baseline.",
+     "decision": "Management should validate the baseline and assumptions before recognizing the ₹38 lakh as avoided cost."
+    },
+    {
+     "given": [
+      {
+       "label": "Expected failure cost",
+       "value": "₹30 lakh"
+      },
+      {
+       "label": "Preventive intervention",
+       "value": "₹8 lakh"
+      },
+      {
+       "label": "Cost Avoidance",
+       "value": "₹22 lakh"
+      }
+     ],
+     "working": "​",
+     "analysis": "The intervention reduces the expected cost by ₹22 lakh relative to the stated no-action scenario.",
+     "decision": "Proceed with the intervention if the ₹22 lakh expected benefit is supported by reliable failure and cost assumptions."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 15,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033tmyt8bu5vikcd",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Cost Reduction",
+   "back": "$$Cost Reduction = Previous Cost − Current Cost$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Old Cleaning Cost",
+       "value": "₹40 Lakhs"
+      },
+      {
+       "label": "New Cleaning Cost",
+       "value": "₹34 Lakhs"
+      },
+      {
+       "label": "Cost Reduction",
+       "value": "₹6 Lakhs"
+      }
+     ],
+     "analysis": "The ongoing expenditure has decreased by ₹6 lakh.",
+     "decision": "Management should verify that service quality and scope have not deteriorated as a result of the reduction."
+    },
+    {
+     "given": [
+      {
+       "label": "Previous annual maintenance cost",
+       "value": "₹75 lakh"
+      },
+      {
+       "label": "Current annual maintenance cost",
+       "value": "₹62 lakh"
+      },
+      {
+       "label": "Cost Reduction",
+       "value": "₹13 lakh"
+      }
+     ],
+     "working": "​",
+     "analysis": "Annual expenditure has reduced by ₹13 lakh.",
+     "decision": "The ₹13 lakh reduction can be recognized as a cost reduction if the service level and output remain acceptable."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 16,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033umyt8de03xn7c",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Cost Savings",
+   "back": "$$Cost Savings = Baseline Cost − Improved Cost$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Electricity Bill",
+       "value": "₹2 Cr"
+      },
+      {
+       "label": "After LED Retrofit",
+       "value": "₹1.55 Cr"
+      },
+      {
+       "label": "Savings",
+       "value": "₹45 Lakhs/year"
+      }
+     ],
+     "analysis": "The retrofit produces ₹45 lakh of annual savings against the stated baseline.",
+     "decision": "The annual saving should be used in the retrofit's ROI/payback evaluation."
+    },
+    {
+     "given": [
+      {
+       "label": "Baseline energy cost",
+       "value": "₹80 lakh/year"
+      },
+      {
+       "label": "Post-efficiency cost",
+       "value": "₹60 lakh/year"
+      },
+      {
+       "label": "Savings",
+       "value": "₹20 lakh/year"
+      }
+     ],
+     "working": "​",
+     "analysis": "Annual expenditure is reduced by ₹20 lakh.",
+     "decision": "Compare the ₹20 lakh annual saving with the investment required to implement the efficiency project."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 17,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033vmyt8u5i81ytw",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Productivity Gain",
+   "back": "$$Productivity Gain = (New Productivity − Old Productivity) ÷ Old Productivity × 100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Old Productivity",
+       "value": "80 Work Orders/day"
+      },
+      {
+       "label": "New Productivity",
+       "value": "100 Work Orders/day"
+      },
+      {
+       "label": "Gain",
+       "value": "25%"
+      }
+     ],
+     "analysis": "Output per day increased by 25%",
+     "decision": "Management should confirm that the improvement is sustainable and does not reduce quality or safety."
+    },
+    {
+     "given": [
+      {
+       "label": "Old productivity",
+       "value": "120 work orders/day"
+      },
+      {
+       "label": "New productivity",
+       "value": "150 work orders/day"
+      },
+      {
+       "label": "Gain",
+       "value": "25%"
+      }
+     ],
+     "working": "​",
+     "analysis": "Productivity improved by 25%.",
+     "decision": "The organization can use the improvement as a performance indicator, provided quality and service-level measures remain satisfactory."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 18,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033wmyt8vu4spzb2",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Cost-Benefit Analysis (CBA)",
+   "back": "$$Net Benefit = Total Benefits − Total Costs$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Benefits",
+       "value": "₹8 Cr"
+      },
+      {
+       "label": "Costs",
+       "value": "₹5 Cr"
+      },
+      {
+       "label": "Net Benefit",
+       "value": "₹3 Crores"
+      }
+     ],
+     "analysis": "Benefits exceed costs by ₹3 crore",
+     "decision": "A positive net benefit supports further consideration of the project, subject to risk, timing, and other decision criteria."
+    },
+    {
+     "given": [
+      {
+       "label": "Total benefits",
+       "value": "₹12 Cr"
+      },
+      {
+       "label": "Total costs",
+       "value": "₹9 Cr"
+      },
+      {
+       "label": "Net Benefit",
+       "value": "₹3 Cr"
+      }
+     ],
+     "working": "​",
+     "analysis": "The project produces a positive net benefit of ₹3 crore.",
+     "decision": "The project can proceed to detailed appraisal if the benefit estimates and cost assumptions are sufficiently supported."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 19,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033xmyt8tg54y6f3",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Benefit-Cost Ratio (BCR)",
+   "back": "$$BCR = Present Value of Benefits ÷ Present Value of Costs$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "PV Benefits",
+       "value": "₹18 Cr"
+      },
+      {
+       "label": "PV Costs",
+       "value": "₹12 Cr"
+      },
+      {
+       "label": "BCR",
+       "value": "1.50"
+      }
+     ],
+     "analysis": "Every ₹1 of present-value cost corresponds to ₹1.50 of present-value benefits.",
+     "decision": "Under the document's stated rule, BCR > 1 indicates acceptance."
+    },
+    {
+     "given": [
+      {
+       "label": "PV Benefits",
+       "value": "₹25 Cr"
+      },
+      {
+       "label": "PV Costs",
+       "value": "₹20 Cr"
+      },
+      {
+       "label": "BCR",
+       "value": "1.25"
+      }
+     ],
+     "working": "​",
+     "analysis": "The present value of benefits is 1.25 times the present value of costs.",
+     "decision": "Under the stated BCR rule, the project passes the BCR threshold of 1."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 20,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033ymyt8knxquzdt",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Cost Variance (CV)",
+   "back": "$$CV = Budgeted Cost − Actual Cost$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Budget",
+       "value": "₹2.50 Cr"
+      },
+      {
+       "label": "Actual",
+       "value": "₹2.30 Cr"
+      },
+      {
+       "label": "CV",
+       "value": "₹20 Lakhs (Favourable)"
+      }
+     ],
+     "analysis": "Actual spending is ₹20 lakh below budget, which the source defines as favourable.",
+     "decision": "Management should investigate whether the favourable variance resulted from genuine efficiency, delayed expenditure, or reduced scope."
+    },
+    {
+     "given": [
+      {
+       "label": "Budget",
+       "value": "₹5 Cr"
+      },
+      {
+       "label": "Actual",
+       "value": "₹5.40 Cr"
+      },
+      {
+       "label": "CV",
+       "value": "−₹40 lakh"
+      }
+     ],
+     "working": "​",
+     "analysis": "Actual cost is ₹40 lakh above budget.",
+     "decision": "The negative variance should trigger investigation of cost overruns and corrective action."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 21,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp9033zmyt8ahw4b6q2",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Unit Cost",
+   "back": "$$Unit Cost = Total Cost ÷ Total Units Produced$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Kitchen Cost",
+       "value": "₹12 Lakhs"
+      },
+      {
+       "label": "Meals Produced",
+       "value": "30,000"
+      },
+      {
+       "label": "Unit Cost",
+       "value": "₹40 per meal"
+      }
+     ],
+     "analysis": "Each meal carries an average cost of ₹40.",
+     "decision": "Management can use ₹40 as a benchmark for pricing and operational cost control, subject to inclusion of all relevant costs."
+    },
+    {
+     "given": [
+      {
+       "label": "Annual facility cost",
+       "value": "₹36 lakh"
+      },
+      {
+       "label": "Service units",
+       "value": "12,000"
+      },
+      {
+       "label": "Unit Cost",
+       "value": "₹300/unit​"
+      }
+     ],
+     "analysis": "Average cost per service unit is ₹300.",
+     "decision": "Compare ₹300 with pricing/recovery levels and with comparable facilities or service providers."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 22,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp90340myt8bk9ojio0",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Cost Efficiency Ratio",
+   "back": "$$Cost Efficiency = Output ÷ Total Cost$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Service Requests Completed",
+       "value": "2,000"
+      },
+      {
+       "label": "Operating Cost",
+       "value": "₹20 Lakhs"
+      },
+      {
+       "label": "Efficiency",
+       "value": "100 requests per ₹1 Lakh spent"
+      }
+     ],
+     "analysis": "The operation produces 100 completed requests for every ₹1 lakh of operating expenditure.",
+     "decision": "A higher ratio, assuming comparable output quality, indicates greater cost efficiency."
+    },
+    {
+     "given": [
+      {
+       "label": "Completed work orders",
+       "value": "3,600"
+      },
+      {
+       "label": "Operating cost",
+       "value": "₹30 lakh"
+      },
+      {
+       "label": "Efficiency",
+       "value": "120 work orders per ₹1 lakh"
+      }
+     ],
+     "analysis": "Productivity per unit of expenditure is 120 work orders per ₹1 lakh.",
+     "decision": "If service quality and complexity are comparable, this ratio can be benchmarked against other periods or facilities."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 23,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  },
+  {
+   "id": "cmv6lucp90341myt8ascqdjtp",
+   "topicId": "cmv6lucp2033cmyt8m194omru",
+   "front": "Return on Cost (ROC)",
+   "back": "$$ROC = Net Profit ÷ Total Cost × 100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Net Profit",
+       "value": "₹1.20 Cr"
+      },
+      {
+       "label": "Total Cost",
+       "value": "₹6 Cr"
+      },
+      {
+       "label": "ROC",
+       "value": "20%"
+      }
+     ],
+     "analysis": "The operation generates ₹20 of net profit for every ₹100 of total cost.",
+     "decision": "Management can use ROC to evaluate how effectively the cost base generates profit or value."
+    },
+    {
+     "given": [
+      {
+       "label": "Net profit",
+       "value": "₹2 Cr"
+      },
+      {
+       "label": "Total cost",
+       "value": "₹10 Cr"
+      },
+      {
+       "label": "ROC",
+       "value": "20%​"
+      }
+     ],
+     "analysis": "The operation generates a 20% return relative to its total cost.",
+     "decision": "Compare the 20% ROC with the organization's required return, historical performance, and comparable operations."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 24,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.660Z",
+   "updatedAt": "2026-10-13T11:35:47.660Z"
+  }
+ ],
+ "cardCount": 25
+}

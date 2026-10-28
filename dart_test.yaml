@@ -1,0 +1,4 @@
+tags:
+  golden:
+  # Tests that use the real local API (test/live/); skipped when it is not running.
+  live:

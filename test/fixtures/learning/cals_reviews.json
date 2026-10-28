@@ -1,0 +1,65 @@
+{
+ "data": [
+  {
+   "id": "design-lj-cals-review-1",
+   "courseId": "design-lj-course-cals",
+   "rating": 5,
+   "title": null,
+   "body": "The staffs are very professional and helpful since we started corresponding before eventually coming to Dubai to do the course. Am going back very confident, well fulfilled and my knowledge in facility management has been enlightening. Thank you!",
+   "roleLabel": "Facilities Manager",
+   "createdAt": "2026-09-23T03:36:59.792Z",
+   "author": {
+    "name": "Charles Selasie Tuffour",
+    "avatarUrl": null
+   },
+   "batch": null
+  },
+  {
+   "id": "design-lj-cals-review-2",
+   "courseId": "design-lj-course-cals",
+   "rating": 4,
+   "title": null,
+   "body": "Well structured over the five days. The leadership self-assessment on day one set the tone for everything that followed, and the group work was the most useful part.",
+   "roleLabel": "Talent Acquisition Lead",
+   "createdAt": "2026-09-08T07:30:10.974Z",
+   "author": {
+    "name": "Anjali Bhatt",
+    "avatarUrl": null
+   },
+   "batch": null
+  },
+  {
+   "id": "design-lj-cals-review-3",
+   "courseId": "design-lj-course-cals",
+   "rating": 5,
+   "title": null,
+   "body": "Practical case work, not slides. I took the team-dynamics exercises straight back to my own procurement team.",
+   "roleLabel": "Procurement Lead",
+   "createdAt": "2026-08-24T07:30:10.974Z",
+   "author": {
+    "name": "Rohan Kulkarni",
+    "avatarUrl": null
+   },
+   "batch": null
+  }
+ ],
+ "meta": {
+  "page": 1,
+  "limit": 20,
+  "total": 3,
+  "totalPages": 1,
+  "hasNext": false,
+  "hasPrev": false
+ },
+ "summary": {
+  "average": 4.7,
+  "count": 3,
+  "distribution": {
+   "1": 0,
+   "2": 0,
+   "3": 0,
+   "4": 1,
+   "5": 2
+  }
+ }
+}

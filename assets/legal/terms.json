@@ -1,0 +1,85 @@
+{
+ "page": "terms",
+ "title": "Terms of Service",
+ "updated": "9 September 2026",
+ "intro": "These terms govern use of the ICR marketplace by buyers, vendors and professionals. Please read them together with the Privacy Policy, which explains how we handle personal data.",
+ "contactEmail": "info@icr.org.in",
+ "sections": [
+  {
+   "heading": "Agreement to these terms",
+   "paragraphs": [
+    "These Terms of Service (\"Terms\") govern access to and use of the ICR marketplace, operated by Vinfraa Pvt Ltd, a company incorporated in India that trades as ICR — Institute for Corporate Real Estate (\"ICR\", \"we\", \"us\"). By creating an account or using the platform you agree to these Terms on behalf of yourself and, where applicable, the business you represent. If you do not agree, do not use the platform.",
+    "The contracting entity is Vinfraa Pvt Ltd, #42, 1st Floor, 7th Cross, 23rd Main, JP Nagar 2nd Phase, Bengaluru, Karnataka 560078, India. You can reach us at info@icr.org.in or +91 6366937506."
+   ]
+  },
+  {
+   "heading": "The platform",
+   "paragraphs": [
+    "ICR is a B2B marketplace that connects corporate buyers with facility-management vendors: buyers publish requirements (RFQs), vendors submit quotes, and the parties may award and manage work through the platform.",
+    "ICR is a facilitator, not a party to contracts formed between buyers and vendors. Unless expressly stated, we do not provide, supervise or guarantee the services procured through the platform."
+   ]
+  },
+  {
+   "heading": "Accounts and eligibility",
+   "bullets": [
+    "The platform is intended for business use by users aged 18 or over acting on behalf of a legal entity or proprietorship.",
+    "You are responsible for the accuracy of the information you register and for safeguarding your credentials; activity under your account is attributed to you.",
+    "Roles (buyer, vendor, professional) carry different capabilities; you agree to use only the capabilities appropriate to your legitimate role."
+   ]
+  },
+  {
+   "heading": "Vendor verification",
+   "paragraphs": [
+    "Vendor verification levels reflect checks performed on documents and platform performance signals at a point in time. They are provided to assist buyer judgement, not to replace it. ICR does not warrant that a verified vendor will perform, and buyers remain responsible for their own commercial due diligence.",
+    "Vendors agree that documents submitted for verification are authentic and current, and that misrepresentation is grounds for removal from the marketplace."
+   ]
+  },
+  {
+   "heading": "Marketplace conduct",
+   "bullets": [
+    "Provide accurate requirements, quotes, company information and reviews; reviews must reflect genuine transactions.",
+    "No circumvention: do not use the platform to source counterparties and then move transactions off-platform to avoid platform terms that apply to them.",
+    "No misuse: no scraping, reverse engineering, automated bulk access, interference with security controls, or use of the platform to send spam.",
+    "No unlawful content: nothing infringing, defamatory, deceptive or in violation of applicable law may be posted to the platform."
+   ]
+  },
+  {
+   "heading": "Quotes, awards and payments",
+   "paragraphs": [
+    "Quotes submitted through the platform are commercial offers by the vendor. An award recorded on the platform evidences the buyer’s selection; the resulting contract, including price, scope, SLAs and payment terms, is between buyer and vendor.",
+    "Where payment features are offered, they are provided through third-party payment processors subject to their own terms. Fees and subscription tiers, where applicable, are described on the membership page at the time of purchase."
+   ]
+  },
+  {
+   "heading": "Content and intellectual property",
+   "paragraphs": [
+    "You retain rights in the content you post and grant ICR a non-exclusive, worldwide licence to host, display and distribute it as needed to operate the marketplace.",
+    "The platform, including its software, design and data compilations, is owned by ICR or its licensors. Except for the limited right to use the platform under these Terms, no rights are transferred to you."
+   ]
+  },
+  {
+   "heading": "Suspension and termination",
+   "paragraphs": [
+    "We may suspend or terminate accounts that breach these Terms, present fraud or security risk, or where required by law. You may close your account at any time; provisions that by their nature survive (including liability limits and dispute terms) survive termination."
+   ]
+  },
+  {
+   "heading": "Disclaimers and limitation of liability",
+   "paragraphs": [
+    "The platform is provided \"as is\" and \"as available\". To the maximum extent permitted by law, ICR disclaims implied warranties and is not liable for indirect or consequential losses, loss of profit, or disputes arising from contracts between buyers and vendors. Our aggregate liability for claims relating to the platform is limited to the fees you paid to ICR in the twelve months preceding the claim."
+   ]
+  },
+  {
+   "heading": "Governing law and disputes",
+   "paragraphs": [
+    "These Terms are governed by the laws of India. Subject to any mandatory arbitration or mediation process agreed between the parties, the courts at Bengaluru, Karnataka shall have exclusive jurisdiction over disputes arising from these Terms or the platform."
+   ]
+  },
+  {
+   "heading": "Changes to these terms",
+   "paragraphs": [
+    "We may revise these Terms from time to time. Material changes will be notified on the platform or by email, and continued use after the effective date constitutes acceptance of the revised Terms."
+   ]
+  }
+ ]
+}

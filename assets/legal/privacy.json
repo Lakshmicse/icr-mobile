@@ -1,0 +1,241 @@
+{
+ "page": "privacy",
+ "title": "Privacy Policy",
+ "updated": "9 September 2026",
+ "intro": "This policy explains how we, ICR, a brand of Vinfraa Pvt Ltd, use the personal information you provide to us when using our service, via our website and mobile applications.",
+ "contactEmail": "info@icr.org.in",
+ "sections": [
+  {
+   "heading": "Introduction",
+   "subsections": [
+    {
+     "heading": "About this privacy notice",
+     "paragraphs": [
+      "This is the customer privacy notice of Vinfraa Pvt Ltd, a company incorporated in India.",
+      "ICR respects your privacy and is committed to protecting your personal data. This privacy notice informs you of who we are, how we collect, share, use and protect your personal data — however you provide it to us — and tells you about your privacy rights and the legal protections available to you."
+     ]
+    },
+    {
+     "heading": "Purpose of this privacy notice",
+     "paragraphs": [
+      "This privacy notice tells you how ICR collects and processes your personal data through your provision of that data to us and through your use of the ICR services. It is supplemental to any other privacy information we give you.",
+      "It is important that you read this privacy notice together with any other information we may provide on specific occasions when we are collecting or processing personal data about you, so that you are fully aware of how and why we are using your data. This privacy notice is complementary to the other information which we might provide in specific circumstances and will not override it."
+     ]
+    }
+   ]
+  },
+  {
+   "heading": "Contacts",
+   "subsections": [
+    {
+     "heading": "Who is the controller and data protection officer?",
+     "paragraphs": [
+      "When we use \"ICR\", \"we\", \"us\" or \"our\" in this privacy notice, we are referring to Vinfraa Pvt Ltd. This company is the \"controller\" for your personal data under the applicable legislation and it is primarily responsible for processing and ensuring proper protection of your data.",
+      "We have appointed an IT Risk and Security Officer who is responsible for overseeing questions in relation to this privacy notice and data protection issues in general. If you have any questions about this privacy notice, including in relation to your legal rights, please contact the IT Risk and Security Officer using the details set out below."
+     ]
+    },
+    {
+     "heading": "Contact details",
+     "bullets": [
+      "Full name of legal entity: Vinfraa Pvt Ltd, India",
+      "Name or title of data protection contact: IT Risk and Security Officer",
+      "Email address: info@icr.org.in",
+      "Postal address: #42, 1st Floor, 7th Cross, 23rd Main, JP Nagar 2nd Phase, Bengaluru, Karnataka 560078",
+      "Contact number: +91 6366937506"
+     ]
+    },
+    {
+     "heading": "Complaints",
+     "paragraphs": [
+      "You have the right to make a complaint at any time to the Data Protection Board of India, the supervisory authority for data protection issues under the Digital Personal Data Protection Act, 2023. We would, however, appreciate the chance to deal with your concerns before you approach the Board, so please contact us in the first instance."
+     ]
+    }
+   ]
+  },
+  {
+   "heading": "What personal data we use",
+   "subsections": [
+    {
+     "heading": "Information that we collect directly from you",
+     "bullets": [
+      "Identity Data may include first name, last name, username, or similar identifier.",
+      "Contact Data may include such things as billing address, delivery address, email address, and telephone numbers.",
+      "Financial Data may include bank account and payment card details where this type of data is relevant to the reason underlying our relationship (usually so we can provide you with products and services).",
+      "Transaction Data may include details about payments to and from you and other details of products and services you have purchased from us.",
+      "Profile Data may include your username and password, purchases or orders made by you, your interests, preferences, feedback, and survey responses.",
+      "Marketing and Communications Data may include your preferences in receiving marketing from us and our third parties, and your communication preferences. You will not be contacted for marketing purposes unless you have given us your express consent to do so.",
+      "Location Data may include where the facility that serves you is located. You select the location that you wish to use."
+     ]
+    },
+    {
+     "heading": "Information that we collect from your use of the platform",
+     "paragraphs": [
+      "Technical Data may include internet protocol (IP) address, login data, browser type and version, time zone setting and location, browser plug-in types and versions, operating system and platform, and other technology on the devices you use to access any of our websites.",
+      "Usage Data may include information about how you use our websites and purchase our products and services.",
+      "We also collect, use, and share aggregated data such as statistical or demographic data that may be derived from your personal data but is not considered personal data, as this data does not directly or indirectly reveal your identity. For example, we may aggregate your Usage Data to calculate the percentage of users buying a product.",
+      "We do not collect any special categories of personal data about you through most of the standard ways in which we might collect your data (this includes details about your health, genetic or biometric data), and we ask that you do not provide us with any."
+     ]
+    },
+    {
+     "heading": "If you fail to provide personal data",
+     "paragraphs": [
+      "Where we need to collect personal data by law, or under the terms of a contract we have with you, and you fail to provide that data when requested, we may not be able to perform the contract we have (or are trying to enter into) with you — for example, to provide you with goods or services. In this case, we may have to cancel access to the product or service you wish to obtain from us, but we will notify you if this is the case at the time."
+     ]
+    },
+    {
+     "heading": "Information provided to us from someone else",
+     "paragraphs": [
+      "In some circumstances, we may have received your personal data from another organisation — for example, as part of an agreement to provide facility services to your organisation. In this case, we will use that personal data to configure your user profile without unreasonable delay and will not use that data for any other purpose. Both parties have a lawful reason to share your personal data."
+     ]
+    }
+   ]
+  },
+  {
+   "heading": "Why we collect your personal data",
+   "subsections": [
+    {
+     "heading": "Purpose of processing",
+     "paragraphs": [
+      "Below we detail the elements of your personal data that we process and the lawful basis for doing so."
+     ],
+     "table": {
+      "columns": [
+       "Type of data",
+       "Lawful basis for processing"
+      ],
+      "rows": [
+       [
+        "Name",
+        "Performance of, or steps leading to, a contract; and legitimate interest."
+       ],
+       [
+        "Email address",
+        "Performance of, or steps leading to, a contract; and legitimate interest."
+       ],
+       [
+        "Mobile number",
+        "Performance of, or steps leading to, a contract; and legitimate interest."
+       ],
+       [
+        "Payment information",
+        "Performance of a contract."
+       ],
+       [
+        "Location data",
+        "Legitimate interest."
+       ],
+       [
+        "Your requests",
+        "Legitimate interest."
+       ]
+      ]
+     }
+    },
+    {
+     "heading": "How we use it",
+     "paragraphs": [
+      "The location data are selected by you so that we can offer you relevant services and booking information for the location of the services we offer. We have a legitimate interest to know the location of the service you want us to offer you.",
+      "Where you opt in to receiving marketing communications, we may use your contact information to market similar goods and services that you have already used or purchased. You may object to us using your data for marketing purposes at any time by contacting us directly. If you contact us, we will use the information you give us to manage your request.",
+      "We process payment information to receive payment for the goods or services you buy from us and, if you choose, to hold a credit balance on your account."
+     ]
+    },
+    {
+     "heading": "Change of purpose",
+     "paragraphs": [
+      "We will only use your personal data for the purposes for which we collected it, unless we reasonably consider that we need to use it for another reason and that reason is compatible with the original purpose. If you wish to get an explanation as to how the processing for the new purpose is compatible with the original purpose, please contact us. If we need to use your personal data for an unrelated purpose, we will notify you and we will explain the legal basis which allows us to do so.",
+      "Generally, we do not rely on consent as a legal basis for processing your personal data, other than in relation to sending third-party direct marketing communications to you via email or text message. You have the right to withdraw consent to marketing at any time by contacting us."
+     ]
+    }
+   ]
+  },
+  {
+   "heading": "With whom we share your personal data",
+   "paragraphs": [
+    "We share your personal data with the following recipients: our cloud hosting provider, which processes your personal data on our behalf; our email delivery provider, which sends the messages you receive from us; our payment gateway, which processes payments you make to us; the service providers who support and develop the platform; ICR and its affiliates for internal administration purposes; and other third parties we may appoint from time to time for the purposes of internal business administration.",
+    "Whenever we share your personal data, we require that our partners offer similar levels of data protection as we apply to your personal data. We do this through our contracts with them, and we have data transfer or processing agreements in place stating how and why we share your personal data, and how we apply controls, appropriate to the risk, to safeguard the confidentiality, integrity, and availability of your personal data.",
+    "In addition, we may share your personal data with: any law enforcement or regulatory body, government agency, court, or other third party where we believe disclosure is necessary under applicable law or regulations or where we have a statutory obligation to do so; new owners or re-organised entities in the event of a business restructuring, sale, purchase, or joint venture affecting our business; and any other person, if you have given your consent.",
+    "We partner with PayU to process card and other online payments. PayU is PCI DSS compliant and we have contractual clauses in place with them. Our systems do not store your card details. Your payment is processed by PayU, and the pseudonymised transactional data is then shared with us."
+   ]
+  },
+  {
+   "heading": "How long we store your personal data",
+   "paragraphs": [
+    "You are in control of your personal data through your use of the ICR platform. The retention period of your personal data may vary depending on the use of that personal data. The longest we would retain your transactional data is 7 years. If we keep data for longer than that for further transactional analysis, or for research or statistical purposes, the data will be anonymised and we will therefore not be able to identify you from that data.",
+    "We retain personal information we collect from you via the ICR platform for as long as you are a user. If you no longer want to use ICR you may delete your account at any time from your account settings. If the corporate email address you registered your account with is no longer valid, the owner of that corporate email address may request deletion of your ICR account. If it is not possible to delete your user account, then we will securely store your personal information and isolate it from any further processing until deletion is possible."
+   ]
+  },
+  {
+   "heading": "Your rights",
+   "paragraphs": [
+    "You have rights under data protection laws in relation to your personal data. Under certain circumstances, your rights are as follows."
+   ],
+   "bullets": [
+    "Request access to your personal data (commonly known as a \"data subject access request\" or \"DSAR\"). This enables you to receive a copy of the personal data we hold about you in order to check that we are processing it lawfully.",
+    "Request correction of the personal data that we hold about you. This enables you to have any incomplete or inaccurate data we hold about you corrected, though we may need to verify the accuracy of the new data you provide to us.",
+    "Request erasure of your personal data. This enables you to ask us to delete or remove personal data where you believe we have no legitimate reason for continuing to process it. You also have the right to ask us to delete or remove your personal data where you have successfully exercised your right to object to processing, where we may have processed your information unlawfully, or where we are required to erase your personal data to comply with local law. Note, however, that we may not always be obliged to comply fully with your request for erasure for specific legal reasons, which will be notified to you, if applicable, at the time of your request.",
+    "Object to processing of your personal data where we are relying on a legitimate interest (or those of a third party) and there is something about your situation which makes you want to object to processing on this ground, as you feel it impacts your fundamental rights and freedoms. In some cases, we might demonstrate that we have compelling legitimate grounds to process your information which override your rights and freedoms.",
+    "Request restriction of processing of your personal data. This enables you to ask us to suspend the processing of your personal data in the following scenarios: (a) if you want us to establish the data's accuracy; (b) where our use of the data is unlawful but you do not want us to erase it; (c) where you need us to hold the data even if we no longer require it, as you need it to establish, exercise or defend legal claims; or (d) you have objected to our use of your data but we need to verify whether we have overriding legitimate grounds to use it.",
+    "Request the transfer of your personal data to you or to a third party. We will provide to you, or to a third party you have chosen, your personal data in a structured, commonly used, machine-readable format. Note that this right only applies to automated information which you initially provided consent for us to use, or where we used the information to perform a contract with you. It is also subject to any overriding legal, accounting, and reporting obligations we might have to retain copies of your data.",
+    "Withdraw consent at any time where we are relying on consent to process your personal data. However, this will not affect the lawfulness of any processing carried out before you withdraw your consent. If you withdraw your consent, we may not be able to provide certain products or services to you. We will advise you if this is the case at the time you withdraw your consent."
+   ],
+   "subsections": [
+    {
+     "heading": "How to exercise your rights",
+     "paragraphs": [
+      "If you wish to exercise any of the rights set out above, please contact us using the contact details in section 2."
+     ]
+    },
+    {
+     "heading": "No fee usually required",
+     "paragraphs": [
+      "You will not have to pay a fee to access your personal data, or to exercise any of the other rights. However, we may charge a reasonable fee if your request is clearly unfounded, repetitive, or excessive. Alternatively, we may refuse to comply with your request in these circumstances."
+     ]
+    },
+    {
+     "heading": "What we may need from you",
+     "paragraphs": [
+      "We may need to request specific information from you to help us confirm your identity and ensure your right to access your personal data, or to exercise any of your other rights. This is a security measure to ensure that personal data is not disclosed to any person who has no right to receive it. We may also contact you to ask you for further information in relation to your request, to speed up our response."
+     ]
+    },
+    {
+     "heading": "Time limit to respond",
+     "paragraphs": [
+      "We try to respond to all legitimate requests within one month. Occasionally it may take us longer than a month if your request is particularly complex or if you have made several requests. In this case, we will notify you and keep you updated."
+     ]
+    }
+   ]
+  },
+  {
+   "heading": "International transfer of personal data",
+   "paragraphs": [
+    "Your personal data is processed in India. This is necessary to provide support services for the platform and to process payment for our goods and services. ICR imposes contractual obligations on the recipients of your personal information to ensure that those recipients subscribe to international frameworks that aim to ensure adequate protection. We have appropriate mechanisms for the transfer and processing of personal data outside of India. We have carried out a data protection impact assessment relating to this processing, and an additional assessment to safeguard your personal data and to assure you of protection essentially equivalent to that offered in India. ICR implements a range of organisational and technical security measures — such as cybersecurity training, role-based access, and encryption where appropriate — to ensure personal data is secure."
+   ]
+  },
+  {
+   "heading": "Data security",
+   "paragraphs": [
+    "We have put in place appropriate security measures to prevent your personal data from being accidentally lost, used or accessed in an unauthorised way, altered or disclosed. In addition, we limit access to your personal data strictly to those employees, agents, contractors, and other third parties who have a business need to know that data. They will only process your personal data on our instructions, and they are subject to a duty of confidentiality."
+   ]
+  },
+  {
+   "heading": "Cookies",
+   "paragraphs": [
+    "We use strictly necessary cookies and similar browser storage for sign-in and session management, without which the platform cannot function, and analytics to understand how the platform is used so that we can improve it. We do not use third-party advertising cookies. You can manage your preferences through the cookie notice shown on your first visit and through your browser settings."
+   ]
+  },
+  {
+   "heading": "Grievance officer",
+   "paragraphs": [
+    "You may contact Mr. Mahesh (the \"Grievance Officer\") in the event of any discrepancies or grievances concerning the processing of your information. The Grievance Officer shall address all such discrepancies and grievances within 15 days of receipt. Vinfraa Pvt Ltd (ICR) acts as a data controller for the personal information it processes in the framework of this privacy policy.",
+    "In case of any questions or comments regarding this privacy policy or the personal information collection practices of Vinfraa Pvt Ltd (ICR), you may contact us at:",
+    "Vinfraa Pvt Ltd (ICR), #42, 1st Floor, 7th Cross, 23rd Main, JP Nagar 2nd Phase, Bengaluru, Karnataka 560078. Contact number: +91 6366937506. Email: info@icr.org.in"
+   ]
+  },
+  {
+   "heading": "Changes to this policy",
+   "paragraphs": [
+    "We may update this privacy notice as our services and the law evolve. Material changes will be announced on the platform and, where appropriate, by email. The \"Last updated\" date shown at the top of this page reflects the current version."
+   ]
+  }
+ ]
+}

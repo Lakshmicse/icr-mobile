@@ -1,0 +1,11 @@
+{
+ "code": "DECK_LOCKED",
+ "key": "learning.assessmentCourses",
+ "reason": "DECKS",
+ "plan": null,
+ "pricingSlug": "professional",
+ "statusCode": 403,
+ "message": "Flash-card decks are not included in your plan.",
+ "path": "/api/v1/learning/me/resource-stars/cmv6lubcf01dfmyt8t4g9it5d",
+ "timestamp": "2026-10-23T12:52:15.633Z"
+}

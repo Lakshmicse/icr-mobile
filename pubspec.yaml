@@ -1,0 +1,76 @@
+name: icr_mobile
+description: "ICR — Institute for Corporate Real Estate mobile app"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  dio: ^5.11.1
+  flutter_secure_storage: ^11.2.0
+  provider: ^6.1.5+1
+  cached_network_image: ^3.4.1
+  share_plus: ^13.3.1
+  url_launcher: ^6.3.3
+  material_symbols_icons: ^4.2960.0
+  lucide_icons_flutter: ^4.0.1
+  flutter_web_auth_2: ^5.1.0
+  crypto: ^3.0.7
+  flutter_svg: ^2.3.0
+  # The Knowledge Center draws a formula's LaTeX as math (learning_study).
+  flutter_math_fork: ^0.7.4
+  file_picker: ^13.2.0
+  webview_flutter: ^4.14.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  webview_flutter_platform_interface: ^2.15.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/brand/
+    - assets/images/demo/
+    - assets/images/icons/
+    - assets/legal/
+    - assets/images/demo/jobs/
+    - assets/images/demo/mentorship/
+    - assets/images/demo/learning/
+    - assets/images/demo/events/
+    - assets/images/demo/councils/
+    - assets/images/demo/marketplace/
+
+  # One typeface, Roboto, as Android's own apps and LinkedIn's are (owner's call,
+  # 27 Oct 2026), cut as static files from Android's variable font so every
+  # `fontWeight` is real and a test draws what a phone does. The scale is in
+  # `lib/core/theme/app_text.dart`.
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Roboto-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Roboto-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700
+
+# App icon: the ICR mark. Regenerate with `dart run flutter_launcher_icons`.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/icon/app_icon.png
+  remove_alpha_ios: true
+  adaptive_icon_background: "#1D63A3"
+  adaptive_icon_foreground: assets/icon/app_icon_foreground.png

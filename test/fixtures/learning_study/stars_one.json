@@ -1,0 +1,27 @@
+[
+ {
+  "id": "cmv6lubcf01dfmyt8t4g9it5d",
+  "topicId": "cmv6lubc001demyt83o222rgr",
+  "front": "What is capital planning in CRE & FM?",
+  "back": "A structured process for forecasting, prioritising, funding and governing investments in buildings, infrastructure, workplace systems and facility assets.",
+  "example": null,
+  "examples": null,
+  "resourceUrl": null,
+  "resourceLabel": null,
+  "category": "Strategy & Fundamentals",
+  "tags": [
+   "Beginner"
+  ],
+  "sortOrder": 0,
+  "active": true,
+  "createdAt": "2026-10-13T11:35:45.902Z",
+  "updatedAt": "2026-10-13T11:35:45.902Z",
+  "topic": {
+   "id": "cmv6lubc001demyt83o222rgr",
+   "slug": "capital-planning",
+   "title": "Capital Planning",
+   "kind": "QNA"
+  },
+  "starredAt": "2026-10-23T12:52:15.573Z"
+ }
+]

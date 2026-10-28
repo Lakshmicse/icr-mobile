@@ -1,0 +1,60 @@
+{
+ "id": "design-home-thread-sarah",
+ "slug": "implementing-iot-sensors-for-hvac-efficiency-best-practices-home-design",
+ "title": "Implementing IoT sensors for HVAC efficiency: Best practices?",
+ "excerpt": "We are currently looking to retrofit a 15- year-old commercial building with modern IoT sensors to better manage our HVAC load during peak hours. Has anyone successfully implemented a system that integrates smoothly…",
+ "kind": "QUESTION",
+ "status": "OPEN",
+ "moderation": "APPROVED",
+ "pinned": true,
+ "tags": [
+  "HVAC",
+  "PropTech",
+  "SmartBMS"
+ ],
+ "category": {
+  "id": "cmupai5wt00gumyzcdgbdjrrg",
+  "key": "SUSTAINABILITY_ESG",
+  "name": "ESG & Sustainability",
+  "slug": "esg-sustainability",
+  "icon": "Grass"
+ },
+ "subcategory": {
+  "id": "design-home-cat-sustainability",
+  "key": "HOME_DESIGN_SUSTAINABILITY",
+  "name": "Sustainability",
+  "slug": "home-design-sustainability",
+  "icon": null
+ },
+ "author": {
+  "id": "design-home-user-sarah",
+  "firstName": "Sarah",
+  "lastName": "Jenkins",
+  "avatarUrl": "/uploads/design-home-avatar_sarah.jpg",
+  "headline": "Senior Facilities Manager at Google",
+  "reputation": 0
+ },
+ "replyCount": 52,
+ "viewCount": 4210,
+ "score": 184,
+ "likes": 184,
+ "hasAcceptedAnswer": false,
+ "lastActivityAt": "2026-12-22T12:38:36.050Z",
+ "createdAt": "2026-10-23T10:36:36.050Z",
+ "myVote": null,
+ "myReaction": null,
+ "reactions": {
+  "CELEBRATE": 30,
+  "LIKE": 104,
+  "INSIGHTFUL": 50
+ },
+ "poll": null,
+ "saved": false,
+ "bodyHtml": "<p>We are currently looking to retrofit a 15- year-old commercial building with modern IoT sensors to better manage our HVAC load during peak hours. Has anyone successfully implemented a system that integrates smoothly with legacy BMS? Looking for recommendations on vendors that balance cost with reliability.</p>",
+ "acceptedReplyId": null,
+ "attachment": null,
+ "subscribed": false,
+ "canEdit": false,
+ "canModerate": false,
+ "updatedAt": "2026-10-23T14:18:39.677Z"
+}

@@ -1,0 +1,42 @@
+{
+ "data": [
+  {
+   "id": "cmvar8d81001amymkyhk9gdr6",
+   "firstName": "Lakshmi",
+   "lastName": "Prasad",
+   "avatarUrl": "/uploads/seed-avatar-female-17.jpg",
+   "company": {
+    "name": "Mumbai Facility 100"
+   },
+   "followedAt": "2026-10-16T12:38:36.050Z"
+  },
+  {
+   "id": "cmvar8d3d000dmymk454r2id9",
+   "firstName": "Fatima",
+   "lastName": "Sheikh",
+   "avatarUrl": "/uploads/seed-avatar-female-13.jpg",
+   "company": {
+    "name": "Hyderabad Services 104"
+   },
+   "followedAt": "2026-09-18T12:38:36.050Z"
+  },
+  {
+   "id": "cmvar8d2r0007mymkx6nyyq5j",
+   "firstName": "Rajesh",
+   "lastName": "Menon",
+   "avatarUrl": "/uploads/seed-avatar-male-13.jpg",
+   "company": {
+    "name": "Mumbai Facility 100"
+   },
+   "followedAt": "2026-09-13T12:38:36.050Z"
+  }
+ ],
+ "meta": {
+  "page": 1,
+  "limit": 3,
+  "total": 12,
+  "totalPages": 4,
+  "hasNext": true,
+  "hasPrev": false
+ }
+}

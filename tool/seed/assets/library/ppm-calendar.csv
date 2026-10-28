@@ -1,0 +1,7 @@
+asset_class,task,frequency,owner,next_due
+Chiller,Tube cleaning,Quarterly,MEP lead,2026-12-01
+AHU,Filter change,Monthly,HVAC technician,2026-11-05
+DG set,Load test,Monthly,Electrical lead,2026-11-03
+Fire pump,Churn run,Weekly,Fire engineer,2026-10-31
+Lift,Statutory inspection,Annual,Lift contractor,2027-05-10
+STP,Blower service,Quarterly,Utilities lead,2027-02-02

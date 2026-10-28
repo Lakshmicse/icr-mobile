@@ -1,0 +1,34 @@
+{
+ "views": {
+  "ALL": 6,
+  "LIVE": 3,
+  "DRAFT": 1,
+  "AWARDED": 1,
+  "ENDED": 1,
+  "ATTENTION": 2,
+  "CLOSING": 1
+ },
+ "pendingResponses": 4,
+ "enquiries": 3,
+ "rfqs": 3,
+ "nextDeadline": "2026-10-31T18:29:59.999Z",
+ "actionItems": [
+  {
+   "rfqId": "design-rfq-ifm",
+   "title": "Bharat Facilities: Integrated Facility Management RFQ",
+   "rfqKind": "RFQ",
+   "kind": "SCREEN",
+   "count": 2,
+   "deadline": "2026-10-31T18:29:59.999Z"
+  },
+  {
+   "rfqId": "design-rfq-security",
+   "title": "Corporate Security: Biometric systems, CCTV & Manpower",
+   "rfqKind": "ENQUIRY",
+   "kind": "BIDS",
+   "count": 2,
+   "deadline": "2026-11-04T18:29:59.999Z"
+  }
+ ],
+ "actionCount": 2
+}

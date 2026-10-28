@@ -1,0 +1,1096 @@
+{
+ "id": "cmv6lucf102rimyt8gam386cx",
+ "title": "Corporate Real Estate (CRE) ",
+ "slug": "corporate-real-estate-cre",
+ "description": null,
+ "kind": "FORMULA",
+ "planLevel": "FREE",
+ "icon": null,
+ "imageUrl": "/uploads/6c90ce46cca7d23945cd3b46.jpeg",
+ "active": true,
+ "sortOrder": 0,
+ "createdAt": "2026-10-13T11:35:47.293Z",
+ "updatedAt": "2026-10-13T11:35:47.293Z",
+ "deletedAt": null,
+ "cards": [
+  {
+   "id": "cmv6lucf602rjmyt8osta8esx",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Portfolio Occupancy Rate",
+   "back": "$$Portfolio Occupancy= Occupied Area \\div Total Portfolio Area ​×100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Occupied Area",
+       "value": "450,000 sq.ft"
+      },
+      {
+       "label": "Portfolio",
+       "value": "600,000 sq.ft"
+      },
+      {
+       "label": "Occupancy",
+       "value": "450000/600000×100 : 75%"
+      }
+     ],
+     "analysis": "<60%\nUnderutilized\n70–90%\nHealthy\n>95%\nCapacity Constraint",
+     "decision": "The portfolio occupancy rate is 75%. Review the unoccupied space to determine whether it is available, underutilized, or held for operational needs."
+    },
+    {
+     "given": [],
+     "working": "Occupied area = 720,000 sq.ft\nTotal portfolio area = 800,000 sq.ft\nOccupancy : 720000/800000×100 : 90%",
+     "analysis": "90% of the portfolio area is occupied.",
+     "decision": "Report occupancy at 90% and use it as an input to portfolio capacity and space-planning decisions."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 0,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rkmyt8q2wk9wy5",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Vacancy Rate",
+   "back": "$$Vacancy= Vacant Area​ \\div  Total Area ×100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Vacant",
+       "value": "50,000 sq.ft"
+      },
+      {
+       "label": "Portfolio",
+       "value": "500,000 sq.ft"
+      },
+      {
+       "label": "Vacancy",
+       "value": "10%"
+      }
+     ],
+     "analysis": "Lower vacancy generally indicates better portfolio utilization, but zero vacancy may reduce operational flexibility.",
+     "decision": "Report a 10% vacancy rate and evaluate whether the vacant space is needed for future growth or can be consolidated or released."
+    },
+    {
+     "given": [],
+     "working": "Vacant area = 36,000 sq.ft\nTotal area = 600,000 sq.ft\nVacancy : 6%",
+     "analysis": "6% of the portfolio is vacant.",
+     "decision": "Report 6% vacancy and assess the space against planned demand and lease commitments."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 1,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rlmyt81ujuhuto",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Lease Efficiency",
+   "back": "$$Lease Efficiency= Usable Area \\div Leased Area​×100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Usable",
+       "value": "95,000 sq.ft"
+      },
+      {
+       "label": "Leased",
+       "value": "110,000 sq.ft"
+      },
+      {
+       "label": "Efficiency",
+       "value": "86.4%"
+      }
+     ],
+     "analysis": "Higher lease efficiency means a greater proportion of leased space is usable.",
+     "decision": "Report lease efficiency as 86.4% and investigate whether the remaining area is required for circulation, services, or other non-usable functions."
+    },
+    {
+     "given": [],
+     "working": "Usable area = 180,000 sq.ft\nLeased area = 200,000 sq.ft\nEfficiency : 90%",
+     "analysis": "90% of the leased area is usable.",
+     "decision": "Report 90% lease efficiency and compare it with the organization's space-planning target."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 2,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rmmyt84kfgym24",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Rent Efficiency",
+   "back": "$$Rent Efficiency=Revenue​ \\div Rent$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Revenue",
+       "value": "₹8 Cr"
+      },
+      {
+       "label": "Rent",
+       "value": "₹2 Cr"
+      },
+      {
+       "label": "Efficiency",
+       "value": "4.0"
+      }
+     ],
+     "analysis": "Every ₹1 spent on rent generates ₹4 in revenue.",
+     "decision": "Report rent efficiency as 4.0×. Use it as a descriptive ratio alongside other property costs and profitability measures."
+    },
+    {
+     "given": [
+      {
+       "label": "Revenue",
+       "value": "₹15 crore"
+      },
+      {
+       "label": "Rent",
+       "value": "₹3 crore"
+      },
+      {
+       "label": "Efficiency",
+       "value": "5"
+      }
+     ],
+     "analysis": "Revenue is five times the rent expense.",
+     "decision": "Report 5.0× rent efficiency and compare it with similar properties using consistent revenue and rent definitions."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 3,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rnmyt8332g1mgh",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Rental Yield",
+   "back": "$$Rental Yield= Annual Rent \\div Property Value​×100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Annual Rent",
+       "value": "₹1.2 Cr"
+      },
+      {
+       "label": "Property Value",
+       "value": "₹18 Cr"
+      },
+      {
+       "label": "Yield",
+       "value": "6.67%"
+      }
+     ],
+     "analysis": "Higher rental yield indicates better investment performance.",
+     "decision": "Report a 6.67% gross rental yield. For investment analysis, also calculate a net yield using an appropriate income measure."
+    },
+    {
+     "given": [
+      {
+       "label": "Annual rent",
+       "value": "₹2.4 crore"
+      },
+      {
+       "label": "Property value",
+       "value": "₹30 crore"
+      },
+      {
+       "label": "Yield",
+       "value": "8%"
+      }
+     ],
+     "analysis": "Annual rent equals 8% of property value before operating expenses.",
+     "decision": "Report 8% gross rental yield and assess it alongside expenses, financing, and risk."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 4,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602romyt8jrla1lws",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Capitalization Rate (Cap Rate)",
+   "back": "$$Cap Rate= NOI \\div Property Value​×100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "NOI",
+       "value": "₹4 Cr"
+      },
+      {
+       "label": "Property",
+       "value": "₹50 Cr"
+      },
+      {
+       "label": "Cap Rate",
+       "value": "8%"
+      }
+     ],
+     "analysis": "Widely used to compare real estate investments. Higher cap rates generally imply higher returns but may also indicate higher risk.",
+     "decision": "Report an 8% capitalization rate and compare it with properties of similar type, location, and risk."
+    },
+    {
+     "given": [],
+     "working": "NOI = ₹6 crore\nProperty value = ₹75 crore\nCap Rate 8%",
+     "analysis": "The property has an 8% cap rate based on the stated NOI and value.",
+     "decision": "Use 8% as the cap-rate input for a comparable-property analysis."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 5,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rpmyt82kj6z82l",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Internal Property Return (IPR)",
+   "back": "$$IPR=Net Annual Income \\div Investment ​×100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Income",
+       "value": "₹6 Cr"
+      },
+      {
+       "label": "Investment",
+       "value": "₹60 Cr"
+      },
+      {
+       "label": "Return",
+       "value": "10%"
+      }
+     ],
+     "analysis": "Assesses annual returns from property investments.",
+     "decision": "Assesses annual returns from property investments."
+    },
+    {
+     "given": [],
+     "working": "Net annual income = ₹4.5 crore\nInvestment = ₹45 crore\nReturn : 10%",
+     "analysis": "The annual income is one-tenth of the investment amount.",
+     "decision": "Report 10% annual property return. For a multi-year investment, use a cash-flow-based return measure if timing and resale proceeds matter."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 6,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rqmyt8g49geami",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Gross Rent Multiplier (GRM)",
+   "back": "$$GRM=Property Price​ \\div  Annual Rental Income$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Building Value",
+       "value": "₹45 Cr"
+      },
+      {
+       "label": "Annual Rent",
+       "value": "₹3 Cr"
+      },
+      {
+       "label": "GRM",
+       "value": "15"
+      }
+     ],
+     "analysis": "Lower GRM often indicates a more attractive investment.",
+     "decision": "Report a GRM of 15 and compare with properties using the same rent basis."
+    },
+    {
+     "given": [],
+     "working": "Property price = ₹60 crore\nAnnual rent = ₹5 crore\nGRM : 12",
+     "analysis": "The property price is 12 times annual gross rent.",
+     "decision": "Report a GRM of 12. Review operating expenses and property condition separately before making an investment assessment."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 7,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rrmyt8fve7agt9",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Net Operating Income (NOI)",
+   "back": "$$NOI=Rental Income−Operating Expenses$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Rental Income",
+       "value": "₹12 Cr"
+      },
+      {
+       "label": "Operating Expenses",
+       "value": "₹4 Cr"
+      },
+      {
+       "label": "NOI",
+       "value": "₹8 Cr"
+      }
+     ],
+     "analysis": "NOI excludes financing costs and taxes, making it a core metric for property valuation.",
+     "decision": "Report ₹8 crore NOI."
+    },
+    {
+     "given": [],
+     "working": "Rental income = ₹20 crore\nOperating expenses = ₹7 crore\nNOI : ₹13 Cr",
+     "analysis": "Operating expenses consume ₹7 crore of the rental income, leaving ₹13 crore in NOI.",
+     "decision": "Use ₹13 crore NOI in property-level operating and valuation analysis."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 8,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rsmyt835otyjih",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "EBITDA Contribution",
+   "back": "$$EBITDA Contribution= Property EBITDA​\\div Total EBITDA×100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Property EBITDA",
+       "value": "₹15 Cr"
+      },
+      {
+       "label": "Company EBITDA",
+       "value": "₹150 Cr"
+      },
+      {
+       "label": "Contribution",
+       "value": "10%"
+      }
+     ],
+     "analysis": "Measures the significance of a property to overall business profitability.",
+     "decision": "Report 10% EBITDA contribution."
+    },
+    {
+     "given": [],
+     "working": "Property EBITDA = ₹24 crore\nCompany EBITDA = ₹240 crore\nContribution : 10%",
+     "analysis": "The property accounts for one-tenth of company EBITDA.",
+     "decision": "Report 10% contribution and use it to describe the property's relative financial significance."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 9,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rtmyt8x3owoakv",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Occupancy Cost",
+   "back": "$$Occupancy Cost=Rent+Utilities+FM+Taxes+Insurance$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Rent",
+       "value": "₹8 Cr"
+      },
+      {
+       "label": "FM",
+       "value": "₹2 Cr"
+      },
+      {
+       "label": "Utilities",
+       "value": "₹1 Cr"
+      },
+      {
+       "label": "Insurance",
+       "value": "₹0.5 Cr"
+      },
+      {
+       "label": "Taxes",
+       "value": "₹0.5 Cr"
+      },
+      {
+       "label": "Occupancy Cost",
+       "value": "₹12 Cr"
+      }
+     ],
+     "analysis": "Represents the total annual cost of occupying the property.",
+     "decision": "Report annual occupancy cost as ₹12 crore."
+    },
+    {
+     "given": [
+      {
+       "label": "Rent",
+       "value": "₹6 crore"
+      },
+      {
+       "label": "Utilities",
+       "value": "₹0.8 crore"
+      },
+      {
+       "label": "FM",
+       "value": "₹1.2 crore"
+      },
+      {
+       "label": "Taxes",
+       "value": "₹0.4 crore"
+      },
+      {
+       "label": "Insurance",
+       "value": "₹0.3 crore"
+      },
+      {
+       "label": "Occupancy Cost",
+       "value": "₹8.7 Cr"
+      }
+     ],
+     "analysis": "The listed expenses total ₹8.7 crore for the period.",
+     "decision": "Use ₹8.7 crore as the annual occupancy cost, provided all inputs cover the same period."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 10,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rumyt8cijnzjga",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Occupancy Cost per Employee",
+   "back": "$$Cost/Employee=Occupancy Cost​ \\div Employees$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Occupancy Cost",
+       "value": "₹12 Cr"
+      },
+      {
+       "label": "Employees",
+       "value": "3,000"
+      },
+      {
+       "label": "Cost",
+       "value": "₹40,000/employee/year"
+      }
+     ],
+     "analysis": "Useful for benchmarking office efficiency across locations.",
+     "decision": "Report ₹40,000 per employee per year and compare locations using consistent employee-count and cost definitions."
+    },
+    {
+     "given": [],
+     "working": "Occupancy cost = ₹9 crore\nEmployees = 2,500\nCost : ₹36,000/employee/year",
+     "analysis": "The average annual occupancy cost is ₹36,000 per employee.",
+     "decision": "Report ₹36,000 per employee per year."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 11,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rvmyt8so9nwkel",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Cost per Seat",
+   "back": "$$Cost/Seat= Annual Occupancy Cost​ \\div Workstations$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Annual Occupancy COst",
+       "value": "₹15 Cr"
+      },
+      {
+       "label": "Seats",
+       "value": "5,000"
+      }
+     ],
+     "working": ": ₹30,000/seat",
+     "analysis": "Supports workplace strategy and hybrid office planning.",
+     "decision": "₹30,000 per seat per year."
+    },
+    {
+     "given": [],
+     "working": "Annual occupancy cost = ₹12 crore\nSeats = 4,000\n: ₹30,000/seat/year​",
+     "analysis": "The cost per seat is ₹30,000 annually.",
+     "decision": "Use ₹30,000 per seat per year for seat-cost benchmarking."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 12,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rwmyt8wgsdspns",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Cost per Square Foot",
+   "back": "$$Cost/Sq.ft=Total Cost​\\div Area$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Annual Cost",
+       "value": "₹12 Cr"
+      },
+      {
+       "label": "Area",
+       "value": "300,000 sq.ft"
+      },
+      {
+       "label": "Cost",
+       "value": "₹400/sq.ft/year"
+      }
+     ],
+     "analysis": "Useful for benchmarking and lease negotiations.",
+     "decision": "Report ₹400/sq.ft/year and compare it with properties measured on the same area basis."
+    },
+    {
+     "given": [],
+     "working": "Annual cost = ₹9 crore\nArea = 225,000 sq.ft\nCost : ₹400/sq.ft/year",
+     "analysis": "The property has the same average annual cost per square foot as the source example.",
+     "decision": "Report ₹400/sq.ft/year."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 13,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rxmyt8u26fxdx3",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Cost per Building",
+   "back": "$$Cost/Building=Portfolio Cost​\\div Number of Buildings$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Portfolio cost",
+       "value": "₹100 crore"
+      },
+      {
+       "label": "Buildings",
+       "value": "5"
+      }
+     ],
+     "working": ": ₹20 Cr/building",
+     "analysis": "Supports portfolio-level budgeting.",
+     "decision": "Report ₹20 crore per building as an average; individual building costs may differ."
+    },
+    {
+     "given": [],
+     "working": "Portfolio cost = ₹72 crore\nBuildings = 6\n: ₹12Cr/building",
+     "analysis": "The average cost per building is ₹12 crore.",
+     "decision": "Use ₹12 crore per building for high-level portfolio budgeting, not as a substitute for building-specific cost data."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 14,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rymyt8nalwkuxx",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Lease Escalation",
+   "back": "$$Future Rent=Current Rent×(1+Escalation)^{Years}$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Rent",
+       "value": "₹100/sq.ft"
+      },
+      {
+       "label": "Escalation",
+       "value": "5%"
+      },
+      {
+       "label": "Years",
+       "value": "3"
+      },
+      {
+       "label": "Future Rent",
+       "value": "₹115.76/sq.ft"
+      }
+     ],
+     "analysis": "Forecasts future lease obligations.",
+     "decision": "Use ₹115.76/sq.ft as the rent after three annual escalation periods, assuming annual compounding"
+    },
+    {
+     "given": [],
+     "working": "Current rent = ₹200/sq.ft\nEscalation = 6%\nYears = 4\nFuture Rent : ₹252.50/sq.ft",
+     "analysis": "The annual increase compounds, so the total increase is greater than a simple 24% calculation.",
+     "decision": "Forecast rent at approximately ₹252.50/sq.ft after four years."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 15,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602rzmyt8xsiqkqo3",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Lease Liability (IFRS 16)",
+   "back": "$$Lease Liability=PV(Future Lease Payments)$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Annual Lease",
+       "value": "₹2 Cr"
+      },
+      {
+       "label": "Years",
+       "value": "10"
+      },
+      {
+       "label": "Discount",
+       "value": "8%"
+      }
+     ],
+     "working": "PV ≈ ₹13.42 Cr",
+     "analysis": "Represents the present value of future lease commitments.",
+     "decision": "Use approximately ₹13.42 crore as the initial lease liability under these simplified assumptions. Actual IFRS 16 measurement also depends on the lease terms and applicable discount rate."
+    },
+    {
+     "given": [],
+     "working": "Annual lease payment = ₹1.5 crore\nTerm = 5 years\nDiscount rate = 7%\nPV≈₹6.15Cr​",
+     "analysis": "Discounting the five annual payments gives a present value of approximately ₹6.15 crore.",
+     "decision": "Use approximately ₹6.15 crore as the illustrative lease liability, subject to the actual lease payment schedule and measurement requirements."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 16,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf602s0myt8iv7bqpu3",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Lease Amortization",
+   "back": "$$Closing Lease Liability=Opening Liability+Interest−Payments$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [],
+     "working": "Opening lease liability = ₹10 crore\nAnnual discount rate = 8%\nAnnual payment = ₹2 crore\nClosing Liability : ₹8.8 crore",
+     "analysis": "Interest increases the liability by ₹0.8 crore before the ₹2 crore payment reduces it.",
+     "decision": "Closing lease liability = ₹8.8 crore."
+    },
+    {
+     "given": [],
+     "working": "Opening lease liability = ₹8.8 crore\nAnnual discount rate = 8%\nAnnual payment = ₹2 crore\nClosing Liability : ₹7.504 crore",
+     "analysis": "The interest charge is lower than in the first year because the opening liability has declined.",
+     "decision": "Closing lease liability = ₹7.504 crore. Use the full lease schedule for subsequent periods."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 17,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf702s1myt8i8cledbt",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Portfolio Optimization Score",
+   "back": "$$POS= U+F+S+C\\div 4 ​$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Utilization",
+       "value": "85"
+      },
+      {
+       "label": "Financial",
+       "value": "90"
+      },
+      {
+       "label": "Strategic",
+       "value": "75"
+      },
+      {
+       "label": "Condition",
+       "value": "80"
+      },
+      {
+       "label": "POS",
+       "value": "82.5"
+      }
+     ],
+     "analysis": "A composite index to assess portfolio performance.",
+     "decision": "Report a portfolio optimization score of 82.5 under this equal-weight approach."
+    },
+    {
+     "given": [
+      {
+       "label": "Utilization",
+       "value": "70"
+      },
+      {
+       "label": "Financial",
+       "value": "80"
+      },
+      {
+       "label": "Strategic",
+       "value": "90"
+      },
+      {
+       "label": "Condition",
+       "value": "80"
+      },
+      {
+       "label": "POS",
+       "value": "80"
+      }
+     ],
+     "analysis": "The average score is 80, with the strategic score offsetting the lower utilization score.",
+     "decision": "Report 80 and review the individual components as well as the composite score."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 18,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf702s2myt81k13xoci",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Space Productivity Index",
+   "back": "$$SPI=Revenue​\\div Area$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Revenue",
+       "value": "₹500 Cr"
+      },
+      {
+       "label": "Area",
+       "value": "500,000 sq.ft"
+      }
+     ],
+     "working": ": ₹100,000/sq.ft",
+     "analysis": "Measures revenue generated per unit area.",
+     "decision": "Report ₹10,000/sq.ft as the space productivity index."
+    },
+    {
+     "given": [],
+     "working": "Revenue = ₹360 crore\nArea = 400,000 sq.ft\n: ₹9,000/sq.ft​",
+     "analysis": "Revenue generated per square foot is ₹9,000.",
+     "decision": "Report ₹9,000/sq.ft and compare it with other spaces using the same period and area definition."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 19,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf702s3myt8e79ucj6s",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Revenue per Employee",
+   "back": "$$Revenue/Employee= Annual Revenue \\div Employees​$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [],
+     "result": "Revenue = ₹20 Lakhs/Employee",
+     "working": "Revenue = ₹800 crore\nEmployees = 4,000\n₹800 Cr ÷ 4,000",
+     "analysis": "Indicates workforce productivity.",
+     "decision": "Report ₹20 lakh per employee for the stated period."
+    },
+    {
+     "given": [],
+     "result": "Revenue = ₹20 Lakhs/Employee",
+     "working": "Revenue = ₹600 crore\nEmployees = 3,000\n₹600 Cr ÷ 3,000",
+     "analysis": "The second example also generates ₹20 lakh per employee.",
+     "decision": "Report ₹20 lakh per employee and interpret it alongside workforce composition and business activity."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 20,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf702s4myt8vt4pqy9p",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Revenue per Seat",
+   "back": "$$Revenue/Seat= Revenue​\\div Seats$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Revenue",
+       "value": "₹600 crore"
+      },
+      {
+       "label": "Seats",
+       "value": "3,000"
+      }
+     ],
+     "working": "₹600 Cr ÷ 3,000\n: ₹20 Lakhs/Seat",
+     "analysis": "Useful in hybrid workplace planning.",
+     "decision": "Report ₹20 lakh per seat for the period covered."
+    },
+    {
+     "given": [],
+     "working": "Revenue = ₹450 crore\nSeats = 2,500\n₹450 Cr ÷ 2,500\n: ₹18 Lakhs/Seat",
+     "analysis": "Revenue averages ₹18 lakh per seat.",
+     "decision": "Report ₹18 lakh per seat and use it as one input to workplace capacity planning."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 21,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf702s5myt8t5prsyhi",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Area per Employee",
+   "back": "$$Area/Employee= Office Area​ \\div Employees$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Office area",
+       "value": "120,000 sq.ft"
+      },
+      {
+       "label": "Employees",
+       "value": "1,200"
+      }
+     ],
+     "working": ": 120,000 sq.ft ÷ 1,200\n: 100 sq.ft/Employee",
+     "analysis": "Global benchmark:\n80–150 sq.ft/person depending on workplace strategy.",
+     "decision": "Report 100 sq.ft per employee and assess it against the organization's workplace strategy."
+    },
+    {
+     "given": [],
+     "working": "Office area = 90,000 sq.ft\nEmployees = 1,000\n: 90,000 sq.ft ÷ 1,000\n: 90 sq.ft/Employee",
+     "analysis": "The office provides 90 square feet per employee.",
+     "decision": "Report 90 sq.ft per employee and review whether this area supports the required work settings and capacity."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 22,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf702s6myt8d3cvplkz",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Workplace Density",
+   "back": "$$Workplace Density= Employees \\div Office Area (sq.ft)​×1000​$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Employees",
+       "value": "1,000"
+      },
+      {
+       "label": "Office area",
+       "value": "100,000 sq.ft"
+      },
+      {
+       "label": "Density",
+       "value": "10 Employees/1,000 sq.ft"
+      }
+     ],
+     "analysis": "Supports workplace planning and health & safety compliance.",
+     "decision": "Report 10 employees per 1,000 sq.ft."
+    },
+    {
+     "given": [],
+     "working": "Employees = 900\nOffice area = 90,000 sq.ft\nDensity : 10 Employees/1,000 sq.ft",
+     "analysis": "The second office has the same density as the first.",
+     "decision": "Report 10 employees per 1,000 sq.ft and compare with the organization's occupancy and safety requirements."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 23,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  },
+  {
+   "id": "cmv6lucf702s7myt8jidp7qwv",
+   "topicId": "cmv6lucf102rimyt8gam386cx",
+   "front": "Utilization Rate",
+   "back": "$$Utilization=Occupied Space \\div Available Space ​×100$$",
+   "example": "",
+   "examples": [
+    {
+     "given": [
+      {
+       "label": "Occupied space",
+       "value": "180,000 sq.ft"
+      },
+      {
+       "label": "Available space",
+       "value": "240,000 sq.ft"
+      }
+     ],
+     "working": ": 180,000 ÷ 240,000\n: 75%",
+     "analysis": "Core KPI for portfolio optimization.",
+     "decision": "Report 75% utilization and review the remaining 25% in light of operational needs and future demand."
+    },
+    {
+     "given": [],
+     "working": "Occupied space = 210,000 sq.ft\nAvailable space = 250,000 sq.ft\n: 210,000 ÷ 250,000\n: 84%",
+     "analysis": "84% of the available space is occupied.",
+     "decision": "Report 84% utilization and use the result in space planning."
+    }
+   ],
+   "resourceUrl": "",
+   "resourceLabel": "",
+   "category": "",
+   "tags": [],
+   "sortOrder": 24,
+   "active": true,
+   "createdAt": "2026-10-13T11:35:47.298Z",
+   "updatedAt": "2026-10-13T11:35:47.298Z"
+  }
+ ],
+ "cardCount": 25
+}

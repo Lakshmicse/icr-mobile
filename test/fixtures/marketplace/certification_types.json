@@ -1,0 +1,94 @@
+[
+ {
+  "id": "cmvp4049y0000myqouzmvzvw5",
+  "name": "DGCA Commercial Drone License",
+  "slug": "design-mkt-dgca",
+  "code": "DESIGN-MKT-DGCA",
+  "category": "GOVERNMENT",
+  "requirementLevel": "OPTIONAL",
+  "validityMonths": null,
+  "renewalFrequencyMonths": null,
+  "expiryNotifyDays": 30,
+  "autoExpire": true,
+  "eligibilityRules": null,
+  "requiredDocuments": [],
+  "issuers": [
+   "Directorate General of Civil Aviation"
+  ],
+  "icon": null,
+  "description": null,
+  "active": true,
+  "sortOrder": 900,
+  "createdAt": "2026-10-26T10:24:00.935Z",
+  "updatedAt": "2026-10-26T10:24:00.935Z"
+ },
+ {
+  "id": "cmvp404a60001myqodxzg2ss9",
+  "name": "ISO 9001:2015 Quality Management",
+  "slug": "design-mkt-iso9001",
+  "code": "DESIGN-MKT-ISO9001",
+  "category": "ISO",
+  "requirementLevel": "OPTIONAL",
+  "validityMonths": null,
+  "renewalFrequencyMonths": null,
+  "expiryNotifyDays": 30,
+  "autoExpire": true,
+  "eligibilityRules": null,
+  "requiredDocuments": [],
+  "issuers": [
+   "TUV Rheinland"
+  ],
+  "icon": null,
+  "description": null,
+  "active": true,
+  "sortOrder": 901,
+  "createdAt": "2026-10-26T10:24:00.942Z",
+  "updatedAt": "2026-10-26T10:24:00.942Z"
+ },
+ {
+  "id": "cmvp404a90002myqo6tjexftu",
+  "name": "ISO 45001 Occupational Safety",
+  "slug": "design-mkt-iso45001",
+  "code": "DESIGN-MKT-ISO45001",
+  "category": "ISO",
+  "requirementLevel": "OPTIONAL",
+  "validityMonths": null,
+  "renewalFrequencyMonths": null,
+  "expiryNotifyDays": 30,
+  "autoExpire": true,
+  "eligibilityRules": null,
+  "requiredDocuments": [],
+  "issuers": [
+   "TUV Rheinland"
+  ],
+  "icon": null,
+  "description": null,
+  "active": true,
+  "sortOrder": 902,
+  "createdAt": "2026-10-26T10:24:00.945Z",
+  "updatedAt": "2026-10-26T10:24:00.945Z"
+ },
+ {
+  "id": "cmvp404ab0003myqo4vgzppt5",
+  "name": "Escrow & Trade Assurance Policy",
+  "slug": "design-mkt-escrow",
+  "code": "DESIGN-MKT-ESCROW",
+  "category": "OTHER",
+  "requirementLevel": "OPTIONAL",
+  "validityMonths": null,
+  "renewalFrequencyMonths": null,
+  "expiryNotifyDays": 30,
+  "autoExpire": true,
+  "eligibilityRules": null,
+  "requiredDocuments": [],
+  "issuers": [
+   "ICR Trade Assurance"
+  ],
+  "icon": null,
+  "description": null,
+  "active": true,
+  "sortOrder": 903,
+  "createdAt": "2026-10-26T10:24:00.947Z",
+  "updatedAt": "2026-10-26T10:24:00.947Z"
+ }
+]

@@ -1,0 +1,11 @@
+{
+ "code": "DECK_LOCKED",
+ "key": "learning.assessmentCourses",
+ "reason": "SIGN_IN",
+ "plan": null,
+ "pricingSlug": "professional",
+ "statusCode": 403,
+ "message": "Sign in to open “Capital Planning”. Every member can open 0 flash-card decks.",
+ "path": "/api/v1/learning/resources/capital-planning",
+ "timestamp": "2026-10-23T12:52:15.544Z"
+}

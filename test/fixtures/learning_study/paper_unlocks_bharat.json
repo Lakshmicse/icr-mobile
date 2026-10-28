@@ -1,0 +1,32 @@
+{
+ "allOpen": false,
+ "paperIds": [
+  "cmv6luasr00j3myt8bajwe20k",
+  "cmv6luaos008fmyt8rlmn1hgu"
+ ],
+ "creditPaperIds": [
+  "cmv6luasr00j3myt8bajwe20k",
+  "cmv6luaos008fmyt8rlmn1hgu"
+ ],
+ "icrCredits": 100,
+ "rupeesPerCredit": 100,
+ "plan": {
+  "assessmentCourses": {
+   "limit": 0,
+   "openedCourseIds": [
+    "cmv6luaih0003myt8qlkfrr1e",
+    "cmv6luaik0005myt89sosuo0n"
+   ]
+  },
+  "mockExams": {
+   "limit": 0,
+   "openedTopicIds": []
+  },
+  "flashCardDecks": {
+   "limit": 0,
+   "openedDeckIds": []
+  },
+  "upgradePlan": null,
+  "mockUpgradePlan": null
+ }
+}

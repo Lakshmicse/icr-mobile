@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "ICR (live API)",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      "name": "ICR (the designs' sample content)",
+      "request": "launch",
+      "type": "dart",
+      "args": ["--dart-define=FEED_SOURCE=demo"]
+    }
+  ]
+}

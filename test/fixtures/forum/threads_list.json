@@ -1,0 +1,284 @@
+{
+ "data": [
+  {
+   "id": "design-home-thread-sarah",
+   "slug": "implementing-iot-sensors-for-hvac-efficiency-best-practices-home-design",
+   "title": "Implementing IoT sensors for HVAC efficiency: Best practices?",
+   "excerpt": "We are currently looking to retrofit a 15- year-old commercial building with modern IoT sensors to better manage our HVAC load during peak hours. Has anyone successfully implemented a system that integrates smoothly…",
+   "kind": "QUESTION",
+   "status": "OPEN",
+   "moderation": "APPROVED",
+   "pinned": true,
+   "tags": [
+    "HVAC",
+    "PropTech",
+    "SmartBMS"
+   ],
+   "category": {
+    "id": "cmupai5wt00gumyzcdgbdjrrg",
+    "key": "SUSTAINABILITY_ESG",
+    "name": "ESG & Sustainability",
+    "slug": "esg-sustainability",
+    "icon": "Grass"
+   },
+   "subcategory": {
+    "id": "design-home-cat-sustainability",
+    "key": "HOME_DESIGN_SUSTAINABILITY",
+    "name": "Sustainability",
+    "slug": "home-design-sustainability",
+    "icon": null
+   },
+   "author": {
+    "id": "design-home-user-sarah",
+    "firstName": "Sarah",
+    "lastName": "Jenkins",
+    "avatarUrl": "/uploads/design-home-avatar_sarah.jpg",
+    "headline": "Senior Facilities Manager at Google",
+    "reputation": 0
+   },
+   "replyCount": 52,
+   "viewCount": 4210,
+   "score": 184,
+   "likes": 184,
+   "hasAcceptedAnswer": false,
+   "lastActivityAt": "2026-12-22T12:38:36.050Z",
+   "createdAt": "2026-10-23T10:36:36.050Z",
+   "myVote": null,
+   "myReaction": null,
+   "reactions": {
+    "LIKE": 104,
+    "INSIGHTFUL": 50,
+    "CELEBRATE": 30
+   },
+   "poll": null,
+   "saved": false,
+   "latestReply": {
+    "id": "design-home-reply-sarah-r10",
+    "author": {
+     "id": "design-home-user-priya",
+     "firstName": "Priya",
+     "lastName": "Nambiar",
+     "avatarUrl": null,
+     "headline": "Facilities Lead at Infosys",
+     "reputation": 0
+    },
+    "excerpt": "Great tips everyone. The PICS point is going straight into our RFP.",
+    "createdAt": "2026-10-23T12:32:36.050Z"
+   }
+  },
+  {
+   "id": "design-home-thread-david",
+   "slug": "the-impact-of-ai-on-preliminary-site-feasibility-analysis-home-design",
+   "title": "The impact of AI on preliminary site feasibility analysis",
+   "excerpt": "I've been experimenting with several new AI tools aimed at automating preliminary site feasibility studies. While the speed is impressive, I'm finding the data heavily relies on outdated municipal records in certain…",
+   "kind": "DISCUSSION",
+   "status": "OPEN",
+   "moderation": "APPROVED",
+   "pinned": true,
+   "tags": [],
+   "category": {
+    "id": "cmupai5ws00gimyzcjc5ib3fg",
+    "key": "TECHNOLOGY_INNOVATION",
+    "name": "Technology",
+    "slug": "technology",
+    "icon": "Laptop"
+   },
+   "subcategory": {
+    "id": "design-home-cat-realEstateTech",
+    "key": "HOME_DESIGN_REAL_ESTATE_TECH",
+    "name": "Real Estate Tech",
+    "slug": "home-design-real-estate-tech",
+    "icon": null
+   },
+   "author": {
+    "id": "design-home-user-david",
+    "firstName": "David",
+    "lastName": "Chen",
+    "avatarUrl": "/uploads/design-home-avatar_david.jpg",
+    "headline": "Project Director at BuildCo",
+    "reputation": 0
+   },
+   "replyCount": 52,
+   "viewCount": 3180,
+   "score": 184,
+   "likes": 184,
+   "hasAcceptedAnswer": false,
+   "lastActivityAt": "2026-12-21T12:38:36.050Z",
+   "createdAt": "2026-10-23T07:36:36.050Z",
+   "myVote": null,
+   "myReaction": null,
+   "reactions": {
+    "INSIGHTFUL": 50,
+    "CELEBRATE": 30,
+    "LIKE": 104
+   },
+   "poll": null,
+   "saved": false,
+   "latestReply": {
+    "id": "design-home-reply-david-f52",
+    "author": {
+     "id": "design-home-user-david",
+     "firstName": "David",
+     "lastName": "Chen",
+     "avatarUrl": "/uploads/design-home-avatar_david.jpg",
+     "headline": "Project Director at BuildCo",
+     "reputation": 0
+    },
+    "excerpt": "That makes sense, thank you.",
+    "createdAt": "2026-10-23T12:03:36.050Z"
+   }
+  },
+  {
+   "id": "design-home-thread-marcus",
+   "slug": "what-is-your-primary-fm-software-in-2026-home-design",
+   "title": "What is your primary FM Software in 2026?",
+   "excerpt": "Select the ecosystem your team relies on for facility workflows.",
+   "kind": "DISCUSSION",
+   "status": "OPEN",
+   "moderation": "APPROVED",
+   "pinned": true,
+   "tags": [],
+   "category": {
+    "id": "cmupai5ws00gimyzcjc5ib3fg",
+    "key": "TECHNOLOGY_INNOVATION",
+    "name": "Technology",
+    "slug": "technology",
+    "icon": "Laptop"
+   },
+   "subcategory": null,
+   "author": {
+    "id": "design-home-user-marcus",
+    "firstName": "Marcus",
+    "lastName": "Reed",
+    "avatarUrl": "/uploads/design-home-avatar_marcus.jpg",
+    "headline": "Lead Architect at DesignCo",
+    "reputation": 0
+   },
+   "replyCount": 12,
+   "viewCount": 2640,
+   "score": 96,
+   "likes": 96,
+   "hasAcceptedAnswer": false,
+   "lastActivityAt": "2026-12-20T12:38:36.050Z",
+   "createdAt": "2026-10-23T02:36:36.050Z",
+   "myVote": null,
+   "myReaction": null,
+   "reactions": {
+    "CELEBRATE": 12,
+    "INSIGHTFUL": 24,
+    "LIKE": 60
+   },
+   "poll": {
+    "id": "design-home-poll-marcus",
+    "totalVotes": 192,
+    "options": [
+     {
+      "id": "design-home-poll-marcus-opt1",
+      "label": "IBM TRIRIGA",
+      "votes": 54
+     },
+     {
+      "id": "design-home-poll-marcus-opt2",
+      "label": "Planon",
+      "votes": 27
+     },
+     {
+      "id": "design-home-poll-marcus-opt3",
+      "label": "Archibus",
+      "votes": 88
+     },
+     {
+      "id": "design-home-poll-marcus-opt4",
+      "label": "Other / Custom In-House",
+      "votes": 23
+     }
+    ],
+    "myOptionId": "design-home-poll-marcus-opt3"
+   },
+   "saved": false,
+   "latestReply": {
+    "id": "design-home-reply-marcus-f12",
+    "author": {
+     "id": "cmvar8d6l0010mymk19peyyqp",
+     "firstName": "Deepa",
+     "lastName": "Iyer",
+     "avatarUrl": "/uploads/seed-avatar-female-12.jpg",
+     "headline": "Health, safety and business continuity for industrial facilities",
+     "reputation": 0
+    },
+    "excerpt": "Well put.",
+    "createdAt": "2026-10-23T11:18:36.050Z"
+   }
+  },
+  {
+   "id": "design-home-thread-elena",
+   "slug": "site-audit-implementing-sustainable-net-zero-solutions-home-design",
+   "title": "Site Audit: Implementing Sustainable Net-Zero Solutions",
+   "excerpt": "Just wrapped up an incredible site visit. It's fascinating to see how the integration of smart climate control systems and renewable energy sources can transform an existing structure into a beacon of sustainability.",
+   "kind": "DISCUSSION",
+   "status": "OPEN",
+   "moderation": "APPROVED",
+   "pinned": true,
+   "tags": [],
+   "category": {
+    "id": "cmupai5wt00gumyzcdgbdjrrg",
+    "key": "SUSTAINABILITY_ESG",
+    "name": "ESG & Sustainability",
+    "slug": "esg-sustainability",
+    "icon": "Grass"
+   },
+   "subcategory": {
+    "id": "design-home-cat-siteAudit",
+    "key": "HOME_DESIGN_SITE_AUDIT",
+    "name": "Site Audit",
+    "slug": "home-design-site-audit",
+    "icon": null
+   },
+   "author": {
+    "id": "design-home-user-elena",
+    "firstName": "Elena",
+    "lastName": "Rostova",
+    "avatarUrl": "/uploads/design-home-avatar_elena.jpg",
+    "headline": "Civil & Sustainability Engineer",
+    "reputation": 0
+   },
+   "replyCount": 52,
+   "viewCount": 2905,
+   "score": 184,
+   "likes": 184,
+   "hasAcceptedAnswer": false,
+   "lastActivityAt": "2026-12-19T12:38:36.050Z",
+   "createdAt": "2026-10-23T04:36:36.050Z",
+   "myVote": null,
+   "myReaction": null,
+   "reactions": {
+    "INSIGHTFUL": 50,
+    "LIKE": 104,
+    "CELEBRATE": 30
+   },
+   "poll": null,
+   "saved": false,
+   "latestReply": {
+    "id": "design-home-reply-elena-f52",
+    "author": {
+     "id": "design-home-user-elena",
+     "firstName": "Elena",
+     "lastName": "Rostova",
+     "avatarUrl": "/uploads/design-home-avatar_elena.jpg",
+     "headline": "Civil & Sustainability Engineer",
+     "reputation": 0
+    },
+    "excerpt": "That makes sense, thank you.",
+    "createdAt": "2026-10-23T10:33:36.050Z"
+   }
+  }
+ ],
+ "meta": {
+  "page": 1,
+  "limit": 4,
+  "total": 9,
+  "totalPages": 3,
+  "hasNext": true,
+  "hasPrev": false
+ }
+}

@@ -1,0 +1,76 @@
+{
+ "id": "design-home-thread-marcus",
+ "slug": "what-is-your-primary-fm-software-in-2026-home-design",
+ "title": "What is your primary FM Software in 2026?",
+ "excerpt": "Select the ecosystem your team relies on for facility workflows.",
+ "kind": "DISCUSSION",
+ "status": "OPEN",
+ "moderation": "APPROVED",
+ "pinned": true,
+ "tags": [],
+ "category": {
+  "id": "cmupai5ws00gimyzcjc5ib3fg",
+  "key": "TECHNOLOGY_INNOVATION",
+  "name": "Technology",
+  "slug": "technology",
+  "icon": "Laptop"
+ },
+ "subcategory": null,
+ "author": {
+  "id": "design-home-user-marcus",
+  "firstName": "Marcus",
+  "lastName": "Reed",
+  "avatarUrl": "/uploads/design-home-avatar_marcus.jpg",
+  "headline": "Lead Architect at DesignCo",
+  "reputation": 0
+ },
+ "replyCount": 12,
+ "viewCount": 2640,
+ "score": 96,
+ "likes": 96,
+ "hasAcceptedAnswer": false,
+ "lastActivityAt": "2026-12-20T12:38:36.050Z",
+ "createdAt": "2026-10-23T02:36:36.050Z",
+ "myVote": null,
+ "myReaction": null,
+ "reactions": {
+  "CELEBRATE": 12,
+  "LIKE": 60,
+  "INSIGHTFUL": 24
+ },
+ "poll": {
+  "id": "design-home-poll-marcus",
+  "totalVotes": 192,
+  "options": [
+   {
+    "id": "design-home-poll-marcus-opt1",
+    "label": "IBM TRIRIGA",
+    "votes": 54
+   },
+   {
+    "id": "design-home-poll-marcus-opt2",
+    "label": "Planon",
+    "votes": 27
+   },
+   {
+    "id": "design-home-poll-marcus-opt3",
+    "label": "Archibus",
+    "votes": 88
+   },
+   {
+    "id": "design-home-poll-marcus-opt4",
+    "label": "Other / Custom In-House",
+    "votes": 23
+   }
+  ],
+  "myOptionId": "design-home-poll-marcus-opt3"
+ },
+ "saved": false,
+ "bodyHtml": "<p>Select the ecosystem your team relies on for facility workflows.</p>",
+ "acceptedReplyId": null,
+ "attachment": null,
+ "subscribed": false,
+ "canEdit": false,
+ "canModerate": false,
+ "updatedAt": "2026-10-23T12:38:36.283Z"
+}

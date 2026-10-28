@@ -1,0 +1,48 @@
+{
+ "data": [
+  {
+   "user": {
+    "id": "cmvf63c5e00dcmyv09l5xry8o",
+    "firstName": "Fiona",
+    "lastName": "Founder",
+    "avatarUrl": null,
+    "headline": null,
+    "reputation": 0
+   },
+   "reaction": "LIKE",
+   "reactedAt": "2026-10-23T12:36:57.635Z"
+  },
+  {
+   "user": {
+    "id": "cmv930ap60046mylcjbjmdran",
+    "firstName": "Hema",
+    "lastName": "Joiner",
+    "avatarUrl": null,
+    "headline": "Facilities Manager",
+    "reputation": 0
+   },
+   "reaction": "LIKE",
+   "reactedAt": "2026-10-23T12:36:34.594Z"
+  },
+  {
+   "user": {
+    "id": "cmuwohh48000cmyas7c9xsqb9",
+    "firstName": "Chetan",
+    "lastName": "CompanyAdmin",
+    "avatarUrl": null,
+    "headline": null,
+    "reputation": 0
+   },
+   "reaction": "LIKE",
+   "reactedAt": "2026-10-23T12:36:09.424Z"
+  }
+ ],
+ "meta": {
+  "page": 1,
+  "limit": 3,
+  "total": 184,
+  "totalPages": 62,
+  "hasNext": true,
+  "hasPrev": false
+ }
+}
