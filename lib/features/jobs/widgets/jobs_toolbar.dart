@@ -182,6 +182,8 @@ class JobsToolbar extends StatelessWidget {
       ..showSnackBar(
         SnackBar(
           content: const Text("Jobs at companies in your network aren't in the app yet."),
+          persist: false, // an Undo snackbar would otherwise stay over every screen until dismissed
+
           action: SnackBarAction(
             label: 'Open network',
             onPressed: () => links.openUri(context, AppConfig.sitePage('/network')),

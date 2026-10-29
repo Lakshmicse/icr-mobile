@@ -23,6 +23,9 @@ class _CountingLearning implements LearningRepository {
   Object? failure;
 
   @override
+  Future<void> withdraw(Course course) async {}
+
+  @override
   Future<List<Course>> courses() async {
     reads++;
     final error = failure;
@@ -55,8 +58,14 @@ void main() {
   group('every kind of source', () {
     test('there is one source per searchable kind, and none for the app features', () {
       expect(sources.map((s) => s.kind).toSet(), {
-        SearchKind.person, SearchKind.job, SearchKind.mentor, SearchKind.course,
-        SearchKind.supplier, SearchKind.event, SearchKind.discussion, SearchKind.document,
+        SearchKind.person,
+        SearchKind.job,
+        SearchKind.mentor,
+        SearchKind.course,
+        SearchKind.supplier,
+        SearchKind.event,
+        SearchKind.discussion,
+        SearchKind.document,
       });
       expect(sources.length, 8);
     });

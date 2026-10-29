@@ -26,6 +26,8 @@ import 'features/learning_exam/certificate_view.dart' show showCertificateSheet;
 import 'features/learning_exam/demo_exam_repository.dart';
 import 'features/learning_exam/exam_repository.dart' show ExamRepository;
 import 'features/learning_exam/verify_sheet.dart' show showVerifySheet;
+import 'features/learning_assess/assess_models.dart' show PaperKind;
+import 'features/learning_assess/open_group.dart';
 import 'features/learning_hub/learning_doors.dart';
 import 'features/marketplace/catalog_pages.dart' show showProductPage;
 import 'features/mentor_desk/mentor_desk_screen.dart';
@@ -153,9 +155,19 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
   }
 
   // --- Learning ---------------------------------------------------------------------------------------------
-  if (parts.length == 2 && parts[0] == 'learning' && parts[1] == 'assessment' ||
-      parts.length == 3 && parts[0] == 'learning' && parts[1] == 'assessment') {
+  // A programme (`/learning/assessment/<code>`, and a level of it `/<code>/<slug>`) and a mock exam subject
+  // (`/learning/mock-tests/<subject>[/<set>]`): their own pages, where a level or set is opened, bought or sat.
+  if (parts.length == 2 && parts[0] == 'learning' && parts[1] == 'assessment') {
     return (ctx) => pushLearningPage<void>(ctx, const LearningRoutes().assessment);
+  }
+  if (parts.length >= 3 && parts.length <= 4 && parts[0] == 'learning' && parts[1] == 'assessment') {
+    return (ctx) => openPaperGroup(ctx, PaperKind.assessment, parts[2]);
+  }
+  if (parts.length == 2 && parts[0] == 'learning' && parts[1] == 'mock-tests') {
+    return (ctx) => pushLearningPage<void>(ctx, const LearningRoutes().mockTests);
+  }
+  if (parts.length >= 3 && parts.length <= 4 && parts[0] == 'learning' && parts[1] == 'mock-tests') {
+    return (ctx) => openPaperGroup(ctx, PaperKind.mock, parts[2]);
   }
   if (parts.length == 3 && parts[0] == 'learning' && parts[1] == 'professional-development') {
     return (ctx) async => openCourseByCode(ctx, parts[2]);

@@ -153,6 +153,8 @@ class _SavedItemsScreenState extends State<SavedItemsScreen> {
     messenger.showSnackBar(
       SnackBar(
         content: Text('Removed “${item.title}” from saved', maxLines: 2, overflow: TextOverflow.ellipsis),
+        persist: false, // an Undo snackbar would otherwise stay over every screen until dismissed
+
         action: SnackBarAction(label: 'Undo', onPressed: () => _undo(removal)),
       ),
     );

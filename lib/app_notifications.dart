@@ -19,6 +19,8 @@ import 'features/jobs/employer/hiring_routes.dart';
 import 'features/jobs/job_detail_sheet.dart';
 import 'features/jobs/jobs_controller.dart';
 import 'features/jobs/jobs_navigation.dart';
+import 'features/learning_assess/assess_models.dart' show PaperKind;
+import 'features/learning_assess/open_group.dart';
 import 'features/learning_hub/learning_doors.dart';
 import 'features/marketplace/catalog_pages.dart' show showProductPage;
 import 'features/membership/membership_models.dart' show MembershipAudience;
@@ -193,9 +195,16 @@ Map<String, NotificationOpener> appNotificationOpeners({required BuildContext sh
     ),
 
     // --- Learning, events, community -----------------------------------------------------------------------
-    NotificationKinds.learningAssessment: plain(
-      (ctx, t) => unawaited(pushLearningPage<void>(ctx, const LearningRoutes().assessment)),
-    ),
+    // "You enrolled into AEE CBCP – Level": the programme's own page (levels, plan, credits), not the landing.
+    NotificationKinds.learningAssessment: (ctx, t) {
+      final code = t['courseCode'];
+      if (code == null) {
+        unawaited(pushLearningPage<void>(ctx, const LearningRoutes().assessment));
+      } else {
+        unawaited(openPaperGroup(ctx, PaperKind.assessment, code));
+      }
+      return true;
+    },
     NotificationKinds.learningCourse: withId('code', (ctx, code, t) => openCourseByCode(ctx, code)),
     NotificationKinds.learningWorkspace: withId('code', (ctx, code, t) => openCourseByCode(ctx, code)),
     NotificationKinds.learningPartners: plain((ctx, t) => AppShell.goToTab(ctx, AppTab.learning)),

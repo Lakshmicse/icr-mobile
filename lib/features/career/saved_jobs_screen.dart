@@ -82,6 +82,8 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
       ..showSnackBar(
         SnackBar(
           content: const Text('Bookmark removed'),
+          persist: false, // an Undo snackbar would otherwise stay over every screen until dismissed
+
           action: SnackBarAction(
             label: 'Undo',
             onPressed: () async {
@@ -105,6 +107,8 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
       ..showSnackBar(
         SnackBar(
           content: const Text('Back on your board'),
+          persist: false, // an Undo snackbar would otherwise stay over every screen until dismissed
+
           action: SnackBarAction(
             label: 'Undo',
             onPressed: () async {
