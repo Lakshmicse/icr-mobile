@@ -156,10 +156,11 @@ class AuthField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Every label row is as tall as a link's tap area, so "Email" and
-        // "Password" sit the same distance above their fields.
-        SizedBox(
-          height: 34,
+        // Every label row is at least as tall as a link's tap area, so "Email" and
+        // "Password" sit the same distance above their fields; a label that wraps
+        // beside its link ("Code from your email" · "Change email") takes more.
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 34),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -269,7 +270,7 @@ class AuthErrorLine extends StatelessWidget {
   }
 }
 
-/// A link: "Forgot password?", "Create an account".
+/// A link on the card screens: "Forgot password?", "Create an account".
 class AuthLink extends StatelessWidget {
   const AuthLink({super.key, required this.label, required this.onTap, this.style, this.padding});
 
@@ -289,7 +290,7 @@ class AuthLink extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(6),
         child: Padding(
-          padding: padding ?? const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+          padding: padding ?? const EdgeInsets.symmetric(vertical: 7, horizontal: 2),
           child: Text(label, style: style ?? AuthType.link(p)),
         ),
       ),

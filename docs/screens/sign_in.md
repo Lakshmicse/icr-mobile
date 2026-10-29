@@ -1,37 +1,33 @@
 # Sign in
 
-The Sign in card in light and in dark (`docs/designs/sign-in-light.png`, `sign-in-dark.png`), and the join screen that follows Google or LinkedIn for someone new, which wears the same card.
+Sign in, laid out as LinkedIn's own sign-in page is, in ICR's colours, in light and in dark. The join screens that follow it (Google or LinkedIn for someone new, and the three sign-up screens) still wear the card from the Sign in designs (`docs/designs/sign-in-light.png`, `sign-in-dark.png`).
+
+**Owner's call, 28 Oct 2026:** "build me android sign in page as it is LinkedIn". This replaces the card layout the sign-in designs drew for this one screen; the card layout stays on the other auth screens.
 
 ## What it is
 
-A card on a plain page: "Sign in" and the ICR logo on one line; the LinkedIn and Google marks on their own, no boxes; a hairline "OR"; **Email** and **Password** with an icon inside each, "Forgot password?" opposite "Password", the show/hide eye; "Remember me"; the **Sign in** button; "New to ICR? Create an account".
+A plain page, no card: the ICR logo at the top left; **Sign in** (32, semibold) with "Stay updated on your professional world." under it; **Email** and **Password** as outlined fields whose label floats up to the border, with **Show** / **Hide** as a word inside the password field; **Forgot password?** under the fields; "Remember me"; one pill **Sign in** button; a hairline **or**; **Continue with LinkedIn** and **Continue with Google** as full-width outlined pills with the provider's mark at the left; and **New to ICR? Join now** pinned to the bottom of the screen.
 
-- **Light or dark follows the phone's own setting** (`AuthPalette.of(context)` reads `MediaQuery.platformBrightness`). Every colour is in `lib/features/auth/auth_palette.dart`, measured from the two designs; the layout is the same in both. The logo swaps to `assets/images/brand/icr-logo-white.png` (the logo recoloured white, shading kept) on the dark card. The rest of the app is light for now; only the auth screens have a dark side.
-- Built from `auth_widgets.dart` (`AuthScaffold`, `AuthHeader`, `AuthField`, `AuthEyeButton`, `AuthCheckbox`, `AuthPrimaryButton`, `AuthLink`, `AuthDivider`, `SocialIconButton`, `AuthErrorLine`, `AuthOutlinedButton`) and the type in `AuthType`; `social_signup_screen.dart` uses the same pieces, so the join step is on the card too.
-- Everything is Work Sans, sized by the width of the designs' text: title 29.4 bold, labels 15.2 bold, input 19, "Forgot password?" 14.5 semibold, "Remember me" 16.7, button 17.9 bold, "New to ICR?" 16.5, "Create an account" 16.8 bold.
-- Geometry (dp, from the 375-wide frames): card 360 wide with 15 either side, 18 radius, 1 border; content 308 wide (25 inside the border); fields 59 tall, 12 radius, 1 border, icon 18 in, text 53 in; button 54 tall, 12 radius; the marks 35 (LinkedIn) and 37 (Google) with their centres 99 apart. Vertical positions are within 1 dp of the designs in both modes (`python tool/design/cardcompare.py build/screens/sign_in_light.png docs/designs/sign-in-light.png out.png` lists every band's offset).
+- **Light or dark follows the phone's own setting** (`LiColors.of(context)` reads `MediaQuery.platformBrightness`). Every colour is in `lib/features/auth/linkedin_style.dart`: a white page and a near-black ink in light, `#1B1F23` and a light ink in dark; the accent is ICR's blue (`#32629E`) for the pill and the focus ring, and links use a lighter tint of it in dark so they read. The logo swaps to `assets/images/brand/icr-logo-white.png` in dark.
+- Built from `linkedin_style.dart` (`LiScaffold`, `LiTextField`, `LiShowButton`, `LiLink`, `LiPrimaryButton`, `LiSocialButton`, `LiOrDivider`, with colours in `LiColors` and type in `LiType`). "Remember me" and the error line are the card screens' `AuthCheckbox` and `AuthErrorLine`.
+- Everything is Work Sans: title 32, subtitle and labels 16, input 17, links 16 semibold, buttons 17 semibold, "or" 14.
+- Geometry (dp): 24 either side, 440 wide at most; fields 56 tall with a 6 radius and a 1 border (2 in the accent when focused); the pill and both provider buttons 52 tall and the full width, fully rounded; 12 between the provider buttons.
+- The label on the email field is "Email", not LinkedIn's "Email or phone": `POST /auth/login` takes an address only.
 
 ## What it does
 
 | Control | Does |
 |---|---|
-| Email, Password | `POST /auth/login` with the trimmed address, the password and Remember me; refusals are the API's sentence ("Invalid email or password." for a bad pair), shown under the form. Empty and malformed values are refused before any call. |
-| Eye | Shows or hides the typed password. |
-| Remember me | Starts off, as in the design, and goes to the API as `rememberMe`. |
-| LinkedIn, Google | The API's own OAuth round trip in a secure browser tab (`/auth/:provider/start?client=app…`). A provider the server has no keys for is drawn faded and says so; closing the tab changes nothing; someone new continues on the join screen. |
-| Forgot password? / Create an account | Open the website's `/forgot-password` and `/register` (resetting and joining with an email happen on the website). |
-| Keyboard | Next moves from email to password; Done submits; the card scrolls when the keyboard is up or the phone is small. |
-
-## What changed from the first version
-
-- The LinkedIn-style layout (logo above the title, "or Join ICR", "Continue with Google/LinkedIn" buttons, a "Show" word on the password) became the card.
-- "Keep me signed in" (on) became "Remember me" (off), as drawn. The session is kept either way; the choice goes to the API as before.
-- The "By signing in you agree to the ICR Terms and Privacy Policy" line is not in the design, so it is gone from this screen (the join step, which creates the account, still carries it).
-- The provider buttons lost their words; each mark carries the label for screen readers ("Continue with Google").
-- Placeholders are an addition: the designs show typed values only.
+| Email, Password | `POST /auth/login` with the trimmed address, the password and Remember me; refusals are the API's sentence ("Invalid email or password." for a bad pair), shown under the form. Empty and malformed values are refused before any call, in red under the field. |
+| Show / Hide | Shows or hides the typed password. Its tooltip and screen-reader name are "Show password" / "Hide password". |
+| Remember me | Starts off and goes to the API as `rememberMe`. |
+| Continue with LinkedIn / Google | The API's own OAuth round trip in a secure browser tab (`/auth/:provider/start?client=app…`). A provider the server has no keys for is drawn faded and says so when tapped; closing the tab changes nothing; someone new continues on the join screen. |
+| Forgot password? | Opens the in-app reset screen with the typed address, still editable. |
+| Join now | Opens the three sign-up screens; coming back with an address (an account that already exists) fills it in here. |
+| Keyboard | Next moves from email to password; Done submits; the page scrolls when the keyboard is up or the phone is small. |
 
 ## Tests
 
-- `test/sign_in_test.dart`: refusals before a call, the login request body, Remember me, an API refusal, the eye, the faded provider and the round trip, screen-reader names, a 320 × 568 phone with the keyboard up (this caught a real overflow in "New to ICR? Create an account", now a `Wrap`), light and dark palettes, and the join screen in both modes (confirming a name, the emailed code path, a link that will not load).
+- `test/sign_in_test.dart`: refusals before a call, the login request body, Remember me, an API refusal, Show / Hide, the faded provider and the round trip, screen-reader names, the LinkedIn layout itself (heading, labelled fields, "or", full-width provider buttons one under the other, "Join now" at the foot of a 390 × 844 screen), a 320 × 568 phone with the keyboard up, light and dark colours (and no card), and the join screen in both modes.
 - `test/live/auth_live_test.dart` (the local API): sign in as a seeded person, resume the saved session, sign out; both Remember me choices; a wrong password; the provider list.
 - `test/golden/screens_golden_test.dart`: `sign_in_light.png` and `sign_in_dark.png` at 390 × 844.

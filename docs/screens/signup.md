@@ -1,6 +1,6 @@
 # Sign-up, password recovery and email confirmation
 
-The way in: three short screens, as the website's `/register` (`components/auth/register/RegisterForm.tsx`), then the two emailed-link flows the website finishes on its own pages, taken in the app. **Sign-in itself is `docs/screens/sign_in.md`** (its look is fixed by the sign-in designs and is not touched here); this page is what Sign in opens: `Create an account` and `Forgot password?`. The screens wear the same card as Sign in (`AuthScaffold`, `AuthPalette`, light and dark follow the phone).
+The way in: three short screens, as the website's `/register` (`components/auth/register/RegisterForm.tsx`), then the two emailed-link flows the website finishes on its own pages, taken in the app. **Sign-in itself is `docs/screens/sign_in.md`** (its look is fixed by the sign-in designs and is not touched here); this page is what Sign in opens: `Join now` and `Forgot password?`. The screens wear the same card as Sign in (`AuthScaffold`, `AuthPalette`, light and dark follow the phone).
 
 Files: `lib/features/auth/` (`sign_up_screen.dart`, `signup_widgets.dart`, `signup_rules.dart`, `your_work_step.dart`, `forgot_password_screen.dart`, `reset_password_screen.dart`, `verify_email_screen.dart`, `recovery_repository.dart`). Tests: `test/signup_test.dart`, `test/recovery_test.dart`, live `test/live/account_live_test.dart` (group "sign-up and recovery").
 
