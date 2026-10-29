@@ -19,7 +19,6 @@ import 'exam_styles.dart';
 import 'exam_widgets.dart';
 import 'open_paper.dart';
 import 'result_screen.dart';
-import '../notifications/notifications_bell.dart';
 import '../notifications/notifications_screen.dart';
 
 /// The member's sittings, newest first, each opening its result again, with the right answers.
@@ -374,6 +373,8 @@ class _AttemptResultLoaderState extends State<AttemptResultLoader> {
         certificateEnabled: paper?.certificateEnabled ?? false,
         onRetake: widget.onRetake,
         eyebrowSuffix: result.attempt.submittedAt == null ? null : ' · ${dayLabel(result.attempt.submittedAt)}',
+        setName: paper?.title,
+        repository: widget.repository,
       );
     }
     return Scaffold(
@@ -382,12 +383,7 @@ class _AttemptResultLoaderState extends State<AttemptResultLoader> {
         bottom: false,
         child: Column(
           children: [
-            TitleBar(
-              title: 'Your result',
-              onBack: () => popOnce(context),
-              unread: bellUnread(context),
-              onBell: () => openNotifications(context),
-            ),
+            ExamTitleBar(title: 'Test Results', onBack: () => popOnce(context)),
             Expanded(
               child: _error == null
                   ? const ExamSpinner()

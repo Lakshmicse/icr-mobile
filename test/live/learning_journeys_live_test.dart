@@ -240,13 +240,13 @@ Future<void> _sit(
         await tester.pump();
       }
       if (i < c.total - 1) {
-        await tester.tap(find.text('Next'));
+        await tester.tap(find.text('Submit & Next'));
         await tester.pump(const Duration(milliseconds: 200));
       }
     }
     expect(c.counts.answered, c.total, reason: 'every question answered from the screen');
   }
-  await tester.tap(find.text(key == null ? 'Submit' : 'Review & submit'));
+  await tester.tap(find.text(key == null ? 'Finish' : 'Submit'));
   await tester.pump(const Duration(milliseconds: 400));
   await _waitFor(tester, find.text('Submit test'), 'the overview');
   await tester.pump(const Duration(milliseconds: 300));
@@ -257,7 +257,7 @@ Future<void> _sit(
   );
   overview?.call(c);
   await _tap(tester, find.text('Submit test'));
-  await _waitFor(tester, find.text('Your result'), 'the result');
+  await _waitFor(tester, find.text('Test Results'), 'the result');
   await tester.pump(const Duration(milliseconds: 500));
 }
 
@@ -438,7 +438,7 @@ void main() {
       expect(find.byType(CertificateSheetView), findsNothing, reason: 'the certificate sheet closed');
 
       // Retake on the result opens the brief again, ready for another sitting (closing it ends the flow).
-      await _tap(tester, find.text('Retake').last);
+      await _tap(tester, find.text('Retake Test').last);
       await _waitFor(tester, take, 'the brief again, after Retake');
       await tester.tapAt(const Offset(195, 12));
       await _closeSheet(tester);
@@ -516,7 +516,7 @@ void main() {
               if (q.multiple) i,
           ].first;
           while (c.current < multiple) {
-            await tester.tap(find.text('Next'));
+            await tester.tap(find.text('Submit & Next'));
             await tester.pump(const Duration(milliseconds: 200));
           }
           expect(find.text('Select all that apply.'), findsOneWidget, reason: 'a multiple-choice question says so');

@@ -113,8 +113,9 @@ PaperInfo samplePaper({
   topicTitle: kind == PaperKind.mock ? 'ASHRAE BEMP' : null,
 );
 
-/// [n] questions of four options; the third is multiple-choice when [multipleAt] says so.
-List<ServedQuestion> sampleQuestions(int n, {int? multipleAt}) => [
+/// [n] questions of four options; the one at [multipleAt] is multiple-choice, and each carries [difficulty]
+/// (EASY, MEDIUM or HARD) when it is given.
+List<ServedQuestion> sampleQuestions(int n, {int? multipleAt, String? difficulty}) => [
   for (var i = 0; i < n; i++)
     ServedQuestion(
       id: 'q${i + 1}',
@@ -122,14 +123,15 @@ List<ServedQuestion> sampleQuestions(int n, {int? multipleAt}) => [
       options: ['Option A${i + 1}', 'Option B${i + 1}', 'Option C${i + 1}', 'Option D${i + 1}'],
       type: i == multipleAt ? QuestionType.multiple : QuestionType.single,
       category: i.isEven ? 'Budgeting' : 'Governance',
+      difficulty: difficulty,
     ),
 ];
 
-PaperSitting sampleSitting({PaperInfo? paper, int questions = 5, int? multipleAt}) {
+PaperSitting sampleSitting({PaperInfo? paper, int questions = 5, int? multipleAt, String? difficulty}) {
   final p = paper ?? samplePaper(questions: questions);
   return PaperSitting(
     paper: p,
-    questions: sampleQuestions(questions, multipleAt: multipleAt),
+    questions: sampleQuestions(questions, multipleAt: multipleAt, difficulty: difficulty),
   );
 }
 

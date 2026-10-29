@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
@@ -13,6 +14,53 @@ bool popOnce<T>(BuildContext context, [T? result]) {
   if (route == null || !route.isCurrent) return false;
   Navigator.of(context).pop(result);
   return true;
+}
+
+/// The bar at the top of the result and the exam: white, a soft shadow below, a back arrow and the title.
+/// [backLabel] is what a screen reader hears for the arrow ("Leave the exam" in the exam).
+class ExamTitleBar extends StatelessWidget {
+  const ExamTitleBar({super.key, required this.title, required this.onBack, this.style, this.backLabel = 'Back'});
+
+  final String title;
+  final VoidCallback onBack;
+  final TextStyle? style;
+  final String backLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 56,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Color(0x14000000), blurRadius: 6, offset: Offset(0, 2))],
+      ),
+      child: Row(
+        children: [
+          Semantics(
+            button: true,
+            label: backLabel,
+            excludeSemantics: true,
+            child: InkResponse(
+              onTap: onBack,
+              radius: 26,
+              child: const SizedBox(
+                width: 56,
+                height: 56,
+                child: Icon(Symbols.arrow_back, size: 24, color: AppColors.onSurfaceVariant),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Semantics(
+              header: true,
+              child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: style ?? ExamText.barTitle),
+            ),
+          ),
+          const SizedBox(width: 16),
+        ],
+      ),
+    );
+  }
 }
 
 /// A white card with the hairline edge the Learning cards wear.
@@ -184,6 +232,8 @@ class ExamButton extends StatelessWidget {
     this.busy = false,
     this.color = AppColors.primary,
     this.height = 48,
+    this.radius = 12,
+    this.borderColor,
   });
 
   final String label;
@@ -197,6 +247,10 @@ class ExamButton extends StatelessWidget {
   final bool busy;
   final Color color;
   final double height;
+  final double radius;
+
+  /// The outline of a quiet button; by default the button's colour at half strength.
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
@@ -204,8 +258,10 @@ class ExamButton extends StatelessWidget {
     final ink = quiet ? color : Colors.white;
     final style = (quiet ? ExamText.buttonQuiet.copyWith(color: color) : ExamText.button);
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-      side: quiet ? BorderSide(color: enabled ? color.withValues(alpha: 0.5) : AppColors.slate300) : BorderSide.none,
+      borderRadius: BorderRadius.circular(radius),
+      side: quiet
+          ? BorderSide(color: enabled ? (borderColor ?? color.withValues(alpha: 0.5)) : AppColors.slate300)
+          : BorderSide.none,
     );
     return Semantics(
       button: true,
