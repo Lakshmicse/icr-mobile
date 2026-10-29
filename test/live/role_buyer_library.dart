@@ -103,19 +103,18 @@ void roleBuyerLibrary() {
               'one tiny PDF (the uploads folder keeps the bytes)',
             );
 
-            // The next account finds it, opens it (a view), downloads it (a download) and reports it.
+            // The next account finds it, previews it (a view; the app never downloads) and reports it.
             final found = await b.documents(LibraryQuery(search: title));
             expect(found.documents.map((d) => d.id), contains(doc.id), reason: '${reader.email} finds it');
             final seen = found.documents.firstWhere((d) => d.id == doc!.id);
             final file = seen.files.first;
-            final preview = await b.fetchFile(seen, file, preview: true);
+            final preview = await b.previewFile(seen, file);
             expect(preview.bytes, isNotEmpty);
-            final bytes = await b.fetchFile(seen, file);
-            expect(String.fromCharCodes(bytes.bytes.take(5)), '%PDF-');
+            expect(String.fromCharCodes(preview.bytes.take(5)), '%PDF-');
             final views = await b.recordView(doc.id);
             expect(views, greaterThan(0));
             await b.report(doc.id, DocumentReportReason.other, note: marker);
-            record('Library: open, download, report', reader.person, 'works', 'two-person with ${author.first}');
+            record('Library: preview, report', reader.person, 'works', 'two-person with ${author.first}');
           } finally {
             final d = doc;
             if (d != null) {

@@ -63,16 +63,6 @@ Future<bool> _seeded(ApiLibraryRepository repo) async {
 
 Future<LibraryDocument> _doc(ApiLibraryRepository repo, String id) => repo.document(id);
 
-/// Waits for the API's download counter, which it moves after the response (fire and forget).
-Future<LibraryDocument> _afterCount(ApiLibraryRepository repo, String id, bool Function(LibraryDocument) done) async {
-  var d = await repo.document(id);
-  for (var i = 0; i < 10 && !done(d); i++) {
-    await Future<void>.delayed(const Duration(milliseconds: 150));
-    d = await repo.document(id);
-  }
-  return d;
-}
-
 void main() {
   liveTest(
     'the list is the API\'s: every document a card, the numbers read from them, the chips from the facets',
@@ -254,24 +244,18 @@ void main() {
   );
 
   liveTest(
-    'the viewer reads the real bytes without counting a download; a download counts one; the first view counts one',
+    'the viewer reads the real bytes without counting a download (the app never downloads); the first view counts one',
     () async {
       final repo = await _repository();
       if (!await _seeded(repo)) return;
       final before = await _doc(repo, _handover);
 
-      final preview = await repo.fetchFile(before, before.files.first, preview: true);
+      final preview = await repo.previewFile(before, before.files.first);
       expect(utf8.decode(preview.bytes.sublist(0, 5)), '%PDF-');
       expect(preview.fileName, 'fm-handover-checklist.pdf');
       expect(preview.mimeType, 'application/pdf');
       await Future<void>.delayed(const Duration(milliseconds: 400));
       expect((await _doc(repo, _handover)).downloadCount, before.downloadCount, reason: 'a preview is not a download');
-
-      final taken = await repo.fetchFile(before, before.files.first);
-      expect(taken.bytes.length, preview.bytes.length);
-      final after = await _afterCount(repo, _handover, (d) => d.downloadCount > before.downloadCount);
-      expect(after.downloadCount, before.downloadCount + 1);
-      expect(after.files.first.downloadCount, before.files.first.downloadCount + 1);
 
       final views = await repo.recordView(_handover);
       expect(views, before.viewCount + 1);
@@ -289,7 +273,7 @@ void main() {
       for (final d in c.documents.where((d) => d.id.startsWith('design-doc-'))) {
         for (final f in d.files) {
           if (!seen.add(f.fileType)) continue;
-          final read = await repo.fetchFile(d, f, preview: true);
+          final read = await repo.previewFile(d, f);
           expect(read.bytes.length, f.sizeBytes, reason: f.fileName);
           final head = read.bytes.sublist(0, 4);
           switch (f.fileType) {
@@ -314,29 +298,27 @@ void main() {
     },
   );
 
-  liveTest('signed out, a preview and a download are the API\'s 401 and the sentence it gives', () async {
+  liveTest('signed out, a preview is the API\'s 401 and the sentence it gives', () async {
     final repo = await _repository();
     if (!await _seeded(repo)) return;
     final doc = await _doc(repo, _assetRegister);
     final anon = ApiLibraryRepository(api: liveAnonymous());
-    for (final preview in [true, false]) {
-      await expectLater(
-        anon.fetchFile(doc, doc.files.first, preview: preview),
-        throwsA(
-          isA<ApiError>().having((e) => e.statusCode, 'status', 401).having((e) => e.message, 'message', isNotEmpty),
-        ),
-      );
-    }
+    await expectLater(
+      anon.previewFile(doc, doc.files.first),
+      throwsA(
+        isA<ApiError>().having((e) => e.statusCode, 'status', 401).having((e) => e.message, 'message', isNotEmpty),
+      ),
+    );
     // The controller turns it into a message, not a lock card (only a 403 is a lock).
     final page = DocumentController(repository: anon, documentId: _assetRegister, initial: doc);
-    final out = await page.download(doc.files.first);
+    final out = await page.preview(doc.files.first);
     expect(out.file, isNull);
     expect(out.locked, isFalse);
     expect(page.lockMessage, isNull);
   });
 
   liveTest(
-    'the document page\'s controller: counts a first view once, a download on the page and the list, and knows who may change it',
+    'the document page\'s controller: counts a first view once (never a download) and knows who may change it',
     () async {
       final repo = await _repository();
       if (!await _seeded(repo)) return;
@@ -352,10 +334,7 @@ void main() {
       expect(first.file, isNotNull);
       await page.preview(page.document!.files.first);
       expect(page.document!.viewCount, before.viewCount + 1, reason: 'one opening, however many reads');
-      final dl = await page.download(page.document!.files.first);
-      expect(dl.file!.fileName, before.files.first.fileName);
-      expect(page.document!.downloadCount, before.downloadCount + 1);
-      expect(changed.last.downloadCount, before.downloadCount + 1);
+      expect(page.document!.downloadCount, before.downloadCount, reason: 'a preview is never a download');
 
       final mine = DocumentController(repository: repo, documentId: _scorecard);
       await mine.start();
@@ -414,7 +393,7 @@ void main() {
         expect(mine.map((r) => r['id']), contains(doc.id));
         final back = await repo.document(doc.id);
         expect(back.fileCount, 2);
-        final read = await repo.fetchFile(back, back.files.first, preview: true);
+        final read = await repo.previewFile(back, back.files.first);
         expect(utf8.decode(read.bytes), startsWith('Round 1: lobby'));
 
         // Add a file to it (append mode), then drop it again.

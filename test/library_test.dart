@@ -420,19 +420,20 @@ void main() {
       expect(const LibraryViewer(id: 'a', isAdmin: true).mayChange(_doc('x')), isTrue);
     });
 
-    test('a file is read with the member’s session by id and, for the viewer, with preview=true', () async {
-      final table = api();
-      table.routes['GET /documents/d1/download'] = (_) => utf8.encode('%PDF bytes');
-      final repo = ApiLibraryRepository(api: table.client());
-      final doc = (await repo.documents(const LibraryQuery())).documents.first;
-      final read = await repo.fetchFile(doc, doc.files.first, preview: true);
-      expect(table.queryOf('GET /documents/d1/download'), {'fileId': 'f1', 'preview': 'true'});
-      expect(read.bytes, utf8.encode('%PDF bytes'));
-      expect(read.fileName, 'FM handover checklist.pdf');
-      expect(read.mimeType, 'application/pdf');
-      await repo.fetchFile(doc, doc.files.first);
-      expect(table.queryOf('GET /documents/d1/download'), {'fileId': 'f1'});
-    });
+    test(
+      'a file is read with the member’s session by id, always as the viewer’s read (preview=true), never a download',
+      () async {
+        final table = api();
+        table.routes['GET /documents/d1/download'] = (_) => utf8.encode('%PDF bytes');
+        final repo = ApiLibraryRepository(api: table.client());
+        final doc = (await repo.documents(const LibraryQuery())).documents.first;
+        final read = await repo.previewFile(doc, doc.files.first);
+        expect(table.queryOf('GET /documents/d1/download'), {'fileId': 'f1', 'preview': 'true'});
+        expect(read.bytes, utf8.encode('%PDF bytes'));
+        expect(read.fileName, 'FM handover checklist.pdf');
+        expect(read.mimeType, 'application/pdf');
+      },
+    );
 
     test('a refusal on a download is the API’s own sentence, decoded from the bytes it arrived as', () async {
       final table = api();
@@ -441,7 +442,7 @@ void main() {
       final repo = ApiLibraryRepository(api: table.client());
       final doc = (await repo.documents(const LibraryQuery())).documents.first;
       await expectLater(
-        repo.fetchFile(doc, doc.files.first),
+        repo.previewFile(doc, doc.files.first),
         throwsA(
           isA<ApiError>()
               .having((e) => e.statusCode, 'status', 403)
@@ -450,7 +451,7 @@ void main() {
       );
       table.routes['GET /documents/d1/download'] = (_) => (401, '{"message":"Unauthorized"}');
       await expectLater(
-        repo.fetchFile(doc, doc.files.first),
+        repo.previewFile(doc, doc.files.first),
         throwsA(
           isA<ApiError>()
               .having((e) => e.statusCode, 'status', 401)
@@ -459,7 +460,7 @@ void main() {
       );
       table.routes['GET /documents/d1/download'] = (_) => (500, 'not json');
       await expectLater(
-        repo.fetchFile(doc, doc.files.first),
+        repo.previewFile(doc, doc.files.first),
         throwsA(
           isA<ApiError>()
               .having((e) => e.statusCode, 'status', 500)

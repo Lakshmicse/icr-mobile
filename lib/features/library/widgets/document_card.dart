@@ -41,8 +41,8 @@ class FilePlate extends StatelessWidget {
               right: -5,
               bottom: -5,
               child: Container(
-                constraints: const BoxConstraints(minWidth: 17),
-                height: 17,
+                constraints: const BoxConstraints(minWidth: 19),
+                height: 19,
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(

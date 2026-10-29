@@ -13,7 +13,9 @@ import 'package:icr_mobile/features/library/library_handoffs.dart';
 import 'package:icr_mobile/features/library/library_models.dart';
 import 'package:icr_mobile/features/library/upload_controller.dart';
 import 'package:icr_mobile/features/library/upload_document_screen.dart';
-import 'package:icr_mobile/features/library/widgets/image_preview_screen.dart';
+import 'package:icr_mobile/features/library/preview_runner.dart';
+import 'package:icr_mobile/features/library/screen_security.dart';
+import 'package:icr_mobile/features/library/widgets/document_viewer_screen.dart';
 import 'package:icr_mobile/features/library/widgets/report_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -35,6 +37,7 @@ class _Doc {
   final String id;
   final LibraryDocument? initial;
   final device = FakeLibraryDevice();
+  final pdf = FakePdfEngine();
   int backs = 0;
   int bells = 0;
   int plans = 0;
@@ -54,10 +57,11 @@ Future<_Doc> _pumpDoc(
   bool plans = true,
   bool ownBell = false,
   double height = 3000,
+  LibraryDocument? doc,
 }) async {
   _view(tester, height: height);
   final fake = repo ?? FakeLibrary();
-  final initial = read ? null : await fake.inner.document(id);
+  final initial = doc ?? (read ? null : await fake.inner.document(id));
   final page = _Doc(fake, id, initial: initial);
   await tester.pumpWidget(const SizedBox());
   await tester.pumpWidget(
@@ -81,6 +85,8 @@ Future<_Doc> _pumpDoc(
             onOpenPlans: plans ? () => page.plans++ : null,
             device: page.device,
             share: (title, link) async => page.shared.add((title, link)),
+            pdf: page.pdf,
+            runner: runHere,
           ),
         ),
       ),
@@ -116,8 +122,11 @@ void main() {
       expect(find.text('About this document'), findsOneWidget);
       expect(find.textContaining('60-point checklist'), findsOneWidget);
       expect(find.text('fm-handover-checklist.pdf'), findsOneWidget);
-      expect(find.text('Open'), findsOneWidget);
-      expect(find.text('Download'), findsOneWidget);
+      // Preview only: there is no Open and no Download, whatever the format.
+      expect(find.text('Preview'), findsOneWidget);
+      expect(find.text('Open'), findsNothing);
+      expect(find.text('Download'), findsNothing);
+      expect(find.byTooltip('Download'), findsNothing);
       // Somebody else's document: report it, never delete or add to it.
       expect(find.text('Report'), findsOneWidget);
       expect(find.text('Delete'), findsNothing);
@@ -130,7 +139,9 @@ void main() {
       expect(find.text('lease-audit-template.xlsx'), findsOneWidget);
       expect(find.text('lease-audit-worked-example.xlsx'), findsOneWidget);
       expect(find.text('lease-audit-method.pdf'), findsOneWidget);
-      expect(find.text('Open'), findsNWidgets(3));
+      // Every file of the pack, Excel and PDF alike, has its own Preview.
+      expect(find.text('Preview'), findsNWidgets(3));
+      expect(find.text('Download'), findsNothing);
       expect(find.text('Files'), findsWidgets);
     });
 
@@ -192,93 +203,132 @@ void main() {
     });
   });
 
-  group('reading and downloading', () {
-    testWidgets('Open reads the file for the viewer (not a download), counts one opening, and hands it to the phone', (
+  group('reading (view-only: no download, no screenshots)', () {
+    testWidgets('Preview reads the file for the viewer (not a download), counts one opening, and opens it in the app', (
       tester,
     ) async {
       final page = await _pumpDoc(tester, _theirs);
-      await tester.tap(find.text('Open'));
+      await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
       expect(page.repo.calls, contains('preview:d1-f0'));
       expect(page.repo.calls, contains('view:d1'));
-      expect(page.device.handed.single.fileName, 'fm-handover-checklist.pdf');
-      expect(page.device.handed.single.mimeType, 'application/pdf');
-      // A preview is not a download: the card says 482 still, and one more opening.
+      expect(page.repo.calls.where((c) => c.startsWith('download')), isEmpty, reason: 'the app never downloads');
+      // The PDF is drawn by the in-app viewer from the bytes the API streamed.
+      expect(find.byType(DocumentViewerScreen), findsOneWidget);
+      expect(page.pdf.opened, hasLength(1));
+      expect(find.text('Page 1 of 3'), findsOneWidget);
+      expect(find.text('fm-handover-checklist.pdf'), findsOneWidget);
+      // A preview is not a download: 482 downloads still, and one more opening.
+      await tester.pageBack();
+      await tester.pumpAndSettle();
       expect(find.text('482'), findsOneWidget);
       expect(find.text('1,291'), findsOneWidget);
       expect(page.changed.last.viewCount, 1291);
+      expect(page.changed.last.downloadCount, 482);
 
       // The same page counts one opening however many files are read.
-      await tester.tap(find.text('Open'));
+      await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
       expect(page.repo.calls.where((c) => c == 'view:d1'), hasLength(1));
-      expect(page.device.handed, hasLength(2));
+      expect(page.pdf.opened, hasLength(2));
     });
 
-    testWidgets(
-      'Download takes a copy through the API, counts it on the page and the list, and hands it to the phone',
-      (tester) async {
-        final page = await _pumpDoc(tester, _theirs);
-        await tester.tap(find.text('Download'));
-        await tester.pumpAndSettle();
-        expect(page.repo.calls, contains('download:d1-f0'));
-        expect(page.repo.calls.where((c) => c.startsWith('view:')), isEmpty);
-        expect(page.device.handed.single.fileName, 'fm-handover-checklist.pdf');
-        expect(find.text('483'), findsOneWidget);
-        expect(find.textContaining('483 downloads'), findsOneWidget);
-        expect(page.changed.last.downloadCount, 483);
-        expect(page.changed.last.files.single.downloadCount, 483);
-      },
-    );
+    testWidgets('the viewer lets the PDF go when it closes', (tester) async {
+      final page = await _pumpDoc(tester, _theirs);
+      await tester.tap(find.text('Preview'));
+      await tester.pumpAndSettle();
+      expect(page.pdf.closed, 0);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(page.pdf.closed, 1);
+    });
 
-    testWidgets('an image opens in the app (Preview), and its Download glyph takes a copy', (tester) async {
+    testWidgets('nothing on the page can save or hand a file over: no Download, no Open, no share of the file', (
+      tester,
+    ) async {
+      final page = await _pumpDoc(tester, 'd5');
+      expect(find.text('Download'), findsNothing);
+      expect(find.byTooltip('Download'), findsNothing);
+      expect(find.text('Open'), findsNothing);
+      expect(find.byIcon(LucideIcons.download), findsNothing);
+      // Share is the library’s link, never a file.
+      await tester.tap(find.text('Share'));
+      expect(page.shared.single.$2, Uri.parse('https://icr.test/documents'));
+    });
+
+    testWidgets('an image opens in the app (Preview) and the viewer has no Download glyph', (tester) async {
       final page = await _pumpDoc(tester, _mine);
       expect(find.text('Preview'), findsOneWidget);
       await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
-      expect(find.byType(ImagePreviewScreen), findsOneWidget);
+      expect(find.byType(DocumentViewerScreen), findsOneWidget);
       expect(find.byType(Image), findsOneWidget);
-      expect(page.device.handed, isEmpty);
       expect(page.repo.calls, contains('preview:d9-f0'));
-
-      await tester.tap(find.byTooltip('Download'));
-      await tester.pumpAndSettle();
-      expect(find.byType(ImagePreviewScreen), findsNothing);
-      expect(page.repo.calls, contains('download:d9-f0'));
-      expect(page.device.handed.single.fileName, 'plant-room-walkdown.png');
+      expect(find.byTooltip('Download'), findsNothing);
+      expect(find.byIcon(LucideIcons.download), findsNothing);
+      expect(page.pdf.opened, isEmpty);
     });
 
-    testWidgets('a phone with nothing to open the file says so', (tester) async {
-      final page = await _pumpDoc(tester, _theirs);
-      page.device.canHandOver = false;
-      await tester.tap(find.text('Download'));
+    testWidgets('a format the viewer reads as text (a sample workbook) opens too, not a hand-over', (tester) async {
+      final page = await _pumpDoc(tester, 'd3');
+      await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
-      expect(find.text("Couldn't open fm-handover-checklist.pdf on this phone."), findsOneWidget);
+      expect(find.byType(DocumentViewerScreen), findsOneWidget);
+      expect(page.repo.calls, contains('preview:d3-f0'));
+    });
+
+    testWidgets('the document page and the viewer keep the window out of screenshots, and let go on leaving', (
+      tester,
+    ) async {
+      final platform = FakeScreenSecurity();
+      ScreenSecurity.platform = platform;
+      addTearDown(() => ScreenSecurity.platform = const MethodChannelScreenSecurity());
+      expect(ScreenSecurity.holds, 0);
+      await _pumpDoc(tester, _theirs);
+      expect(ScreenSecurity.holds, 1);
+      expect(platform.requests, [true]);
+
+      await tester.tap(find.text('Preview'));
+      await tester.pumpAndSettle();
+      // The viewer holds it too; the window stays protected throughout (one request, not a flicker).
+      expect(ScreenSecurity.holds, 2);
+      expect(platform.requests, [true]);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(ScreenSecurity.holds, 1);
+      expect(platform.requests, [true]);
+
+      await tester.pumpWidget(const SizedBox());
+      expect(ScreenSecurity.holds, 0);
+      expect(platform.requests, [true, false]);
     });
 
     testWidgets('a plan that does not open it: the server’s own sentence in a lock card, and See plans', (
       tester,
     ) async {
       final repo = FakeLibrary()
-        ..failures['download'] = ApiError(
+        ..failures['preview'] = ApiError(
           'Your plan opens Limited documents. Upgrade to open this one.',
           statusCode: 403,
         );
       final page = await _pumpDoc(tester, _theirs, repo: repo);
-      await tester.tap(find.text('Download'));
+      await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
       expect(find.text('Not included in your plan'), findsOneWidget);
       expect(find.text('Your plan opens Limited documents. Upgrade to open this one.'), findsOneWidget);
-      expect(page.device.handed, isEmpty);
+      expect(find.byType(DocumentViewerScreen), findsNothing);
       await tester.tap(find.text('See plans'));
       expect(page.plans, 1);
 
-      // The preview is refused the same way, and the card goes when a read works.
+      // The card goes when a read works.
       repo.failures.clear();
-      await tester.tap(find.text('Open'));
+      await tester.tap(find.text('Preview'));
+      await tester.pumpAndSettle();
+      expect(find.byType(DocumentViewerScreen), findsOneWidget);
+      await tester.pageBack();
       await tester.pumpAndSettle();
       expect(find.text('Not included in your plan'), findsNothing);
-      expect(page.device.handed, hasLength(1));
     });
 
     testWidgets('the lock card has no button without a shell callback; a sign-in wall is a message, not a lock', (
@@ -286,14 +336,14 @@ void main() {
     ) async {
       final repo = FakeLibrary()..failures['preview'] = ApiError('Not allowed.', statusCode: 403);
       await _pumpDoc(tester, _theirs, repo: repo, plans: false);
-      await tester.tap(find.text('Open'));
+      await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
       expect(find.text('Not allowed.'), findsOneWidget);
       expect(find.text('See plans'), findsNothing);
 
-      final signedOut = FakeLibrary()..failures['download'] = ApiError('Unauthorized', statusCode: 401);
+      final signedOut = FakeLibrary()..failures['preview'] = ApiError('Unauthorized', statusCode: 401);
       await _pumpDoc(tester, _theirs, repo: signedOut);
-      await tester.tap(find.text('Download'));
+      await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
       expect(find.text('Unauthorized'), findsOneWidget);
       expect(find.text('Not included in your plan'), findsNothing);
@@ -302,10 +352,24 @@ void main() {
     testWidgets('a read that fails shows the API’s sentence and does not count an opening', (tester) async {
       final repo = FakeLibrary()..failures['preview'] = ApiError('The stored file is missing.', statusCode: 404);
       final page = await _pumpDoc(tester, _theirs, repo: repo);
-      await tester.tap(find.text('Open'));
+      await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
       expect(find.text('The stored file is missing.'), findsOneWidget);
       expect(page.repo.calls.where((c) => c.startsWith('view:')), isEmpty);
+    });
+
+    testWidgets('a format with no reader says so instead of offering a button that does nothing', (tester) async {
+      final repo = FakeLibrary();
+      const odd = LibraryDocument(
+        id: 'odd',
+        title: 'CAD drawing',
+        uploaderId: 'demo-priya',
+        files: [LibraryFile(id: 'odd-f0', fileName: 'plan.dwg', mimeType: 'application/acad', sizeBytes: 2048)],
+      );
+      await _pumpDoc(tester, 'odd', repo: repo, doc: odd);
+      expect(find.text('Preview'), findsNothing);
+      expect(find.text("Other files can't be previewed in the app."), findsOneWidget);
+      expect(find.text('Download'), findsNothing);
     });
   });
 
@@ -468,7 +532,7 @@ void main() {
     ) async {
       final repo = FakeLibrary();
       final page = await _pumpDoc(tester, 'd5', repo: repo);
-      expect(find.text('Open'), findsNWidgets(3));
+      expect(find.text('Preview'), findsNWidgets(3));
       await tester.tap(find.byTooltip('Remove lease-audit-method.pdf'));
       await tester.pumpAndSettle();
       expect(find.text('Remove lease-audit-method.pdf?'), findsOneWidget);
@@ -481,7 +545,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(repo.calls, contains('removeFile:d5-f2'));
       expect(find.text('lease-audit-method.pdf'), findsNothing);
-      expect(find.text('Open'), findsNWidgets(2));
+      expect(find.text('Preview'), findsNWidgets(2));
       expect(page.changed.last.fileCount, 2);
 
       await tester.tap(find.byTooltip('Remove lease-audit-worked-example.xlsx'));
@@ -490,7 +554,7 @@ void main() {
       await tester.pumpAndSettle();
       // One file left: no remove glyph is drawn for it.
       expect(find.byTooltip('Remove lease-audit-template.xlsx'), findsNothing);
-      expect(find.text('Open'), findsOneWidget);
+      expect(find.text('Preview'), findsOneWidget);
 
       repo.failures['removeFile'] = ApiError(
         'That is the only file on this document. Remove the document instead.',

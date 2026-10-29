@@ -99,6 +99,82 @@ enum LibraryFileType {
   };
 }
 
+/// How a file is shown in the app. The library is view-only on a phone: a file is read and drawn in the
+/// app, never saved or handed to another app.
+enum PreviewKind {
+  /// Pages drawn by the phone's PDF renderer.
+  pdf,
+
+  /// A picture, zoomable.
+  image,
+
+  /// Plain text, line by line.
+  text,
+
+  /// A CSV file as a table.
+  table,
+
+  /// Word documents (.doc, .docx): headings, paragraphs, lists and tables.
+  word,
+
+  /// Excel workbooks (.xls, .xlsx): each sheet as a grid.
+  sheets,
+
+  /// PowerPoint decks (.ppt, .pptx): each slide's text.
+  slides,
+
+  /// ZIP files: the files inside, each opened in the viewer in turn.
+  archive,
+
+  /// Anything the app has no reader for (the library takes none of these).
+  none,
+}
+
+/// How a file is shown, from its MIME type or, failing that, its name. The formats are the ones the library
+/// accepts (`LibraryLimits.extensions`); the app reads each in its own viewer because a document cannot be
+/// saved or handed to another app.
+PreviewKind previewKindFor(String mimeType, String fileName) {
+  final mime = mimeType.toLowerCase();
+  if (mime == 'image/svg+xml') return PreviewKind.none;
+  const byMime = <String, PreviewKind>{
+    'application/pdf': PreviewKind.pdf,
+    'text/plain': PreviewKind.text,
+    'text/csv': PreviewKind.table,
+    'application/msword': PreviewKind.word,
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': PreviewKind.word,
+    'application/vnd.ms-excel': PreviewKind.sheets,
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': PreviewKind.sheets,
+    'application/vnd.ms-powerpoint': PreviewKind.slides,
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': PreviewKind.slides,
+    'application/zip': PreviewKind.archive,
+    'application/x-zip-compressed': PreviewKind.archive,
+  };
+  final known = byMime[mime];
+  if (known != null) return known;
+  if (mime.startsWith('image/')) return PreviewKind.image;
+  final dot = fileName.lastIndexOf('.');
+  if (dot < 0) return PreviewKind.none;
+  switch (fileName.substring(dot + 1).toLowerCase()) {
+    case 'pdf':
+      return PreviewKind.pdf;
+    case 'txt':
+      return PreviewKind.text;
+    case 'csv':
+      return PreviewKind.table;
+    case 'doc' || 'docx':
+      return PreviewKind.word;
+    case 'xls' || 'xlsx':
+      return PreviewKind.sheets;
+    case 'ppt' || 'pptx':
+      return PreviewKind.slides;
+    case 'zip':
+      return PreviewKind.archive;
+    case 'png' || 'jpg' || 'jpeg' || 'webp' || 'gif':
+      return PreviewKind.image;
+  }
+  return PreviewKind.none;
+}
+
 /// A format badge and its colour, for the plate on a document card (`fileGlyph` on the website).
 class FileGlyph {
   const FileGlyph(this.label, this.color);
@@ -163,8 +239,13 @@ class LibraryFile {
 
   FileGlyph get glyph => FileGlyph.of(mimeType, fileName);
 
-  /// An image the app can show itself (the viewer reads the bytes); every other format opens in another app.
+  /// An image the app can show itself (the viewer reads the bytes).
   bool get isImage => fileType == LibraryFileType.image && mimeType.startsWith('image/') && mimeType != 'image/svg+xml';
+
+  /// How the app shows this file, or [PreviewKind.none] when it has no reader for it.
+  PreviewKind get previewKind => previewKindFor(mimeType, fileName);
+
+  bool get canPreview => previewKind != PreviewKind.none;
 
   LibraryFile copyWith({int? downloadCount}) => LibraryFile(
     id: id,

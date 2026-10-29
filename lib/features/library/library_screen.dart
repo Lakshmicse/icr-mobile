@@ -14,11 +14,12 @@ import 'library_device.dart';
 import 'library_format.dart';
 import 'library_handoffs.dart';
 import 'library_models.dart';
+import 'screen_security.dart';
 import 'upload_document_screen.dart';
 import 'widgets/document_card.dart';
 
 /// The Digital Library: every document members shared, searchable and filterable, with a page for each
-/// and a form to share your own.
+/// and a form to share your own. A document is previewed in the app and cannot be downloaded or screenshotted.
 ///
 /// Top to bottom: four tiles (Documents, Categories, Formats, Your uploads), "Browse by kind" quick
 /// searches, the search box (its sliders glyph opens Sort and "Only my uploads"), the category chips,
@@ -147,13 +148,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final c = context.watch<LibraryController>();
-    return CommunityPage(
-      title: 'Digital Library',
-      onBack: widget.onBack,
-      onBell: _bell,
-      unread: c.unread,
-      onRefresh: c.refresh,
-      children: _body(c),
+    // View-only: no screenshots or recordings while the library is on screen (and, with it, every document
+    // page and viewer opened from it, which hold the same guard).
+    return ScreenGuard(
+      child: CommunityPage(
+        title: 'Digital Library',
+        onBack: widget.onBack,
+        onBell: _bell,
+        unread: c.unread,
+        onRefresh: c.refresh,
+        children: _body(c),
+      ),
     );
   }
 

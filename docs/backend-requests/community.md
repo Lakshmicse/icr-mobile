@@ -24,7 +24,11 @@ async detail(id: string) {
 
 Unit spec: returns the card for a live document, 404 for a soft-deleted one, never returns `fileUrl`.
 
-## 2. A short-lived link to a download (so a document can open in the phone's own viewer)
+## 2. ~~A short-lived link to a download~~ — withdrawn, 28 Oct 2026
+
+The Digital Library is now view-only on the phone (no download, no hand-over to other apps), so the app has no use for a link a browser or another viewer could open. Kept below for the record.
+
+### Original request: a short-lived link to a download (so a document can open in the phone's own viewer)
 
 `GET /documents/:id/download` needs the bearer token and the stored file is private, so `url_launcher` (which the brief asked for) cannot open it: the app fetches the bytes with its session and hands them to the share sheet instead. A signed, expiring link would let the phone open the file directly in a viewer:
 
