@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_error.dart';
 import 'rfq_format.dart';
-import 'rfq_links.dart' show PickedRfqFile;
+import 'rfq_links.dart' show PickedRfqFile, RfqClock;
 import 'rfq_models.dart';
 import 'rfq_repository.dart';
 import 'rfq_rules.dart';
@@ -504,7 +504,14 @@ class PostRfqController extends ChangeNotifier {
   bool _lastGoingLive = true;
 
   Map<String, String> _draftProblems({required bool goingLive}) =>
-      draft.problems(goingLive: goingLive, askCompany: askCompany, effectiveTitle: effectiveTitle, editing: editing);
+      // On the clock the date picker uses (RfqClock), so a day the picker offered is never already past.
+      draft.problems(
+        goingLive: goingLive,
+        askCompany: askCompany,
+        effectiveTitle: effectiveTitle,
+        editing: editing,
+        now: RfqClock.now(),
+      );
 
   Map<String, String> _quoteProblems() => quote.problems(hasItem: target?.item != null, askPhone: _askPhone);
 
