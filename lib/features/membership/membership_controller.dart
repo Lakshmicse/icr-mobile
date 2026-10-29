@@ -13,6 +13,7 @@ class MembershipController extends ChangeNotifier {
   final MembershipRepository repository;
 
   MembershipAudience _audience;
+  List<MembershipAudience>? _knownTabs;
   List<MembershipPlan> _plans = const [];
   MyPlan? _mine;
   bool _started = false;
@@ -25,6 +26,19 @@ class MembershipController extends ChangeNotifier {
   int _generation = 0;
 
   MembershipAudience get audience => _audience;
+
+  /// The ladders to draw a chip for, in the website's order: the ones the
+  /// repository names (the member holds a plan there, or may buy and it has a
+  /// plan on sale) and the one being looked at. Until they are read, or when
+  /// reading them fails, that is just the ladder the screen opened on.
+  List<MembershipAudience> get tabs {
+    final shown = {...?_knownTabs, _audience};
+    return [
+      for (final a in MembershipAudience.values)
+        if (shown.contains(a)) a,
+    ];
+  }
+
   List<MembershipPlan> get plans => _plans;
 
   /// Null until read, or when the read failed (the cards still show).
@@ -61,7 +75,8 @@ class MembershipController extends ChangeNotifier {
     if (next == _audience) return;
     _audience = next;
     _message = null;
-    _load(notify: true);
+    // The ladders the member has do not change with the one they look at.
+    _load(notify: true, refreshTabs: false);
   }
 
   void dismissMessage() {
@@ -110,7 +125,7 @@ class MembershipController extends ChangeNotifier {
     }
   }
 
-  Future<void> _load({required bool notify}) async {
+  Future<void> _load({required bool notify, bool refreshTabs = true}) async {
     final generation = ++_generation;
     final audience = _audience;
     _loading = true;
@@ -120,10 +135,21 @@ class MembershipController extends ChangeNotifier {
       final results = await Future.wait<Object?>([
         repository.plans(audience),
         repository.mine(audience).then<Object?>((m) => m).catchError((Object _) => null),
+        if (refreshTabs) repository.audiences().then<Object?>((a) => a).catchError((Object _) => null),
       ]);
       if (generation != _generation) return;
       _plans = results[0] as List<MembershipPlan>;
       _mine = results[1] as MyPlan?;
+      if (refreshTabs) _knownTabs = results[2] as List<MembershipAudience>?;
+      // Opened on a ladder with nothing on sale that is not one of the member's
+      // (a link to Learning, which is not sold any more): go to the first ladder
+      // they have rather than leave a chip that says "No plans on sale yet".
+      final known = _knownTabs;
+      if (known != null && known.isNotEmpty && _plans.isEmpty && !known.contains(audience)) {
+        _audience = known.first;
+        _message = null;
+        return _load(notify: true, refreshTabs: false);
+      }
     } catch (e) {
       if (generation != _generation) return;
       _plans = const [];

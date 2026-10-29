@@ -18,6 +18,36 @@ class ApiMembershipRepository implements MembershipRepository {
     }
   }
 
+  /// `/me/all` says what the member holds and may buy on each ladder; the
+  /// catalogue (every audience at once) says which ladders have a plan on sale.
+  /// A ladder gets a chip when the member holds a plan on it, or may buy there
+  /// and it has one on sale: the website's own rule (`MembershipPlansPage`). When
+  /// the catalogue cannot be read nothing is hidden for want of it, as there.
+  @override
+  Future<List<MembershipAudience>> audiences() async {
+    Set<String>? onSale;
+    try {
+      final catalogue = await _get('/subscriptions/catalogue');
+      onSale = {
+        for (final p in (catalogue['plans'] as List? ?? const []))
+          if (p is Map && p['audience'] is String) p['audience'] as String,
+      };
+    } on ApiError {
+      onSale = null;
+    }
+    final all = await _get('/subscriptions/me/all');
+    final shown = <MembershipAudience>{};
+    for (final m in (all['memberships'] as List? ?? const [])) {
+      if (m is! Map) continue;
+      final audience = MembershipAudience.fromApi(m['audience'] as String?);
+      if (audience == null) continue;
+      final holds = m['subscription'] != null;
+      final canBuy = m['canBuy'] as bool? ?? false;
+      if (holds || (canBuy && (onSale == null || onSale.contains(audience.api)))) shown.add(audience);
+    }
+    return [for (final a in MembershipAudience.values) if (shown.contains(a)) a];
+  }
+
   @override
   Future<List<MembershipPlan>> plans(MembershipAudience audience) async {
     final json = await _get('/subscriptions/catalogue', {'audience': audience.api});

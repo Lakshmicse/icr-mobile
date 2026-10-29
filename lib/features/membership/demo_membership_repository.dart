@@ -75,6 +75,13 @@ class DemoMembershipRepository implements MembershipRepository {
     ];
   }
 
+  /// Every ladder the website sells on. Learning is not sold any more, so it has no chip.
+  @override
+  Future<List<MembershipAudience>> audiences() async => [
+    for (final a in MembershipAudience.values)
+      if (a != MembershipAudience.learning) a,
+  ];
+
   @override
   Future<List<MembershipPlan>> plans(MembershipAudience audience) async => _ladder(audience);
 
