@@ -275,7 +275,7 @@ class ApiForumRepository implements ForumRepository {
   /// API takes it) and no body on an edit (the API refuses to empty one); an edit that leaves the body alone
   /// (`ForumDraft.body` null) sends none, so a body the website's editor formatted is kept as it is.
   Map<String, dynamic> _draftBody(ForumDraft d, {required bool creating}) {
-    final html = d.body == null ? '' : ForumJson.textToHtml(d.body!);
+    final html = d.bodyHtml ?? (d.body == null ? '' : ForumJson.textToHtml(d.body!));
     final poll = d.pollOptions?.map((o) => o.trim()).where((o) => o.isNotEmpty).toList();
     return {
       if (d.categoryKey != null) ...{'topicCategory': d.categoryKey, 'topicSubcategory': d.subcategoryKey},

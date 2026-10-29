@@ -300,6 +300,7 @@ class ForumDraft {
     required this.categoryKey,
     required this.title,
     this.body,
+    this.bodyHtml,
     this.subcategoryKey,
     this.kind = ThreadKind.discussion,
     this.tags = const [],
@@ -312,9 +313,13 @@ class ForumDraft {
   final String? subcategoryKey;
   final String title;
 
-  /// What was typed: plain text, sent as escaped paragraphs. Null on an edit leaves the stored body exactly as
-  /// it is (a body the website's editor formatted is not flattened by an edit of the title or the tags).
+  /// What was typed, as plain words: sent as escaped paragraphs when there is no [bodyHtml]. Null on an edit
+  /// leaves the stored body exactly as it is (a body the website's editor formatted is not flattened by an edit of
+  /// the title or the tags).
   final String? body;
+
+  /// The details as the forum's HTML (the composer's rich editor); sent as it is, in place of [body].
+  final String? bodyHtml;
   final ThreadKind kind;
   final List<String> tags;
   final ForumAttachment? attachment;

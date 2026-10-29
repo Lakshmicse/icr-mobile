@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_error.dart';
 import '../feed/feed_models.dart';
-import '../feed/forum_json.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
+import 'rich_document.dart';
 
 /// What a new discussion is (the website's composer, 19 Oct 2026): a discussion, or a poll. An edit keeps its own
 /// kind (an older post may be a question), so the choice exists only on a new post.
@@ -22,12 +22,14 @@ class ComposerController extends ChangeNotifier {
     String? initialBody,
   }) : _mode = mode,
        title = editing?.card.title ?? initialTitle ?? '',
-       body = editing == null ? (initialBody ?? '') : ForumJson.htmlToText(editing.bodyHtml),
-      tags = [for (final t in editing?.card.tags ?? const <String>[]) t.startsWith('#') ? t.substring(1) : t],
-      _topicKey = editing?.category?.key,
-      _subKey = editing?.subcategory?.key,
-      _attachment = editing?.attachment {
-    _originalBody = body;
+       doc = editing != null
+           ? RichDoc.fromHtml(editing.bodyHtml)
+           : (initialBody == null ? RichDoc.empty : RichDoc.fromPlain(initialBody)),
+       tags = [for (final t in editing?.card.tags ?? const <String>[]) t.startsWith('#') ? t.substring(1) : t],
+       _topicKey = editing?.category?.key,
+       _subKey = editing?.subcategory?.key,
+       _attachment = editing?.attachment {
+    _originalHtml = doc.toHtml();
     _originalTitle = title;
     _originalTags = [...tags];
   }
@@ -39,7 +41,10 @@ class ComposerController extends ChangeNotifier {
 
   ComposerMode _mode;
   String title;
-  String body;
+
+  /// The details, as the editor holds them: words with bold, italic, headings, lists and links.
+  RichDoc doc;
+  String? _html;
   List<String> tags;
   final List<String> pollOptions = ['', ''];
   String? _topicKey;
@@ -47,7 +52,7 @@ class ComposerController extends ChangeNotifier {
   ForumAttachment? _attachment;
   bool _attachmentChanged = false;
 
-  late final String _originalBody;
+  late final String _originalHtml;
   late final String _originalTitle;
   late final List<String> _originalTags;
 
@@ -180,10 +185,21 @@ class ComposerController extends ChangeNotifier {
     _changed();
   }
 
-  void setBody(String value) {
-    body = value;
+  /// The details as plain words, a line each: what the rules read.
+  String get body => doc.plainText;
+
+  /// The details as the forum's HTML (what is sent).
+  String get bodyHtml => _html ??= doc.toHtml();
+
+  /// The editor's document changed.
+  void setDoc(RichDoc value) {
+    doc = value;
+    _html = null;
     _changed();
   }
+
+  /// The details replaced by plain words (a draft restored, a test).
+  void setBody(String value) => setDoc(RichDoc.fromPlain(value));
 
   void setTopic(TaxonomyNode? node) {
     _topicKey = node?.key;
@@ -301,9 +317,8 @@ class ComposerController extends ChangeNotifier {
   }
 
   String? get bodyProblem {
-    final t = body.trim();
-    if (t.isEmpty && !bodyOptional) return 'Add some details so people know what you mean.';
-    if (t.length > ForumLimits.bodyMax) return 'The details can be at most ${ForumLimits.bodyMax} characters.';
+    if (doc.isBlank && !bodyOptional) return 'Add some details so people know what you mean.';
+    if (doc.plainLength > ForumLimits.bodyMax) return 'The details can be at most ${ForumLimits.bodyMax} characters.';
     return null;
   }
 
@@ -317,10 +332,10 @@ class ComposerController extends ChangeNotifier {
   /// Whether anything differs from what an edit started with.
   bool get changed {
     if (!isEdit) {
-      return title.trim().isNotEmpty || body.trim().isNotEmpty || filledOptions.isNotEmpty || tags.isNotEmpty;
+      return title.trim().isNotEmpty || !doc.isBlank || filledOptions.isNotEmpty || tags.isNotEmpty;
     }
     return title.trim() != _originalTitle ||
-        body.trim() != _originalBody.trim() ||
+        bodyHtml != _originalHtml ||
         !listEquals(tags, _originalTags) ||
         _topicKey != editing!.category?.key ||
         _subKey != editing!.subcategory?.key ||
@@ -330,9 +345,12 @@ class ComposerController extends ChangeNotifier {
   /// Whether leaving would lose something the reader wrote.
   bool get hasUnsentWork => !_sending && changed;
 
-  /// The body is the stored one's words, so an edit that does not change them sends none and leaves the website
-  /// editor's formatting alone.
-  bool get bodyUnchanged => isEdit && body.trim() == _originalBody.trim();
+  /// The details are as the post has them, so an edit that does not change them sends none and leaves the stored
+  /// HTML exactly as it is (the website's editor can hold a quote or code this one reads as paragraphs).
+  bool get bodyUnchanged => isEdit && bodyHtml == _originalHtml;
+
+  /// The post has formatting this editor cannot hold (quotes, code), which an edit of its words would flatten.
+  bool get editLosesFormatting => isEdit && htmlHasFormattingEditorLoses(editing!.bodyHtml);
 
   /// An edit that did not touch the topic sends none: the forum re-checks a topic it is sent, and a sub-topic since
   /// retired would refuse an edit of the title alone.
@@ -343,6 +361,7 @@ class ComposerController extends ChangeNotifier {
     subcategoryKey: _subKey,
     title: title,
     body: bodyUnchanged ? null : body,
+    bodyHtml: bodyUnchanged ? null : bodyHtml,
     kind: kind,
     tags: tags,
     attachment: !isEdit || _attachmentChanged ? _attachment : null,
