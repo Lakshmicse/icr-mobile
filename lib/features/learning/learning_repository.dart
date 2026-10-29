@@ -19,6 +19,10 @@ abstract class LearningRepository {
   /// itself when it schedules no runs. A paid place is bought on the website.
   Future<MyEnrolment> enrol(Course course, {CourseRun? run});
 
+  /// Takes back the member's place or request on [course] (`DELETE /learning/courses/:id/enroll`). The API
+  /// refuses a place that is paid for, with a sentence that sends the member to ICR, who arrange the refund.
+  Future<void> withdraw(Course course);
+
   /// Writes to the institute that awards the course. [message] is the whole
   /// text; an in-house request is a corporate lead, which also carries the
   /// [company] and how many people to train ([headcount]).

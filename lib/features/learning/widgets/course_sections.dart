@@ -592,7 +592,8 @@ class Testimonial extends StatelessWidget {
 }
 
 /// The reviews: the first as the design's testimonial, and — when the course
-/// has more — "see all N reviews" unfolding the rest in the same layout.
+/// has more — "see all N reviews" unfolding the rest in the same layout. A course with more reviews than the
+/// page the sheet read says how many are shown; the rest are not a reason to leave the app.
 class Testimonials extends StatelessWidget {
   const Testimonials({
     super.key,
@@ -600,7 +601,6 @@ class Testimonials extends StatelessWidget {
     required this.total,
     required this.expanded,
     required this.onToggle,
-    required this.onMore,
   });
 
   final List<CourseReview> reviews;
@@ -609,9 +609,6 @@ class Testimonials extends StatelessWidget {
   final int total;
   final bool expanded;
   final VoidCallback onToggle;
-
-  /// Opens the rest of a long list where it lives, on the website.
-  final VoidCallback onMore;
 
   @override
   Widget build(BuildContext context) {
@@ -629,24 +626,21 @@ class Testimonials extends StatelessWidget {
             child: GestureDetector(
               key: const ValueKey('reviews-toggle'),
               behavior: HitTestBehavior.opaque,
-              onTap: expanded && more ? onMore : onToggle,
+              onTap: onToggle,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    expanded
-                        ? (more ? 'read all $total reviews on the website' : 'show fewer reviews')
-                        : 'see all $total reviews',
-                    style: LearningText.showMore,
-                  ),
+                  Text(expanded ? 'show fewer reviews' : 'see all $total reviews', style: LearningText.showMore),
                   const SizedBox(width: 1),
-                  if (expanded && more)
-                    const Icon(LucideIcons.arrowUpRight, size: 11, color: AppColors.primary)
-                  else
-                    SizedBox(width: 12, height: 12, child: _Chevron(up: expanded)),
+                  SizedBox(width: 12, height: 12, child: _Chevron(up: expanded)),
                 ],
               ),
             ),
+          ),
+        if (expanded && more)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(58.8, 6, 22, 0),
+            child: Text('Showing the newest ${reviews.length} of $total.', style: LearningText.tileEmpty),
           ),
       ],
     );

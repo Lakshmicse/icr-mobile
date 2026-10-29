@@ -125,6 +125,9 @@ class _BareCourses implements LearningRepository {
   );
 
   @override
+  Future<void> withdraw(Course course) => inner.withdraw(course);
+
+  @override
   Future<List<Course>> courses() async => [for (final c in await inner.courses()) _bare(c)];
   @override
   Future<Course> detail(Course course) async => _bare(await inner.detail(course));

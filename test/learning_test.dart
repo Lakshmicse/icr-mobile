@@ -238,8 +238,12 @@ class _Fake implements LearningRepository {
   String? enrolError;
   String? listError;
 
+  /// What taking a place back answers with: a refusal's sentence, or null to allow it.
+  String? withdrawError;
+
   int courseCalls = 0;
   final enrols = <(String, String?)>[];
+  final withdrawals = <String>[];
   final enquiries = <({String code, String message, EnquiryKind kind, String? company, int? headcount})>[];
 
   MyEnrolment? _mineFor(Course c) {
@@ -247,6 +251,16 @@ class _Fake implements LearningRepository {
       if (m.courseId == c.id) return m;
     }
     return null;
+  }
+
+  @override
+  Future<void> withdraw(Course course) async {
+    withdrawals.add(course.code);
+    if (withdrawError != null) throw ApiError(withdrawError!, statusCode: 403);
+    mine = [
+      for (final m in mine)
+        if (m.courseId != course.id) m,
+    ];
   }
 
   @override
@@ -569,6 +583,35 @@ void main() {
       expect(mine.runId, 'b1');
       expect(mine.location, 'Riyadh, KSA');
       expect(api.bodies.last, {'batchId': 'demo-run-1'});
+    });
+
+    test('a place is taken back through the withdraw endpoint, by the course id', () async {
+      final course = DemoLearningRepository().course;
+      final api = _Api({
+        'GET /learning/me/enrollments': (_) => [
+          {'id': 'e1', 'courseId': course.id, 'batchId': 'b1', 'status': 'PENDING'},
+        ],
+        'DELETE /learning/courses/${course.id}/enroll': (_) => {'id': 'e1', 'status': 'CANCELLED'},
+      });
+      final repo = _repo(api);
+      expect((await repo.myEnrolments()).map((m) => m.courseId), [course.id]);
+      await repo.withdraw(course);
+      expect(api.calls.last, 'DELETE /learning/courses/${course.id}/enroll');
+    });
+
+    test('a paid place is refused by the API and the sentence reaches the caller', () async {
+      final course = DemoLearningRepository().course;
+      final api = _Api({
+        'DELETE /learning/courses/${course.id}/enroll': (_) => (
+          403,
+          '{"message":"Your place is paid for. To withdraw, contact ICR support, who will arrange any refund."}',
+        ),
+      });
+      final repo = _repo(api);
+      await expectLater(
+        repo.withdraw(course),
+        throwsA(isA<ApiError>().having((e) => e.message, 'message', startsWith('Your place is paid for.'))),
+      );
     });
 
     test('the reviews are the published page, newest first, with the count of them all', () async {
@@ -1469,7 +1512,11 @@ void main() {
       // As wide as its words (now set at the app's 12 sp, so 168 dp rather than the design's 133) with 11.4 dp
       // of padding and a 1 dp hairline each side.
       final words = tester.getSize(find.text('PREMIUM CERTIFICATION')).width;
-      expect(size.width, closeTo(words + 2 * 11.4 + 2, 1.5), reason: 'the pill is as wide as its words plus its padding');
+      expect(
+        size.width,
+        closeTo(words + 2 * 11.4 + 2, 1.5),
+        reason: 'the pill is as wide as its words plus its padding',
+      );
     });
 
     testWidgets('the two tabs filter the runs by mode, and each tab opens on its own first run', (tester) async {
@@ -1499,16 +1546,16 @@ void main() {
       expect(sheet.selectedRun, isNull);
     });
 
-    testWidgets('a date tile selects its run, and the schedule link opens the course on the website', (tester) async {
+    testWidgets('a date tile selects its run; the schedule caption is a caption, not a way out', (tester) async {
       final (_, sheet) = await pumpSheet(tester, _Fake(catalogue: [_rich()]));
       expect(sheet.selectedRun?.id, 'r1');
       await tester.tap(find.text('London, UK'));
       await tester.pump();
       expect(sheet.selectedRun?.id, 'r2');
       expect(find.text('2027 Schedule'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('schedule-link')));
+      await tester.tap(find.byKey(const ValueKey('schedule-link')), warnIfMissed: false);
       await tester.pump();
-      expect(launches.urls, ['https://icr.org.in/learning/professional-development/RICH']);
+      expect(launches.urls, isEmpty, reason: 'the grid is the schedule; the website page was this sheet');
     });
 
     testWidgets('See More Dates unfolds the fourth run', (tester) async {
@@ -1525,11 +1572,10 @@ void main() {
       expect(launches.urls, isEmpty);
     });
 
-    testWidgets('See More Dates with no further run opens the full schedule on the website', (tester) async {
+    testWidgets('with no further run there is no See More Dates (it opened this sheet again)', (tester) async {
       await pumpSheet(tester, _Fake(catalogue: [DemoLearningRepository().course]));
-      await tester.tap(find.text('See More Dates'));
-      await tester.pump();
-      expect(launches.urls, ['https://icr.org.in/learning/professional-development/CALS']);
+      expect(find.text('See More Dates'), findsNothing);
+      expect(launches.urls, isEmpty);
     });
 
     testWidgets('a held place reads CONFIRMED on its tile and the big button says so; Add to cart is off', (
@@ -1540,9 +1586,11 @@ void main() {
       );
       final (fake, _) = await pumpSheet(tester, _Fake(catalogue: [held]));
       expect(find.text('CONFIRMED'), findsOneWidget);
-      expect(find.text('ENROLLED'), findsOneWidget);
-      expect(find.text('enrolled'), findsOneWidget, reason: 'the pinned bar too');
-      await tester.tap(find.text('ENROLLED'));
+      expect(find.text('ENROLLED'), findsNothing, reason: 'the big button gives way to the place itself');
+      expect(find.text('You are confirmed on Riyadh, KSA, Aug 23 - 27, 2027.'), findsOneWidget);
+      expect(find.text('ADD TO CART'), findsNothing);
+      expect(find.text('enrolled'), findsOneWidget, reason: 'the pinned bar still says so');
+      await tester.tap(find.text('enrolled'));
       await tester.pump();
       expect(fake.enrols, isEmpty, reason: 'a held place is never taken twice');
       expect(
@@ -1560,7 +1608,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(fake.enrols, [('RICH', 'r2')]);
       expect(sheet.course.enrolment?.status, EnrolmentStatus.pending);
-      expect(find.text('PLACE REQUESTED'), findsOneWidget);
+      expect(
+        find.text('You are pending on London, UK, Sep 14 - 18, 2027 — the ICR team will confirm your place.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('withdraw')), findsOneWidget, reason: 'a request can be taken back');
       expect(find.text('REQUESTED'), findsOneWidget, reason: 'London reads REQUESTED on its tile');
       expect(find.text('Place requested. ICR will confirm it by email.'), findsOneWidget);
       expect(launches.urls, isEmpty);
@@ -1583,6 +1635,88 @@ void main() {
       expect(find.text('This batch is full.'), findsOneWidget);
       expect(sheet.course.enrolled, isFalse);
       expect(find.text('ADD TO CART'), findsOneWidget);
+    });
+
+    group('withdrawing a place, as the website does', () {
+      MyEnrolment held(EnrolmentStatus status, {String? runId = 'r2'}) =>
+          MyEnrolment(id: 'e', courseId: 'c-RICH', runId: runId, status: status);
+
+      Future<(_Fake, CourseSheetController)> pumpHeld(WidgetTester tester, MyEnrolment mine, {String? refusal}) {
+        final fake = _Fake(catalogue: [_rich()])..mine = [mine];
+        fake.withdrawError = refusal;
+        return pumpSheet(tester, fake, seed: _rich(enrolment: mine));
+      }
+
+      testWidgets('a request is taken back after one question, and "add to cart" returns', (tester) async {
+        final (fake, sheet) = await pumpHeld(tester, held(EnrolmentStatus.pending));
+        expect(find.text('REQUESTED'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('withdraw')));
+        await tester.pumpAndSettle();
+        expect(find.text('Withdraw your request?'), findsOneWidget);
+        await tester.tap(find.text('Withdraw').last);
+        await tester.pumpAndSettle();
+        expect(fake.withdrawals, ['RICH']);
+        expect(sheet.course.enrolled, isFalse);
+        expect(find.text('ADD TO CART'), findsOneWidget, reason: 'the member can ask again, here or on another date');
+        expect(find.byKey(const ValueKey('place-status')), findsNothing);
+        expect(find.text('REQUESTED'), findsNothing, reason: 'the date tile is plain again');
+        expect(find.text('Your request was withdrawn.'), findsOneWidget);
+      });
+
+      testWidgets('"Keep it" sends nothing', (tester) async {
+        final (fake, sheet) = await pumpHeld(tester, held(EnrolmentStatus.pending));
+        await tester.tap(find.byKey(const ValueKey('withdraw')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Keep it'));
+        await tester.pumpAndSettle();
+        expect(fake.withdrawals, isEmpty);
+        expect(sheet.course.enrolled, isTrue);
+      });
+
+      testWidgets('a confirmed place says it is given up', (tester) async {
+        final (fake, sheet) = await pumpHeld(tester, held(EnrolmentStatus.confirmed));
+        await tester.tap(find.byKey(const ValueKey('withdraw')));
+        await tester.pumpAndSettle();
+        expect(find.text('Withdraw your place?'), findsOneWidget);
+        await tester.tap(find.text('Withdraw').last);
+        await tester.pumpAndSettle();
+        expect(fake.withdrawals, ['RICH']);
+        expect(sheet.course.enrolled, isFalse);
+        expect(find.text('Your place was withdrawn.'), findsOneWidget);
+      });
+
+      testWidgets("a paid place is refused in the API's own words and stays held", (tester) async {
+        const refusal = 'Your place is paid for. To withdraw, contact ICR support, who will arrange any refund.';
+        final (_, sheet) = await pumpHeld(tester, held(EnrolmentStatus.confirmed), refusal: refusal);
+        await tester.tap(find.byKey(const ValueKey('withdraw')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Withdraw').last);
+        await tester.pumpAndSettle();
+        expect(find.text(refusal), findsOneWidget);
+        expect(find.byKey(const ValueKey('withdraw-refused')), findsOneWidget);
+        expect(sheet.course.enrolled, isTrue);
+        expect(find.byKey(const ValueKey('withdraw')), findsOneWidget, reason: 'still there to try again');
+      });
+
+      testWidgets('a waitlist place is told what happens next, and can be withdrawn', (tester) async {
+        await pumpHeld(tester, held(EnrolmentStatus.waitlisted));
+        expect(
+          find.text('You are waitlisted on London, UK, Sep 14 - 18, 2027 — we will be in touch if a seat frees up.'),
+          findsOneWidget,
+        );
+        expect(find.byKey(const ValueKey('withdraw')), findsOneWidget);
+      });
+
+      testWidgets('a completed course has nothing to withdraw', (tester) async {
+        await pumpHeld(tester, held(EnrolmentStatus.completed));
+        expect(find.text('You have completed this course.'), findsOneWidget);
+        expect(find.byKey(const ValueKey('withdraw')), findsNothing);
+      });
+
+      testWidgets('a place on no run names none', (tester) async {
+        await pumpHeld(tester, held(EnrolmentStatus.pending, runId: null));
+        expect(find.text('You are pending — the ICR team will confirm your place.'), findsOneWidget);
+      });
     });
 
     testWidgets('DOWNLOAD BROCHURE and the bar glyph open the brochure', (tester) async {
@@ -1749,7 +1883,9 @@ void main() {
       expect(find.textContaining('Review body number 2'), findsNothing);
     });
 
-    testWidgets('a course with more reviews than the page sends the rest to the website', (tester) async {
+    testWidgets('a course with more reviews than the page says how many are shown, and stays in the app', (
+      tester,
+    ) async {
       final fake = _Fake(
         catalogue: [_rich()],
         reviewList: CourseReviews(items: [_review(1), _review(2)], total: 41),
@@ -1758,9 +1894,12 @@ void main() {
       await tester.tap(find.text('see all 41 reviews'));
       await tester.pump();
       expect(find.textContaining('Review body number 2'), findsOneWidget);
-      await tester.tap(find.text('read all 41 reviews on the website'));
+      expect(find.text('Showing the newest 2 of 41.'), findsOneWidget);
+      expect(find.text('read all 41 reviews on the website'), findsNothing);
+      await tester.tap(find.text('show fewer reviews'));
       await tester.pump();
-      expect(launches.urls, ['https://icr.org.in/learning/professional-development/RICH']);
+      expect(find.textContaining('Review body number 2'), findsNothing);
+      expect(launches.urls, isEmpty);
     });
 
     testWidgets('one review has no list to open, and no reviews draws nothing', (tester) async {
@@ -1790,6 +1929,9 @@ class _Refusing implements LearningRepository {
   _Refusing(this.inner);
 
   final LearningRepository inner;
+
+  @override
+  Future<void> withdraw(Course course) => inner.withdraw(course);
 
   @override
   Future<MyEnrolment> enrol(Course course, {CourseRun? run}) async =>

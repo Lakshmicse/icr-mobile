@@ -17,6 +17,7 @@ import 'widgets/course_picture.dart';
 import 'widgets/cover_pill.dart';
 import 'widgets/course_sections.dart';
 import 'widgets/enquiry_sheet.dart';
+import 'widgets/place_status.dart';
 import 'widgets/run_tile.dart';
 
 /// Opens a course over the list, as the Course page design.
@@ -80,30 +81,32 @@ class CourseSheetBody extends StatelessWidget {
             _ModeTabs(controller: controller),
             const SizedBox(height: 12.2),
             _SelectDateRow(controller: controller),
-            const SizedBox(height: 12),
+            const SizedBox(height: 11),
             _RunGrid(controller: controller),
-            const SizedBox(height: 11.5),
-            Padding(
-              padding: const EdgeInsets.only(left: 16.5),
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => controller.hasMoreRuns
-                    ? controller.toggleAllDates()
-                    : openUrl(context, controller.repository.link(course)),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(controller.allDates ? 'Show Fewer Dates' : 'See More Dates', style: LearningText.seeMore),
-                    const SizedBox(width: 4),
-                    Icon(
-                      controller.allDates ? LucideIcons.chevronUp : LucideIcons.arrowRight,
-                      size: 15,
-                      color: AppColors.primary,
-                    ),
-                  ],
+            // "See More Dates" unfolds the rest of the grid; when every run is already on it there is nothing to
+            // link to (the website's course page is this sheet).
+            if (controller.hasMoreRuns || controller.allDates) ...[
+              const SizedBox(height: 11.5),
+              Padding(
+                padding: const EdgeInsets.only(left: 16.5),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: controller.toggleAllDates,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(controller.allDates ? 'Show Fewer Dates' : 'See More Dates', style: LearningText.seeMore),
+                      const SizedBox(width: 4),
+                      Icon(
+                        controller.allDates ? LucideIcons.chevronUp : LucideIcons.arrowRight,
+                        size: 15,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
             const SizedBox(height: 8.4),
           ] else ...[
             const SizedBox(height: 16),
@@ -115,15 +118,17 @@ class CourseSheetBody extends StatelessWidget {
           ],
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15.5),
-            child: _WideButton(
-              label: controller.ctaLabel,
-              icon: course.enrolled ? LucideIcons.check : Symbols.shopping_bag,
-              iconWeight: 600,
-              filled: true,
-              held: course.enrolled,
-              enabled: controller.canAct,
-              onPressed: () => addToCart(context, controller),
-            ),
+            // A place the member holds replaces the button with what it is and "Withdraw", as the website's panel does.
+            child: course.enrolled
+                ? PlaceStatus(controller: controller)
+                : _WideButton(
+                    label: controller.ctaLabel,
+                    icon: Symbols.shopping_bag,
+                    iconWeight: 600,
+                    filled: true,
+                    enabled: controller.canAct,
+                    onPressed: () => addToCart(context, controller),
+                  ),
           ),
           const SizedBox(height: 9.5),
           Padding(
@@ -175,7 +180,6 @@ class CourseSheetBody extends StatelessWidget {
               total: controller.reviewTotal,
               expanded: controller.allReviews,
               onToggle: controller.toggleAllReviews,
-              onMore: () => openUrl(context, controller.repository.link(course)),
             ),
           const SizedBox(height: 24),
         ],
@@ -200,7 +204,7 @@ class CourseSheetBody extends StatelessWidget {
     }
     if (!controller.canAct) return;
     if (controller.paidPlace) {
-      await openUrl(context, controller.repository.checkoutLink(controller.course, controller.selectedRun));
+      await openExternal(context, controller.repository.checkoutLink(controller.course, controller.selectedRun));
       return;
     }
     final message = await controller.enrol();
@@ -311,23 +315,22 @@ class _ModeTabs extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 15.5),
       child: Column(
         children: [
-          SizedBox(
-            height: 14,
-            child: Row(
-              children: [
-                for (final mode in DeliveryMode.values)
-                  Expanded(
-                    child: _ModeTab(
-                      mode: mode,
-                      active: controller.mode == mode,
-                      alignment: mode == DeliveryMode.inPerson ? Alignment.centerLeft : Alignment.center,
-                      onTap: () => controller.selectMode(mode),
-                    ),
+          // As tall as its tallest piece (the 20 dp glyph, or the label at the app's 12 sp floor): the design's
+          // 14 dp box cut both. The gap under it gives back the 6 dp it grew by (7.1 -> 1.1).
+          Row(
+            children: [
+              for (final mode in DeliveryMode.values)
+                Expanded(
+                  child: _ModeTab(
+                    mode: mode,
+                    active: controller.mode == mode,
+                    alignment: mode == DeliveryMode.inPerson ? Alignment.centerLeft : Alignment.center,
+                    onTap: () => controller.selectMode(mode),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
-          const SizedBox(height: 7.1),
+          const SizedBox(height: 1.1),
           SizedBox(
             height: 3,
             child: Stack(
@@ -421,31 +424,22 @@ class _SelectDateRow extends StatelessWidget {
     final schedule = scheduleLabel(controller.runsInMode);
     return Padding(
       padding: const EdgeInsets.only(left: 16.5, right: 16.5),
-      child: SizedBox(
-        height: 16,
-        child: Row(
-          children: [
-            Text('Select Date', style: LearningText.selectDate),
-            const Spacer(),
-            if (schedule != null)
-              Semantics(
-                button: true,
-                child: GestureDetector(
-                  key: const ValueKey('schedule-link'),
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => openUrl(context, controller.repository.link(controller.course)),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Symbols.calendar_month, size: 13, weight: 700, color: AppColors.primary),
-                      const SizedBox(width: 1.5),
-                      Text(schedule, style: LearningText.schedule),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
+      // No fixed height: the row is as tall as its text (17 dp at 12 sp, not the design's 16).
+      child: Row(
+        children: [
+          Text('Select Date', style: LearningText.selectDate),
+          const Spacer(),
+          if (schedule != null)
+            Row(
+              key: const ValueKey('schedule-link'),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Symbols.calendar_month, size: 13, weight: 700, color: AppColors.primary),
+                const SizedBox(width: 1.5),
+                Text(schedule, style: LearningText.schedule),
+              ],
+            ),
+        ],
       ),
     );
   }
@@ -520,7 +514,6 @@ class _WideButton extends StatelessWidget {
     required this.onPressed,
     this.iconWeight,
     this.filled = false,
-    this.held = false,
     this.enabled = true,
     this.height = 39,
   });
@@ -532,19 +525,15 @@ class _WideButton extends StatelessWidget {
   final double? iconWeight;
   final VoidCallback onPressed;
   final bool filled;
-
-  /// The member already holds a place: drawn solid, as done, not dimmed as unavailable.
-  final bool held;
   final bool enabled;
   final double height;
 
   @override
   Widget build(BuildContext context) {
     final style = filled ? LearningText.primaryButton : LearningText.outlineButton;
-    final live = enabled || held;
-    final ink = live ? style.color! : style.color!.withValues(alpha: 0.6);
+    final ink = enabled ? style.color! : style.color!.withValues(alpha: 0.6);
     return Material(
-      color: filled ? (live ? AppColors.primary : AppColors.primary.withValues(alpha: 0.5)) : Colors.white,
+      color: filled ? (enabled ? AppColors.primary : AppColors.primary.withValues(alpha: 0.5)) : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: filled ? BorderSide.none : const BorderSide(color: AppColors.outlineVariant),
