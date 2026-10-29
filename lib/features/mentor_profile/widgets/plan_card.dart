@@ -76,14 +76,14 @@ class PlanCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6.9),
                   SizedBox(
-                    height: 18,
+                    height: 19,
                     child: Text(plan.title, style: MentorText.planTitle, maxLines: 1, overflow: TextOverflow.ellipsis),
                   ),
-                  const SizedBox(height: 17.5),
+                  const SizedBox(height: 16.5),
                   for (final (i, line) in _lines.indexed) ...[
-                    if (i > 0) const SizedBox(height: 15.8),
+                    if (i > 0) const SizedBox(height: 12.8),
                     SizedBox(
-                      height: 14,
+                      height: 17,
                       child: Row(
                         children: [
                           const _Check(),
@@ -104,24 +104,19 @@ class PlanCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     SizedBox(
-                      height: 16,
+                      height: 17,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
                         children: [
                           Text(price == 0 ? 'FREE' : inr(price), style: MentorText.planPrice),
-                          if (price > 0) ...[
-                            const SizedBox(width: 4.7),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 1.5),
-                              child: Text('/mo', style: MentorText.planPer),
-                            ),
-                          ],
+                          if (price > 0) ...[const SizedBox(width: 4.7), Text('/mo', style: MentorText.planPer)],
                         ],
                       ),
                     ),
                     if (plan.seatsNote != null) ...[
-                      const SizedBox(height: 10.6),
+                      const SizedBox(height: 9.6),
                       Container(
                         height: 26.7,
                         padding: const EdgeInsets.symmetric(horizontal: 12),

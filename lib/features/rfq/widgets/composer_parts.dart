@@ -46,7 +46,10 @@ class SectionCard extends StatelessWidget {
                 width: 22,
                 height: 22,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: done ? AppColors.emerald700 : AppColors.primary),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: done ? AppColors.emerald700 : AppColors.primary,
+                ),
                 child: done
                     ? const Icon(LucideIcons.check, size: 13, color: Colors.white)
                     : Text('$step', style: RfqText.step),
@@ -122,7 +125,10 @@ class KindPicker extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(w.short, style: RfqText.kicker.copyWith(color: on ? AppColors.primary : AppColors.slate500)),
+                                Text(
+                                  w.short,
+                                  style: RfqText.kicker.copyWith(color: on ? AppColors.primary : AppColors.slate500),
+                                ),
                                 const SizedBox(height: 3),
                                 Text(w.title, style: RfqText.cardTitle),
                                 const SizedBox(height: 6),
@@ -205,7 +211,10 @@ class DescriptionChecklist extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(item.id.label, style: RfqText.meta.copyWith(color: item.done ? AppColors.slate500 : AppColors.slate900)),
+                        Text(
+                          item.id.label,
+                          style: RfqText.meta.copyWith(color: item.done ? AppColors.slate500 : AppColors.slate900),
+                        ),
                         if (!item.done) Text(item.id.hint, style: RfqText.small),
                       ],
                     ),
@@ -214,7 +223,10 @@ class DescriptionChecklist extends StatelessWidget {
                     TextButton(
                       key: ValueKey('check-add-${item.id.name}'),
                       onPressed: () => onAdd(item.id.label),
-                      style: TextButton.styleFrom(minimumSize: const Size(44, 32), padding: const EdgeInsets.symmetric(horizontal: 8)),
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(44, 32),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
                       child: Text('Add', style: RfqText.link),
                     ),
                 ],
@@ -256,14 +268,13 @@ class PlacesField extends StatelessWidget {
                   Container(
                     key: ValueKey('place-chip-${p.label}'),
                     padding: const EdgeInsets.only(left: 10, right: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.chipEmphasis,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                    decoration: BoxDecoration(color: AppColors.chipEmphasis, borderRadius: BorderRadius.circular(16)),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Flexible(child: Text(p.label, style: RfqText.pill.copyWith(color: AppColors.primary))),
+                        Flexible(
+                          child: Text(p.label, style: RfqText.pill.copyWith(color: AppColors.primary)),
+                        ),
                         IconButton(
                           tooltip: 'Remove ${p.label}',
                           visualDensity: VisualDensity.compact,
@@ -619,7 +630,14 @@ class _ItemSheetState extends State<_ItemSheet> {
 
 /// The line items, one row each, with a button to add another.
 class ItemsList extends StatelessWidget {
-  const ItemsList({super.key, required this.items, required this.onAdd, required this.onEdit, required this.onRemove, this.error});
+  const ItemsList({
+    super.key,
+    required this.items,
+    required this.onAdd,
+    required this.onEdit,
+    required this.onRemove,
+    this.error,
+  });
 
   final List<RfqItem> items;
   final VoidCallback onAdd;
@@ -637,7 +655,10 @@ class ItemsList extends StatelessWidget {
             key: ValueKey('item-row-$i'),
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-            decoration: BoxDecoration(border: Border.all(color: AppColors.slate200), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.slate200),
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -666,7 +687,11 @@ class ItemsList extends StatelessWidget {
               ],
             ),
           ),
-        if (error != null) Padding(padding: const EdgeInsets.only(bottom: 6), child: Text(error!, style: RfqText.error)),
+        if (error != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(error!, style: RfqText.error),
+          ),
         if (items.length < RfqLimits.maxItems)
           Align(
             alignment: Alignment.centerLeft,
@@ -744,7 +769,10 @@ class AttachmentsPanel extends StatelessWidget {
             key: ValueKey('file-row-$i'),
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.fromLTRB(10, 10, 4, 10),
-            decoration: BoxDecoration(border: Border.all(color: AppColors.slate200), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.slate200),
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -808,12 +836,19 @@ class AttachmentsPanel extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(u.name, style: RfqText.metaStrong, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      Text(u.error ?? 'Uploading ${fileSizeLabel(u.file.size)}', style: u.error == null ? RfqText.small : RfqText.error),
+                      Text(
+                        u.error ?? 'Uploading ${fileSizeLabel(u.file.size)}',
+                        style: u.error == null ? RfqText.small : RfqText.error,
+                      ),
                     ],
                   ),
                 ),
                 if (u.error != null) ...[
-                  TextButton(key: ValueKey('upload-retry-${u.name}'), onPressed: () => onRetry(u), child: Text('Retry', style: RfqText.link)),
+                  TextButton(
+                    key: ValueKey('upload-retry-${u.name}'),
+                    onPressed: () => onRetry(u),
+                    child: Text('Retry', style: RfqText.link),
+                  ),
                   IconButton(
                     tooltip: 'Remove ${u.name}',
                     onPressed: () => onDismiss(u),
@@ -828,7 +863,11 @@ class AttachmentsPanel extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 8),
             child: RfqBanner(notice!, action: 'Dismiss', onAction: onDismissNotice),
           ),
-        if (error != null) Padding(padding: const EdgeInsets.only(bottom: 6), child: Text(error!, style: RfqText.error)),
+        if (error != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(error!, style: RfqText.error),
+          ),
         Align(
           alignment: Alignment.centerLeft,
           child: OutlinedButton.icon(
@@ -839,7 +878,10 @@ class AttachmentsPanel extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(help ?? 'PDF, Office, text, zip or images, up to 10 MB each, $max files at most.', style: RfqText.formHelp),
+        Text(
+          help ?? 'PDF, Office, text, zip or images, up to 10 MB each, $max files at most.',
+          style: RfqText.formHelp,
+        ),
       ],
     );
   }
@@ -872,8 +914,14 @@ class ToggleChip extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (on) ...[const Icon(LucideIcons.check, size: 13, color: AppColors.primary), const SizedBox(width: 5)],
-                Text(label, style: RfqText.pill.copyWith(color: on ? AppColors.primary : AppColors.slate700, fontSize: 12)),
+                if (on) ...[
+                  const Icon(LucideIcons.check, size: 13, color: AppColors.primary),
+                  const SizedBox(width: 5),
+                ],
+                Text(
+                  label,
+                  style: RfqText.pill.copyWith(color: on ? AppColors.primary : AppColors.slate700, fontSize: 12),
+                ),
               ],
             ),
           ),
@@ -947,13 +995,19 @@ class DateField extends StatelessWidget {
                     icon: const Icon(LucideIcons.x, size: 16, color: AppColors.slate500),
                   )
                 else
-                  const Padding(padding: EdgeInsets.only(right: 8), child: Icon(LucideIcons.calendar, size: 18, color: AppColors.slate500)),
+                  const Padding(
+                    padding: EdgeInsets.only(right: 8),
+                    child: Icon(LucideIcons.calendar, size: 18, color: AppColors.slate500),
+                  ),
               ],
             ),
           ),
         ),
         const SizedBox(height: 4),
-        if (error != null) Text(error!, style: RfqText.error) else if (help != null) Text(help!, style: RfqText.formHelp),
+        if (error != null)
+          Text(error!, style: RfqText.error)
+        else if (help != null)
+          Text(help!, style: RfqText.formHelp),
       ],
     );
   }
@@ -1069,13 +1123,18 @@ class _ReviewSheetState extends State<_ReviewSheet> {
                     Container(
                       key: ValueKey('review-${row.section}-${row.label}'),
                       padding: const EdgeInsets.symmetric(vertical: 9),
-                      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.slate100))),
+                      decoration: const BoxDecoration(
+                        border: Border(bottom: BorderSide(color: AppColors.slate100)),
+                      ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(width: 96, child: Text(row.label, style: RfqText.meta)),
                           Expanded(
-                            child: Text(row.value.isEmpty ? 'Not given' : row.value, style: row.value.isEmpty ? RfqText.small : RfqText.metaStrong),
+                            child: Text(
+                              row.value.isEmpty ? 'Not given' : row.value,
+                              style: row.value.isEmpty ? RfqText.small : RfqText.metaStrong,
+                            ),
                           ),
                           TextButton(
                             key: ValueKey('review-edit-${row.section}'),
@@ -1085,7 +1144,13 @@ class _ReviewSheetState extends State<_ReviewSheet> {
                                     Navigator.pop(context);
                                     widget.onEdit(row.section);
                                   },
-                            style: TextButton.styleFrom(minimumSize: const Size(44, 28), padding: const EdgeInsets.symmetric(horizontal: 8)),
+                            // As tall as its word, so it sits on the row's first line rather than hanging below it.
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(44, 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
                             child: Text('Edit', style: RfqText.link),
                           ),
                         ],
@@ -1094,11 +1159,7 @@ class _ReviewSheetState extends State<_ReviewSheet> {
                 ],
               ),
             ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                child: RfqBanner(_error!),
-              ),
+            if (_error != null) Padding(padding: const EdgeInsets.fromLTRB(20, 10, 20, 0), child: RfqBanner(_error!)),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
               child: Text(widget.note, style: RfqText.formHelp),
@@ -1126,7 +1187,11 @@ class _ReviewSheetState extends State<_ReviewSheet> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                       child: _sending
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
                           : Text(widget.confirmLabel),
                     ),
                   ),
@@ -1186,7 +1251,9 @@ class ProblemsCard extends StatelessWidget {
               const Icon(LucideIcons.circleAlert, size: 16, color: AppColors.error),
               const SizedBox(width: 8),
               Text(
-                problems.length == 1 ? '1 thing to fix before sending' : '${problems.length} things to fix before sending',
+                problems.length == 1
+                    ? '1 thing to fix before sending'
+                    : '${problems.length} things to fix before sending',
                 style: RfqText.bodyStrong.copyWith(color: AppColors.onErrorContainer),
               ),
             ],
@@ -1205,7 +1272,12 @@ class ProblemsCard extends StatelessWidget {
                         TextSpan(
                           text: '${labels[entry.key] ?? entry.key}: ',
                           style: RfqText.metaStrong.copyWith(color: AppColors.onErrorContainer),
-                          children: [TextSpan(text: entry.value, style: RfqText.meta.copyWith(color: AppColors.onErrorContainer))],
+                          children: [
+                            TextSpan(
+                              text: entry.value,
+                              style: RfqText.meta.copyWith(color: AppColors.onErrorContainer),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -1287,7 +1359,12 @@ class PostedPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            Center(child: Text('Ref ${result.id.length > 8 ? result.id.substring(result.id.length - 8).toUpperCase() : result.id.toUpperCase()}', style: RfqText.small)),
+            Center(
+              child: Text(
+                'Ref ${result.id.length > 8 ? result.id.substring(result.id.length - 8).toUpperCase() : result.id.toUpperCase()}',
+                style: RfqText.small,
+              ),
+            ),
             const SizedBox(height: 10),
             if (draft)
               Text(
@@ -1306,7 +1383,9 @@ class PostedPanel extends StatelessWidget {
                     : [
                         now == 1 ? 'Shared with 1 matched supplier.' : 'Shared with $now matched suppliers.',
                         if ((later ?? 0) > 0)
-                          later == 1 ? '1 more is alerted when early access ends.' : 'Up to $later more are alerted when early access ends.',
+                          later == 1
+                              ? '1 more is alerted when early access ends.'
+                              : 'Up to $later more are alerted when early access ends.',
                       ].join(' '),
                 key: const ValueKey('posted-reach'),
                 textAlign: TextAlign.center,
@@ -1322,7 +1401,10 @@ class PostedPanel extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Padding(padding: EdgeInsets.only(top: 2), child: Icon(LucideIcons.check, size: 15, color: AppColors.emerald700)),
+                      const Padding(
+                        padding: EdgeInsets.only(top: 2),
+                        child: Icon(LucideIcons.check, size: 15, color: AppColors.emerald700),
+                      ),
                       const SizedBox(width: 8),
                       Expanded(child: Text(line, style: RfqText.body)),
                     ],
@@ -1348,7 +1430,11 @@ class PostedPanel extends StatelessWidget {
                 style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
                 child: const Text('Post another'),
               ),
-            TextButton(key: const ValueKey('posted-done'), onPressed: onDone, child: Text('Back to My RFQ\'s', style: RfqText.link)),
+            TextButton(
+              key: const ValueKey('posted-done'),
+              onPressed: onDone,
+              child: Text('Back to My RFQ\'s', style: RfqText.link),
+            ),
           ],
         ),
       ),

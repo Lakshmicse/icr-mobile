@@ -75,23 +75,10 @@ class EventSheetBody extends StatelessWidget {
         const SizedBox(height: 10),
         Padding(
           padding: const EdgeInsets.only(left: 16, right: 16),
-          child: SizedBox(
-            height: 13,
-            child: Row(
-              children: [
-                Text('About', style: EventsText.sectionLabel),
-                const Spacer(),
-                // The full overview is the event's page on the website.
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => openUrl(context, controller.repository.link(e)),
-                  child: Text('Overview', style: EventsText.sectionAction),
-                ),
-              ],
-            ),
-          ),
+          // As tall as its text (17 dp at the 12 sp floor, not the design's 13); the gap below gave up the 4 dp.
+          child: Row(children: [Text('About', style: EventsText.sectionLabel)]),
         ),
-        const SizedBox(height: 12.5),
+        const SizedBox(height: 8.5),
         if (controller.loading && paras.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 30),
@@ -131,29 +118,25 @@ class EventSheetBody extends StatelessWidget {
           const SizedBox(height: 11.5),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(
-              height: 15,
-              child: Row(
-                children: [
-                  Text(
-                    // "SUMMIT AGENDA", or the kind's word for an event that is not one.
-                    e.title.toLowerCase().contains('summit') ? 'SUMMIT AGENDA' : '${e.kind.label.toUpperCase()} AGENDA',
-                    style: EventsText.agendaHeading,
+            // The row and its pill are as tall as their text (17 dp, the design's 15); the gap below gave up the 2.
+            child: Row(
+              children: [
+                Text(
+                  // "SUMMIT AGENDA", or the kind's word for an event that is not one.
+                  e.title.toLowerCase().contains('summit') ? 'SUMMIT AGENDA' : '${e.kind.label.toUpperCase()} AGENDA',
+                  style: EventsText.agendaHeading,
+                ),
+                const Spacer(),
+                if (detail.agendaNote != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(color: EventsColors.panel, borderRadius: BorderRadius.circular(8.5)),
+                    child: Text(detail.agendaNote!, style: EventsText.agendaPill),
                   ),
-                  const Spacer(),
-                  if (detail.agendaNote != null)
-                    Container(
-                      height: 15,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(color: EventsColors.panel, borderRadius: BorderRadius.circular(7.5)),
-                      child: Text(detail.agendaNote!, style: EventsText.agendaPill),
-                    ),
-                ],
-              ),
+              ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           _Timeline(sessions: detail.sessions),
         ],
         const SizedBox(height: 24),
@@ -196,14 +179,12 @@ class EventSheetBar extends StatelessWidget {
             AppColors.online,
           );
 
-    Widget primary;
+    // No button when there is nothing to do here: an ended or invite-only event has its status line, and the
+    // "Event page" that stood there only opened this sheet again.
+    Widget? primary;
     Widget? secondary;
     if (e.past || (e.inviteOnly && !detail.invited && !e.rsvp.holds)) {
-      primary = _BarButton.primary(
-        label: 'Event page',
-        icon: LucideIcons.externalLink,
-        onTap: () => openUrl(context, link),
-      );
+      primary = null;
     } else if (going || waitlisted) {
       secondary = _BarButton.secondary(
         label: 'Cancel',
@@ -211,16 +192,23 @@ class EventSheetBar extends StatelessWidget {
         onTap: controller.busy ? null : () => _run(context, controller.cancel()),
       );
       // A confirmed place has a pass to show (the event's code and a QR to
-      // its page); a waitlisted one has none yet, so the button is the page.
+      // its page); a waitlisted one has none yet, so Cancel stands alone.
       final pass = detail.pass;
       final hasPass = going && pass?.reference != null;
-      primary = _BarButton.primary(
-        label: hasPass ? 'View Pass & QR' : 'Event page',
-        icon: hasPass ? LucideIcons.qrCode : LucideIcons.externalLink,
-        onTap: hasPass ? () => showEventPass(context, event: e, pass: pass!, link: link) : () => openUrl(context, link),
-      );
+      primary = hasPass
+          ? _BarButton.primary(
+              label: 'View Pass & QR',
+              icon: LucideIcons.qrCode,
+              onTap: () => showEventPass(context, event: e, pass: pass!, link: link),
+            )
+          : null;
     } else if (e.priced && detail.sellsTickets) {
-      primary = _BarButton.primary(label: 'Get Tickets', icon: LucideIcons.ticket, onTap: () => openUrl(context, link));
+      // Tickets are bought on the website (the app has no checkout): the phone opens it, never this sheet again.
+      primary = _BarButton.primary(
+        label: 'Get Tickets',
+        icon: LucideIcons.ticket,
+        onTap: () => openExternal(context, link),
+      );
     } else {
       primary = _BarButton.primary(
         label: e.full ? 'Join Waitlist' : 'Register Now',
@@ -241,34 +229,46 @@ class EventSheetBar extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                height: 14,
-                child: Row(
-                  children: [
-                    const SizedBox(width: 2.5),
-                    Container(
-                      width: 10.5,
-                      height: 10.5,
-                      decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+              // The status line is as tall as its text (17 dp at the 12 sp floor, the design's 14); the gap below
+              // gave up the 3 dp.
+              Row(
+                children: [
+                  const SizedBox(width: 2.5),
+                  Container(
+                    width: 10.5,
+                    height: 10.5,
+                    decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(title, style: EventsText.barTitle),
+                  // The note takes what the title leaves, right-aligned, and gives way with an ellipsis on a narrow
+                  // phone rather than running past the bar.
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      note,
+                      textAlign: TextAlign.end,
+                      style: EventsText.barNote,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(width: 4),
-                    Text(title, style: EventsText.barTitle),
-                    const Spacer(),
-                    Text(note, style: EventsText.barNote, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    const SizedBox(width: 4),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
               ),
-              const SizedBox(height: 12.5),
-              Padding(
-                padding: EdgeInsets.only(right: secondary == null ? 0 : 19.5),
-                child: Row(
-                  children: [
-                    if (secondary != null) ...[Expanded(flex: 159, child: secondary), const SizedBox(width: 8.5)],
-                    Expanded(flex: secondary == null ? 1 : 171, child: primary),
-                  ],
+              if (primary != null || secondary != null) ...[
+                const SizedBox(height: 9.5),
+                Padding(
+                  padding: EdgeInsets.only(right: primary != null && secondary != null ? 19.5 : 0),
+                  child: Row(
+                    children: [
+                      if (secondary != null) Expanded(flex: primary == null ? 1 : 159, child: secondary),
+                      if (secondary != null && primary != null) const SizedBox(width: 8.5),
+                      if (primary != null) Expanded(flex: secondary == null ? 1 : 171, child: primary),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -441,7 +441,9 @@ class _Pill extends StatelessWidget {
         children: [
           Icon(icon, size: iconSize, color: style.color),
           const SizedBox(width: 5),
-          Flexible(child: Text(label, style: style, maxLines: 1, overflow: TextOverflow.ellipsis)),
+          Flexible(
+            child: Text(label, style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
         ],
       ),
     );
@@ -585,13 +587,12 @@ class _PassCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 6),
+                          // As tall as its word (17 dp at the 12 sp floor, the design's 13).
                           Container(
-                            height: 13,
                             padding: const EdgeInsets.symmetric(horizontal: 6),
-                            alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: waitlisted ? AppColors.amber100 : EventsColors.activePill,
-                              borderRadius: BorderRadius.circular(6.5),
+                              borderRadius: BorderRadius.circular(8.5),
                             ),
                             child: Text(
                               waitlisted ? 'Waitlisted' : 'Active Pass',
@@ -602,7 +603,7 @@ class _PassCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 9.5),
+                      const SizedBox(height: 8.5),
                       Text(
                         '${pass.role} • ${pass.holder}',
                         style: EventsText.passHolder,
@@ -612,33 +613,29 @@ class _PassCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                Material(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  child: InkWell(
-                    onTap: pass.reference == null
-                        ? () => openUrl(context, link)
-                        : () => showEventPass(context, event: e, pass: pass, link: link),
+                if (pass.reference != null) ...[
+                  const SizedBox(width: 8),
+                  Material(
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      width: 81.5,
-                      height: 37.5,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            pass.reference == null ? LucideIcons.externalLink : LucideIcons.qrCode,
-                            size: 13,
-                            color: EventsColors.link,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(pass.reference == null ? 'Event page' : 'Show Pass', style: EventsText.passButton),
-                        ],
+                    child: InkWell(
+                      onTap: () => showEventPass(context, event: e, pass: pass, link: link),
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        width: 81.5,
+                        height: 37.5,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(LucideIcons.qrCode, size: 13, color: EventsColors.link),
+                            const SizedBox(width: 4),
+                            Text('Show Pass', style: EventsText.passButton),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -805,7 +802,7 @@ class _AttendeesStrip extends StatelessWidget {
                 ),
                 if (note != null) ...[
                   const SizedBox(height: 1),
-                  Text(note!, style: EventsText.attendeesNote, maxLines: 1, overflow: TextOverflow.clip),
+                  Text(note!, style: EventsText.attendeesNote, maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
               ],
             ),
@@ -937,32 +934,28 @@ class _SessionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            height: 15,
-            child: Row(
-              children: [
-                Text(s.time ?? 'Session', style: EventsText.sessionTime),
-                const Spacer(),
-                if (s.tag != null)
-                  Container(
-                    height: 15,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: s.tagGreen ? EventsColors.panelPill : EventsColors.keynotePill,
-                      borderRadius: BorderRadius.circular(7.5),
-                    ),
-                    child: Text(
-                      s.tag!,
-                      style: s.tagGreen
-                          ? EventsText.sessionTag.copyWith(color: EventsColors.activeInk)
-                          : EventsText.sessionTag,
-                    ),
+          // The time and tag row is as tall as its text (17 dp, the design's 15); the gap below gave up the 2.
+          Row(
+            children: [
+              Text(s.time ?? 'Session', style: EventsText.sessionTime),
+              const Spacer(),
+              if (s.tag != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: s.tagGreen ? EventsColors.panelPill : EventsColors.keynotePill,
+                    borderRadius: BorderRadius.circular(8.5),
                   ),
-              ],
-            ),
+                  child: Text(
+                    s.tag!,
+                    style: s.tagGreen
+                        ? EventsText.sessionTag.copyWith(color: EventsColors.activeInk)
+                        : EventsText.sessionTag,
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 12.5),
+          const SizedBox(height: 10.5),
           Text(s.title, style: EventsText.sessionTitle, maxLines: 2, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 12.5),
           Row(

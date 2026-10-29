@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -60,68 +62,55 @@ class SupplierCard extends StatelessWidget {
               child: SizedBox(
                 height: supplierCardBaseHeight * k,
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(13.5 * k, 10.5 * k, 13.5 * k, 0),
+                  // The header is as tall as two lines of the name (40 dp; the design's 37 held two lines of smaller
+                  // type), so 1.5 dp comes off the top and the rating row takes its share below.
+                  padding: EdgeInsets.fromLTRB(13.5 * k, 9 * k, 13.5 * k, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       SizedBox(
-                        height: 37 * k,
+                        height: _headerHeight(k),
                         child: _Header(supplier: supplier, scale: k),
                       ),
                       Container(height: 1.5 * k, color: MartColors.rule),
-                      SizedBox(height: 6 * k),
-                      SizedBox(
-                        height: 20 * k,
-                        child: Row(
-                          children: [
-                            // 20.25 dp of ink: the star glyph fills 78% of its box.
-                            SizedBox(
-                              width: 20.25 * k,
-                              height: 20 * k,
-                              child: OverflowBox(
-                                maxWidth: 25 * k,
-                                maxHeight: 25 * k,
-                                child: Icon(Icons.star, size: 24.8 * k, color: MartColors.star),
+                      SizedBox(height: 3.5 * k),
+                      // As tall as its text (the rating's line is 22 dp, the star's box 20); the gaps either side
+                      // each gave up 1 dp, so the row stays where the design put it.
+                      Row(
+                        children: [
+                          // 20.25 dp of ink: the star glyph fills 78% of its box.
+                          SizedBox(
+                            width: 20.25 * k,
+                            height: 20 * k,
+                            child: OverflowBox(
+                              maxWidth: 25 * k,
+                              maxHeight: 25 * k,
+                              child: Icon(Icons.star, size: 24.8 * k, color: MartColors.star),
+                            ),
+                          ),
+                          SizedBox(width: 6.75 * k),
+                          Text(supplier.ratingLabel, style: scaled(MartText.cardRating, k)),
+                          SizedBox(width: 7 * k),
+                          Flexible(
+                            // The design sets the reviews a hair above the digits' centre line.
+                            child: Padding(
+                              padding: EdgeInsets.only(bottom: 3 * k),
+                              child: Text(
+                                '(${supplier.ratingCount} ${supplier.ratingCount == 1 ? 'review' : 'reviews'})',
+                                style: scaled(MartText.cardReviews, k),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            SizedBox(width: 6.75 * k),
-                            Text(supplier.ratingLabel, style: scaled(MartText.cardRating, k)),
-                            SizedBox(width: 7 * k),
-                            Flexible(
-                              // The design sets the reviews a hair above the digits' centre line.
-                              child: Padding(
-                                padding: EdgeInsets.only(bottom: 3 * k),
-                                child: Text(
-                                  '(${supplier.ratingCount} ${supplier.ratingCount == 1 ? 'review' : 'reviews'})',
-                                  style: scaled(MartText.cardReviews, k),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 9 * k),
-                      SizedBox(
-                        height: 20 * k,
-                        child: Text(
-                          heading,
-                          style: scaled(MartText.cardTitle, k),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
+                      SizedBox(height: 8 * k),
+                      // The title and the two lines under it are as tall as their text: at a narrower cell the engine
+                      // rounds a line up past the 20 * k and 37 * k the design gave them.
+                      Text(heading, style: scaled(MartText.cardTitle, k), maxLines: 1, overflow: TextOverflow.ellipsis),
                       SizedBox(height: 5.5 * k),
-                      SizedBox(
-                        height: 37 * k,
-                        child: Text(
-                          body,
-                          style: scaled(MartText.cardBody, k),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
+                      Text(body, style: scaled(MartText.cardBody, k), maxLines: 2, overflow: TextOverflow.ellipsis),
                     ],
                   ),
                 ),
@@ -132,6 +121,14 @@ class SupplierCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Two lines of the company's name, which is what the header must hold: 40 dp at the phone design's width. The
+/// engine lays each line out on a whole dp, so a line is taken up, never rounded down; the design's own 37 dp is
+/// the floor (the logo).
+double _headerHeight(double k) {
+  final name = scaled(MartText.cardName, k);
+  return math.max(37 * k, 2 * (name.fontSize! * name.height!).ceilToDouble());
 }
 
 /// The logo and the name: the design's picture, or the company's own logo with
@@ -147,7 +144,10 @@ class _Header extends StatelessWidget {
     final k = scale;
     final lockup = supplier.lockupAsset;
     if (lockup != null) {
-      return Image.asset(lockup, width: 153 * k, height: 37 * k, fit: BoxFit.fill, filterQuality: FilterQuality.high);
+      // The picture keeps its own 153 x 37 inside the header's 40.
+      return Center(
+        child: Image.asset(lockup, width: 153 * k, height: 37 * k, fit: BoxFit.fill, filterQuality: FilterQuality.high),
+      );
     }
     final color = supplier.brandColor ?? MartColors.brand;
     return Row(

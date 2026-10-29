@@ -521,11 +521,12 @@ void main() {
   });
 
   group('the tiles and the host card', () {
-    testWidgets('Manage & View opens the website\'s events page, where the schedule is managed', (tester) async {
+    testWidgets('Manage & View opens the next booked event\'s sheet, where its pass and Cancel are', (tester) async {
       await pumpBoard(tester);
       await tester.tap(find.text('Manage & View'));
-      await tester.pump();
-      expect(launched.single.toString(), 'https://icr.org.in/events');
+      await settle(tester);
+      expect(find.byType(EventSheetBar), findsOneWidget);
+      expect(launched, isEmpty, reason: 'the website\'s events page is this screen');
     });
 
     testWidgets('Submit Topic opens the website\'s contact page', (tester) async {
@@ -591,9 +592,7 @@ void main() {
       expect(find.text('Pass #ICR-EVT-AI'), findsWidgets);
       expect(find.text('Member • Bharat Buyer (TechCorp)'), findsWidgets);
 
-      await tester.tap(find.text('Event page'));
-      await tester.pump();
-      expect(launched.single.toString(), 'https://icr.org.in/events/slug-ai');
+      expect(find.text('Event page'), findsNothing, reason: 'the pass sits on the event\'s own sheet');
 
       await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
@@ -620,14 +619,13 @@ void main() {
       expect(url.queryParameters['details'], contains('https://icr.org.in/events/slug-ai'));
     });
 
-    testWidgets('Overview and View Network open the website', (tester) async {
+    testWidgets('View Network opens the network; About has no link out (the sheet is the overview)', (tester) async {
       await pumpBoard(tester);
       await openSheet(tester, 'ai');
-      await tester.tap(find.text('Overview'));
-      await tester.pump();
+      expect(find.text('Overview'), findsNothing);
       await tester.tap(find.text('View Network'));
       await tester.pump();
-      expect(launched.map((u) => u.toString()), ['https://icr.org.in/events/slug-ai', 'https://icr.org.in/network']);
+      expect(launched.map((u) => u.toString()), ['https://icr.org.in/network']);
     });
 
     testWidgets('share and bookmark: the sheet\'s and the board\'s agree', (tester) async {
@@ -720,19 +718,18 @@ void main() {
       expect(api.calls.where((c) => c.startsWith('POST')), isEmpty);
     });
 
-    testWidgets('an invite-only event the member was not asked to: By invitation, and the page', (tester) async {
+    testWidgets('an invite-only event the member was not asked to: By invitation, and no button', (tester) async {
       final w = EventsWorld()..notInvited.add('gcc');
       await pumpBoard(tester, custom: w);
       await openSheet(tester, 'gcc');
       expect(find.text('By invitation'), findsOneWidget);
       expect(find.text('This event is invite-only'), findsOneWidget);
       expect(find.descendant(of: find.byType(EventSheetBody), matching: find.text('INVITE ONLY')), findsOneWidget);
-      await tester.tap(find.text('Event page'));
-      await tester.pump();
-      expect(launched.single.toString(), 'https://icr.org.in/events/slug-gcc');
+      expect(find.text('Event page'), findsNothing, reason: 'it only opened this sheet again');
+      expect(launched, isEmpty);
     });
 
-    testWidgets('a waitlisted place: the pill, the badge, no pass; Cancel and the page', (tester) async {
+    testWidgets('a waitlisted place: the pill, the badge, no pass; Cancel alone', (tester) async {
       world = EventsWorld()..places['gcc'] = 'WAITLISTED';
       await pumpBoard(tester, custom: world);
       await openSheet(tester, 'gcc');
@@ -740,7 +737,7 @@ void main() {
       expect(find.text('Waitlisted'), findsOneWidget);
       expect(find.text("You're on the waitlist"), findsOneWidget);
       expect(find.text('Your place'), findsOneWidget);
-      expect(find.text('Event page'), findsWidgets);
+      expect(find.text('Event page'), findsNothing);
       expect(find.text('Show Pass'), findsNothing);
       expect(find.text('View Pass & QR'), findsNothing);
       await tester.tap(find.text('Cancel'));
@@ -748,7 +745,7 @@ void main() {
       expect(world.places['gcc'], 'CANCELLED');
     });
 
-    testWidgets('a past event: ended, and the page', (tester) async {
+    testWidgets('a past event: ended, and no button', (tester) async {
       await pumpBoard(tester);
       await tester.tap(find.byIcon(LucideIcons.slidersHorizontal));
       await tester.pumpAndSettle();
@@ -759,7 +756,7 @@ void main() {
       await openSheet(tester, 'old');
       expect(find.text('Event Ended'), findsOneWidget);
       expect(find.text('This event has ended'), findsOneWidget);
-      expect(find.text('Event page'), findsOneWidget);
+      expect(find.text('Event page'), findsNothing);
       expect(find.text('It happened.'), findsOneWidget);
     });
 

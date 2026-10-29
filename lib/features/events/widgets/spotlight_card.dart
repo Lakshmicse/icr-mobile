@@ -131,24 +131,23 @@ class SpotlightCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(8, 16.5, 7, 9.5),
               child: Column(
                 children: [
-                  SizedBox(
-                    height: 13,
-                    child: Row(
-                      children: [
-                        const Icon(LucideIcons.mapPin, size: 13, color: AppColors.linkIcon),
-                        const SizedBox(width: 3.5),
-                        Expanded(
-                          child: Text(venue, style: EventsText.venue, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(LucideIcons.badgeCheck, size: 13, color: AppColors.tertiary),
-                        const SizedBox(width: 4),
-                        Text(aside, style: EventsText.badgeLine),
-                        const SizedBox(width: 5),
-                      ],
-                    ),
+                  // As tall as its text, not the design's 13 dp: at the app's 12 sp floor a line is 17 dp, and a
+                  // fixed box cut the descenders off. The gap below gave up the 4 dp the row took.
+                  Row(
+                    children: [
+                      const Icon(LucideIcons.mapPin, size: 13, color: AppColors.linkIcon),
+                      const SizedBox(width: 3.5),
+                      Expanded(
+                        child: Text(venue, style: EventsText.venue, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(LucideIcons.badgeCheck, size: 13, color: AppColors.tertiary),
+                      const SizedBox(width: 4),
+                      Text(aside, style: EventsText.badgeLine),
+                      const SizedBox(width: 5),
+                    ],
                   ),
-                  const SizedBox(height: 12.5),
+                  const SizedBox(height: 8.5),
                   SizedBox(
                     height: 36,
                     child: Row(

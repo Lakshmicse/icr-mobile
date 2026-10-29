@@ -81,7 +81,7 @@ class ProfileHero extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: _gutter),
               child: SizedBox(
-                height: 20,
+                height: 21,
                 child: Row(
                   children: [
                     Flexible(
@@ -95,7 +95,7 @@ class ProfileHero extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 8.2),
+            const SizedBox(height: 7.2),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: _gutter),
               child: Text.rich(

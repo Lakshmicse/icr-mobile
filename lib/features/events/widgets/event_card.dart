@@ -85,7 +85,11 @@ class EventCard extends StatelessWidget {
                     left: 8,
                     right: 8,
                     top: 9.5,
-                    child: Wrap(spacing: 4.5, runSpacing: 4, children: [for (final tag in tags) IntrinsicWidth(child: TagPill(tag))]),
+                    child: Wrap(
+                      spacing: 4.5,
+                      runSpacing: 4,
+                      children: [for (final tag in tags) IntrinsicWidth(child: TagPill(tag))],
+                    ),
                   ),
                   Positioned(
                     left: 10,
@@ -214,7 +218,14 @@ class _Footer extends StatelessWidget {
     var pending = 0.0;
     void gap(double w) => pending = w;
     void add(Widget w) {
-      items.add(pending == 0 ? w : Padding(padding: EdgeInsets.only(left: pending), child: w));
+      items.add(
+        pending == 0
+            ? w
+            : Padding(
+                padding: EdgeInsets.only(left: pending),
+                child: w,
+              ),
+      );
       pending = 0;
     }
 
@@ -242,12 +253,26 @@ class _Footer extends StatelessWidget {
         add(_button(f.action!));
       }
     } else {
-      // "[Register Free]   ⤴   🔖": the button first, the glyphs spaced out.
-      if (f.action != null) add(_button(f.action!));
-      for (final g in [if (f.share) _share(), if (f.bookmark) _bookmark()]) {
-        if (items.isNotEmpty) gap(items.length == 1 ? 21 : 17);
-        add(g);
-      }
+      // "[Register Free]   ⤴   🔖": the button first, the glyphs at the right edge. A Row, not the Wrap below: on
+      // a half-width card at the app's text sizes the three no longer fit one line, and the Wrap dropped the
+      // bookmark onto a line of its own. Here the glyphs keep their line, closing up to 4 and 6 dp apart (about
+      // 22 dp beside the button on a 390 dp phone), and the button gives way with an ellipsis only below about 355 dp.
+      final glyphs = [if (f.share) _share(), if (f.bookmark) _bookmark()];
+      return ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: height),
+        child: Row(
+          mainAxisAlignment: f.action == null ? MainAxisAlignment.end : MainAxisAlignment.spaceBetween,
+          children: [
+            if (f.action != null) ...[Flexible(child: _button(f.action!)), const SizedBox(width: 4)],
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final (i, g) in glyphs.indexed) ...[if (i > 0) const SizedBox(width: 6), g],
+              ],
+            ),
+          ],
+        ),
+      );
     }
     // What does not fit on the first line wraps to the next, and a note wider than the card gives way to an
     // ellipsis: nothing runs past the card's edge.
@@ -258,7 +283,11 @@ class _Footer extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           runSpacing: 4,
           children: [
-            for (final w in items) ConstrainedBox(constraints: BoxConstraints(maxWidth: box.maxWidth), child: w),
+            for (final w in items)
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: box.maxWidth),
+                child: w,
+              ),
           ],
         ),
       ),
@@ -280,7 +309,9 @@ class _Footer extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (icon != null) ...[Icon(icon, size: 11, color: style.color), const SizedBox(width: 3)],
-        Flexible(child: Text(f.note!, style: style, maxLines: 1, overflow: TextOverflow.ellipsis)),
+        Flexible(
+          child: Text(f.note!, style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
       ],
     );
   }
@@ -297,7 +328,10 @@ class _Footer extends StatelessWidget {
           height: height,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 11.5),
-            child: Center(widthFactor: 1, child: Text(label, style: EventsText.footerButton, maxLines: 1, overflow: TextOverflow.ellipsis)),
+            child: Center(
+              widthFactor: 1,
+              child: Text(label, style: EventsText.footerButton, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
           ),
         ),
       ),

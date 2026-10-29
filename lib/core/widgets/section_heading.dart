@@ -20,8 +20,8 @@ class SectionHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 20,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 20),
       child: Padding(
         padding: padding,
         child: Row(

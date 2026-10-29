@@ -92,8 +92,9 @@ class _VerifiedPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 20 dp at least, taller when larger text needs it.
     return Container(
-      height: 20,
+      constraints: const BoxConstraints(minHeight: 20),
       padding: const EdgeInsets.only(left: 6, right: 8),
       decoration: BoxDecoration(color: AppColors.successTint, borderRadius: BorderRadius.circular(10)),
       child: Row(

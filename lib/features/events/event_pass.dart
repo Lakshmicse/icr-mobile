@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/util/links.dart';
 import 'event_format.dart';
 import 'event_models.dart';
 import 'events_styles.dart';
@@ -118,20 +117,6 @@ class EventPassDialog extends StatelessWidget {
             const SizedBox(height: 14),
             Row(
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => openUrl(context, link),
-                    icon: const Icon(LucideIcons.externalLink, size: 14),
-                    label: Text('Event page', style: EventsText.footerButton),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.onSurface,
-                      minimumSize: const Size.fromHeight(38),
-                      side: const BorderSide(color: EventsColors.border),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
                 Expanded(
                   child: FilledButton(
                     onPressed: () => Navigator.of(context).maybePop(),

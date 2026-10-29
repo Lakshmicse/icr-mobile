@@ -99,15 +99,15 @@ class _Badge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 32 dp at least: the tab grows with larger text rather than cutting "ICR" off.
     return Container(
       width: 76,
-      height: 32,
+      constraints: const BoxConstraints(minHeight: 32),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(bottomRight: Radius.circular(LearnCard.radius)),
       ),
-      alignment: Alignment.center,
-      child: Text(text, style: HubText.badge),
+      child: Center(heightFactor: 1, child: Text(text, style: HubText.badge)),
     );
   }
 }

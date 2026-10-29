@@ -366,9 +366,36 @@ class CohortCard extends StatelessWidget {
   static const _avatarStep = 14.5;
   static const _avatarColors = [AppColors.primary, AppColors.tertiary, Color(0xFF4B5563)];
 
+  /// A circle is as wide as it is tall; initials too wide for it ("+31" at the app's 12 sp, which wrapped onto a
+  /// second line) stand in a pill as tall as the circle, with [_pillPad] either side of the words.
+  static const _pillPad = 4.0;
+
+  static double _widthOf(BuildContext context, CohortAvatar avatar) {
+    if (avatar.photo != null) return _avatarSize;
+    final painter = TextPainter(
+      text: TextSpan(text: avatar.initials, style: MentorshipText.cohortInitials),
+      textDirection: TextDirection.ltr,
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final words = painter.width;
+    painter.dispose();
+    // The circle's room for words is inside its 1 dp border.
+    return words <= _avatarSize - 2 ? _avatarSize : words + 2 + 2 * _pillPad;
+  }
+
   @override
   Widget build(BuildContext context) {
     final count = cohort.avatars.length;
+    final widths = [for (final a in cohort.avatars) _widthOf(context, a)];
+    // Each photo is overlapped by the next avatar as the design draws it. Initials at the app's 12 sp fill their
+    // circle, so the next one would cover the end of a letter: they stand side by side, borders sharing a dp.
+    final lefts = <double>[];
+    var left = 0.0;
+    for (final (i, w) in widths.indexed) {
+      lefts.add(left);
+      left += w - (cohort.avatars[i].photo != null ? _avatarSize - _avatarStep : 1);
+    }
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(colors: [MentorshipColors.cohortStart, MentorshipColors.cohortEnd]),
@@ -383,21 +410,20 @@ class CohortCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    height: 14,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 8.2,
-                          height: 8.2,
-                          decoration: const BoxDecoration(color: MentorshipColors.liveDot, shape: BoxShape.circle),
-                        ),
-                        const SizedBox(width: 6.3),
-                        Text('UPCOMING COHORT', style: MentorshipText.cohortKicker),
-                      ],
-                    ),
+                  // As tall as the kicker's line (a fixed 14 cut it at the app's 12 sp), with the gap below it
+                  // a dp shorter.
+                  Row(
+                    children: [
+                      Container(
+                        width: 8.2,
+                        height: 8.2,
+                        decoration: const BoxDecoration(color: MentorshipColors.liveDot, shape: BoxShape.circle),
+                      ),
+                      const SizedBox(width: 6.3),
+                      Text('UPCOMING COHORT', style: MentorshipText.cohortKicker),
+                    ],
                   ),
-                  const SizedBox(height: 9.3),
+                  const SizedBox(height: 8.3),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 230),
                     child: Text(cohort.name, style: MentorshipText.cohortTitle, maxLines: 2),
@@ -409,13 +435,13 @@ class CohortCard extends StatelessWidget {
                       children: [
                         if (count > 0)
                           SizedBox(
-                            width: _avatarStep * (count - 1) + _avatarSize,
+                            width: lefts.last + widths.last,
                             child: Stack(
                               children: [
                                 for (final (i, a) in cohort.avatars.indexed)
                                   Positioned(
-                                    left: i * _avatarStep,
-                                    child: _CohortAvatar(avatar: a, index: i),
+                                    left: lefts[i],
+                                    child: _CohortAvatar(avatar: a, index: i, width: widths[i]),
                                   ),
                               ],
                             ),
@@ -488,24 +514,25 @@ class _CohortBackdrop extends StatelessWidget {
 }
 
 class _CohortAvatar extends StatelessWidget {
-  const _CohortAvatar({required this.avatar, required this.index});
+  const _CohortAvatar({required this.avatar, required this.index, required this.width});
 
   final CohortAvatar avatar;
   final int index;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: CohortCard._avatarSize,
+      width: width,
       height: CohortCard._avatarSize,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: CohortCard._avatarColors[index % CohortCard._avatarColors.length],
-        shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(CohortCard._avatarSize / 2),
         border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1),
       ),
       child: avatar.photo == null
-          ? Text(avatar.initials, style: MentorshipText.cohortInitials)
+          ? Text(avatar.initials, style: MentorshipText.cohortInitials, maxLines: 1, softWrap: false)
           : FeedAvatar(photo: avatar.photo, initials: avatar.initials, size: CohortCard._avatarSize - 2),
     );
   }
