@@ -60,7 +60,7 @@ List<ScreenCase> memberScreens() {
     ScreenCase('my profile', (c) => const MyProfileScreen(), 'Profile strength'),
     ScreenCase('settings', (c) => const SettingsScreen(), 'Sign-in & security'),
     ScreenCase('notifications', (c) => const NotificationsScreen(), 'Notifications'),
-    ScreenCase('messages', (c) => const InboxScreen(poll: false), 'Messages'),
+    ScreenCase('messages', (c) => const InboxScreen(poll: false), 'Messaging'),
     ScreenCase('the library', doors['/documents']!, 'Documents'),
     ScreenCase('chapters', doors['/chapters']!, 'Your Chapters'),
     ScreenCase('events', doors['/events']!, 'All Events'),

@@ -7,8 +7,9 @@ import 'messaging_repository.dart';
 
 const _demo = 'assets/images/demo';
 
-/// Messages with the designs' people (Arvind Swamy, Priya Nambiar, Sarah
-/// Jenkins, Vikasha Aero Tech), bundled for design review
+/// Messages with the designs' people — the inbox design's five threads (Dr. Radhika Iyer, Srikanth
+/// Sriramagiri, Vikasha Aero Tech, Rajesh Sharma, Marcus Reed; docs/designs/messaging-inbox.png and
+/// messaging-thread.png) and the older ones (Arvind Swamy, Priya Nambiar, Sarah Jenkins) — bundled for design review
 /// (`--dart-define=FEED_SOURCE=demo`). Everything works in memory: sending,
 /// reading, star and pin, deleting; nothing leaves the phone.
 class DemoMessagingRepository implements MessagingRepository {
@@ -54,9 +55,35 @@ class DemoMessagingRepository implements MessagingRepository {
     id: 'marcus',
     firstName: 'Marcus',
     lastName: 'Reed',
-    photo: ChatPicture.asset('$_demo/avatar_marcus.jpg'),
+    photo: ChatPicture.asset('$_demo/messaging/avatar_marcus.png'),
+    headline: 'Lead IoT Architect @ Schneider Electric',
+    online: false,
   );
-  static const karthik = ChatPerson(id: 'karthik', firstName: 'Karthik', lastName: 'Rao');
+  static const radhika = ChatPerson(
+    id: 'radhika',
+    firstName: 'Dr. Radhika',
+    lastName: 'Iyer',
+    photo: ChatPicture.asset('$_demo/messaging/avatar_radhika.png'),
+    headline: 'Head of Energy & Climate, CBRE',
+    online: true,
+  );
+  static const srikanth = ChatPerson(
+    id: 'srikanth',
+    firstName: 'Srikanth',
+    lastName: 'Sriramagiri',
+    photo: ChatPicture.asset('$_demo/messaging/avatar_srikanth.png'),
+    headline: 'Supply Chain Leader @ Microsoft',
+    online: true,
+  );
+  static const rajesh = ChatPerson(
+    id: 'rajesh',
+    firstName: 'Rajesh',
+    lastName: 'Sharma',
+    photo: ChatPicture.asset('$_demo/messaging/avatar_rajesh.png'),
+    headline: 'VP Facilities @ Infosys',
+    online: true,
+  );
+  static const karthik = ChatPerson(id: 'karthik', firstName: 'Karthik', lastName: 'Rao', online: false);
   static const vikasha = ChatCompany(id: 'vikasha', name: 'Vikasha Aero Tech');
   static const brookfield = ChatCompany(id: 'brookfield', name: 'Brookfield Properties');
 
@@ -66,7 +93,173 @@ class DemoMessagingRepository implements MessagingRepository {
   DateTime _ago({int days = 0, int hours = 0, int minutes = 0}) =>
       _now.subtract(Duration(days: days, hours: hours, minutes: minutes));
 
+  /// Today at [hour]:[minute] on the demo's clock (the design's "10:42 AM").
+  DateTime _todayAt(int hour, int minute) => DateTime(_now.year, _now.month, _now.day, hour, minute);
+
   void _seed() {
+    final tomorrowFour = DateTime(_now.year, _now.month, _now.day + 1, 16);
+    _add(
+      _Thread(
+        id: 'c-radhika',
+        participants: const [me, radhika],
+        kind: ConversationKind.direct,
+        contextLabel: 'Net-Zero Council',
+        context: ConversationContext(
+          kind: ConversationKind.direct,
+          person: radhika,
+          company: const ContextCompany(
+            id: 'cbre',
+            name: 'CBRE',
+            industry: 'Chair, Net-Zero Council',
+            city: 'Bengaluru',
+            verified: true,
+          ),
+          // The sync call she set up, as the thread's meeting card.
+          consultation: ContextConsultation(
+            id: 'sync-wg01',
+            title: '1:1 Council Pre-Flight Sync',
+            buyer: true,
+            oneOnOne: true,
+            scheduledAt: tomorrowFour,
+          ),
+        ),
+        messages: [
+          _m(
+            'r1',
+            'c-radhika',
+            radhika,
+            'Good morning Rahul, thank you for sharing the draft Green Lease SLA rider yesterday. Our ESG committee '
+                'reviewed Section 4.2 regarding real-time sub-metering data sharing between landlord central BMS and '
+                'tenant sub-distributors.',
+            _todayAt(10, 14),
+            read: true,
+          ),
+          ChatMessage(
+            id: 'r2',
+            conversationId: 'c-radhika',
+            senderId: radhika.id,
+            sender: radhika,
+            body: '',
+            attachmentUrl: '/uploads/demo-green-sla-rider.docx',
+            attachmentName: 'Standardized_Green_SLA_Rider_v2.4.docx',
+            attachmentSize: 696320,
+            attachmentMime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            readAt: _todayAt(10, 20),
+            createdAt: _todayAt(10, 14),
+          ),
+          _m(
+            'r3',
+            'c-radhika',
+            me,
+            'Glad to hear that, Dr. Radhika. We calibrated the clauses directly against RICS and SEBI BRSR Core '
+                'guidelines to make compliance frictionless for Tier-1 multinational tenants. Are we good to present '
+                'this at the April 18 roundtable?',
+            _todayAt(10, 30),
+            read: true,
+          ),
+          _m(
+            'r4',
+            'c-radhika',
+            radhika,
+            "Yes, absolutely. I've scheduled a quick 20-min sync call tomorrow at 4:00 PM to finalize the slide deck "
+                'and confirm panel speaking assignments.',
+            _todayAt(10, 42),
+          ),
+        ],
+      ),
+    );
+    _add(
+      _Thread(
+        id: 'c-srikanth',
+        participants: const [me, srikanth],
+        kind: ConversationKind.mentorship,
+        contextLabel: '1:1 Mentorship',
+        context: ConversationContext(
+          kind: ConversationKind.mentorship,
+          person: srikanth,
+          mentorship: ContextMentorship(
+            id: 'mentorship-srikanth',
+            mentee: true,
+            mentorProfileId: 'demo-srikanth',
+            topics: const ['Supply chain planning', 'Career transitions'],
+            sessionsCount: 2,
+            nextSessionAt: _now.add(const Duration(days: 4, hours: 2)),
+          ),
+        ),
+        messages: [
+          _m(
+            'k1',
+            'c-srikanth',
+            me,
+            'Thank you for the diagnostic session. Could you share the notes when they are ready?',
+            _ago(days: 1, hours: 6),
+            read: true,
+          ),
+          _m(
+            'k2',
+            'c-srikanth',
+            srikanth,
+            'The diagnostic session notes are ready. I have added two reading links for the planning module.',
+            _ago(days: 1, hours: 3),
+            read: true,
+          ),
+        ],
+      ),
+    );
+    _add(
+      _Thread(
+        id: 'c-rajesh',
+        title: 'CXO Workplace Group',
+        participants: const [me, rajesh, david],
+        kind: ConversationKind.groupSession,
+        contextLabel: 'CXO Workplace Group',
+        context: ConversationContext(
+          kind: ConversationKind.groupSession,
+          groupSession: ContextGroupSession(
+            id: 'group-cxo',
+            title: 'CXO Workplace Group',
+            nextAt: _now.add(const Duration(days: 9)),
+          ),
+        ),
+        messages: [
+          _m(
+            'x1',
+            'c-rajesh',
+            rajesh,
+            'Confirmed for the smart building walkthrough on the 22nd. Bring your BMS integration questions.',
+            _ago(days: 15, hours: 2),
+            read: true,
+          ),
+        ],
+      ),
+    );
+    _add(
+      _Thread(
+        id: 'c-marcus',
+        participants: const [me, marcus],
+        kind: ConversationKind.direct,
+        contextLabel: 'BMS & Energy',
+        context: const ConversationContext(kind: ConversationKind.direct, person: marcus),
+        messages: [
+          _m(
+            'mr1',
+            'c-marcus',
+            me,
+            'Marcus, which schema did you settle on for the telemetry feed?',
+            _ago(days: 17, hours: 4),
+            read: true,
+          ),
+          _m(
+            'mr2',
+            'c-marcus',
+            marcus,
+            'BACnet telemetry integration schema is attached in the shared drive; the object model is flat on purpose.',
+            _ago(days: 17, hours: 1),
+            read: true,
+          ),
+        ],
+      ),
+    );
     _add(
       _Thread(
         id: 'c-arvind',
@@ -90,7 +283,7 @@ class DemoMessagingRepository implements MessagingRepository {
             'c-arvind',
             me,
             'Arvind, loved your point on BACnet/IP in the HVAC thread.',
-            _ago(hours: 3, minutes: 10),
+            _ago(days: 20, hours: 3, minutes: 10),
             read: true,
           ),
           _m(
@@ -98,7 +291,7 @@ class DemoMessagingRepository implements MessagingRepository {
             'c-arvind',
             arvind,
             'Thanks! The Niagara framework let us take the legacy controllers off vendor lock-in across the portfolio.',
-            _ago(hours: 2, minutes: 52),
+            _ago(days: 20, hours: 2, minutes: 52),
             read: true,
           ),
           _m(
@@ -106,7 +299,7 @@ class DemoMessagingRepository implements MessagingRepository {
             'c-arvind',
             me,
             'Did you keep the old controllers or replace them?',
-            _ago(hours: 2, minutes: 40),
+            _ago(days: 20, hours: 2, minutes: 40),
             read: true,
           ),
           _m(
@@ -114,9 +307,17 @@ class DemoMessagingRepository implements MessagingRepository {
             'c-arvind',
             arvind,
             'Kept them. We wrapped them with JACE gateways, so only the head-end changed.',
-            _ago(minutes: 48),
+            _ago(days: 20, minutes: 48),
+            read: true,
           ),
-          _m('a5', 'c-arvind', arvind, 'Happy to share the commissioning checklist we used.', _ago(minutes: 42)),
+          _m(
+            'a5',
+            'c-arvind',
+            arvind,
+            'Happy to share the commissioning checklist we used.',
+            _ago(days: 20, minutes: 42),
+            read: true,
+          ),
         ],
       ),
     );
@@ -127,6 +328,7 @@ class DemoMessagingRepository implements MessagingRepository {
         participants: const [me, karthik],
         kind: ConversationKind.enquiry,
         rfqTitle: 'Drone facade cleaning — Tower B, Whitefield',
+        contextLabel: 'RFQ #2026-084',
         counterpartCompany: vikasha,
         context: ConversationContext(
           kind: ConversationKind.enquiry,
@@ -135,7 +337,7 @@ class DemoMessagingRepository implements MessagingRepository {
           company: const ContextCompany(
             id: 'vikasha',
             name: 'Vikasha Aero Tech',
-            industry: 'Facade & high-rise maintenance',
+            industry: 'Drone Facade & AI Robotics',
             city: 'Bengaluru',
             verified: true,
             sells: true,
@@ -157,7 +359,7 @@ class DemoMessagingRepository implements MessagingRepository {
             'c-vikasha',
             me,
             'Hi team, we need the north and east facades of Tower B cleaned before the December audit. Can you share a quote?',
-            _ago(days: 1, hours: 5),
+            _ago(days: 2, hours: 5),
             read: true,
           ),
           _m(
@@ -165,7 +367,7 @@ class DemoMessagingRepository implements MessagingRepository {
             'c-vikasha',
             karthik,
             'Thanks Rahul. Our DGCA-licensed crew can do both faces in four nights with zero rope access. Quote attached.',
-            _ago(days: 1, hours: 2),
+            _ago(days: 2, hours: 2),
             company: vikasha,
             read: true,
           ),
@@ -180,16 +382,23 @@ class DemoMessagingRepository implements MessagingRepository {
             attachmentName: 'Vikasha_Tower-B_Quote.pdf',
             attachmentSize: 248000,
             attachmentMime: 'application/pdf',
-            readAt: _ago(days: 1),
-            createdAt: _ago(days: 1, hours: 2),
+            readAt: _ago(days: 2),
+            createdAt: _ago(days: 2, hours: 2),
           ),
-          _m('v4', 'c-vikasha', me, 'Could we visit one of your live sites first?', _ago(hours: 6), read: true),
+          _m(
+            'v4',
+            'c-vikasha',
+            me,
+            'Could we visit one of your live sites first?',
+            _ago(days: 1, hours: 9),
+            read: true,
+          ),
           _m(
             'v5',
             'c-vikasha',
             karthik,
-            'Of course — Prestige Tech Park, Thursday 7 am works for our crew.',
-            _ago(hours: 1, minutes: 5),
+            'We have uploaded the revised DGCA crew certificates and the site visit slot: Prestige Tech Park, Thursday 7 am.',
+            _ago(days: 1, hours: 4),
             company: vikasha,
           ),
         ],
@@ -200,7 +409,6 @@ class DemoMessagingRepository implements MessagingRepository {
         id: 'c-priya',
         participants: const [me, priya],
         kind: ConversationKind.mentorship,
-        pinned: true,
         context: ConversationContext(
           kind: ConversationKind.mentorship,
           person: priya,
@@ -219,7 +427,7 @@ class DemoMessagingRepository implements MessagingRepository {
             'c-priya',
             priya,
             'Great session today. Send me the energy audit when it is ready.',
-            _ago(days: 2),
+            _ago(days: 24),
             read: true,
           ),
           _m(
@@ -227,7 +435,7 @@ class DemoMessagingRepository implements MessagingRepository {
             'c-priya',
             me,
             'Here it is — the chiller plant numbers are on page 4.',
-            _ago(days: 1, hours: 20),
+            _ago(days: 23, hours: 20),
             read: true,
           ),
           _m(
@@ -235,7 +443,7 @@ class DemoMessagingRepository implements MessagingRepository {
             'c-priya',
             priya,
             'Looked through it. Your kW/TR is high; let us start with the condenser approach next time.',
-            _ago(days: 1, hours: 3),
+            _ago(days: 22, hours: 3),
             read: true,
           ),
         ],
@@ -254,7 +462,7 @@ class DemoMessagingRepository implements MessagingRepository {
             'c-sarah',
             sarah,
             'Which vendors did you shortlist for the IoT sensor retrofit? Our BMS is 15 years old too.',
-            _ago(days: 3, hours: 4),
+            _ago(days: 26, hours: 4),
             read: true,
           ),
           _m(
@@ -262,7 +470,7 @@ class DemoMessagingRepository implements MessagingRepository {
             'c-sarah',
             me,
             'Three on the shortlist, here is the one we liked best:\n${AppConfig.siteUrl}/companies/vikasha',
-            _ago(days: 3, hours: 2),
+            _ago(days: 26, hours: 2),
             read: true,
           ),
         ],
@@ -284,8 +492,15 @@ class DemoMessagingRepository implements MessagingRepository {
           ),
         ),
         messages: [
-          _m('g1', 'c-room', david, 'Slides for Thursday are up in the session page.', _ago(days: 6), read: true),
-          _m('g2', 'c-room', marcus, 'Can we cover Archibus integration too?', _ago(days: 6, minutes: -20), read: true),
+          _m('g1', 'c-room', david, 'Slides for Thursday are up in the session page.', _ago(days: 30), read: true),
+          _m(
+            'g2',
+            'c-room',
+            marcus,
+            'Can we cover Archibus integration too?',
+            _ago(days: 30, minutes: -20),
+            read: true,
+          ),
         ],
       ),
     );
@@ -326,6 +541,7 @@ class DemoMessagingRepository implements MessagingRepository {
     unread: _unread(t),
     starred: t.starred,
     pinned: t.pinned,
+    verified: t.context?.company?.verified ?? false,
     kind: t.kind,
     contextLabel: t.contextLabel ?? t.rfqTitle,
     counterpartCompany: t.counterpartCompany,
@@ -699,6 +915,7 @@ class _Thread {
     this.counterpartCompany,
     this.context,
     this.starred = false,
+    // ignore: unused_element_parameter
     this.pinned = false,
   });
 

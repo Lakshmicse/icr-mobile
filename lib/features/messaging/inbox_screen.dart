@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text.dart';
 import '../../core/util/links.dart';
-import '../../core/widgets/chips.dart';
-import '../../core/widgets/search_field.dart';
 import '../notifications/unread_counts.dart';
 import 'inbox_controller.dart';
 import 'messaging_launcher.dart';
@@ -19,13 +19,13 @@ import 'widgets/conversation_tile.dart';
 import 'widgets/new_message_sheet.dart';
 import 'widgets/states.dart';
 
-/// The person's messages, as the website's inbox on a phone: their own and
-/// each company inbox they answer for (switch between them), search across
-/// people and message text, All / Unread / Starred and a kind filter (a
-/// company inbox has Open / Unread / Mine / Done / Spam and its topics),
-/// pinned threads on top, mark all read, a long-press menu to star or pin,
-/// and "New message". The list refreshes by itself every half minute while
-/// the screen is open: the app has no socket client.
+/// The person's messages, as the designed inbox (docs/designs/messaging-inbox.png): "Messaging" with its
+/// "N Active" pill, an options menu and the "New message" pencil, a search box, one row of filter chips and the
+/// threads. The options menu holds "Mark all as read" and, for someone who answers for a company, the inbox
+/// switcher (their own messages and each company inbox, with the other inbox's unread count). Search covers
+/// people, companies and message text; a company inbox has Open / Unread / Mine / Done / Spam and its topics;
+/// pinned threads sit on top; press and hold a row to star or pin it. The list refreshes by itself every half
+/// minute while the screen is open: the app has no socket client.
 class InboxScreen extends StatefulWidget {
   const InboxScreen({
     super.key,
@@ -193,7 +193,7 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.white),
       child: Scaffold(
-        backgroundColor: ChatColors.page,
+        backgroundColor: Colors.white,
         body: SafeArea(
           bottom: false,
           child: ListenableBuilder(
@@ -201,28 +201,8 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
             builder: (context, _) => Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                ChatTitleBar(
-                  title: 'Messages',
-                  actions: [
-                    IconButton(
-                      key: const ValueKey('mark-all-read'),
-                      tooltip: 'Mark all as read',
-                      onPressed: _c.unreadHere == 0 ? null : _markAll,
-                      icon: const Icon(LucideIcons.checkCheck, size: 20),
-                      color: AppColors.primary,
-                      disabledColor: AppColors.slate400,
-                    ),
-                    IconButton(
-                      key: const ValueKey('compose'),
-                      tooltip: 'New message',
-                      onPressed: _compose,
-                      icon: const Icon(LucideIcons.squarePen, size: 20),
-                      color: AppColors.primary,
-                    ),
-                  ],
-                ),
-                _Controls(controller: _c, search: _search),
-                const Divider(height: 1, color: ChatColors.rule),
+                _Controls(controller: _c, search: _search, onCompose: _compose, onMarkAll: _markAll),
+                const Divider(height: 1, thickness: 1, color: InboxColors.rule),
                 Expanded(child: _body()),
               ],
             ),
@@ -261,7 +241,7 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
         slivers.add(
           SliverList.separated(
             itemCount: _c.hits.length,
-            separatorBuilder: (_, _) => const Divider(height: 1, thickness: 1, color: ChatColors.rule, indent: 16),
+            separatorBuilder: (_, _) => const _Rule(),
             itemBuilder: (context, i) {
               final h = _c.hits[i];
               return SearchHitTile(
@@ -288,7 +268,7 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
       slivers.add(SliverToBoxAdapter(child: _footer()));
     }
     return RefreshIndicator(
-      color: AppColors.primary,
+      color: InboxColors.navy,
       onRefresh: _c.refresh,
       child: CustomScrollView(controller: _scroll, physics: const AlwaysScrollableScrollPhysics(), slivers: slivers),
     );
@@ -296,7 +276,7 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
 
   SliverList _list(List<Conversation> rows, String? meId, DateTime now) => SliverList.separated(
     itemCount: rows.length,
-    separatorBuilder: (_, _) => const Divider(height: 1, thickness: 1, color: ChatColors.rule, indent: 74),
+    separatorBuilder: (_, _) => const _Rule(),
     itemBuilder: (context, i) {
       final c = rows[i];
       return ConversationTile(
@@ -361,6 +341,14 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
   }
 }
 
+/// The hairline between two rows.
+class _Rule extends StatelessWidget {
+  const _Rule();
+
+  @override
+  Widget build(BuildContext context) => const Divider(height: 1, thickness: 1, color: InboxColors.rule);
+}
+
 class _Heading extends StatelessWidget {
   const _Heading(this.text);
 
@@ -368,121 +356,177 @@ class _Heading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-    child: Text(text.toUpperCase(), style: ChatText.section),
+    padding: const EdgeInsets.fromLTRB(12, 14, 12, 6),
+    child: Text(text.toUpperCase(), style: InboxText.heading.copyWith(letterSpacing: 0.5)),
   );
 }
 
-/// The inbox switcher, the search box and the filter chips.
+/// What the options menu's rows return.
+enum _Choice { markAll }
+
+/// The header, the search box and the filter chips (the design's white block above the list).
 class _Controls extends StatelessWidget {
-  const _Controls({required this.controller, required this.search});
+  const _Controls({required this.controller, required this.search, required this.onCompose, required this.onMarkAll});
 
   final InboxController controller;
   final TextEditingController search;
+  final VoidCallback onCompose;
+  final VoidCallback onMarkAll;
+
+  /// Every conversation this view holds, pinned ones included.
+  int get _viewTotal => controller.total + controller.pinned.length;
+
+  bool _isKind(InboxKind kind, Conversation c) => switch (kind) {
+    InboxKind.requirement => c.kind?.isRequirement ?? false,
+    InboxKind.mentorship =>
+      c.kind == ConversationKind.mentorship ||
+          c.kind == ConversationKind.groupSession ||
+          c.kind == ConversationKind.consultation,
+    InboxKind.direct => c.kind == ConversationKind.direct || c.kind == ConversationKind.company,
+  };
+
+  /// How many threads of [kind] the person has: this view's total while it is the kind on, the count in the
+  /// list while the list is the whole inbox, else unknown (no count is better than a wrong one).
+  int? _kindCount(InboxKind kind) {
+    final q = controller.query;
+    if (q.kind == kind) return _viewTotal;
+    final whole = q.filter == InboxFilter.all && q.kind == null && q.search.trim().isEmpty && !controller.hasMore;
+    if (!whole) return null;
+    return [...controller.pinned, ...controller.conversations].where((c) => _isKind(kind, c)).length;
+  }
+
+  String _label(String base, int? count) => count == null ? base : '$base ($count)';
 
   @override
   Widget build(BuildContext context) {
     final c = controller;
     final q = c.query;
-    Widget chip(String key, String label, bool on, VoidCallback onTap, {Widget? trailing, IconData? icon}) => IcrChip(
-      key: ValueKey(key),
-      label: label,
-      tone: on ? ChipTone.primary : ChipTone.outlined,
-      height: 30,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      icon: icon,
-      iconSize: 13,
-      iconColor: on ? Colors.white : AppColors.slate500,
-      trailing: trailing,
-      trailingGap: 6,
-      textStyle: ChatText.label.copyWith(color: on ? Colors.white : AppColors.onSurface),
-      onTap: onTap,
-    );
+    final loaded = !(c.loading && c.conversations.isEmpty && c.pinned.isEmpty);
+    final inbox = c.currentInbox;
+    final whole = q.filter == InboxFilter.all && q.kind == null && q.search.trim().isEmpty;
 
-    Widget row(List<Widget> chips) => SizedBox(
-      height: 30,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: chips.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (_, i) => chips[i],
+    Widget pill(String key, String label, bool on, VoidCallback onTap) =>
+        _FilterPill(key: ValueKey(key), label: label, on: on, onTap: onTap);
+
+    Widget row(List<Widget> chips) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: SizedBox(
+        height: 25,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: chips.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 6),
+          itemBuilder: (_, i) => chips[i],
+        ),
       ),
     );
 
-    Widget dot(int n) => n > 0
-        ? Container(
-            constraints: const BoxConstraints(minWidth: 16),
-            height: 16,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(color: AppColors.error, borderRadius: BorderRadius.circular(8)),
-            child: Text('$n', style: ChatText.count),
-          )
-        : const SizedBox.shrink();
+    final pillText = !loaded
+        ? null
+        : q.companyInbox
+        ? '${inbox?.name ?? 'Company'} · $_viewTotal Active'
+        : '$_viewTotal Active';
 
-    final inbox = c.currentInbox;
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.only(top: 10, bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (c.companyInboxes.isNotEmpty) ...[
-            row([
-              for (final i in c.inboxes)
-                chip(
-                  'inbox-${i.id}',
-                  i.personal ? 'My messages' : (i.name ?? 'Company'),
-                  i.id == q.inbox,
-                  () => c.setInbox(i.id),
-                  icon: i.personal ? LucideIcons.user : LucideIcons.building2,
-                  trailing: i.id == q.inbox ? null : dot(i.unread),
-                ),
-            ]),
-            const SizedBox(height: 10),
-          ],
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: IcrSearchField(
+            padding: const EdgeInsets.fromLTRB(12, 9, 10, 7),
+            child: SizedBox(
+              height: 34,
+              child: Row(
+                children: [
+                  if (Navigator.of(context).canPop()) const _BackButton(),
+                  Expanded(
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 1),
+                            child: Text('Messaging', style: InboxText.title),
+                          ),
+                          if (pillText != null) ...[
+                            const SizedBox(width: 8),
+                            Flexible(child: _ActivePill(text: pillText)),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  _OptionsMenu(controller: c, onMarkAll: onMarkAll),
+                  _ComposeButton(onTap: onCompose),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: _SearchBox(
               controller: search,
-              height: 36,
-              hint: 'Search people, companies and messages',
               onSubmitted: (v) {
                 if (v.trim().isEmpty && search.text.isNotEmpty) search.clear();
                 c.setSearch(v);
               },
             ),
           ),
-          const SizedBox(height: 10),
-          if (!q.companyInbox) ...[
+          const SizedBox(height: 11.5),
+          if (!q.companyInbox)
             row([
-              chip('filter-all', 'All', q.filter == InboxFilter.all, () => c.setFilter(InboxFilter.all)),
-              chip(
+              pill(
+                'filter-all',
+                _label('Focused', whole && loaded ? _viewTotal : null),
+                q.filter == InboxFilter.all && q.kind == null,
+                () async {
+                  if (q.kind != null) await c.setKind(null);
+                  if (c.query.filter != InboxFilter.all) await c.setFilter(InboxFilter.all);
+                },
+              ),
+              pill(
                 'filter-unread',
-                'Unread',
+                _label('Unread', c.unreadHere > 0 ? c.unreadHere : null),
                 q.filter == InboxFilter.unread,
                 () => c.setFilter(InboxFilter.unread),
-                trailing: q.filter == InboxFilter.unread ? null : dot(c.unreadHere),
               ),
-              chip(
+              pill(
+                'kind-requirement',
+                _label('Vendor RFQs', loaded ? _kindCount(InboxKind.requirement) : null),
+                q.kind == InboxKind.requirement,
+                () => c.setKind(InboxKind.requirement),
+              ),
+              pill(
+                'kind-mentorship',
+                _label('Mentorship', loaded ? _kindCount(InboxKind.mentorship) : null),
+                q.kind == InboxKind.mentorship,
+                () => c.setKind(InboxKind.mentorship),
+              ),
+              pill(
                 'filter-starred',
                 'Starred',
                 q.filter == InboxFilter.starred,
                 () => c.setFilter(InboxFilter.starred),
               ),
-              for (final k in InboxKind.values) chip('kind-${k.name}', k.label, q.kind == k, () => c.setKind(k)),
-            ]),
-          ] else ...[
+              pill(
+                'kind-direct',
+                _label('Direct', loaded ? _kindCount(InboxKind.direct) : null),
+                q.kind == InboxKind.direct,
+                () => c.setKind(InboxKind.direct),
+              ),
+            ])
+          else ...[
             row([
-              for (final v in CompanyInboxView.values) chip('view-${v.name}', v.label, q.view == v, () => c.setView(v)),
+              for (final v in CompanyInboxView.values) pill('view-${v.name}', v.label, q.view == v, () => c.setView(v)),
             ]),
             if ((inbox?.topics.length ?? 0) > 1) ...[
               const SizedBox(height: 8),
               row([
-                chip('topic-all', 'All topics', q.topic == null, () => c.setTopic(null)),
+                pill('topic-all', 'All topics', q.topic == null, () => c.setTopic(null)),
                 for (final t in inbox!.topics)
-                  chip('topic-$t', messageTopicLabels[t] ?? t, q.topic == t, () => c.setTopic(q.topic == t ? null : t)),
+                  pill('topic-$t', messageTopicLabels[t] ?? t, q.topic == t, () => c.setTopic(q.topic == t ? null : t)),
               ]),
             ],
           ],
@@ -490,4 +534,278 @@ class _Controls extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "Back", for a screen pushed over another (the design's inbox has none: it is drawn as a tab's page).
+class _BackButton extends StatelessWidget {
+  const _BackButton();
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: 'Back',
+    child: InkResponse(
+      onTap: () => Navigator.maybePop(context),
+      radius: 22,
+      child: const SizedBox(
+        width: 32,
+        height: 34,
+        child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Icon(Symbols.arrow_back, size: 22, color: AppColors.onSurfaceVariant),
+        ),
+      ),
+    ),
+  );
+}
+
+/// "5 Active": a blue pill after the title.
+class _ActivePill extends StatelessWidget {
+  const _ActivePill({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    height: 20.5,
+    padding: const EdgeInsets.symmetric(horizontal: 8.5),
+    decoration: BoxDecoration(color: InboxColors.blueTint, borderRadius: BorderRadius.circular(10.25)),
+    child: Center(
+      widthFactor: 1,
+      child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: InboxText.activePill),
+    ),
+  );
+}
+
+/// The sliders button: a menu with "Mark all as read" and, for a company's people, the inbox switcher.
+class _OptionsMenu extends StatelessWidget {
+  const _OptionsMenu({required this.controller, required this.onMarkAll});
+
+  final InboxController controller;
+  final VoidCallback onMarkAll;
+
+  static final _item = AppText.plexSans(12, FontWeight.w500, InboxColors.ink).copyWith(height: 1.3);
+
+  @override
+  Widget build(BuildContext context) {
+    final c = controller;
+    final q = c.query;
+    return PopupMenuButton<String>(
+      key: const ValueKey('inbox-options'),
+      tooltip: 'Inbox options',
+      padding: EdgeInsets.zero,
+      color: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      position: PopupMenuPosition.under,
+      onSelected: (value) {
+        if (value == _Choice.markAll.name) {
+          onMarkAll();
+        } else if (value.startsWith('inbox:')) {
+          c.setInbox(value.substring(6));
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem<String>(
+          key: const ValueKey('mark-all-read'),
+          value: _Choice.markAll.name,
+          enabled: c.unreadHere > 0,
+          child: Row(
+            children: [
+              const Icon(LucideIcons.checkCheck, size: 18, color: InboxColors.navy),
+              const SizedBox(width: 10),
+              Text('Mark all as read', style: _item),
+            ],
+          ),
+        ),
+        if (c.companyInboxes.isNotEmpty) ...[
+          const PopupMenuDivider(),
+          for (final i in c.inboxes)
+            PopupMenuItem<String>(
+              key: ValueKey('inbox-${i.id}'),
+              value: 'inbox:${i.id}',
+              child: Row(
+                children: [
+                  Icon(i.personal ? LucideIcons.user : LucideIcons.building2, size: 18, color: InboxColors.soft),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      i.personal ? 'My messages' : (i.name ?? 'Company'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: _item,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  if (i.id == q.inbox)
+                    const Icon(LucideIcons.check, size: 16, color: InboxColors.navy, semanticLabel: 'Open')
+                  else if (i.unread > 0)
+                    Container(
+                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(color: InboxColors.navy, borderRadius: BorderRadius.circular(8)),
+                      child: Center(
+                        widthFactor: 1,
+                        heightFactor: 1,
+                        child: Text('${i.unread}', style: InboxText.count),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ],
+      child: SizedBox(
+        width: 32,
+        height: 34,
+        child: Stack(
+          alignment: const Alignment(0.0625, 0),
+          children: [
+            const Icon(Symbols.tune, size: 18, color: AppColors.slate500, semanticLabel: 'Inbox options'),
+            // Another inbox has something waiting.
+            if (c.unreadElsewhere > 0)
+              Positioned(
+                top: 6,
+                right: 4,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: AppColors.error,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 1.5),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The filled square with a pencil: "New message".
+class _ComposeButton extends StatelessWidget {
+  const _ComposeButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: 'New message',
+    child: Tooltip(
+      message: 'New message',
+      excludeFromSemantics: true,
+      child: InkResponse(
+        key: const ValueKey('compose'),
+        onTap: onTap,
+        radius: 20,
+        child: SizedBox(
+          width: 34,
+          height: 34,
+          child: Center(
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(color: InboxColors.navy, borderRadius: BorderRadius.circular(6)),
+              child: const Icon(Symbols.edit_square, size: 18, color: Colors.white),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// The grey search box with its magnifier and the design's hint.
+class _SearchBox extends StatelessWidget {
+  const _SearchBox({required this.controller, required this.onSubmitted});
+
+  final TextEditingController controller;
+  final ValueChanged<String> onSubmitted;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    height: 32,
+    padding: const EdgeInsets.only(left: 8),
+    decoration: BoxDecoration(color: InboxColors.grey, borderRadius: BorderRadius.circular(4)),
+    child: Row(
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 4),
+          child: Icon(Symbols.search, size: 16, color: InboxColors.faint),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: controller,
+            builder: (context, value, _) => Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    style: InboxText.searchInput,
+                    textAlignVertical: TextAlignVertical.center,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: onSubmitted,
+                    cursorColor: InboxColors.navy,
+                    decoration: InputDecoration(
+                      isCollapsed: true,
+                      border: InputBorder.none,
+                      hintText: 'Search messages, contacts, RFQs...',
+                      hintStyle: InboxText.searchHint,
+                      hintMaxLines: 1,
+                    ),
+                  ),
+                ),
+                if (value.text.isNotEmpty)
+                  IconButton(
+                    tooltip: 'Clear search',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    iconSize: 16,
+                    onPressed: () {
+                      controller.clear();
+                      onSubmitted('');
+                    },
+                    icon: const Icon(LucideIcons.x, color: InboxColors.faint),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// A filter chip: navy with white words while it is the one on, light grey otherwise.
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({super.key, required this.label, required this.on, required this.onTap});
+
+  final String label;
+  final bool on;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    selected: on,
+    child: Material(
+      color: on ? InboxColors.navy : InboxColors.grey,
+      shape: const StadiumBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          height: 25,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          alignment: Alignment.center,
+          child: Text(label, maxLines: 1, style: on ? InboxText.filterOn : InboxText.filter),
+        ),
+      ),
+    ),
+  );
 }
