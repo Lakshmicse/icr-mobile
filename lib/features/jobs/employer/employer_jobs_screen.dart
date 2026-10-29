@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/config.dart';
 import '../../../core/util/links.dart' show showMessage;
 import '../../career/career_format.dart';
 import '../../career/career_styles.dart';
@@ -96,8 +97,9 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
     if (mounted) _c.refresh();
   }
 
-  /// A promotion is bought: the website takes the payment (its list has a Promote on each live posting).
-  Future<void> _promote(PostedJob job) => widget.links.openSite(context, '/manage/jobs');
+  /// A promotion is bought: the website takes the payment (its list has a Promote on each live posting), so this
+  /// leaves the app for it rather than opening the app's own jobs list again.
+  Future<void> _promote(PostedJob job) => widget.links.openExternal(context, AppConfig.sitePage('/manage/jobs'));
 
   Future<void> _move(PostedJob job, PostingStatus to) async {
     if (to == PostingStatus.closed) {

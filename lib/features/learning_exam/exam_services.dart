@@ -12,8 +12,12 @@ class ExamServices {
   /// Where an unsent sitting is kept between launches.
   static ExamProgressStore progress = SecureExamProgressStore();
 
-  /// Opens a page of the website in the browser.
+  /// Opens a page of the website: the app's own screen when it has one, else the app's web view.
   static Future<void> Function(BuildContext context, Uri uri) openUrl = links.openUrl;
+
+  /// Opens a page of the website with the phone, never the app's own screen for it: a payment, or a download
+  /// the website makes. The app's screen for the same address would only open itself again.
+  static Future<void> Function(BuildContext context, Uri uri) openExternal = links.openExternal;
 
   /// Hands text (a link) to the system share sheet.
   static Future<void> Function(String text, {String? subject}) share = _share;

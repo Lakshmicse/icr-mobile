@@ -83,7 +83,11 @@ void main() {
       });
       expect(SiteRoutes.inApp(callback), isNull);
       expect(SiteRoutes.inApp(Uri.parse('https://icr.org.in/auth/callbacks')), isNull);
-      expect(SiteRoutes.inApp(Uri.parse('https://icr.org.in/auth')), isNotNull, reason: 'only the callback is excluded');
+      expect(
+        SiteRoutes.inApp(Uri.parse('https://icr.org.in/auth')),
+        isNotNull,
+        reason: 'only the callback is excluded',
+      );
     });
   });
 
@@ -163,10 +167,13 @@ void main() {
       expect(opened, ['browser:https://icr.org.in/pricing/professional']);
     });
 
-    testWidgets('openExternal sends a paper page to the browser even though the app has a screen for it', (tester) async {
+    testWidgets('openExternal sends a paper page to the browser even though the app has a screen for it', (
+      tester,
+    ) async {
       // The app draws /learning/assessment/<code>/<slug> itself; a "Pay on the website" button must reach the
       // website's page (its checkout), not land back on that screen.
-      SiteRoutes.resolver = (uri) => uri.path.startsWith('/learning/') ? (c) async => opened.add('native:${uri.path}') : null;
+      SiteRoutes.resolver = (uri) =>
+          uri.path.startsWith('/learning/') ? (c) async => opened.add('native:${uri.path}') : null;
       SiteRoutes.webView = (c, uri) async => opened.add('web:${uri.path}');
       late BuildContext context;
       await tester.pumpWidget(
@@ -270,6 +277,11 @@ void main() {
         'https://icr.org.in/learning/professional-development/AEE-CBCP',
         'https://icr.org.in/learning/assessment',
         'https://icr.org.in/learning/assessment/capital-planning',
+        'https://icr.org.in/learning/assessment/CP',
+        'https://icr.org.in/learning/assessment/CP/foundation',
+        'https://icr.org.in/learning/mock-tests',
+        'https://icr.org.in/learning/mock-tests/aee-cbcp',
+        'https://icr.org.in/learning/mock-tests/aee-cbcp/set-2',
         'https://icr.org.in/learning/verify?id=ICR-123',
         'https://icr.org.in/learning/certificates/ICR-123',
         'https://icr.org.in/mentorship',
@@ -557,7 +569,27 @@ void main() {
       await pump(tester, accessToken: () async => 'tok.en.value', uri: Uri.parse('https://icr.org.in/dashboard'));
       web.delegate.onPageFinished!('https://icr.org.in/robots.txt');
       await tester.pump();
-      expect(find.byKey(const Key('web.loading')), findsOneWidget, reason: '/robots.txt has finished, the page has not');
+      expect(
+        find.byKey(const Key('web.loading')),
+        findsOneWidget,
+        reason: '/robots.txt has finished, the page has not',
+      );
+      web.delegate.onPageFinished!('https://icr.org.in/dashboard');
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const Key('web.loading')), findsNothing);
+    });
+
+    testWidgets('a second "finished" for the static page (the Android WebView sends one) still leaves the cover up', (
+      tester,
+    ) async {
+      await pump(tester, accessToken: () async => 'tok.en.value', uri: Uri.parse('https://icr.org.in/dashboard'));
+      web.delegate.onPageFinished!('https://icr.org.in/robots.txt'); // writes the session, asks for the page
+      await tester.pump();
+      web.delegate.onPageFinished!('https://icr.org.in/robots.txt'); // again, before the page has come
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const Key('web.loading')), findsOneWidget, reason: 'the page asked for has not painted yet');
       web.delegate.onPageFinished!('https://icr.org.in/dashboard');
       await tester.pump();
       await tester.pump();
@@ -654,8 +686,7 @@ class _FakeWebPlatform extends WebViewPlatform {
       _FakeDelegate(params);
 
   @override
-  PlatformWebViewWidget createPlatformWebViewWidget(PlatformWebViewWidgetCreationParams params) =>
-      _FakeWidget(params);
+  PlatformWebViewWidget createPlatformWebViewWidget(PlatformWebViewWidgetCreationParams params) => _FakeWidget(params);
 }
 
 class _FakeController extends PlatformWebViewController {

@@ -40,6 +40,12 @@ extension JobLinksOpening on JobLinks {
   Future<void> openUri(BuildContext context, Uri uri) async {
     final inApp = SiteRoutes.inApp(uri);
     if (inApp != null) return inApp(context);
+    return openExternal(context, uri);
+  }
+
+  /// Opens [uri] with the phone, never the app's own screen for it: a payment page, which the website takes, where
+  /// the app's screen for the same address would only open itself again.
+  Future<void> openExternal(BuildContext context, Uri uri) async {
     final messenger = ScaffoldMessenger.of(context);
     var opened = false;
     try {

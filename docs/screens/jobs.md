@@ -29,7 +29,7 @@ Opens over the board, blurred and dimmed, from `GET /jobs/:id` plus `GET /compan
 
 | Design | Live |
 |---|---|
-| "JOB DETAILS", share, bookmark, more | Share hands the title and link to the system share sheet; the bookmark is the board's (the row behind the sheet follows); More offers "Copy link" and "Open on the ICR website". |
+| "JOB DETAILS", share, bookmark, more | Share hands the title and link to the system share sheet; the bookmark is the board's (the row behind the sheet follows); More offers "Copy link" and "Reviews, salaries and interviews" (the "Open on the ICR website" row only opened this sheet again, and is gone since 29 Oct 2026). |
 | Company name with the seal | `verificationLevel` above REGISTERED draws the seal. |
 | "Enterprise Workplace & Asset Management" under the name | The API has no tagline: the company's **industry** ("Commercial Real Estate Services", from `Company.industry`), else the first sentence of its description if short (up to 56 characters), else its kind ("Real Estate"). |
 | Blue line under the title | `department`, after the category when the job has one. |
@@ -47,7 +47,7 @@ Opens over the board, blurred and dimmed, from `GET /jobs/:id` plus `GET /compan
 3. *Qualifications* the employer wrote (`qualifications`, then the preferred ones with "Preferred credential."), found in the member's credentials (`GET /credentials/me`) and education by acronym (RICS, IFMA) or as the whole phrase.
 4. *Skills*, one row each, against the résumé's.
 
-Each row has the design's circle (filled when met, empty when not) and the detail line under it, and the title counts them ("matches 6 of 8"). "Show comparative applicant insights ›" opens the job on the website, where the preview and the applicants' comparison are.
+Each row has the design's circle (filled when met, empty when not) and the detail line under it, and the title counts them ("matches 6 of 8"). The design's "Show comparative applicant insights ›" is not drawn: it opened the job on the website, which is this sheet (29 Oct 2026); the applicants' comparison would need a screen and an API of its own.
 
 **Easy Apply** (bottom bar, with the bookmark beside it) `POST /jobs/:id/apply`, one form (`apply_sheet.dart`, rules in `apply_rules.dart`, ported from `@icr/shared`):
 - an optional **note**, an optional **expected salary**, the **résumé** to send (`GET /users/me/resumes`, the default first), and a **mobile number** field when the profile has none (`GET /auth/me`), refused locally under 8 characters. If the API refuses for want of a number anyway (`400`, "Add a mobile number so the employer can reach you.") the field appears with that sentence, and the number is saved by the API with the application;

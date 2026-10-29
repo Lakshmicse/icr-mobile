@@ -43,7 +43,9 @@ import 'features/mentorship_my/mentoring_links.dart' show MentorshipLinks;
 import 'features/become_mentor/become_mentor_screen.dart' show openBecomeMentor;
 import 'features/contact/contact_screen.dart' show contactRoute;
 import 'features/mentor_profile/mentor_profile_screen.dart' show mentorProfileRoute;
-import 'features/mentorship_my/programmes_screen.dart' show openProgrammes;
+import 'features/mentorship_my/group_sessions_screen.dart' show openGroupSession;
+import 'features/mentorship_my/pairing_screen.dart' show openPairing;
+import 'features/mentorship_my/programmes_screen.dart' show openProgramme, openProgrammes;
 import 'features/messaging/messaging_launcher.dart';
 import 'features/network/network_screen.dart' show networkRoute;
 import 'features/notifications/notifications_bell.dart';
@@ -53,6 +55,8 @@ import 'features/rfq/post_rfq_screen.dart';
 import 'features/rfq/rfq_navigation.dart';
 import 'features/rfq/rfq_scope.dart';
 import 'features/shell/app_shell.dart';
+import 'features/site/legal_page.dart' show legalPages;
+import 'features/site/legal_page_screen.dart' show LegalPageScreen;
 import 'features/shell/icr_bottom_nav.dart';
 import 'features/shell/shell_page.dart';
 
@@ -184,6 +188,18 @@ Future<void> openMembershipHistory(BuildContext context, {MembershipAudience? au
       MembershipHistoryScreen(audience: audience ?? MembershipAudience.seeker, onBack: () => Navigator.of(ctx).pop()),
 );
 
+/// Signed out, the app has only the legal pages to open itself ("Terms of Service" and "Privacy Policy" under the
+/// sign-up consent line); anything else stays with the phone.
+SiteRouteOpener? signedOutSiteRoute(Uri uri) {
+  final legal = legalPages[uri.path];
+  if (legal == null) return null;
+  return (ctx) => Navigator.of(ctx).push(
+    MaterialPageRoute<void>(
+      builder: (c) => LegalPageScreen(page: legal, onBack: () => Navigator.of(c).pop()),
+    ),
+  );
+}
+
 /// The pages of the website the app opens itself, for `SiteRoutes.resolver`:
 /// the notifications, the plans and the history, and every screen a Discover
 /// door or a profile-menu row has (`/chapters`, `/events`, `/profile`, …).
@@ -237,6 +253,20 @@ SiteRouteOpener? _inAppRecord(Uri uri, String path) {
   if (path == '/become-a-mentor' || path == '/mentorship/become-a-mentor') return (ctx) => openBecomeMentor(ctx);
   if (path == '/mentorship/programmes') {
     return (ctx) => openProgrammes(ctx, onBecomeMentor: (c) => openBecomeMentor(c));
+  }
+  // The mentoring records the notification router opens (`app_notifications.dart`), so a cohort card's "Know
+  // more" or a link in a message reaches the app's screen and not the web view. The public certificate check
+  // (`/mentorship/certificates/<number>`) is not here: the app has no screen for it, and the tab that links it is
+  // the member's own certificates, which would only open again.
+  if (parts.length == 3 && parts[0] == 'mentorship') {
+    switch (parts[1]) {
+      case 'programmes':
+        return (ctx) => openProgramme(ctx, parts[2]);
+      case 'groups':
+        return (ctx) => openGroupSession(ctx, parts[2]);
+      case 'my':
+        return (ctx) => openPairing(ctx, parts[2]);
+    }
   }
   if (path == '/account/companies/new') return (ctx) => AppShell.push<void>(ctx, (c) => CreateCompanyScreen());
   if (path == '/network') {

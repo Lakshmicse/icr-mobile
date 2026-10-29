@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/api/api_error.dart';
-import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
 import '../../core/widgets/detail_sheet.dart';
 import 'exam_format.dart';
 import 'exam_models.dart';
 import 'exam_repository.dart';
-import 'exam_services.dart';
 import 'exam_styles.dart';
 import 'exam_widgets.dart';
 
@@ -136,14 +134,6 @@ class _VerifyBodyState extends State<VerifyBody> {
         ],
         if (found != null && !_busy) ...[const SizedBox(height: 16), _Verified(certificate: found)],
         const SizedBox(height: 8),
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => ExamServices.openUrl(context, AppConfig.sitePage('/learning/verify')),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            child: Center(child: Text('Open the register on the website', style: ExamText.link)),
-          ),
-        ),
       ],
     );
   }

@@ -86,6 +86,12 @@ class _SessionGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
+    if (auth.status != SessionStatus.signedIn) {
+      // Signed out, a link to the website has only the legal pages to open in the app (sign-up's consent line);
+      // the rest stays with the phone, and a resolver left over from a session that ended is not kept.
+      SiteRoutes.resolver = signedOutSiteRoute;
+      SiteRoutes.webView = null;
+    }
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 250),
       child: switch (auth.status) {
@@ -93,7 +99,10 @@ class _SessionGate extends StatelessWidget {
         SessionStatus.signedOut => const SignInScreen(key: ValueKey('sign-in')),
         // Keyed on the company too: switching company (the profile menu, My companies) builds the whole app again,
         // so no tab keeps the previous company's feed, jobs or requirements.
-        SessionStatus.signedIn => _Home(key: ValueKey('home-${auth.user?.id}-${auth.user?.companyId}'), user: auth.user),
+        SessionStatus.signedIn => _Home(
+          key: ValueKey('home-${auth.user?.id}-${auth.user?.companyId}'),
+          user: auth.user,
+        ),
       },
     );
   }
@@ -217,9 +226,7 @@ class _Home extends StatelessWidget {
         // because the notifications list is a pushed route and sits above them.
         builder: (shellContext) => InboxHost(
           api: context.read<ApiClient>(),
-          router: NotificationRouter(
-            openers: _wireShell(shellContext),
-          ),
+          router: NotificationRouter(openers: _wireShell(shellContext)),
           child: AppShell(
             drawer: ProfileDrawer(
               screens: screens,

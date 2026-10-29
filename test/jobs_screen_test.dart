@@ -703,14 +703,14 @@ void main() {
       expect(copied, ['https://icr.org.in/jobs']);
       expect(find.text('Link copied'), findsOneWidget);
 
+      // The sheet is the job's page: no row sends the member to the website for the same job.
       await tester.tap(find.byIcon(LucideIcons.ellipsis));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Open on the ICR website'));
-      await tester.pumpAndSettle();
-      expect(board.links.opened.single.toString(), 'https://icr.org.in/jobs');
+      expect(find.text('Open on the ICR website'), findsNothing);
+      expect(board.links.opened, isEmpty);
     });
 
-    testWidgets('the match card counts what is met and its link opens the job on the website', (tester) async {
+    testWidgets('the match card counts what is met, and offers no link out to the same job', (tester) async {
       final repo = SpyJobsRepository()
         ..matchSet = true
         ..matchAnswer = const JobMatch(
@@ -735,14 +735,12 @@ void main() {
         );
       final board = await pumpBoard(tester, repo: repo);
       await openFirstJob(tester);
-      await scrollSheetTo(tester, find.text('Show comparative applicant insights'));
-      expect(find.text('Your profile matches 2 of 3 requirements'), findsOneWidget);
+      await scrollSheetTo(tester, find.text('Your profile matches 2 of 3 requirements'));
       expect(find.text('8+ years of experience'), findsOneWidget);
       expect(find.text('Preferred credential. Not on your profile yet.'), findsOneWidget);
-
-      await tester.tap(find.text('Show comparative applicant insights'));
-      await tester.pump();
-      expect(board.links.opened.single.toString(), 'https://icr.org.in/jobs');
+      // "Show comparative applicant insights" only opened this same sheet again on the website's address.
+      expect(find.text('Show comparative applicant insights'), findsNothing);
+      expect(board.links.opened, isEmpty);
     });
 
     testWidgets('a job with nothing to compare has no match card', (tester) async {

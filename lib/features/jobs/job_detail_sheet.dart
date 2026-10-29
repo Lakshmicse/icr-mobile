@@ -239,10 +239,7 @@ class JobSheetBody extends StatelessWidget {
             const Hairline(),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 9, 16, 0),
-              child: _MatchCard(
-                match: match,
-                onInsights: () => controller.links.openUri(context, controller.repository.link(job)),
-              ),
+              child: _MatchCard(match: match),
             ),
             const SizedBox(height: 10),
             const Hairline(color: AppColors.blockRule),
@@ -424,17 +421,6 @@ class _Toolbar extends StatelessWidget {
                       Clipboard.setData(ClipboardData(text: link.toString()));
                       Navigator.pop(sheet);
                       showMessage(context, 'Link copied');
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Symbols.open_in_new),
-                    title: Text(
-                      'Open on the ICR website',
-                      style: AppText.small.copyWith(color: AppColors.onSurface, fontSize: 14),
-                    ),
-                    onTap: () {
-                      Navigator.pop(sheet);
-                      controller.links.openUri(context, link);
                     },
                   ),
                   ListTile(
@@ -680,13 +666,9 @@ class _Bullet extends StatelessWidget {
 }
 
 class _MatchCard extends StatelessWidget {
-  const _MatchCard({required this.match, required this.onInsights});
+  const _MatchCard({required this.match});
 
   final JobMatch match;
-
-  /// "Show comparative applicant insights": the job's page on the website,
-  /// where the match and the applicants' comparison are.
-  final VoidCallback onInsights;
 
   @override
   Widget build(BuildContext context) {
@@ -757,21 +739,6 @@ class _MatchCard extends StatelessWidget {
                 ),
               ],
             ],
-          ),
-        ),
-        const SizedBox(height: 11),
-        Center(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onInsights,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Show comparative applicant insights', style: JobsText.insights),
-                const SizedBox(width: 3),
-                const Icon(LucideIcons.chevronRight, size: 12, color: AppColors.primary),
-              ],
-            ),
           ),
         ),
       ],

@@ -32,7 +32,7 @@ by its id goes through `lib/app_records.dart` (the same code the notification op
 | `/chapters`, `/councils`, `/events`, `/documents`, `/get-involved` | Discover doors, profile menu, banners | NATIVE |
 | `/chapters/<slug>` | chapter cards' page link, share | **NATIVE (round 2)**: the chapter page (`openChapterPage`) |
 | `/councils/<slug>[?tab=]` | council cards' page link | **NATIVE (round 2)**: the councils directory (the app has no page per council) |
-| `/events/<slug>` | event cards, share, roundtables, Get Tickets | NATIVE: the event sheet |
+| `/events/<slug>` | event cards, share, roundtables | NATIVE: the event sheet. **Get Tickets** (a priced event) is a payment: it opens the page with the phone (`openExternal`), never the sheet again (round 3) |
 | `/mentorship/mentors/<id>`, `…#reviews` | mentor cards, mentoring links | NATIVE: the mentor profile (Recommendations tab) |
 | `/mentorship/mentors` | mentorship banners | **NATIVE (round 2)**: Find Mentors |
 | `/mentorship/my[?tab=]`, `/mentorship/mentor-desk` | notifications, links | **NATIVE (round 2)**: My mentoring, the mentor desk |
@@ -41,21 +41,22 @@ by its id goes through `lib/app_records.dart` (the same code the notification op
 | `/network`, `/contact[?subject=]`, `/quote`, `/messaging[?c=]` | links, Events "Host an event", course enquiry | NATIVE |
 | `/vendors/<id>` | supplier links | NATIVE: the supplier sheet |
 | `/become-a-mentor`, `/mentorship/become-a-mentor`, `/mentorship/programmes` | mentorship banners and cohorts | NATIVE |
+| `/mentorship/programmes/<slug>`, `/mentorship/groups/<id>`, `/mentorship/my/<id>` | a cohort card's "Know More", links in messages | **NATIVE (round 3)**: the programme, the group session, the pairing — the screens the notification router already opened |
 | `/account/companies/new[?role=]`, `/rfq/new`, `/manage/requirements`, `/profile[?tab=security]`, `/career/saved`, `/learning/certificates` | Discover doors, profile menu, Settings | NATIVE |
 | `/account/companies` | the companies notification, links | **NATIVE (round 2)**: My companies |
 | `/jobs`, `/jobs?q=` | job links, "Find jobs" | **NATIVE (round 2)**: the Jobs tab (with the search typed) |
 | `/jobs/<id>` | job links, shares, notifications | **NATIVE (round 2)**: the job sheet, read by id |
-| `/manage/jobs`, `/manage/jobs/new`, `/manage/jobs/<id>[/edit\|/applicants]` | employer "post a job", "Promote" | **NATIVE (round 2)**: the hiring screens |
+| `/manage/jobs`, `/manage/jobs/new`, `/manage/jobs/<id>[/edit\|/applicants]` | employer "post a job" | **NATIVE (round 2)**: the hiring screens. **Promote** is a payment: it opens `/manage/jobs` with the phone (round 3) |
 | `/companies/<id>[?tab=reviews\|people\|salaries\|interviews]` | company links, share | **NATIVE (round 2)**: the company page, on that tab |
 | `/products/<id>` | product links, share | **NATIVE (round 2)**: the product page |
 | `/vendors`, `/services`, `/products`, `/rfq` | links, fallback tab | **NATIVE (round 2)**: the Marketplace tab |
 | `/rfq/<id>`, `/manage/requirements/<id>` | requirement links | **NATIVE (round 2)**: the supplier's page / the buyer's page |
 | `/community`, `/community/<slug>[?reply=]` | Forums fallback, post link, notifications | **NATIVE (round 2)**: the Forums tab; the thread page by slug, at the reply |
 | `/learning`, `/learning/professional-development` | "Coming to the app" fallback, links | **NATIVE (round 2)**: the Learning tab |
-| `/learning/professional-development/<code>[#enrol]` | course sheet "More", enrol, partner link | **NATIVE (round 2)**: the course sheet, read by code |
+| `/learning/professional-development/<code>` | course links, partner link | **NATIVE (round 2)**: the course sheet, read by code. `#enrol` (a paid place) is a payment: the website's enrolment panel, opened with the phone (round 3) |
 | `/learning/assessment[/<key>]` | assessment links | **NATIVE (round 2)**: Assess Your Knowledge |
 | `/learning/verify[?id=]`, `/learning/certificates/<id>` | certificate page and verify | **NATIVE (round 2)**: the verify sheet; the certificate sheet |
-| `/privacy`, `/terms` | Settings, sign-up legal line | **NATIVE (round 2)**: the legal page, drawn from the website's own words bundled as `assets/legal/*.json` (`tool/legal/extract.cjs` regenerates them) |
+| `/privacy`, `/terms` | Settings, sign-up legal line | **NATIVE (round 2)**: the legal page, drawn from the website's own words bundled as `assets/legal/*.json` (`tool/legal/extract.cjs` regenerates them). Signed out too, since round 3 (`signedOutSiteRoute`: before a session the resolver only knows these two) |
 | `/blogs`, `/blogs/<slug>` | blog notifications, links | **NATIVE (round 2)**: the blog list and post, from `GET /cms/blogs` |
 | `/refer`, `/refer/credits` | Assess group "Earn more", notifications | **NATIVE (round 2)**: Invite (`GET /referrals/me`) |
 | `/advertise` | Discover "Advertise", notifications | **NATIVE (round 2)**: Advertise: the placements, the person's price, their placements; "Talk to us" opens the contact form (buying one is a payment) |
@@ -71,8 +72,29 @@ by its id goes through `lib/app_records.dart` (the same code the notification op
 | WhatsApp, `mailto:` (course enquiry, the legal pages' contact), `tel:` | contact rows | EXT |
 | LinkedIn share and "Add to LinkedIn", Google Calendar "add" | certificates, events | EXT: another site |
 
-Counts (one row = one destination group): **NATIVE 33 rows** (23 new this round), **WEB 4 rows** (the company workspace, the company-side consoles, the support desk, and a path nobody mapped), **EXT 7 rows**.
-support desk, and a path nobody mapped), **EXT 6 rows**.
+Counts (one row = one destination group): **NATIVE 34 rows**, **WEB 4 rows** (the company workspace, the company-side consoles, the support desk, and a path nobody mapped), **EXT 7 rows**.
+
+## Round 3 (29 Oct 2026): payments reach the website, and nothing links to the screen it sits on
+
+An inventory of every hand-off (194 call sites) found two faults that `SiteRoutes` had hidden:
+
+1. **Payments that never reached checkout.** A page the app has a screen for resolves to that screen, so a payment
+   button that called plain `openUrl` opened the member's own sheet again: the course sheet's "add to cart" for a paid
+   place, "Get Tickets", a mentor's "Purchase Guide" / "Subscribe", the mentoring "Pay ₹… on the website" (a session or
+   a programme term), the exam brief's "Pay on the website", the employer's "Promote", and the certificate's
+   "Download PDF on the website". Each now leaves the app with the phone: `openExternal` (`core/util/links.dart`),
+   `ExamServices.openExternal`, `JobLinks.openExternal`, `MentorshipLinks.openPayment`. PayU runs on the website and
+   its return leg is the website's, so these stay there by design.
+2. **Links that only opened the screen they sat on.** Removed: the job sheet's "Open on the ICR website" and "Show
+   comparative applicant insights"; the course sheet's schedule link, its "See More Dates" with nothing more to show,
+   and "read all N reviews on the website" (the sheet says "Showing the newest N of M."); the event sheet's "Overview"
+   and its "Event page" buttons (ended, invite-only, waitlisted, a place with no pass) and the pass dialog's "Event
+   page"; the certificate register's "Open the register on the website". "Manage & View" on the Events board opens the
+   next booked event's sheet, where its pass and Cancel are. A product with an unreadable supplier opens the quote form.
+
+Still the web view, each a build of its own: the company verification dossier (`/company?tab=verification`, from the
+post-job gate), "Write an article" (`/manage/articles`), and a council's own page (`/councils/<slug>`, which opens the
+directory; eight taps on the councils screen, a saved council and a profile's council row all land there).
 
 ## No black frame
 
@@ -89,7 +111,7 @@ Three things used to put a dark frame before a page, all fixed (`test/web_test.d
 - `lib/features/feed/home_screen.dart` hands the promoted card's link to `openSitePage` as a *path*; a full external URL there would be glued onto the site address.
 - The `UpcomingTab` "coming to the app" screens in `AppShell` are defaults for a tab the shell is not given a screen for; the app gives every tab one, so they are unreachable (tests build a bare shell).
 - Payments stay on the website, as before: the app cannot finish a PayU checkout (`docs/backend-requests/membership.md`).
-- The council pages: the app has the councils directory, not a page per council, so `/councils/<slug>` opens the directory.
+- The council pages: the app has the councils directory, not a page per council, so `/councils/<slug>` opens the directory (a page per council is the next thing to build: updates, events, the Member Lounge).
 - The legal pages are the words the website had at the last build; run `node tool/legal/extract.cjs` from the portal when they change.
 
 ## API gap

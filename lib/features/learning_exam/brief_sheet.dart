@@ -602,7 +602,7 @@ class _BuyOption extends StatelessWidget {
             label: quote.payable ? 'Pay on the website' : 'Payment is not available',
             icon: LucideIcons.externalLink,
             onPressed: quote.payable
-                ? () => ExamServices.openUrl(context, brief.repository.sitePage(paper.sitePath))
+                ? () => ExamServices.openExternal(context, brief.repository.sitePage(paper.sitePath))
                 : null,
           ),
         ],

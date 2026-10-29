@@ -42,7 +42,8 @@ Every screen takes the same four named callbacks (all optional; every one has a 
 | `onOpenConversation(context, conversationId)` | "Message" on a pairing, a bought session, a group room, once the API gave the thread id (the messaging builder's chat screen) | the website's `/messaging?c=<id>` |
 | `onOpenMentor(context, mentorProfileId)` | a mentor's name or "View profile" | `mentorProfileRoute` (the in-app profile) |
 | `onBell(context)` | the bell | the website's `/notifications` |
-| `onOpenWebsite(context, path)` | a page of the website: a PayU payment page, the public certificate check | the browser |
+| `onOpenWebsite(context, path)` | a page of the website: the public certificate check | the app's screen when it has one, else the web view |
+| `openPayment(context, path)` (on `MentorshipLinks`) | a PayU payment page (`/mentorship/my?tab=purchases&purchase=<id>`, a seat, a programme term) | the phone's browser, never the app's own screen for that address (29 Oct 2026) |
 | `MentorshipLinks.openPairingThread / openPurchaseThread / openGroupThread(context, recordId)` | preferred over `onOpenConversation` when wired (`MessagingLauncher.forMentorship` etc.) | the API opens the thread, then `onOpenConversation` |
 | `MentorshipLinks.openDirectory(context)` | "Find a mentor" | pop |
 | `MentorshipLinks.shareFile(context, name, bytes)` | a downloaded private file (shared link or purchased guide) | the share sheet (`share_plus`) |
