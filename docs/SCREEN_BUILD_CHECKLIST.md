@@ -27,3 +27,20 @@ Nothing else: not `pubspec.yaml`, not `lib/app.dart`, not `lib/features/shell/`,
 - `dart format lib test` (120 columns), `flutter analyze` clean, `flutter test` green (all tests, not only yours).
 - `python tool/design/compare.py <flat design> build/screens/<name>.png --out side.png` shows the main bands starting within 2 dp; where they cannot (the API lacks the content, a font draws taller), say so.
 - Flutter commands share one lock: if one says it is waiting for another, wait. Do not run `flutter clean`, `flutter pub get` or the emulator; do not commit.
+
+## The layout audit (since 29 Oct 2026)
+
+The app's text floor is 12 sp (`AppText.sp`), and a design's fixed box heights were drawn for 8–10 sp text, so a label
+in a `SizedBox(height: 13)` is cut off at the bottom without a sound. `test/helpers/layout_audit.dart` finds that:
+`layoutProblems()` walks the render tree and reports `clipped | <text> | <needed> needed, <given> given`, plus rows and
+wraps whose pieces differ in height and are not centred on each other (`crooked row`, `uneven chips` — a heuristic;
+a glyph beside a label a dp off is not worth a change).
+
+- **Every test, no test changed:** `LAYOUT_AUDIT=1 flutter test …` (`test/flutter_test_config.dart`) looks over every
+  frame a widget test pumps and writes the findings to `build/layout_audit/<test file>.txt`, once per test. Delete the
+  folder first. A screen with no file is clean.
+- **A guard per feature:** `test/<feature>_layout_test.dart` (events, learning, marketplace, mentorship, the mentor
+  profile) pumps the feature's screens from the demo repository at 390 and 360 dp and asserts no `clipped` line. Add one
+  for a new feature.
+- **The fix:** make the box as tall as its text (drop the fixed height, or `ConstrainedBox(minHeight:)`) and take the
+  growth out of the gap beside it, so the rhythm is kept. Never shrink the text.

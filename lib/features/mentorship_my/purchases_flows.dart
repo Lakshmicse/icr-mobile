@@ -115,7 +115,7 @@ Future<void> finishPayment(BuildContext context, MentorshipLinks links, PaymentO
     showMessage(context, outcome.message ?? 'Done.');
     return;
   }
-  if (outcome.sitePath != null) await links.openSite(context, outcome.sitePath!);
+  if (outcome.sitePath != null) await links.openPayment(context, outcome.sitePath!);
 }
 
 // ---------------------------------------------------------------------------

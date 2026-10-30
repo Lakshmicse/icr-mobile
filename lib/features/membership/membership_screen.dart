@@ -147,7 +147,7 @@ class _MembershipScreenState extends State<MembershipScreen> {
     final mine = _c.mine;
     final canBuy = mine?.canBuy ?? true;
     return [
-      _AudienceChips(current: _c.audience, onPick: _c.setAudience),
+      _AudienceChips(tabs: _c.tabs, current: _c.audience, onPick: _c.setAudience),
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
         child: Column(
@@ -190,9 +190,13 @@ class _MembershipScreenState extends State<MembershipScreen> {
   }
 }
 
+/// One chip for each ladder the member has (`MembershipController.tabs`), as the
+/// website's `/membership` page draws its tabs: nothing for a ladder with no plan
+/// on sale or that they cannot buy on.
 class _AudienceChips extends StatelessWidget {
-  const _AudienceChips({required this.current, required this.onPick});
+  const _AudienceChips({required this.tabs, required this.current, required this.onPick});
 
+  final List<MembershipAudience> tabs;
   final MembershipAudience current;
   final ValueChanged<MembershipAudience> onPick;
 
@@ -204,7 +208,7 @@ class _AudienceChips extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         children: [
-          for (final a in MembershipAudience.values)
+          for (final a in tabs)
             Padding(
               padding: const EdgeInsets.only(right: 6),
               child: IcrChip(

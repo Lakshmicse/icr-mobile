@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/api/api_error.dart';
+import '../../core/config.dart';
 import '../../core/util/links.dart';
 import '../mentor_profile/mentor_profile_screen.dart';
 import '../messaging/messaging_launcher.dart';
@@ -58,6 +59,7 @@ class MentorshipLinks {
     this.openDirectory,
     this.openNotifications,
     this.openSite = openSitePage,
+    this.openPayment = _openPaymentPage,
     this.shareFile = shareBytes,
   });
 
@@ -82,6 +84,10 @@ class MentorshipLinks {
   /// The bell; the website's `/notifications` by default.
   final void Function(BuildContext context)? openNotifications;
   final OpenSitePath openSite;
+
+  /// A payment page of the website (PayU runs there, and its return leg is the website's): opened with the phone,
+  /// never the app's own screen for that address, which would only open itself again.
+  final OpenSitePath openPayment;
   final ShareFile shareFile;
 
   /// What the screens do when nobody gave them links: every "Message" opens the app's own conversation and the bell
@@ -96,6 +102,9 @@ class MentorshipLinks {
   );
 
   static void _openBell(BuildContext context) => notifications_screen.openNotifications(context);
+
+  static Future<void> _openPaymentPage(BuildContext context, String path) =>
+      openExternal(context, AppConfig.sitePage(path));
 
   static Future<void> _openThread(BuildContext context, String conversationId) =>
       MessagingLauncher.openConversation(context, conversationId);
@@ -130,6 +139,7 @@ class MentorshipLinks {
       openDirectory: base.openDirectory,
       openNotifications: onBell ?? base.openNotifications,
       openSite: onOpenWebsite ?? base.openSite,
+      openPayment: base.openPayment,
       shareFile: base.shareFile,
     );
   }

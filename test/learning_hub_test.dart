@@ -62,6 +62,9 @@ class _Courses implements LearningRepository {
   int courseCalls = 0;
 
   @override
+  Future<void> withdraw(Course course) async {}
+
+  @override
   Future<List<Course>> courses() async {
     courseCalls++;
     if (listError != null) throw ApiError(listError!, statusCode: 500);

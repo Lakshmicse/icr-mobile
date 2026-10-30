@@ -207,6 +207,7 @@ class ServedQuestion {
     this.type = QuestionType.single,
     this.marks = 1,
     this.category,
+    this.difficulty,
   });
 
   final String id;
@@ -215,6 +216,17 @@ class ServedQuestion {
   final QuestionType type;
   final int marks;
   final String? category;
+
+  /// EASY, MEDIUM or HARD as the API sends it; null when it did not say.
+  final String? difficulty;
+
+  /// "Easy", "Medium" or "Hard"; null when the question carries none (or one this app does not know).
+  String? get difficultyLabel => switch (difficulty?.toUpperCase()) {
+    'EASY' => 'Easy',
+    'MEDIUM' => 'Medium',
+    'HARD' => 'Hard',
+    _ => null,
+  };
 
   bool get multiple => type == QuestionType.multiple;
 
@@ -225,6 +237,7 @@ class ServedQuestion {
     type: QuestionType.fromApi(j['type'] as String?),
     marks: _int(j['marks'], 1),
     category: _text(j['category']),
+    difficulty: _text(j['difficulty']),
   );
 
   Map<String, dynamic> toJson() => {
@@ -234,6 +247,7 @@ class ServedQuestion {
     'type': multiple ? 'MULTIPLE' : 'SINGLE',
     'marks': marks,
     'category': category,
+    'difficulty': difficulty,
   };
 }
 
@@ -515,6 +529,7 @@ class ReviewItem {
     required this.selected,
     this.explanation,
     this.category,
+    this.marks,
   });
 
   final String id;
@@ -524,6 +539,10 @@ class ReviewItem {
   final List<int> selected;
   final String? explanation;
   final String? category;
+
+  /// What the question is worth, when the API says (a review does not carry it yet; the result then works
+  /// it out from the sitting, or leaves it off).
+  final int? marks;
 
   ReviewOutcome get outcome {
     if (selected.isEmpty) return ReviewOutcome.skipped;
@@ -544,6 +563,7 @@ class ReviewItem {
     selected: _ints(j['selected']),
     explanation: _text(j['explanation']),
     category: _text(j['category']),
+    marks: _intOrNull(j['marks']),
   );
 }
 

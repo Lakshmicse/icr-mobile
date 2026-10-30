@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:ui' show Size;
 
 import 'package:dio/dio.dart';
 import 'package:icr_mobile/core/api/api_client.dart';
@@ -11,6 +12,8 @@ import 'package:icr_mobile/features/library/demo_library_repository.dart';
 import 'package:icr_mobile/features/library/library_device.dart';
 import 'package:icr_mobile/features/library/library_models.dart';
 import 'package:icr_mobile/features/library/library_repository.dart';
+import 'package:icr_mobile/features/library/pdf_engine.dart';
+import 'package:icr_mobile/features/library/screen_security.dart';
 import 'package:icr_mobile/features/contact/contact_models.dart' show ContactSender;
 import 'package:icr_mobile/features/volunteer/demo_volunteer_repository.dart';
 import 'package:icr_mobile/features/volunteer/volunteer_models.dart';
@@ -386,8 +389,8 @@ class FakeLibrary implements LibraryRepository {
   Future<LibraryViewer?> viewer() => _call('viewer', () async => viewerValue);
 
   @override
-  Future<DocumentBytes> fetchFile(LibraryDocument document, LibraryFile file, {bool preview = false}) =>
-      _call(preview ? 'preview' : 'download', () => inner.fetchFile(document, file, preview: preview), file.id);
+  Future<DocumentBytes> previewFile(LibraryDocument document, LibraryFile file) =>
+      _call('preview', () => inner.previewFile(document, file), file.id);
 
   @override
   Future<int> recordView(String id) => _call('view', () => inner.recordView(id), id);
@@ -423,18 +426,15 @@ class FakeLibrary implements LibraryRepository {
 }
 
 /// The phone, for the Library screens: the files the picker "chooses" come from [picks] (one batch per
-/// tap), a file handed over is recorded, and so is each page opened.
+/// tap), and each page opened is recorded. It has no way to take a document out of the app: the library is
+/// view-only, so `LibraryDevice` offers none.
 class FakeLibraryDevice extends LibraryDevice {
   FakeLibraryDevice();
 
   /// Batches the picker hands over, in order; an empty list when it runs out (the person chose nothing).
   final picks = <List<PickedFile>>[];
-  final handed = <DocumentBytes>[];
   final opened = <Uri>[];
   int pickerOpened = 0;
-
-  /// What `handOver` answers: false when the phone has nothing to take the file.
-  bool canHandOver = true;
 
   @override
   Future<List<PickedFile>> pickFiles() async {
@@ -443,16 +443,60 @@ class FakeLibraryDevice extends LibraryDevice {
   }
 
   @override
-  Future<bool> handOver(DocumentBytes file) async {
-    handed.add(file);
-    return canHandOver;
-  }
-
-  @override
   Future<bool> open(Uri uri) async {
     opened.add(uri);
     return true;
   }
+}
+
+/// A 1 x 1 PNG: what the fake PDF engine "draws" for every page.
+final fakePagePng = base64Decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+);
+
+/// The phone's PDF renderer, for the viewer's tests: [pages] A4-shaped pages, every request recorded, and
+/// [failure] to make `open` refuse in the reader's words.
+class FakePdfEngine implements PdfEngine {
+  FakePdfEngine({this.pages = 3, this.failure});
+
+  final int pages;
+  final PdfProblem? failure;
+  final opened = <Uint8List>[];
+  final rendered = <(int page, int width)>[];
+  int closed = 0;
+
+  @override
+  Future<PdfDocumentHandle> open(Uint8List bytes) async {
+    opened.add(bytes);
+    if (failure != null) throw failure!;
+    return _FakePdf(this);
+  }
+}
+
+class _FakePdf extends PdfDocumentHandle {
+  _FakePdf(this._engine);
+
+  final FakePdfEngine _engine;
+
+  @override
+  List<Size> get pageSizes => List.filled(_engine.pages, const Size(595, 842));
+
+  @override
+  Future<Uint8List> render(int index, int widthPx) async {
+    _engine.rendered.add((index, widthPx));
+    return fakePagePng;
+  }
+
+  @override
+  Future<void> close() async => _engine.closed++;
+}
+
+/// The window's screenshot protection, for tests: every request the Library made, in order.
+class FakeScreenSecurity implements ScreenSecurityPlatform {
+  final requests = <bool>[];
+
+  @override
+  Future<void> setSecure(bool on) async => requests.add(on);
 }
 
 /// A file the picker hands over: [size] bytes of zeros.

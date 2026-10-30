@@ -18,6 +18,33 @@ String runDates(DateTime start, DateTime? end) {
   return '${month(s)} ${_two(s.day)}, ${s.year} - ${month(e)} ${_two(e.day)}, ${e.year}';
 }
 
+/// The run a held place is on, as the status line names it: "IIM Bengaluru, Nov 01 - 25, 2026". Null when the place
+/// is on the course itself, or its run is no longer in the list.
+String? placeRunLabel(Course course) {
+  final id = course.enrolment?.runId;
+  if (id == null) return null;
+  for (final r in course.runs) {
+    if (r.id != id) continue;
+    final name = r.location ?? r.title;
+    final dates = runDates(r.startsAt, r.endsAt);
+    return name == null ? dates : '$name, $dates';
+  }
+  return null;
+}
+
+/// What the member's place is and what happens next, in the website's words ("You are pending on … — the ICR team
+/// will confirm your place.").
+String placeStatusLine(Course course) {
+  final on = placeRunLabel(course);
+  final at = on == null ? '' : ' on $on';
+  return switch (course.enrolment?.status) {
+    EnrolmentStatus.confirmed => 'You are confirmed$at.',
+    EnrolmentStatus.waitlisted => 'You are waitlisted$at — we will be in touch if a seat frees up.',
+    EnrolmentStatus.completed => 'You have completed this course.',
+    _ => 'You are pending$at — the ICR team will confirm your place.',
+  };
+}
+
 /// "2024 Schedule": the year the shown runs start in.
 String? scheduleLabel(List<CourseRun> runs) {
   if (runs.isEmpty) return null;

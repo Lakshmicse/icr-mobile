@@ -26,6 +26,10 @@ dependencies:
   # The Knowledge Center draws a formula's LaTeX as math (learning_study).
   flutter_math_fork: ^0.7.4
   file_picker: ^13.2.0
+  # The Digital Library reads Word, Excel, PowerPoint and ZIP files in the app (office/), since nothing
+  # may be saved or handed to another app.
+  archive: ^4.5.2
+  xml: ^7.0.1
   webview_flutter: ^4.14.1
 
 dev_dependencies:
@@ -47,6 +51,7 @@ flutter:
     - assets/images/demo/mentorship/
     - assets/images/demo/learning/
     - assets/images/demo/events/
+    - assets/images/demo/messaging/
     - assets/images/demo/councils/
     - assets/images/demo/marketplace/
 

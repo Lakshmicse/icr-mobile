@@ -165,7 +165,7 @@ class ProductPage extends StatelessWidget {
                     onPressed: () {
                       final supplier = c.supplier;
                       if (supplier == null) {
-                        links.openSite(context, '/products/${Uri.encodeComponent(product.id)}');
+                        links.openSite(context, '/quote');
                       } else {
                         nav.requestQuote(context, links, supplier, product: product);
                       }

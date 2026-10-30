@@ -59,7 +59,7 @@ await startDiscussion(context, repository: repo, viewer: viewer, topicSlug: 'tec
 ## Screens and what each control does (and the test that proves it)
 
 `W` widget test, `U` unit test, `L` live test (`test/live/forum_live_test.dart`, API up and seeded). Files:
-`test/forum_thread_test.dart` (52 W), `test/forums_tab_test.dart` (28 W), `test/forum_composer_test.dart` (26: 5 U, 21 W),
+`test/forum_thread_test.dart` (52 W), `test/forums_tab_test.dart` (28 W), `test/forum_composer_test.dart` (32: 5 U, 27 W), `test/forum_rich_text_test.dart` (27: 26 U, 1 W), `test/golden/composer_golden_test.dart` (4 goldens),
 `test/forum_home_test.dart` (7 W), `test/forum_demo_test.dart` (4 W), `test/forum_test.dart` (33 U), live: 21.
 
 ### A discussion's page (`ThreadScreen`, `thread_screen.dart`)
@@ -112,19 +112,42 @@ await startDiscussion(context, repository: repo, viewer: viewer, topicSlug: 'tec
 
 ### The composer (`NewThreadScreen`, `ComposerController`)
 
+The website's "Create a post" form (`ThreadComposer`), on a phone, in the website's words and order (owner's order, 28 Oct
+2026: "the same form should be added here"). One Post in the title bar (Save on an edit) is the only posting control:
+the website's Cancel and "Post to the community" under the form are the bar's X and Post. Fields carry their words as
+floating labels (no TOPIC / YOUR POST headers); the website's helper lines sit under them in grey; a missing field is
+drawn with a red border, never a red line of words, and ONE message under the form names what is first missing after
+Post. A post and a poll are one form in one type (Roboto 16 for fields and the editor, 14 for "Details" and "Options",
+12 for helpers).
+
 | Control | Does | Proved by |
 |---|---|---|
-| Discussion / Poll | the two kinds of a new post (the website's, since 19 Oct 2026); an edit keeps its own kind (an older post may be a question) | W; U |
-| topic, sub-topic | a searchable list of the taxonomy (`GET /categories/tree?kind=SERVICE&depth=2`); a sub-topic row appears when the topic has some; the page the composer was opened from presets its topic | W (3) |
-| title / details | 8 to 160 characters; details required (20,000 at most) except on a poll; hints show once typing starts, the whole list after Post; a refusal from the API reads at the top and **every field stays** | W (4); U (5) |
-| poll options | 2 to 4 rows, add and remove, 80 characters each, duplicates (any case) refused; sent as `pollOptions`; fixed once posted (an edit never sends them) | W; U; L |
-| tags | up to 5, 32 characters, lower case, spaces to dashes, "#" dropped (the forum's own `normaliseTags`); a comma adds; chips with an x; a tag typed and not added is sent | W (2); U |
-| file | a photo or PDF from the phone (`file_picker`; a test hands in a picker), uploaded as `forum-attachment` **with its real media type** (the forum takes a file by it), shown as a tile, removable before sending; an edit can only replace one (the forum cannot clear it: `docs/backend-requests/forums.md` 3) | W (3); L |
-| Post / Save | validated first, then sent as the website's DTO; a new post's `bodyHtml` is escaped paragraphs; an edit sends **no body** unless its words changed, and **no topic** unless it changed (a retired sub-topic would refuse a title edit), and no file unless replaced | W (5); U; L "an edit of the title alone keeps its body and topic" |
-| website formatting on edit | "This post has formatting from the website... Changing its words here replaces the formatting." shown when it applies | W |
+| Discussion / Poll | the two kinds of a new post as two tiles **side by side** (icon, name, "Ask or share" / "Let people vote"; the owner asked for this layout back on 28 Oct 2026); an edit keeps its own kind (an older post may be a question) | W; U |
+| Category * / Sub-category (optional) | both always on the form; a list of the taxonomy (`GET /categories/tree?kind=SERVICE&depth=2`, sent as `topicCategory` / `topicSubcategory`) that **searches the whole tree like the website's Category box**: empty it lists the categories, typing matches every word anywhere in a node's path (category › sub-category), the sub-category hits grouped under their category's name, and picking one fills both boxes ("No matching categories" when nothing matches); the sub-category is greyed until there is a category **with sub-categories** (the website enables it as soon as there is a category and then lists nothing); the page the composer was opened from presets its category | W (3) |
+| Title / Poll question | 8 to 160 characters, wraps up to three lines; helper "Specific titles get answered. "Pricing question" does not." / "One clear question. Members pick one option."; an edit of a question reads "Your question" | W (4); U (5) |
+| poll options | "Options  2 of 4", rows with a ring, "Option 1".., add and remove, 80 characters each, duplicates (any case) refused, hint "Members pick one; results show once they have voted."; sent as `pollOptions`; fixed once posted (an edit never sends them) | W; U; L |
+| Details (optional on a poll) | **the website's rich-text editor** (below); required except on a poll; 20,000 characters, counted as the website does (the words, not newlines or list markers) | W; U |
+| tags | up to 5, 32 characters, lower case, spaces to dashes, "#" dropped (the forum's own `normaliseTags`); a comma adds; chips with an x; a tag typed and not added is sent; "Add up to 5" and the website's helper | W (2); U |
+| Attach a file | a photo or PDF from the phone (`file_picker`; a test hands in a picker), uploaded as `forum-attachment` **with its real media type**, shown as a tile, removable before sending; "Replace attachment" when there is one; an edit can only replace one (the forum cannot clear it: `docs/backend-requests/forums.md` 3) | W (3); L |
+| Post / Save | validated first, then sent as the website's DTO; `bodyHtml` is the editor's HTML (below); an edit sends **no body** unless the details changed, and **no topic** unless it changed (a retired sub-topic would refuse a title edit), and no file unless replaced | W; U; L "an edit of the title alone keeps its body and topic" |
+| a quote or code from the website, on edit | the editor shows them as paragraphs; "This post has a quote or code from the website that this editor cannot show..." appears once the words change (bold, italic, headings, lists and links are held, so they carry no warning) | W (2) |
 | leaving | asks before discarding typed work, not on a blank form | W (2) |
 | moderation notice | shown to a reader whose posts are reviewed first | W |
-| topics failed | message with Try again | W |
+| categories failed | message with Try again | W |
+
+**The editor** (`widgets/rich_editor.dart`, `rich_text_controller.dart`, `rich_document.dart`): a frame with the website's
+toolbar (Bold, Italic, Heading, Bulleted list, Numbered list, Link), the writing area and "0 / 20,000". It is a plain
+Flutter `TextField` over a controller that keeps a mark per character (bold, italic, heading, a link), so it adds no
+package, needs no rich-text plugin and draws as written (bold is bold, a heading is larger, a link is blue). A list
+item is a line that starts "• " or "1. " (real text, as the website's input rules treat "- " and "1. "): Enter carries the
+list on, Enter on an empty item ends it, Backspace after a marker takes it whole, "- " at the start of a line becomes a
+bullet, numbers count on from 1 in each run. Bold and italic chosen with nothing selected apply to what is typed next; a
+heading is a whole line; the Link button needs selected words (or the caret on a link), asks for an address in a sheet and
+adds `https://` to one without a scheme (only http, https and mailto are attached). Words that replace others (a
+keyboard's correction) keep the look of the ones they replace. The HTML sent is `<p>`, `<h3>`, `<ul>`/`<ol>` with `<li>`,
+`<strong>`, `<em>` and `<a href>`: every character escaped, empty lines dropped, one paragraph per line; the API's
+sanitiser (`sanitizeRichText`) keeps all of it (`L` "formatted details reach the forum"), and the discussion page draws it
+(`ForumRichText`: W). An edit loads the stored HTML into the editor; if the details are unchanged nothing is sent for them.
 
 ### The Home feed card (`HomeScreen`, `PostCard`, `ReplyThread`)
 
@@ -162,7 +185,7 @@ sub-topic since retired refuses an edit that re-sends the topic; a pending discu
 | "VP Sustainability" role chip | the part of the author's headline before " at "/"@"/"·"; `forums.ts` sets Arvind Swamy's designation to the design's |
 | a headline that names no company | the whole headline is the line under the name, no chip |
 | "(edited)" on a reply | no edit time exists (`docs/backend-requests/forums.md` 2): only a reply edited in this session says so |
-| the website editor's formatting | shown as written; the app's editor is plain text, so an edit that does not change the words sends no body, and changing them replaces the formatting (the composer says so) |
+| the website editor's formatting | shown as written, and the composer's editor holds it (bold, italic, a level-3 heading, lists, links); a quote, code or other heading level from the website is read as a paragraph (h1, h2 and h4 as the level-3 heading), with a note when its words are changed |
 | Following / Polls views | the forum has no such filters (`docs/backend-requests/forums.md` 1): the app reads the latest 100 and keeps the matching ones (no paging in those two views) |
 | quota banner | none exists (the community is free of posting limits); the one notice is the moderation one |
 | a poll's "2 days left" | the poll has no closing time: "Open" / "Closed" |

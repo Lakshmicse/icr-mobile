@@ -1806,10 +1806,15 @@ void main() {
             ),
             size: const Size(390, 1200),
           );
-          await pumpUntilFound(tester, find.text('My messages'));
+          await pumpUntilFound(tester, find.byKey(const ValueKey('inbox-options')));
           await settled(tester);
           expect(tester.takeException(), isNull, reason: who.label);
+          // The inbox switcher sits in the sliders menu (the designed inbox has no bar for it).
+          await tester.tap(find.byKey(const ValueKey('inbox-options')));
+          await settled(tester);
           expect(find.text('My messages'), findsOneWidget, reason: who.label);
+          await tester.tapAt(const Offset(10, 10));
+          await settled(tester);
           expect(find.text(name), findsWidgets, reason: who.label);
           for (final view in ['Open', 'Unread', 'Mine', 'Done', 'Spam']) {
             expect(find.text(view), findsWidgets, reason: '${who.label}: $view');

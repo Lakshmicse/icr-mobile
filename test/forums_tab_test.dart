@@ -857,8 +857,8 @@ void main() {
       await tester.enterText(key('composer-title'), 'Which BMS do you run?');
       await tester.enterText(key('composer-body'), 'We run two sites.');
       await tester.pump();
-      await tester.ensureVisible(key('composer-send'));
-      await tester.tap(key('composer-send'));
+      await tester.ensureVisible(key('composer-bar-send'));
+      await tester.tap(key('composer-bar-send'));
       await settle(tester);
     }
 

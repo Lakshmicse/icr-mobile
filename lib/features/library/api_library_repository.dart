@@ -119,11 +119,13 @@ class ApiLibraryRepository implements LibraryRepository {
   }
 
   @override
-  Future<DocumentBytes> fetchFile(LibraryDocument document, LibraryFile file, {bool preview = false}) async {
+  Future<DocumentBytes> previewFile(LibraryDocument document, LibraryFile file) async {
     try {
+      // Always the viewer's read (`preview=true`): the app never asks the API for a download, so nothing it
+      // does is counted as one.
       final res = await _dio.get<List<int>>(
         '/documents/${Uri.encodeComponent(document.id)}/download',
-        queryParameters: {'fileId': file.id, if (preview) 'preview': 'true'},
+        queryParameters: {'fileId': file.id, 'preview': 'true'},
         options: Options(responseType: ResponseType.bytes),
       );
       return DocumentBytes(

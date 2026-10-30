@@ -355,21 +355,45 @@ class DemoLibraryRepository implements LibraryRepository {
   Future<LibraryViewer?> viewer() async => const LibraryViewer(id: meId);
 
   @override
-  Future<DocumentBytes> fetchFile(LibraryDocument document, LibraryFile file, {bool preview = false}) async {
-    calls.add('${preview ? 'preview' : 'download'}:${document.id}:${file.id}');
-    if (!preview) _bump(document.id, file.id);
-    final bytes = file.isImage ? _png : Uint8List.fromList(utf8.encode('%PDF-1.4 sample of ${file.fileName}'));
+  Future<DocumentBytes> previewFile(LibraryDocument document, LibraryFile file) async {
+    calls.add('preview:${document.id}:${file.id}');
+    final Uint8List bytes;
+    if (file.isImage) {
+      bytes = _png;
+    } else if (file.previewKind == PreviewKind.pdf) {
+      bytes = _samplePdf(document.title);
+    } else {
+      bytes = Uint8List.fromList(
+        utf8.encode('Sample of ${file.fileName}\nThe library shows this file; it cannot be saved.'),
+      );
+    }
     return DocumentBytes(bytes: bytes, fileName: file.fileName, mimeType: file.mimeType);
   }
 
-  void _bump(String docId, String fileId) {
-    final i = _docs.indexWhere((d) => d.id == docId);
-    if (i < 0) return;
-    final d = _docs[i];
-    _docs[i] = d.copyWith(
-      downloadCount: d.downloadCount + 1,
-      files: [for (final f in d.files) f.id == fileId ? f.copyWith(downloadCount: f.downloadCount + 1) : f],
-    );
+  /// A real one-page PDF (so the phone's renderer has something to draw) carrying [title].
+  static Uint8List _samplePdf(String title) {
+    final text = title.replaceAll(RegExp(r'[^\x20-\x7E]'), '?').replaceAll(RegExp(r'[()\\]'), ' ');
+    final content = 'BT /F1 22 Tf 56 760 Td (Sample document) Tj 0 -34 Td /F1 14 Tf ($text) Tj ET';
+    final objects = <String>[
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>',
+      '<< /Length ${content.length} >>\nstream\n$content\nendstream',
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    ];
+    final out = StringBuffer('%PDF-1.4\n');
+    final offsets = <int>[];
+    for (var i = 0; i < objects.length; i++) {
+      offsets.add(out.length);
+      out.write('${i + 1} 0 obj\n${objects[i]}\nendobj\n');
+    }
+    final xref = out.length;
+    out.write('xref\n0 ${objects.length + 1}\n0000000000 65535 f \n');
+    for (final o in offsets) {
+      out.write('${o.toString().padLeft(10, '0')} 00000 n \n');
+    }
+    out.write('trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n$xref\n%%EOF');
+    return Uint8List.fromList(latin1.encode(out.toString()));
   }
 
   @override

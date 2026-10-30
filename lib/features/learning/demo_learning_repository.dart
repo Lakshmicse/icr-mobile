@@ -141,6 +141,9 @@ class DemoLearningRepository implements LearningRepository {
   );
 
   @override
+  Future<void> withdraw(Course course) async => _enrolment = null;
+
+  @override
   Future<MyEnrolment> enrol(Course course, {CourseRun? run}) async => _enrolment = MyEnrolment(
     id: 'demo-enrolment',
     courseId: course.id,

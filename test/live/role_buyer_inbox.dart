@@ -182,7 +182,7 @@ void roleBuyerInbox() {
 
         await loadScreen(tester, InboxScreen(repository: messagingOf(w)), size: const Size(390, 1600));
         text = expectHealthy(tester, 'the inbox as ${w.email}');
-        expect(text, contains('Messages'));
+        expect(text, contains('Messaging'));
         await unmount(tester);
         record('Notifications and Messages: screens', w.person, 'works');
       }

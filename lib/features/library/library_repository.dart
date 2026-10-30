@@ -24,10 +24,11 @@ abstract class LibraryRepository {
   /// The signed-in person, to tell their own documents; null signed out.
   Future<LibraryViewer?> viewer();
 
-  /// One file's bytes (`GET /documents/:id/download?fileId=`), or with [preview] the viewer's read, which
-  /// the API does not count as a download. Signed-in only: the API answers 401 otherwise, and a plan
-  /// that does not open the document gets its own refusal sentence.
-  Future<DocumentBytes> fetchFile(LibraryDocument document, LibraryFile file, {bool preview = false});
+  /// One file's bytes for the in-app viewer (`GET /documents/:id/download?fileId=&preview=true`), which the
+  /// API does not count as a download. **This is the only way the app reads a file: it has no download.**
+  /// The bytes are drawn by the viewer and dropped with it; nothing saves them. Signed-in only: the API
+  /// answers 401 otherwise, and a plan that does not open the document gets its own refusal sentence.
+  Future<DocumentBytes> previewFile(LibraryDocument document, LibraryFile file);
 
   /// Counts one opening of the document (`POST /documents/:id/view`); the new count.
   Future<int> recordView(String id);

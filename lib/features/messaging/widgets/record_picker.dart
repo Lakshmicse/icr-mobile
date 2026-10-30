@@ -14,29 +14,37 @@ import 'states.dart';
 
 /// "Share an ICR record": pick a job, requirement, company, product, mentor or
 /// event; the composer then carries its link, which the thread draws as a card.
-/// Returns the record chosen, or null.
-Future<RecordFacts?> showRecordPicker(BuildContext context, MessagingRepository repository) {
+/// Returns the record chosen, or null. It opens on [initial] (the composer's "RFQ" chip opens it on Requirements).
+Future<RecordFacts?> showRecordPicker(
+  BuildContext context,
+  MessagingRepository repository, {
+  RecordType initial = RecordType.job,
+}) {
   return showModalBottomSheet<RecordFacts>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.white,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-    builder: (_) => FractionallySizedBox(heightFactor: 0.85, child: RecordPicker(repository: repository)),
+    builder: (_) => FractionallySizedBox(
+      heightFactor: 0.85,
+      child: RecordPicker(repository: repository, initial: initial),
+    ),
   );
 }
 
 class RecordPicker extends StatefulWidget {
-  const RecordPicker({super.key, required this.repository});
+  const RecordPicker({super.key, required this.repository, this.initial = RecordType.job});
 
   final MessagingRepository repository;
+  final RecordType initial;
 
   @override
   State<RecordPicker> createState() => _RecordPickerState();
 }
 
 class _RecordPickerState extends State<RecordPicker> {
-  RecordType _type = RecordType.job;
+  late RecordType _type = widget.initial;
   final _search = TextEditingController();
   Timer? _debounce;
   List<RecordFacts> _results = const [];

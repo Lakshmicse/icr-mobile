@@ -58,7 +58,7 @@ EventsScreen(
 | `GET /notifications/unread-count` | the bell's red dot |
 | `GET /auth/me`, `GET /companies/:id` | the name and company on the pass card |
 
-Opened on the website (`openSitePage` / `openUrl`): `/notifications` (bell), `/events` ("Manage & View": the website's board carries the member's schedule), `/contact` ("Submit Topic"), `/network` ("View Network"), `/events/:slug` (**Get Tickets**, "Event page", "Overview", the pass dialog's "Event page"). **"Add to calendar"** opens Google Calendar's add-event page with the title, the times (UTC stamps), the venue and the event page filled in (the website's own button downloads an `.ics` in the browser; ICR syncs with no calendar).
+Opened on the website (`openSitePage` / `openUrl`): `/notifications` (bell), `/contact` ("Submit Topic"), `/network` ("View Network"), Google Calendar ("Add to calendar"). A priced event's **Get Tickets** opens its page **with the phone** (`openExternal`): a payment, and the app's own screen for that address is the sheet. Since 29 Oct 2026 nothing on the board or the sheet links to the event's page itself ("Overview", "Event page", the pass dialog's "Event page" are gone), and "Manage & View" opens the next booked event's sheet.
 
 ## What the design shows that the API cannot give
 
@@ -91,7 +91,7 @@ Opened on the website (`openSitePage` / `openUrl`): `/notifications` (bell), `/e
 | sheet: "SUMMIT AGENDA — Full Day Track • Oct 24", times, KEYNOTE / PANEL | the programme lists accepted talks (title, abstract, speaker, bio) with no slot or session type | **a card per talk with a time and a tag**: slots are laid out from the event's start, 75 minutes a talk with 15 between (the design's 10:00–11:15 and 11:30–12:45), squeezed to fit the first day, a lone talk at a short event taking it all; the tag is KEYNOTE, PANEL (green, "& Panelists" added), FIRESIDE, WORKSHOP when the talk's own words say so, else TALK. **Because ICR stores no running order the pill says "Indicative times • Oct 24"** where the design says "Full Day Track". The heading is "SUMMIT AGENDA" for a summit, else "WEBINAR AGENDA" and so on. |
 | sheet: "1 delegate seat confirmed" | no seat count | the same words when the member is going (one RSVP is one seat); other states say waitlisted, invite-only, full, ended or seats left |
 | sheet: "Organised by ICR Vinfraa & PropTech India Chapter" | the hosting chapter/council | its name, else "ICR" |
-| sheet: "Overview" (beside About) | none | opens the event's page (the full overview) |
+| sheet: "Overview" (beside About) | none | not drawn: it opened the event's page, which is this sheet (29 Oct 2026) |
 
 All dates are shown on the Indian clock (`event_format.dart`), as ICR's notifications are.
 
@@ -116,12 +116,12 @@ Widget tests (`test/events_screen_test.dart`) press the real screens over the re
 | Card: **Register Free**, **Reserve Pass**, **Join Waitlist** (+ a refusal) | `the cards of the agenda` (Register, Reserve, refused, full) | `Register Free / Reserve Pass: the API keeps the place, My Schedule counts it, Cancel gives it back`; `an invitation is a place…` |
 | Card: **Get Tickets** → the event's page; **Details** → sheet (priced too); invite-only **Details**; **View** on a held place; the card itself | `Get Tickets opens…`, `Details opens the sheet…`, `an invite-only event's button…`, `View…`, `the card itself…` | — |
 | Card: share (the title and the page) · bookmark (its own card only) | `share hands the share sheet…`, `the bookmark glyph toggles…` | `a bookmark stays on the device…` |
-| "Manage & View" → `/events` · "Submit Topic" → `/contact` · pull to refresh · the error state's Try again / Back to Home | `the tiles and the host card` (3), `a board that cannot load…` | — |
+| "Manage & View" → the next booked event's sheet (hidden with nothing booked) · "Submit Topic" → `/contact` · pull to refresh · the error state's Try again / Back to Home | `the tiles and the host card` (3), `the error state…` | — |
 | Sheet: pills, pass card, booking line, programme with times and tags | `a held place: the confirmed pill…` | `reads the seeded event: organiser, pass, highlights and the programme…` |
 | Sheet: **Register Now** (+ refusal) · **Cancel** (the pill, the pass card, the counts and the board's tile follow) · re-register brings the pass back | `Cancel gives the place back…`, `Register Now takes the place again…`, `an open event: Register Now registers, and a refusal says why` | `the sheet registers and cancels through the same routes, and tells the board` |
 | A **priced seat refuses the RSVP**, a **paid seat refuses Cancel**: the API's sentence is shown, the card goes back | `a paid seat refuses to cancel…`, controller tests | `a priced seat is refused as a free place…`, `a paid seat refuses to cancel…` |
-| **Show Pass** and **View Pass & QR** → the pass dialog (reference, holder, QR of the page, Event page, Done, ✕) | `Show Pass and View Pass & QR open the pass…` | the QR is verified below |
-| **Add to calendar** → Google Calendar · **Overview** → page · **View Network** → `/network` | `Add to calendar…`, `Overview and View Network…` | — |
+| **Show Pass** and **View Pass & QR** → the pass dialog (reference, holder, QR of the page, Done, ✕); a place with no pass yet has no button | `Show Pass and View Pass & QR open the pass…` | — |
+| **Add to calendar** → Google Calendar · **View Network** → `/network` | `Add to calendar…`, `View Network opens the network…` | — |
 | Sheet share · bookmark (the board agrees) · ✕ · the system Back | `share and bookmark…`, `the cross and the back button close the sheet` | — |
 | Sheet states: Get Tickets (priced), By invitation (not asked), waitlisted, ended | `a priced event…`, `an invite-only event the member was not asked to…`, `a waitlisted place…`, `a past event…` | `an invite-only event is on the board for the people asked to it, and for nobody else` |
 

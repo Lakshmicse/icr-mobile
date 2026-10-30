@@ -6,9 +6,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/widgets/chips.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:icr_mobile/core/api/api_error.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/messaging/attachment_picker.dart';
+import 'package:icr_mobile/features/messaging/conversation_controller.dart';
 import 'package:icr_mobile/features/messaging/conversation_screen.dart';
 import 'package:icr_mobile/features/messaging/messaging_launcher.dart';
 import 'package:icr_mobile/features/messaging/messaging_models.dart';
@@ -26,6 +28,7 @@ import 'messaging_fakes.dart';
 /// `test/live/messaging_live_test.dart`.
 void main() {
   setUpAll(loadAppFonts);
+  setUp(DraftStore.clearAll);
 
   /// A 1x1 transparent PNG.
   final png = base64Decode(
@@ -235,9 +238,33 @@ void main() {
   });
 
   group('a file in the thread', () {
-    testWidgets('shows as a row with its name and size; a tap reads it with the person\'s session and hands it over', (
-      tester,
-    ) async {
+    testWidgets(
+      'shows as a card with its name, size and kind; a tap reads it with the person\'s session and hands it over',
+      (tester) async {
+        final thread = [
+          msg(
+            'f1',
+            'sarah',
+            sarah,
+            '',
+            ago: 30,
+            attachment: 'Site feasibility checklist.pdf',
+            attachmentMime: 'application/pdf',
+            attachmentSize: 1300,
+          ),
+        ];
+        await pump(tester, repository: seeded(thread: thread));
+        expect(find.text('Site feasibility checklist.pdf'), findsOneWidget);
+        expect(find.text('1 KB • PDF'), findsOneWidget);
+        expect(find.text('Preview'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('attachment-f1')));
+        await tester.pumpAndSettle();
+        expect(repo.calls, contains('download /uploads/Site feasibility checklist.pdf'));
+        expect(opened.single, (name: 'Site feasibility checklist.pdf', bytes: 3));
+      },
+    );
+
+    testWidgets('Preview and the download glyph each do what a tap on the file does', (tester) async {
       final thread = [
         msg(
           'f1',
@@ -245,18 +272,19 @@ void main() {
           sarah,
           '',
           ago: 30,
-          attachment: 'Site feasibility checklist.pdf',
-          attachmentMime: 'application/pdf',
-          attachmentSize: 1300,
+          attachment: 'Rider.docx',
+          attachmentMime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          attachmentSize: 696320,
         ),
       ];
       await pump(tester, repository: seeded(thread: thread));
-      expect(find.text('Site feasibility checklist.pdf'), findsOneWidget);
-      expect(find.text('1 KB'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('attachment-f1')));
+      expect(find.text('680 KB • DOCX'), findsOneWidget);
+      await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
-      expect(repo.calls, contains('download /uploads/Site feasibility checklist.pdf'));
-      expect(opened.single, (name: 'Site feasibility checklist.pdf', bytes: 3));
+      expect(opened, hasLength(1));
+      await tester.tap(find.byIcon(LucideIcons.download));
+      await tester.pumpAndSettle();
+      expect(opened, hasLength(2));
     });
 
     testWidgets('a file that cannot be read says so, with the API\'s reason', (tester) async {
@@ -585,8 +613,16 @@ void main() {
         const RecordFacts(type: RecordType.event, id: 'summit-design', title: 'Smart Buildings Summit'),
       ];
 
+    /// The "RFQ" pill opens the sheet on Requirements.
     Future<void> openPicker(WidgetTester tester) async {
       await tester.tap(find.byKey(const ValueKey('share-record')));
+      await tester.pumpAndSettle();
+    }
+
+    /// Opens it and moves to [kind], which is where most of these start.
+    Future<void> openOn(WidgetTester tester, RecordType kind) async {
+      await openPicker(tester);
+      await tester.tap(find.byKey(ValueKey('picker-${kind.name}')));
       await tester.pumpAndSettle();
     }
 
@@ -598,13 +634,24 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('opens on Jobs, lists what the API gives, and the six kinds are one tap away', (tester) async {
-      await pump(tester, repository: sharing());
+    testWidgets('the RFQ pill opens on Requirements, lists what the API gives, and the six kinds are one tap away', (
+      tester,
+    ) async {
+      final repository = sharing()
+        ..searchRecordsAnswers[RecordType.requirement] = [
+          const RecordFacts(
+            type: RecordType.requirement,
+            id: 'R1',
+            title: 'Annual Housekeeping',
+            owner: 'Global Infra',
+          ),
+        ];
+      await pump(tester, repository: repository);
       await openPicker(tester);
       expect(find.text('Share an ICR record'), findsOneWidget);
-      expect(repo.calls, contains('searchRecords job ""'));
-      expect(find.text('Senior Facilities Manager'), findsOneWidget);
-      expect(find.text('CBRE South Asia · Mumbai'), findsOneWidget);
+      expect(repo.calls, contains('searchRecords requirement ""'));
+      expect(find.text('Annual Housekeeping'), findsOneWidget);
+      expect(find.text('Global Infra'), findsOneWidget);
       for (final t in RecordType.values) {
         await scrollToKind(tester, t);
         expect(find.byKey(ValueKey('picker-${t.name}')), findsOneWidget);
@@ -616,7 +663,7 @@ void main() {
     ) async {
       await pump(tester, repository: sharing());
       await tester.enterText(composer(), 'Take a look');
-      await openPicker(tester);
+      await openOn(tester, RecordType.job);
       await tester.tap(find.byKey(const ValueKey('picker-row-J1')));
       await tester.pumpAndSettle();
       expect(tester.widget<TextField>(composer()).controller!.text, 'Take a look\nhttps://icr.org.in/jobs/J1');
@@ -627,7 +674,7 @@ void main() {
 
     testWidgets('an empty box takes just the link', (tester) async {
       await pump(tester, repository: sharing());
-      await openPicker(tester);
+      await openOn(tester, RecordType.job);
       await tester.tap(find.byKey(const ValueKey('picker-row-J2')));
       await tester.pumpAndSettle();
       expect(tester.widget<TextField>(composer()).controller!.text, 'https://icr.org.in/jobs/J2');
@@ -656,7 +703,7 @@ void main() {
       expect(repo.calls.where((c) => c.contains('"energy"')), isEmpty);
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
-      expect(repo.calls, contains('searchRecords job "energy"'));
+      expect(repo.calls, contains('searchRecords requirement "energy"'), reason: 'the kind the sheet is on');
     });
 
     testWidgets('nothing found, and a failure with Retry', (tester) async {

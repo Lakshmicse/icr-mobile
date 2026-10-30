@@ -264,13 +264,14 @@ class _EventsScreenState extends State<EventsScreen> {
   }
 
   /// A card's button: a free seat is taken here, tickets are bought on the
-  /// event's page on the website (the app has no checkout), and an
+  /// event's page on the website (the app has no checkout) — opened with the
+  /// phone, since the app's own screen for that address is the sheet — and an
   /// invitation or anything already held opens the sheet.
   void _act(EventSummary e) {
     final events = context.read<EventsController>();
     final open = !e.past && !e.rsvp.holds && !e.inviteOnly;
     if (open && e.priced) {
-      openUrl(context, events.repository.link(e));
+      openExternal(context, events.repository.link(e));
       return;
     }
     if (open) {
@@ -417,22 +418,21 @@ class _MemberTiles extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    height: 13,
-                    child: Row(
-                      children: [
-                        Text('My Schedule (${s?.count ?? 0})', style: EventsText.tileTitle),
-                        const Spacer(),
-                        if ((s?.count ?? 0) > 0)
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(color: AppColors.online, shape: BoxShape.circle),
-                          ),
-                      ],
-                    ),
+                  // The title rows are as tall as their text (17 dp at the 12 sp floor, the design drew 13); the
+                  // gap below each gave up the 4 dp, so the tile keeps its height.
+                  Row(
+                    children: [
+                      Text('My Schedule (${s?.count ?? 0})', style: EventsText.tileTitle),
+                      const Spacer(),
+                      if ((s?.count ?? 0) > 0)
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(color: AppColors.online, shape: BoxShape.circle),
+                        ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   if (s?.next == null)
                     Text('Nothing booked yet', style: EventsText.tileBody, maxLines: 1, overflow: TextOverflow.ellipsis)
                   else
@@ -451,19 +451,23 @@ class _MemberTiles extends StatelessWidget {
                         Text(' • ${nextWhen(s.next!.startsAt)}', style: EventsText.tileBody, softWrap: false),
                       ],
                     ),
-                  const SizedBox(height: 10),
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => openSitePage(context, '/events'),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('Manage & View', style: EventsText.tileLink),
-                        const SizedBox(width: 1),
-                        const Icon(LucideIcons.chevronRight, size: 12, color: EventsColors.link),
-                      ],
+                  // The next booked event's sheet, where its pass and Cancel are (the website's events page is this
+                  // screen); nothing to manage, no link.
+                  if (s?.next != null) ...[
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => showEventSheet(context, s!.next!),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Manage & View', style: EventsText.tileLink),
+                          const SizedBox(width: 1),
+                          const Icon(LucideIcons.chevronRight, size: 12, color: EventsColors.link),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -474,23 +478,20 @@ class _MemberTiles extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    height: 13,
-                    child: Row(
-                      children: [
-                        const Icon(LucideIcons.award, size: 12, color: AppColors.tertiary),
-                        const SizedBox(width: 4),
-                        Text('CPD Earned', style: EventsText.tileTitle),
-                        const Spacer(),
-                        if (c != null)
-                          Text(
-                            c.target > 0 ? '${hoursLabel(c.earned)} / ${hoursLabel(c.target)}' : hoursLabel(c.earned),
-                            style: EventsText.cpdValue,
-                          ),
-                      ],
-                    ),
+                  Row(
+                    children: [
+                      const Icon(LucideIcons.award, size: 12, color: AppColors.tertiary),
+                      const SizedBox(width: 4),
+                      Text('CPD Earned', style: EventsText.tileTitle),
+                      const Spacer(),
+                      if (c != null)
+                        Text(
+                          c.target > 0 ? '${hoursLabel(c.earned)} / ${hoursLabel(c.target)}' : hoursLabel(c.earned),
+                          style: EventsText.cpdValue,
+                        ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(3.5),
                     child: SizedBox(

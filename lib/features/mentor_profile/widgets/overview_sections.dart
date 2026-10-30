@@ -38,61 +38,64 @@ class StatsCard extends StatelessWidget {
     final languages = profile.languages.take(4).toList();
     return Padding(
       padding: const EdgeInsets.fromLTRB(9.1, 9, 10.2, 0),
-      child: SizedBox(
-        height: 98,
-        child: Row(
-          children: [
-            Expanded(
-              flex: 1103,
-              child: _Cell(
-                children: [
-                  Text(s.sessions, style: MentorText.statValue),
-                  const SizedBox(height: 3.3),
-                  Text('Sessions Conducted', style: MentorText.statCaption),
-                  if (s.sessionsBadge != null) ...[
-                    const SizedBox(height: 3.7),
-                    Container(
-                      height: 24,
-                      padding: const EdgeInsets.symmetric(horizontal: 3.4),
-
-                      decoration: BoxDecoration(color: MentorColors.mint, borderRadius: BorderRadius.circular(2)),
-                      child: Center(widthFactor: 1, child: Text(s.sessionsBadge!, style: MentorText.statBadge)),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 4.5),
-            Expanded(
-              flex: 1034,
-              child: _Cell(
-                children: [
-                  Text(s.mentees, style: MentorText.statValue),
-                  const SizedBox(height: 3.3),
-                  Text(s.menteesCaption, style: MentorText.statCaption),
-                  if (s.menteesNote != null) ...[
-                    const SizedBox(height: 9.5),
-                    Text(s.menteesNote!, style: MentorText.statCaption, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  ],
-                ],
-              ),
-            ),
-            if (languages.isNotEmpty) ...[
-              const SizedBox(width: 4.5),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 98),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               Expanded(
-                flex: 1478,
+                flex: 1103,
                 child: _Cell(
-                  top: 9.9,
-                  left: 22,
                   children: [
-                    Text('Languages', style: MentorText.statLabel),
-                    const SizedBox(height: 7),
-                    Wrap(spacing: 7, runSpacing: 9.6, children: [for (final l in languages) _LanguageChip(label: l)]),
+                    Text(s.sessions, style: MentorText.statValue),
+                    const SizedBox(height: 3.3),
+                    Text('Sessions Conducted', style: MentorText.statCaption),
+                    if (s.sessionsBadge != null) ...[
+                      const SizedBox(height: 3.7),
+                      Container(
+                        constraints: const BoxConstraints(minHeight: 24),
+                        padding: const EdgeInsets.symmetric(horizontal: 3.4),
+
+                        decoration: BoxDecoration(color: MentorColors.mint, borderRadius: BorderRadius.circular(2)),
+                        child: Center(widthFactor: 1, child: Text(s.sessionsBadge!, style: MentorText.statBadge)),
+                      ),
+                    ],
                   ],
                 ),
               ),
+              const SizedBox(width: 4.5),
+              Expanded(
+                flex: 1034,
+                child: _Cell(
+                  children: [
+                    Text(s.mentees, style: MentorText.statValue),
+                    const SizedBox(height: 3.3),
+                    Text(s.menteesCaption, style: MentorText.statCaption),
+                    if (s.menteesNote != null) ...[
+                      const SizedBox(height: 9.5),
+                      Text(s.menteesNote!, style: MentorText.statCaption, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ],
+                  ],
+                ),
+              ),
+              if (languages.isNotEmpty) ...[
+                const SizedBox(width: 4.5),
+                Expanded(
+                  flex: 1478,
+                  child: _Cell(
+                    top: 9.9,
+                    left: 22,
+                    children: [
+                      Text('Languages', style: MentorText.statLabel),
+                      const SizedBox(height: 7),
+                      Wrap(spacing: 7, runSpacing: 6, children: [for (final l in languages) _LanguageChip(label: l)]),
+                    ],
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -110,7 +113,7 @@ class _Cell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       clipBehavior: Clip.hardEdge,
-      padding: EdgeInsets.fromLTRB(left, top, 6, 0),
+      padding: EdgeInsets.fromLTRB(left, top, 6, 6),
       decoration: BoxDecoration(
         color: _cellFill,
         borderRadius: BorderRadius.circular(8),
@@ -129,7 +132,7 @@ class _LanguageChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 13.7,
+      height: 18,
       padding: const EdgeInsets.symmetric(horizontal: 6),
 
       decoration: BoxDecoration(
@@ -192,7 +195,7 @@ class AboutSection extends StatelessWidget {
               behavior: HitTestBehavior.opaque,
               onTap: onExpand,
               child: SizedBox(
-                height: 14,
+                height: 16,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -204,7 +207,7 @@ class AboutSection extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: 15.2),
+          const SizedBox(height: 13.2),
         ],
       ),
     );
@@ -257,7 +260,7 @@ class CareerSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            height: 16,
+            height: 17,
             child: Row(
               children: [
                 Text('Career Journey', style: MentorText.sectionWide),
@@ -266,7 +269,7 @@ class CareerSection extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 24.3),
+          const SizedBox(height: 23.3),
           for (final (i, role) in roles.indexed) _RoleTile(role: role, index: i, last: i == roles.length - 1),
         ],
       ),
@@ -520,8 +523,8 @@ class SkillsSection extends StatelessWidget {
 
   List<Widget> _group(String label, List<String> items, {required bool first}) => [
     if (!first) const SizedBox(height: 17.1),
-    SizedBox(height: 11, child: Text(label, style: MentorText.skillLabel)),
-    SizedBox(height: first ? 11.0 : 11.0),
+    SizedBox(height: 16, child: Text(label, style: MentorText.skillLabel)),
+    const SizedBox(height: 6),
     Wrap(
       spacing: 6.3,
       runSpacing: 5.4,
@@ -568,7 +571,7 @@ class RecommendationsSection extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 11.4),
             child: SizedBox(
-              height: 16,
+              height: 17,
               child: Row(
                 children: [
                   Text('Recommendations', style: MentorText.sectionWide),
@@ -582,7 +585,7 @@ class RecommendationsSection extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 9.1),
+          const SizedBox(height: 8.1),
           if (shown.isEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(22.7, 6, 22.7, 16),
@@ -646,8 +649,8 @@ class _ReviewCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      height: 34,
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 34),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -667,24 +670,13 @@ class _ReviewCard extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const SizedBox(height: 2.2),
-                                SizedBox(
-                                  height: 16,
-                                  child: Text(
-                                    r.name,
-                                    style: MentorText.reviewer,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(height: 3.2),
-                                SizedBox(
-                                  height: 10,
-                                  child: Text(
-                                    subline,
-                                    style: MentorText.reviewerLine,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                Text(r.name, style: MentorText.reviewer, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                const SizedBox(height: 2),
+                                Text(
+                                  subline,
+                                  style: MentorText.reviewerLine,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),

@@ -277,9 +277,19 @@ void main() {
 
   shadowed('the result of a sitting that missed, reviewed', (tester) async {
     await pumpResult(tester, AttemptResult.fromJson(recorded('result_cp1') as Map<String, dynamic>));
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -820));
+    await tester.tap(find.text('Review answers'));
     await settle(tester);
     await shoot(tester, 'exam_result_review');
+  });
+
+  shadowed('the result, its last question and its attempts', (tester) async {
+    await pumpResult(tester, AttemptResult.fromJson(recorded('result_cp1') as Map<String, dynamic>));
+    await tester.ensureVisible(find.byKey(const ValueKey('review-q-7')));
+    await tester.tap(find.byKey(const ValueKey('review-q-7')));
+    await settle(tester);
+    await tester.ensureVisible(find.text('My attempts'));
+    await settle(tester);
+    await shoot(tester, 'exam_result_attempts');
   });
 
   shadowed('My attempts', (tester) async {

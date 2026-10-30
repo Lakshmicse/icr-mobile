@@ -11,9 +11,10 @@ import 'library_format.dart';
 import 'library_handoffs.dart';
 import 'library_models.dart';
 import 'library_repository.dart';
+import 'screen_security.dart';
 import 'upload_document_screen.dart';
 import 'widgets/document_card.dart';
-import 'widgets/image_preview_screen.dart';
+import 'widgets/document_viewer_screen.dart';
 import 'widgets/report_sheet.dart';
 import 'library_device.dart' show LibraryDeviceSite;
 
@@ -73,10 +74,11 @@ Future<void> openDocumentPage(
   );
 }
 
-/// One document: who shared it and when, the numbers, its description, and each of its files with
-/// Open (or Preview, for an image) and Download. The member who shared it (or a SUPER_ADMIN) may add
-/// files, drop one and delete it; anyone else may report it. A refusal that says the plan does not open
-/// it is the lock card, in the server's own words.
+/// One document: who shared it and when, the numbers, its description, and each of its files with a
+/// Preview that opens it in the app. **There is no Download**: the library is view-only on a phone (owner's
+/// call, 28 Oct 2026), and the screen keeps the window out of screenshots and recordings while it is up. The
+/// member who shared it (or a SUPER_ADMIN) may add files, drop one and delete it; anyone else may report it.
+/// A refusal that says the plan does not open it is the lock card, in the server's own words.
 ///
 /// Reads a [DocumentController] from Provider and starts it on first build.
 class DocumentScreen extends StatefulWidget {
@@ -111,8 +113,11 @@ class _DocumentScreenState extends State<DocumentScreen> {
 
   LibraryHandoffs get _h => widget.handoffs;
 
-  /// Reads one file for the viewer: an image opens here, every other format in the phone's own apps.
-  Future<void> _open(DocumentController c, LibraryFile file) async {
+  /// Reads one file and shows it in the app's own viewer. The bytes go to the viewer and nowhere else: they
+  /// are never saved, shared or handed to another app.
+  Future<void> _preview(DocumentController c, LibraryFile file) async {
+    final kind = file.previewKind;
+    if (kind == PreviewKind.none) return;
     final out = await c.preview(file);
     if (!mounted) return;
     final bytes = out.file;
@@ -120,41 +125,11 @@ class _DocumentScreenState extends State<DocumentScreen> {
       if (!out.locked) showMessage(context, out.error ?? 'Could not open that file.');
       return;
     }
-    if (file.isImage) {
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (route) => ImagePreviewScreen(
-            file: bytes,
-            onDownload: () {
-              Navigator.of(route).pop();
-              _download(c, file);
-            },
-          ),
-        ),
-      );
-      return;
-    }
-    await _handOver(bytes);
-  }
-
-  /// Takes a copy (counted as a download) and hands it to the phone to save or open.
-  Future<void> _download(DocumentController c, LibraryFile file) async {
-    final out = await c.download(file);
-    if (!mounted) return;
-    final bytes = out.file;
-    if (bytes == null) {
-      if (!out.locked) showMessage(context, out.error ?? 'Could not download that file.');
-      return;
-    }
-    await _handOver(bytes);
-  }
-
-  Future<void> _handOver(DocumentBytes bytes) async {
-    var ok = false;
-    try {
-      ok = await _h.device.handOver(bytes);
-    } catch (_) {}
-    if (!ok && mounted) showMessage(context, "Couldn't open ${bytes.fileName} on this phone.");
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => DocumentViewerScreen(file: bytes, kind: kind, pdf: _h.pdf, runner: _h.runner),
+      ),
+    );
   }
 
   Future<void> _report(DocumentController c) async {
@@ -213,12 +188,14 @@ class _DocumentScreenState extends State<DocumentScreen> {
   @override
   Widget build(BuildContext context) {
     final c = context.watch<DocumentController>();
-    return CommunityPage(
-      title: 'Document',
-      onBack: widget.onBack,
-      onBell: _bell,
-      onRefresh: c.refresh,
-      children: _body(c),
+    return ScreenGuard(
+      child: CommunityPage(
+        title: 'Document',
+        onBack: widget.onBack,
+        onBell: _bell,
+        onRefresh: c.refresh,
+        children: _body(c),
+      ),
     );
   }
 
@@ -310,8 +287,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
           file: f,
           busy: c.isBusy(f.id),
           canRemove: c.mayChange && d.fileCount > 1,
-          onOpen: () => _open(c, f),
-          onDownload: () => _download(c, f),
+          onPreview: () => _preview(c, f),
           onRemove: () => _removeFile(c, f),
         ),
       if (c.mayChange && room > 0)
@@ -479,16 +455,14 @@ class _FileRow extends StatelessWidget {
     required this.file,
     required this.busy,
     required this.canRemove,
-    required this.onOpen,
-    required this.onDownload,
+    required this.onPreview,
     required this.onRemove,
   });
 
   final LibraryFile file;
   final bool busy;
   final bool canRemove;
-  final VoidCallback onOpen;
-  final VoidCallback onDownload;
+  final VoidCallback onPreview;
   final VoidCallback onRemove;
 
   @override
@@ -527,32 +501,27 @@ class _FileRow extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: CommunityButton(
-                    label: f.isImage ? 'Preview' : 'Open',
-                    icon: f.isImage ? LucideIcons.eye : LucideIcons.externalLink,
-                    outlined: true,
-                    expand: true,
-                    height: 34,
-                    busy: busy,
-                    onPressed: onOpen,
+            if (f.canPreview)
+              CommunityButton(
+                label: 'Preview',
+                icon: LucideIcons.eye,
+                expand: true,
+                height: 34,
+                busy: busy,
+                onPressed: onPreview,
+              )
+            else
+              // Word, Excel, PowerPoint and archives have no viewer in the app, and nothing can be saved, so
+              // there is nothing to offer: say so rather than draw a button that does nothing.
+              Row(
+                children: [
+                  const Icon(LucideIcons.eyeOff, size: 15, color: AppColors.slate500),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text("${f.fileType.label} files can't be previewed in the app.", style: CommunityText.small),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: CommunityButton(
-                    label: 'Download',
-                    icon: LucideIcons.download,
-                    expand: true,
-                    height: 34,
-                    busy: busy,
-                    onPressed: onDownload,
-                  ),
-                ),
-              ],
-            ),
+                ],
+              ),
           ],
         ),
       ),

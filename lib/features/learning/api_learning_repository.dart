@@ -93,6 +93,12 @@ class ApiLearningRepository implements LearningRepository {
   }
 
   @override
+  Future<void> withdraw(Course course) async {
+    await _send('DELETE', '/learning/courses/${Uri.encodeComponent(course.id)}/enroll');
+    _mine?.remove(course.id);
+  }
+
+  @override
   Future<void> enquire(
     Course course, {
     required String message,

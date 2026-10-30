@@ -17,13 +17,16 @@ import 'package:icr_mobile/features/learning_exam/certificates_screen.dart';
 import 'package:icr_mobile/features/learning_exam/exam_controller.dart';
 import 'package:icr_mobile/features/learning_exam/exam_models.dart';
 import 'package:icr_mobile/features/learning_exam/exam_progress_store.dart';
+import 'package:icr_mobile/features/learning_exam/exam_repository.dart';
 import 'package:icr_mobile/features/learning_exam/exam_screen.dart';
 import 'package:icr_mobile/features/learning_exam/exam_services.dart';
+import 'package:icr_mobile/features/learning_exam/exam_sheets.dart';
 import 'package:icr_mobile/features/learning_exam/my_attempts_screen.dart';
 import 'package:icr_mobile/features/learning_exam/open_paper.dart';
 import 'package:icr_mobile/features/learning_exam/result_screen.dart';
 
 import 'helpers/fonts.dart';
+import 'helpers/layout_audit.dart';
 import 'learning_exam_fakes.dart';
 
 /// A widget test with the semantics tree on, as a screen reader sees the screen.
@@ -56,6 +59,7 @@ void main() {
     ExamServices.progress = store;
     ExamServices.now = clock.call;
     ExamServices.openUrl = (context, uri) async => opened.add(uri);
+    ExamServices.openExternal = (context, uri) async => opened.add(uri);
     ExamServices.share = (text, {subject}) async => shared.add(text);
   });
 
@@ -105,6 +109,18 @@ void main() {
   bool optionChecked(WidgetTester tester, String text) {
     final node = tester.getSemantics(find.bySemanticsLabel('Option ${text[7]}. $text'));
     return node.getSemanticsData().flagsCollection.isChecked == CheckedState.isTrue;
+  }
+
+  /// What a screen reader says about number [n] of the exam's strip: "Go to question 3, answered, current".
+  String stripLabel(WidgetTester tester, int n) => tester.getSemantics(find.byKey(ValueKey('strip-$n'))).label;
+
+  /// Number [n] in the palette sheet (the strip behind it draws some of the same digits).
+  Finder paletteNumber(int n) => find.descendant(of: find.byType(PaletteSheet), matching: find.text('$n'));
+
+  /// Taps number [n] of the exam's strip.
+  Future<void> goToQuestion(WidgetTester tester, int n) async {
+    await tester.tap(find.byKey(ValueKey('strip-$n')));
+    await settle(tester);
   }
 
   /// Scrolls the first scrollable until [target] is on screen.
@@ -490,19 +506,93 @@ void main() {
   // --- the exam window ------------------------------------------------------------------------------------
 
   group('the exam window', () {
-    semanticTest('shows the paper, the question, its options by letter, the clock and where you are', (tester) async {
+    semanticTest('shows what it is, the clock, the number strip, the question, and its options', (tester) async {
       await pumpExam(tester, sitting: sampleSitting(paper: samplePaper(minutes: 30), questions: 5));
-      expect(find.text('Capital Planning – Foundation'), findsOneWidget);
-      expect(find.text('Question 1 of 5 · 0 answered'), findsOneWidget);
-      expect(find.text('30:00'), findsOneWidget);
-      expect(find.text('QUESTION 1'), findsOneWidget);
+      expect(find.text('Assessment'), findsOneWidget, reason: 'a level paper is an Assessment');
+      expect(find.text('Time Left: 30:00'), findsOneWidget);
+      expect(find.text('Question 1'), findsOneWidget);
       expect(find.text('Question number 1: what is right?'), findsOneWidget);
-      for (final l in ['A', 'B', 'C', 'D']) {
-        expect(find.text(l), findsOneWidget);
-      }
+      expect(find.text('Answer'), findsOneWidget);
+      expect(find.text('Option A1'), findsOneWidget);
       expect(find.text('Option B1'), findsOneWidget);
-      final bar = tester.widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator));
-      expect(bar.value, closeTo(1 / 5, 1e-9));
+      // Five questions: all five numbers, the first one open, and no ellipsis.
+      expect(stripLabel(tester, 1), 'Go to question 1, not answered, current');
+      expect(stripLabel(tester, 5), 'Go to question 5, not answered');
+      expect(find.text('…'), findsNothing);
+      expect(find.bySemanticsLabel('Question palette'), findsOneWidget);
+      for (final b in ['Finish', 'Review', 'Skip', 'Submit & Next']) {
+        expect(find.text(b), findsOneWidget);
+      }
+    });
+
+    semanticTest('a mock set is a Mock Test, and a question says how hard it is when the API did', (tester) async {
+      final mock = samplePaper(slug: 'bemp-1', title: 'Set 1', kind: PaperKind.mock, certificate: false);
+      await pumpExam(
+        tester,
+        sitting: sampleSitting(paper: mock, difficulty: 'EASY'),
+      );
+      expect(find.text('Mock Test'), findsOneWidget);
+      expect(find.text('Assessment'), findsNothing);
+      expect(find.text('EASY'), findsOneWidget);
+      await tapText(tester, 'Skip');
+      expect(find.text('EASY'), findsOneWidget, reason: 'each question carries its own');
+    });
+
+    semanticTest('a question the API gave no difficulty for shows no chip', (tester) async {
+      await pumpExam(tester);
+      for (final d in ['EASY', 'MEDIUM', 'HARD']) {
+        expect(find.text(d), findsNothing);
+      }
+    });
+
+    semanticTest('the strip shows the numbers around the open question, then an ellipsis and the last one', (
+      tester,
+    ) async {
+      final c = await pumpExam(tester, sitting: sampleSitting(questions: 30, difficulty: 'HARD'));
+      expect(find.text('HARD'), findsOneWidget);
+      // First question: 1 2 3 4 ... 30.
+      for (final n in [1, 2, 3, 4, 30]) {
+        expect(find.byKey(ValueKey('strip-$n')), findsOneWidget, reason: 'number $n');
+      }
+      expect(find.byKey(const ValueKey('strip-5')), findsNothing);
+      expect(find.text('…'), findsOneWidget);
+
+      c.goTo(6);
+      await tester.pump();
+      // Question 7: 5 6 7 8 ... 30, as the design draws it.
+      for (final n in [5, 6, 7, 8, 30]) {
+        expect(find.byKey(ValueKey('strip-$n')), findsOneWidget, reason: 'number $n');
+      }
+      expect(find.byKey(const ValueKey('strip-4')), findsNothing);
+      expect(find.byKey(const ValueKey('strip-9')), findsNothing);
+      expect(stripLabel(tester, 7), 'Go to question 7, not answered, current');
+      expect(find.text('Question 7'), findsOneWidget);
+
+      await goToQuestion(tester, 8);
+      expect(c.current, 7);
+      c.goTo(28);
+      await tester.pump();
+      // Next to last: 27 28 29 30 with nothing between.
+      for (final n in [27, 28, 29, 30]) {
+        expect(find.byKey(ValueKey('strip-$n')), findsOneWidget, reason: 'number $n');
+      }
+      expect(find.text('…'), findsNothing);
+      c.goTo(29);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('strip-27')), findsOneWidget);
+      expect(find.byKey(const ValueKey('strip-30')), findsOneWidget);
+    });
+
+    semanticTest('the strip marks answered, open and flagged questions', (tester) async {
+      final c = await pumpExam(tester, sitting: sampleSitting(questions: 6));
+      c.select(1);
+      c.goTo(1);
+      c.toggleFlag();
+      c.goTo(2);
+      await tester.pump();
+      expect(stripLabel(tester, 1), 'Go to question 1, answered');
+      expect(stripLabel(tester, 2), 'Go to question 2, not answered, flagged');
+      expect(stripLabel(tester, 3), 'Go to question 3, not answered, current');
     });
 
     semanticTest('tapping an option selects it, and tapping another moves the choice', (tester) async {
@@ -510,7 +600,7 @@ void main() {
       await tester.tap(find.text('Option B1'));
       await tester.pump();
       expect(c.picked('q1'), [1]);
-      expect(find.text('Question 1 of 5 · 1 answered'), findsOneWidget);
+      expect(stripLabel(tester, 1), 'Go to question 1, answered, current');
       expect(optionChecked(tester, 'Option B1'), isTrue);
       expect(optionChecked(tester, 'Option C1'), isFalse);
       await tester.tap(find.text('Option C1'));
@@ -518,7 +608,7 @@ void main() {
       expect(c.picked('q1'), [2]);
       expect(optionChecked(tester, 'Option B1'), isFalse);
       expect(optionChecked(tester, 'Option C1'), isTrue);
-      expect(find.text('Question 1 of 5 · 1 answered'), findsOneWidget);
+      expect(stripLabel(tester, 1), 'Go to question 1, answered, current');
     });
 
     semanticTest('a multiple-choice question says so and ticks any number of options', (tester) async {
@@ -536,49 +626,65 @@ void main() {
       expect(optionChecked(tester, 'Option A1'), isFalse);
     });
 
-    semanticTest(
-      'Next and Previous move through the paper and stop at the ends; the last question offers the overview',
-      (tester) async {
-        await pumpExam(tester, sitting: sampleSitting(questions: 3));
-        final previous = find.text('Previous');
-        await tester.tap(previous, warnIfMissed: false);
-        await tester.pump();
-        expect(find.text('QUESTION 1'), findsOneWidget, reason: 'Previous is off on the first question');
+    semanticTest('Skip and Submit & Next move on, a number goes back, and the last question offers the overview', (
+      tester,
+    ) async {
+      final c = await pumpExam(tester, sitting: sampleSitting(questions: 3));
+      await tapText(tester, 'Skip');
+      expect(find.text('Question 2'), findsOneWidget);
+      expect(find.text('Question number 2: what is right?'), findsOneWidget);
+      await goToQuestion(tester, 1);
+      expect(find.text('Question 1'), findsOneWidget, reason: 'a number in the strip goes back');
+      await tapText(tester, 'Submit & Next');
+      expect(find.text('Question 2'), findsOneWidget);
+      await tapText(tester, 'Submit & Next');
+      expect(find.text('Question 3'), findsOneWidget);
+      expect(find.text('Submit & Next'), findsNothing);
+      expect(find.text('Skip'), findsOneWidget);
+      await tester.tap(find.text('Skip'), warnIfMissed: false);
+      await tester.pump();
+      expect(c.current, 2, reason: 'Skip is off on the last question');
+      expect(find.text('Assessment overview'), findsNothing);
+      await tapText(tester, 'Submit');
+      expect(find.text('Assessment overview'), findsOneWidget);
+      expect(repo.submitted, isEmpty, reason: 'the overview asks before anything is sent');
+    });
 
-        await tapText(tester, 'Next');
-        expect(find.text('QUESTION 2'), findsOneWidget);
-        expect(find.text('Question number 2: what is right?'), findsOneWidget);
-        await tapText(tester, 'Previous');
-        expect(find.text('QUESTION 1'), findsOneWidget);
-        await tapText(tester, 'Next');
-        await tapText(tester, 'Next');
-        expect(find.text('QUESTION 3'), findsOneWidget);
-        expect(find.text('Next'), findsNothing);
-        expect(find.text('Review & submit'), findsOneWidget);
-        await tapText(tester, 'Review & submit');
-        expect(find.text('Assessment overview'), findsOneWidget);
-      },
-    );
+    semanticTest('Submit & Next keeps the answer given, and Skip leaves the question as it was', (tester) async {
+      final c = await pumpExam(tester);
+      await tester.tap(find.text('Option C1'));
+      await tapText(tester, 'Submit & Next');
+      await tapText(tester, 'Skip');
+      expect(c.current, 2);
+      expect(c.picked('q1'), [2]);
+      expect(c.picked('q2'), isEmpty);
+      expect(stripLabel(tester, 1), 'Go to question 1, answered');
+      expect(stripLabel(tester, 2), 'Go to question 2, not answered');
+    });
 
     semanticTest('an answer is still there after going away and coming back', (tester) async {
       await pumpExam(tester);
       await tester.tap(find.text('Option D1'));
       await tester.pump();
-      await tapText(tester, 'Next');
-      await tapText(tester, 'Previous');
+      await tapText(tester, 'Skip');
+      await goToQuestion(tester, 1);
       expect(optionChecked(tester, 'Option D1'), isTrue);
     });
 
-    semanticTest('Flag for review flags the question, shows a flag, and Unflag takes it off', (tester) async {
+    semanticTest('Review flags the question, the strip and the button show it, and a second tap takes it off', (
+      tester,
+    ) async {
       final c = await pumpExam(tester);
-      expect(find.text('Flag for review'), findsOneWidget);
-      await tapText(tester, 'Flag for review');
+      expect(find.bySemanticsLabel('Flag for review'), findsOneWidget);
+      await tapText(tester, 'Review');
       expect(c.isFlagged(0), isTrue);
-      expect(find.text('Flagged'), findsOneWidget);
-      expect(find.text('Unflag'), findsOneWidget);
-      await tapText(tester, 'Unflag');
+      expect(stripLabel(tester, 1), 'Go to question 1, not answered, flagged, current');
+      expect(find.bySemanticsLabel('Unflag'), findsOneWidget);
+      expect(find.bySemanticsLabel('Flag for review'), findsNothing);
+      await tapText(tester, 'Review');
       expect(c.isFlagged(0), isFalse);
-      expect(find.text('Flagged'), findsNothing);
+      expect(stripLabel(tester, 1), 'Go to question 1, not answered, current');
+      expect(find.bySemanticsLabel('Flag for review'), findsOneWidget);
     });
 
     semanticTest('Clear is off until there is an answer, then takes it away', (tester) async {
@@ -591,17 +697,17 @@ void main() {
       await tapText(tester, 'Clear');
       expect(c.picked('q1'), isEmpty);
       expect(optionChecked(tester, 'Option A1'), isFalse);
-      expect(find.text('Question 1 of 5 · 0 answered'), findsOneWidget);
+      expect(stripLabel(tester, 1), 'Go to question 1, not answered, current');
     });
 
     semanticTest('the palette shows every question by state, and a tap goes there', (tester) async {
       final c = await pumpExam(tester, sitting: sampleSitting(questions: 6));
       await tester.tap(find.text('Option B1'));
-      await tapText(tester, 'Next');
-      await tapText(tester, 'Flag for review');
-      await tapText(tester, 'Next');
+      await tapText(tester, 'Skip');
+      await tapText(tester, 'Review');
+      await tapText(tester, 'Skip');
       await tester.tap(find.text('Option A3'));
-      await tapText(tester, 'Flag for review');
+      await tapText(tester, 'Review');
 
       await tester.tap(find.bySemanticsLabel('Question palette'));
       await settle(tester);
@@ -616,10 +722,10 @@ void main() {
       }
       expect(c.counts.byMark[QuestionMark.notVisited], 3);
 
-      await tester.tap(find.text('5'));
+      await tester.tap(paletteNumber(5));
       await settle(tester);
       expect(find.text('Question palette'), findsNothing, reason: 'the sheet closes on a jump');
-      expect(find.text('QUESTION 5'), findsOneWidget);
+      expect(find.text('Question 5'), findsOneWidget);
       expect(find.text('Question number 5: what is right?'), findsOneWidget);
     });
 
@@ -637,11 +743,11 @@ void main() {
     ) async {
       await pumpExam(tester, sitting: sampleSitting(questions: 6));
       await tester.tap(find.text('Option B1'));
-      await tapText(tester, 'Next');
+      await tapText(tester, 'Skip');
       await tester.tap(find.text('Option B2'));
-      await tapText(tester, 'Flag for review');
+      await tapText(tester, 'Review');
 
-      await tapText(tester, 'Submit');
+      await tapText(tester, 'Finish');
       expect(find.text('Assessment overview'), findsOneWidget);
       expect(find.text('CAPITAL PLANNING – FOUNDATION'), findsOneWidget);
       expect(find.text('2 answered, 4 skipped, 1 flagged'), findsOneWidget);
@@ -653,16 +759,16 @@ void main() {
       await tester.tap(find.bySemanticsLabel('Question 5, not answered. Go to it.'));
       await settle(tester);
       expect(find.text('Assessment overview'), findsNothing);
-      expect(find.text('QUESTION 5'), findsOneWidget);
+      expect(find.text('Question 5'), findsOneWidget);
     });
 
     semanticTest('Back to test closes the overview and sends nothing', (tester) async {
       await pumpExam(tester);
-      await tapText(tester, 'Submit');
+      await tapText(tester, 'Finish');
       await tester.ensureVisible(find.text('Back to test'));
       await tapText(tester, 'Back to test');
       expect(find.text('Assessment overview'), findsNothing);
-      expect(find.text('QUESTION 1'), findsOneWidget);
+      expect(find.text('Question 1'), findsOneWidget);
       expect(repo.submitted, isEmpty);
     });
 
@@ -671,7 +777,7 @@ void main() {
       final c = await pumpExam(tester, sitting: sampleSitting(questions: 5));
       await tester.tap(find.text('Option B1'));
       await tester.pump();
-      await tapText(tester, 'Submit');
+      await tapText(tester, 'Finish');
       await tester.ensureVisible(find.text('Submit test'));
       await tester.tap(find.text('Submit test'));
       await settle(tester);
@@ -680,7 +786,7 @@ void main() {
       expect(repo.submitted.single, hasLength(5), reason: 'every question goes, answered or not');
       expect(repo.submitted.single.first.selected, [1]);
       expect(c.phase, ExamPhase.done);
-      expect(find.text('Your result'), findsOneWidget);
+      expect(find.text('Test Results'), findsOneWidget);
       expect(find.text('Well done, Bharat'), findsOneWidget);
       expect(find.text('ExamScreen'), findsNothing);
       expect(find.byType(ExamScreen), findsNothing, reason: 'the exam is replaced, so Back cannot return to it');
@@ -691,21 +797,21 @@ void main() {
       await pumpExam(tester);
       await tester.tap(find.text('Option B1'));
       await tester.pump();
-      await tapText(tester, 'Submit');
+      await tapText(tester, 'Finish');
       await tester.ensureVisible(find.text('Submit test'));
       await tester.tap(find.text('Submit test'));
       await tester.tap(find.text('Submit test'));
       await settle(tester);
       expect(repo.submitted, hasLength(1));
-      expect(find.text('Your result'), findsOneWidget);
+      expect(find.text('Test Results'), findsOneWidget);
     });
 
     semanticTest('two quick taps on a palette number go to that question once and leave the exam open', (tester) async {
       final c = await pumpExam(tester, sitting: sampleSitting(questions: 6));
       await tester.tap(find.bySemanticsLabel('Question palette'));
       await settle(tester);
-      await tester.tap(find.text('4'));
-      await tester.tap(find.text('4'));
+      await tester.tap(paletteNumber(4));
+      await tester.tap(paletteNumber(4));
       await settle(tester);
       expect(find.byType(ExamScreen), findsOneWidget);
       expect(c.current, 3);
@@ -713,13 +819,21 @@ void main() {
 
     semanticTest('the clock turns red under five minutes and shows the time left', (tester) async {
       final c = await pumpExam(tester, sitting: sampleSitting(paper: samplePaper(minutes: 6)));
-      Color clockColor() => tester.widget<Text>(find.text(clockText(c))).style!.color!;
-      expect(clockColor(), isNot(const Color(0xFFBA1A1A)));
+      Finder pill() => find.text('Time Left: ${clockText(c)}');
+      Color clockColor() => tester.widget<Text>(pill()).style!.color!;
+      Color pillFill() =>
+          (tester.widget<Container>(find.ancestor(of: pill(), matching: find.byType(Container)).first).decoration
+                  as BoxDecoration)
+              .color!;
+      // Red on a red tint while there is time; solid red with white words in the last five minutes.
+      expect(clockColor(), const Color(0xFFC62828));
+      expect(pillFill(), const Color(0xFFFDECEC));
       clock.advance(const Duration(seconds: 61));
       c.tick();
       await tester.pump();
-      expect(find.text('04:59'), findsOneWidget);
-      expect(clockColor(), const Color(0xFFBA1A1A));
+      expect(find.text('Time Left: 04:59'), findsOneWidget);
+      expect(clockColor(), Colors.white);
+      expect(pillFill(), const Color(0xFFC62828));
     });
 
     semanticTest('at zero the answers are sent for the candidate and the result shows', (tester) async {
@@ -729,7 +843,7 @@ void main() {
       await tester.pump();
       clock.advance(const Duration(seconds: 59));
       await tester.pump(const Duration(seconds: 59));
-      expect(find.text('00:01'), findsOneWidget);
+      expect(find.text('Time Left: 00:01'), findsOneWidget);
       expect(repo.submitted, isEmpty);
 
       final gate = Completer<AttemptResult>();
@@ -742,20 +856,20 @@ void main() {
       gate.complete(sampleResult(percentage: 40));
       await settle(tester);
       expect(c.autoSubmitted, isTrue);
-      expect(find.text('Your result'), findsOneWidget);
+      expect(find.text('Test Results'), findsOneWidget);
       expect(find.text('Not quite there yet, Bharat'), findsOneWidget);
     });
 
     semanticTest('the clock running out under an open overview closes it and sends', (tester) async {
       await pumpExam(tester, sitting: sampleSitting(paper: samplePaper(minutes: 1)));
-      await tapText(tester, 'Submit');
+      await tapText(tester, 'Finish');
       expect(find.text('Assessment overview'), findsOneWidget);
       clock.advance(const Duration(minutes: 2));
       await tester.pump(const Duration(seconds: 2));
       await settle(tester);
       expect(find.text('Assessment overview'), findsNothing);
       expect(repo.submitted, hasLength(1));
-      expect(find.text('Your result'), findsOneWidget);
+      expect(find.text('Test Results'), findsOneWidget);
     });
 
     semanticTest('a send that fails keeps the answers and offers to try again, which sends them', (tester) async {
@@ -768,7 +882,7 @@ void main() {
       final c = await pumpExam(tester);
       await tester.tap(find.text('Option B1'));
       await tester.pump();
-      await tapText(tester, 'Submit');
+      await tapText(tester, 'Finish');
       await tester.ensureVisible(find.text('Submit test'));
       await tester.tap(find.text('Submit test'));
       await settle(tester);
@@ -784,7 +898,7 @@ void main() {
       await tester.tap(find.text('Try again'));
       await settle(tester);
       expect(tries, 2, reason: 'a second tap on a busy button sends nothing more');
-      expect(find.text('Your result'), findsOneWidget);
+      expect(find.text('Test Results'), findsOneWidget);
     });
 
     semanticTest('after a failed send with time left, Back to the test returns to the paper with the answers', (
@@ -794,7 +908,7 @@ void main() {
       final c = await pumpExam(tester);
       await tester.tap(find.text('Option B1'));
       await tester.pump();
-      await tapText(tester, 'Submit');
+      await tapText(tester, 'Finish');
       await tester.ensureVisible(find.text('Submit test'));
       await tester.tap(find.text('Submit test'));
       await settle(tester);
@@ -817,7 +931,7 @@ void main() {
       await settle(tester);
       await tester.tap(find.text('Option B1'));
       await tester.pump();
-      await tapText(tester, 'Submit');
+      await tapText(tester, 'Finish');
       await tester.ensureVisible(find.text('Submit test'));
       await tester.tap(find.text('Submit test'));
       await settle(tester);
@@ -864,7 +978,7 @@ void main() {
     semanticTest('a rotation keeps the question, the answers and the clock', (tester) async {
       final c = await pumpExam(tester, sitting: sampleSitting(paper: samplePaper(minutes: 30)));
       await tester.tap(find.text('Option C1'));
-      await tapText(tester, 'Next');
+      await tapText(tester, 'Skip');
       await tester.tap(find.text('Option A2'));
       await tester.pump();
       clock.advance(const Duration(minutes: 3));
@@ -874,15 +988,17 @@ void main() {
       tester.view.physicalSize = const Size(844 * 2, 390 * 2);
       await tester.pump();
       await tester.pump();
-      expect(find.text('QUESTION 2'), findsOneWidget);
+      expect(find.text('Question 2'), findsOneWidget);
+      expect(find.text('Time Left: 27:00'), findsOneWidget);
+      expect(stripLabel(tester, 1), 'Go to question 1, answered');
+      expect(stripLabel(tester, 2), 'Go to question 2, answered, current');
+      await scrollTo(tester, find.text('Option A2'));
       expect(optionChecked(tester, 'Option A2'), isTrue);
-      expect(find.text('27:00'), findsOneWidget);
-      expect(find.text('Question 2 of 5 · 2 answered'), findsOneWidget);
       expect(tester.takeException(), isNull);
 
       tester.view.physicalSize = const Size(390 * 2, 844 * 2);
       await tester.pump();
-      await tapText(tester, 'Previous');
+      await goToQuestion(tester, 1);
       expect(optionChecked(tester, 'Option C1'), isTrue);
     });
 
@@ -901,14 +1017,15 @@ void main() {
 
       final saved = (await store.load('u1', 'cp-foundation'))!;
       await pumpExam(tester, sitting: saved.sitting, resume: saved);
-      expect(find.text('QUESTION 4'), findsOneWidget);
+      expect(find.text('Question 4'), findsOneWidget);
       expect(optionChecked(tester, 'Option B4'), isTrue);
-      expect(find.text('21:00'), findsOneWidget);
-      expect(find.text('Question 4 of 5 · 2 answered'), findsOneWidget);
-      await tapText(tester, 'Previous');
-      await tapText(tester, 'Previous');
-      expect(find.text('QUESTION 2'), findsOneWidget);
-      expect(find.text('Flagged'), findsOneWidget, reason: 'the flag on question 2 came back too');
+      expect(find.text('Time Left: 21:00'), findsOneWidget);
+      expect(stripLabel(tester, 4), 'Go to question 4, answered, current');
+      expect(stripLabel(tester, 3), 'Go to question 3, not answered');
+      await goToQuestion(tester, 2);
+      expect(find.text('Question 2'), findsOneWidget);
+      expect(stripLabel(tester, 2), 'Go to question 2, not answered, flagged, current');
+      expect(find.bySemanticsLabel('Unflag'), findsOneWidget, reason: 'the flag on question 2 came back too');
     });
 
     semanticTest('a screen opened on a sitting whose time ran out sends its answers at once', (tester) async {
@@ -922,7 +1039,7 @@ void main() {
       await settle(tester);
       expect(repo.submitted, hasLength(1));
       expect(repo.submitted.single.first.selected, [3]);
-      expect(find.text('Your result'), findsOneWidget);
+      expect(find.text('Test Results'), findsOneWidget);
       expect(await store.load('u1', 'cp-foundation'), isNull);
     });
 
@@ -934,7 +1051,7 @@ void main() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pump();
       expect(c.remaining.value, const Duration(minutes: 19));
-      expect(find.text('19:00'), findsOneWidget);
+      expect(find.text('Time Left: 19:00'), findsOneWidget);
       expect(repo.submitted, isEmpty);
     });
 
@@ -948,7 +1065,7 @@ void main() {
       await settle(tester);
       expect(repo.submitted, hasLength(1));
       expect(repo.submitted.single.first.selected, [1]);
-      expect(find.text('Your result'), findsOneWidget);
+      expect(find.text('Test Results'), findsOneWidget);
     });
 
     semanticTest('options can be read by a screen reader: letter, text, and whether it is chosen', (tester) async {
@@ -972,8 +1089,12 @@ void main() {
       String? firstName = 'Bharat',
       VoidCallback? onRetake,
       String? suffix,
+      ExamRepository? repository,
+      Map<String, int>? questionMarks,
+      Size size = const Size(390, 844),
     }) async {
-      phone(tester);
+      phone(tester, size: size);
+      await tester.pumpWidget(const SizedBox.shrink()); // a fresh page, not the last one with its result still pushed
       await tester.pumpWidget(
         launched(
           ResultScreen(
@@ -983,6 +1104,8 @@ void main() {
             firstName: firstName,
             onRetake: onRetake,
             eyebrowSuffix: suffix,
+            repository: repository,
+            questionMarks: questionMarks,
           ),
         ),
       );
@@ -990,24 +1113,56 @@ void main() {
       await settle(tester);
     }
 
-    semanticTest('a pass on a certifying paper: the score, the chips, the certificate, and the breakdown', (
+    /// The filter chip for [label] ("Incorrect (1)").
+    Finder chip(String label) => find.text(label);
+
+    /// Number [n] of the review's strip.
+    Finder reviewNumber(int n) => find.byKey(ValueKey('review-q-$n'));
+
+    /// Scrolls the strip's number [n] into view and taps it.
+    Future<void> openQuestion(WidgetTester tester, int n) async {
+      await tester.ensureVisible(reviewNumber(n));
+      await tester.tap(reviewNumber(n));
+      await settle(tester);
+    }
+
+    semanticTest('a pass on a certifying paper: the headline, the tiles, the certificate, and the pass line', (
       tester,
     ) async {
       await pumpResult(tester, sampleResult(percentage: 90, withCertificate: true), suffix: ' · 18 Oct 2026');
+      expect(find.text('Test Results'), findsOneWidget);
+      expect(find.text('TEST ANALYSIS — FOUNDATION · 18 OCT 2026'), findsOneWidget);
+      expect(find.text('Summative'), findsOneWidget, reason: 'a certifying paper is not a formative one');
       expect(find.text('Outstanding result, Bharat'), findsOneWidget);
-      expect(find.text('CAPITAL PLANNING – FOUNDATION · 18 OCT 2026'), findsOneWidget);
       expect(
         find.textContaining('You passed Capital Planning – Foundation with 90%, against a pass mark of 70%.'),
         findsOneWidget,
       );
-      expect(find.text('90'), findsOneWidget);
-      expect(find.text('Accuracy 90%'), findsOneWidget);
-      expect(find.textContaining('Time taken 12m 04s'), findsOneWidget);
-      expect(find.text('5 of 5 correct'), findsOneWidget);
       expect(find.text('Passed'), findsOneWidget);
       expect(find.text('Certificate issued: ICR-CP-2026-AB12CD34, on attempt 2.'), findsOneWidget);
-      expect(find.text('Correct'), findsWidgets);
-      expect(find.text('Incorrect'), findsWidgets);
+      // The six tiles: score, percentage, correct, wrong, unanswered, time taken.
+      for (final tile in [
+        '5 / 5 Score',
+        '90% Percentage',
+        '5 Correct',
+        '0 Wrong',
+        '0 Unanswered',
+        '12m 04s Time taken',
+      ]) {
+        expect(find.bySemanticsLabel(tile), findsOneWidget, reason: tile);
+      }
+      expect(find.bySemanticsLabel('Attempt Count 1'), findsOneWidget);
+      expect(find.text('Attempt Count'), findsOneWidget);
+    });
+
+    semanticTest('the tiles count what went wrong too, and the headline of a miss is red', (tester) async {
+      await pumpResult(tester, sampleResult(percentage: 40));
+      expect(find.bySemanticsLabel('2 / 5 Score'), findsOneWidget);
+      expect(find.bySemanticsLabel('40% Percentage'), findsOneWidget);
+      expect(find.bySemanticsLabel('2 Correct'), findsOneWidget);
+      expect(find.bySemanticsLabel('3 Wrong'), findsOneWidget);
+      final headline = tester.widget<Text>(find.text('Not quite there yet, Bharat'));
+      expect(headline.style!.color, const Color(0xFFC62828));
     });
 
     semanticTest('Passed with under 85% reads Well done', (tester) async {
@@ -1023,16 +1178,27 @@ void main() {
       expect(find.textContaining('Certificate issued'), findsNothing);
     });
 
-    semanticTest('a practice paper just says what was scored, and the pass mark in neutral words', (tester) async {
+    semanticTest('a practice paper says what was scored, in red or green, and that no certificate is issued', (
+      tester,
+    ) async {
       await pumpResult(tester, sampleResult(percentage: 60), certifying: false);
       expect(find.text('You scored 60%'), findsOneWidget);
-      expect(find.text('Below the 70% pass mark'), findsOneWidget);
-      expect(find.textContaining('A practice paper'), findsOneWidget);
+      expect(find.text('Formative'), findsOneWidget);
+      expect(find.text('Practice paper — no certificate is issued.'), findsOneWidget);
+      expect(find.text('Below the 70% pass mark'), findsOneWidget, reason: 'the pass mark, in neutral words');
+      Color? percentColour() {
+        final span = tester.widget<Text>(find.text('You scored 60%')).textSpan! as TextSpan;
+        return (span.children!.last as TextSpan).style!.color;
+      }
+
+      expect(percentColour(), const Color(0xFFC62828));
     });
 
-    semanticTest('a practice paper above the pass mark still says Passed', (tester) async {
+    semanticTest('a practice paper above the pass mark still says Passed, in green', (tester) async {
       await pumpResult(tester, sampleResult(percentage: 90), certifying: false);
       expect(find.text('Passed'), findsOneWidget);
+      final span = tester.widget<Text>(find.text('You scored 90%')).textSpan! as TextSpan;
+      expect((span.children!.last as TextSpan).style!.color, const Color(0xFF0E9F6E));
     });
 
     semanticTest('without a name the headline is bare', (tester) async {
@@ -1040,47 +1206,161 @@ void main() {
       expect(find.text('Outstanding result'), findsOneWidget);
     });
 
-    semanticTest('every question is worked through: the key, the pick, and the explanation', (tester) async {
-      await pumpResult(tester, sampleResult(percentage: 40, total: 5));
-      await scrollTo(tester, find.text('Review your answers'));
-      expect(find.text('Review your answers'), findsOneWidget);
-      // sampleResult(40%) is 2 right (q1, q2), q3 wrong (picked C), q4 and q5 skipped.
-      expect(find.text('QUESTION 1 OF 5 · BUDGETING'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('Question number 3: what is right?'),
-        400,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(find.text('Question number 3: what is right?'), findsOneWidget);
-      expect(find.text('Because B is the answer to number 3.'), findsOneWidget);
-      expect(find.text('Rationale'), findsWidgets);
-      expect(find.text('Correct answer'), findsWidgets);
-      expect(find.text('Your answer'), findsWidgets);
+    semanticTest('the tag names the set of a mock paper', (tester) async {
+      final mock = samplePaper(slug: 'bemp-1', title: 'Set 1', kind: PaperKind.mock, certificate: false);
+      await pumpResult(tester, sampleResult(percentage: 60, paper: mock), certifying: false);
+      expect(find.text('TEST ANALYSIS — SET 1'), findsOneWidget);
     });
 
-    semanticTest('the filters narrow the review to incorrect, skipped or correct questions', (tester) async {
-      await pumpResult(tester, sampleResult(percentage: 40, total: 5));
-      await scrollTo(tester, find.text('All 5'));
-      expect(find.text('All 5'), findsOneWidget);
-      expect(find.text('Incorrect 1'), findsOneWidget);
-      expect(find.text('Skipped 2'), findsOneWidget);
-      expect(find.text('Correct 2'), findsOneWidget);
+    semanticTest('Retake test and Review answers sit side by side; Review answers scrolls to the review', (
+      tester,
+    ) async {
+      await pumpResult(tester, sampleResult(percentage: 40, total: 5), onRetake: () {});
+      final retake = tester.getRect(find.text('Retake test'));
+      final review = tester.getRect(find.text('Review answers'));
+      expect((retake.center.dy - review.center.dy).abs(), lessThan(1), reason: 'one row');
+      expect(retake.center.dx, lessThan(review.center.dx));
+      final before = tester.getTopLeft(find.text('Question Review & Explanations')).dy;
+      expect(before, greaterThan(600), reason: 'the review starts below the first screen');
+      await tester.tap(find.text('Review answers'));
+      await settle(tester);
+      expect(tester.getTopLeft(find.text('Question Review & Explanations')).dy, lessThan(200));
+    });
 
-      await tester.scrollUntilVisible(find.text('Incorrect 1'), 300, scrollable: find.byType(Scrollable).first);
-      await tester.tap(find.text('Incorrect 1'));
+    semanticTest('every question is worked through: the key, the pick, the mark and the explanation', (tester) async {
+      await pumpResult(tester, sampleResult(percentage: 40, total: 5));
+      await scrollTo(tester, find.text('Question Review & Explanations'));
+      expect(find.text('Question Review & Explanations'), findsOneWidget);
+      // sampleResult(40%) is 2 right (q1, q2), q3 wrong (picked C), q4 and q5 skipped; it opens on the first.
+      expect(find.text('Question 1'), findsOneWidget);
+      expect(find.text('Question number 1: what is right?'), findsOneWidget);
+      expect(find.text('1 / 1 Mark'), findsOneWidget);
+      expect(find.text('Your Answer (Correct)'), findsOneWidget);
+
+      await openQuestion(tester, 3);
+      expect(find.text('Question 3'), findsOneWidget);
+      expect(find.text('Question number 3: what is right?'), findsOneWidget);
+      expect(find.text('Question number 1: what is right?'), findsNothing, reason: 'one question at a time');
+      expect(find.text('0 / 1 Mark'), findsOneWidget);
+      expect(find.text('Incorrect'), findsWidgets);
+      expect(find.text('Correct Answer'), findsOneWidget, reason: 'B, the key, which was not picked');
+      expect(find.text('Your Answer (Incorrect)'), findsOneWidget, reason: 'C, which was');
+      expect(find.text('Detailed Explanation & Rationale'), findsOneWidget);
+      expect(find.text('Because B is the answer to number 3.'), findsOneWidget);
+      expect(find.text('Core Topic: Budgeting'), findsOneWidget);
+      expect(find.bySemanticsLabel('Option C. Option C3. Your Answer (Incorrect).'), findsOneWidget);
+      expect(find.bySemanticsLabel('Option B. Option B3. Correct Answer.'), findsOneWidget);
+
+      // Question 4 was left blank and has no explanation: no panel, no topic.
+      await openQuestion(tester, 4);
+      expect(find.text('Unanswered'), findsWidgets);
+      expect(find.text('Detailed Explanation & Rationale'), findsNothing);
+      expect(find.textContaining('Core Topic'), findsNothing);
+      expect(find.text('Correct Answer'), findsOneWidget);
+      expect(find.text('Your Answer (Incorrect)'), findsNothing);
+    });
+
+    semanticTest('the strip numbers each question by how it went, and the one on show is marked', (tester) async {
+      await pumpResult(tester, sampleResult(percentage: 40, total: 5));
+      await scrollTo(tester, find.text('Question Review & Explanations'));
+      String label(int n) => tester.getSemantics(reviewNumber(n)).label;
+      expect(label(1), 'Question 1, correct, on show');
+      expect(label(2), 'Question 2, correct');
+      expect(label(3), 'Question 3, incorrect');
+      expect(label(4), 'Question 4, unanswered');
+      await openQuestion(tester, 3);
+      expect(label(3), 'Question 3, incorrect, on show');
+      expect(label(1), 'Question 1, correct');
+    });
+
+    semanticTest('the pager walks the questions and is off at both ends', (tester) async {
+      await pumpResult(tester, sampleResult(percentage: 40, total: 5));
+      await scrollTo(tester, find.text('Question Review & Explanations'));
+      await tester.ensureVisible(find.text('Previous'));
+      expect(find.text('Question 1 of 5'), findsOneWidget);
+      await tester.tap(find.text('Previous'), warnIfMissed: false);
+      await settle(tester);
+      expect(find.text('Question 1 of 5'), findsOneWidget, reason: 'Previous is off on the first');
+
+      await tester.tap(find.text('Next'));
+      await settle(tester);
+      expect(find.text('Question 2 of 5'), findsOneWidget);
+      expect(find.text('Question number 2: what is right?'), findsOneWidget);
+      await tester.tap(find.text('Previous'));
+      await settle(tester);
+      expect(find.text('Question 1 of 5'), findsOneWidget);
+
+      for (var i = 0; i < 4; i++) {
+        await tester.ensureVisible(find.text('Next'));
+        await tester.tap(find.text('Next'));
+        await settle(tester);
+      }
+      expect(find.text('Question 5 of 5'), findsOneWidget);
+      expect(find.text('Question number 5: what is right?'), findsOneWidget);
+      await tester.tap(find.text('Next'), warnIfMissed: false);
+      await settle(tester);
+      expect(find.text('Question 5 of 5'), findsOneWidget, reason: 'Next is off on the last');
+    });
+
+    semanticTest('the filters narrow the review to incorrect, unanswered or correct questions', (tester) async {
+      await pumpResult(tester, sampleResult(percentage: 40, total: 5));
+      await scrollTo(tester, chip('All (5)'));
+      expect(chip('All (5)'), findsOneWidget);
+      expect(chip('Incorrect (1)'), findsOneWidget);
+      expect(chip('Unanswered (2)'), findsOneWidget);
+      expect(chip('Correct (2)'), findsOneWidget);
+
+      await tester.ensureVisible(chip('Incorrect (1)'));
+      await tester.tap(chip('Incorrect (1)'));
       await settle(tester);
       expect(find.text('Question number 3: what is right?'), findsOneWidget);
       expect(find.text('Question number 1: what is right?'), findsNothing);
-      expect(find.text('QUESTION 3 OF 5 · BUDGETING'), findsOneWidget, reason: 'it keeps its own number');
+      expect(find.text('Question 3'), findsOneWidget, reason: 'it keeps its own number');
+      expect(find.text('Question 3 of 5'), findsOneWidget);
+      expect(reviewNumber(3), findsOneWidget);
+      expect(reviewNumber(1), findsNothing, reason: 'the strip is the filtered questions');
+      await tester.ensureVisible(find.text('Next'));
+      await tester.tap(find.text('Next'), warnIfMissed: false);
+      await settle(tester);
+      expect(find.text('Question number 3: what is right?'), findsOneWidget, reason: 'the only one: no way on');
 
-      await tester.tap(find.text('Skipped 2'));
+      await tester.ensureVisible(chip('Unanswered (2)'));
+      await tester.tap(chip('Unanswered (2)'));
       await settle(tester);
       expect(find.text('Question number 4: what is right?'), findsOneWidget);
       expect(find.text('Question number 3: what is right?'), findsNothing);
+      await tester.ensureVisible(find.text('Next'));
+      await tester.tap(find.text('Next'));
+      await settle(tester);
+      expect(find.text('Question number 5: what is right?'), findsOneWidget);
 
-      await tester.tap(find.text('All 5'));
+      await tester.ensureVisible(chip('Correct (2)'));
+      await tester.tap(chip('Correct (2)'));
       await settle(tester);
       expect(find.text('Question number 1: what is right?'), findsOneWidget);
+
+      await tester.ensureVisible(chip('All (5)'));
+      await tester.tap(chip('All (5)'));
+      await settle(tester);
+      expect(reviewNumber(5), findsOneWidget);
+      expect(reviewNumber(1), findsOneWidget);
+      expect(find.text('Question number 1: what is right?'), findsOneWidget, reason: 'it stays where it was');
+    });
+
+    semanticTest('a filter nothing falls under says so, and Unanswered is offered only when something is', (
+      tester,
+    ) async {
+      await pumpResult(tester, sampleResult(percentage: 100, total: 5));
+      await scrollTo(tester, chip('All (5)'));
+      expect(chip('Correct (5)'), findsOneWidget);
+      expect(chip('Incorrect (0)'), findsOneWidget, reason: 'drawn with its zero, as the design does');
+      expect(find.textContaining('Unanswered ('), findsNothing);
+      await tester.tap(chip('Incorrect (0)'));
+      await settle(tester);
+      expect(find.text('Nothing here.'), findsOneWidget);
+      await tester.tap(chip('All (5)'));
+      await settle(tester);
+      expect(find.text('Nothing here.'), findsNothing);
     });
 
     semanticTest('a result by topic appears when the questions carry topics', (tester) async {
@@ -1097,6 +1377,74 @@ void main() {
       expect(find.textContaining('2 questions from this sitting have since been removed'), findsOneWidget);
     });
 
+    semanticTest('what a question was worth: from the review, from the sitting, or one a question when all are', (
+      tester,
+    ) async {
+      // maxScore equals the number of questions here, so every question is one mark.
+      await pumpResult(tester, sampleResult(percentage: 40, total: 5));
+      await scrollTo(tester, find.text('Question Review & Explanations'));
+      expect(find.text('1 / 1 Mark'), findsOneWidget);
+
+      // The sitting just taken knows each question's marks.
+      await pumpResult(
+        tester,
+        sampleResult(percentage: 40, total: 5),
+        questionMarks: {'q1': 2, 'q2': 1, 'q3': 3, 'q4': 1, 'q5': 1},
+      );
+      await scrollTo(tester, find.text('Question Review & Explanations'));
+      expect(find.text('2 / 2 Marks'), findsOneWidget);
+      await openQuestion(tester, 3);
+      expect(find.text('0 / 3 Marks'), findsOneWidget);
+
+      // A review that says what it was worth wins.
+      final base = sampleResult(percentage: 40, total: 5);
+      final weighted = AttemptResult(
+        attempt: base.attempt,
+        review: [
+          for (final r in base.review)
+            ReviewItem(
+              id: r.id,
+              prompt: r.prompt,
+              options: r.options,
+              correctIndexes: r.correctIndexes,
+              selected: r.selected,
+              explanation: r.explanation,
+              category: r.category,
+              marks: 4,
+            ),
+        ],
+      );
+      await pumpResult(tester, weighted);
+      await scrollTo(tester, find.text('Question Review & Explanations'));
+      expect(find.text('4 / 4 Marks'), findsOneWidget);
+    });
+
+    semanticTest('a paper with marks that differ and a review that does not say shows no mark line', (tester) async {
+      final a = sampleAttempt(percentage: 40);
+      final heavy = Attempt(
+        id: a.id,
+        paperId: a.paperId,
+        attempt: a.attempt,
+        startedAt: a.startedAt,
+        submittedAt: a.submittedAt,
+        timeTakenMs: a.timeTakenMs,
+        totalQuestions: 5,
+        correct: 2,
+        wrong: 3,
+        unanswered: 0,
+        score: 4,
+        maxScore: 8,
+        percentage: 50,
+        passPercentage: 70,
+        passed: false,
+        paper: a.paper,
+      );
+      await pumpResult(tester, AttemptResult(attempt: heavy, review: sampleReview(5, right: 2)));
+      await scrollTo(tester, find.text('Question Review & Explanations'));
+      expect(find.textContaining(' Mark'), findsNothing, reason: 'it is not made up');
+      expect(find.bySemanticsLabel('4 / 8 Score'), findsOneWidget);
+    });
+
     semanticTest('View certificate opens the certificate', (tester) async {
       await pumpResult(tester, sampleResult(percentage: 90, withCertificate: true));
       await tester.tap(find.text('View certificate').last);
@@ -1105,7 +1453,7 @@ void main() {
       expect(find.text('Share'), findsOneWidget);
     });
 
-    semanticTest('Retake closes the result and starts the paper again; Back just closes', (tester) async {
+    semanticTest('Retake test closes the result and starts the paper again; Back just closes', (tester) async {
       var retaken = 0;
       await pumpResult(tester, sampleResult(percentage: 40), onRetake: () => retaken++);
       await tester.tap(find.text('Retake test'));
@@ -1117,6 +1465,22 @@ void main() {
       await tester.tap(find.text('Back'));
       await settle(tester);
       expect(retaken, 1);
+      expect(find.byType(ResultScreen), findsNothing);
+    });
+
+    semanticTest('the bar offers Retake Test as well, and it does the same', (tester) async {
+      var retaken = 0;
+      await pumpResult(tester, sampleResult(percentage: 40), onRetake: () => retaken++);
+      await tester.tap(find.text('Retake Test'));
+      await settle(tester);
+      expect(retaken, 1);
+      expect(find.byType(ResultScreen), findsNothing);
+    });
+
+    semanticTest('the back arrow closes the result', (tester) async {
+      await pumpResult(tester, sampleResult(percentage: 40));
+      await tester.tap(find.bySemanticsLabel('Back').first);
+      await settle(tester);
       expect(find.byType(ResultScreen), findsNothing);
     });
 
@@ -1132,18 +1496,169 @@ void main() {
       expect(find.text('start'), findsOneWidget, reason: 'the page that opened the result is still there');
     });
 
-    semanticTest('with nothing to retake there is only Back', (tester) async {
+    semanticTest('with nothing to retake there is only Back, and Review answers has the row to itself', (tester) async {
       await pumpResult(tester, sampleResult(percentage: 40));
       expect(find.text('Retake test'), findsNothing);
+      expect(find.text('Retake Test'), findsNothing);
       expect(find.text('Back'), findsOneWidget);
+      expect(find.text('Review answers'), findsOneWidget);
     });
 
-    semanticTest('with a certificate the bar offers Retake beside View certificate', (tester) async {
+    semanticTest('a result with nothing to review has no review section and no Review answers', (tester) async {
+      final r = sampleResult(percentage: 40);
+      await pumpResult(
+        tester,
+        AttemptResult(attempt: r.attempt, review: const []),
+        onRetake: () {},
+      );
+      expect(find.text('Review answers'), findsNothing);
+      expect(find.text('Question Review & Explanations'), findsNothing);
+      expect(find.text('Retake test'), findsOneWidget);
+      expect(find.text('My attempts'), findsOneWidget);
+    });
+
+    semanticTest('with a certificate the bar offers View certificate beside Retake Test', (tester) async {
       var retaken = 0;
       await pumpResult(tester, sampleResult(percentage: 90, withCertificate: true), onRetake: () => retaken++);
-      await tester.tap(find.text('Retake'));
+      await tester.tap(find.text('Retake Test'));
       await settle(tester);
       expect(retaken, 1);
+    });
+
+    group('My attempts', () {
+      AttemptResult resultOf(String id, int attempt, {bool certificate = false}) => AttemptResult(
+        attempt: sampleAttempt(id: id, attempt: attempt, percentage: certificate ? 90 : 40),
+        review: sampleReview(5, right: certificate ? 5 : 2),
+        certificate: certificate ? sampleCertificate() : null,
+      );
+
+      setUp(() {
+        repo.attemptsValue = [
+          sampleAttempt(id: 'a3', attempt: 3, percentage: 90),
+          sampleAttempt(id: 'a2', attempt: 2, percentage: 60),
+          sampleAttempt(id: 'a1', attempt: 1, percentage: 40),
+          sampleAttempt(
+            id: 'other',
+            attempt: 1,
+            percentage: 100,
+            paper: samplePaper(slug: 'other', title: 'Advanced'),
+          ),
+        ];
+        repo.results['a2'] = resultOf('a2', 2);
+        repo.results['a1'] = resultOf('a1', 1);
+      });
+
+      semanticTest('without a repository the sitting on show is listed alone', (tester) async {
+        await pumpResult(tester, sampleResult(percentage: 40));
+        await scrollTo(tester, find.text('My attempts'));
+        expect(find.text('My attempts'), findsOneWidget);
+        expect(find.text('1 attempt recorded'), findsOneWidget);
+        expect(find.text('20 Oct 2026, 09:12'), findsOneWidget);
+        expect(find.bySemanticsLabel('Open attempt 1'), findsOneWidget);
+        expect(find.text('Score'), findsNWidgets(2), reason: 'the tile, and the column of the sitting');
+        expect(find.text('Result'), findsOneWidget);
+        expect(find.text('Duration'), findsOneWidget);
+        // Each figure is in its tile above and in the sitting's own column.
+        expect(find.text('2 / 5'), findsNWidgets(2));
+        expect(find.text('40%'), findsNWidgets(2));
+        expect(find.text('12m 04s'), findsNWidgets(2));
+      });
+
+      semanticTest('with one it lists this paper\'s sittings newest first, each with score, result and time', (
+        tester,
+      ) async {
+        await pumpResult(tester, resultOf('a3', 3, certificate: true), repository: repo);
+        await scrollTo(tester, find.text('My attempts'));
+        expect(repo.calls, contains('attempts paper-cp-foundation'));
+        expect(find.text('3 attempts recorded'), findsOneWidget, reason: 'the other paper\'s sitting is not here');
+        final three = tester.getTopLeft(find.bySemanticsLabel('Open attempt 3')).dy;
+        final two = tester.getTopLeft(find.bySemanticsLabel('Open attempt 2')).dy;
+        final one = tester.getTopLeft(find.bySemanticsLabel('Open attempt 1')).dy;
+        expect(three, lessThan(two));
+        expect(two, lessThan(one));
+        Color colourOf(Finder f) => tester.widget<Text>(f).style!.color!;
+        expect(colourOf(find.text('60%')), const Color(0xFFC62828), reason: 'below the pass mark');
+        expect(
+          colourOf(find.text('90%').last),
+          const Color(0xFF0E9F6E),
+          reason: 'passed (the tile above is the same figure)',
+        );
+      });
+
+      semanticTest('a sitting that is not on show opens as a result of its own', (tester) async {
+        await pumpResult(tester, resultOf('a3', 3, certificate: true), repository: repo);
+        await scrollTo(tester, find.text('My attempts'));
+        await tester.ensureVisible(find.bySemanticsLabel('Open attempt 2'));
+        await tester.tap(find.bySemanticsLabel('Open attempt 2'));
+        await settle(tester);
+        expect(repo.calls, contains('attempt a2'));
+        expect(find.text('Test Results'), findsOneWidget);
+        expect(find.text('Not quite there yet'), findsOneWidget, reason: 'no name given: the bare headline');
+        expect(find.bySemanticsLabel('Attempt Count 2'), findsOneWidget);
+        await tester.tap(find.bySemanticsLabel('Back').first);
+        await settle(tester);
+        expect(find.bySemanticsLabel('Attempt Count 3'), findsOneWidget, reason: 'back to the one it came from');
+      });
+
+      semanticTest('the sitting on show opens its certificate, or goes back to the top when it earned none', (
+        tester,
+      ) async {
+        await pumpResult(tester, resultOf('a3', 3, certificate: true), repository: repo);
+        await scrollTo(tester, find.text('My attempts'));
+        await tester.tap(find.bySemanticsLabel('Open attempt 3'));
+        await settle(tester);
+        expect(find.text('Certificate of Knowledge Assessment'), findsOneWidget);
+        await tester.tapAt(const Offset(10, 10));
+        await settle(tester);
+
+        await pumpResult(tester, resultOf('a1', 1));
+        await scrollTo(tester, find.text('My attempts'));
+        expect(find.text('Test Results'), findsOneWidget);
+        expect(tester.getTopLeft(find.text('Summative')).dy, lessThan(0), reason: 'scrolled away from the top');
+        await tester.tap(find.bySemanticsLabel('Open attempt 1'));
+        await settle(tester);
+        expect(tester.getTopLeft(find.text('Summative')).dy, greaterThan(56), reason: 'the top of the result again');
+      });
+
+      semanticTest('retaking from an older sitting closes both results and starts the paper once', (tester) async {
+        var retaken = 0;
+        await pumpResult(tester, resultOf('a3', 3, certificate: true), repository: repo, onRetake: () => retaken++);
+        await scrollTo(tester, find.text('My attempts'));
+        await tester.ensureVisible(find.bySemanticsLabel('Open attempt 1'));
+        await tester.tap(find.bySemanticsLabel('Open attempt 1'));
+        await settle(tester);
+        expect(find.byType(ResultScreen), findsOneWidget, reason: 'the older one is on top');
+        await tester.tap(find.text('Retake test'));
+        await settle(tester);
+        expect(retaken, 1);
+        expect(find.byType(ResultScreen), findsNothing, reason: 'both closed');
+        expect(find.text('start'), findsOneWidget);
+      });
+
+      semanticTest('a history that will not load leaves the sitting on show listed', (tester) async {
+        repo.attemptsError = ApiError('offline');
+        await pumpResult(tester, resultOf('a3', 3), repository: repo);
+        await scrollTo(tester, find.text('My attempts'));
+        expect(find.text('1 attempt recorded'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    });
+
+    group('at 360 dp', () {
+      semanticTest('the result and its review do not overflow, and nothing is cut off', (tester) async {
+        await pumpResult(
+          tester,
+          sampleResult(percentage: 40, total: 5, withCertificate: false),
+          onRetake: () {},
+          repository: repo,
+          size: const Size(360, 780),
+          suffix: ' · 18 Oct 2026',
+        );
+        expect(tester.takeException(), isNull);
+        await scrollTo(tester, find.text('My attempts'));
+        expect(tester.takeException(), isNull);
+        expect(layoutProblems().where((p) => p.startsWith('clipped')), isEmpty);
+      });
     });
   });
 
@@ -1303,12 +1818,12 @@ void main() {
       await pumpAttempts(tester);
       await tester.tap(find.text('Attempt #3 · 20 Oct 2026, 09:12'));
       await settle(tester);
-      expect(find.text('Your result'), findsOneWidget);
-      expect(find.text('CAPITAL PLANNING – FOUNDATION · 20 OCT 2026'), findsOneWidget);
+      expect(find.text('Test Results'), findsOneWidget);
+      expect(find.text('TEST ANALYSIS — FOUNDATION · 20 OCT 2026'), findsOneWidget);
       expect(find.text('Outstanding result'), findsOneWidget);
       expect(find.text('Certificate issued: ICR-CP-2026-AB12CD34, on attempt 2.'), findsOneWidget);
-      await scrollTo(tester, find.text('Review your answers'));
-      expect(find.text('Review your answers'), findsOneWidget);
+      await scrollTo(tester, find.text('Question Review & Explanations'));
+      expect(find.text('Question Review & Explanations'), findsOneWidget);
       expect(repo.calls, contains('attempt a3'));
     });
 
@@ -1340,8 +1855,8 @@ void main() {
         findsOneWidget,
         reason: 'a mock set does not certify, so it is scored, not passed',
       );
-      await scrollTo(tester, find.text('Review your answers'));
-      expect(find.text('Review your answers'), findsOneWidget);
+      await scrollTo(tester, find.text('Question Review & Explanations'));
+      expect(find.text('Question Review & Explanations'), findsOneWidget);
     });
 
     semanticTest('no sittings yet: an empty state, and its button goes back', (tester) async {
@@ -1520,12 +2035,10 @@ void main() {
         expect(repo.calls.where((c) => c.startsWith('verify')), hasLength(2));
       });
 
-      semanticTest('the website register is one tap away', (tester) async {
+      semanticTest('the sheet is the register: nothing sends the member to the website for it', (tester) async {
         await openRegister(tester);
-        await tester.ensureVisible(find.text('Open the register on the website'));
-        await tester.tap(find.text('Open the register on the website'));
-        await settle(tester);
-        expect(opened.single.toString(), endsWith('/learning/verify'));
+        expect(find.text('Open the register on the website'), findsNothing);
+        expect(opened, isEmpty);
       });
     });
 
@@ -1582,10 +2095,12 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.tap(find.textContaining('Option A: a deliberately'));
       await tester.pump();
-      expect(find.text('Flag'), findsOneWidget, reason: 'the shortened label on a narrow phone');
-      await tapText(tester, 'Flag');
+      expect(find.text('Review'), findsNothing, reason: 'Review keeps only its bookmark on a narrow phone');
+      expect(find.bySemanticsLabel('Flag for review'), findsOneWidget);
+      await tester.tap(find.bySemanticsLabel('Flag for review'));
+      await settle(tester);
       expect(find.bySemanticsLabel('Unflag'), findsOneWidget);
-      await tapText(tester, 'Next');
+      await tapText(tester, 'Skip');
       expect(tester.takeException(), isNull);
       await tester.tap(find.bySemanticsLabel('Question palette'));
       await settle(tester);
@@ -1687,7 +2202,9 @@ void main() {
       );
       await settle(tester);
       expect(tester.takeException(), isNull);
-      await scrollTo(tester, find.text('Review your answers'));
+      await scrollTo(tester, find.text('Question Review & Explanations'));
+      expect(tester.takeException(), isNull);
+      await scrollTo(tester, find.text('My attempts'));
       expect(tester.takeException(), isNull);
     });
 
@@ -1707,6 +2224,33 @@ void main() {
       );
       await settle(tester);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('a 360 dp phone', () {
+    const size = Size(360, 780);
+
+    semanticTest('the exam window fits: the pill, the strip, the question and all four buttons', (tester) async {
+      phone(tester, size: size);
+      final c = controllerFor(sampleSitting(questions: 30, difficulty: 'MEDIUM'));
+      await tester.pumpWidget(app(ExamScreen(controller: c, firstName: 'Bharat')));
+      await tester.pump();
+      c.goTo(6);
+      c.select(1);
+      c.toggleFlag();
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      for (final b in ['Finish', 'Review', 'Skip', 'Submit & Next']) {
+        expect(find.text(b), findsOneWidget, reason: b);
+      }
+      expect(find.text('Time Left: 30:00'), findsOneWidget);
+      expect(layoutProblems().where((p) => p.startsWith('clipped')), isEmpty);
+
+      c.goTo(29);
+      await tester.pump();
+      expect(find.text('Submit'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      expect(layoutProblems().where((p) => p.startsWith('clipped')), isEmpty);
     });
   });
 
@@ -1746,16 +2290,17 @@ void main() {
       await tester.tap(find.text('Take test'));
       await settle(tester);
       expect(find.byType(ExamScreen), findsOneWidget);
-      expect(find.text('Question 1 of 2 · 0 answered'), findsOneWidget);
+      expect(find.text('Assessment'), findsOneWidget);
+      expect(find.text('Question 1'), findsOneWidget);
       await tester.tap(find.text('Option B1'));
-      await tapText(tester, 'Next');
+      await tapText(tester, 'Submit & Next');
       await tester.tap(find.text('Option A2'));
       await tester.pump();
-      await tapText(tester, 'Review & submit');
+      await tapText(tester, 'Submit');
       await tester.ensureVisible(find.text('Submit test'));
       await tester.tap(find.text('Submit test'));
       await settle(tester);
-      expect(find.text('Your result'), findsOneWidget);
+      expect(find.text('Test Results'), findsOneWidget);
       expect(repo.submitted.single.map((a) => a.selected), [
         [1],
         [0],

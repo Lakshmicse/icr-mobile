@@ -150,33 +150,21 @@ class _Body extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // The design's role line stands 2 dp lower under the name than the name's
-        // own line height gives.
-        SizedBox(
-          height: 19.3,
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: SizedBox(
-              height: 17.3,
-              child: Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      mentor.name,
-                      style: MentorshipText.mentorName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (mentor.approved) ...[
-                    const SizedBox(width: 4.5),
-                    const Icon(Symbols.verified, fill: 1, size: 14.5, color: AppColors.primary),
-                  ],
-                ],
-              ),
+        // The name's line is as tall as its text (a fixed 17.3 cut it at the app's 14 sp). The design's role
+        // line stands 2 dp lower under the name than the name's own line height gives; at this size the
+        // line's own 18 leaves 1.3 dp of that.
+        Row(
+          children: [
+            Flexible(
+              child: Text(mentor.name, style: MentorshipText.mentorName, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
-          ),
+            if (mentor.approved) ...[
+              const SizedBox(width: 4.5),
+              const Icon(Symbols.verified, fill: 1, size: 14.5, color: AppColors.primary),
+            ],
+          ],
         ),
+        const SizedBox(height: 1.3),
         if (role.isNotEmpty) Text(role, style: MentorshipText.mentorRole, maxLines: 2, overflow: TextOverflow.ellipsis),
         if (chips.isNotEmpty) ...[
           const SizedBox(height: 5.5),

@@ -28,6 +28,7 @@ import 'package:icr_mobile/features/forum/forum_html.dart';
 import 'package:icr_mobile/features/forum/forum_models.dart';
 import 'package:icr_mobile/features/forum/forums_controller.dart';
 import 'package:icr_mobile/features/forum/reply_tree.dart';
+import 'package:icr_mobile/features/forum/rich_document.dart';
 import 'package:icr_mobile/features/forum/thread_controller.dart';
 
 import 'live.dart';
@@ -565,14 +566,14 @@ void main() {
           expect(stored.moderation, 'APPROVED');
           expect(
             stored.bodyHtml,
-            '<p>We run &lt;b&gt;two&lt;/b&gt; sites &amp; one is old.</p><p>Second paragraph<br />same line</p>',
+            '<p>We run &lt;b&gt;two&lt;/b&gt; sites &amp; one is old.</p><p>Second paragraph</p><p>same line</p>',
           );
 
           // An edit from the page: starts from what the forum holds; the title alone changes.
           final read = await p.forum.thread(stored.slug);
           final editor = ComposerController(repository: p.forum, editing: read);
           await editor.start();
-          expect(editor.body, 'We run <b>two</b> sites & one is old.\n\nSecond paragraph\nsame line');
+          expect(editor.body, 'We run <b>two</b> sites & one is old.\nSecond paragraph\nsame line');
           editor.setTitle('${read.card.title} (edited)');
           expect(editor.draft.body, isNull);
           expect(editor.draft.categoryKey, isNull);
@@ -591,6 +592,61 @@ void main() {
           expect(changed!.bodyHtml, '<p>Only these words now.</p>');
           expect(changed.category?.key, 'SUSTAINABILITY_ESG');
           expect(changed.subcategory, isNull);
+          editor.dispose();
+        } finally {
+          c.dispose();
+          if (stored != null) await p.forum.deleteThread(stored.id);
+        }
+      },
+    );
+
+    liveTest(
+      'formatted details reach the forum as the editor wrote them: the sanitiser keeps every tag, and an edit reads them back',
+      () async {
+        final p = await _pooja.open();
+        final c = ComposerController(repository: p.forum);
+        ForumThread? stored;
+        try {
+          await c.start();
+          c.setTopic(c.taxonomy.firstWhere((n) => n.key == 'TECHNOLOGY_INNOVATION'));
+          c.setTitle('A rich composer sandbox ${DateTime.now().millisecondsSinceEpoch}');
+          c.setDoc(
+            RichDoc.fromHtml(
+              '<h3>Where we started</h3>'
+              '<p>Two sites on <strong>BACnet</strong>, a <em>lot</em> of rounds, notes at '
+              '<a href="https://icr.org.in/community?a=1&amp;b=2">our write-up</a> &amp; a 1 &lt; 2 check.</p>'
+              '<ul><li>Sub-metering</li><li>Set-point review</li></ul><ol><li>Baseline</li><li>Pilot</li></ol>',
+            ),
+          );
+          stored = await c.send();
+          expect(c.error, isNull);
+          expect(stored, isNotNull);
+
+          // What the forum kept: a heading, bold, italic, a safe link, both lists.
+          final html = stored!.bodyHtml;
+          expect(html, contains('<h3>Where we started</h3>'));
+          expect(html, contains('<strong>BACnet</strong>'));
+          expect(html, contains('<em>lot</em>'));
+          expect(html, contains('href="https://icr.org.in/community?a=1&amp;b=2"'));
+          expect(html, contains('<ul><li>Sub-metering</li><li>Set-point review</li></ul>'));
+          expect(html, contains('<ol><li>Baseline</li><li>Pilot</li></ol>'));
+          expect(html, contains('&amp; a 1 &lt; 2 check.'));
+          final blocks = parseForumHtml(html);
+          expect(blocks.where((b) => b.kind == BlockKind.heading), hasLength(1));
+          expect(blocks.where((b) => b.kind == BlockKind.listItem), hasLength(4));
+
+          // An edit opens on it with its formatting and sends nothing for the body until the words change.
+          final read = await p.forum.thread(stored.slug);
+          final editor = ComposerController(repository: p.forum, editing: read);
+          await editor.start();
+          expect(editor.doc.text, c.doc.text);
+          expect(editor.bodyUnchanged, isTrue);
+          expect(editor.editLosesFormatting, isFalse);
+          editor.setTitle('${read.card.title} (edited)');
+          expect(editor.draft.bodyHtml, isNull);
+          final after = await editor.send();
+          expect(editor.error, isNull);
+          expect(after!.bodyHtml, html);
           editor.dispose();
         } finally {
           c.dispose();

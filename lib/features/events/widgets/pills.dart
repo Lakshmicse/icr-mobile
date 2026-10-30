@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -97,7 +98,9 @@ class DateBadge extends StatelessWidget {
   }
 }
 
-/// Overlapping initials circles ("MK", "TL", "RS", "+16").
+/// Overlapping initials circles ("MK", "TL", "RS", "+16"). At the app's 12 sp floor a count like "+181" is wider
+/// than the circle's inside, and used to wrap onto a second line and be cut off: a circle whose text does not fit
+/// grows into a pill just wide enough for it, and the stack is as wide as its furthest edge.
 class AvatarStack extends StatelessWidget {
   const AvatarStack({super.key, required this.avatars, this.size = 25, this.step = 14, this.ring = 2, this.style});
 
@@ -107,19 +110,54 @@ class AvatarStack extends StatelessWidget {
   final double ring;
   final TextStyle? style;
 
+  /// How wide [a]'s text is.
+  double _textWidth(BuildContext context, EventAvatar a, TextStyle text) {
+    final painter = TextPainter(
+      text: TextSpan(text: a.initials, style: text),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final width = painter.width.ceilToDouble();
+    painter.dispose();
+    return width;
+  }
+
+  /// The width circle [a] needs: [size], or, when its text is wider than the inside, the text, the ring and 2 dp
+  /// of air on each side.
+  double _widthOf(double textWidth) => textWidth > size - 2 * ring ? textWidth + 2 * ring + 4 : size;
+
   @override
   Widget build(BuildContext context) {
     if (avatars.isEmpty) return const SizedBox.shrink();
+    final base = style ?? EventsText.avatarInitials;
+    final textWidths = [for (final a in avatars) _textWidth(context, a, base)];
+    final widths = [for (final w in textWidths) _widthOf(w)];
+    // Each circle sits [step] after the last, or further when that would cover the last one's letters: at the
+    // app's 12 sp the initials fill their circle, and the design's overlap cut the right half of each off.
+    final lefts = <double>[];
+    for (var i = 0; i < avatars.length; i++) {
+      if (i == 0) {
+        lefts.add(0);
+        continue;
+      }
+      final textRight = lefts[i - 1] + (widths[i - 1] + textWidths[i - 1]) / 2;
+      lefts.add(math.max(lefts[i - 1] + step, (textRight + 1).ceilToDouble()));
+    }
+    var total = 0.0;
+    for (final (i, w) in widths.indexed) {
+      if (lefts[i] + w > total) total = lefts[i] + w;
+    }
     return SizedBox(
-      width: size + step * (avatars.length - 1),
+      width: total,
       height: size,
       child: Stack(
         children: [
           for (final (i, a) in avatars.indexed)
             Positioned(
-              left: i * step,
+              left: lefts[i],
               child: Container(
-                width: size,
+                width: widths[i],
                 height: size,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
@@ -131,12 +169,15 @@ class AvatarStack extends StatelessWidget {
                     AvatarTone.slate => EventsColors.avatarSlate,
                     AvatarTone.count => EventsColors.avatarLavender,
                   },
-                  shape: BoxShape.circle,
+                  shape: widths[i] == size ? BoxShape.circle : BoxShape.rectangle,
+                  borderRadius: widths[i] == size ? null : BorderRadius.circular(size / 2),
                   border: Border.all(color: Colors.white, width: ring),
                 ),
                 child: Text(
                   a.initials,
-                  style: (style ?? EventsText.avatarInitials).copyWith(
+                  maxLines: 1,
+                  softWrap: false,
+                  style: base.copyWith(
                     color: switch (a.tone) {
                       AvatarTone.mint => EventsColors.mintInk,
                       AvatarTone.lavender => AppColors.onSurface,

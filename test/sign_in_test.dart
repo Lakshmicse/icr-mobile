@@ -8,7 +8,7 @@ import 'package:icr_mobile/core/auth/auth_controller.dart';
 import 'package:icr_mobile/core/auth/social_sign_in.dart';
 import 'package:icr_mobile/core/auth/token_store.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
-import 'package:icr_mobile/features/auth/auth_palette.dart';
+import 'package:icr_mobile/features/auth/linkedin_style.dart';
 import 'package:icr_mobile/features/auth/sign_in_screen.dart';
 import 'package:icr_mobile/features/auth/social_signup_screen.dart';
 import 'package:provider/provider.dart';
@@ -240,8 +240,38 @@ void main() {
       expect(find.bySemanticsLabel('Continue with LinkedIn'), findsOneWidget);
       expect(find.bySemanticsLabel('Continue with Google'), findsOneWidget);
       expect(find.text('Forgot password?'), findsOneWidget);
-      expect(find.text('Create an account'), findsOneWidget);
+      expect(find.text('Join now'), findsOneWidget);
     });
+
+    testWidgets(
+      'is laid out as LinkedIn is: heading, labelled fields, Show, or, full-width provider buttons, Join now',
+      (tester) async {
+        await _pump(tester, _harness());
+
+        // The heading, and the button that carries the same words.
+        expect(find.text('Sign in'), findsNWidgets(2));
+        expect(find.text('Stay updated on your professional world.'), findsOneWidget);
+        expect(find.text('Email'), findsOneWidget);
+        expect(find.text('Password'), findsOneWidget);
+        expect(find.text('Show'), findsOneWidget);
+        expect(find.text('or'), findsOneWidget);
+        expect(find.text('Continue with LinkedIn'), findsOneWidget);
+        expect(find.text('Continue with Google'), findsOneWidget);
+        expect(find.text('New to ICR? '), findsOneWidget);
+
+        // The pill and both provider buttons span the page, the providers one under the other.
+        final width = tester.getSize(find.byKey(const Key('signIn.submit'))).width;
+        expect(tester.getSize(find.byKey(const Key('signIn.linkedin'))).width, width);
+        expect(tester.getSize(find.byKey(const Key('signIn.google'))).width, width);
+        expect(
+          tester.getTopLeft(find.byKey(const Key('signIn.google'))).dy,
+          greaterThan(tester.getBottomLeft(find.byKey(const Key('signIn.linkedin'))).dy),
+        );
+
+        // "New to ICR? Join now" sits at the foot of the screen (390 x 844 dp).
+        expect(tester.getRect(find.byKey(const Key('signIn.create'))).bottom, greaterThan(844 - 70));
+      },
+    );
 
     testWidgets('a small phone with the keyboard up scrolls instead of overflowing', (tester) async {
       final h = _harness();
@@ -268,27 +298,28 @@ void main() {
 
   group('light and dark', () {
     for (final dark in [false, true]) {
-      testWidgets('the card follows the phone: ${dark ? 'dark' : 'light'}', (tester) async {
+      testWidgets('the page follows the phone: ${dark ? 'dark' : 'light'}', (tester) async {
         tester.platformDispatcher.platformBrightnessTestValue = dark ? Brightness.dark : Brightness.light;
         addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
         final h = _harness();
         await _pump(tester, h);
 
-        final palette = dark ? AuthPalette.dark : AuthPalette.light;
-        expect(tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor, palette.page);
-        final card = tester
+        final colors = dark ? LiColors.dark : LiColors.light;
+        expect(tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor, colors.page);
+        // LinkedIn's page has no card: nothing on it draws a filled, bordered box.
+        final boxes = tester
             .widgetList<DecoratedBox>(find.byType(DecoratedBox))
             .map((b) => b.decoration)
             .whereType<BoxDecoration>();
-        expect(card.any((d) => d.color == palette.card && d.border != null), isTrue);
-        // The logo that reads on the card.
+        expect(boxes.any((d) => d.color == colors.page && d.border != null), isFalse);
+        // The logo that reads on the page.
         final logo = tester.widget<Image>(find.byType(Image).first).image as AssetImage;
-        expect(logo.assetName, palette.logo);
+        expect(logo.assetName, colors.logo);
         expect(tester.takeException(), isNull);
       });
     }
 
-    testWidgets('typed text and labels are the palette ink in dark', (tester) async {
+    testWidgets('typed text is the page ink and labels the secondary grey, in dark', (tester) async {
       tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
       addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
       final h = _harness();
@@ -299,9 +330,12 @@ void main() {
       final typed = tester.widget<EditableText>(
         find.descendant(of: find.byKey(const Key('signIn.email')), matching: find.byType(EditableText)),
       );
-      expect(typed.style.color, AuthPalette.dark.text);
-      final label = tester.widget<Text>(find.text('Email'));
-      expect(label.style!.color, AuthPalette.dark.text);
+      expect(typed.style.color, LiColors.dark.ink);
+      // The label floats inside the field's decoration rather than being a Text of its own.
+      final field = tester.widget<TextField>(
+        find.descendant(of: find.byKey(const Key('signIn.email')), matching: find.byType(TextField)),
+      );
+      expect(field.decoration!.labelStyle!.color, LiColors.dark.secondary);
     });
   });
 

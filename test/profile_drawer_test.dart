@@ -9,7 +9,6 @@ import 'package:icr_mobile/core/auth/auth_controller.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/account/account_models.dart';
 import 'package:icr_mobile/features/account/account_repository.dart';
-import 'package:icr_mobile/features/account/companies/create_company_screen.dart';
 import 'package:icr_mobile/features/account/companies/my_companies_screen.dart';
 import 'package:icr_mobile/features/account/demo_account_repository.dart';
 import 'package:icr_mobile/features/profile/profile_drawer.dart';
@@ -279,8 +278,9 @@ void main() {
     const globe = MyCompany(companyId: 'co-globe', name: 'Global Infra Solutions', role: 'VENDOR');
     const harbor = MyCompany(companyId: 'co-harbor', name: 'Harbor Soft Services', role: 'BUYER');
 
-    DemoAccountRepository repoWith(List<MyCompany> list) =>
-        DemoAccountRepository(companies: MyCompanies(personalRole: 'PROFESSIONAL', companies: list));
+    DemoAccountRepository repoWith(List<MyCompany> list) => DemoAccountRepository(
+      companies: MyCompanies(personalRole: 'PROFESSIONAL', companies: list),
+    );
 
     testWidgets('three of five, the one acted for first and marked Active, and See all for the rest', (tester) async {
       final repo = repoWith(const [north, tech, globe, harbor, mine]);
@@ -366,16 +366,13 @@ void main() {
       expect(find.byKey(const ValueKey('drawer-company-active:co-mine')), findsOneWidget, reason: 'nothing changed');
     });
 
-    testWidgets('with no company the block offers only to create one', (tester) async {
+    testWidgets('with no company there is no block at all: no heading, no "Create a company" row', (tester) async {
       await pumpDrawer(tester, companies: repoWith(const []), withApiClient: true);
-      expect(find.text('YOUR COMPANIES'), findsOneWidget);
-      expect(find.text('Create a company'), findsOneWidget);
+      expect(find.text('YOUR COMPANIES'), findsNothing);
+      expect(find.text('Create a company'), findsNothing);
+      expect(find.byKey(const ValueKey('drawer-company-create')), findsNothing);
       expect(find.byKey(const ValueKey('drawer-companies-all')), findsNothing);
-
-      await tester.tap(find.byKey(const ValueKey('drawer-company-create')));
-      await tester.pumpAndSettle();
-      expect(find.byType(CreateCompanyScreen), findsOneWidget);
-      expect(find.byType(ProfileDrawer), findsNothing);
+      expect(find.text('Regional Chapters'), findsOneWidget, reason: 'the rest of the menu is untouched');
     });
 
     testWidgets('while it reads, two grey rows; a failed read draws nothing and never an error', (tester) async {
@@ -388,7 +385,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('My Own Co'), findsOneWidget);
 
-      final failing = repoWith(const [mine])..failures['myCompanies'] = ApiError('The server is busy.', statusCode: 503);
+      final failing = repoWith(const [mine])
+        ..failures['myCompanies'] = ApiError('The server is busy.', statusCode: 503);
       await pumpDrawer(tester, companies: failing);
       expect(find.text('YOUR COMPANIES'), findsNothing);
       expect(find.text('The server is busy.'), findsNothing);
@@ -433,7 +431,11 @@ void main() {
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       await pumpDrawer(tester, companies: repoWith(const [mine, north, tech, globe]));
       expect(tester.takeException(), isNull);
-      await tester.scrollUntilVisible(find.text('Certificates & Badges'), 120, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.text('Certificates & Badges'),
+        120,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Certificates & Badges'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });

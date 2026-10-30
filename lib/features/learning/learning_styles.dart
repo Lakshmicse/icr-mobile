@@ -82,6 +82,10 @@ class LearningText {
   static final tileEmpty = AppText.plexSans(9.75, FontWeight.w500, AppColors.inkMuted, lineHeight: 14);
   static final seeMore = AppText.plexSans(11.5, FontWeight.w700, AppColors.primary, lineHeight: 14);
   static final primaryButton = AppText.plexSans(10.5, FontWeight.w700, Colors.white, lineHeight: 14);
+
+  /// The line that says what the member's place is, and "Withdraw" under it.
+  static final placeNote = AppText.plexSans(10, FontWeight.w500, AppColors.onSurface, lineHeight: 15);
+  static final withdraw = AppText.plexSans(10.5, FontWeight.w700, AppColors.error, lineHeight: 14);
   static final outlineButton = AppText.plexSans(9.8, FontWeight.w700, AppColors.onSurface, lineHeight: 14);
 
   // The sections.

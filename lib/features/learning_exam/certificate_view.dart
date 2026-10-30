@@ -209,8 +209,11 @@ class CertificateActions extends StatelessWidget {
             icon: LucideIcons.download,
             quiet: true,
             height: 44,
-            onPressed: () =>
-                ExamServices.openUrl(context, AppConfig.sitePage('/learning/certificates/${c.paperSlug ?? c.paperId}')),
+            // The website draws the PDF; the app's own certificate sheet is the page this would otherwise open.
+            onPressed: () => ExamServices.openExternal(
+              context,
+              AppConfig.sitePage('/learning/certificates/${c.paperSlug ?? c.paperId}'),
+            ),
           ),
           const SizedBox(height: 10),
           ExamButton(

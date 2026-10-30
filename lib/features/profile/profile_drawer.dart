@@ -18,7 +18,6 @@ import '../account/account_repository.dart';
 import '../account/api_account_repository.dart';
 import '../account/companies/companies_controller.dart';
 import '../account/companies/company_words.dart';
-import '../account/companies/create_company_screen.dart';
 import '../account/companies/my_companies_screen.dart';
 import '../account/demo_account_repository.dart';
 import '../account/widgets/account_kit.dart' show CompanyLogo;
@@ -182,12 +181,6 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
     if (mounted) unawaited(_companies?.load(refresh: true));
   }
 
-  Future<void> _createCompany() async {
-    Navigator.of(context).pop();
-    await AppShell.push<void>(context, (_) => CreateCompanyScreen(onSessionChanged: widget.onSessionChanged));
-    if (mounted) unawaited(_companies?.load(refresh: true));
-  }
-
   @override
   Widget build(BuildContext context) {
     final data = context.watch<ProfileDrawerController>().data;
@@ -220,7 +213,6 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                               controller: _companies!,
                               onTapCompany: _tapCompany,
                               onSeeAll: _seeAllCompanies,
-                              onCreate: _createCompany,
                             ),
                           _AssociationRow(
                             icon: Image.asset('assets/images/icons/chapters.png', width: 48, height: 48),
@@ -425,20 +417,15 @@ class _Header extends StatelessWidget {
 }
 
 /// "Your companies": up to three of the companies the member belongs to, the one they are acting for marked, each
-/// a tap away from its page (or from becoming the one they act for). A member with none is offered the way to
-/// create one; a read that failed draws nothing at all, never an error in the menu.
+/// a tap away from its page (or from becoming the one they act for). A member with none sees no block at all (no
+/// "Create a company" row: the owner's call, 28 Oct 2026), and neither does a read that failed, never an error in
+/// the menu.
 class _CompaniesBlock extends StatelessWidget {
-  const _CompaniesBlock({
-    required this.controller,
-    required this.onTapCompany,
-    required this.onSeeAll,
-    required this.onCreate,
-  });
+  const _CompaniesBlock({required this.controller, required this.onTapCompany, required this.onSeeAll});
 
   final CompaniesController controller;
   final ValueChanged<MyCompany> onTapCompany;
   final VoidCallback onSeeAll;
-  final VoidCallback onCreate;
 
   @override
   Widget build(BuildContext context) {
@@ -454,6 +441,8 @@ class _CompaniesBlock extends StatelessWidget {
         }
         // ICR staff accounts are personal: they have no companies and cannot create one.
         if (!data.canJoinCompanies) return const SizedBox.shrink();
+        // No company: nothing to list, so no heading and no way to create one here.
+        if (data.companies.isEmpty) return const SizedBox.shrink();
         final all = [...data.companies]..sort((a, b) => (b.active ? 1 : 0) - (a.active ? 1 : 0));
         final shown = all.take(ProfileDrawer.companiesShown).toList();
         return _CompaniesFrame(
@@ -461,7 +450,6 @@ class _CompaniesBlock extends StatelessWidget {
           children: [
             for (final c in shown)
               _CompanyRow(company: c, switching: controller.switching == c.companyId, onTap: () => onTapCompany(c)),
-            if (all.isEmpty) _CreateRow(onTap: onCreate),
           ],
         );
       },
@@ -564,53 +552,6 @@ class _CompanyRow extends StatelessWidget {
                 ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CreateRow extends StatelessWidget {
-  const _CreateRow({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      key: const ValueKey('drawer-company-create'),
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8.8),
-                border: Border.all(color: AppColors.primary),
-              ),
-              child: const Icon(Icons.add, size: 22, color: AppColors.primary),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Create a company', style: AppText.workSans(16, FontWeight.w600, AppColors.primary)),
-                  Text(
-                    'Buy, sell or hire for your organisation',
-                    style: AppText.workSans(12, FontWeight.w400, const Color(0x99000000)),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );

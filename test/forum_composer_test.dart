@@ -5,6 +5,7 @@ import 'package:icr_mobile/features/feed/feed_models.dart';
 import 'package:icr_mobile/features/forum/composer_controller.dart';
 import 'package:icr_mobile/features/forum/forum_models.dart';
 import 'package:icr_mobile/features/forum/new_thread_screen.dart';
+import 'package:icr_mobile/features/forum/rich_text_controller.dart';
 
 import 'helpers/feed_fixtures.dart';
 import 'helpers/fonts.dart';
@@ -287,47 +288,127 @@ void main() {
     }
 
     Future<void> post(WidgetTester tester) async {
-      await tester.ensureVisible(key('composer-send'));
+      await tester.ensureVisible(key('composer-bar-send'));
       await tester.pumpAndSettle();
-      await tester.tap(key('composer-send'));
+      await tester.tap(key('composer-bar-send'));
       await settle(tester);
     }
 
     testWidgets(
-      'it opens on a new discussion: the two kinds, the topic, the title, the details, the tags and the file',
+      'it opens as the website\'s Create a post form: the two kinds, Category, Sub-category, Title, Details, Tags, file',
       (tester) async {
         await pumpComposer(tester);
         expect(find.text('New discussion'), findsOneWidget);
-        expect(find.text('Discussion'), findsWidgets);
+        // The two kinds, side by side as the composer first drew them.
+        expect(find.text('Discussion'), findsOneWidget);
+        expect(find.text('Ask or share'), findsOneWidget);
         expect(find.text('Poll'), findsOneWidget);
-        expect(find.text('Choose a topic'), findsWidgets);
+        expect(find.text('Let people vote'), findsOneWidget);
+        final discussionBox = tester.getRect(key('mode:discussion'));
+        final pollBox = tester.getRect(key('mode:poll'));
+        expect(discussionBox.top, pollBox.top);
+        expect(pollBox.left, greaterThan(discussionBox.right));
+        // Category (required) and Sub-category are both on the form; the fields carry the words, no section headers.
+        expect(find.text('Category *'), findsOneWidget);
+        expect(find.text('Sub-category (optional)'), findsOneWidget);
+        expect(find.text('Title'), findsOneWidget);
+        expect(find.text('Details'), findsOneWidget);
+        expect(find.text('Tags'), findsOneWidget);
+        for (final gone in [
+          'TOPIC',
+          'YOUR POST',
+          'YOUR POLL',
+          'Your Post',
+          'Poll Question',
+          'File',
+          'Choose a topic',
+        ]) {
+          expect(find.text(gone), findsNothing, reason: gone);
+        }
         expect(key('composer-title'), findsOneWidget);
         expect(key('composer-body'), findsOneWidget);
         expect(key('composer-tag'), findsOneWidget);
-        expect(find.text('Attach a photo or PDF'), findsOneWidget);
-        expect(find.text('Post to the community'), findsOneWidget);
+        expect(find.text('Attach a file'), findsOneWidget);
+        // The website's helper lines.
+        expect(find.text('Specific titles get answered. "Pricing question" does not.'), findsOneWidget);
+        expect(find.text('Tags are how someone finds this in six months.'), findsOneWidget);
+        expect(
+          find.text(
+            'Give enough context that someone can actually help — portfolio size, what you have tried, what constraints you are under.',
+          ),
+          findsOneWidget,
+        );
+        // The editor: its toolbar and its count.
+        for (final tool in ['bold', 'italic', 'heading', 'bullets', 'numbers', 'link']) {
+          expect(key('rich-$tool'), findsOneWidget, reason: tool);
+        }
+        expect(find.text('0 / 20,000'), findsOneWidget);
+        // One Post, in the title bar (LinkedIn's); no second button under the form.
+        expect(find.descendant(of: key('composer-bar-send'), matching: find.text('Post')), findsOneWidget);
+        expect(find.text('Post to the community'), findsNothing);
+        expect(find.text('Cancel'), findsNothing);
+        expect(key('composer-send'), findsNothing);
         expect(api.count('GET', '/categories/tree'), 1);
         expect(api.count('GET', '/forum/me'), 1);
       },
     );
 
-    testWidgets('a topic is chosen from the list, which can be searched; a sub-topic appears when the topic has some', (
+    testWidgets('a category is chosen from the list, which can be searched; the sub-category waits for one', (
       tester,
     ) async {
       await pumpComposer(tester);
-      expect(key('composer-subtopic'), findsNothing);
+      // Always on the form, greyed until there is a category to pick under.
+      bool subEnabled() => tester.widget<InkWell>(key('composer-subtopic')).onTap != null;
+      expect(key('composer-subtopic'), findsOneWidget);
+      expect(subEnabled(), isFalse);
       await chooseTopic(tester, 'TECHNOLOGY_INNOVATION');
       expect(find.text('Technology'), findsOneWidget);
-      expect(key('composer-subtopic'), findsOneWidget);
+      expect(subEnabled(), isTrue);
       await tester.tap(key('composer-subtopic'));
       await tester.pumpAndSettle();
+      expect(find.text('Sub-category (optional)'), findsWidgets);
       await tester.tap(key('topic-option:BMS'));
       await tester.pumpAndSettle();
       expect(find.text('Building Management Systems'), findsOneWidget);
-      // Another topic drops the sub-topic; one with none shows no row.
+      // Another category drops the sub-category; one with none leaves the field greyed.
       await chooseTopic(tester, 'SUSTAINABILITY_ESG');
-      expect(key('composer-subtopic'), findsNothing);
+      expect(find.text('Building Management Systems'), findsNothing);
+      expect(subEnabled(), isFalse);
       expect(find.text('ESG & Sustainability'), findsOneWidget);
+    });
+
+    testWidgets('the Category box searches the whole tree, as the website\'s does: a sub-category hit fills both', (
+      tester,
+    ) async {
+      await pumpComposer(tester);
+      await tester.tap(key('composer-topic'));
+      await tester.pumpAndSettle();
+      // Empty: the categories alone, no sub-categories listed yet.
+      expect(find.text('Type a category or sub-category'), findsOneWidget);
+      expect(key('topic-option:TECHNOLOGY_INNOVATION'), findsOneWidget);
+      expect(key('topic-hit:TECHNOLOGY_INNOVATION:BMS'), findsNothing);
+      // A word from a sub-category's name finds it, headed by its category.
+      await tester.enterText(key('topic-search'), 'building manage');
+      await tester.pumpAndSettle();
+      expect(key('topic-group:TECHNOLOGY_INNOVATION'), findsOneWidget);
+      expect(key('topic-hit:TECHNOLOGY_INNOVATION:BMS'), findsOneWidget);
+      expect(key('topic-option:TECHNOLOGY_INNOVATION'), findsNothing);
+      // A word from the category's own name lists the category and what is under it.
+      await tester.enterText(key('topic-search'), 'techno');
+      await tester.pumpAndSettle();
+      expect(key('topic-option:TECHNOLOGY_INNOVATION'), findsOneWidget);
+      expect(key('topic-hit:TECHNOLOGY_INNOVATION:BMS'), findsOneWidget);
+      // Nothing matching says so.
+      await tester.enterText(key('topic-search'), 'zzzz');
+      await tester.pumpAndSettle();
+      expect(find.text('No matching categories'), findsOneWidget);
+      // Picking the hit fills the category and the sub-category.
+      await tester.enterText(key('topic-search'), 'building');
+      await tester.pumpAndSettle();
+      await tester.tap(key('topic-hit:TECHNOLOGY_INNOVATION:BMS'));
+      await tester.pumpAndSettle();
+      expect(find.text('Technology'), findsOneWidget);
+      expect(find.text('Building Management Systems'), findsOneWidget);
     });
 
     testWidgets('the page the composer was opened from presets its topic', (tester) async {
@@ -339,9 +420,12 @@ void main() {
       await pumpComposer(tester);
       await post(tester);
       expect(api.count('POST', '/forum/threads'), 0);
-      expect(find.text('Choose the topic this belongs to.'), findsWidgets);
-      expect(find.text('The title needs at least 8 characters.'), findsWidgets);
-      expect(find.text('Add some details so people know what you mean.'), findsWidgets);
+      // The fields turn red and ONE message says what is first missing, under the form: no line under each field.
+      // (The website's helper lines stay grey under their fields.)
+      expect(find.text('Choose the topic this belongs to.'), findsOneWidget);
+      expect(key('composer-problem'), findsOneWidget);
+      expect(find.text('The title needs at least 8 characters.'), findsNothing);
+      expect(find.text('Add some details so people know what you mean.'), findsNothing);
       expect(holder.closed, isFalse);
     });
 
@@ -395,7 +479,24 @@ void main() {
       await tester.tap(key('mode:poll'));
       await tester.pumpAndSettle();
       expect(find.text('New poll'), findsOneWidget);
+      // The poll is the same form: the website's words for a poll, in the same fields and the same type.
+      expect(find.text('Poll question'), findsOneWidget);
+      expect(find.text('Title'), findsNothing);
+      expect(find.text('One clear question. Members pick one option.'), findsOneWidget);
+      expect(find.text('Category *'), findsOneWidget);
+      expect(find.text('Sub-category (optional)'), findsOneWidget);
+      expect(find.text('Options'), findsOneWidget);
+      expect(find.text('2 of 4'), findsOneWidget);
+      expect(find.text('Add option'), findsOneWidget);
+      expect(find.text('Members pick one; results show once they have voted.'), findsOneWidget);
       expect(find.text('Details (optional)'), findsOneWidget);
+      expect(
+        find.text('Add context for voters — why you are asking, and anything the options leave out.'),
+        findsOneWidget,
+      );
+      expect(find.text('Option 1'), findsOneWidget);
+      expect(find.text('Option 2'), findsOneWidget);
+      expect(key('rich-bold'), findsOneWidget, reason: 'the poll has the same editor');
       expect(key('poll-field:0'), findsOneWidget);
       expect(key('poll-field:1'), findsOneWidget);
       expect(key('poll-remove:0'), findsNothing, reason: 'two is the least');
@@ -404,6 +505,7 @@ void main() {
       await tester.pump();
       await tester.tap(key('poll-add'));
       await tester.pump();
+      expect(find.text('4 of 4'), findsOneWidget);
       expect(key('poll-field:3'), findsOneWidget);
       expect(key('poll-add'), findsNothing, reason: 'four is the most');
       await tester.tap(key('poll-remove:3'));
@@ -415,12 +517,14 @@ void main() {
       await tester.enterText(key('poll-field:0'), 'Chillers');
       await tester.enterText(key('poll-field:1'), 'chillers');
       await tester.pump();
-      expect(key('poll-problem'), findsOneWidget);
+      // No line under the options while typing; sending says it, once, under the form.
+      expect(key('poll-problem'), findsNothing);
+      await post(tester);
+      expect(api.count('POST', '/forum/threads'), 0);
       expect(find.text('Two options read the same: make each one different.'), findsOneWidget);
       await tester.enterText(key('poll-field:1'), 'Split units');
       await tester.enterText(key('poll-field:2'), 'VRF');
       await tester.pump();
-      expect(key('poll-problem'), findsNothing);
       await post(tester);
       expect(api.bodyOf('POST', '/forum/threads'), {
         'topicCategory': 'PROCUREMENT_SUPPLY_CHAIN',
@@ -474,11 +578,11 @@ void main() {
     testWidgets('topics that fail to load say so and Try again reads them', (tester) async {
       final refusals = <String, (int, String)>{'GET /categories/tree': (500, 'No taxonomy')};
       await pumpComposer(tester, custom: routes(refusals: refusals));
-      expect(find.textContaining("Couldn't load the topics"), findsOneWidget);
+      expect(find.textContaining("Couldn't load the categories"), findsOneWidget);
       refusals.clear();
       await tester.tap(key('topics-retry'));
       await settle(tester);
-      expect(find.text('Choose a topic'), findsWidgets);
+      expect(find.text('Category *'), findsOneWidget);
       expect(key('composer-topic'), findsOneWidget);
     });
 
@@ -501,7 +605,7 @@ void main() {
       expect(picks, 1);
       expect(find.text('site.png · 2 KB'), findsOneWidget);
       expect(api.to('POST', '/uploads').single.queryParameters, {'purpose': 'forum-attachment'});
-      expect(find.text('Replace the file'), findsOneWidget);
+      expect(find.text('Replace attachment'), findsOneWidget);
       await tester.tap(key('attachment-remove'));
       await tester.pump();
       expect(key('composer-file'), findsNothing);
@@ -536,6 +640,122 @@ void main() {
       expect(snack('is not an accepted file type'), findsOneWidget);
       expect(key('composer-file'), findsNothing);
       expect(answer.name, 'notes.docx');
+    });
+
+    testWidgets('the toolbar formats what is written, and the HTML sent carries it', (tester) async {
+      await pumpComposer(tester);
+      await chooseTopic(tester, 'PROCUREMENT_SUPPLY_CHAIN');
+      await fill(tester, title: 'How do you price retrofits?');
+      final body = tester.widget<TextField>(key('composer-body')).controller! as RichTextController;
+      await tester.enterText(key('composer-body'), 'Heading line\nPlan the retrofit\nfirst\nsecond\none\ntwo');
+      await tester.pump();
+
+      Future<void> select(String from, String to) async {
+        final a = body.text.indexOf(from);
+        final b = body.text.indexOf(to) + to.length;
+        body.selection = TextSelection(baseOffset: a, extentOffset: b);
+        await tester.pump();
+      }
+
+      Future<void> tool(String name) async {
+        await tester.ensureVisible(key('rich-$name'));
+        await tester.tap(key('rich-$name'));
+        await tester.pump();
+      }
+
+      await select('Heading', 'Heading');
+      await tool('heading');
+      expect(body.isHeading, isTrue);
+      await select('retrofit', 'retrofit');
+      await tool('bold');
+      expect(body.isBold, isTrue);
+      await select('Plan', 'Plan');
+      await tool('italic');
+      expect(body.isItalic, isTrue);
+      await select('first', 'second');
+      await tool('bullets');
+      expect(body.isBulleted, isTrue);
+      await select('one', 'two');
+      await tool('numbers');
+      expect(body.isNumbered, isTrue);
+      expect(body.text, 'Heading line\nPlan the retrofit\n• first\n• second\n1. one\n2. two');
+      // The link: the button waits for words, then asks for the address (https:// is added).
+      body.selection = TextSelection.collapsed(offset: body.text.indexOf('Plan'));
+      await tester.pump();
+      await select('the', 'the');
+      await tool('link');
+      await tester.pumpAndSettle();
+      await tester.enterText(key('link-url'), 'icr.org.in/guide');
+      await tester.pump();
+      await tester.tap(key('link-apply'));
+      await tester.pumpAndSettle();
+      expect(body.currentLink, 'https://icr.org.in/guide');
+      // The count is the words alone.
+      expect(find.text('${body.plainLength} / 20,000'), findsOneWidget);
+
+      await post(tester);
+      expect(
+        api.bodyOf('POST', '/forum/threads')['bodyHtml'],
+        '<h3>Heading line</h3><p><em>Plan</em> <a href="https://icr.org.in/guide">the</a> <strong>retrofit</strong></p>'
+        '<ul><li>first</li><li>second</li></ul><ol><li>one</li><li>two</li></ol>',
+      );
+    });
+
+    testWidgets('the link button waits for words to link; a bad address cannot be applied', (tester) async {
+      await pumpComposer(tester);
+      final body = tester.widget<TextField>(key('composer-body')).controller! as RichTextController;
+      expect(tester.widget<InkResponse>(key('rich-link')).onTap, isNull, reason: 'nothing selected');
+      await tester.enterText(key('composer-body'), 'Read this');
+      body.selection = const TextSelection(baseOffset: 5, extentOffset: 9);
+      await tester.pump();
+      expect(tester.widget<InkResponse>(key('rich-link')).onTap, isNotNull);
+      await tester.ensureVisible(key('rich-link'));
+      await tester.tap(key('rich-link'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<FilledButton>(key('link-apply')).onPressed, isNull, reason: 'no address yet');
+      await tester.enterText(key('link-url'), 'not an address');
+      await tester.pump();
+      expect(tester.widget<FilledButton>(key('link-apply')).onPressed, isNull);
+      await tester.enterText(key('link-url'), 'javascript:alert(1)');
+      await tester.pump();
+      expect(tester.widget<FilledButton>(key('link-apply')).onPressed, isNull);
+      await tester.enterText(key('link-url'), 'mailto:ops@icr.org.in');
+      await tester.pump();
+      await tester.tap(key('link-apply'));
+      await tester.pumpAndSettle();
+      expect(body.doc.toHtml(), '<p>Read <a href="mailto:ops@icr.org.in">this</a></p>');
+    });
+
+    testWidgets('a post and a poll are one form in one type', (tester) async {
+      await pumpComposer(tester);
+      final post = tester.widget<TextField>(key('composer-title')).style!;
+      expect(post.fontSize, 16);
+      expect(post.fontFamily, 'Roboto');
+      await tester.tap(key('mode:poll'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(key('composer-title')).style, post);
+      expect(tester.widget<TextField>(key('poll-field:0')).style, post);
+      expect(tester.widget<TextField>(key('composer-body')).style, post);
+      expect(tester.widget<TextField>(key('composer-tag')).style, post);
+    });
+
+    testWidgets('a poll\'s details are optional and rich: they go as HTML beside the options', (tester) async {
+      await pumpComposer(tester, mode: ComposerMode.poll);
+      await chooseTopic(tester, 'PROCUREMENT_SUPPLY_CHAIN');
+      await fill(tester, title: 'What do you use?');
+      await tester.enterText(key('poll-field:0'), 'Chillers');
+      await tester.enterText(key('poll-field:1'), 'VRF');
+      final body = tester.widget<TextField>(key('composer-body')).controller! as RichTextController;
+      await tester.enterText(key('composer-body'), 'Context <for> voters');
+      body.selection = TextSelection(baseOffset: 0, extentOffset: body.text.length);
+      await tester.pump();
+      await tester.ensureVisible(key('rich-bold'));
+      await tester.tap(key('rich-bold'));
+      await tester.pump();
+      await post(tester);
+      final sent = api.bodyOf('POST', '/forum/threads');
+      expect(sent['bodyHtml'], '<p><strong>Context &lt;for&gt; voters</strong></p>');
+      expect(sent['pollOptions'], ['Chillers', 'VRF']);
     });
 
     testWidgets('leaving with something written asks first; leaving a blank form does not', (tester) async {
@@ -634,7 +854,8 @@ void main() {
       expect(find.text('#hvac'), findsOneWidget);
       expect(find.text('Technology'), findsOneWidget);
       expect(key('mode:poll'), findsNothing);
-      expect(find.text('Save changes'), findsOneWidget);
+      expect(find.descendant(of: key('composer-bar-send'), matching: find.text('Save')), findsOneWidget);
+      expect(find.text('Save changes'), findsNothing);
     });
 
     testWidgets('a changed title alone sends the title and tags, no body, no topic, and keeps the kind', (
@@ -643,8 +864,8 @@ void main() {
       await pumpEdit(tester, existing());
       await tester.enterText(key('composer-title'), 'A better title for it');
       await tester.pump();
-      await tester.ensureVisible(key('composer-send'));
-      await tester.tap(key('composer-send'));
+      await tester.ensureVisible(key('composer-bar-send'));
+      await tester.tap(key('composer-bar-send'));
       await settle(tester);
       final body = api.bodyOf('PATCH', '/forum/threads/t-q');
       expect(body, {
@@ -656,29 +877,73 @@ void main() {
       expect(saved, isNotNull);
     });
 
-    testWidgets('changing the words sends them, and a discussion with website formatting says it will be replaced', (
+    testWidgets('a post with website formatting opens with its formatting, sends it back when the words change', (
       tester,
     ) async {
-      await pumpEdit(tester, existing());
+      await pumpEdit(
+        tester,
+        existing(
+          html:
+              '<h3>Plan</h3><p>Words <strong>bold</strong> and <em>slanted</em>, see <a href="https://icr.org.in/x">this</a></p>'
+              '<ul><li>BMS</li><li>BACnet</li></ul><ol><li>one</li><li>two</li></ol>',
+        ),
+      );
+      final body = tester.widget<TextField>(key('composer-body')).controller! as RichTextController;
+      expect(body.text, 'Plan\nWords bold and slanted, see this\n• BMS\n• BACnet\n1. one\n2. two');
+      // No "this will replace the formatting" warning: the editor holds all of it.
       expect(key('composer-rich-note'), findsNothing);
-      await tester.enterText(key('composer-body'), 'New words only');
+      // Add a word at the end of the paragraph: the rest keeps its formatting.
+      final at = body.text.indexOf('this') + 4;
+      body.value = TextEditingValue(
+        text: body.text.replaceRange(at, at, '!'),
+        selection: TextSelection.collapsed(offset: at + 1),
+      );
       await tester.pump();
-      expect(key('composer-rich-note'), findsOneWidget);
-      await tester.ensureVisible(key('composer-send'));
-      await tester.tap(key('composer-send'));
+      expect(key('composer-rich-note'), findsNothing);
+      await tester.ensureVisible(key('composer-bar-send'));
+      await tester.tap(key('composer-bar-send'));
       await settle(tester);
-      expect(api.bodyOf('PATCH', '/forum/threads/t-q')['bodyHtml'], '<p>New words only</p>');
+      expect(
+        api.bodyOf('PATCH', '/forum/threads/t-q')['bodyHtml'],
+        '<h3>Plan</h3><p>Words <strong>bold</strong> and <em>slanted</em>, see <a href="https://icr.org.in/x">this</a>!</p>'
+        '<ul><li>BMS</li><li>BACnet</li></ul><ol><li>one</li><li>two</li></ol>',
+      );
     });
 
-    testWidgets('a plain discussion has no formatting note; the details cannot be emptied', (tester) async {
+    testWidgets(
+      'typing over all of the words sends the new ones; a quote or code from the website says it will flatten',
+      (tester) async {
+        await pumpEdit(tester, existing());
+        expect(key('composer-rich-note'), findsNothing);
+        await tester.enterText(key('composer-body'), 'New words only');
+        await tester.pump();
+        expect(key('composer-rich-note'), findsNothing);
+        await tester.ensureVisible(key('composer-bar-send'));
+        await tester.tap(key('composer-bar-send'));
+        await settle(tester);
+        expect(api.bodyOf('PATCH', '/forum/threads/t-q')['bodyHtml'], '<p>New words only</p>');
+      },
+    );
+
+    testWidgets('a quote from the website is shown as a paragraph, with a note once its words change', (tester) async {
+      await pumpEdit(tester, existing(html: '<blockquote>Said once</blockquote><p>And then</p>'));
+      expect(key('composer-rich-note'), findsNothing);
+      final body = tester.widget<TextField>(key('composer-body')).controller! as RichTextController;
+      expect(body.text, 'Said once\nAnd then');
+      await tester.enterText(key('composer-body'), 'Said once\nAnd then more');
+      await tester.pump();
+      expect(key('composer-rich-note'), findsOneWidget);
+    });
+
+    testWidgets('the details cannot be emptied on an edit', (tester) async {
       await pumpEdit(tester, existing(html: '<p>Plain words</p>'));
       await tester.enterText(key('composer-body'), 'Different');
       await tester.pump();
       expect(key('composer-rich-note'), findsNothing);
       await tester.enterText(key('composer-body'), '');
       await tester.pump();
-      await tester.ensureVisible(key('composer-send'));
-      await tester.tap(key('composer-send'));
+      await tester.ensureVisible(key('composer-bar-send'));
+      await tester.tap(key('composer-bar-send'));
       await settle(tester);
       expect(api.count('PATCH', '/forum/threads/t-q'), 0);
       expect(find.text('Add some details so people know what you mean.'), findsWidgets);
@@ -696,14 +961,14 @@ void main() {
       );
       expect(find.text('Old spec.pdf · 1 KB'), findsOneWidget);
       expect(key('attachment-remove'), findsNothing);
-      expect(find.text('Replace the file'), findsOneWidget);
+      expect(find.text('Replace attachment'), findsOneWidget);
       await tester.ensureVisible(key('composer-attach'));
       await tester.tap(key('composer-attach'));
       await settle(tester);
       expect(find.text('site.png · 2 KB'), findsOneWidget);
       expect(key('attachment-remove'), findsOneWidget, reason: 'a file chosen now can be taken back');
-      await tester.ensureVisible(key('composer-send'));
-      await tester.tap(key('composer-send'));
+      await tester.ensureVisible(key('composer-bar-send'));
+      await tester.tap(key('composer-bar-send'));
       await settle(tester);
       expect(api.bodyOf('PATCH', '/forum/threads/t-q')['uploadId'], 'abc123.png');
     });
@@ -719,8 +984,8 @@ void main() {
         );
         await tester.enterText(key('composer-title'), 'A better title for it');
         await tester.pump();
-        await tester.ensureVisible(key('composer-send'));
-        await tester.tap(key('composer-send'));
+        await tester.ensureVisible(key('composer-bar-send'));
+        await tester.tap(key('composer-bar-send'));
         await settle(tester);
         expect(api.bodyOf('PATCH', '/forum/threads/t-q').containsKey('uploadId'), isFalse);
       },

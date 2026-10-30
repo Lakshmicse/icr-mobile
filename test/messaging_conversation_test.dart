@@ -7,6 +7,7 @@ import 'package:icr_mobile/core/api/api_error.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/messaging/conversation_controller.dart';
 import 'package:icr_mobile/features/messaging/conversation_screen.dart';
+import 'package:icr_mobile/features/messaging/demo_messaging_repository.dart';
 import 'package:icr_mobile/features/messaging/messaging_launcher.dart';
 import 'package:icr_mobile/features/messaging/messaging_models.dart';
 import 'package:icr_mobile/features/messaging/widgets/composer.dart';
@@ -26,6 +27,8 @@ import 'messaging_fakes.dart';
 /// What the API does with each call: `test/live/messaging_live_test.dart`.
 void main() {
   setUpAll(loadAppFonts);
+  // Drafts live in memory for the life of the app: every test opens a thread with an empty box.
+  setUp(DraftStore.clearAll);
 
   /// A thread between Bharat and Sarah that spans three days, ends on Bharat's message and has been read.
   List<ChatMessage> sarahThread() => [
@@ -177,16 +180,21 @@ void main() {
 
   group('opening a conversation', () {
     testWidgets('reads the newest window, with the day, the time, whose it is and what it quotes', (tester) async {
-      await pump(tester);
+      // Tall enough that the oldest day's pill is in view (an item outside the viewport is not "on stage").
+      await pump(tester, size: const Size(390, 1100));
       expect(repo.calls, contains('thread sarah take=50 as=null'));
       // Header: who it is with, and "Direct" once the context is in.
       expect(find.text('Sarah Jenkins'), findsWidgets);
       expect(text('Thanks Bharat! I will send it across today.'), findsOneWidget);
       expect(text('Did you get a chance to look at it?'), findsOneWidget);
-      // Day separators.
-      expect(find.text('Today'), findsOneWidget);
-      expect(find.text('Yesterday'), findsOneWidget);
-      expect(find.text('Fri, 23 Oct'), findsOneWidget);
+      // Day separators, in the design's lower case.
+      expect(find.text('today, october 25'), findsOneWidget);
+      expect(find.text('yesterday, october 24'), findsOneWidget);
+      expect(find.text('friday, 23 october'), findsOneWidget);
+      // Their block carries their name and the time of its first message (s4, 14:20); mine carries its time
+      // (s6, 14:40); s2, on the Friday, was also sent at 14:40.
+      expect(find.text('2:20 PM'), findsOneWidget);
+      expect(find.text('2:40 PM'), findsNWidgets(2));
       // The reply's quote carries the quoted person and words.
       expect(find.text('Bharat Buyer'), findsOneWidget);
       expect(text('Hi Sarah, your post was a great read.'), findsNWidgets(2), reason: 'the message and the quote');
@@ -517,11 +525,18 @@ void main() {
 
     testWidgets('tapping a quote scrolls to the message it quotes', (tester) async {
       await pump(tester);
-      await tester.tap(
-        find.descendant(of: find.byType(MessageBubble), matching: text('Hi Sarah, your post was a great read.')).last,
+      // s2 quotes s1: the quote is the copy of s1's words inside s2's bubble.
+      final reply = find.ancestor(
+        of: text('Thanks Bharat! I will send it across today.'),
+        matching: find.byType(MessageBubble),
       );
+      final quote = find.descendant(of: reply, matching: text('Hi Sarah, your post was a great read.'));
+      expect(quote, findsOneWidget);
+      await tester.ensureVisible(quote);
+      await tester.tap(quote);
       await tester.pumpAndSettle();
       expect(find.byType(ConversationScreen), findsOneWidget);
+      expect(text('Hi Sarah, your post was a great read.'), findsNWidgets(2), reason: 'the message and its quote');
     });
 
     testWidgets('Copy text puts the words on the clipboard', (tester) async {
@@ -634,16 +649,28 @@ void main() {
     });
   });
 
-  group('"Seen"', () {
-    testWidgets('sits under your newest message the other person has read, in a one-to-one thread', (tester) async {
+  group('"Seen" (a green double tick under your message on a one-to-one thread)', () {
+    Finder tick(String key) => find.byKey(ValueKey(key));
+    Finder inNewest(String key) => find.descendant(of: find.byType(MessageBubble).first, matching: tick(key));
+
+    testWidgets('sits under your messages the other person has read, up to the one the API names', (tester) async {
       await pump(tester);
-      expect(find.text('Seen'), findsOneWidget);
-      expect(find.descendant(of: find.byType(MessageBubble).first, matching: find.text('Seen')), findsOneWidget);
+      // s1 and s6 are mine; the API says the other side has read up to s6, so both are read.
+      expect(tick('tick-seen'), findsNWidgets(2));
+      expect(tick('tick-sent'), findsNothing);
+      expect(inNewest('tick-seen'), findsOneWidget);
+      final semantics = tester.ensureSemantics();
+      await tester.pump();
+      expect(tester.getSemantics(inNewest('tick-seen')).label, contains('Seen'), reason: 'a screen reader says it');
+      semantics.dispose();
     });
 
-    testWidgets('is not drawn when the API gives none (a room, or nothing read yet)', (tester) async {
+    testWidgets('is not drawn when the API gives none (a room, or nothing read yet): a single grey tick', (
+      tester,
+    ) async {
       await pump(tester, repository: sarahRepo(seen: false));
-      expect(find.text('Seen'), findsNothing);
+      expect(tick('tick-seen'), findsNothing);
+      expect(tick('tick-sent'), findsNWidgets(2));
     });
 
     testWidgets('moves to the newer message when the other side reads it, on the next poll', (tester) async {
@@ -651,13 +678,13 @@ void main() {
       await pump(tester, repository: repository, poll: true);
       await typeAndSend(tester, 'See you then');
       await tester.pumpAndSettle();
-      expect(find.text('Seen'), findsOneWidget);
+      expect(inNewest('tick-sent'), findsOneWidget, reason: 'sent, not read yet');
       final sentId = repository.sent.isEmpty ? null : repository.threads['sarah']!.last.id;
       repository.seenAt['sarah'] = MessageSeen(messageId: sentId!, at: testNow.add(const Duration(minutes: 9)));
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
-      expect(find.text('Seen'), findsOneWidget);
-      expect(find.descendant(of: find.byType(MessageBubble).first, matching: find.text('Seen')), findsOneWidget);
+      expect(inNewest('tick-seen'), findsOneWidget);
+      expect(tick('tick-sent'), findsNothing);
     });
   });
 
@@ -836,6 +863,359 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Mark done'), findsOneWidget, reason: 'still open');
     });
+  });
+
+  group("the contact card and the design's pieces", () {
+    testWidgets("the card names who it is with, the company's role and city, and a verified company", (tester) async {
+      const company = ContextCompany(
+        id: 'co-cbre',
+        name: 'CBRE',
+        industry: 'Chair, Net-Zero Council',
+        city: 'Bengaluru',
+        verified: true,
+      );
+      await pump(
+        tester,
+        repository: sarahRepo(
+          context: const ConversationContext(kind: ConversationKind.direct, person: sarah, company: company),
+        ),
+      );
+      expect(find.text('Chair, Net-Zero Council • Bengaluru'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('verified-badge')),
+        findsWidgets,
+        reason: "the card's avatar and their messages'",
+      );
+      expect(find.text('Messages'), findsOneWidget, reason: 'the bar');
+    });
+
+    testWidgets('a company that is not verified draws no badge, and a thread with no company says what it is', (
+      tester,
+    ) async {
+      await pump(tester);
+      expect(find.byKey(const ValueKey('verified-badge')), findsNothing);
+      expect(find.text('Direct'), findsOneWidget);
+    });
+
+    testWidgets('a chevron opens what the thread is about, and a tap on it opens the record', (tester) async {
+      final repository = FakeMessagingRepository(
+        rows: [convo('rfq', kind: ConversationKind.requirement, counterpart: globalInfra)],
+        threads: {
+          'rfq': [msg('q1', 'rfq', priya, 'Happy to quote.', company: globalInfra, ago: 30)],
+        },
+        contexts: {
+          'rfq': ConversationContext(
+            kind: ConversationKind.requirement,
+            perspective: Perspective.owner,
+            company: const ContextCompany(id: 'co-gi', name: 'Global Infra Solutions'),
+            requirement: ContextRequirement(
+              id: 'r1',
+              title: 'Annual Housekeeping',
+              kind: 'RFQ',
+              status: 'PUBLISHED',
+              location: 'Chennai',
+              dueDate: testNow.add(const Duration(days: 9)),
+            ),
+          ),
+        },
+      );
+      await pump(tester, repository: repository, id: 'rfq');
+      expect(find.byKey(const ValueKey('context-strip')), findsNothing, reason: 'closed, as the design draws it');
+      await tester.tap(find.byKey(const ValueKey('thread-about')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('context-strip')), findsOneWidget);
+      expect(find.text('Annual Housekeeping'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('context-strip')));
+      await tester.pumpAndSettle();
+      expect(routed.single, startsWith('rfq.owner'));
+      await tester.tap(find.byKey(const ValueKey('thread-about')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('context-strip')), findsNothing);
+    });
+
+    testWidgets('a thread with nothing to say about itself has no chevron', (tester) async {
+      await pump(tester);
+      expect(find.byKey(const ValueKey('thread-about')), findsNothing);
+    });
+
+    testWidgets('a long press on the card opens the menu', (tester) async {
+      await pump(tester);
+      await tester.longPress(find.byKey(const ValueKey('thread-header')));
+      await tester.pumpAndSettle();
+      expect(find.text('Star conversation'), findsOneWidget);
+    });
+
+    testWidgets("a file is a card under the sender's bubble, with its size and kind", (tester) async {
+      final thread = [
+        msg('t1', 'sarah', sarah, 'Here is the rider.', ago: 30, attachment: 'Rider.docx', attachmentSize: 696320),
+      ];
+      await pump(tester, repository: sarahRepo(messages: thread, seen: false));
+      expect(find.text('Here is the rider.'), findsOneWidget);
+      expect(find.text('Rider.docx'), findsOneWidget);
+      expect(find.text('680 KB • DOCX'), findsOneWidget);
+    });
+  });
+
+  group('the booked session (the meeting card)', () {
+    final launched = <Uri>[];
+
+    setUp(launched.clear);
+
+    ConversationContext booked({DateTime? at, bool oneOnOne = true}) => ConversationContext(
+      kind: ConversationKind.consultation,
+      person: sarah,
+      consultation: ContextConsultation(
+        id: 'k1',
+        title: '1:1 Council Pre-Flight Sync',
+        buyer: true,
+        oneOnOne: oneOnOne,
+        scheduledAt: at ?? DateTime(2026, 10, 26, 16),
+      ),
+    );
+
+    testWidgets('is drawn after the last message: title, kind, when it runs, Add to Cal and Join Meeting', (
+      tester,
+    ) async {
+      await pump(tester, repository: sarahRepo(context: booked()));
+      expect(find.byKey(const ValueKey('meeting-card')), findsOneWidget);
+      expect(find.text('1:1 Council Pre-Flight Sync'), findsOneWidget);
+      expect(find.text('Consultation'), findsWidgets, reason: "the kind, with no topic of the thread's own");
+      expect(find.text('Tomorrow, 4:00 PM – 4:20 PM IST'), findsOneWidget);
+      expect(find.text('Add to Cal'), findsOneWidget);
+      expect(find.text('Join Meeting'), findsOneWidget);
+      // The session carries no join link: its line is left out.
+      expect(find.textContaining('Encrypted ICR Room'), findsNothing);
+      // After the last message: the card sits below the newest bubble.
+      final meeting = tester.getTopLeft(find.byKey(const ValueKey('meeting-card'))).dy;
+      final newest = tester.getBottomLeft(find.byType(MessageBubble).first).dy;
+      expect(meeting, greaterThan(newest));
+    });
+
+    testWidgets("names the thread's topic under the title when it has one", (tester) async {
+      final row = convo('sarah', contextLabel: 'WG-01 Charter Finalization');
+      final repository = FakeMessagingRepository(
+        rows: [row],
+        threads: {'sarah': sarahThread()},
+        contexts: {'sarah': booked()},
+      );
+      await pump(tester, repository: repository, initial: row);
+      expect(find.text('WG-01 Charter Finalization'), findsOneWidget);
+    });
+
+    testWidgets('a session already over, or with no time set, draws no card', (tester) async {
+      await pump(
+        tester,
+        repository: sarahRepo(context: booked(at: DateTime(2026, 10, 24, 16))),
+      );
+      expect(find.byKey(const ValueKey('meeting-card')), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+      await pump(tester);
+      expect(find.byKey(const ValueKey('meeting-card')), findsNothing);
+    });
+
+    testWidgets("a pairing's next session and a group session's next one are drawn too", (tester) async {
+      await pump(
+        tester,
+        repository: sarahRepo(
+          context: ConversationContext(
+            kind: ConversationKind.mentorship,
+            person: sarah,
+            mentorship: ContextMentorship(
+              id: 'm1',
+              mentee: true,
+              mentorProfileId: 'p1',
+              sessionsCount: 2,
+              topics: const ['Supply chain', 'Careers', 'Ignored'],
+              nextSessionAt: DateTime(2026, 10, 29, 9, 30),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Supply chain, Careers'), findsOneWidget);
+      expect(find.text('Thu, 29 Oct, 9:30 AM – 9:50 AM IST'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      await pump(
+        tester,
+        repository: sarahRepo(
+          context: ConversationContext(
+            kind: ConversationKind.groupSession,
+            groupSession: ContextGroupSession(
+              id: 'g1',
+              title: 'CXO Workplace Group',
+              nextAt: DateTime(2026, 10, 25, 17),
+            ),
+          ),
+        ),
+      );
+      expect(
+        find.descendant(of: find.byKey(const ValueKey('meeting-card')), matching: find.text('CXO Workplace Group')),
+        findsOneWidget,
+      );
+      expect(find.text('Today, 5:00 PM – 5:20 PM IST'), findsOneWidget);
+    });
+
+    testWidgets('Join Meeting, with no link on the session, opens its record through the router', (tester) async {
+      await pump(
+        tester,
+        repository: sarahRepo(
+          context: ConversationContext(
+            kind: ConversationKind.mentorship,
+            person: sarah,
+            mentorship: ContextMentorship(
+              id: 'm1',
+              mentee: true,
+              mentorProfileId: 'p1',
+              sessionsCount: 2,
+              nextSessionAt: DateTime(2026, 10, 26, 10),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('meeting-join')));
+      await tester.pumpAndSettle();
+      expect(routed.single, startsWith('mentorship.pairing'));
+    });
+
+    testWidgets('Add to Cal opens a Google Calendar "add event" page for the session, twenty minutes long', (
+      tester,
+    ) async {
+      final messenger = tester.binding.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(const MethodChannel('plugins.flutter.io/url_launcher'), (call) async {
+        if (call.method == 'launch') launched.add(Uri.parse((call.arguments as Map)['url'] as String));
+        return call.method == 'launch' || call.method == 'canLaunch';
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(const MethodChannel('plugins.flutter.io/url_launcher'), null),
+      );
+      await pump(tester, repository: sarahRepo(context: booked()));
+      await tester.tap(find.byKey(const ValueKey('meeting-calendar')));
+      await tester.pumpAndSettle();
+      final uri = launched.single;
+      expect(uri.host, 'calendar.google.com');
+      expect(uri.queryParameters['action'], 'TEMPLATE');
+      expect(uri.queryParameters['text'], '1:1 Council Pre-Flight Sync');
+      final dates = uri.queryParameters['dates']!.split('/');
+      expect(DateTime.parse(dates[1]).difference(DateTime.parse(dates[0])), const Duration(minutes: 20));
+      expect(DateTime.parse(dates[0]), DateTime(2026, 10, 26, 16).toUtc());
+    });
+
+    testWidgets("the Meet pill opens the thread's own record, and is not offered when there is none", (tester) async {
+      await pump(tester, repository: sarahRepo(context: booked()));
+      expect(find.byKey(const ValueKey('meet')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('meet')));
+      await tester.pumpAndSettle();
+      expect(routed.length + site.length, 1, reason: "the purchase's page, through the router or the website");
+      await tester.pumpWidget(const SizedBox());
+      await pump(tester);
+      expect(find.byKey(const ValueKey('meet')), findsNothing);
+    });
+  });
+
+  group("the composer's pills and the draft", () {
+    testWidgets('a hint, the paperclip, RFQ, the emoji pill, and no microphone', (tester) async {
+      await pump(tester);
+      expect(
+        find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText == 'Write a message or attach RFP...'),
+        findsOneWidget,
+      );
+      for (final key in ['attach', 'share-record', 'emoji', 'send']) {
+        expect(find.byKey(ValueKey(key)), findsOneWidget, reason: key);
+      }
+      expect(find.text('RFQ'), findsOneWidget);
+      expect(find.byTooltip('Record'), findsNothing);
+    });
+
+    testWidgets('the smiley offers common emoji and puts the one chosen in at the cursor', (tester) async {
+      await pump(tester);
+      await tester.enterText(composer(), 'abcd');
+      final field = tester.widget<TextField>(composer());
+      field.controller!.selection = const TextSelection.collapsed(offset: 2);
+      await tester.tap(find.byKey(const ValueKey('emoji')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('emoji-👍')));
+      await tester.pumpAndSettle();
+      expect(field.controller!.text, 'ab👍cd');
+      expect(field.controller!.selection.baseOffset, 4);
+    });
+
+    testWidgets('a draft is kept a second after typing stops, restored on reopening, and cleared by sending', (
+      tester,
+    ) async {
+      await pump(tester);
+      expect(find.text('Draft Saved'), findsNothing);
+      await tester.enterText(composer(), 'Half a thought');
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Draft Saved'), findsNothing, reason: 'still typing');
+      expect(DraftStore.of('sarah'), isNull);
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(find.text('Draft Saved'), findsOneWidget);
+      expect(DraftStore.of('sarah'), 'Half a thought');
+
+      // Leave and come back: the words are where they were.
+      await tester.pumpWidget(const SizedBox());
+      await pump(tester);
+      expect(tester.widget<TextField>(composer()).controller!.text, 'Half a thought');
+      expect(find.text('Draft Saved'), findsOneWidget);
+
+      await tester.tap(sendButton());
+      await tester.pumpAndSettle();
+      expect(repo.sent.single.body, 'Half a thought');
+      expect(DraftStore.of('sarah'), isNull);
+      expect(find.text('Draft Saved'), findsNothing);
+      expect(tester.widget<TextField>(composer()).controller!.text, isEmpty);
+    });
+
+    testWidgets('leaving at once keeps what was typed, and an emptied box keeps nothing', (tester) async {
+      await pump(tester);
+      await tester.enterText(composer(), 'Typed and left');
+      await tester.pumpWidget(const SizedBox());
+      expect(DraftStore.of('sarah'), 'Typed and left');
+
+      await pump(tester);
+      await tester.enterText(composer(), '');
+      await tester.pumpWidget(const SizedBox());
+      expect(DraftStore.of('sarah'), isNull);
+    });
+
+    testWidgets('a draft belongs to its conversation', (tester) async {
+      DraftStore.save('someone-else', 'not here');
+      await pump(tester);
+      expect(tester.widget<TextField>(composer()).controller!.text, isEmpty);
+    });
+  });
+
+  group("the designed thread (demo content) at a phone's width", () {
+    final day = DateTime(2026, 4, 16, 10, 50);
+
+    for (final width in [390.0, 360.0]) {
+      testWidgets('draws whole at ${width.toInt()} dp: no overflow, every piece of the design', (tester) async {
+        final demo = DemoMessagingRepository(now: day);
+        tester.view.physicalSize = Size(width, 1500);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: buildAppTheme(),
+            home: ConversationScreen(conversationId: 'c-radhika', repository: demo, poll: false, clock: () => day),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(find.text('Dr. Radhika Iyer'), findsWidgets);
+        expect(find.text('Chair, Net-Zero Council • Bengaluru'), findsOneWidget);
+        expect(find.text('today, april 16'), findsOneWidget);
+        expect(find.text('10:14 AM'), findsOneWidget);
+        expect(find.text('10:30 AM'), findsOneWidget);
+        expect(find.text('10:42 AM'), findsOneWidget);
+        expect(find.text('Standardized_Green_SLA_Rider_v2.4.docx'), findsOneWidget);
+        expect(find.text('680 KB • DOCX'), findsOneWidget);
+        expect(find.text('1:1 Council Pre-Flight Sync'), findsOneWidget);
+        expect(find.text('Tomorrow, 4:00 PM – 4:20 PM IST'), findsOneWidget);
+        expect(find.text('RFQ'), findsOneWidget);
+        expect(find.text('Meet'), findsOneWidget);
+        expect(find.byKey(const ValueKey('tick-seen')), findsOneWidget);
+      });
+    }
   });
 
   group('the conversation controller', () {

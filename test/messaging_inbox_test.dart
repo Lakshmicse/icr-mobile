@@ -3,15 +3,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/api/api_error.dart';
+import 'package:icr_mobile/core/theme/app_colors.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/messaging/conversation_screen.dart';
 import 'package:icr_mobile/features/messaging/inbox_controller.dart';
 import 'package:icr_mobile/features/messaging/inbox_screen.dart';
 import 'package:icr_mobile/features/messaging/messaging_models.dart';
 import 'package:icr_mobile/features/messaging/messaging_repository.dart';
+import 'package:icr_mobile/features/messaging/widgets/chat_avatar.dart';
+import 'package:icr_mobile/features/messaging/messaging_styles.dart';
 import 'package:icr_mobile/features/messaging/widgets/conversation_tile.dart';
 import 'package:icr_mobile/features/notifications/unread_counts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 
 import 'helpers/fonts.dart';
@@ -114,6 +118,12 @@ void main() {
   Finder inTile(String id, Finder f) => find.descendant(of: tile(id), matching: f);
   Finder chip(String key) => find.byKey(ValueKey(key));
 
+  /// Opens the sliders menu: "Mark all as read" and, for a company's people, the inbox switcher.
+  Future<void> openOptions(WidgetTester tester) async {
+    await tester.tap(find.byKey(const ValueKey('inbox-options')));
+    await tester.pumpAndSettle();
+  }
+
   /// The last listing the screen asked for.
   String lastList() => repo.calls.lastWhere((c) => c.startsWith('conversations'));
 
@@ -121,10 +131,10 @@ void main() {
     testWidgets('each says who it is with, why it exists, the last word and when', (tester) async {
       await pump(tester);
 
-      // A person: their name, "Direct", the preview, 2:25 pm, and the two waiting.
+      // A person: their name, "Direct", the preview, 2:25 PM, and the two waiting.
       expect(inTile('sarah', find.text('Sarah Jenkins')), findsOneWidget);
       expect(inTile('sarah', find.text('Did you get a chance to look at it?')), findsOneWidget);
-      expect(inTile('sarah', find.text('2:25 pm')), findsOneWidget);
+      expect(inTile('sarah', find.text('2:25 PM')), findsOneWidget);
       expect(inTile('sarah', find.text('2')), findsOneWidget, reason: 'the unread count');
       expect(inTile('sarah', find.text('Direct')), findsOneWidget);
 
@@ -133,7 +143,7 @@ void main() {
       expect(inTile('company', find.text('Company')), findsOneWidget);
       expect(inTile('company', find.text('We would like to set up an intro call.')), findsOneWidget);
 
-      // A requirement: the company on the other side, the badge, the requirement beside it.
+      // A requirement: the company on the other side, why it exists under it, the requirement as its chip.
       expect(inTile('rfq', find.text('Bengaluru Care 101')), findsOneWidget);
       expect(inTile('rfq', find.text('Requirement')), findsOneWidget);
       expect(inTile('rfq', find.text('Annual Housekeeping Contract')), findsOneWidget);
@@ -152,20 +162,164 @@ void main() {
       expect(inTile('empty', find.text('No messages yet')), findsOneWidget);
     });
 
-    testWidgets('unread is said by weight, a dot and a count, and read out as one sentence', (tester) async {
+    testWidgets('unread is said by a tint and bar, a bold time and a count, and read out as one sentence', (
+      tester,
+    ) async {
       final semantics = tester.ensureSemantics();
       await pump(tester);
       expect(
         tester.getSemantics(tile('sarah')).label,
-        'Sarah Jenkins, 2 unread, Direct, Did you get a chance to look at it?, 2:25 pm',
+        'Sarah Jenkins, 2 unread, Direct, Did you get a chance to look at it?, 2:25 PM',
       );
       expect(tester.getSemantics(tile('company')).label, startsWith('Global Infra Solutions, 1 unread, Company, '));
       expect(tester.getSemantics(tile('file')).label, isNot(contains('unread')));
-      final unreadName = tester.widget<Text>(inTile('sarah', find.text('Sarah Jenkins')));
-      final readName = tester.widget<Text>(find.descendant(of: tile('file'), matching: find.text('Priya Sharma')));
-      expect(unreadName.style!.fontWeight, FontWeight.w700);
-      expect(readName.style!.fontWeight, FontWeight.w600);
+      // The time is bold and navy on an unread row; the row is tinted and carries a 4 dp bar at its left edge.
+      final unreadTime = tester.widget<Text>(inTile('sarah', find.text('2:25 PM')));
+      final readTime = tester.widget<Text>(
+        find.descendant(
+          of: tile('file'),
+          matching: find.text(inboxStamp(minutesAgo(5000), now: testNow)),
+        ),
+      );
+      expect(unreadTime.style!.fontWeight, FontWeight.w700);
+      expect(unreadTime.style!.color, InboxColors.navy);
+      expect(readTime.style!.fontWeight, FontWeight.w400);
+      Color? tintOf(String id) => tester.widget<Material>(inTile(id, find.byType(Material)).first).color;
+      expect(tintOf('sarah'), InboxColors.unreadTint);
+      expect(tintOf('file'), Colors.white);
+      bool hasBar(String id) => inTile(
+        id,
+        find.byWidgetPredicate((w) => w is ColoredBox && w.color == InboxColors.navy),
+      ).evaluate().isNotEmpty;
+      expect(hasBar('sarah'), isTrue);
+      expect(hasBar('file'), isFalse);
+      // The count is a navy disc; a requirement thread's is green, and that thread's unread is the count alone.
+      Color? fillBehind(String id, String text) {
+        final box = tester.widget<Container>(
+          find.ancestor(of: inTile(id, find.text(text)), matching: find.byType(Container)).first,
+        );
+        return (box.decoration! as BoxDecoration).color;
+      }
+
+      expect(fillBehind('sarah', '2'), InboxColors.navy);
+      expect(fillBehind('rfq', '1'), InboxColors.green);
+      expect(tintOf('rfq'), Colors.white);
+      expect(hasBar('rfq'), isFalse);
       semantics.dispose();
+    });
+
+    testWidgets('a row says who they are, the context as one chip, and what marks the other side', (tester) async {
+      const radhika = ChatPerson(
+        id: 'radhika',
+        firstName: 'Dr. Radhika',
+        lastName: 'Iyer',
+        headline: 'Head of Energy & Climate, CBRE',
+        online: true,
+      );
+      const marcus = ChatPerson(id: 'marcus', firstName: 'Marcus', lastName: 'Reed', online: false);
+      await pump(
+        tester,
+        repository: FakeMessagingRepository(
+          rows: [
+            convo(
+              'radhika',
+              people: const [me, radhika],
+              contextLabel: 'Net-Zero Council',
+              last: msg('r-1', 'radhika', radhika, 'I reviewed the draft.', ago: 8),
+              updatedAgo: 8,
+            ),
+            convo(
+              'marcus',
+              people: const [me, marcus],
+              contextLabel: 'BMS & Energy',
+              last: msg('m-1', 'marcus', marcus, 'Schema attached.', ago: 100, read: true),
+              updatedAgo: 100,
+            ),
+            convo(
+              'mentee',
+              people: const [me, david],
+              kind: ConversationKind.mentorship,
+              contextLabel: '1:1 Mentorship',
+              last: msg('d-1', 'mentee', david, 'See you Thursday.', ago: 200, read: true),
+              updatedAgo: 200,
+            ),
+          ],
+        ),
+      );
+      // Her headline sits under her name, her context is the chip.
+      expect(inTile('radhika', find.text('Head of Energy & Climate, CBRE')), findsOneWidget);
+      expect(inTile('radhika', find.text('Net-Zero Council')), findsOneWidget);
+      expect(inTile('radhika', find.text('2:52 PM')), findsOneWidget);
+
+      // The presence dot: green for online, grey for offline, none when the source gives none.
+      Color? dotOf(String id) {
+        final dot = find.descendant(of: tile(id), matching: find.byType(PresenceDot));
+        if (dot.evaluate().isEmpty) return null;
+        final box = tester.widget<Container>(find.descendant(of: dot, matching: find.byType(Container)));
+        return (box.decoration! as BoxDecoration).color;
+      }
+
+      expect(dotOf('radhika'), AppColors.online);
+      expect(dotOf('marcus'), AppColors.slate300);
+      expect(dotOf('mentee'), isNull);
+
+      // A council reads blue, any other topic grey, a mentorship grey with the mentor's shield by the name.
+      Color? chipFill(String id, String label) {
+        final box = tester.widget<Container>(
+          find.ancestor(of: inTile(id, find.text(label)), matching: find.byType(Container)).first,
+        );
+        return (box.decoration! as BoxDecoration).color;
+      }
+
+      expect(chipFill('radhika', 'Net-Zero Council'), InboxColors.blueTint);
+      expect(chipFill('marcus', 'BMS & Energy'), InboxColors.grey);
+      expect(chipFill('mentee', '1:1 Mentorship'), InboxColors.grey);
+      expect(inTile('mentee', find.byIcon(Symbols.shield)), findsOneWidget);
+      expect(inTile('marcus', find.byIcon(Symbols.shield)), findsNothing);
+    });
+
+    testWidgets('a company thread draws its building, and a requirement its amber chip', (tester) async {
+      await pump(tester);
+      expect(inTile('rfq', find.byIcon(Symbols.apartment)), findsOneWidget);
+      expect(inTile('company', find.byIcon(Symbols.apartment)), findsOneWidget);
+      expect(inTile('sarah', find.byIcon(Symbols.apartment)), findsNothing);
+      final chip = tester.widget<Container>(
+        find
+            .ancestor(of: inTile('rfq', find.text('Annual Housekeeping Contract')), matching: find.byType(Container))
+            .first,
+      );
+      expect((chip.decoration! as BoxDecoration).color, InboxColors.amberTint);
+      expect((chip.decoration! as BoxDecoration).border, isNotNull, reason: 'the amber chip has its 1 dp edge');
+    });
+
+    testWidgets('the verified check follows a person when the list knows they are verified', (tester) async {
+      Widget row(String key, {bool? verified}) => ConversationTile(
+        key: ValueKey(key),
+        conversation: convo(key, people: const [me, sarah], last: msg('$key-1', key, sarah, 'Hi', ago: 5)),
+        meId: meId,
+        now: testNow,
+        verified: verified,
+        onTap: () {},
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildAppTheme(),
+          home: Scaffold(body: Column(children: [row('checked', verified: true), row('plain')])),
+        ),
+      );
+      Finder markIn(String key) =>
+          find.descendant(of: find.byKey(ValueKey(key)), matching: find.byIcon(Symbols.verified));
+      expect(markIn('checked'), findsOneWidget);
+      expect(markIn('plain'), findsNothing);
+    });
+
+    test('the stamp reads "10:42 AM", "Yesterday", a weekday, then "Apr 14"', () {
+      final now = DateTime(2026, 4, 29, 10, 50);
+      expect(inboxStamp(DateTime(2026, 4, 29, 10, 42), now: now), '10:42 AM');
+      expect(inboxStamp(DateTime(2026, 4, 29, 0, 5), now: now), '12:05 AM');
+      expect(inboxStamp(DateTime(2026, 4, 28, 7, 50), now: now), 'Yesterday');
+      expect(inboxStamp(DateTime(2026, 4, 14, 8, 50), now: now), 'Apr 14');
+      expect(inboxStamp(DateTime(2025, 12, 3, 8), now: now), 'Dec 3, 2025');
     });
 
     testWidgets('a pinned thread is listed above the rest under "Pinned", a starred one carries its star', (
@@ -325,10 +479,54 @@ void main() {
           inboxList: const [MessagingInbox(id: MessagingInbox.personalId, personal: true, unread: 4)],
         ),
       );
-      expect(find.descendant(of: chip('filter-unread'), matching: find.text('4')), findsOneWidget);
+      expect(find.descendant(of: chip('filter-unread'), matching: find.text('Unread (4)')), findsOneWidget);
       await tester.tap(chip('filter-unread'));
       await tester.pumpAndSettle();
-      expect(find.descendant(of: chip('filter-unread'), matching: find.text('4')), findsNothing);
+      expect(find.descendant(of: chip('filter-unread'), matching: find.text('Unread (4)')), findsOneWidget);
+    });
+
+    testWidgets('the chips carry their counts: Focused is the view total, a kind is how many there are', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        repository: FakeMessagingRepository(
+          rows: sample(),
+          inboxList: const [MessagingInbox(id: MessagingInbox.personalId, personal: true, unread: 4)],
+        ),
+      );
+      Finder label(String key, String text) => find.descendant(of: chip(key), matching: find.text(text));
+      expect(find.text('7 Active'), findsOneWidget, reason: 'every conversation of the view, the pinned one too');
+      expect(label('filter-all', 'Focused (7)'), findsOneWidget);
+      expect(label('filter-unread', 'Unread (4)'), findsOneWidget);
+      // The row scrolls sideways: the last chips are drawn once it has.
+      await tester.drag(
+        find.byWidgetPredicate((w) => w is ListView && w.scrollDirection == Axis.horizontal),
+        const Offset(-300, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(label('kind-requirement', 'Vendor RFQs (1)'), findsOneWidget);
+      expect(label('kind-mentorship', 'Mentorship (1)'), findsOneWidget);
+      expect(label('kind-direct', 'Direct (5)'), findsOneWidget);
+
+      // On a kind, the total is the kind's; the other chips drop a count they cannot know.
+      await tester.tap(chip('kind-requirement'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 Active'), findsOneWidget);
+      expect(label('kind-requirement', 'Vendor RFQs (1)'), findsOneWidget);
+      await tester.drag(
+        find.byWidgetPredicate((w) => w is ListView && w.scrollDirection == Axis.horizontal),
+        const Offset(300, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(label('filter-all', 'Focused'), findsOneWidget);
+      expect(label('kind-mentorship', 'Mentorship'), findsOneWidget);
+
+      // Focused clears the kind and is the one on again.
+      await tester.tap(chip('filter-all'));
+      await tester.pumpAndSettle();
+      expect(lastList(), contains('kind=null'));
+      expect(label('filter-all', 'Focused (7)'), findsOneWidget);
     });
   });
 
@@ -435,7 +633,8 @@ void main() {
       expect(find.byType(ConversationScreen), findsOneWidget);
       expect(repository.calls, contains('markRead sarah as=null'));
 
-      await tester.tap(find.byTooltip('Back'));
+      // Back from the thread (however its own header draws it).
+      Navigator.of(tester.element(find.byType(ConversationScreen))).pop();
       await tester.pumpAndSettle();
       expect(find.byType(InboxScreen), findsOneWidget);
       expect(inTile('sarah', find.text('2')), findsNothing, reason: 'its count went with the read');
@@ -502,14 +701,16 @@ void main() {
           inboxList: const [MessagingInbox(id: MessagingInbox.personalId, personal: true, unread: 4)],
         ),
       );
-      final button = find.byKey(const ValueKey('mark-all-read'));
-      expect(tester.widget<IconButton>(button).onPressed, isNotNull);
-      await tester.tap(button);
+      final item = find.byKey(const ValueKey('mark-all-read'));
+      await openOptions(tester);
+      expect(tester.widget<PopupMenuItem<String>>(item).enabled, isTrue);
+      await tester.tap(item);
       await tester.pumpAndSettle();
       expect(repo.calls, contains('markAllRead inbox=personal'));
       expect(find.text('All marked as read'), findsOneWidget);
       expect(inTile('sarah', find.text('2')), findsNothing);
-      expect(tester.widget<IconButton>(button).onPressed, isNull, reason: 'nothing left to read');
+      await openOptions(tester);
+      expect(tester.widget<PopupMenuItem<String>>(item).enabled, isFalse, reason: 'nothing left to read');
     });
 
     testWidgets('a refusal brings every count back and shows why', (tester) async {
@@ -520,10 +721,107 @@ void main() {
           inboxList: const [MessagingInbox(id: MessagingInbox.personalId, personal: true, unread: 4)],
         )..errors['markAllRead'] = ApiError('Try again later.', statusCode: 500),
       );
+      await openOptions(tester);
       await tester.tap(find.byKey(const ValueKey('mark-all-read')));
       await tester.pumpAndSettle();
       expect(find.text('Try again later.'), findsOneWidget);
       expect(inTile('sarah', find.text('2')), findsOneWidget);
+    });
+  });
+
+  group('narrow phones', () {
+    testWidgets('360 dp wide draws long names, headlines, chips and a company pill without overflow', (tester) async {
+      const longName = ChatPerson(
+        id: 'long',
+        firstName: 'Venkatasubramanian',
+        lastName: 'Ramakrishnan-Parthasarathy',
+        headline: 'Vice President, Facilities, Energy and Sustainability @ A Very Long Company Name Private Limited',
+        online: true,
+      );
+      final rows = [
+        convo(
+          'long',
+          people: const [me, longName],
+          kind: ConversationKind.mentorship,
+          contextLabel: 'A mentorship context label that goes on and on well past the width of the phone',
+          pinned: true,
+          starred: true,
+          unread: 128,
+          last: msg(
+            'l-1',
+            'long',
+            longName,
+            'A very long last word that goes past two lines of the row so that it ends with an ellipsis, '
+                'and then a good deal more besides, to be sure of it.',
+            ago: 9,
+          ),
+          updatedAgo: 9,
+        ),
+        ...sample(),
+      ];
+      await pump(
+        tester,
+        repository: FakeMessagingRepository(
+          rows: rows,
+          inboxList: const [
+            MessagingInbox(id: MessagingInbox.personalId, personal: true, unread: 140),
+            MessagingInbox(
+              id: 'co-acme',
+              personal: false,
+              name: 'Acme Facility Management and Allied Services Private Limited',
+              topics: ['SALES', 'PROCUREMENT'],
+              unread: 3,
+            ),
+          ],
+        ),
+        size: const Size(360, 1400),
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.text('99+'), findsOneWidget);
+      await tester.tap(chip('inbox-options'));
+      await tester.pumpAndSettle();
+      await tester.tap(chip('inbox-co-acme'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Acme Facility'), findsWidgets);
+    });
+  });
+
+  group('back', () {
+    testWidgets('on its own the screen has no Back, as drawn; pushed over another page it has one that returns', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await pump(tester);
+      expect(find.bySemanticsLabel('Back'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+
+      tester.view.physicalSize = const Size(390, 1100);
+      repo = FakeMessagingRepository(rows: sample());
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildAppTheme(),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => InboxScreen(repository: repo, poll: false, clock: () => testNow),
+                  ),
+                ),
+                child: const Text('open the inbox'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open the inbox'));
+      await tester.pumpAndSettle();
+      expect(find.byType(InboxScreen), findsOneWidget);
+      await tester.tap(find.bySemanticsLabel('Back'));
+      await tester.pumpAndSettle();
+      expect(find.byType(InboxScreen), findsNothing);
+      semantics.dispose();
     });
   });
 
@@ -636,10 +934,20 @@ void main() {
       ),
     ];
 
+    /// Picks an inbox from the sliders menu.
+    Future<void> pickInbox(WidgetTester tester, String id) async {
+      await openOptions(tester);
+      await tester.tap(chip('inbox-$id'));
+      await tester.pumpAndSettle();
+    }
+
     testWidgets('with no company inbox the switcher is not drawn', (tester) async {
       await pump(tester);
+      await openOptions(tester);
+      expect(find.byKey(const ValueKey('mark-all-read')), findsOneWidget);
       expect(chip('inbox-personal'), findsNothing);
       expect(chip('view-open'), findsNothing);
+      expect(find.byKey(const ValueKey('inbox-options')), findsOneWidget);
     });
 
     testWidgets('the switcher lists My messages and each company, with the other inbox\'s unread count', (
@@ -649,8 +957,11 @@ void main() {
         tester,
         repository: FakeMessagingRepository(rows: withCompany(), inboxList: twoInboxes()),
       );
+      expect(chip('inbox-personal'), findsNothing, reason: 'the switcher lives in the sliders menu');
+      await openOptions(tester);
       expect(chip('inbox-personal'), findsOneWidget);
       expect(chip('inbox-co-acme'), findsOneWidget);
+      expect(find.text('My messages'), findsOneWidget);
       expect(find.text('Acme FM'), findsOneWidget);
       expect(find.descendant(of: chip('inbox-co-acme'), matching: find.text('2')), findsOneWidget);
       expect(
@@ -667,10 +978,10 @@ void main() {
         tester,
         repository: FakeMessagingRepository(rows: withCompany(), inboxList: twoInboxes()),
       );
-      await tester.tap(chip('inbox-co-acme'));
-      await tester.pumpAndSettle();
+      await pickInbox(tester, 'co-acme');
       expect(lastList(), contains('inbox=co-acme'));
       expect(lastList(), contains('view=open'));
+      expect(find.text('Acme FM · 1 Active'), findsOneWidget, reason: 'the pill names the inbox on screen');
       expect(find.byType(ConversationTile), findsOneWidget);
       expect(tile('acme-1'), findsOneWidget);
       // The company's inbox draws its own filters, not the person's.
@@ -710,8 +1021,7 @@ void main() {
         },
       );
       await pump(tester, repository: repository);
-      await tester.tap(chip('inbox-co-acme'));
-      await tester.pumpAndSettle();
+      await pickInbox(tester, 'co-acme');
       expect(inTile('acme-1', find.text('Facade cleaning')), findsOneWidget);
       await tester.tap(tile('acme-1'));
       await tester.pumpAndSettle();
@@ -731,12 +1041,12 @@ void main() {
     testWidgets('an inbox the person no longer answers for falls back to their own', (tester) async {
       final repository = FakeMessagingRepository(rows: withCompany(), inboxList: twoInboxes());
       await pump(tester, repository: repository);
-      await tester.tap(chip('inbox-co-acme'));
-      await tester.pumpAndSettle();
+      await pickInbox(tester, 'co-acme');
       repository.inboxList = [const MessagingInbox(id: MessagingInbox.personalId, personal: true, unread: 4)];
       await tester.fling(find.byType(CustomScrollView), const Offset(0, 400), 1000);
       await tester.pumpAndSettle();
       expect(lastList(), contains('inbox=personal'));
+      await openOptions(tester);
       expect(chip('inbox-co-acme'), findsNothing);
     });
   });

@@ -161,7 +161,7 @@ class OfferingRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(
-                  height: 15.5,
+                  height: 17.5,
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
@@ -175,7 +175,7 @@ class OfferingRow extends StatelessWidget {
                   ),
                 ),
                 // The design's row with a preview link sets its title a little lower and the link a little closer.
-                SizedBox(height: hasGreen ? 6.9 : (hasPreview ? 11.5 : 10.5)),
+                SizedBox(height: hasGreen ? 4.9 : (hasPreview ? 9.5 : 8.5)),
                 Text(o.title, style: MentorText.offeringTitle, maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 0.15),
                 // Two lines of room at the blurb's own size and line height (never a fixed 29.8 dp, which cut the
@@ -262,7 +262,7 @@ class _Tags extends StatelessWidget {
             Text(t.label, style: MentorText.tagGreen)
           else
             Container(
-              height: 15.5,
+              height: 17.5,
               padding: const EdgeInsets.symmetric(horizontal: 5.4),
               alignment: Alignment.center,
               decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(8)),
@@ -287,19 +287,16 @@ class _Price extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final o = offering;
-    if (o.free) return SizedBox(height: 12, child: Text('FREE', style: MentorText.free));
-    return SizedBox(
-      height: 14,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (o.compareAtPaisa != null && o.compareAtPaisa! > o.pricePaisa) ...[
-            Text(inr(o.compareAtPaisa!), style: MentorText.wasPrice),
-            const SizedBox(width: 3.4),
-          ],
-          Text(inr(o.pricePaisa), style: MentorText.price),
+    if (o.free) return Text('FREE', style: MentorText.free);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (o.compareAtPaisa != null && o.compareAtPaisa! > o.pricePaisa) ...[
+          Text(inr(o.compareAtPaisa!), style: MentorText.wasPrice),
+          const SizedBox(width: 3.4),
         ],
-      ),
+        Text(inr(o.pricePaisa), style: MentorText.price),
+      ],
     );
   }
 }

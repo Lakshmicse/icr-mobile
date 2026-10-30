@@ -109,9 +109,19 @@ class _InAppWebScreenState extends State<InAppWebScreen> {
     // The page reads its session from the origin's storage before it runs, so
     // the storage is filled from a static page of the same origin first.
     _pendingToken = token;
+    _carriesSession = true;
     _primed = false;
     await _web.loadRequest(_site.resolve('/robots.txt'));
   }
+
+  /// Whether [url] is the static page the session is carried through (never the page the person asked for).
+  bool _isPrimingPage(String url) {
+    final uri = Uri.tryParse(url);
+    return _carriesSession && uri != null && uri.path == '/robots.txt' && widget.uri.path != '/robots.txt';
+  }
+
+  /// This view carries the person's session through `/robots.txt` first.
+  bool _carriesSession = false;
 
   Future<void> _onPageFinished(String url) async {
     final token = _pendingToken;
@@ -123,6 +133,10 @@ class _InAppWebScreenState extends State<InAppWebScreen> {
       if (mounted) await _web.loadRequest(widget.uri);
       return;
     }
+    // The Android WebView says "finished" for the priming page again once the real page has been requested from
+    // inside its own finish handler (27 Oct 2026: the owner saw `robots.txt` in a dark page): it is still not the
+    // page the person asked for, so the white cover stays.
+    if (_isPrimingPage(url)) return;
     final title = await _web.getTitle();
     _set(() {
       _pageTitle = title == null || title.trim().isEmpty ? null : title.trim();

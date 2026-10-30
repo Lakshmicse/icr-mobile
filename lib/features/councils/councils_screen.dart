@@ -369,22 +369,19 @@ class _RoundtablesHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 16,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 16, right: 15),
-        child: Row(
-          children: [
-            Text('Upcoming Roundtables', style: CouncilsText.sectionTitle),
-            const Spacer(),
-            if (caption != null)
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onCaption,
-                child: Text(caption!, style: CouncilsText.sectionCaption),
-              ),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, right: 15),
+      child: Row(
+        children: [
+          Text('Upcoming Roundtables', style: CouncilsText.sectionTitle),
+          const Spacer(),
+          if (caption != null)
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onCaption,
+              child: Text(caption!, style: CouncilsText.sectionCaption),
+            ),
+        ],
       ),
     );
   }

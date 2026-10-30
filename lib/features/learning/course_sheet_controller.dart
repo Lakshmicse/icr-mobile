@@ -23,6 +23,8 @@ class CourseSheetController extends ChangeNotifier with NotifySafely {
   bool _allReviews = false;
   bool _loading = true;
   bool _enrolling = false;
+  bool _withdrawing = false;
+  String? _withdrawError;
   String? _error;
   DeliveryMode _mode = DeliveryMode.inPerson;
   String? _runId;
@@ -38,6 +40,17 @@ class CourseSheetController extends ChangeNotifier with NotifySafely {
   bool get allReviews => _allReviews;
   bool get loading => _loading;
   bool get enrolling => _enrolling;
+  bool get withdrawing => _withdrawing;
+
+  /// The API's sentence when it refused to take a place back (a paid one is withdrawn by ICR).
+  String? get withdrawError => _withdrawError;
+
+  /// A request, a waitlist place or a confirmed place can be taken back; a completed one cannot.
+  bool get canWithdraw {
+    final mine = _course.enrolment;
+    return mine != null && mine.status.active && mine.status != EnrolmentStatus.completed;
+  }
+
   String? get error => _error;
   DeliveryMode get mode => _mode;
   bool get allDates => _allDates;
@@ -156,6 +169,30 @@ class CourseSheetController extends ChangeNotifier with NotifySafely {
       return ApiError.from(e).message;
     } finally {
       _enrolling = false;
+      notifyListeners();
+    }
+  }
+
+  /// Takes the place back, as the website's Withdraw does: the sheet offers "add to cart" again at once. A
+  /// sentence when the API refuses (a paid place is withdrawn by ICR), kept in [withdrawError] for the sheet to show.
+  Future<String?> withdraw() async {
+    if (!canWithdraw || _withdrawing) return null;
+    _withdrawing = true;
+    _withdrawError = null;
+    notifyListeners();
+    try {
+      await repository.withdraw(_course);
+      _set(_course.copyWith(clearEnrolment: true));
+      // The seat is free again: read the course once more so the runs say so.
+      try {
+        _course = _course.copyWith(detail: await repository.detail(_course));
+      } catch (_) {}
+      return null;
+    } catch (e) {
+      _withdrawError = ApiError.from(e).message;
+      return _withdrawError;
+    } finally {
+      _withdrawing = false;
       notifyListeners();
     }
   }

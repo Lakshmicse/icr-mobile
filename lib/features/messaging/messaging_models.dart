@@ -20,12 +20,26 @@ String initialsOf(String name) {
 
 /// Someone in a conversation (`MessagingPersonDto`).
 class ChatPerson {
-  const ChatPerson({required this.id, required this.firstName, required this.lastName, this.photo});
+  const ChatPerson({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    this.photo,
+    this.headline,
+    this.online,
+  });
 
   final String id;
   final String firstName;
   final String lastName;
   final ChatPicture? photo;
+
+  /// "Head of Energy & Climate, CBRE": the line the inbox draws under the name, when the source gives one.
+  final String? headline;
+
+  /// Presence, as the design draws it (a green dot, a grey one). The API sends none, so a real person is null
+  /// and no dot is drawn; the demo content sets it.
+  final bool? online;
 
   String get fullName => '$firstName $lastName'.trim();
   String get initials => initialsOf(fullName);
@@ -260,6 +274,7 @@ class Conversation {
     this.counterpartCompany,
     this.parties = const [],
     this.asCompanyId,
+    this.verified = false,
   });
 
   final String id;
@@ -281,6 +296,10 @@ class Conversation {
   /// The company the other side is acting for, when one is known.
   final ChatCompany? counterpartCompany;
   final List<ThreadParty> parties;
+
+  /// The other side is a verified company (the check after the name on the inbox row). The list endpoint does
+  /// not say, so a row read from the API is false; the demo content sets it from its context.
+  final bool verified;
 
   /// The party the reader reads this thread as; null when in it as themselves.
   final String? asCompanyId;
@@ -307,6 +326,7 @@ class Conversation {
     ChatCompany? counterpartCompany,
     String? contextLabel,
     DateTime? updatedAt,
+    bool? verified,
   }) => Conversation(
     id: id,
     title: title,
@@ -314,6 +334,7 @@ class Conversation {
     rfqTitle: rfqTitle,
     participants: participants,
     lastMessage: lastMessage ?? this.lastMessage,
+    verified: verified ?? this.verified,
     unread: unread ?? this.unread,
     starred: starred ?? this.starred,
     pinned: pinned ?? this.pinned,

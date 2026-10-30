@@ -10,7 +10,9 @@ import '../../core/api/api_error.dart';
 import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
+import '../../core/widgets/title_bar.dart';
 import '../notifications/notification_router.dart';
+import '../notifications/notifications_screen.dart' show openNotifications;
 import '../notifications/unread_counts.dart';
 import 'conversation_controller.dart';
 import 'messaging_context.dart';
@@ -19,7 +21,6 @@ import 'messaging_launcher.dart';
 import 'messaging_models.dart';
 import 'messaging_repository.dart';
 import 'messaging_styles.dart';
-import 'widgets/chat_avatar.dart';
 import 'widgets/composer.dart';
 import 'widgets/conversation_tile.dart' show kindIcon;
 import 'widgets/message_bubble.dart';
@@ -40,13 +41,41 @@ Future<void> shareAttachment(BuildContext context, ChatMessage message, Uint8Lis
   );
 }
 
-/// One conversation, as the website's chat pane: the newest messages with
-/// earlier ones a scroll away, what the thread is about under the header,
-/// text and files sent from the box below (a failed send stays with Retry),
-/// "Seen" on a 1:1, and a long-press menu on each message (reply, copy,
-/// delete your own, report someone else's). New messages arrive by polling
-/// every few seconds while the screen is open: the app has no socket client,
-/// so there is no "typing" signal.
+/// The emoji the composer's smiley offers.
+const _emoji = [
+  '😀',
+  '😂',
+  '🙂',
+  '😉',
+  '😍',
+  '🤔',
+  '🙏',
+  '👍',
+  '👏',
+  '🙌',
+  '🤝',
+  '💡',
+  '🎯',
+  '✅',
+  '❌',
+  '⭐',
+  '🔥',
+  '🎉',
+  '📎',
+  '📅',
+  '📞',
+  '💬',
+  '👀',
+  '🚀',
+];
+
+/// One conversation, as the thread design draws it (docs/designs/messaging-thread.png): the "Messages" bar and
+/// bell, a card for who it is with (a chevron opens what the thread is about), the newest messages with earlier
+/// ones a scroll away, files as cards, the next booked session as a meeting card, and the box below with its
+/// pills (attach, RFQ, Meet, emoji). A failed send stays with Retry, "Seen" is a green double tick under your
+/// message on a 1:1, and a long-press menu on each message offers reply, copy, delete your own and report
+/// someone else's. A draft in the box is kept per conversation. New messages arrive by polling every few
+/// seconds while the screen is open: the app has no socket client, so there is no "typing" signal.
 class ConversationScreen extends StatefulWidget {
   const ConversationScreen({
     super.key,
@@ -103,6 +132,14 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
   final _keys = <String, GlobalKey>{};
   bool _focused = false;
 
+  /// "What this is about" is open under the contact card.
+  bool _aboutOpen = false;
+
+  /// The draft in the box is written a second after typing stops; "Draft Saved" shows while one is kept.
+  Timer? _draftTimer;
+  String _lastText = '';
+  bool _draftKept = false;
+
   @override
   void initState() {
     super.initState();
@@ -122,6 +159,13 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
           clock: widget.clock,
           onRead: unread == null ? null : () => unawaited(unread.refresh()),
         );
+    final draft = DraftStore.of(widget.conversationId);
+    if (draft != null) {
+      _text.text = draft;
+      _draftKept = true;
+    }
+    _lastText = _text.text;
+    _text.addListener(_draftChanged);
     _scroll.addListener(_maybeLoadOlder);
     if (_owns) {
       unawaited(_c.start());
@@ -134,6 +178,10 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _c.removeListener(_focusOnce);
+    // Leaving keeps what was written.
+    _draftTimer?.cancel();
+    DraftStore.save(widget.conversationId, _text.text);
+    _text.removeListener(_draftChanged);
     _scroll.dispose();
     _text.dispose();
     _focus.dispose();
@@ -143,6 +191,7 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) _saveDraft();
     if (!_owns || !widget.poll) return;
     if (state == AppLifecycleState.resumed) {
       unawaited(_c.poll());
@@ -150,6 +199,21 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
     } else if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
       _c.stopPolling();
     }
+  }
+
+  void _draftChanged() {
+    if (_text.text == _lastText) return;
+    _lastText = _text.text;
+    _draftTimer?.cancel();
+    _draftTimer = Timer(const Duration(seconds: 1), _saveDraft);
+  }
+
+  void _saveDraft() {
+    _draftTimer?.cancel();
+    _draftTimer = null;
+    DraftStore.save(widget.conversationId, _text.text);
+    final kept = DraftStore.has(widget.conversationId);
+    if (mounted && kept != _draftKept) setState(() => _draftKept = kept);
   }
 
   void _maybeLoadOlder() {
@@ -210,6 +274,11 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
       return;
     }
     _text.clear();
+    // What was written is sent: nothing is kept as a draft.
+    _draftTimer?.cancel();
+    _draftTimer = null;
+    DraftStore.clear(widget.conversationId);
+    if (_draftKept) setState(() => _draftKept = false);
     // A refusal stays in the thread as a failed message with Retry, so nothing typed is lost.
     unawaited(_c.send(text));
     if (_scroll.hasClients) {
@@ -226,8 +295,9 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
     if (problem != null && mounted) showMessage(context, problem);
   }
 
+  /// "RFQ": the "Share an ICR record" sheet, on Requirements.
   Future<void> _shareRecord() async {
-    final picked = await showRecordPicker(context, _repository);
+    final picked = await showRecordPicker(context, _repository, initial: RecordType.requirement);
     if (picked == null || !mounted) return;
     final link = '${AppConfig.siteUrl}${picked.ref.path}';
     final current = _text.text;
@@ -235,6 +305,47 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
     _text.value = TextEditingValue(
       text: joined,
       selection: TextSelection.collapsed(offset: joined.length),
+    );
+    _focus.requestFocus();
+  }
+
+  /// The smiley: a small sheet of common emoji; the one chosen goes in at the cursor.
+  Future<void> _pickEmoji() async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              for (final e in _emoji)
+                InkWell(
+                  key: ValueKey('emoji-$e'),
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () => Navigator.of(context).pop(e),
+                  child: SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: Center(child: Text(e, style: const TextStyle(fontSize: 26))),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    final value = _text.value;
+    final at = value.selection.isValid ? value.selection.start : value.text.length;
+    final to = value.selection.isValid ? value.selection.end : at;
+    _text.value = TextEditingValue(
+      text: value.text.replaceRange(at, to, picked),
+      selection: TextSelection.collapsed(offset: at + picked.length),
     );
     _focus.requestFocus();
   }
@@ -268,6 +379,30 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
   }
 
   void _openHref(String href) => unawaited(NotificationRouter.of(context).openHref(context, href));
+
+  void _addToCalendar(MeetingFacts f) {
+    unawaited(
+      openUrl(
+        context,
+        googleCalendarLink(
+          title: f.title,
+          start: f.start,
+          end: f.end,
+          details: 'ICR conversation with ${_c.display.name}',
+        ),
+      ),
+    );
+  }
+
+  /// "Join Meeting": the call when the session has a link, else the record it belongs to.
+  void _join(MeetingFacts f) {
+    final link = f.joinUrl;
+    if (link != null) {
+      unawaited(openUrl(context, link));
+    } else if (f.href != null) {
+      _openHref(f.href!);
+    }
+  }
 
   Future<void> _messageMenu(ChatMessage m) async {
     if (m.deleted) return;
@@ -343,32 +478,65 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
 
   @override
   Widget build(BuildContext context) {
+    final bell = Provider.of<UnreadCounts?>(context)?.notifications ?? 0;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.white),
       child: Scaffold(
-        backgroundColor: ChatColors.page,
+        backgroundColor: ThreadColors.page,
         body: SafeArea(
           bottom: false,
           child: ListenableBuilder(
             listenable: _c,
-            builder: (context, _) => Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _Header(controller: _c, onProfile: _openHref, onToggle: _toggle),
-                _Strip(controller: _c, onOpen: _openHref, now: _c.clock()),
-                Expanded(child: _body()),
-                if (_c.loaded && !_c.cannotOpen)
-                  Composer(
-                    controller: _c,
-                    text: _text,
-                    focus: _focus,
-                    onSend: _send,
-                    onAttach: (widget.pickAttachment ?? MessagingLauncher.attachmentPicker) == null ? null : _attach,
-                    onShareRecord: _shareRecord,
-                    asCompany: _c.side == null ? null : _c.myParty?.name,
+            builder: (context, _) {
+              final about = contextStripModel(_c.context, _c.conversation?.title, now: _c.clock());
+              final sessionHref = sessionRecordHref(_c.context);
+              return Stack(
+                children: [
+                  // The bar is drawn last, so its shadow falls on the contact card as the design's does.
+                  Positioned.fill(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: TitleBar.height),
+                        _ContactCard(
+                          controller: _c,
+                          onProfile: _openHref,
+                          onToggle: _toggle,
+                          hasAbout: about != null,
+                          aboutOpen: _aboutOpen,
+                          onAbout: () => setState(() => _aboutOpen = !_aboutOpen),
+                        ),
+                        if (_aboutOpen && about != null) _Strip(model: about, controller: _c, onOpen: _openHref),
+                        Expanded(
+                          child: ColoredBox(color: ThreadColors.page, child: _body()),
+                        ),
+                        if (_c.loaded && !_c.cannotOpen)
+                          Composer(
+                            controller: _c,
+                            text: _text,
+                            focus: _focus,
+                            onSend: _send,
+                            onAttach: (widget.pickAttachment ?? MessagingLauncher.attachmentPicker) == null
+                                ? null
+                                : _attach,
+                            onShareRecord: _shareRecord,
+                            onMeet: sessionHref == null ? null : () => _openHref(sessionHref),
+                            onEmoji: _pickEmoji,
+                            asCompany: _c.side == null ? null : _c.myParty?.name,
+                            draftSaved: _draftKept,
+                          ),
+                      ],
+                    ),
                   ),
-              ],
-            ),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: TitleBar(title: 'Messages', unread: bell, onBell: () => openNotifications(context)),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -394,10 +562,20 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
     }
     final items = _c.timeline;
     if (items.isEmpty) return _Empty(controller: _c, onStarter: _fill);
+    final now = _c.clock();
     final display = _c.display;
-    final room = display.avatar == AvatarKind.group;
+    final verified = _c.context?.company?.verified == true && display.avatar != AvatarKind.group;
+    final meeting = meetingOf(_c.context, _c.conversation, now: now);
+    final footer = meeting == null ? 0 : 1;
+    // Everything of mine up to the message the other person has read is read.
+    DateTime? seenAt;
     final seenId = _c.seenMessageId;
-    final count = items.length + (_c.hasMore ? 1 : 0);
+    if (seenId != null) {
+      for (final m in _c.messages) {
+        if (m.id == seenId) seenAt = m.createdAt;
+      }
+    }
+    final count = footer + items.length + (_c.hasMore ? 1 : 0);
     return ListView.builder(
       key: const ValueKey('thread'),
       controller: _scroll,
@@ -406,7 +584,17 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
       padding: const EdgeInsets.only(top: 8, bottom: 12),
       itemCount: count,
       itemBuilder: (context, i) {
-        if (i == items.length) {
+        // The list is reversed: the first row is the newest (the booked session, when there is one).
+        if (meeting != null && i == 0) {
+          return MeetingCard(
+            facts: meeting,
+            now: now,
+            onAddToCalendar: () => _addToCalendar(meeting),
+            onJoin: () => _join(meeting),
+          );
+        }
+        final row = i - footer;
+        if (row == items.length) {
           return Padding(
             padding: const EdgeInsets.all(12),
             child: Center(
@@ -420,9 +608,10 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
             ),
           );
         }
-        final item = items[items.length - 1 - i];
+        final at = items.length - 1 - row;
+        final item = items[at];
         return switch (item) {
-          DayItem() => DayDivider(date: item.date, now: _c.clock()),
+          DayItem() => DayDivider(date: item.date, now: now),
           EventItem() => Builder(
             builder: (context) {
               final line = eventLine(item.event, _c.context);
@@ -448,8 +637,10 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
               message: item.message,
               mine: _c.isMine(item.message),
               continued: item.continued,
-              showSender: room || item.message.senderCompany != null,
-              seen: item.message.id == seenId && _c.isMine(item.message),
+              endsBlock:
+                  !(at + 1 < items.length && items[at + 1] is MessageItem && (items[at + 1] as MessageItem).continued),
+              seen: seenAt != null && _c.isMine(item.message) && !item.message.createdAt.isAfter(seenAt),
+              verified: verified,
               controller: _c,
               onLongPress: () => _messageMenu(item.message),
               onLink: _openLink,
@@ -489,28 +680,62 @@ class _SheetRow extends StatelessWidget {
   );
 }
 
-/// The thread's header: back, who it is with (a tap opens their page), and a menu.
-class _Header extends StatelessWidget {
-  const _Header({required this.controller, required this.onProfile, required this.onToggle});
+/// The line under a contact's name: the company's role and city when the context gives them, else what the
+/// thread is ("Direct · Global Infra").
+String contactSubline(ConversationController c) {
+  final company = c.context?.company;
+  final facts = [
+    if (company?.industry != null && company!.industry!.trim().isNotEmpty) company.industry!.trim(),
+    if (company?.city != null && company!.city!.trim().isNotEmpty) company.city!.trim(),
+  ];
+  if (facts.isNotEmpty) return facts.join(' • ');
+  final display = c.display;
+  final conversation = c.conversation;
+  final kind = c.context?.kind ?? conversation?.kind;
+  return [
+    ?kind?.label,
+    if (display.secondary != null) display.secondary!,
+    if (display.avatar == AvatarKind.group && conversation != null)
+      '${conversation.participants.length} people'
+    else if (display.avatar == AvatarKind.person && display.company != null)
+      display.company!.name,
+  ].join(' · ');
+}
+
+/// The thread's header, as the design's contact card: who it is with (a tap opens their page, a long press the
+/// menu), a chevron that opens what the thread is about, and an overflow menu (Star, Pin, and a company
+/// inbox's sorting).
+class _ContactCard extends StatefulWidget {
+  const _ContactCard({
+    required this.controller,
+    required this.onProfile,
+    required this.onToggle,
+    required this.hasAbout,
+    required this.aboutOpen,
+    required this.onAbout,
+  });
 
   final ConversationController controller;
   final ValueChanged<String> onProfile;
   final Future<void> Function(Future<String?> Function() action) onToggle;
+  final bool hasAbout;
+  final bool aboutOpen;
+  final VoidCallback onAbout;
+
+  @override
+  State<_ContactCard> createState() => _ContactCardState();
+}
+
+class _ContactCardState extends State<_ContactCard> {
+  final _menu = GlobalKey<PopupMenuButtonState<String>>();
 
   @override
   Widget build(BuildContext context) {
-    final c = controller;
+    final c = widget.controller;
     final conversation = c.conversation;
     final display = c.display;
-    final kind = c.context?.kind ?? conversation?.kind;
-    final sub = <String>[
-      ?kind?.label,
-      if (display.secondary != null) display.secondary!,
-      if (display.avatar == AvatarKind.group && conversation != null)
-        '${conversation.participants.length} people'
-      else if (display.avatar == AvatarKind.person && display.company != null)
-        display.company!.name,
-    ].join(' · ');
+    final verified = c.context?.company?.verified == true;
+    final sub = contactSubline(c);
     final href = switch (display.avatar) {
       AvatarKind.company when display.company != null && display.company!.id.isNotEmpty => companyHref(
         display.company!.id,
@@ -519,102 +744,143 @@ class _Header extends StatelessWidget {
       _ => null,
     };
     final party = c.myParty;
-    return Container(
-      height: 60,
+    return DecoratedBox(
       decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1))],
+        boxShadow: [BoxShadow(color: Color(0x10000000), blurRadius: 4, offset: Offset(0, 1))],
       ),
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: 'Back',
-            onPressed: () => Navigator.maybePop(context),
-            icon: const Icon(Icons.arrow_back, color: AppColors.onSurfaceVariant),
-          ),
-          Expanded(
-            child: InkWell(
-              key: const ValueKey('thread-header'),
-              onTap: href == null ? null : () => onProfile(href),
-              child: Row(
-                children: [
-                  ChatAvatar.forDisplay(display, size: 36),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.white,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 62),
+          child: Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  key: const ValueKey('thread-header'),
+                  onTap: href == null ? null : () => widget.onProfile(href),
+                  onLongPress: conversation == null ? null : () => _menu.currentState?.showButtonMenu(),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 13, 0, 13),
+                    child: Row(
                       children: [
-                        Text(display.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: ChatText.headerName),
-                        if (sub.isNotEmpty)
-                          Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: ChatText.headerSub),
+                        ThreadAvatar.forDisplay(display, size: 36, verified: verified),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      display.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: ChatText.contactName,
+                                    ),
+                                  ),
+                                  if (verified) ...[
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.verified, size: 17, color: ThreadColors.deepBlue),
+                                  ],
+                                ],
+                              ),
+                              if (sub.isNotEmpty)
+                                Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: ChatText.contactSub),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+              if (widget.hasAbout)
+                IconButton(
+                  key: const ValueKey('thread-about'),
+                  tooltip: widget.aboutOpen ? 'Hide what this is about' : 'Show what this is about',
+                  onPressed: widget.onAbout,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints.tightFor(width: 36, height: 48),
+                  icon: Icon(
+                    widget.aboutOpen ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                    size: 18,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              if (conversation != null)
+                KeyedSubtree(
+                  key: const ValueKey('thread-menu'),
+                  child: PopupMenuButton<String>(
+                    key: _menu,
+                    tooltip: 'More',
+                    padding: EdgeInsets.zero,
+                    onSelected: (v) {
+                      switch (v) {
+                        case 'star':
+                          widget.onToggle(c.toggleStar);
+                        case 'pin':
+                          widget.onToggle(c.togglePin);
+                        case 'done':
+                          widget.onToggle(() => c.setStatus(ThreadStatus.done));
+                        case 'spam':
+                          widget.onToggle(() => c.setStatus(ThreadStatus.spam));
+                        case 'open':
+                          widget.onToggle(() => c.setStatus(ThreadStatus.open));
+                        case 'assign':
+                          widget.onToggle(c.assignToMe);
+                        case 'unassign':
+                          widget.onToggle(c.unassign);
+                      }
+                    },
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'star',
+                        child: Text(conversation.starred ? 'Remove star' : 'Star conversation'),
+                      ),
+                      PopupMenuItem(value: 'pin', child: Text(conversation.pinned ? 'Unpin from top' : 'Pin to top')),
+                      if (party != null) ...[
+                        const PopupMenuDivider(),
+                        if (party.status == ThreadStatus.open) ...[
+                          const PopupMenuItem(value: 'done', child: Text('Mark done')),
+                          const PopupMenuItem(value: 'spam', child: Text('Mark as spam')),
+                        ] else
+                          const PopupMenuItem(value: 'open', child: Text('Move back to open')),
+                        if (party.assignee == null)
+                          const PopupMenuItem(value: 'assign', child: Text('Assign to me'))
+                        else
+                          const PopupMenuItem(value: 'unassign', child: Text('Unassign')),
+                      ],
+                    ],
+                    child: const SizedBox(
+                      width: 36,
+                      height: 48,
+                      child: Icon(LucideIcons.ellipsisVertical, size: 18, color: AppColors.onSurfaceVariant),
+                    ),
+                  ),
+                )
+              else
+                const SizedBox(width: 8),
+              const SizedBox(width: 4),
+            ],
           ),
-          if (conversation != null)
-            PopupMenuButton<String>(
-              key: const ValueKey('thread-menu'),
-              tooltip: 'More',
-              icon: const Icon(LucideIcons.ellipsisVertical, size: 20, color: AppColors.onSurfaceVariant),
-              onSelected: (v) {
-                switch (v) {
-                  case 'star':
-                    onToggle(c.toggleStar);
-                  case 'pin':
-                    onToggle(c.togglePin);
-                  case 'done':
-                    onToggle(() => c.setStatus(ThreadStatus.done));
-                  case 'spam':
-                    onToggle(() => c.setStatus(ThreadStatus.spam));
-                  case 'open':
-                    onToggle(() => c.setStatus(ThreadStatus.open));
-                  case 'assign':
-                    onToggle(c.assignToMe);
-                  case 'unassign':
-                    onToggle(c.unassign);
-                }
-              },
-              itemBuilder: (_) => [
-                PopupMenuItem(value: 'star', child: Text(conversation.starred ? 'Remove star' : 'Star conversation')),
-                PopupMenuItem(value: 'pin', child: Text(conversation.pinned ? 'Unpin from top' : 'Pin to top')),
-                if (party != null) ...[
-                  const PopupMenuDivider(),
-                  if (party.status == ThreadStatus.open) ...[
-                    const PopupMenuItem(value: 'done', child: Text('Mark done')),
-                    const PopupMenuItem(value: 'spam', child: Text('Mark as spam')),
-                  ] else
-                    const PopupMenuItem(value: 'open', child: Text('Move back to open')),
-                  if (party.assignee == null)
-                    const PopupMenuItem(value: 'assign', child: Text('Assign to me'))
-                  else
-                    const PopupMenuItem(value: 'unassign', child: Text('Unassign')),
-                ],
-              ],
-            )
-          else
-            const SizedBox(width: 8),
-        ],
+        ),
       ),
     );
   }
 }
 
-/// What the thread is about, one tap from the record.
+/// What the thread is about, one tap from the record (opened by the contact card's chevron).
 class _Strip extends StatelessWidget {
-  const _Strip({required this.controller, required this.onOpen, required this.now});
+  const _Strip({required this.model, required this.controller, required this.onOpen});
 
+  final ContextStripModel model;
   final ConversationController controller;
   final ValueChanged<String> onOpen;
-  final DateTime now;
 
   @override
   Widget build(BuildContext context) {
-    final model = contextStripModel(controller.context, controller.conversation?.title, now: now);
-    if (model == null) return const SizedBox.shrink();
     final lines = model.lines;
     final kind = controller.context?.kind ?? controller.conversation?.kind;
     return Material(
@@ -676,7 +942,7 @@ class _Empty extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ChatAvatar.forDisplay(controller.display, size: 64),
+            ThreadAvatar.forDisplay(controller.display, size: 64),
             const SizedBox(height: 12),
             Text(controller.display.name, textAlign: TextAlign.center, style: ChatText.sheetTitle),
             const SizedBox(height: 6),

@@ -52,6 +52,32 @@ class PendingItem extends ThreadItem {
 /// Consecutive messages from one person this close together read as one block.
 const groupWindow = Duration(minutes: 5);
 
+/// The words half-written in each conversation's box, kept in memory for the life of the app so a thread
+/// left and opened again finds them where they were. The screen writes a second after typing stops and on
+/// leaving, and clears it on send.
+abstract final class DraftStore {
+  static final _drafts = <String, String>{};
+
+  /// The draft kept for [conversationId], if any.
+  static String? of(String conversationId) => _drafts[conversationId];
+
+  static bool has(String conversationId) => _drafts.containsKey(conversationId);
+
+  /// Keeps [text] as the draft; an empty box keeps nothing.
+  static void save(String conversationId, String text) {
+    if (text.trim().isEmpty) {
+      _drafts.remove(conversationId);
+    } else {
+      _drafts[conversationId] = text;
+    }
+  }
+
+  static void clear(String conversationId) => _drafts.remove(conversationId);
+
+  /// Forgets every draft (tests, sign-out).
+  static void clearAll() => _drafts.clear();
+}
+
 /// An open conversation: the newest window of messages and older pages as the
 /// person scrolls back, new ones caught up by a poll every few seconds while
 /// the screen is open, sending (with retry), a file uploaded before it is

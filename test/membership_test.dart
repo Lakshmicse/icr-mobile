@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +10,7 @@ import 'package:icr_mobile/core/auth/token_store.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/core/widgets/buttons.dart';
 import 'package:icr_mobile/features/contact/contact_screen.dart';
+import 'package:icr_mobile/features/membership/api_membership_repository.dart';
 import 'package:icr_mobile/features/membership/demo_membership_repository.dart';
 import 'package:icr_mobile/features/membership/membership_controller.dart';
 import 'package:icr_mobile/features/membership/membership_format.dart';
@@ -19,11 +23,36 @@ import 'helpers/fonts.dart';
 
 /// Plans and a held plan under the test's control, recording every checkout.
 class _Plans implements MembershipRepository {
-  _Plans({this.held, this.canBuy = true, this.reason, this.refusal, this.gateway = false, this.plansError});
+  _Plans({
+    this.held,
+    this.canBuy = true,
+    this.reason,
+    this.refusal,
+    this.gateway = false,
+    this.plansError,
+    this.tabs = const [
+      MembershipAudience.seeker,
+      MembershipAudience.mentor,
+      MembershipAudience.supplier,
+      MembershipAudience.company,
+      MembershipAudience.institution,
+    ],
+    this.tabsError = false,
+    this.nothingOnSale = const {},
+  });
 
   MySubscription? held;
   bool canBuy;
   String? reason;
+
+  /// The ladders the member has a chip for, as the repository names them.
+  List<MembershipAudience> tabs;
+
+  /// Make reading the ladders fail.
+  bool tabsError;
+
+  /// Ladders with no plan on sale: their catalogue answers with nothing.
+  Set<MembershipAudience> nothingOnSale;
 
   /// The API's refusal of a checkout, when set.
   String? refusal;
@@ -34,6 +63,7 @@ class _Plans implements MembershipRepository {
   final checkouts = <String>[];
   int planReads = 0;
   int mineReads = 0;
+  int tabReads = 0;
 
   static const _silverPrice = PlanPrice(id: 'price-silver', months: 12, pricePaisa: 499900);
   static const _goldPrice = PlanPrice(id: 'price-gold', months: 12, pricePaisa: 1299900, compareAtPaisa: 1499900);
@@ -74,10 +104,17 @@ class _Plans implements MembershipRepository {
   ];
 
   @override
+  Future<List<MembershipAudience>> audiences() async {
+    tabReads++;
+    if (tabsError) throw ApiError('The ladders could not be read.', statusCode: 500);
+    return tabs;
+  }
+
+  @override
   Future<List<MembershipPlan>> plans(MembershipAudience audience) async {
     planReads++;
     if (plansError != null) throw ApiError(plansError!, statusCode: 500);
-    return ladder(audience);
+    return nothingOnSale.contains(audience) ? const [] : ladder(audience);
   }
 
   @override
@@ -140,6 +177,66 @@ class _NoTokens extends TokenStore {
   Future<String?> accessToken() async => 'token';
   @override
   Future<String?> refreshToken() async => null;
+}
+
+/// Answers the two reads that decide the chips, as the API does: `/subscriptions/catalogue`
+/// (a plan on sale for each audience named) and `/subscriptions/me/all` (what the member
+/// holds and may buy on every ladder).
+class _MembershipApi implements HttpClientAdapter {
+  _MembershipApi({required this.onSale, required this.memberships, this.catalogueFails = false, this.meFails = false});
+
+  /// The API keys of the audiences with a plan on sale.
+  final List<String> onSale;
+  final List<Map<String, Object?>> memberships;
+  final bool catalogueFails;
+  final bool meFails;
+
+  static final _json = {
+    Headers.contentTypeHeader: [Headers.jsonContentType],
+  };
+
+  /// What `/me/all` says about one ladder: held when [held], else free to buy or not.
+  static Map<String, Object?> ladder(String audience, {bool canBuy = true, bool held = false}) => {
+    'audience': audience,
+    'canBuy': canBuy,
+    'reason': canBuy ? null : 'Not sold to your kind of account.',
+    'subscription': held ? {'id': 's1', 'planId': 'p1', 'tier': 'SILVER', 'status': 'ACTIVE'} : null,
+    'tier': held ? 'SILVER' : 'FREE',
+  };
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<List<int>>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    switch (options.path) {
+      case '/subscriptions/catalogue':
+        if (catalogueFails) return ResponseBody.fromString('{"message":"down"}', 500, headers: _json);
+        return ResponseBody.fromString(
+          jsonEncode({
+            'plans': [
+              for (final a in onSale) {'id': 'plan-$a', 'audience': a, 'name': 'Free', 'tier': 'FREE'},
+            ],
+          }),
+          200,
+          headers: _json,
+        );
+      case '/subscriptions/me/all':
+        if (meFails) return ResponseBody.fromString('{"message":"down"}', 500, headers: _json);
+        return ResponseBody.fromString(jsonEncode({'memberships': memberships}), 200, headers: _json);
+    }
+    return ResponseBody.fromString('{"message":"Not found"}', 404, headers: _json);
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
+ApiMembershipRepository _apiRepository(_MembershipApi api) {
+  final client = ApiClient(tokens: _NoTokens(), baseUrl: 'http://api.test/api/v1');
+  client.dio.httpClientAdapter = api;
+  return ApiMembershipRepository(api: client);
 }
 
 /// Records what the app hands to the browser.
@@ -269,6 +366,67 @@ void main() {
       expect(repo.planReads, 2);
     });
 
+    test('the chips are the ladders the member has, plus the one they opened on; never Learning', () async {
+      final c = MembershipController(
+        _Plans(tabs: const [MembershipAudience.seeker, MembershipAudience.institution]),
+        audience: MembershipAudience.seeker,
+      );
+      expect(c.tabs, [MembershipAudience.seeker], reason: 'until they are read: only the ladder the screen opened on');
+      await c.start();
+      expect(c.tabs, [MembershipAudience.seeker, MembershipAudience.institution]);
+      expect(c.tabs, isNot(contains(MembershipAudience.learning)));
+    });
+
+    test(
+      'a ladder with plans on sale stays on show when a link opens it, even if it is not one of the member\'s',
+      () async {
+        final c = MembershipController(
+          _Plans(tabs: const [MembershipAudience.seeker]),
+          audience: MembershipAudience.supplier,
+        );
+        await c.start();
+        expect(c.audience, MembershipAudience.supplier);
+        expect(c.tabs, [MembershipAudience.seeker, MembershipAudience.supplier]);
+      },
+    );
+
+    test(
+      'opened on a ladder with nothing on sale that is not theirs (a link to Learning), it moves to their first',
+      () async {
+        final repo = _Plans(
+          tabs: const [MembershipAudience.seeker, MembershipAudience.company],
+          nothingOnSale: {MembershipAudience.learning},
+        );
+        final c = MembershipController(repo, audience: MembershipAudience.learning);
+        await c.start();
+        expect(c.audience, MembershipAudience.seeker);
+        expect(c.tabs, [MembershipAudience.seeker, MembershipAudience.company]);
+        expect(c.plans, isNotEmpty);
+        expect(c.mine?.audience, MembershipAudience.seeker);
+        expect(c.loading, isFalse);
+      },
+    );
+
+    test('when the ladders cannot be read the chips stay at the one opened on and the plans still show', () async {
+      final c = MembershipController(_Plans(tabsError: true), audience: MembershipAudience.supplier);
+      await c.start();
+      expect(c.tabs, [MembershipAudience.supplier]);
+      expect(c.plans, isNotEmpty);
+      expect(c.error, isNull);
+    });
+
+    test('switching ladder does not read the member\'s ladders again; a refresh does', () async {
+      final repo = _Plans();
+      final c = MembershipController(repo);
+      await c.start();
+      expect(repo.tabReads, 1);
+      c.setAudience(MembershipAudience.mentor);
+      await Future<void>.delayed(Duration.zero);
+      expect(repo.tabReads, 1);
+      await c.refresh();
+      expect(repo.tabReads, 2);
+    });
+
     test('choosing a plan sends its annual price; the API activating it marks it current', () async {
       final repo = _Plans();
       final c = MembershipController(repo);
@@ -306,6 +464,62 @@ void main() {
       expect(repo.checkouts, isEmpty);
       await c.renew();
       expect(repo.checkouts, ['price-silver']);
+    });
+  });
+
+  group('which ladders get a chip (the API repository)', () {
+    test('one the member holds, or may buy on and has a plan on sale; in the website\'s order', () async {
+      final repo = _apiRepository(
+        _MembershipApi(
+          onSale: const ['SEEKER', 'SUPPLIER', 'COMPANY', 'INSTITUTION'],
+          memberships: [
+            _MembershipApi.ladder('SEEKER'),
+            // May buy, but no plan is on sale.
+            _MembershipApi.ladder('MENTOR'),
+            // On sale, but not sold to this member.
+            _MembershipApi.ladder('SUPPLIER', canBuy: false),
+            _MembershipApi.ladder('COMPANY', canBuy: false),
+            // Nothing on sale, but they still hold a plan on it.
+            _MembershipApi.ladder('LEARNING', canBuy: false, held: true),
+            _MembershipApi.ladder('INSTITUTION'),
+          ],
+        ),
+      );
+      expect(await repo.audiences(), [
+        MembershipAudience.seeker,
+        MembershipAudience.learning,
+        MembershipAudience.institution,
+      ]);
+    });
+
+    test('Learning is not shown to someone who may buy there when nothing is on sale', () async {
+      final repo = _apiRepository(
+        _MembershipApi(
+          onSale: const ['SEEKER'],
+          memberships: [_MembershipApi.ladder('SEEKER'), _MembershipApi.ladder('LEARNING')],
+        ),
+      );
+      expect(await repo.audiences(), [MembershipAudience.seeker]);
+    });
+
+    test('when the catalogue cannot be read nothing they may buy on is hidden for want of it', () async {
+      final repo = _apiRepository(
+        _MembershipApi(
+          onSale: const [],
+          catalogueFails: true,
+          memberships: [
+            _MembershipApi.ladder('SEEKER'),
+            _MembershipApi.ladder('MENTOR'),
+            _MembershipApi.ladder('SUPPLIER', canBuy: false),
+          ],
+        ),
+      );
+      expect(await repo.audiences(), [MembershipAudience.seeker, MembershipAudience.mentor]);
+    });
+
+    test('when the member\'s own ladders cannot be read it says so, and the screen keeps to its own ladder', () async {
+      final repo = _apiRepository(_MembershipApi(onSale: const ['SEEKER'], memberships: const [], meFails: true));
+      await expectLater(repo.audiences(), throwsA(isA<ApiError>()));
     });
   });
 
@@ -368,6 +582,33 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Guide. Influence. Lead.'), findsOneWidget);
       expect(repo.planReads, 2);
+    });
+
+    testWidgets('has no chip for a ladder that is not sold or that the member cannot buy on', (tester) async {
+      await pump(tester, repo: _Plans(tabs: const [MembershipAudience.seeker]));
+      expect(find.byKey(const ValueKey('audience-professional')), findsOneWidget);
+      for (final slug in ['learning', 'institution', 'supplier', 'corporate', 'mentor']) {
+        expect(find.byKey(ValueKey('audience-$slug')), findsNothing, reason: slug);
+      }
+      expect(find.text('Learning'), findsNothing);
+      expect(find.text('Partner Institution'), findsNothing);
+      expect(find.text('No plans on sale yet'), findsNothing);
+    });
+
+    testWidgets('a link to Learning opens the member\'s first ladder, with no Learning chip', (tester) async {
+      await pump(
+        tester,
+        repo: _Plans(
+          tabs: const [MembershipAudience.seeker, MembershipAudience.company],
+          nothingOnSale: {MembershipAudience.learning},
+        ),
+        audience: MembershipAudience.learning,
+      );
+      expect(find.byKey(const ValueKey('audience-learning')), findsNothing);
+      expect(find.text('Learn. Connect. Grow.'), findsOneWidget, reason: 'the Professional ladder');
+      expect(find.text('Assess. Learn. Certify.'), findsNothing);
+      expect(find.text('No plans on sale yet'), findsNothing);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('Choose starts the checkout and, activated on the spot, says so and marks the plan', (tester) async {

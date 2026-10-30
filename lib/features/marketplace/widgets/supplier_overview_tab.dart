@@ -243,32 +243,30 @@ class _DispatchBand extends StatelessWidget {
         children: [
           Text(band.kicker, style: MartText.bandKicker),
           const SizedBox(height: 6),
+          // The button sits on the title's own line, centred on it (it hung 3.5 dp below, at the design's smaller
+          // type); the line shrank by that much, so the gap under it grew by the same.
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: Text(band.title, style: MartText.bandTitle)),
               const SizedBox(width: 12),
-              Padding(
-                padding: const EdgeInsets.only(top: 3.5),
-                child: Material(
-                  color: Colors.white,
+              Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(5),
+                child: InkWell(
+                  key: const ValueKey('view-hubs'),
                   borderRadius: BorderRadius.circular(5),
-                  child: InkWell(
-                    key: const ValueKey('view-hubs'),
-                    borderRadius: BorderRadius.circular(5),
-                    onTap: () => showHubsSheet(context, supplier),
-                    child: Container(
-                      height: 17,
-                      padding: const EdgeInsets.symmetric(horizontal: 12.5),
-                      alignment: Alignment.center,
-                      child: Text('View Hubs', style: MartText.bandButton),
-                    ),
+                  onTap: () => showHubsSheet(context, supplier),
+                  child: Container(
+                    height: 17,
+                    padding: const EdgeInsets.symmetric(horizontal: 12.5),
+                    alignment: Alignment.center,
+                    child: Text('View Hubs', style: MartText.bandButton),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 8.5),
           Text(band.line, style: MartText.bandLine),
         ],
       ),

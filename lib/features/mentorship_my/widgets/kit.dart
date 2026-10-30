@@ -531,9 +531,9 @@ class ActionWrap extends StatelessWidget {
   }
 }
 
-/// The tab strip of the Mentor Profile (a bordered band with the open tab on a
-/// blue pill), scrolling sideways when the labels outgrow the phone and
-/// bringing the open tab into view.
+/// A row of tabs as separate pills on the page, as the Career and Supplier Mart rows are: the open one
+/// solid blue, the rest white with a hairline. Scrolls sideways when the labels outgrow the phone and
+/// brings the open tab into view.
 class SegmentTabs extends StatefulWidget {
   const SegmentTabs({super.key, required this.labels, required this.selected, required this.onSelect, this.badges});
 
@@ -577,19 +577,13 @@ class _SegmentTabsState extends State<SegmentTabs> {
   @override
   Widget build(BuildContext context) {
     final labels = widget.labels;
-    return Container(
-      height: 40,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FA),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.outlineVariant),
-      ),
+    return SizedBox(
+      height: 30,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         child: Row(
           children: [
-            for (var i = 0; i < labels.length; i++) ...[if (i > 0) const SizedBox(width: 3), _tab(i, labels[i])],
+            for (var i = 0; i < labels.length; i++) ...[if (i > 0) const SizedBox(width: 6), _tab(i, labels[i])],
           ],
         ),
       ),
@@ -604,14 +598,17 @@ class _SegmentTabsState extends State<SegmentTabs> {
       button: true,
       selected: on,
       child: Material(
-        color: on ? AppColors.primary : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        color: on ? AppColors.primary : Colors.white,
+        shape: StadiumBorder(side: BorderSide(color: on ? AppColors.primary : AppColors.outlineVariant)),
         child: InkWell(
+          customBorder: const StadiumBorder(),
           onTap: () => widget.onSelect(i),
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 11),
+          child: Container(
+            height: 30,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(label, style: on ? MentoringText.tabSelected : MentoringText.tab),
                 if (badge > 0) ...[

@@ -95,43 +95,43 @@ class CourseCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(course.title, style: LearningText.cardTitle, maxLines: 2, overflow: TextOverflow.ellipsis),
-                      const SizedBox(height: 4),
-                      SizedBox(
-                        height: 14,
-                        child: Row(
-                          children: [
-                            if (provider?.logo != null) ...[
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(3),
-                                child: SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CoursePicture(
-                                    picture: provider!.logo,
-                                    fit: BoxFit.contain,
-                                    plate: AppColors.surfaceContainerLow,
-                                  ),
+                      // The institute line is as tall as its text (17 dp at 12 sp, not the design's 14); the gaps
+                      // either side give back the 3 dp it grew by (4 -> 3, 3 -> 1).
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          if (provider?.logo != null) ...[
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(3),
+                              child: SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CoursePicture(
+                                  picture: provider!.logo,
+                                  fit: BoxFit.contain,
+                                  plate: AppColors.surfaceContainerLow,
                                 ),
                               ),
-                              const SizedBox(width: 4),
-                            ],
-                            Expanded(
-                              child: Text(
-                                providerName,
-                                style: LearningText.cardProvider,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
                             ),
+                            const SizedBox(width: 4),
                           ],
-                        ),
+                          Expanded(
+                            child: Text(
+                              providerName,
+                              style: LearningText.cardProvider,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 1),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Centred on the first of the meta text's lines (17 dp at 12 sp).
                           Padding(
-                            padding: const EdgeInsets.only(top: 1.5),
+                            padding: const EdgeInsets.only(top: 3),
                             child: Icon(metaIcon, size: 11, color: AppColors.onSurfaceVariant),
                           ),
                           const SizedBox(width: 4),
@@ -179,8 +179,8 @@ class CourseFooter extends StatelessWidget {
         if (course.free)
           const _Pill(label: 'Free', fill: AppColors.successTint, ink: AppColors.successInk)
         else
-          SizedBox(
-            height: 20,
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 20),
             child: Center(
               widthFactor: 1,
               child: Text(priceLabel(course.priceAmount, course.priceCurrency), style: LearningText.cardPrice),
@@ -229,8 +229,9 @@ class _Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 20 dp at least, taller when larger text needs it.
     return Container(
-      height: 20,
+      constraints: const BoxConstraints(minHeight: 20),
       padding: EdgeInsets.only(left: icon == null ? 8 : 6, right: 8),
       decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(10)),
       child: Row(

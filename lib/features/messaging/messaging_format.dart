@@ -50,6 +50,82 @@ String dayLabel(DateTime at, {DateTime? now}) {
   return local.year == current.toLocal().year ? base : '$base ${local.year}';
 }
 
+const _monthNames = [
+  'january',
+  'february',
+  'march',
+  'april',
+  'may',
+  'june',
+  'july',
+  'august',
+  'september',
+  'october',
+  'november',
+  'december',
+];
+const _weekdayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+/// "10:14 AM": the time a message was sent, as the thread draws it.
+String messageTime(DateTime at) {
+  final local = at.toLocal();
+  final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
+  return '$hour:${local.minute.toString().padLeft(2, '0')} ${local.hour < 12 ? 'AM' : 'PM'}';
+}
+
+/// The thread's day pill, in the design's lower case: "today, april 16", "yesterday, april 15", then
+/// "monday, 14 april" (with the year when it is not this one).
+String threadDayLabel(DateTime at, {DateTime? now}) {
+  final current = (now ?? DateTime.now()).toLocal();
+  final local = at.toLocal();
+  final month = _monthNames[local.month - 1];
+  if (sameDay(local, current)) return 'today, $month ${local.day}';
+  if (sameDay(local, current.subtract(const Duration(days: 1)))) return 'yesterday, $month ${local.day}';
+  final base = '${_weekdayNames[local.weekday - 1]}, ${local.day} $month';
+  return local.year == current.year ? base : '$base ${local.year}';
+}
+
+/// "Tomorrow, 4:00 PM – 4:20 PM IST": when a booked session runs. The app shows every time on the Indian
+/// clock's name, as its other screens do.
+String meetingWhen(DateTime start, DateTime end, {DateTime? now}) {
+  final current = (now ?? DateTime.now()).toLocal();
+  final local = start.toLocal();
+  final String day;
+  if (sameDay(local, current)) {
+    day = 'Today';
+  } else if (sameDay(local, current.add(const Duration(days: 1)))) {
+    day = 'Tomorrow';
+  } else {
+    day = local.year == current.year ? weekdayDate(local) : '${weekdayDate(local)} ${local.year}';
+  }
+  return '$day, ${messageTime(local)} – ${messageTime(end)} IST';
+}
+
+/// A Google Calendar "add event" page for a session (the app syncs with no calendar of its own).
+Uri googleCalendarLink({required String title, required DateTime start, required DateTime end, String? details}) {
+  String two(int n) => n.toString().padLeft(2, '0');
+  String stamp(DateTime d) {
+    final u = d.toUtc();
+    return '${u.year.toString().padLeft(4, '0')}${two(u.month)}${two(u.day)}T${two(u.hour)}${two(u.minute)}${two(u.second)}Z';
+  }
+
+  return Uri.https('calendar.google.com', '/calendar/render', {
+    'action': 'TEMPLATE',
+    'text': title,
+    'dates': '${stamp(start)}/${stamp(end)}',
+    if (details != null && details.trim().isNotEmpty) 'details': details,
+  });
+}
+
+/// What kind of file this is, for the file card's second line: "DOCX", "PDF".
+String fileKind(String? name, [String? mime]) {
+  final n = name ?? '';
+  final dot = n.lastIndexOf('.');
+  if (dot > 0 && dot < n.length - 1 && n.length - dot <= 6) return n.substring(dot + 1).toUpperCase();
+  final subtype = (mime ?? '').split('/').last.split('+').first.split(';').first;
+  return subtype.isNotEmpty && subtype.length <= 5 ? subtype.toUpperCase() : 'FILE';
+}
+
 /// "1.2 MB", "84 KB".
 String fileSize(int? bytes) {
   if (bytes == null || bytes <= 0) return '';

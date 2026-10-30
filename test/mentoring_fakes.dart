@@ -387,6 +387,7 @@ class LinkRecorder {
     openNotifications: (context) => opened.add('bell'),
     openConversation: (context, id) async => opened.add('conversation:$id'),
     openSite: (context, path) async => sites.add(path),
+    openPayment: (context, path) async => sites.add(path),
     shareFile: (context, name, bytes) async => shared.add('$name:${bytes.length}'),
   );
 }

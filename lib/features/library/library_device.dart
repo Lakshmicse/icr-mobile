@@ -1,29 +1,23 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/widgets.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/util/links.dart' show SiteRoutes;
 import 'api_library_repository.dart';
 import 'library_models.dart';
 
-/// Where the Library screens reach the phone: choosing files to share, handing a downloaded file to the
-/// phone's own apps, and opening a page. Behind one seam, so a test sees what would have happened and
-/// gives the files the picker would have.
+/// Where the Library screens reach the phone: choosing files to share, and opening a page. Behind one seam,
+/// so a test sees what would have happened and gives the files the picker would have.
 ///
-/// Why a file is handed over instead of opened by address: the API's `GET /documents/:id/download`
-/// needs the member's bearer token and the stored file is private (`/uploads/<name>` refuses anyone but
-/// its uploader), so a browser given the link would be refused. The app fetches the bytes with its own
-/// session and passes them to the phone's share sheet ("Save to Files", "Open in…").
+/// **There is no way to take a document out of the app through here, on purpose** (owner's call, 28 Oct
+/// 2026: the Digital Library on a phone is view-only). A document is fetched with the member's own session
+/// (the API's download route needs their bearer token), drawn by the in-app viewer and dropped with it. It
+/// is never saved, shared or handed to another app.
 abstract class LibraryDevice {
   const LibraryDevice();
 
   /// Asks the person to choose files to share; empty when they choose none.
   Future<List<PickedFile>> pickFiles();
-
-  /// Hands a downloaded file to the phone: its share sheet saves it or opens it in another app. False when
-  /// nothing could take it.
-  Future<bool> handOver(DocumentBytes file);
 
   /// Opens [uri] outside the app; false when nothing could open it.
   Future<bool> open(Uri uri);
@@ -39,18 +33,6 @@ class SystemLibraryDevice extends LibraryDevice {
       for (final f in files)
         PickedFile(name: f.name, bytes: await f.readAsBytes(), mimeType: ApiLibraryRepository.mimeForName(f.name)),
     ];
-  }
-
-  @override
-  Future<bool> handOver(DocumentBytes file) async {
-    final result = await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile.fromData(file.bytes, name: file.fileName, mimeType: file.mimeType)],
-        fileNameOverrides: [file.fileName],
-        subject: file.fileName,
-      ),
-    );
-    return result.status != ShareResultStatus.unavailable;
   }
 
   @override

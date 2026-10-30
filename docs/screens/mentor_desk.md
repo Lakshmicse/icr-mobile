@@ -12,7 +12,7 @@ MentorDeskScreen(
   onOpenConversation: (context, conversationId) => ...,   // messaging builder's chat screen ("Message" through the record)
   onOpenMentor: (context, mentorProfileId) => ...,
   onBell: (context) => ...,
-  onOpenWebsite: (context, path) => ...,                  // only /profile ("Finish my profile"), /terms
+  onOpenWebsite: (context, path) => ...,                  // /terms (the seller terms); /profile resolves to the app's own profile
   onBecomeMentor: (context) => ...,                       // the lead wires it to BecomeMentorScreen
 );
 openMentorDesk(context, tab: DeskTab.requests, links: links, onBecomeMentor: ...);
@@ -66,7 +66,7 @@ W = widget test, L = live test. Every tab has loading, error with "Try again", e
 
 ## Handoffs kept
 
-* "Finish my profile" opens the website's `/profile`: the missing items (certifications, work history, education) belong to the person's own profile, which another screen owns.
+* "Finish my profile" opens `/profile`, which the app resolves to its own profile screen (`SiteRoutes`): the missing items (certifications, work history, education) belong to the person's own profile, not the mentor desk.
 * A buyer pays on the website's PayU page; the desk only shows "payment due".
 * Payouts are ICR's: the Earnings tab is read-only by design.
 

@@ -505,7 +505,10 @@ void main() {
       await feed.start();
       final audit = feed.posts.firstWhere((p) => p.id == 'audit');
       feed.toggleReplies(audit);
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+      // Until the replies have been read (a fixed 20 ms wait failed on a busy machine).
+      for (var i = 0; i < 100 && feed.posts.firstWhere((p) => p.id == 'audit').replies.isEmpty; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
       final read = feed.posts.firstWhere((p) => p.id == 'audit');
       expect(await feed.deleteReply(read, read.replies.last), isNull);
       expect(feed.posts.firstWhere((p) => p.id == 'audit').comments, 1);

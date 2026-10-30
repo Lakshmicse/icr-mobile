@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/config.dart';
 import '../../core/util/links.dart';
 import 'mentor_profile_controller.dart';
 import 'mentor_profile_format.dart';
@@ -45,7 +46,8 @@ Future<bool> runOfferingAction(BuildContext context, MentorProfileController c, 
       if (!context.mounted) return false;
       if (outcome.message != null) showMessage(context, outcome.message!);
       if (outcome.state == CheckoutState.website && outcome.sitePath != null) {
-        await openSitePage(context, outcome.sitePath!);
+        // The checkout runs on the website (PayU); the app's own screen for that address is this profile.
+        await openExternal(context, AppConfig.sitePage(outcome.sitePath!));
         return false;
       }
       return outcome.state == CheckoutState.completed || outcome.state == CheckoutState.requested;

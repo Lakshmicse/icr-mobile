@@ -146,8 +146,8 @@ class _OfferingSheetBodyState extends State<OfferingSheetBody> {
                   ],
                   if (shown.details.isNotEmpty) ...[
                     const SizedBox(height: 12.8),
-                    SizedBox(height: 16, child: Text('Program Details', style: MentorText.sheetSection)),
-                    const SizedBox(height: 8.2),
+                    Text('Program Details', style: MentorText.sheetSection),
+                    const SizedBox(height: 7.2),
                     _DetailGrid(details: shown.details),
                   ],
                   if (term != null) ...[
@@ -551,23 +551,22 @@ class OfferingSheetBar extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      height: 18,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text('${pricing.label} ', style: MentorText.startsAt),
-                          if (pricing.compareAt != null) ...[
-                            Text(pricing.compareAt!, style: MentorText.wasPrice.copyWith(fontSize: 12)),
-                            const SizedBox(width: 4),
-                          ],
-                          Text(pricing.amount, style: MentorText.startsPrice),
-                          if (pricing.per != null) Text(' ${pricing.per}', style: MentorText.startsPer),
+                    // As tall as the price's line (a fixed 18 cut it at the app's 16 sp), with the gap below it
+                    // a dp shorter.
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text('${pricing.label} ', style: MentorText.startsAt),
+                        if (pricing.compareAt != null) ...[
+                          Text(pricing.compareAt!, style: MentorText.wasPrice.copyWith(fontSize: 12)),
+                          const SizedBox(width: 4),
                         ],
-                      ),
+                        Text(pricing.amount, style: MentorText.startsPrice),
+                        if (pricing.per != null) Text(' ${pricing.per}', style: MentorText.startsPer),
+                      ],
                     ),
-                    const SizedBox(height: 5.6),
+                    const SizedBox(height: 4.6),
                     // The trial pill and the tax note share a line while they fit and stack when they do not
                     // (the note was cut at the card's edge at the app's text size).
                     Wrap(

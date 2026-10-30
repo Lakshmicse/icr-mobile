@@ -4,7 +4,7 @@ import '../../core/api/api_error.dart';
 import 'library_models.dart';
 import 'library_repository.dart';
 
-/// What reading or downloading one file came to: its bytes, or why not. A refusal that is the API
+/// What reading one file came to: its bytes, or why not. A refusal that is the API
 /// saying the plan does not open the document (a 403) is a [locked] one: the page draws it as the lock
 /// card, in the server's own words, not as an error toast.
 class FileOutcome {
@@ -17,7 +17,7 @@ class FileOutcome {
 }
 
 /// One document's page: the document, who the member is (for "mine"), the actions on it, and the
-/// server's lock message when the plan does not open it. A change a person makes (a view, a download, a
+/// server's lock message when the plan does not open it. A change a person makes (a view, a
 /// file added or dropped) is told to the list behind the page through [onChanged] and [onRemoved].
 class DocumentController extends ChangeNotifier {
   DocumentController({
@@ -107,34 +107,22 @@ class DocumentController extends ChangeNotifier {
     _notify();
   }
 
-  // --- reading and downloading ---------------------------------------------------
+  // --- reading ---------------------------------------------------------------------
 
   /// Reads one file for the viewer (`?preview=true`, not a download). The first read of a page counts one
   /// opening of the document (`POST /documents/:id/view`, best effort).
-  Future<FileOutcome> preview(LibraryFile file) => _fetch(file, preview: true);
-
-  /// Takes a copy (`GET /documents/:id/download`); the API counts it, so the counts move here too.
-  Future<FileOutcome> download(LibraryFile file) => _fetch(file, preview: false);
-
-  Future<FileOutcome> _fetch(LibraryFile file, {required bool preview}) async {
+  ///
+  /// This is the only way the app reads a file. There is deliberately no download here (owner's call,
+  /// 28 Oct 2026: the library is view-only on a phone), so the bytes go to the viewer and nowhere else.
+  Future<FileOutcome> preview(LibraryFile file) async {
     final d = _doc;
     if (d == null || _busy.contains(file.id)) return const FileOutcome.failed('Please wait.');
     _busy.add(file.id);
     _lock = null;
     _notify();
     try {
-      final bytes = await repository.fetchFile(d, file, preview: preview);
-      if (preview) {
-        await _countView();
-      } else {
-        final cur = _doc ?? d;
-        _set(
-          cur.copyWith(
-            downloadCount: cur.downloadCount + 1,
-            files: [for (final f in cur.files) f.id == file.id ? f.copyWith(downloadCount: f.downloadCount + 1) : f],
-          ),
-        );
-      }
+      final bytes = await repository.previewFile(d, file);
+      await _countView();
       return FileOutcome.ok(bytes);
     } catch (e) {
       final err = ApiError.from(e);
