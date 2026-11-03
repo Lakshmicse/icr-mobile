@@ -913,6 +913,7 @@ void main() {
           categories: o.categories,
           selectedCategory: o.selectedCategory,
           domainsBadge: domainsBadgeFor(58),
+          domains: o.domains,
           companies: o.companies,
           shelves: o.shelves,
           topics: o.topics,
@@ -936,17 +937,29 @@ void main() {
       }
     });
 
-    testWidgets('the topics grid is three to a row, tinted as the design tints it', (tester) async {
+    testWidgets('the topics are chips as wide as their words, at one size, tinted as the design tints it', (
+      tester,
+    ) async {
       await _pumpLanding(tester, _Repo(), _Calls());
       Finder topic(String label) => find.descendant(of: find.byType(TopicGrid), matching: find.text(label)).first;
-      // A row is a set of tiles at one height: compare the tiles, not their labels (a label of two lines at the
-      // app's 12 sp sits higher in its tile than one of a single line).
       final tiles = find.descendant(of: find.byType(TopicGrid), matching: find.byType(InkWell));
-      final rows = <double>{
-        for (var i = 0; i < tester.widgetList(tiles).length; i++) tester.getTopLeft(tiles.at(i)).dy.roundToDouble(),
-      };
-      expect(rows.length, 3);
-      expect(find.descendant(of: find.byType(TopicGrid), matching: find.byType(InkWell)), findsNWidgets(9));
+      expect(tiles, findsNWidgets(9));
+      // Nothing is shrunk to fit a column (a fixed three-column grid drew "Communication & Stakeholder
+      // Management" at a third of its neighbours' size): every label is at the one size, in a chip of the design's
+      // height no wider than the row, and the long names flow onto further rows.
+      final labels = tester.widgetList<Text>(find.descendant(of: find.byType(TopicGrid), matching: find.byType(Text)));
+      expect({for (final t in labels) t.style?.fontSize}.length, 1);
+      final rowWidth = tester.getSize(find.byType(TopicGrid)).width - 32;
+      for (var i = 0; i < 9; i++) {
+        expect(
+          tester.getSize(tiles.at(i)).height,
+          closeTo(TopicGrid.chipHeight, 2.5),
+          reason: 'the ink inside the border',
+        );
+        expect(tester.getSize(tiles.at(i)).width, lessThanOrEqualTo(rowWidth));
+      }
+      final rows = <double>{for (var i = 0; i < 9; i++) tester.getTopLeft(tiles.at(i)).dy.roundToDouble()};
+      expect(rows.length, greaterThanOrEqualTo(3));
       Color? colourOf(String label) => tester.widget<Text>(topic(label)).style?.color;
       expect(colourOf('Workplace Safety'), MentorshipColors.topicRed);
       expect(colourOf('Budgeting & Costing'), MentorshipColors.topicBlue);
@@ -1053,13 +1066,22 @@ void main() {
       expect(repo.lastFilters.category, 'Sustainability & ESG');
     });
 
-    testWidgets('the Domains pill opens Find Mentors', (tester) async {
+    testWidgets('the Domains pill lists every domain with its count; a pick opens Find Mentors on it', (tester) async {
       final repo = _Repo();
       await _pumpLanding(tester, repo, _Calls());
       await tester.tap(find.text('8+ Domains').first);
       await tester.pumpAndSettle();
+      // The sheet, not the directory on the lit chip (which is what the pill used to open).
+      expect(find.text('All domains'), findsOneWidget);
+      expect(find.text('${DemoMentorshipRepository.categoryList.length} domains'), findsOneWidget);
+      expect(find.byType(FindMentorsScreen), findsNothing);
+      for (final c in DemoMentorshipRepository.categoryList) {
+        expect(find.byKey(ValueKey('domain-${c.label}')), findsOneWidget, reason: c.label);
+      }
+      await tester.tap(find.byKey(const ValueKey('domain-Sustainability & ESG')));
+      await tester.pumpAndSettle();
       expect(find.byType(FindMentorsScreen), findsOneWidget);
-      expect(repo.lastFilters.category, 'Operations & FM');
+      expect(repo.lastFilters.category, 'Sustainability & ESG', reason: 'the picked domain, not the lit chip');
     });
 
     testWidgets('a mentor card opens that mentor\'s profile', (tester) async {
@@ -1088,9 +1110,12 @@ void main() {
     testWidgets('each advisory session\'s button opens its mentor, where the offering is', (tester) async {
       final calls = _Calls();
       await _pumpLanding(tester, _Repo(), calls);
-      await tester.tap(find.text('Book Diagnostic (Free)'));
-      await tester.tap(find.text('Book Session'));
-      await tester.tap(find.text('Request Review'));
+      // The topic chips above now take as many rows as their words need, so the third card sits below the fold.
+      for (final label in ['Book Diagnostic (Free)', 'Book Session', 'Request Review']) {
+        await tester.ensureVisible(find.text(label));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(label));
+      }
       expect(calls.mentors, ['rajesh', 'rajesh', 'rajesh']);
     });
 

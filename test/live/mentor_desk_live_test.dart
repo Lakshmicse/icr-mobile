@@ -73,8 +73,6 @@ void main() {
         expect(d.profile!.discoverable, isTrue);
         expect(d.profile!.rating, greaterThan(0));
         expect(d.profile!.ratingCount, greaterThan(0));
-        expect(d.capacityTotal, 6);
-        expect(d.capacityActive + d.capacityOpen, d.capacityTotal);
         expect(d.requestsPending, greaterThanOrEqualTo(4));
         expect(d.menteesActive, greaterThanOrEqualTo(2));
         expect(d.completenessScore, inInclusiveRange(1, 100));
@@ -152,7 +150,6 @@ void main() {
       // Settings and hours.
       final s = c.settings.data!;
       expect(s.status, DeskStatus.approved);
-      expect(s.capacity, 6);
       expect(s.preferredModes, containsAll(['VIDEO', 'PHONE']));
       expect(s.timezone, 'Asia/Kolkata');
       expect(s.meetingLink, startsWith('https://'));
@@ -243,34 +240,26 @@ void main() {
       await c.settings.load();
       final before = c.settings.data!;
       try {
-        expect(
-          await c.saveSettings({'capacity': before.capacity + 1, 'availabilityNote': 'A live test wrote this note.'}),
-          isNull,
-        );
+        // (No places: the portal keeps no limit on mentees since 27 Oct 2026, so only the note is changed.)
+        expect(await c.saveSettings({'availabilityNote': 'A live test wrote this note.'}), isNull);
         final after = c.settings.data!;
-        expect(after.capacity, before.capacity + 1);
         expect(after.availabilityNote, 'A live test wrote this note.');
         expect(after.timezone, before.timezone, reason: 'what was not sent is left alone');
         expect(after.preferredModes, before.preferredModes);
         expect(after.meetingLink, before.meetingLink);
         expect(after.bioHtml, before.bioHtml, reason: 'an untouched bio keeps its formatting');
-        expect((await c.dashboard.load().then((_) => c.dashboard.data!)).capacityTotal, before.capacity + 1);
-
         expect(await c.saveSettings({'meetingLink': 'not a link'}), isNotNull);
-        expect(await c.saveSettings({'capacity': 0}), isNotNull, reason: 'a mentor takes at least one mentee');
-        expect(await c.saveSettings({'capacity': 11}), isNotNull, reason: 'and at most ten');
         expect(
           await c.saveSettings({
             'preferredModes': ['TELEPATHY'],
           }),
           isNotNull,
         );
-        expect(c.settings.data!.capacity, before.capacity + 1);
+        expect(c.settings.data!.availabilityNote, 'A live test wrote this note.');
       } finally {
-        await c.saveSettings({'capacity': before.capacity, 'availabilityNote': before.availabilityNote});
+        await c.saveSettings({'availabilityNote': before.availabilityNote});
       }
       await c.settings.load();
-      expect(c.settings.data!.capacity, before.capacity);
       expect(c.settings.data!.availabilityNote, before.availabilityNote);
       c.dispose();
     });

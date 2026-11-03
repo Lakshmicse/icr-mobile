@@ -315,14 +315,20 @@ class MentorshipOverview {
     this.banner,
     this.cohort,
     this.services = const [],
+    this.domains = const [],
   });
 
+  /// The chips: the most-listed domains.
   final List<MentorCategory> categories;
   final String? selectedCategory;
 
   /// "8+ Domains" as the design words it: the count of domains with a mentor,
   /// rounded down with a "+" (`domainsBadgeFor`).
   final String domainsBadge;
+
+  /// Every domain a listed mentor has, with its mentor count: what the pill opens, so the "15+" can be seen in
+  /// full (the chips are only the first few).
+  final List<MentorCategory> domains;
   final List<MentorCompany> companies;
   final List<MentorShelf> shelves;
   final List<MentorTopic> topics;
@@ -340,6 +346,7 @@ class MentorshipOverview {
     banner: banner,
     cohort: cohort,
     services: services,
+    domains: domains,
   );
 }
 

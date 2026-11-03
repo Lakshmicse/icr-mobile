@@ -28,6 +28,7 @@ class MentorshipScreen extends StatefulWidget {
     required this.viewer,
     required this.onAccount,
     this.openSite = openSitePage,
+    this.offerMentoring = true,
   });
 
   /// The shell's way back to Home. The tab has no arrow of its own (it wears
@@ -45,6 +46,10 @@ class MentorshipScreen extends StatefulWidget {
   /// Opens a page of the website: the browser by default, a recorder in tests.
   /// "Apply as Mentor", the cohort's "Know More" and the bell go through it.
   final OpenSite openSite;
+
+  /// Whether the "Become an ICR Mentor" band and "Apply as Mentor" are shown: only to someone who could still
+  /// apply (`canOfferToMentor`), as the website hides its band from a mentor, an applicant and staff.
+  final bool offerMentoring;
 
   @override
   State<MentorshipScreen> createState() => _MentorshipScreenState();
@@ -64,6 +69,16 @@ class _MentorshipScreenState extends State<MentorshipScreen> {
   void dispose() {
     _search.dispose();
     super.dispose();
+  }
+
+  /// The Domains pill: every domain in a sheet, a pick opening Find Mentors on it. An overview that carries no
+  /// list (none in the facets) opens the whole directory instead of nothing.
+  void _browseDomains(MentorshipOverview o) {
+    if (o.domains.isEmpty) {
+      _find();
+      return;
+    }
+    showDomainsSheet(context, o.domains, onPick: (label) => _find(category: label));
   }
 
   void _find({String? category, String search = '', String? company, bool companyOnAccount = false}) => openFindMentors(
@@ -151,8 +166,8 @@ class _MentorshipScreenState extends State<MentorshipScreen> {
           child: MentorshipNotice(
             title: 'No mentors are listed yet',
             body: 'Be the first to guide the next generation of facility and real estate leaders.',
-            action: 'Apply as Mentor',
-            onAction: () => widget.openSite(context, '/become-a-mentor'),
+            action: widget.offerMentoring ? 'Apply as Mentor' : null,
+            onAction: widget.offerMentoring ? () => widget.openSite(context, '/become-a-mentor') : null,
           ),
         ),
       ];
@@ -165,7 +180,7 @@ class _MentorshipScreenState extends State<MentorshipScreen> {
     final shelves = o.shelves.where((s) => s.mentors.isNotEmpty).toList();
     void openMentor(Mentor m) => widget.onOpenMentor(context, m.id);
 
-    final pill = o.domainsBadge.isEmpty ? null : DomainsPill(o.domainsBadge, onTap: () => _find(category: selected));
+    final pill = o.domainsBadge.isEmpty ? null : DomainsPill(o.domainsBadge, onTap: () => _browseDomains(o));
     Widget chips() => CategoryChipRow(
       categories: o.categories,
       selected: selected,
@@ -241,7 +256,7 @@ class _MentorshipScreenState extends State<MentorshipScreen> {
         for (final (i, s) in shelves.indexed.skip(1)) shelf(i, s),
         if (shelves.length < 2) const SizedBox(height: 20.5),
 
-        if (o.banner != null)
+        if (o.banner != null && widget.offerMentoring)
           BecomeMentorBanner(
             banner: o.banner!,
             onApply: () => widget.openSite(context, o.banner!.link ?? '/become-a-mentor'),

@@ -205,7 +205,9 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
     final user = json['user'] as Map<String, dynamic>? ?? const {};
     final career = (json['career'] as Map<String, dynamic>?)?['currentRole'] as Map<String, dynamic>?;
     final viewerJson = json['viewer'] as Map<String, dynamic>?;
-    final openSlots = (json['openSlots'] as num?)?.toInt() ?? 0;
+    // The portal keeps no limit on mentees since 27 Oct 2026 (`discoverable` alone stops requests), so the
+    // directory sends no `openSlots`; an older API's count is still worded.
+    final openSlots = (json['openSlots'] as num?)?.toInt();
     final modes = _strings(json['preferredModes']).map(_modeLabel).whereType<String>().toList();
     return MentorProfile(
       id: json['id'] as String,
@@ -232,7 +234,11 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
         sessions: sessionsLabel((json['sessionsCompleted'] as num?)?.toInt() ?? 0),
         sessionsBadge: json['isTopMentor'] == true ? 'Top Mentor' : null,
         mentees: '${(json['menteesHelped'] as num?)?.toInt() ?? 0}',
-        menteesNote: openSlots > 0 ? '$openSlots slot${openSlots == 1 ? '' : 's'} open' : 'At capacity',
+        menteesNote: openSlots == null
+            ? 'Taking new mentees'
+            : openSlots > 0
+            ? '$openSlots slot${openSlots == 1 ? '' : 's'} open'
+            : 'At capacity',
       ),
       experience: [for (final r in (json['experience'] as List? ?? const []).cast<Map<String, dynamic>>()) _role(r)],
       education: [
@@ -264,7 +270,7 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
               mentorshipId: viewerJson['mentorshipId'] as String?,
               pendingRequestId: viewerJson['pendingRequestId'] as String?,
             ),
-      openSlots: openSlots,
+      openSlots: openSlots ?? 0,
       capacity: (json['capacity'] as num?)?.toInt() ?? 0,
       yearsLabel: switch ((json['yearsExperience'] as num?)?.toInt()) {
         null || 0 => null,

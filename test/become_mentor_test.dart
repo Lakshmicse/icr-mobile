@@ -319,22 +319,18 @@ void main() {
   });
 
   group('Availability', () {
-    testWidgets('capacity, how you meet, how often and when you are free are saved as the API takes them', (
-      tester,
-    ) async {
+    testWidgets('how you meet, how often and when you are free are saved as the API takes them (no mentee count: '
+        'the portal keeps no limit)', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld(withProfile: true));
-      expect(find.byKey(const ValueKey('capacity-line')), findsOneWidget);
+      expect(find.text('Mentees at a time'), findsNothing);
       await openCard(tester, 'availability', 'Edit');
-      expect(find.text('Mentees at a time: 2'), findsOneWidget);
-      await tester.drag(find.byKey(const ValueKey('capacity-slider')), const Offset(150, 0));
-      await tester.pump();
+      expect(find.byKey(const ValueKey('capacity-slider')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('mode-PHONE')));
       await tester.tap(find.byKey(const ValueKey('cadence-WEEKLY')));
       await enter(tester, 'availability-note', 'Weekday evenings after 7pm IST');
       await tapSheetButton(tester, 'Save');
       final body = api.bodyOf('PUT /mentorship/mentors/me') as Map;
-      expect(body['capacity'], greaterThan(2));
-      expect(body['capacity'], lessThanOrEqualTo(10));
+      expect(body.containsKey('capacity'), isFalse);
       expect(body['preferredModes'], ['VIDEO', 'PHONE']);
       expect(body['cadence'], 'WEEKLY');
       expect(body['availabilityNote'], 'Weekday evenings after 7pm IST');

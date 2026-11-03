@@ -103,7 +103,13 @@ class MentorshipText {
   static final bannerTitle = AppText.workSans(15.9, FontWeight.w700, Colors.white, lineHeight: 18);
   static final bannerBody = AppText.plexSans(12.2, FontWeight.w400, const Color(0xFFE4EEF9), lineHeight: 15);
   static final bannerButton = AppText.plexSans(12.7, FontWeight.w600, MentorshipColors.bannerInk, lineHeight: 16);
-  static final cohortKicker = AppText.plexSans(11.13, FontWeight.w700, AppColors.onSurface, lineHeight: 14, spacing: 0.4);
+  static final cohortKicker = AppText.plexSans(
+    11.13,
+    FontWeight.w700,
+    AppColors.onSurface,
+    lineHeight: 14,
+    spacing: 0.4,
+  );
   static final cohortTitle = AppText.workSans(14, FontWeight.w700, AppColors.onSurface, lineHeight: 17);
   static final cohortButton = AppText.plexSans(12.3, FontWeight.w700, AppColors.primary, lineHeight: 16);
   static final cohortMeta = AppText.plexSans(11.9, FontWeight.w500, AppColors.onSurfaceVariant, lineHeight: 16);

@@ -104,7 +104,7 @@ void main() {
     expect(p.stats.sessions, '26+');
     expect(p.stats.sessionsBadge, 'Top Mentor');
     expect(p.stats.mentees, '12');
-    expect(p.stats.menteesNote, '2 slots open');
+    expect(p.stats.menteesNote, 'Taking new mentees', reason: 'the portal keeps no limit on mentees');
     expect(p.languages, ['English', 'Telugu', 'Hindi', 'Kannada']);
 
     // Career Journey: the design's three roles, newest first.
@@ -188,7 +188,7 @@ void main() {
     final plan = c.featuredPlan!;
     expect(plan.title, 'Pro Mentorship Tier');
     expect(plan.perMonthPaisa, 1250000);
-    expect(plan.seatsNote, 'Only 2 slots left');
+    expect(plan.seatsNote, isNull, reason: 'no seats to count: the portal keeps no limit on mentees');
     expect(plan.applyLabel, 'Apply for Pro Mentorship');
     expect(plan.inclusions, [
       '2 dedicated live 1:1 strategy calls each month',

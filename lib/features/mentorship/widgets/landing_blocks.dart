@@ -10,6 +10,7 @@ import '../../../core/widgets/section_heading.dart';
 import '../../feed/widgets/feed_avatar.dart';
 import '../mentorship_models.dart';
 import '../mentorship_styles.dart';
+import 'category_chips.dart';
 
 /// A section's heading row, 20 dp tall: the title, and whatever sits at the
 /// right ("8+ Domains", "View More").
@@ -177,7 +178,10 @@ class _Tile extends StatelessWidget {
   }
 }
 
-/// "Learn from top topics": outlined chips, three to a row.
+/// "Learn from top topics": outlined chips, each as wide as its words, flowing onto new rows. The design draws
+/// three short names to a row; real topics run to "Communication & Stakeholder Management", and a fixed
+/// three-column grid shrank those to a third of the size of their neighbours. A name wider than the row is cut
+/// with an ellipsis rather than shrunk.
 class TopicGrid extends StatelessWidget {
   const TopicGrid({super.key, required this.topics, required this.onOpen});
 
@@ -189,27 +193,12 @@ class TopicGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final shown = topics.take(9).toList();
-    final rows = (shown.length + 2) ~/ 3;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          for (var r = 0; r < rows; r++) ...[
-            if (r > 0) const SizedBox(height: 6.4),
-            Row(
-              children: [
-                for (var i = 0; i < 3; i++) ...[
-                  if (i > 0) const SizedBox(width: 8),
-                  Expanded(
-                    child: r * 3 + i < shown.length
-                        ? _TopicChip(topic: shown[r * 3 + i], onTap: () => onOpen(shown[r * 3 + i]))
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ],
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 6.4,
+        children: [for (final t in shown) _TopicChip(topic: t, onTap: () => onOpen(t))],
       ),
     );
   }
@@ -244,12 +233,15 @@ class _TopicChip extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(6),
             onTap: onTap,
-            child: Center(
-              child: Padding(
-                padding: EdgeInsets.zero,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(topic.label, maxLines: 1, style: MentorshipText.topicChip(color)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Center(
+                widthFactor: 1,
+                child: Text(
+                  topic.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: MentorshipText.topicChip(color),
                 ),
               ),
             ),
@@ -640,4 +632,64 @@ class _SessionCard extends StatelessWidget {
       ],
     );
   }
+}
+
+/// "All domains": what the Domains pill opens — every domain a listed mentor has, with its mentor count, each a
+/// way into Find Mentors on that domain (the website's directory lists them the same way in its Domain filter).
+/// The pill's "15+" is the rounded count of this list.
+Future<void> showDomainsSheet(
+  BuildContext context,
+  List<MentorCategory> domains, {
+  required ValueChanged<String> onPick,
+}) async {
+  final picked = await showModalBottomSheet<String>(
+    context: context,
+    showDragHandle: true,
+    backgroundColor: Colors.white,
+    isScrollControlled: true,
+    builder: (sheet) => SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(sheet).height * 0.8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+              child: Row(
+                children: [
+                  Text('All domains', style: MentorshipText.formTitle),
+                  const Spacer(),
+                  Text(
+                    '${domains.length} ${domains.length == 1 ? 'domain' : 'domains'}',
+                    key: const ValueKey('domains-count'),
+                    style: MentorshipText.matches,
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: domains.length,
+                itemBuilder: (_, i) {
+                  final d = domains[i];
+                  final g = domainGlyph(d.label);
+                  return ListTile(
+                    key: ValueKey('domain-${d.label}'),
+                    leading: Icon(g.icon, size: 22, fill: g.filled ? 1 : 0, color: AppColors.primary),
+                    title: Text(d.label, style: MentorshipText.option),
+                    trailing: d.count > 0
+                        ? Text('${d.count} ${d.count == 1 ? 'mentor' : 'mentors'}', style: MentorshipText.matches)
+                        : null,
+                    onTap: () => Navigator.pop(sheet, d.label),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  if (picked != null) onPick(picked);
 }

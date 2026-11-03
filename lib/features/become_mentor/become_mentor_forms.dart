@@ -214,7 +214,8 @@ class _AudienceFormState extends State<AudienceForm> with SheetState<AudienceFor
   }
 }
 
-/// How many mentees at once, how they will meet, how often, and a line on when the mentor is free.
+/// How they will meet, how often, and a line on when the mentor is free. (No count of mentees: the portal keeps
+/// no limit since 27 Oct 2026 — "Taking new mentees" in Settings is what stops requests.)
 class AvailabilityForm extends StatefulWidget {
   const AvailabilityForm({super.key, required this.profile, required this.onSave});
 
@@ -226,10 +227,6 @@ class AvailabilityForm extends StatefulWidget {
 }
 
 class _AvailabilityFormState extends State<AvailabilityForm> with SheetState<AvailabilityForm> {
-  late double _capacity = (widget.profile?.capacity ?? MentorLimits.capacityDefault).toDouble().clamp(
-    1,
-    MentorLimits.capacityMax.toDouble(),
-  );
   late final Set<String> _modes = {
     ...(widget.profile?.preferredModes ?? const ['VIDEO']),
   };
@@ -253,7 +250,6 @@ class _AvailabilityFormState extends State<AvailabilityForm> with SheetState<Ava
           : () => send(
               () => problems.isEmpty ? null : problems.first.message,
               () => widget.onSave({
-                'capacity': _capacity.round(),
                 // Kept in the API's order, so the card lists them the same way every time.
                 'preferredModes': [
                   for (final m in mentorModes.keys)
@@ -265,19 +261,6 @@ class _AvailabilityFormState extends State<AvailabilityForm> with SheetState<Ava
               }),
             ),
       children: [
-        FieldBlock(
-          label: 'Mentees at a time: ${_capacity.round()}',
-          help: 'You stop appearing as available once you are full.',
-          child: Slider(
-            key: const ValueKey('capacity-slider'),
-            value: _capacity,
-            min: 1,
-            max: MentorLimits.capacityMax.toDouble(),
-            divisions: MentorLimits.capacityMax - 1,
-            label: '${_capacity.round()}',
-            onChanged: (v) => setState(() => _capacity = v),
-          ),
-        ),
         FieldBlock(
           label: "How you'll meet",
           child: Wrap(

@@ -277,7 +277,7 @@ class CareerSection extends StatelessWidget {
   }
 }
 
-class _RoleTile extends StatelessWidget {
+class _RoleTile extends StatefulWidget {
   const _RoleTile({required this.role, required this.index, required this.last});
 
   /// The timeline's axis, from the section's left padding, and its two dot sizes (from the design).
@@ -290,7 +290,18 @@ class _RoleTile extends StatelessWidget {
   final bool last;
 
   @override
+  State<_RoleTile> createState() => _RoleTileState();
+}
+
+class _RoleTileState extends State<_RoleTile> {
+  /// The description opened past its four lines.
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
+    final role = widget.role;
+    final index = widget.index;
+    final last = widget.last;
     final months = monthsBetween(role.startYear, role.startMonth, role.endYear, role.endMonth);
     final length = role.durationLabel ?? durationLabel(months);
     final short = role.durationLabel ?? durationShort(months);
@@ -308,19 +319,19 @@ class _RoleTile extends StatelessWidget {
         // leaving the gap above the next dot (measured on the design: 2 dp wide, 1.3 dp under the dot).
         if (!last && recent)
           Positioned(
-            left: _axis - 1,
-            top: rowHeight / 2 + _ringSize / 2 + 1.3,
+            left: _RoleTile._axis - 1,
+            top: rowHeight / 2 + _RoleTile._ringSize / 2 + 1.3,
             bottom: 17.8,
             width: 2,
             child: const ColoredBox(color: MentorColors.timeline),
           ),
         Positioned(
-          left: _axis - (recent ? _ringSize : _fadedSize) / 2,
-          top: rowHeight / 2 - (recent ? _ringSize : _fadedSize) / 2,
+          left: _RoleTile._axis - (recent ? _RoleTile._ringSize : _RoleTile._fadedSize) / 2,
+          top: rowHeight / 2 - (recent ? _RoleTile._ringSize : _RoleTile._fadedSize) / 2,
           child: recent
               ? Container(
-                  width: _ringSize,
-                  height: _ringSize,
+                  width: _RoleTile._ringSize,
+                  height: _RoleTile._ringSize,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
@@ -329,8 +340,8 @@ class _RoleTile extends StatelessWidget {
                 )
               : Container(
                   // An earlier role: a faint disc with a pale core.
-                  width: _fadedSize,
-                  height: _fadedSize,
+                  width: _RoleTile._fadedSize,
+                  height: _RoleTile._fadedSize,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: const Color(0xFFFAFAFA),
@@ -394,10 +405,42 @@ class _RoleTile extends StatelessWidget {
               Text(meta, style: MentorText.roleMeta, maxLines: 1, overflow: TextOverflow.ellipsis),
               if (description != null && description.isNotEmpty) ...[
                 const SizedBox(height: 10.4),
-                SizedBox(
-                  // The design's longest line is 307 dp (Medium weight); the next word would not fit under 331.
-                  width: 310,
-                  child: Text(description, style: MentorText.body, maxLines: 4, overflow: TextOverflow.ellipsis),
+                Padding(
+                  padding: const EdgeInsets.only(right: 10.8),
+                  child: LayoutBuilder(
+                    builder: (context, box) {
+                      // Four lines, then "...read more" opens the rest in place: a mentor's role can run to a
+                      // paragraph, and the design's four-line box cut it off with an ellipsis.
+                      final painter = TextPainter(
+                        text: TextSpan(text: description, style: MentorText.body),
+                        textDirection: Directionality.of(context),
+                        textScaler: MediaQuery.textScalerOf(context),
+                        maxLines: 4,
+                      )..layout(maxWidth: box.maxWidth);
+                      final folds = painter.didExceedMaxLines;
+                      painter.dispose();
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            description,
+                            style: MentorText.body,
+                            maxLines: _expanded ? null : 4,
+                            overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                          ),
+                          if (folds) ...[
+                            const SizedBox(height: 6),
+                            GestureDetector(
+                              key: ValueKey('role-more-$index'),
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => setState(() => _expanded = !_expanded),
+                              child: Text(_expanded ? 'show less' : '...read more', style: MentorText.readMore),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ],
               SizedBox(height: last ? 11.8 : 17.8),

@@ -107,7 +107,7 @@ class OverviewTab extends StatelessWidget {
               StatStrip(
                 tiles: [
                   ('${d.menteesActive}', 'Active mentees'),
-                  (d.capacityTotal == 0 ? '0' : '${d.capacityOpen} of ${d.capacityTotal}', 'Places open'),
+                  ('${d.menteesCompleted}', 'Completed'),
                   ('${c.requestCount}', 'To answer'),
                 ],
               ),
@@ -123,14 +123,6 @@ class OverviewTab extends StatelessWidget {
                   (d.answeredThisMonth == 0 ? '-' : '${d.acceptRatePct}%', 'Accepted this month'),
                 ],
               ),
-              if (d.capacityTotal > 0 && d.capacityOpen == 0 && c.freeRequests.isNotEmpty)
-                Callout(
-                  tone: PillTone.amber,
-                  text:
-                      'All ${d.capacityTotal} of your places are taken. You cannot accept another mentee until one frees up '
-                      'or you raise your places under Settings.',
-                  actions: [QuietButton(label: 'Open Settings', onPressed: () => onSelectTab(DeskTab.settings))],
-                ),
               NeedsYouCard(items: needs, clear: 'Nothing is waiting on you.'),
               if (next != null) ...[
                 const SectionTitle(title: 'Up next', top: 6),
@@ -259,11 +251,7 @@ class _Visibility extends StatelessWidget {
             title: Text('Let members find me', style: MentoringText.bodyStrong),
             subtitle: Text(
               profile.discoverable
-                  ? (dashboard.isListed
-                        ? 'Members can find you and ask for mentoring.'
-                        : dashboard.capacityOpen == 0
-                        ? 'Switched on, but all your places are taken, so you are not shown.'
-                        : 'Switched on.')
+                  ? (dashboard.isListed ? 'Members can find you and ask for mentoring.' : 'Switched on.')
                   : 'Switched off: nobody new can find you. Current mentees are not affected.',
               style: MentoringText.meta,
             ),

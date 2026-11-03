@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -19,6 +21,7 @@ import 'api_membership_repository.dart';
 import 'demo_membership_repository.dart';
 import 'membership_controller.dart';
 import 'membership_format.dart';
+import '../payments/checkout_start.dart';
 import 'membership_models.dart';
 import 'membership_repository.dart';
 import 'membership_styles.dart';
@@ -75,13 +78,25 @@ class _MembershipScreenState extends State<MembershipScreen> {
     super.dispose();
   }
 
-  /// A checkout the gateway must finish: the website's plans page takes it (the
-  /// app has no gateway leg), never the app's own screen for that page.
+  /// A checkout the gateway must finish: paid in the app's own payment view (owner's call, 2 Nov 2026 — the
+  /// website's plans page took it in the phone's browser before), then the plans read again.
   void _onChange() {
     final gateway = _c.gateway;
     if (gateway == null || !mounted) return;
     _c.gatewayHandled();
-    openUrl(context, AppConfig.sitePage('/pricing/${_c.audience.slug}'), inApp: false);
+    unawaited(_payForPlan(gateway));
+  }
+
+  Future<void> _payForPlan(CheckoutOutcome gateway) async {
+    final start = CheckoutStart(
+      devActivated: gateway.devActivated,
+      action: gateway.gatewayAction,
+      fields: gateway.fields ?? const {},
+    );
+    final outcome = await runCheckout(context, start, title: 'Pay for your plan');
+    if (!mounted) return;
+    await _c.refresh();
+    if (mounted) showMessage(context, paymentMessage(outcome, what: 'Your plan'));
   }
 
   /// "Talk to us": the app's contact form, set to membership and naming the plan (the website's `talkToUsHref`).

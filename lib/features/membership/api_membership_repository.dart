@@ -45,7 +45,10 @@ class ApiMembershipRepository implements MembershipRepository {
       final canBuy = m['canBuy'] as bool? ?? false;
       if (holds || (canBuy && (onSale == null || onSale.contains(audience.api)))) shown.add(audience);
     }
-    return [for (final a in MembershipAudience.values) if (shown.contains(a)) a];
+    return [
+      for (final a in MembershipAudience.values)
+        if (shown.contains(a)) a,
+    ];
   }
 
   @override

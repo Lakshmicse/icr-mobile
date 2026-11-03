@@ -389,10 +389,10 @@ void main() {
 
     liveTest('a company on mentors\' accounts goes to the directory\'s own `companies` filter', () async {
       final repo = ApiMentorshipRepository(api: await _client());
-      // No seeded mentor has a company on their account, so the filter is honoured by being empty.
+      // Whoever the API lists for the company has it on their account (none, or the mentors seeded at SpaceX).
       final page = await repo.search(const MentorFilters(company: 'SpaceX', companyOnAccount: true));
-      expect(page.total, 0);
-      expect(page.mentors, isEmpty);
+      expect(page.mentors.length, page.total);
+      expect(page.mentors.every((m) => m.roleLine.endsWith('@ SpaceX')), isTrue);
     });
 
     liveTest(
@@ -415,7 +415,9 @@ void main() {
       const filters = MentorFilters(availableOnly: true);
       final rows = await _rawPage(api, filters);
       expect(rows, isNotEmpty);
-      expect(rows.every((r) => (r['openSlots'] as num) > 0), isTrue);
+      // The portal keeps no limit on mentees since 27 Oct 2026, so a row carries no `openSlots`; an older API's
+      // count must be positive.
+      expect(rows.every((r) => r['openSlots'] == null || (r['openSlots'] as num) > 0), isTrue);
       final page = await ApiMentorshipRepository(api: api).search(filters);
       expect(page.mentors.map((m) => m.id), rows.map((r) => r['id']));
     });

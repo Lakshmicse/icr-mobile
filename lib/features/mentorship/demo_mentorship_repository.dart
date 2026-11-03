@@ -152,6 +152,7 @@ class DemoMentorshipRepository implements MentorshipRepository {
       categories: categoryList,
       selectedCategory: category ?? categoryList.first.label,
       domainsBadge: domainsBadgeFor(8),
+      domains: categoryList,
       companies: companies,
       shelves: [
         MentorShelf(key: 'network', title: mentorNetworkTitle, mentors: shelf),
