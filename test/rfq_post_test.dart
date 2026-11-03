@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/features/rfq/demo_rfq_repository.dart';
+import 'package:icr_mobile/features/rfq/widgets/composer_parts.dart' show SectionCard;
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:icr_mobile/features/rfq/post_rfq_controller.dart';
 import 'package:icr_mobile/features/rfq/post_rfq_screen.dart';
 import 'package:icr_mobile/features/rfq/rfq_detail_screen.dart';
@@ -10,14 +12,16 @@ import 'package:icr_mobile/features/rfq/rfq_links.dart';
 import 'package:icr_mobile/features/rfq/rfq_models.dart';
 import 'package:icr_mobile/features/rfq/rfq_rules.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
+import 'package:icr_mobile/core/widgets/buttons.dart' show PrimaryButton;
 
 import 'helpers/fonts.dart';
 import 'rfq_fakes.dart';
 
-/// Every control of the composer ("Post RFQ"), tapped: the kind, the details, the places, the service, the
-/// description and its checklist, the line items, the files, the supplier criteria, the dates, who may reply, the
-/// review, the send, the refusal that keeps what was typed, the draft, the edit and the copy. What the API does
-/// with the body is proved in `test/live/rfq_live_test.dart`.
+/// Every control of the composer ("Post your requirement", the website's `/rfq/new` since 3 Nov 2026), tapped: the
+/// kind, "Posting for", the details, the places, the service, the description and its checklist, the files, the
+/// supplier criteria, the dates, the progress card, the review, the send, the refusal that keeps what was typed, the
+/// edit (where a draft, a title and a budget still show) and the copy. What the API does with the body is proved in
+/// `test/live/rfq_live_test.dart`.
 void main() {
   late FlakyRfqRepository repo;
   late RecordingRfqLinks links;
@@ -106,22 +110,75 @@ void main() {
 
   testWidgets('opens on an enquiry, for the company, with the account\'s details filled in', (tester) async {
     await open(tester);
-    expect(find.text('Post RFQ'), findsOneWidget);
+    expect(find.text('Post your requirement'), findsOneWidget, reason: "the website's heading");
     expect(find.text('Bharat Facilities'), findsOneWidget);
     expect(tester.widget<TextField>(key('contact-name')).controller!.text, 'Bharat Buyer');
     expect(tester.widget<TextField>(key('contact-phone')).controller!.text, '+919879879898');
     final email = tester.widget<TextField>(key('contact-email'));
     expect(email.controller!.text, 'buyer@icr.dev');
     expect(email.readOnly, isTrue, reason: 'the account\'s address is not editable here');
+    expect(
+      find.descendant(of: find.byKey(const ValueKey('contact-email')), matching: find.byIcon(LucideIcons.lock)),
+      findsOneWidget,
+      reason: 'locked, as on the website',
+    );
+    expect(find.text('ENQUIRY'), findsOneWidget);
+    expect(find.text('RFQ'), findsOneWidget);
     expect(find.text('Quick supplier matching'), findsOneWidget);
     expect(find.text('Formal quotation process'), findsOneWidget);
+    expect(find.text('What kind of request'), findsNothing, reason: 'the kind card has no heading or number');
+    expect(find.text('12/80'), findsNothing, reason: 'the contact fields show no counter');
     expect(
       find.text('Supplier criteria'),
       findsNothing,
       reason: 'the RFQ\'s own sections join only when RFQ is chosen',
     );
+    // What the website's composer does not ask.
+    for (final gone in ['title', 'budget']) {
+      expect(key(gone), findsNothing, reason: gone);
+    }
+    expect(find.text('Line items'), findsNothing);
+    expect(find.text('Who can reply'), findsNothing);
+    expect(find.text('Reply by'), findsNothing);
+    expect(find.text('Save draft'), findsNothing, reason: 'a new requirement is posted at once');
     expect(find.text('Send enquiry'), findsOneWidget);
-    expect(find.text('Save draft'), findsOneWidget);
+    expect(find.text('You will see a summary to check before anything is sent.'), findsOneWidget);
+    // The website's rail, after the form.
+    expect(key('composer-progress'), findsOneWidget);
+    expect(key('what-happens-next'), findsOneWidget);
+    expect(key('why-icr'), findsOneWidget);
+  });
+
+  testWidgets('the sections are numbered from Your details, each ticked once complete, as on the website', (
+    tester,
+  ) async {
+    // A phone's height, so the progress card's rows have somewhere to scroll to.
+    await open(tester, height: 844);
+    final details = find.ancestor(of: find.text('Your details'), matching: find.byType(SectionCard)).first;
+    expect(tester.widget<SectionCard>(details).step, 1);
+    expect(tester.widget<SectionCard>(details).done, isTrue, reason: 'the account fills it');
+    final location = find.ancestor(of: find.text('Service location'), matching: find.byType(SectionCard)).first;
+    expect(tester.widget<SectionCard>(location).step, 2);
+    await pickFrom(tester, 'facility-field', 'IT & ITES');
+    await addPlace(tester, 'pun', 'Pune');
+    expect(tester.widget<SectionCard>(location).done, isTrue);
+    // The progress card follows the form: Your details and the location of four.
+    final form = find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first;
+    await tester.scrollUntilVisible(key('progress-describe'), 300, scrollable: form);
+    await settle(tester, 6);
+    expect(find.text('2 of 4'), findsOneWidget);
+    // A row of the progress card goes to its section.
+    await tester.tap(key('progress-describe'));
+    await settle(tester, 12);
+    final heading = find.descendant(
+      of: find.ancestor(
+        of: find.text('Include scope, quantity, frequency, timelines and any specific requirements.'),
+        matching: find.byType(SectionCard),
+      ),
+      matching: find.text('Tell suppliers what you need'),
+    );
+    final top = tester.getTopLeft(heading).dy;
+    expect(top, inInclusiveRange(0, 400), reason: 'the section is brought to the top of the screen');
   });
 
   testWidgets('choosing RFQ adds its criteria and deadlines and keeps what was typed', (tester) async {
@@ -134,9 +191,15 @@ void main() {
     expect(find.text('Create RFQ'), findsOneWidget);
     expect(find.text('Scope of services'), findsOneWidget);
     expect(tester.widget<TextField>(key('text')).controller!.text, startsWith('Housekeeping'));
+    expect(find.text('5 of 5'), findsNothing);
+    expect(find.textContaining('of 5'), findsOneWidget, reason: 'the RFQ adds Timeline to the progress');
     await tapKey(tester, 'kind-enquiry');
     expect(find.text('Send enquiry'), findsOneWidget);
-    expect(find.text('Who can reply'), findsOneWidget);
+    expect(
+      find.text('Your requirement'),
+      findsOneWidget,
+      reason: "an enquiry's text is the website's \"Your requirement\"",
+    );
     expect(tester.widget<TextField>(key('text')).controller!.text, startsWith('Housekeeping'));
   });
 
@@ -254,15 +317,26 @@ void main() {
       expect(find.text('Physical Security'), findsNothing);
     });
 
-    testWidgets('the title follows the service until one is typed', (tester) async {
+    testWidgets('a new requirement is titled from the facility and the service, as the website titles it', (
+      tester,
+    ) async {
       await open(tester);
-      await pickFrom(tester, 'facility-field', 'IT & ITES');
-      await pickFrom(tester, 'category-field', 'Security Services');
-      expect(find.textContaining('Left blank it reads "IT & ITES — Security Services"'), findsOneWidget);
-      await type(tester, 'title', 'Guarding for Pune');
-      expect(find.textContaining('Left blank it reads'), findsOneWidget);
-      await tapKey(tester, 'kind-rfq');
-      expect(find.textContaining('Bharat Facilities — Security Services RFQ'), findsWidgets);
+      await fillEnquiry(tester);
+      await send(tester);
+      await tester.tap(key('review-confirm'));
+      await settle(tester, 12);
+      expect(repo.created.single['title'], 'IT & ITES — Security Services');
+    });
+
+    test("an RFQ is titled from the company and the service, the website's way", () {
+      final d = RequirementDraft()
+        ..kind = RfqKind.rfq
+        ..facilityType = 'IT & ITES';
+      expect(
+        d.suggestedTitle(serviceLabel: 'Security Services', company: 'Bharat Facilities'),
+        'Bharat Facilities — Security Services RFQ',
+      );
+      expect(d.suggestedTitle(serviceLabel: '', company: 'Bharat Facilities'), 'Bharat Facilities — Services RFQ');
     });
   });
 
@@ -299,54 +373,14 @@ void main() {
       expect(find.textContaining('at least 20 characters'), findsWidgets);
     });
 
-    testWidgets('a budget is a rupee amount', (tester) async {
-      await open(tester);
+    testWidgets('editing a requirement shows its budget, held to a rupee amount', (tester) async {
+      await open(tester, editId: DemoRfqRepository.securityId);
       await type(tester, 'budget', 'lots');
       await send(tester);
       expect(find.text('Enter an amount in rupees, like 50,00,000'), findsWidgets);
       await type(tester, 'budget', '12,00,000');
       await send(tester);
       expect(find.text('Enter an amount in rupees, like 50,00,000'), findsNothing);
-    });
-  });
-
-  group('the line items', () {
-    testWidgets('an item is added, changed and removed', (tester) async {
-      await open(tester);
-      await tapKey(tester, 'item-add', frames: 10);
-      await tester.enterText(key('item-name'), 'Floor scrubber machine');
-      await tester.enterText(key('item-quantity'), '2');
-      await tester.enterText(key('item-unit'), 'units');
-      await tester.tap(key('item-save'));
-      await settle(tester, 10);
-      expect(find.text('Floor scrubber machine'), findsOneWidget);
-      expect(find.text('2 units'), findsOneWidget);
-      await tester.tap(find.text('Floor scrubber machine'));
-      await settle(tester, 10);
-      await tester.enterText(key('item-quantity'), '5');
-      await tester.tap(key('item-save'));
-      await settle(tester, 10);
-      expect(find.text('5 units'), findsOneWidget);
-      await tester.tap(find.byTooltip('Remove Floor scrubber machine'));
-      await settle(tester);
-      expect(key('item-row-0'), findsNothing);
-    });
-
-    testWidgets('a nameless item and a quantity that is not a whole number are refused in the sheet', (tester) async {
-      await open(tester);
-      await tapKey(tester, 'item-add', frames: 10);
-      await tester.tap(key('item-save'));
-      await settle(tester);
-      expect(find.text('Name the item'), findsOneWidget);
-      await tester.enterText(key('item-name'), 'Mop');
-      await tester.enterText(key('item-quantity'), '2.5');
-      await tester.tap(key('item-save'));
-      await settle(tester);
-      expect(find.text('Quantity must be a whole number'), findsOneWidget);
-      await tester.enterText(key('item-quantity'), '0');
-      await tester.tap(key('item-save'));
-      await settle(tester);
-      expect(find.textContaining('Quantity must be 1 to'), findsOneWidget);
     });
   });
 
@@ -547,64 +581,20 @@ void main() {
     });
   });
 
-  group('who can reply', () {
-    testWidgets('an invite-only enquiry needs suppliers, and goes to them as a private requirement', (tester) async {
-      await open(tester);
-      await fillEnquiry(tester);
-      await tapKey(tester, 'audience-invited');
-      await send(tester);
-      expect(find.text('Choose at least one supplier to invite'), findsWidgets);
-      expect(repo.created, isEmpty);
-      await tapKey(tester, 'invite-choose', frames: 12);
-      await tester.tap(key('supplier-demo-v-bluedot'));
-      await settle(tester);
-      await tester.tap(key('supplier-demo-v-innowork'));
-      await settle(tester);
-      await tester.tap(key('supplier-confirm'));
-      await settle(tester, 12);
-      expect(key('invited-demo-v-bluedot'), findsOneWidget);
-      expect(key('invited-demo-v-innowork'), findsOneWidget);
-      await send(tester);
-      expect(find.text('Only the suppliers you chose are told, and only they can reply.'), findsOneWidget);
-      await tester.tap(key('review-confirm'));
-      await settle(tester, 12);
-      final body = repo.created.single;
-      expect(body['visibility'], 'TARGETED');
-      expect(body['vendorIds'], ['demo-v-bluedot', 'demo-v-innowork']);
-      expect(body['status'], 'PUBLISHED');
-    });
-
-    testWidgets('a chosen supplier is taken off with its cross, and an RFQ offers no invite-only choice', (
-      tester,
-    ) async {
-      await open(tester);
-      await tapKey(tester, 'audience-invited');
-      await tapKey(tester, 'invite-choose', frames: 12);
-      await tester.tap(key('supplier-demo-v-bluedot'));
-      await settle(tester);
-      await tester.tap(key('supplier-confirm'));
-      await settle(tester, 12);
-      await tester.tap(find.byTooltip('Remove BlueDot'));
-      await settle(tester);
-      expect(key('invited-demo-v-bluedot'), findsNothing);
-      await tapKey(tester, 'kind-rfq');
-      expect(key('audience-invited'), findsNothing);
-    });
-  });
-
   group('the review and the send', () {
     testWidgets('the review lists what suppliers will read, and Edit goes back to that section', (tester) async {
       await open(tester);
       await fillEnquiry(tester);
       await send(tester);
       expect(find.text('Review your enquiry'), findsOneWidget);
-      expect(
-        find.descendant(of: key('review-describe-Title'), matching: find.text('IT & ITES — Security Services')),
-        findsOneWidget,
-      );
+      // The website's rows, and no others.
+      expect(find.descendant(of: key('review-type-Request type'), matching: find.text('Enquiry')), findsOneWidget);
       expect(find.descendant(of: key('review-location-Locations'), matching: find.text('Pune')), findsOneWidget);
+      expect(find.descendant(of: key('review-describe-Attachments'), matching: find.text('None')), findsOneWidget);
       expect(find.text('Bharat Facilities · Bharat Buyer · +919879879898'), findsOneWidget);
-      expect(find.text('Every supplier that matches'), findsOneWidget);
+      expect(key('review-describe-Title'), findsNothing);
+      expect(find.text('Every supplier that matches'), findsNothing);
+      expect(find.text('Matching suppliers are alerted as soon as it is posted.'), findsWidgets);
       expect(repo.created, isEmpty, reason: 'nothing is sent before the review is confirmed');
       await tester.tap(key('review-edit-service'));
       await settle(tester, 12);
@@ -622,7 +612,6 @@ void main() {
     ) async {
       await open(tester);
       await fillEnquiry(tester);
-      await type(tester, 'budget', '6,50,000');
       await send(tester);
       await tester.tap(key('review-confirm'));
       await settle(tester, 12);
@@ -634,7 +623,10 @@ void main() {
       expect(body['description'], startsWith('Round-the-clock'));
       expect(body['facilityType'], 'IT & ITES');
       expect(body['category'], 'SECURITY');
-      expect(body['budget'], 650000);
+      // What the website's composer does not ask is not sent.
+      for (final notAsked in ['budget', 'items', 'vendorIds', 'dueDate']) {
+        expect(body.containsKey(notAsked), isFalse, reason: notAsked);
+      }
       expect(body['contactName'], 'Bharat Buyer');
       expect(body['contactEmail'], 'buyer@icr.dev');
       expect(body['contactPhone'], '+919879879898');
@@ -710,28 +702,124 @@ void main() {
       expect(repo.created, hasLength(1), reason: "the refused attempt never reached the API's create");
     });
 
-    testWidgets('an account with no company is told so before the form, with the way to one', (tester) async {
-      repo.poster = const Poster(
-        id: 'bharat',
-        name: 'Bharat Buyer',
-        email: 'buyer@icr.dev',
-        role: 'BUYER',
-        phone: '+919879879898',
+    // Someone acting for no company, as the website's composer treats them (and the API since the party guard): an
+    // enquiry is theirs to send, naming who it is for; an RFQ is a registered company's.
+    const pooja = Poster(
+      id: 'pooja',
+      name: 'Pooja Professional',
+      email: 'pooja@icr.test',
+      role: 'PROFESSIONAL',
+      phone: '+919800000001',
+    );
+
+    testWidgets('acting for no company, an enquiry is sent for the employer "Posting for" names', (tester) async {
+      repo
+        ..poster = pooja
+        ..posting = const PostingOptions(names: ['Zenith Hospitals']);
+      await open(tester);
+      expect(tester.widget<Text>(key('posting-for')).data, 'Zenith Hospitals');
+      expect(key('company-name'), findsNothing, reason: 'the employer names it');
+      await fillEnquiry(tester);
+      await send(tester);
+      await tester.tap(key('review-confirm'));
+      await settle(tester, 12);
+      final body = repo.created.single;
+      expect(body['kind'], 'ENQUIRY');
+      expect(body['companyName'], 'Zenith Hospitals');
+      expect(find.text('Enquiry posted'), findsOneWidget);
+    });
+
+    testWidgets('with several employers "Posting for" is a choice, and a company to post for switches the account', (
+      tester,
+    ) async {
+      repo
+        ..poster = pooja
+        ..posting = const PostingOptions(
+          names: ['Zenith Hospitals', 'Acme Estates'],
+          companies: [PostingCompany(id: DemoRfqRepository.companyId, name: 'Bharat Facilities')],
+        );
+      final switched = <String>[];
+      tester.view.physicalSize = const Size(390, 3600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildAppTheme(),
+          home: PostRfqScreen(
+            repository: repo,
+            links: links,
+            onSwitchCompany: (id) async {
+              switched.add(id);
+              // The account now acts for the company.
+              repo.poster = const Poster(
+                id: 'pooja',
+                name: 'Pooja Professional',
+                email: 'pooja@icr.test',
+                role: 'BUYER',
+                companyId: DemoRfqRepository.companyId,
+                companyName: 'Bharat Facilities',
+              );
+            },
+          ),
+        ),
       );
+      await settle(tester, 8);
+      await tapKey(tester, 'posting-for-card', frames: 10);
+      await tester.tap(key('posting-name-Acme Estates'));
+      await settle(tester, 10);
+      expect(tester.widget<Text>(key('posting-for')).data, 'Acme Estates');
+      await tapKey(tester, 'posting-for-card', frames: 10);
+      await tester.tap(key('posting-company-${DemoRfqRepository.companyId}'));
+      await settle(tester, 12);
+      expect(switched, [DemoRfqRepository.companyId]);
+      expect(tester.widget<Text>(key('posting-for')).data, 'Bharat Facilities');
+    });
+
+    testWidgets('with no employer on the profile, the company name is asked', (tester) async {
+      repo.poster = pooja;
+      await open(tester);
+      expect(key('posting-for-card'), findsNothing, reason: 'the website shows no line then');
+      expect(key('company-name'), findsOneWidget);
+      await fillEnquiry(tester);
+      await send(tester);
+      expect(key('problem-companyName'), findsOneWidget);
+      await type(tester, 'company-name', 'Pooja Consulting');
+      await send(tester);
+      await tester.tap(key('review-confirm'));
+      await settle(tester, 12);
+      expect(repo.created.single['companyName'], 'Pooja Consulting');
+    });
+
+    testWidgets('acting for no company, an RFQ says it needs one, cannot be sent, and offers the way to a company', (
+      tester,
+    ) async {
+      repo
+        ..poster = pooja
+        ..posting = const PostingOptions(names: ['Zenith Hospitals']);
       var created = 0;
-      await open(tester, onCreateCompany: () => created++);
-      expect(find.text('Requirements are posted for a company'), findsOneWidget);
-      expect(find.text('Send enquiry'), findsNothing);
-      expect(key('text'), findsNothing);
-      await tester.tap(find.text('Create a company'));
+      await open(tester, kind: RfqKind.rfq, onCreateCompany: () => created++);
+      expect(key('rfq-needs-company'), findsOneWidget);
+      expect(
+        find.text(
+          'An RFQ is posted for a registered company, so suppliers know who is buying. An enquiry needs no registration.',
+        ),
+        findsOneWidget,
+      );
+      expect(tester.widget<PrimaryButton>(key('send')).onPressed, isNull, reason: 'Create RFQ is disabled');
+      expect(key('rfq-switch-company'), findsNothing, reason: 'no company of theirs posts requirements');
+      await tester.tap(key('rfq-create-company'));
       expect(created, 1);
       expect(links.opened, isEmpty, reason: 'the lead\'s screen opens, not the website');
+      // Back to an enquiry, and the form sends.
+      await tapKey(tester, 'kind-enquiry');
+      expect(key('rfq-needs-company'), findsNothing);
+      expect(tester.widget<PrimaryButton>(key('send')).onPressed, isNotNull);
     });
 
     testWidgets('with no callback wired, the way to a company opens the website page', (tester) async {
-      repo.poster = const Poster(id: 'bharat', name: 'Bharat Buyer', email: 'buyer@icr.dev', role: 'BUYER');
-      await open(tester);
-      await tester.tap(find.text('Create a company'));
+      repo.poster = pooja;
+      await open(tester, kind: RfqKind.rfq);
+      await tester.tap(key('rfq-create-company'));
       await settle(tester);
       expect(links.opened.single.path, '/account/companies/new');
     });
@@ -749,25 +837,26 @@ void main() {
     });
   });
 
+  // A new requirement is posted at once, as on the website; a draft posted before (an older one, or from the
+  // website's earlier composer) is still edited, saved and published here.
   group('drafts', () {
-    testWidgets('Save draft sends it as a draft, held only to the fields\' own limits', (tester) async {
-      await open(tester);
-      await type(tester, 'title', 'Residential Communities: Home Security');
+    testWidgets('a draft being edited is saved again as a draft, held only to the fields\' own limits', (tester) async {
+      await open(tester, editId: DemoRfqRepository.homeId);
       await tapKey(tester, 'save-draft');
-      expect(repo.created.single['status'], 'DRAFT');
-      expect(find.text('Draft saved'), findsOneWidget);
-      expect(find.textContaining('Only your team can see it'), findsOneWidget);
+      expect(repo.patched.single.$1, DemoRfqRepository.homeId);
+      expect(repo.calls, isNot(contains('act')), reason: 'saved, not published');
+      expect(find.text('Changes saved'), findsOneWidget);
     });
 
     testWidgets('a draft still refuses what the API refuses at any status', (tester) async {
-      await open(tester);
+      await open(tester, editId: DemoRfqRepository.homeId);
       await type(tester, 'budget', 'nonsense');
       await tapKey(tester, 'save-draft');
-      expect(repo.created, isEmpty);
+      expect(repo.patched, isEmpty);
       expect(find.text('Enter an amount in rupees, like 50,00,000'), findsWidgets);
     });
 
-    testWidgets('an invite-only enquiry goes out at once, never as a draft', (tester) async {
+    test('a new requirement goes out open to every matching supplier, whatever a copy carried', () async {
       final c = PostRfqController(repository: repo);
       await c.start();
       c.update((d) {
@@ -775,12 +864,20 @@ void main() {
           ..facilityType = 'IT & ITES'
           ..places = [RfqPlace.typed('Pune')]
           ..category = 'SECURITY'
-          ..text = 'A private enquiry to two suppliers about guarding.'
+          ..text = 'An enquiry about round-the-clock guarding for a campus.'
+          // What an older requirement could carry, and the website's composer never sends.
           ..audience = Audience.invited
-          ..invited = [DemoRfqRepository.blueDot];
+          ..invited = [DemoRfqRepository.blueDot]
+          ..budget = '6,50,000'
+          ..dueDate = DateTime(2026, 11, 30);
       });
-      expect(await c.submit(publish: false), isTrue);
-      expect(repo.created.single['status'], 'PUBLISHED');
+      expect(await c.submit(publish: true), isTrue);
+      final body = repo.created.single;
+      expect(body['status'], 'PUBLISHED');
+      expect(body['visibility'], 'PUBLIC');
+      for (final notAsked in ['vendorIds', 'budget', 'dueDate', 'items']) {
+        expect(body.containsKey(notAsked), isFalse, reason: notAsked);
+      }
     });
   });
 
@@ -838,7 +935,7 @@ void main() {
       tester,
     ) async {
       await open(tester, copyFrom: DemoRfqRepository.ifmId);
-      expect(find.text('Post RFQ'), findsOneWidget);
+      expect(find.text('Post your requirement'), findsOneWidget);
       expect(find.text('Scope of services'), findsOneWidget);
       expect(tester.widget<TextField>(key('text')).controller!.text, startsWith('Integrated facility management'));
       expect(find.text('Pick a date'), findsNWidgets(2), reason: 'dates are picked anew');
@@ -849,11 +946,7 @@ void main() {
       );
       expect(tester.widget<TextField>(key('min-years')).controller!.text, '5');
       expect(find.text('Create RFQ'), findsOneWidget);
-      expect(
-        tester.widget<TextField>(key('title')).controller!.text,
-        isEmpty,
-        reason: 'a copy gets a title of its own',
-      );
+      expect(key('title'), findsNothing, reason: 'a copy is titled anew, from what it asks for');
     });
   });
 
@@ -863,7 +956,7 @@ void main() {
       await type(tester, 'text', 'Round-the-clock guarding for the campus.');
       await tester.tap(find.bySemanticsLabel('Back'));
       await settle(tester, 10);
-      expect(find.text('Leave without saving?'), findsOneWidget);
+      expect(find.text('Leave without sending?'), findsOneWidget);
       await tester.tap(find.text('Keep editing').last);
       await settle(tester, 10);
       expect(find.byType(PostRfqScreen), findsOneWidget);

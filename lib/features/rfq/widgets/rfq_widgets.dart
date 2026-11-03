@@ -97,16 +97,16 @@ class LogoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final url = AppConfig.absoluteUrl(logoUrl);
     final initials = Center(
-      child: Text(_initials, style: RfqText.metaStrong.copyWith(color: AppColors.primary, fontSize: size * 0.32)),
+      child: Text(
+        _initials,
+        style: RfqText.metaStrong.copyWith(color: AppColors.primary, fontSize: size * 0.32),
+      ),
     );
     return Container(
       width: size,
       height: size,
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: const Color(0xFFD6E2EE),
-        borderRadius: BorderRadius.circular(size * 0.22),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFFD6E2EE), borderRadius: BorderRadius.circular(size * 0.22)),
       child: url == null
           ? initials
           : CachedNetworkImage(imageUrl: url, fit: BoxFit.cover, errorWidget: (_, _, _) => initials),
@@ -152,7 +152,11 @@ class RfqNotice extends StatelessWidget {
           Text(title, textAlign: TextAlign.center, style: RfqText.section),
           if (body != null) ...[
             const SizedBox(height: 6),
-            Text(body!, textAlign: TextAlign.center, style: RfqText.body.copyWith(color: AppColors.slate600)),
+            Text(
+              body!,
+              textAlign: TextAlign.center,
+              style: RfqText.body.copyWith(color: AppColors.slate600),
+            ),
           ],
           if (action != null) ...[
             const SizedBox(height: 16),
@@ -273,7 +277,12 @@ class FactRow extends StatelessWidget {
 
 /// A heading over a block of a page.
 class RfqSectionTitle extends StatelessWidget {
-  const RfqSectionTitle(this.title, {super.key, this.trailing, this.padding = const EdgeInsets.fromLTRB(16, 18, 16, 10)});
+  const RfqSectionTitle(
+    this.title, {
+    super.key,
+    this.trailing,
+    this.padding = const EdgeInsets.fromLTRB(16, 18, 16, 10),
+  });
 
   final String title;
   final Widget? trailing;
@@ -322,7 +331,10 @@ class MatchRing extends StatelessWidget {
                 color: color,
               ),
             ),
-            Text('$score', style: RfqText.metaStrong.copyWith(fontSize: size * 0.3, color: color)),
+            Text(
+              '$score',
+              style: RfqText.metaStrong.copyWith(fontSize: size * 0.3, color: color),
+            ),
           ],
         ),
       ),
@@ -346,7 +358,10 @@ Future<bool> confirmMove(
       title: Text(title, style: RfqText.sheetTitle),
       content: Text(body, style: RfqText.body),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(keep, style: RfqText.link)),
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(keep, style: RfqText.link),
+        ),
         FilledButton(
           onPressed: () => Navigator.pop(context, true),
           style: FilledButton.styleFrom(backgroundColor: destructive ? AppColors.error : AppColors.primary),
@@ -373,13 +388,8 @@ Future<({T? value})?> pickOne<T>(
     isScrollControlled: true,
     showDragHandle: true,
     backgroundColor: Colors.white,
-    builder: (context) => _PickOneSheet<T>(
-      title: title,
-      options: options,
-      labelOf: labelOf,
-      selected: selected,
-      clearLabel: clearLabel,
-    ),
+    builder: (context) =>
+        _PickOneSheet<T>(title: title, options: options, labelOf: labelOf, selected: selected, clearLabel: clearLabel),
   );
 }
 
@@ -410,7 +420,10 @@ class _PickOneSheetState<T> extends State<_PickOneSheet<T>> {
     final q = _query.trim().toLowerCase();
     final shown = q.isEmpty
         ? widget.options
-        : [for (final o in widget.options) if (widget.labelOf(o).toLowerCase().contains(q)) o];
+        : [
+            for (final o in widget.options)
+              if (widget.labelOf(o).toLowerCase().contains(q)) o,
+          ];
     return SafeArea(
       child: SizedBox(
         height: MediaQuery.sizeOf(context).height * (widget.options.length > 8 ? 0.75 : 0.5),
@@ -442,7 +455,9 @@ class _PickOneSheetState<T> extends State<_PickOneSheet<T>> {
                   for (final o in shown)
                     ListTile(
                       title: Text(widget.labelOf(o), style: RfqText.body.copyWith(color: AppColors.slate900)),
-                      trailing: o == widget.selected ? const Icon(LucideIcons.check, size: 18, color: AppColors.primary) : null,
+                      trailing: o == widget.selected
+                          ? const Icon(LucideIcons.check, size: 18, color: AppColors.primary)
+                          : null,
                       onTap: () => Navigator.pop(context, (value: o)),
                     ),
                   if (shown.isEmpty)
@@ -461,29 +476,39 @@ class _PickOneSheetState<T> extends State<_PickOneSheet<T>> {
 }
 
 /// The forms' outlined input look.
-InputDecoration rfqInputDecoration({String? hint, String? error, IconData? prefix, String? prefixText, String? suffixText}) =>
-    InputDecoration(
-      isDense: true,
-      hintText: hint,
-      hintStyle: RfqText.formHint,
-      errorText: error,
-      errorMaxLines: 3,
-      prefixIcon: prefix == null ? null : Icon(prefix, size: 18, color: AppColors.slate400),
-      prefixText: prefixText,
-      suffixText: suffixText,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.slate200)),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AppColors.slate200),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
-      ),
-    );
+InputDecoration rfqInputDecoration({
+  String? hint,
+  String? error,
+  IconData? prefix,
+  String? prefixText,
+  String? suffixText,
+  IconData? suffix,
+}) => InputDecoration(
+  isDense: true,
+  hintText: hint,
+  hintStyle: RfqText.formHint,
+  errorText: error,
+  errorMaxLines: 3,
+  prefixIcon: prefix == null ? null : Icon(prefix, size: 18, color: AppColors.slate400),
+  prefixText: prefixText,
+  suffixText: suffixText,
+  suffixIcon: suffix == null ? null : Icon(suffix, size: 16, color: AppColors.slate400),
+  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+  filled: true,
+  fillColor: Colors.white,
+  border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10),
+    borderSide: const BorderSide(color: AppColors.slate200),
+  ),
+  enabledBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10),
+    borderSide: const BorderSide(color: AppColors.slate200),
+  ),
+  focusedBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10),
+    borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
+  ),
+);
 
 /// A labelled text box that keeps its own controller in step with the value.
 class RfqField extends StatefulWidget {
@@ -504,6 +529,8 @@ class RfqField extends StatefulWidget {
     this.readOnly = false,
     this.optional = false,
     this.fieldKey,
+    this.showCounter = true,
+    this.suffixIcon,
   });
 
   final String label;
@@ -520,6 +547,13 @@ class RfqField extends StatefulWidget {
   final String? suffixText;
   final bool readOnly;
   final bool optional;
+
+  /// "12/80" under the box while [maxLength] is set; false holds the length without showing it (the website's
+  /// contact fields show none).
+  final bool showCounter;
+
+  /// An icon at the end of the box, e.g. the lock on a value that comes from the account.
+  final IconData? suffixIcon;
 
   /// Finds the box in a test.
   final Key? fieldKey;
@@ -559,12 +593,16 @@ class _RfqFieldState extends State<RfqField> {
           maxLines: widget.maxLines,
           minLines: widget.minLines,
           maxLength: widget.maxLength,
+          buildCounter: widget.showCounter
+              ? null
+              : (context, {required currentLength, required isFocused, maxLength}) => null,
           style: RfqText.formInput.copyWith(color: widget.readOnly ? AppColors.slate500 : null),
           decoration: rfqInputDecoration(
             hint: widget.hint,
             error: widget.error,
             prefixText: widget.prefixText,
             suffixText: widget.suffixText,
+            suffix: widget.suffixIcon,
           ),
         ),
         if (widget.help != null && widget.error == null) ...[
@@ -664,7 +702,14 @@ class PickerField extends StatelessWidget {
 
 /// A notice band: the API's refusal, or a note.
 class RfqBanner extends StatelessWidget {
-  const RfqBanner(this.message, {super.key, this.tone = Tone.red, this.icon = LucideIcons.circleAlert, this.action, this.onAction});
+  const RfqBanner(
+    this.message, {
+    super.key,
+    this.tone = Tone.red,
+    this.icon = LucideIcons.circleAlert,
+    this.action,
+    this.onAction,
+  });
 
   final String message;
   final Tone tone;
@@ -680,14 +725,22 @@ class RfqBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(padding: const EdgeInsets.only(top: 1), child: Icon(icon, size: 16, color: tone.ink)),
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(icon, size: 16, color: tone.ink),
+          ),
           const SizedBox(width: 8),
-          Expanded(child: Text(message, style: RfqText.meta.copyWith(color: tone.ink))),
+          Expanded(
+            child: Text(message, style: RfqText.meta.copyWith(color: tone.ink)),
+          ),
           if (action != null) ...[
             const SizedBox(width: 8),
             GestureDetector(
               onTap: onAction,
-              child: Text(action!, style: RfqText.link.copyWith(color: tone.ink, decoration: TextDecoration.underline)),
+              child: Text(
+                action!,
+                style: RfqText.link.copyWith(color: tone.ink, decoration: TextDecoration.underline),
+              ),
             ),
           ],
         ],

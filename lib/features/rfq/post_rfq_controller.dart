@@ -146,19 +146,45 @@ class PostRfqController extends ChangeNotifier {
   /// What to tell that account ([roleCannotPost]).
   String get roleCannotPostMessage => roleCannotPost ? _poster!.cannotPostMessage : '';
 
-  /// A requirement is posted for a company: someone acting as themselves registers or switches to one first
-  /// (ICR staff post for ICR). The API refuses the post with its own sentence; this says so before the form.
-  /// Editing a requirement one already owns is not held to it.
-  bool get mustRegisterCompany {
+  /// Acting for no company (ICR staff aside). Such a person may send an enquiry, naming who it is for ([posting]),
+  /// but an RFQ is a registered company's: the website's composer, and the API, which refuses an RFQ from them with
+  /// its own sentence. Editing a requirement one already owns is not held to it.
+  bool get personal {
     final p = _poster;
     return !direct && !editing && p != null && p.companyId == null && p.role != 'SUPER_ADMIN';
   }
 
-  /// The company the requirement will belong to, named once at the top.
-  String? get companyFromAccount => _poster?.companyId == null ? null : _poster?.companyName;
+  /// An RFQ chosen by someone acting for no company: the form says why and does not send it (the website's
+  /// `rfqNeedsCompany`); an enquiry needs no company.
+  bool get rfqNeedsCompany => personal && draft.isRfq;
 
-  /// ICR staff post with no company of their own, and so name one.
-  bool get askCompany => _poster != null && _poster!.companyId == null && !editing && _poster!.role == 'SUPER_ADMIN';
+  PostingOptions _posting = const PostingOptions();
+  String? _postingFor;
+
+  /// What "Posting for" offers someone acting for no company: employers to name, companies to switch to.
+  PostingOptions get posting => _posting;
+
+  /// The employer the enquiry names, of [posting]'s names; null when there is none, and the form asks for a name.
+  String? get postingFor => _postingFor;
+
+  void setPostingFor(String name) {
+    if (!_posting.names.contains(name) || name == _postingFor) return;
+    _postingFor = name;
+    _revalidate();
+    notifyListeners();
+  }
+
+  /// The company the requirement will belong to, named once at the top.
+  String? get companyFromAccount => _poster?.companyId == null ? (personal ? _postingFor : null) : _poster?.companyName;
+
+  /// The form asks the company's name: ICR staff, who post with no company of their own, and someone acting for no
+  /// company whose profile names no employer to post for.
+  bool get askCompany =>
+      !direct &&
+      _poster != null &&
+      _poster!.companyId == null &&
+      !editing &&
+      (_poster!.role == 'SUPER_ADMIN' || _postingFor == null);
 
   /// Whether the title follows the suggestion ([suggestedTitle]) or what was typed.
   bool get titleEdited => _titleEdited;
@@ -184,6 +210,15 @@ class PostRfqController extends ChangeNotifier {
           draft.companyName = poster.companyName ?? '';
         }
         if (draft.email.isEmpty) draft.email = poster.email;
+      }
+      if (personal) {
+        try {
+          _posting = await repository.postingOptions();
+        } catch (_) {
+          _posting = const PostingOptions();
+        }
+        final names = _posting.names;
+        if (_postingFor == null || !names.contains(_postingFor)) _postingFor = names.isEmpty ? null : names.first;
       }
       _askPhone = direct && !poster.hasPhone;
       _loadError = null;
@@ -503,15 +538,24 @@ class PostRfqController extends ChangeNotifier {
 
   bool _lastGoingLive = true;
 
-  Map<String, String> _draftProblems({required bool goingLive}) =>
-      // On the clock the date picker uses (RfqClock), so a day the picker offered is never already past.
-      draft.problems(
-        goingLive: goingLive,
-        askCompany: askCompany,
-        effectiveTitle: effectiveTitle,
-        editing: editing,
-        now: RfqClock.now(),
-      );
+  Map<String, String> _draftProblems({required bool goingLive}) {
+    // On the clock the date picker uses (RfqClock), so a day the picker offered is never already past.
+    final out = draft.problems(
+      goingLive: goingLive,
+      askCompany: askCompany,
+      effectiveTitle: effectiveTitle,
+      editing: editing,
+      now: RfqClock.now(),
+    );
+    // A new requirement is held only to what its form asks (see [_newRequirement]).
+    if (!editing) {
+      for (final key in ['budget', 'items', 'invited']) {
+        out.remove(key);
+      }
+      if (!draft.isRfq) out.remove('dueDate');
+    }
+    return out;
+  }
 
   Map<String, String> _quoteProblems() => quote.problems(hasItem: target?.item != null, askPhone: _askPhone);
 
@@ -528,7 +572,7 @@ class PostRfqController extends ChangeNotifier {
   /// request. False when the form has problems or the API refused; the values
   /// stay as typed either way.
   Future<bool> submit({required bool publish}) async {
-    if (_sending || uploading) return false;
+    if (_sending || uploading || rfqNeedsCompany) return false;
     if (!review(publish: publish)) return false;
     _sending = true;
     _error = null;
@@ -554,13 +598,7 @@ class PostRfqController extends ChangeNotifier {
           status: publishing ? RfqStatus.published : (_source?.status ?? RfqStatus.draft),
         );
       } else {
-        // Invite-only requirements go out at once: a draft would tell the
-        // invited suppliers about something they cannot open.
-        final invitesOnly = draft.audience == Audience.invited && !draft.isRfq;
-        final status = publish || invitesOnly ? RfqStatus.published : RfqStatus.draft;
-        _result = await repository.create(
-          draft.toCreate(status: status, effectiveTitle: effectiveTitle, companyFromAccount: companyFromAccount),
-        );
+        _result = await repository.create(_newRequirement(publish: publish));
       }
       return true;
     } catch (e) {
@@ -573,6 +611,25 @@ class PostRfqController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// The fields the website's composer asks of a new requirement, and only those. It asks no budget, line items,
+  /// invitations or reply-by day, so none goes out unseen (from a copy, or a date picked before the kind changed): a
+  /// new requirement is open to every matching supplier, and an enquiry runs until its poster closes it.
+  Map<String, dynamic> _newRequirement({required bool publish}) {
+    final body = draft.toCreate(
+      status: publish ? RfqStatus.published : RfqStatus.draft,
+      effectiveTitle: effectiveTitle,
+      companyFromAccount: companyFromAccount,
+    );
+    for (final key in _notAskedOnCreate) {
+      body.remove(key);
+    }
+    body['visibility'] = RfqVisibility.public.wire;
+    if (!draft.isRfq) body.remove('dueDate');
+    return body;
+  }
+
+  static const _notAskedOnCreate = ['budget', 'items', 'vendorIds'];
 
   /// "Post another": a blank form after a post.
   void reset() {

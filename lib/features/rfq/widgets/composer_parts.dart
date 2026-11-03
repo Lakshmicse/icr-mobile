@@ -68,7 +68,9 @@ class SectionCard extends StatelessWidget {
   }
 }
 
-/// Enquiry or RFQ: two cards, the one chosen outlined in blue. Locked while editing (a requirement keeps its kind).
+/// Enquiry or RFQ, as the website's composer asks it: two cards side by side, each the kind's name in large capitals
+/// and one line under it, the one chosen tinted and outlined in blue with a filled check. Locked while editing (a
+/// requirement keeps its kind).
 class KindPicker extends StatelessWidget {
   const KindPicker({super.key, required this.value, required this.onChanged, this.locked = false});
 
@@ -77,89 +79,74 @@ class KindPicker extends StatelessWidget {
   final bool locked;
 
   static const _words = {
-    RfqKind.enquiry: (
-      short: 'ENQUIRY',
-      title: 'Quick supplier matching',
-      body: 'Get responses, questions and indicative pricing from matched suppliers.',
-      best: 'the quickest response',
-    ),
-    RfqKind.rfq: (
-      short: 'RFQ',
-      title: 'Formal quotation process',
-      body: 'Suppliers pre-qualify against your criteria, then your shortlist sends detailed quotes.',
-      best: 'larger or formal procurement',
-    ),
+    RfqKind.enquiry: (short: 'ENQUIRY', title: 'Quick supplier matching'),
+    RfqKind.rfq: (short: 'RFQ', title: 'Formal quotation process'),
   };
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (final kind in RfqKind.values) ...[
-          if (kind != RfqKind.values.first) const SizedBox(height: 10),
-          Builder(
-            builder: (context) {
-              final on = kind == value;
-              final w = _words[kind]!;
-              return Semantics(
-                button: true,
-                selected: on,
-                inMutuallyExclusiveGroup: true,
-                label: kind.label,
-                child: Material(
-                  color: on ? AppColors.chipEmphasis.withValues(alpha: 0.5) : Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: on ? AppColors.primary : AppColors.slate200, width: on ? 1.5 : 1),
-                  ),
-                  child: InkWell(
-                    key: ValueKey('kind-${kind.wire.toLowerCase()}'),
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: locked && !on ? null : () => onChanged(kind),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  w.short,
-                                  style: RfqText.kicker.copyWith(color: on ? AppColors.primary : AppColors.slate500),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(w.title, style: RfqText.cardTitle),
-                                const SizedBox(height: 6),
-                                Text(w.body, style: RfqText.body),
-                                const SizedBox(height: 6),
-                                Text.rich(
-                                  TextSpan(
-                                    text: 'Best for: ',
-                                    style: RfqText.metaStrong,
-                                    children: [TextSpan(text: w.best, style: RfqText.meta)],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            on ? LucideIcons.circleCheck : LucideIcons.circle,
-                            size: 20,
-                            color: on ? AppColors.primary : AppColors.slate300,
-                          ),
-                        ],
-                      ),
+    Widget card(RfqKind kind) {
+      final on = kind == value;
+      final w = _words[kind]!;
+      return Semantics(
+        button: true,
+        selected: on,
+        inMutuallyExclusiveGroup: true,
+        label: kind.label,
+        child: Material(
+          color: on ? AppColors.chipEmphasis.withValues(alpha: 0.5) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            // The same width chosen or not, so choosing never shifts the line.
+            side: BorderSide(color: on ? AppColors.primary : AppColors.slate200, width: 1.5),
+          ),
+          child: InkWell(
+            key: ValueKey('kind-${kind.wire.toLowerCase()}'),
+            borderRadius: BorderRadius.circular(12),
+            onTap: locked && !on ? null : () => onChanged(kind),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 10, 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          w.short,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: RfqText.kindName.copyWith(color: on ? AppColors.primary : AppColors.onSurface),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(w.title, style: RfqText.small),
+                      ],
                     ),
                   ),
-                ),
-              );
-            },
+                  const SizedBox(width: 6),
+                  Icon(
+                    on ? LucideIcons.circleCheck : LucideIcons.circle,
+                    size: 20,
+                    color: on ? AppColors.primary : AppColors.slate300,
+                  ),
+                ],
+              ),
+            ),
           ),
+        ),
+      );
+    }
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: card(RfqKind.enquiry)),
+          const SizedBox(width: 10),
+          Expanded(child: card(RfqKind.rfq)),
         ],
-      ],
+      ),
     );
   }
 }
@@ -1224,7 +1211,7 @@ class ProblemsCard extends StatelessWidget {
     'text': 'What you need',
     'budget': 'Budget',
     'items': 'Line items',
-    'attachments': 'Files',
+    'attachments': 'Attachments',
     'invited': 'Suppliers to invite',
     'minYears': 'Supplier criteria',
     'minAnnualTurnover': 'Supplier criteria',
@@ -1302,6 +1289,7 @@ class PostedPanel extends StatelessWidget {
     required this.onPostAnother,
     required this.onDone,
     this.preQualEnd,
+    this.onBrowse,
   });
 
   final PostResult result;
@@ -1310,6 +1298,9 @@ class PostedPanel extends StatelessWidget {
   final VoidCallback onPostAnother;
   final VoidCallback onDone;
   final DateTime? preQualEnd;
+
+  /// "Browse suppliers": the Supplier Mart, as the website's confirmation offers it.
+  final VoidCallback? onBrowse;
 
   @override
   Widget build(BuildContext context) {
@@ -1423,6 +1414,15 @@ class PostedPanel extends StatelessWidget {
               child: const Text('View requirement'),
             ),
             const SizedBox(height: 8),
+            if (!editing && !draft && onBrowse != null) ...[
+              OutlinedButton(
+                key: const ValueKey('posted-browse'),
+                onPressed: onBrowse,
+                style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
+                child: const Text('Browse suppliers'),
+              ),
+              const SizedBox(height: 8),
+            ],
             if (!editing)
               OutlinedButton(
                 key: const ValueKey('posted-another'),

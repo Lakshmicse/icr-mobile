@@ -43,6 +43,7 @@ class RfqHooks {
     this.onOpenSupplier,
     this.onCreateCompany,
     this.onSeePlans,
+    this.onSwitchCompany,
   });
 
   final RfqRepository repository;
@@ -52,6 +53,10 @@ class RfqHooks {
 
   /// Founds a company (the account screens'): posting a requirement needs one.
   final VoidCallback? onCreateCompany;
+
+  /// Makes the account act for one of its companies (the account screens' switch, with the fresh session adopted):
+  /// "Posting for" offers it to someone acting for no company who may post for a company. Throws the API's refusal.
+  final Future<void> Function(String companyId)? onSwitchCompany;
 
   /// Opens the supplier plans (the lead's): offered beside a refusal that is about the plan.
   final VoidCallback? onSeePlans;
@@ -90,6 +95,7 @@ RfqHooks rfqHooksFor(
   ValueChanged<String>? onOpenSupplier,
   VoidCallback? onCreateCompany,
   VoidCallback? onSeePlans,
+  Future<void> Function(String companyId)? onSwitchCompany,
 }) => RfqHooks(
   repository: repository ?? rfqRepositoryOf(context),
   links: links ?? const SystemRfqLinks(),
@@ -97,6 +103,7 @@ RfqHooks rfqHooksFor(
   onOpenSupplier: onOpenSupplier,
   onCreateCompany: onCreateCompany,
   onSeePlans: onSeePlans,
+  onSwitchCompany: onSwitchCompany,
 );
 
 /// The page frame every requirements screen shares: the title bar (back, the

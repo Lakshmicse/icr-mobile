@@ -88,6 +88,19 @@ class MarketToolbar extends StatelessWidget {
               trailingGap: 8.25,
               onTap: () => nav.alerts(context, links),
             ),
+            // A supplier's door: the open requirements to bid on (the website's Find Work & Bid). It is drawn for
+            // everyone, as the website's console row is; the board itself says when the company does not sell yet.
+            IcrChip(
+              key: const ValueKey('mart-find-work'),
+              label: 'Find work',
+              tone: ChipTone.outlined,
+              icon: LucideIcons.compass,
+              iconSize: 12.5,
+              padding: const EdgeInsets.only(left: 11.8, right: 12),
+              gap: 5.5,
+              textStyle: MartText.quickChip,
+              onTap: () => nav.findWork(context, links),
+            ),
           ],
         ),
         const SizedBox(height: 9),

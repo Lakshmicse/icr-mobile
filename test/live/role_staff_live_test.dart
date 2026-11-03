@@ -25,6 +25,7 @@ import 'package:icr_mobile/features/mentor_profile/api_mentor_profile_repository
 import 'package:icr_mobile/features/mentor_profile/mentor_profile_controller.dart';
 import 'package:icr_mobile/features/mentorship_my/mentoring_models.dart';
 import 'package:icr_mobile/features/mentorship_my/mentoring_repository.dart';
+import 'package:icr_mobile/features/shell/icr_bottom_nav.dart';
 
 import '../helpers/fonts.dart';
 import 'live.dart';
@@ -61,12 +62,11 @@ void main() {
           final probes = {
             'Learning': 'Assess Your Knowledge',
             'Mentorship': 'Top Mentors in Your Network',
-            'Forums': 'Start a discussion...',
             'Marketplace': 'Post RFQ',
             'Jobs': 'Post a job',
           };
           for (final entry in probes.entries) {
-            await tester.tap(find.bySemanticsLabel(entry.key).first);
+            await tester.tap(find.descendant(of: find.byType(IcrBottomNav), matching: find.text(entry.key)).first);
             await settleLive(tester, timeout: const Duration(seconds: 20));
             expect(thrown(tester), isNull, reason: '${entry.key} threw');
             expectNoRawErrors(tester, entry.key);
@@ -83,7 +83,6 @@ void main() {
           await settleLive(tester);
           final first = who.label.split(' ').first;
           expect(find.textContaining(first), findsWidgets, reason: 'the menu names the person');
-          expect(find.text('View Full Profile'), findsOneWidget);
           expect(thrown(tester), isNull);
           expectNoRawErrors(tester, 'the menu');
 
@@ -107,13 +106,12 @@ void main() {
     'superadmin@icr.test': {
       'the career hub': ['Your career', 'Insufficient role permissions'],
     },
-    // A person on no company's team: jobs and requirements are posted for a company.
+    // A person on no company's team: jobs are posted for a company. A requirement form is theirs (an enquiry needs
+    // no company, as on the website since 3 Nov 2026), so its usual probe applies.
     'contentadmin@icr.test': {
-      'post a requirement': ['Requirements are posted for a company', 'Create a company'],
       'jobs you posted': ['Posting jobs is for hiring teams', 'Set up a company'],
     },
     'supportagent@icr.test': {
-      'post a requirement': ['Requirements are posted for a company', 'Create a company'],
       'jobs you posted': ['Posting jobs is for hiring teams', 'Set up a company'],
     },
   };

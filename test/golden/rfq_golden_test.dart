@@ -12,6 +12,7 @@ import 'package:icr_mobile/features/rfq/demo_rfq_repository.dart';
 import 'package:icr_mobile/features/rfq/my_bids_screen.dart';
 import 'package:icr_mobile/features/rfq/my_rfqs_screen.dart';
 import 'package:icr_mobile/features/rfq/open_requirements_screen.dart';
+import 'package:icr_mobile/features/rfq/requirements_board_screen.dart';
 import 'package:icr_mobile/features/rfq/rfq_alerts_screen.dart';
 import 'package:icr_mobile/features/rfq/rfq_links.dart';
 
@@ -75,5 +76,14 @@ void main() {
 
   testWidgets('My Bids', (tester) async {
     await shoot(tester, MyBidsScreen(repository: demo(), links: RecordingRfqLinks()), 'rfq_my_bids');
+  });
+
+  testWidgets('Requirements (everything posted)', (tester) async {
+    await shoot(
+      tester,
+      RequirementsBoardScreen(repository: demo(), links: RecordingRfqLinks()),
+      'rfq_posted',
+      height: 900,
+    );
   });
 }

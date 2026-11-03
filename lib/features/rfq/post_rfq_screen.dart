@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/api/api_error.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart' show showMessage;
 import '../../core/widgets/buttons.dart';
@@ -15,8 +16,8 @@ import 'rfq_rules.dart';
 import 'rfq_scope.dart';
 import 'rfq_styles.dart';
 import 'widgets/composer_parts.dart';
+import 'widgets/composer_rail.dart';
 import 'widgets/rfq_widgets.dart';
-import 'widgets/supplier_picker.dart';
 
 /// Post RFQ: one guided page for an enquiry and for a staged RFQ (what kind of request, who to reply to, where,
 /// what service, what suppliers need to know), then a review of what will be sent, and only then the post. The
@@ -38,6 +39,7 @@ class PostRfqScreen extends StatefulWidget {
     this.onOpenSupplier,
     this.onPosted,
     this.onCreateCompany,
+    this.onSwitchCompany,
   });
 
   final String? editRfqId;
@@ -54,9 +56,13 @@ class PostRfqScreen extends StatefulWidget {
   /// same result when the person leaves).
   final ValueChanged<PostResult>? onPosted;
 
-  /// Founds a company: someone posting as themselves has none, and a requirement is posted for a company. By
-  /// default the website's page for it opens.
+  /// Founds a company: someone acting as themselves may send an enquiry, but an RFQ is a company's. By default the
+  /// website's page for it opens.
   final VoidCallback? onCreateCompany;
+
+  /// Makes the account act for one of its companies, from "Posting for" (the account screens' switch). Without it
+  /// "Posting for" offers only the names an enquiry may carry.
+  final Future<void> Function(String companyId)? onSwitchCompany;
 
   @override
   State<PostRfqScreen> createState() => _PostRfqScreenState();
@@ -92,6 +98,8 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
       links: widget.links ?? const SystemRfqLinks(),
       onOpenConversation: widget.onOpenConversation,
       onOpenSupplier: widget.onOpenSupplier,
+      onCreateCompany: widget.onCreateCompany,
+      onSwitchCompany: widget.onSwitchCompany,
     );
     _c = PostRfqController(
       repository: _hooks.repository,
@@ -136,8 +144,8 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     if (_c.result == null && _dirty) {
       final leave = await confirmMove(
         context,
-        title: 'Leave without saving?',
-        body: 'What you have typed is not saved yet. Save it as a draft to keep it.',
+        title: 'Leave without sending?',
+        body: 'Nothing you have typed is sent or kept. Leaving drops it.',
         confirm: 'Leave',
         keep: 'Keep editing',
         destructive: true,
@@ -176,7 +184,9 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
 
   // ---- Sending ---------------------------------------------------------------------------------------------
 
-  bool get _isDraftOrNew => !_c.editing || _c.source?.status == RfqStatus.draft;
+  /// Editing a draft: it can be saved again as a draft, or published. A new requirement is posted at once, as on the
+  /// website, which has no "Save draft".
+  bool get _editingDraft => _c.editing && _c.source?.status == RfqStatus.draft;
 
   Future<void> _send({required bool publish}) async {
     FocusScope.of(context).unfocus();
@@ -199,11 +209,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
       context,
       title: _c.draft.isRfq ? 'Review your RFQ' : 'Review your enquiry',
       confirmLabel: _c.draft.isRfq ? 'Create RFQ' : 'Send enquiry',
-      note: _c.draft.isRfq
-          ? 'It goes live to matching suppliers as soon as it is created.'
-          : (_c.draft.audience == Audience.invited
-                ? 'Only the suppliers you chose are told, and only they can reply.'
-                : 'Matching suppliers are alerted as soon as it is posted.'),
+      note: _sendNote,
       rows: _reviewRows(),
       onEdit: _goTo,
       errorOf: () => _c.error,
@@ -224,14 +230,18 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     }
   }
 
+  /// What sending does, under the send bar and in the review (the website's words).
+  String get _sendNote => _c.draft.isRfq
+      ? 'It goes live to matching suppliers as soon as it is created.'
+      : 'Matching suppliers are alerted as soon as it is posted.';
+
+  /// The review before a new requirement is sent: the website's rows, in its order.
   List<ReviewRow> _reviewRows() {
     final d = _c.draft;
     final text = withoutEmptyPrompts(d.text);
     final files = d.attachments.map((f) => f.title.trim()).where((t) => t.isNotEmpty);
-    final budget = parseRupees(d.budget);
     return [
       ReviewRow(label: 'Request type', value: d.isRfq ? 'Request for quotation' : 'Enquiry', section: 'type'),
-      ReviewRow(label: 'Title', value: _c.effectiveTitle, section: 'describe'),
       ReviewRow(
         label: 'Contact',
         value: [
@@ -249,30 +259,17 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         value: text.length > 300 ? '${text.substring(0, 300)}…' : text,
         section: 'describe',
       ),
-      if (budget != null && !budget.isNaN) ReviewRow(label: 'Budget', value: formatInr(budget), section: 'describe'),
-      if (d.items.isNotEmpty)
-        ReviewRow(
-          label: 'Line items',
-          value: d.items.map((i) => '${i.name} × ${i.quantity}').join(', '),
-          section: 'describe',
-        ),
       ReviewRow(
-        label: 'Files',
-        value: files.isEmpty ? '' : '${files.length} file${files.length == 1 ? '' : 's'}: ${files.join(', ')}',
+        label: 'Attachments',
+        value: files.isEmpty ? 'None' : '${files.length} file${files.length == 1 ? '' : 's'}: ${files.join(', ')}',
         section: 'describe',
       ),
-      if (!d.isRfq)
-        ReviewRow(
-          label: 'Who can reply',
-          value: d.audience == Audience.invited
-              ? 'Only ${d.invited.map((s) => s.name).join(', ')}'
-              : 'Every supplier that matches',
-          section: 'audience',
-        ),
       if (d.isRfq) ...[
         ReviewRow(
-          label: 'Criteria',
-          value: d.criteriaCount == 0 ? 'None: any matched supplier can pre-qualify' : '${d.criteriaCount} set',
+          label: 'Supplier criteria',
+          value: d.criteriaCount == 0
+              ? 'None: any matched supplier can pre-qualify'
+              : '${d.criteriaCount} ${d.criteriaCount == 1 ? 'criterion' : 'criteria'} set',
           section: 'criteria',
         ),
         ReviewRow(
@@ -282,8 +279,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
               : '',
           section: 'timeline',
         ),
-      ] else if (d.dueDate != null)
-        ReviewRow(label: 'Reply by', value: pickedDay(d.dueDate!), section: 'timeline'),
+      ],
     ];
   }
 
@@ -341,16 +337,6 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     if (picked != null) _c.setService(picked.value?.key ?? '');
   }
 
-  Future<void> _addItem() async {
-    final item = await showItemSheet(context);
-    if (item != null) _c.addItem(item);
-  }
-
-  Future<void> _editItem(int index) async {
-    final item = await showItemSheet(context, item: _c.draft.items[index]);
-    if (item != null) _c.replaceItem(index, item);
-  }
-
   Future<void> _pickDay({required bool preQual}) async {
     final d = _c.draft;
     final picked = await pickDay(
@@ -387,19 +373,61 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     if (files.isNotEmpty) await _c.addFiles(files);
   }
 
-  Future<void> _chooseSuppliers() {
-    return showSupplierPicker(
-      context,
-      title: 'Suppliers to invite',
-      confirmLabel: 'Use these suppliers',
-      search: _c.findSuppliers,
-      selected: _c.draft.invited,
-      max: RfqLimits.maxInvites,
-      onConfirm: (chosen) async {
-        _c.update((d) => d.invited = chosen);
-        return null;
-      },
+  /// "Posting for", for someone acting for no company with more than one choice: the employers an enquiry may name,
+  /// and the companies they may post for, which switch the account to that company (the website's dropdown).
+  Future<void> _pickPostingFor() async {
+    final options = _c.posting;
+    final canSwitch = widget.onSwitchCompany != null;
+    final choice = await showModalBottomSheet<(String, bool)>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text('Posting for', style: RfqText.section),
+            ),
+            for (final name in options.names)
+              ListTile(
+                key: ValueKey('posting-name-$name'),
+                leading: LogoTile(name: name, size: 30),
+                title: Text(name, style: RfqText.bodyStrong),
+                trailing: name == _c.postingFor
+                    ? const Icon(LucideIcons.check, size: 18, color: AppColors.primary)
+                    : null,
+                onTap: () => Navigator.of(sheet).pop((name, false)),
+              ),
+            if (canSwitch)
+              for (final company in options.companies)
+                ListTile(
+                  key: ValueKey('posting-company-${company.id}'),
+                  leading: LogoTile(name: company.name, size: 30),
+                  title: Text(company.name, style: RfqText.bodyStrong),
+                  subtitle: Text('Switch to this company and post for it', style: RfqText.small),
+                  onTap: () => Navigator.of(sheet).pop((company.id, true)),
+                ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
     );
+    if (choice == null || !mounted) return;
+    final (value, switching) = choice;
+    if (!switching) {
+      _c.setPostingFor(value);
+      return;
+    }
+    try {
+      await widget.onSwitchCompany!(value);
+      // The account now acts for that company: read who is posting again (what was typed stays).
+      await _c.retry();
+    } catch (e) {
+      if (mounted) showMessage(context, ApiError.from(e).message);
+    }
   }
 
   void _addPrompt(String label) {
@@ -424,7 +452,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
             if (!didPop) _leave();
           },
           child: RfqScaffold(
-            title: _c.editing ? 'Edit requirement' : 'Post RFQ',
+            title: _c.editing ? 'Edit requirement' : 'Post your requirement',
             onBack: widget.onBack ?? _leave,
             onBell: widget.onBell ?? () => pushAlerts(context, _hooks),
             bottomBar: _bar(),
@@ -436,12 +464,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
   }
 
   Widget? _bar() {
-    if (!_c.started ||
-        _c.loading ||
-        _c.loadError != null ||
-        _c.result != null ||
-        _c.mustRegisterCompany ||
-        _c.roleCannotPost) {
+    if (!_c.started || _c.loading || _c.loadError != null || _c.result != null || _c.roleCannotPost) {
       return null;
     }
     final d = _c.draft;
@@ -451,7 +474,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     final busy = _c.sending;
     return BottomActionBar(
       children: [
-        if (_isDraftOrNew)
+        if (_editingDraft)
           Expanded(
             child: OutlinedButton(
               key: const ValueKey('save-draft'),
@@ -469,7 +492,8 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
           child: PrimaryButton(
             key: const ValueKey('send'),
             label: _c.uploading ? 'Waiting for uploads…' : (busy ? 'Sending…' : primary),
-            onPressed: busy || _c.uploading ? null : () => _send(publish: true),
+            // An RFQ from someone acting for no company is not sent: the form says why (the website disables it too).
+            onPressed: busy || _c.uploading || _c.rfqNeedsCompany ? null : () => _send(publish: true),
           ),
         ),
       ],
@@ -495,6 +519,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
           editing: _c.editing,
           preQualEnd: _c.draft.preQualEndDate,
           onView: _viewPosted,
+          onBrowse: () => _hooks.openSite(context, '/vendors'),
           onPostAnother: () {
             _c.reset();
             _text.clear();
@@ -510,16 +535,6 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         icon: LucideIcons.lock,
         title: "Requirements aren't part of your role",
         body: _c.roleCannotPostMessage,
-      );
-    }
-    if (_c.mustRegisterCompany) {
-      return RfqNotice(
-        icon: LucideIcons.building2,
-        title: 'Requirements are posted for a company',
-        body:
-            'Requirements are posted for a company. Register your company, or switch to one you belong to, then post again.',
-        action: 'Create a company',
-        onAction: widget.onCreateCompany ?? () => _hooks.openSite(context, '/account/companies/new'),
       );
     }
     return _form();
@@ -543,6 +558,21 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     String? problem(String field) => problems[field];
     var step = 0;
     int next() => ++step;
+    final text = withoutEmptyPrompts(d.text).length;
+    // Which sections are complete: the website's rules, which tick each section's number and the progress card.
+    final detailsDone =
+        d.contactName.trim().isNotEmpty &&
+        contactPhonePattern.hasMatch(d.contactPhone.trim()) &&
+        (!c.askCompany || d.companyName.trim().isNotEmpty);
+    final locationDone = d.facilityType.isNotEmpty && d.places.isNotEmpty;
+    final serviceDone = d.category.isNotEmpty;
+    final describeDone =
+        text >= RfqLimits.descriptionMin &&
+        text <= RfqLimits.descriptionMax &&
+        d.attachments.every((a) => a.title.trim().isNotEmpty) &&
+        !c.uploading;
+    final timelineDone = d.preQualEndDate != null && d.dueDate != null && d.dueDate!.isAfter(d.preQualEndDate!);
+    final postingFor = _postingFor();
 
     final children = <Widget>[
       if (problems.isNotEmpty)
@@ -551,21 +581,31 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
           child: ProblemsCard(problems: problems, onGo: _goToProblem),
         ),
       if (c.error != null) RfqBanner(c.error!),
-      _postingFor(),
-      SectionCard(
+      ?postingFor,
+      // The kind of request: the website's first card, with no number or heading of its own.
+      KeyedSubtree(
         key: _anchors['type'],
-        step: next(),
-        title: 'What kind of request',
-        caption: c.editing ? 'A requirement keeps its kind once posted.' : 'Pick how you want to source.',
-        done: true,
-        child: KindPicker(value: d.kind, locked: c.editing, onChanged: c.setKind),
+        child: RfqCard(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              KindPicker(value: d.kind, locked: c.editing, onChanged: c.setKind),
+              if (c.editing) ...[
+                const SizedBox(height: 8),
+                Text('A requirement keeps its kind once posted.', style: RfqText.formHelp),
+              ],
+              if (c.rfqNeedsCompany) ...[const SizedBox(height: 12), _rfqNeedsCompany()],
+            ],
+          ),
+        ),
       ),
       SectionCard(
         key: _anchors['details'],
         step: next(),
         title: 'Your details',
         caption: 'Who suppliers reply to.',
-        done: d.contactName.trim().isNotEmpty && contactPhonePattern.hasMatch(d.contactPhone.trim()),
+        done: detailsDone,
         child: _details(problem),
       ),
       SectionCard(
@@ -573,7 +613,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         step: next(),
         title: 'Service location',
         caption: 'The kind of facility, and every city the work covers.',
-        done: d.facilityType.isNotEmpty && d.places.isNotEmpty,
+        done: locationDone,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -600,8 +640,8 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         key: _anchors['service'],
         step: next(),
         title: 'Service needed',
-        caption: 'Suppliers are matched on this: pick the closest category.',
-        done: d.category.isNotEmpty,
+        caption: 'Suppliers are matched by this category, so pick the closest.',
+        done: serviceDone,
         child: _service(problem),
       ),
       SectionCard(
@@ -609,7 +649,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         step: next(),
         title: 'Tell suppliers what you need',
         caption: 'Include scope, quantity, frequency, timelines and any specific requirements.',
-        done: withoutEmptyPrompts(d.text).length >= RfqLimits.descriptionMin && !c.uploading,
+        done: describeDone,
         child: _describe(problem),
       ),
       if (d.isRfq)
@@ -626,8 +666,8 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
           key: _anchors['timeline'],
           step: next(),
           title: 'Timeline',
-          caption: 'Pre-qualification runs to the first date, detailed quotes to the second.',
-          done: d.preQualEndDate != null && d.dueDate != null && d.dueDate!.isAfter(d.preQualEndDate!),
+          caption: "When pre-qualification closes, and when the shortlist's quotes are due.",
+          done: timelineDone,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -651,7 +691,9 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
             ],
           ),
         )
-      else ...[
+      // An enquiry posted before carries its reply-by day, and editing it keeps it (the website's composer, which
+      // posts and never edits, asks none).
+      else if (c.editing)
         SectionCard(
           key: _anchors['timeline'],
           step: next(),
@@ -668,14 +710,32 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
             error: problem('dueDate'),
           ),
         ),
-        if (!c.editing)
-          SectionCard(
-            key: _anchors['audience'],
-            step: next(),
-            title: 'Who can reply',
-            caption: 'An enquiry is shown to every matching supplier, or only to the ones you name.',
-            child: _audience(problem),
+      if (!c.editing) ...[
+        // The website's send bar says this beside its button; here the button is pinned below.
+        RfqCard(
+          key: const ValueKey('send-note'),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('You will see a summary to check before anything is sent.', style: RfqText.bodyStrong),
+              const SizedBox(height: 2),
+              Text(_sendNote, style: RfqText.small),
+            ],
           ),
+        ),
+        ComposerProgress(
+          steps: [
+            ProgressStep(id: 'details', label: 'Your details', done: detailsDone),
+            ProgressStep(id: 'location', label: 'Service location', done: locationDone),
+            ProgressStep(id: 'service', label: 'Service needed', done: serviceDone),
+            ProgressStep(id: 'describe', label: 'Tell suppliers what you need', done: describeDone),
+            if (d.isRfq) ProgressStep(id: 'timeline', label: 'Timeline', done: timelineDone),
+          ],
+          onGo: _goTo,
+        ),
+        WhatHappensNext(kind: d.kind, preQualEnd: d.preQualEndDate, dueDate: d.dueDate),
+        const WhyIcrCard(),
       ],
       const SizedBox(height: 8),
     ];
@@ -693,27 +753,90 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     );
   }
 
-  Widget _postingFor() {
-    final name = _c.companyFromAccount;
+  /// An RFQ chosen by someone acting for no company (the website's `rfqNeedsCompany`), with its "Create a company"
+  /// and, for someone who belongs to companies, "Switch company".
+  Widget _rfqNeedsCompany() {
+    final canSwitch = widget.onSwitchCompany != null && _c.posting.companies.isNotEmpty;
+    return Container(
+      key: const ValueKey('rfq-needs-company'),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+      decoration: BoxDecoration(color: Tone.amber.fill, borderRadius: BorderRadius.circular(10)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Icon(LucideIcons.building2, size: 16, color: Tone.amber.ink),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'An RFQ is posted for a registered company, so suppliers know who is buying. '
+                  'An enquiry needs no registration.',
+                  style: RfqText.meta.copyWith(color: Tone.amber.ink),
+                ),
+              ),
+            ],
+          ),
+          Wrap(
+            spacing: 4,
+            children: [
+              TextButton(
+                key: const ValueKey('rfq-create-company'),
+                onPressed: widget.onCreateCompany ?? () => _hooks.openSite(context, '/account/companies/new'),
+                child: Text('Create a company', style: RfqText.link),
+              ),
+              if (canSwitch)
+                TextButton(
+                  key: const ValueKey('rfq-switch-company'),
+                  onPressed: _pickPostingFor,
+                  child: Text('Switch company', style: RfqText.link),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Who the requirement is for: the company the account acts for; for someone acting for no company, the employer
+  /// their enquiry names, a choice when there are several (the website's `PostingForEmployer`), and nothing at all
+  /// when there is none (the form then asks the company's name).
+  Widget? _postingFor() {
+    final c = _c;
+    final String shown;
+    var choosable = false;
+    if (c.personal) {
+      final options = c.posting;
+      final companies = widget.onSwitchCompany == null ? const <PostingCompany>[] : options.companies;
+      if (options.names.isEmpty && companies.isEmpty) return null;
+      shown = c.postingFor ?? (options.names.isNotEmpty ? options.names.first : companies.first.name);
+      choosable = options.names.length + companies.length > 1 || (options.names.isEmpty && companies.isNotEmpty);
+    } else {
+      shown =
+          c.companyFromAccount ?? (c.askCompany ? 'ICR (you name the company below)' : (c.poster?.name ?? 'Yourself'));
+    }
     return RfqCard(
+      key: const ValueKey('posting-for-card'),
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      onTap: choosable ? _pickPostingFor : null,
       child: Row(
         children: [
-          LogoTile(name: name ?? 'ICR', size: 36),
+          LogoTile(name: shown, size: 36),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_c.editing ? 'Requirement of' : 'Posting for', style: RfqText.small),
-                Text(
-                  name ?? (_c.askCompany ? 'ICR (you name the company below)' : (_c.poster?.name ?? 'Yourself')),
-                  key: const ValueKey('posting-for'),
-                  style: RfqText.cardTitle,
-                ),
+                Text(c.editing ? 'Requirement of' : 'Posting for', style: RfqText.small),
+                Text(shown, key: const ValueKey('posting-for'), style: RfqText.cardTitle),
               ],
             ),
           ),
+          if (choosable) const Icon(LucideIcons.chevronsUpDown, size: 16, color: AppColors.slate500),
         ],
       ),
     );
@@ -730,7 +853,8 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
             label: 'Company name',
             value: d.companyName,
             maxLength: RfqLimits.companyName,
-            help: 'The name suppliers see.',
+            showCounter: false,
+            help: 'The name suppliers will see on this requirement.',
             error: problem('companyName'),
             onChanged: (v) => _c.update((d) => d.companyName = v),
           ),
@@ -741,6 +865,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
           label: 'Contact person',
           value: d.contactName,
           maxLength: RfqLimits.contactName,
+          showCounter: false,
           error: problem('contactName'),
           onChanged: (v) => _c.update((d) => d.contactName = v),
         ),
@@ -749,9 +874,10 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
           fieldKey: const ValueKey('contact-phone'),
           label: 'Phone',
           value: d.contactPhone,
-          hint: '+91 98765 43210',
+          hint: 'e.g. +91 98765 43210',
           keyboardType: TextInputType.phone,
           maxLength: RfqLimits.phoneMax,
+          showCounter: false,
           error: problem('contactPhone'),
           onChanged: (v) => _c.update((d) => d.contactPhone = v),
         ),
@@ -761,7 +887,10 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
           label: 'Email',
           value: d.email,
           readOnly: true,
-          help: 'From your account. Suppliers see the company; the person and numbers only through their plan.',
+          suffixIcon: LucideIcons.lock,
+          help:
+              'From your account. Suppliers see your contact details only after they respond, on plans that '
+              'include them.',
           onChanged: (_) {},
         ),
       ],
@@ -819,6 +948,13 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
             onTap: _pickSpecialisation,
           ),
         ],
+        if (problem('category') == null) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Narrow it to a sub-category and specialisation if one fits; suppliers listed under it are matched first.',
+            style: RfqText.formHelp,
+          ),
+        ],
       ],
     );
   }
@@ -830,19 +966,23 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        RfqField(
-          fieldKey: const ValueKey('title'),
-          label: 'Title',
-          value: c.titleEdited ? d.title : '',
-          hint: c.suggestedTitle,
-          optional: true,
-          maxLength: RfqLimits.title,
-          help: 'What suppliers see first. Left blank it reads "${c.suggestedTitle}".',
-          error: problem('title'),
-          onChanged: c.setTitle,
-        ),
-        const SizedBox(height: 14),
-        FieldLabel(d.isRfq ? 'Scope of services' : 'Tell suppliers what you need'),
+        // A new requirement's title is made from what it asks for, as the website makes it ("Hospital — Housekeeping",
+        // "Bharat Facilities — Housekeeping RFQ"); a requirement posted before keeps its own, and editing shows it.
+        if (c.editing) ...[
+          RfqField(
+            fieldKey: const ValueKey('title'),
+            label: 'Title',
+            value: c.titleEdited ? d.title : '',
+            hint: c.suggestedTitle,
+            optional: true,
+            maxLength: RfqLimits.title,
+            help: 'What suppliers see first. Left blank it reads "${c.suggestedTitle}".',
+            error: problem('title'),
+            onChanged: c.setTitle,
+          ),
+          const SizedBox(height: 14),
+        ],
+        FieldLabel(d.isRfq ? 'Scope of services' : 'Your requirement'),
         const SizedBox(height: 6),
         TextField(
           key: const ValueKey('text'),
@@ -869,28 +1009,19 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
           ),
         const SizedBox(height: 10),
         DescriptionChecklist(text: d.text, onAdd: _addPrompt),
-        const SizedBox(height: 16),
-        RfqField(
-          fieldKey: const ValueKey('budget'),
-          label: 'Budget',
-          value: d.budget,
-          optional: true,
-          prefixText: '₹ ',
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          help: d.isRfq ? 'Your estimate for the whole contract.' : 'What you expect to spend, if you know.',
-          error: problem('budget'),
-          onChanged: (v) => c.update((d) => d.budget = v),
-        ),
-        if (!c.editing) ...[
+        // The website's composer asks no budget; a requirement posted with one keeps it, and editing shows it.
+        if (c.editing) ...[
           const SizedBox(height: 16),
-          const FieldLabel('Line items', optional: true),
-          const SizedBox(height: 6),
-          ItemsList(
-            items: d.items,
-            error: problem('items'),
-            onAdd: _addItem,
-            onEdit: _editItem,
-            onRemove: c.removeItem,
+          RfqField(
+            fieldKey: const ValueKey('budget'),
+            label: 'Budget',
+            value: d.budget,
+            optional: true,
+            prefixText: '₹ ',
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            help: d.isRfq ? 'Your estimate for the whole contract.' : 'What you expect to spend, if you know.',
+            error: problem('budget'),
+            onChanged: (v) => c.update((d) => d.budget = v),
           ),
         ],
         const SizedBox(height: 16),
@@ -1026,103 +1157,6 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
             ],
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _audience(String? Function(String) problem) {
-    final d = _c.draft;
-    Widget option(Audience a, String title, String body) {
-      final on = d.audience == a;
-      return Semantics(
-        button: true,
-        selected: on,
-        inMutuallyExclusiveGroup: true,
-        child: InkWell(
-          key: ValueKey('audience-${a.name}'),
-          borderRadius: BorderRadius.circular(10),
-          onTap: () => _c.setAudience(a),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: on ? AppColors.primary : AppColors.slate200, width: on ? 1.5 : 1),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  on ? LucideIcons.circleCheck : LucideIcons.circle,
-                  size: 18,
-                  color: on ? AppColors.primary : AppColors.slate300,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: RfqText.bodyStrong),
-                      Text(body, style: RfqText.small),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        option(Audience.open, 'Every matching supplier', 'It is on the open board and alerts the suppliers that fit.'),
-        const SizedBox(height: 8),
-        option(
-          Audience.invited,
-          'Only suppliers I invite',
-          'A private enquiry: only the suppliers you choose can see it or reply.',
-        ),
-        if (d.audience == Audience.invited) ...[
-          const SizedBox(height: 10),
-          if (d.invited.isNotEmpty)
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final s in d.invited)
-                  Container(
-                    key: ValueKey('invited-${s.vendorId}'),
-                    padding: const EdgeInsets.only(left: 10, right: 2),
-                    decoration: BoxDecoration(color: AppColors.chipEmphasis, borderRadius: BorderRadius.circular(16)),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(s.name, style: RfqText.pill.copyWith(color: AppColors.primary)),
-                        IconButton(
-                          tooltip: 'Remove ${s.name}',
-                          visualDensity: VisualDensity.compact,
-                          constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                          padding: EdgeInsets.zero,
-                          onPressed: () => _c.toggleInvited(s),
-                          icon: const Icon(LucideIcons.x, size: 14, color: AppColors.primary),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              key: const ValueKey('invite-choose'),
-              onPressed: _chooseSuppliers,
-              icon: const Icon(LucideIcons.userPlus, size: 16),
-              label: Text(d.invited.isEmpty ? 'Choose suppliers' : 'Change suppliers', style: RfqText.link),
-            ),
-          ),
-          if (problem('invited') != null) Text(problem('invited')!, style: RfqText.error),
-        ],
       ],
     );
   }

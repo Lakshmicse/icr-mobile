@@ -213,7 +213,10 @@ void main() {
       );
       await settle(tester, 16);
       expect(find.byKey(const ValueKey('role-cannot-post')), findsNothing);
-      expect(find.text('Requirements are posted for a company'), findsOneWidget);
+      // As on the website (3 Nov 2026): someone acting for no company has the form and may send an enquiry; only an
+      // RFQ needs a company.
+      expect(find.byKey(const ValueKey('send')), findsOneWidget);
+      expect(find.byKey(const ValueKey('rfq-needs-company')), findsNothing, reason: 'the form opens on an enquiry');
     });
 
     test('the composer\'s controller knows it too', () async {

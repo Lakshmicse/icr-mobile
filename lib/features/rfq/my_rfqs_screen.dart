@@ -244,6 +244,14 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
               icon: LucideIcons.circlePlus,
               onTap: _post,
             ),
+            // The other side of the board: the open requirements a supplier bids on (the website's Find Work & Bid).
+            IcrChip(
+              key: const ValueKey('rfq-find-work'),
+              label: 'Find work',
+              tone: ChipTone.outlined,
+              icon: LucideIcons.compass,
+              onTap: () => pushBoard(context, _hooks),
+            ),
             IcrChip(
               key: const ValueKey('rfq-kind'),
               label: kindLabel,

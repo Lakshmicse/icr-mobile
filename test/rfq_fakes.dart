@@ -212,6 +212,15 @@ class FlakyRfqRepository extends DemoRfqRepository {
   Future<List<Requirement>> openBoard(BoardQuery query, {int page = 1, int limit = 20}) =>
       _read('openBoard', () => super.openBoard(query, page: page, limit: limit));
 
+  /// The calls the Requirements board made, as `status|search|page|limit`.
+  final List<String> postedCalls = [];
+
+  @override
+  Future<RequirementPage> posted({String search = '', RfqStatus? status, int page = 1, int limit = 20}) {
+    postedCalls.add('${status?.wire ?? ''}|$search|$page|$limit');
+    return _read('posted', () => super.posted(search: search, status: status, page: page, limit: limit));
+  }
+
   @override
   Future<List<MyBid>> myBids() => _read('myBids', super.myBids);
 

@@ -58,6 +58,29 @@ class ApiRfqRepository implements RfqRepository {
     );
   }
 
+  @override
+  Future<PostingOptions> postingOptions() async {
+    // Each read on its own: a profile with no roles still offers the companies, and the other way round.
+    List<Map<String, dynamic>> companies = const [];
+    List<Map<String, dynamic>> roles = const [];
+    try {
+      companies = asMaps(asMap(await _get('/me/companies'))['companies']);
+    } catch (_) {}
+    try {
+      roles = asMaps(await _get('/profile/experience'));
+    } catch (_) {}
+    return PostingOptions.from(
+      roles: [
+        for (final r in roles)
+          (organisation: asText(r['organisation']) ?? '', current: r['isCurrent'] == true || r['endYear'] == null),
+      ],
+      memberships: [
+        for (final c in companies)
+          (id: asText(c['companyId']) ?? '', name: asText(c['name']) ?? '', role: asText(c['role']) ?? ''),
+      ],
+    );
+  }
+
   // ---- The buyer's requirements ---------------------------------------------------
 
   @override
@@ -88,6 +111,21 @@ class ApiRfqRepository implements RfqRepository {
 
   @override
   Future<Requirement> requirement(String id) async => Requirement.fromJson(asMap(await _get('/rfq/$id')));
+
+  @override
+  Future<RequirementPage> posted({String search = '', RfqStatus? status, int page = 1, int limit = 20}) async {
+    final data = asMap(
+      await _get('/rfq', {
+        'page': page,
+        'limit': limit,
+        if (search.trim().isNotEmpty) 'search': search.trim(),
+        'status': ?status?.wire,
+      }),
+    );
+    final meta = asMap(data['meta']);
+    final rows = [for (final r in asMaps(data['data'])) Requirement.fromJson(r)];
+    return RequirementPage(rows: rows, total: asInt(meta['total']) ?? rows.length, hasMore: meta['hasNext'] == true);
+  }
 
   @override
   Future<PostResult> create(Map<String, dynamic> body) async => PostResult.fromJson(asMap(await _post('/rfq', body)));

@@ -69,7 +69,7 @@ Future<PostResult> _post(
   final c = PostRfqController(repository: repo, initialKind: kind);
   await c.start();
   expect(c.loadError, isNull);
-  expect(c.mustRegisterCompany, isFalse);
+  expect(c.personal, isFalse);
   expect(c.companyFromAccount, 'Sunrise Facilities Pvt Ltd');
   final pune = (await c.searchPlaces('Pune')).first;
   expect(c.addPlace(pune), isTrue);
@@ -649,6 +649,8 @@ void main() {
       final repo = await _repo(sunrise);
       final posted = await _post(
         repo,
+        // The website's composer asks no line items or budget (3 Nov 2026), so none is sent even when a draft holds
+        // them.
         tweak: (d) => d.items = [
           const RfqItem(name: 'Security guards', quantity: 24, unit: 'guards', specification: 'PSARA licensed'),
         ],
@@ -664,7 +666,7 @@ void main() {
       expect(r.category, 'SECURITY');
       expect(r.subcategory, 'PHYSICAL_SECURITY');
       expect(r.facilityType, 'IT & ITES');
-      expect(r.budget, 650000);
+      expect(r.budget, isNull, reason: 'not asked, not sent');
       expect(r.locations, ['Pune']);
       expect(r.state, 'Maharashtra');
       expect(r.country, 'India');
@@ -672,8 +674,7 @@ void main() {
       expect(r.serviceLocations.single.state, 'Maharashtra');
       expect(r.contactName, 'Bhavya Buyer');
       expect(r.companyName, 'Sunrise Facilities Pvt Ltd');
-      expect(r.items.single.name, 'Security guards');
-      expect(r.items.single.quantity, 24);
+      expect(r.items, isEmpty, reason: 'not asked, not sent');
       expect(r.description, contains('Round-the-clock'));
       final mine = await repo.mine(search: 'zz live');
       expect(mine.rows.map((x) => x.id), contains(posted.id));
@@ -989,12 +990,24 @@ void main() {
       final repo = await _repo(sunrise);
       final blue = await _repo(bluepeak);
       final bluepeakVendor = (await blue.access()).vendorId!;
-      final posted = await _post(
-        repo,
-        tweak: (d) => d
-          ..audience = Audience.invited
-          ..invited = [SupplierRef(vendorId: bluepeakVendor, name: 'Bluepeak Security')],
+      // A private enquiry starts, as on the website, from a supplier's "Request a quote" (the composer posts open
+      // requirements only since 3 Nov 2026).
+      final ask = PostRfqController(
+        repository: repo,
+        target: QuoteTarget(vendorId: bluepeakVendor, supplierName: 'Bluepeak Security', categoryKey: 'PHYSICAL_SECURITY'),
       );
+      await ask.start();
+      ask.quote
+        ..title = 'zz live invite ${DateTime.now().millisecondsSinceEpoch}'
+        ..city = 'Pune'
+        ..description = 'Round-the-clock guarding for a Pune campus: 24 guards, three shifts.';
+      expect(await ask.submit(publish: true), isTrue, reason: ask.error ?? '${ask.problems}');
+      final posted = ask.result!;
+      addTearDown(() async {
+        try {
+          await repo.deleteDraft(posted.id);
+        } catch (_) {}
+      });
       final r = await repo.requirement(posted.id);
       expect(r.visibility, RfqVisibility.targeted);
       expect(r.status, RfqStatus.published, reason: 'an invite-only enquiry goes out at once');
@@ -1093,7 +1106,7 @@ void main() {
       final edit = PostRfqController(repository: repo, editingId: posted.id);
       await edit.start();
       expect(edit.editing, isTrue);
-      expect(edit.draft.budget, '650000');
+      expect(edit.draft.budget, isEmpty, reason: 'the composer asks no budget; editing may add one');
       expect(edit.draft.places.single.label, 'Pune');
       edit.update((d) => d.budget = '7,25,000');
       expect(await edit.submit(publish: true), isTrue, reason: edit.error ?? '${edit.problems}');
@@ -1130,27 +1143,62 @@ void main() {
     });
 
     liveTest(
-      'a person with no company reads and manages requirements but is refused posting, in the API\'s words',
+      'a person with no company may post an enquiry but not an RFQ, in the API\'s words, and runs their own',
       () async {
         final repo = await _repo(bharat);
         final c = PostRfqController(repository: repo);
         await c.start();
-        expect(c.mustRegisterCompany, isTrue, reason: 'the form says so before any typing');
+        expect(c.personal, isTrue);
+        expect(c.rfqNeedsCompany, isFalse, reason: 'the form opens on an enquiry, which needs no company');
+        c.setKind(RfqKind.rfq);
+        expect(c.rfqNeedsCompany, isTrue, reason: 'the form says so before any typing');
+        // The API's rule (the website's since the requirement party guard): an RFQ is refused…
         final refusal = await _refusal(
           repo.create({
             'title': 'zz live',
-            'kind': 'ENQUIRY',
-            'status': 'PUBLISHED',
+            'kind': 'RFQ',
+            'status': 'DRAFT',
             'description': 'A requirement of twenty characters.',
           }),
         );
         expect(refusal, contains('Register your company'));
-        // But his own earlier requirements are his to run.
+        // An enquiry is taken: the next test sends one through the composer.
+        // And his own earlier requirements are his to run.
         final owner = RfqDetailController(repository: repo, rfqId: security);
         await owner.start();
         expect(owner.notOwner, isNull);
       },
     );
+
+    liveTest('acting for no company, the composer sends an enquiry named for the employer "Posting for" shows', () async {
+      final repo = await _repo(pooja);
+      final c = PostRfqController(repository: repo);
+      await c.start();
+      expect(c.personal, isTrue);
+      final pune = (await c.searchPlaces('Pune')).first;
+      c.addPlace(pune);
+      c.update((d) {
+        d
+          ..facilityType = 'IT & ITES'
+          ..category = 'SECURITY'
+          ..text = 'Round-the-clock guarding for a Pune campus: 24 guards, three shifts.';
+        // A profile with no current employer is asked the name, as the website asks it.
+        if (c.askCompany) d.companyName = 'Pooja Consulting';
+      });
+      final expected = c.postingFor ?? 'Pooja Consulting';
+      // Kept a draft, so no supplier is alerted; deleted at the end.
+      expect(await c.submit(publish: false), isTrue, reason: c.error ?? '${c.problems}');
+      final id = c.result!.id;
+      addTearDown(() async {
+        try {
+          await repo.deleteDraft(id);
+        } catch (_) {}
+      });
+      final saved = await repo.requirement(id);
+      expect(saved.kind, RfqKind.enquiry);
+      expect(saved.companyName, expected);
+      expect(saved.companyId, isNull, reason: 'it is the person\'s, not a company\'s');
+    });
 
     liveTest('the place search finds a city with its state and country, and a short query is not sent', () async {
       final repo = await _repo(sunrise);

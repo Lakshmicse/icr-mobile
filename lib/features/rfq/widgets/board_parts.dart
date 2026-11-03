@@ -13,12 +13,23 @@ import '../rfq_rules.dart' show parseRupees;
 /// One requirement on the supplier's board: what is wanted, who is buying
 /// (verified or not), how well it fits, where, how much and by when.
 class OpportunityCard extends StatelessWidget {
-  const OpportunityCard({super.key, required this.rfq, required this.nameOf, required this.onOpen, this.now});
+  const OpportunityCard({
+    super.key,
+    required this.rfq,
+    required this.nameOf,
+    required this.onOpen,
+    this.now,
+    this.showStatus = false,
+  });
 
   final Requirement rfq;
   final CategoryNamer nameOf;
   final VoidCallback onOpen;
   final DateTime? now;
+
+  /// On the board of everything posted, which holds ended requirements too: where it stands (Live, Awarded,
+  /// Closed, Cancelled) and how many responses it has drawn, as the website's cards show.
+  final bool showStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +39,21 @@ class OpportunityCard extends StatelessWidget {
     final places = rfq.places;
     final score = rfq.matchScore;
     final invited = rfq.inviteStatus == InviteStatus.invited;
+    final responses = rfq.quoteCount;
+    final pills = [
+      if (showStatus) StatusPill(rfq.status),
+      if (showStatus && responses > 0)
+        TonePill(
+          rfq.isEnquiry
+              ? (responses == 1 ? '1 reply' : '$responses replies')
+              : (responses == 1 ? '1 bid' : '$responses bids'),
+          icon: LucideIcons.messageSquare,
+        ),
+      if (rfq.hasBid) const TonePill('Bid sent', tone: Tone.green, icon: LucideIcons.check),
+      if (invited) const TonePill('Invited to quote', tone: Tone.blue, icon: LucideIcons.mailPlus),
+      if (rfq.inviteStatus == InviteStatus.declined) const TonePill('You declined'),
+      if (rfq.visibility == RfqVisibility.targeted && !invited) const TonePill('Invite only', icon: LucideIcons.lock),
+    ];
     return RfqCard(
       onTap: onOpen,
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -80,18 +106,9 @@ class OpportunityCard extends StatelessWidget {
               if (rfq.createdAt != null) _Fact(icon: LucideIcons.calendar, text: postedAgo(rfq.createdAt, clock)),
             ],
           ),
-          if (rfq.hasBid || invited || rfq.visibility == RfqVisibility.targeted || rfq.inviteStatus == InviteStatus.declined) ...[
+          if (pills.isNotEmpty) ...[
             const SizedBox(height: 10),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                if (rfq.hasBid) const TonePill('Bid sent', tone: Tone.green, icon: LucideIcons.check),
-                if (invited) const TonePill('Invited to quote', tone: Tone.blue, icon: LucideIcons.mailPlus),
-                if (rfq.inviteStatus == InviteStatus.declined) const TonePill('You declined'),
-                if (rfq.visibility == RfqVisibility.targeted && !invited) const TonePill('Invite only', icon: LucideIcons.lock),
-              ],
-            ),
+            Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: pills),
           ],
         ],
       ),
@@ -112,7 +129,9 @@ class _Fact extends StatelessWidget {
     children: [
       Icon(icon, size: 12, color: color ?? AppColors.slate500),
       const SizedBox(width: 4),
-      Flexible(child: Text(text, style: RfqText.small.copyWith(color: color))),
+      Flexible(
+        child: Text(text, style: RfqText.small.copyWith(color: color)),
+      ),
     ],
   );
 }

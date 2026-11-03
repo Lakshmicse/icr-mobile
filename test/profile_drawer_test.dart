@@ -162,7 +162,9 @@ void main() {
         'Working Councils': '/councils',
         'Get Involved & Volunteer': '/get-involved',
         'Saved Items & Jobs': '/career/saved',
-        'My RFQ Requirements': '/manage/requirements',
+        // Everything posted on ICR, not only the member's own (owner, 3 Nov 2026).
+        'Requirements': '/rfq',
+        'Find Work & Bid': '/manage/bids',
         'Certificates & Badges': '/learning/certificates',
         'Settings': '/profile?tab=security',
         'Nikhil Majjagi': '/members/nikhil-majjagi',
@@ -271,7 +273,7 @@ void main() {
     });
   });
 
-  group('Your companies', () {
+  group('My companies', () {
     const mine = MyCompany(companyId: 'co-mine', name: 'My Own Co', role: 'COMPANY_ADMIN', active: true);
     const north = MyCompany(companyId: 'co-north', name: 'Northwind Facilities', role: 'PROFESSIONAL');
     const tech = MyCompany(companyId: 'co-tech', name: 'TechCorp', role: 'RECRUITER');
@@ -285,7 +287,7 @@ void main() {
     testWidgets('three of five, the one acted for first and marked Active, and See all for the rest', (tester) async {
       final repo = repoWith(const [north, tech, globe, harbor, mine]);
       await pumpDrawer(tester, companies: repo);
-      expect(find.text('YOUR COMPANIES'), findsOneWidget);
+      expect(find.text('MY COMPANIES'), findsOneWidget);
       // The company being acted for leads the list whatever its place in the API's answer.
       expect(find.text('My Own Co'), findsOneWidget);
       expect(find.text('Northwind Facilities'), findsOneWidget);
@@ -368,7 +370,7 @@ void main() {
 
     testWidgets('with no company there is no block at all: no heading, no "Create a company" row', (tester) async {
       await pumpDrawer(tester, companies: repoWith(const []), withApiClient: true);
-      expect(find.text('YOUR COMPANIES'), findsNothing);
+      expect(find.text('MY COMPANIES'), findsNothing);
       expect(find.text('Create a company'), findsNothing);
       expect(find.byKey(const ValueKey('drawer-company-create')), findsNothing);
       expect(find.byKey(const ValueKey('drawer-companies-all')), findsNothing);
@@ -379,7 +381,7 @@ void main() {
       final gate = Completer<void>();
       final slow = repoWith(const [mine])..gate = gate.future;
       await pumpDrawer(tester, companies: slow);
-      expect(find.text('YOUR COMPANIES'), findsOneWidget, reason: 'the heading and the grey rows wait for the read');
+      expect(find.text('MY COMPANIES'), findsOneWidget, reason: 'the heading and the grey rows wait for the read');
       expect(find.text('My Own Co'), findsNothing);
       gate.complete();
       await tester.pumpAndSettle();
@@ -388,7 +390,7 @@ void main() {
       final failing = repoWith(const [mine])
         ..failures['myCompanies'] = ApiError('The server is busy.', statusCode: 503);
       await pumpDrawer(tester, companies: failing);
-      expect(find.text('YOUR COMPANIES'), findsNothing);
+      expect(find.text('MY COMPANIES'), findsNothing);
       expect(find.text('The server is busy.'), findsNothing);
       expect(find.text('Regional Chapters'), findsOneWidget, reason: 'the rest of the menu is untouched');
     });
@@ -417,13 +419,13 @@ void main() {
         companies: const MyCompanies(personalRole: 'SUPER_ADMIN', canJoinCompanies: false),
       );
       await pumpDrawer(tester, companies: staff);
-      expect(find.text('YOUR COMPANIES'), findsNothing);
+      expect(find.text('MY COMPANIES'), findsNothing);
       expect(find.text('Create a company'), findsNothing);
     });
 
     testWidgets('without an account repository (no API client above the menu) there is no block', (tester) async {
       await pumpDrawer(tester);
-      expect(find.text('YOUR COMPANIES'), findsNothing);
+      expect(find.text('MY COMPANIES'), findsNothing);
     });
 
     testWidgets('the menu scrolls at the phone\'s width with large text, with nothing overflowing', (tester) async {
