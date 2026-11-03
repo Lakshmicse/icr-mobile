@@ -8,11 +8,12 @@ import '../../core/api/api_client.dart';
 import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
-import '../feed/feed_models.dart' show FeedAuthor;
+import '../feed/feed_models.dart' show FeedAuthor, FeedPicture;
 import '../feed/widgets/home_header.dart';
 import '../learning/course_sheet.dart';
 import '../learning/learning_controller.dart';
 import '../learning/learning_screen.dart';
+import '../learning/opened_learning.dart';
 import '../learning_assess/api_assess_repository.dart';
 import '../learning_assess/assess_models.dart';
 import '../learning_assess/assess_repository.dart';
@@ -114,8 +115,41 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
       case LearningDoor.partnerCourses:
         _openPartners();
       default:
-        pushLearningPage(context, widget.routes.forDoor(door)!);
+        _pushAndRecount(widget.routes.forDoor(door)!);
     }
+  }
+
+  /// A page where the member may open a level, a set or a whole course (credits, a plan place, a purchase): the
+  /// My courses row reads what they hold again when they come back.
+  Future<void> _pushAndRecount(LearningPageBuilder page) async {
+    await pushLearningPage<void>(context, page);
+    if (mounted) _hub.reloadAccess();
+  }
+
+  /// "My courses · View More": the My courses page, which files what the member holds under its own headings — Mock
+  /// Exams, Assess Your Knowledge, Flash Cards, then ICR Courses and Partner Courses (the website's My courses).
+  Future<void> _openMyCourses() async {
+    final learning = _hub.learning
+      ..setSearch('')
+      ..setMineOnly(true);
+    await pushLearningPage<void>(
+      context,
+      (route, back) => ChangeNotifierProvider<LearningController>.value(
+        value: learning,
+        child: LearningScreen(onBack: back, title: 'My courses', routes: widget.routes, onOpenDeck: _openDeck),
+      ),
+    );
+    if (mounted) _hub.reloadAccess();
+  }
+
+  /// A card of the My courses row: an exam or programme opens its levels or sets, a deck its study screen.
+  void _openOpened(OpenedItem item) {
+    final deck = item.deck;
+    if (deck != null) {
+      _openDeck(deck);
+      return;
+    }
+    _openGroup(item.group!.kind, item.group!);
   }
 
   /// The ICR Courses grid, over the hub. It shares the hub's course controller,
@@ -167,8 +201,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
   /// reads one for the member's places and its refresh).
   void _openGroup(PaperKind kind, PaperGroup group) {
     final catalogue = CatalogueController(repository: _assess, kind: kind);
-    pushLearningPage<void>(
-      context,
+    _pushAndRecount(
       (route, back) => ChangeNotifierProvider<CatalogueController>(
         create: (_) => catalogue,
         child: GroupScreen(seed: group, onBack: back, opener: openPaper),
@@ -275,7 +308,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
         body: _grid(
           key: 'assess',
           title: 'Assess Your Knowledge',
-          onMore: () => pushLearningPage(context, widget.routes.assessment),
+          onMore: () => _pushAndRecount(widget.routes.assessment),
           loading: _hub.assessLoading,
           error: _hub.assessError,
           onRetry: _hub.reloadAssess,
@@ -296,7 +329,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
         body: _grid(
           key: 'mock',
           title: 'Mock Exams',
-          onMore: () => pushLearningPage(context, widget.routes.mockTests),
+          onMore: () => _pushAndRecount(widget.routes.mockTests),
           loading: _hub.mockLoading,
           error: _hub.mockError,
           onRetry: _hub.reloadMocks,
@@ -364,6 +397,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
         const HubRule(),
         const SizedBox(height: 6.2),
       ],
+      ..._myCoursesRow(),
       for (final (i, section) in sections.indexed) ...[
         ...section.body,
         // 10.2 dp under the last card (or tile), the hairline, 5.9 dp, the next heading — or, with no hairline,
@@ -418,6 +452,70 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
     }
     return [HubSectionHeading(key: ValueKey('$key-heading'), title: title, onAction: onMore), ...rows];
   }
+
+  /// "My courses" (owner, 3 Nov 2026): one horizontal row under the Catalogue of everything the member holds —
+  /// the exams, programmes and decks they opened and the courses they hold a place on, the hub's own cards — with
+  /// "View More" for the My courses page. Nothing at all while they hold nothing.
+  List<Widget> _myCoursesRow() {
+    final entries = _hub.myLearning;
+    if (entries.isEmpty) return const [];
+    return [
+      HubSectionHeading(key: const ValueKey('my-courses-heading'), title: 'My courses', onAction: _openMyCourses),
+      const SizedBox(height: 1),
+      SingleChildScrollView(
+        key: const ValueKey('rail-my-courses'),
+        scrollDirection: Axis.horizontal,
+        // Room under the cards for their shadow.
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final (i, entry) in entries.indexed) ...[
+                if (i > 0) const SizedBox(width: _myCardGap),
+                SizedBox(width: _myCardWidth, child: _myCard(entry, i)),
+              ],
+            ],
+          ),
+        ),
+      ),
+      const SizedBox(height: 6.2),
+      const HubRule(),
+      const SizedBox(height: 5.9),
+    ];
+  }
+
+  /// The row's cards: a little narrower than the grid's, so the next one shows at the edge and says it scrolls.
+  static const _myCardWidth = 160.0;
+  static const _myCardGap = 12.0;
+
+  Widget _myCard(MyLearningEntry entry, int index) {
+    final item = entry.opened;
+    if (item != null) {
+      return LearnCard(
+        key: ValueKey('my-${entry.key}'),
+        title: item.title,
+        cover: item.cover ?? FeedPicture.asset(_doorFor(item.kind).image),
+        // As the My courses page badges it: only a place redeemed with ICR credits.
+        badge: item.via == OpenedVia.credits ? 'Credits' : null,
+        onTap: () => _openOpened(item),
+      );
+    }
+    final course = entry.course!;
+    return LearnCard(
+      key: ValueKey('my-${entry.key}'),
+      title: course.title,
+      cover: coverFor(course.cover, index),
+      badge: LearningHubController.isIcr(course) ? 'ICR' : null,
+      onTap: () => showCourseSheet(context, course),
+    );
+  }
+
+  static LearningDoor _doorFor(OpenedKind kind) => switch (kind) {
+    OpenedKind.mock => LearningDoor.mockTests,
+    OpenedKind.course => LearningDoor.assessment,
+    OpenedKind.deck => LearningDoor.flashCards,
+  };
 
   List<Widget> _flashRail(List<StudyTopic> decks) {
     if (_hub.study == null) return const [];

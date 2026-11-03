@@ -87,7 +87,8 @@ class _Courses implements LearningRepository {
   Future<CourseReviews> reviews(Course course) async => const CourseReviews();
 
   @override
-  Future<MyEnrolment> enrol(Course course, {CourseRun? run}) async => throw UnimplementedError();
+  Future<MyEnrolment> enrol(Course course, {CourseRun? run}) async =>
+      MyEnrolment(id: 'e-${course.code}', courseId: course.id, runId: run?.id, status: EnrolmentStatus.confirmed);
 
   @override
   Future<void> enquire(
@@ -229,13 +230,17 @@ class _Assess implements AssessRepository {
   @override
   Future<CheckoutStart> checkoutBundle(PaperKind kind, String key) async => const CheckoutStart(devActivated: true);
 
-  _Assess({List<PaperGroup>? assessments, List<PaperGroup>? mocks, this.assessError})
+  _Assess({List<PaperGroup>? assessments, List<PaperGroup>? mocks, this.assessError, this.access})
     : assessments = assessments ?? _programmes(3),
       mocks = mocks ?? _subjects();
 
   List<PaperGroup> assessments;
   List<PaperGroup> mocks;
   String? assessError;
+
+  /// What the member holds (plan places, levels opened with credits or bought); nothing known when null.
+  MemberAccess? access;
+  int memberReads = 0;
   final groupsReads = <String>[];
   final groupReads = <String>[];
 
@@ -254,7 +259,10 @@ class _Assess implements AssessRepository {
   }
 
   @override
-  Future<MemberLearning> member(PaperKind kind) async => MemberLearning.none;
+  Future<MemberLearning> member(PaperKind kind) async {
+    memberReads++;
+    return MemberLearning(access: access);
+  }
 
   @override
   Future<int> unreadNotifications() async => 0;
@@ -444,6 +452,9 @@ List<Course> _catalogue() => [
   for (var i = 1; i <= 12; i++)
     _course('P$i', i == 3 ? 'Communication' : 'Programme number $i', kind: CourseKind.assessment),
 ];
+
+/// The catalogue for a member who holds no place: the design's page, with no My courses row.
+List<Course> _unplaced() => [for (final c in _catalogue()) c.copyWith(clearEnrolment: true)];
 
 const _vinfraaInstitute = Institute(
   id: 'p-vin',
@@ -696,7 +707,8 @@ void main() {
 
   group('the hub screen (the Learning Centre design)', () {
     testWidgets('opens on the design: the header, Catalogue, the grids, the decks rail and the banner', (tester) async {
-      await pumpHub(tester);
+      // A member who holds nothing yet: the page is the design's, with no My courses row.
+      await pumpHub(tester, courses: _Courses(_unplaced()));
       expect(find.byType(HomeHeader), findsOneWidget, reason: 'the Home header, not a title bar');
       expect(find.byType(TitleBar), findsNothing);
       expect(find.byType(CatalogueRail), findsOneWidget);
@@ -913,9 +925,11 @@ void main() {
     });
 
     group("the page keeps the export's measures (docs/designs/learning-hub-v2.png, below its header)", () {
-      // Six programmes and six subjects, so every grid is three rows deep.
+      // Six programmes and six subjects, so every grid is three rows deep; a member who holds nothing, so no My
+      // courses row sits between the Catalogue and the grids.
       Future<void> pumpDesign(WidgetTester tester) => pumpHub(
         tester,
+        courses: _Courses(_unplaced()),
         assess: _Assess(assessments: _programmes(6), mocks: _subjectsOf(6)),
         heightDp: 2400,
       );
@@ -1005,6 +1019,112 @@ void main() {
       });
     });
   });
+
+  // Owner, 3 Nov 2026: one horizontal row of what the member holds, under the Catalogue — exams as well as
+  // courses — and "View More" to the My courses page, which files them under their own headings.
+  group('My courses (the row under the Catalogue)', () {
+    // A mock exam on the plan, an Assess Your Knowledge level opened with credits, and the course place in the
+    // catalogue (Certificate in Advanced Leadership Skills).
+    _Assess holding() => _Assess(
+      access: const MemberAccess(
+        paperIds: {'p2'},
+        creditPaperIds: {'p2'},
+        mocks: PlanPlaces(limit: 2, opened: ['s1']),
+      ),
+    );
+
+    List<String> rowKeys(WidgetTester tester) => [
+      for (final card in tester.widgetList<LearnCard>(
+        find.descendant(of: find.byKey(const ValueKey('rail-my-courses')), matching: find.byType(LearnCard)),
+      ))
+        (card.key! as ValueKey<String>).value,
+    ];
+
+    testWidgets('sits under the Catalogue: exams first, as My courses shelves them, then the courses held', (
+      tester,
+    ) async {
+      await pumpHub(tester, assess: holding());
+      final heading = tester.getRect(find.byKey(const ValueKey('my-courses-heading')));
+      expect(heading.top, greaterThan(tester.getRect(find.byType(CatalogueRail)).bottom), reason: 'under the Catalogue');
+      expect(
+        heading.bottom,
+        lessThanOrEqualTo(tester.getRect(find.byKey(const ValueKey('assess-heading'))).top),
+        reason: 'above Assess Your Knowledge',
+      );
+      expect(rowKeys(tester), ['my-mock:s1', 'my-paper:p2', 'my-course:c-CALS']);
+      expect(find.text('Programme 2 · Foundation'), findsOneWidget, reason: 'a level held on its own is named');
+      // One row that scrolls sideways, not a grid.
+      final first = tester.getRect(find.byKey(const ValueKey('my-mock:s1')));
+      final second = tester.getRect(find.byKey(const ValueKey('my-paper:p2')));
+      expect(second.top, first.top);
+      expect(second.left - first.right, closeTo(12, 0.1));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a member who holds nothing has no row', (tester) async {
+      await pumpHub(tester, courses: _Courses(_unplaced()));
+      expect(find.byKey(const ValueKey('my-courses-heading')), findsNothing);
+      expect(find.byKey(const ValueKey('rail-my-courses')), findsNothing);
+    });
+
+    testWidgets('a course place alone is enough, and a new place joins the row at once', (tester) async {
+      final hub = await pumpHub(tester, courses: _Courses(_unplaced()));
+      expect(find.byKey(const ValueKey('rail-my-courses')), findsNothing);
+      final fam = hub.learning.courses.firstWhere((c) => c.code == 'FAM');
+      await tester.runAsync(() => hub.learning.enrol(fam));
+      await tester.pumpAndSettle();
+      expect(rowKeys(tester), ['my-course:c-FAM']);
+    });
+
+    testWidgets('View More opens My courses with its headings; a card opens what it is', (tester) async {
+      final assess = holding();
+      final study = _Study();
+      // As the app builds it (`createHubController`): the course controller reads the exams too, for the page's
+      // shelves of what the member opened.
+      await pumpHubWith(
+        tester,
+        LearningHubController(
+          repository: _Hub(list: _institutes()),
+          learning: LearningController(_Courses(_catalogue()), assess: assess, study: study),
+          assess: assess,
+          study: study,
+          ownsLearning: true,
+        ),
+      );
+      await tester.tap(
+        find.descendant(of: find.byKey(const ValueKey('my-courses-heading')), matching: find.text('View More')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(LearningScreen), findsOneWidget);
+      expect(find.text('My courses'), findsWidgets);
+      // The leadership course is the ICR Institute's, an institute's course: Partner Courses.
+      for (final heading in ['Mock Exams', 'Assess Your Knowledge', 'Partner Courses']) {
+        expect(find.text(heading), findsOneWidget, reason: heading);
+      }
+      final before = assess.memberReads;
+      Navigator.of(tester.element(find.byType(LearningScreen))).pop();
+      await tester.pumpAndSettle();
+      expect(assess.memberReads, greaterThan(before), reason: 'what the member holds is read again on the way back');
+
+      await tester.tap(find.byKey(const ValueKey('my-mock:s1')));
+      // The sets page keeps a spinner going while it reads, so it never settles: two half-second frames, as the
+      // other programme taps here.
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byType(GroupScreen), findsOneWidget, reason: "the mock exam's sets");
+    });
+
+    testWidgets('the search narrows the row with the rest of the page', (tester) async {
+      final hub = await pumpHub(tester, assess: holding());
+      hub.setSearch('leadership');
+      await tester.pumpAndSettle();
+      expect(rowKeys(tester), ['my-course:c-CALS']);
+      hub.setSearch('nothing like this');
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('rail-my-courses')), findsNothing);
+    });
+  });
+
   group('Partner Courses (the directory)', () {
     Future<LearningHubController> pumpDirectory(WidgetTester tester, {_Hub? hub, Size? size}) async {
       tester.view.physicalSize = size ?? const Size(780, 2400);

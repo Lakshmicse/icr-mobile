@@ -324,6 +324,28 @@ class _DesignCourses extends DemoLearningRepository {
   ];
 }
 
+/// A member who holds things (owner, 3 Nov 2026: the hub's My courses row): a mock exam and an Assess Your
+/// Knowledge programme on their plan, and a place on one of the institute's courses.
+class _HoldingAssess extends _DesignAssess {
+  @override
+  Future<MemberLearning> member(PaperKind kind) async => const MemberLearning(
+    access: MemberAccess(
+      courses: PlanPlaces(limit: 2, opened: ['assessment-1']),
+      mocks: PlanPlaces(limit: 2, opened: ['mock-0']),
+    ),
+  );
+}
+
+class _HoldingCourses extends _DesignCourses {
+  @override
+  Future<List<Course>> courses() async => [
+    for (final c in await super.courses())
+      c.id == 'par-2'
+          ? c.copyWith(enrolment: MyEnrolment(id: 'e', courseId: c.id, status: EnrolmentStatus.confirmed))
+          : c,
+  ];
+}
+
 /// The Learning screens at the designs' frames, exported at 2x to build/screens/.
 void main() {
   setUpAll(loadAppFonts);
@@ -491,6 +513,25 @@ void main() {
     await pumpHubDesign(tester, physical: const Size(780, 1688));
     await export(tester, find.byType(LearningHubScreen), 'learning_hub');
     await expectLater(find.byType(LearningHubScreen), matchesGoldenFile('goldens/learning_hub.png'));
+  });
+
+  // The My courses row under the Catalogue, for a member who holds a mock exam, a programme and a course place.
+  shadowedWidgets('learning hub with My courses, at 390 × 844', (tester) async {
+    tester.view.physicalSize = const Size(780, 1688);
+    tester.view.devicePixelRatio = 2;
+    addTearDown(tester.view.reset);
+    final hub = LearningHubController(
+      repository: _HubSource(),
+      learning: LearningController(_HoldingCourses()),
+      assess: _HoldingAssess(),
+      study: _DesignStudy(),
+    );
+    addTearDown(hub.dispose);
+    await tester.runAsync(hub.start);
+    await tester.pumpWidget(MaterialApp(debugShowCheckedModeBanner: false, theme: buildAppTheme(), home: hubTab(hub)));
+    await precacheAll(tester);
+    await export(tester, find.byType(LearningHubScreen), 'learning_hub_my_courses');
+    await expectLater(find.byType(LearningHubScreen), matchesGoldenFile('goldens/learning_hub_my_courses.png'));
   });
 
   shadowedWidgets('learning hub, the whole page, at 390 × 2143', (tester) async {
