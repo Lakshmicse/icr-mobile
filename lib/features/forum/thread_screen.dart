@@ -535,6 +535,13 @@ class _ThreadScreenState extends State<ThreadScreen> {
             : (id) {
                 if (mounted) widget.callbacks.onOpenMember!(id);
               },
+        byHandle: _c.repository.memberIdByHandle,
+        searchCompanies: _c.repository.companies,
+        onOpenCompany: widget.callbacks.onOpenCompany == null
+            ? null
+            : (id) {
+                if (mounted) widget.callbacks.onOpenCompany!(id);
+              },
       );
       return;
     }

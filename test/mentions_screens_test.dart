@@ -57,9 +57,24 @@ void main() {
       'lastName': 'Sharma',
       'avatarUrl': null,
       'headline': 'Head of FM at Prestige',
+      'profileSlug': 'rahul-sharma',
     },
-    {'id': 'u-rakesh', 'firstName': 'Rakesh', 'lastName': 'Iyer', 'avatarUrl': null, 'headline': null},
-    {'id': 'u-priya', 'firstName': 'Priya', 'lastName': 'Nambiar', 'avatarUrl': null, 'headline': 'Facilities Lead'},
+    {
+      'id': 'u-rakesh',
+      'firstName': 'Rakesh',
+      'lastName': 'Iyer',
+      'avatarUrl': null,
+      'headline': null,
+      'profileSlug': 'rakesh-iyer',
+    },
+    {
+      'id': 'u-priya',
+      'firstName': 'Priya',
+      'lastName': 'Nambiar',
+      'avatarUrl': null,
+      'headline': 'Facilities Lead',
+      'profileSlug': 'priya-nambiar',
+    },
   ];
 
   Map<String, Handler> mentionable() => {
@@ -393,6 +408,20 @@ void main() {
 
     Map<String, Handler> routes() => {
       ...mentionable(),
+      // The public company list, as `GET /companies?search=` pages it.
+      'GET /companies': (o) {
+        final q = (o.queryParameters['search'] as String).toLowerCase();
+        return {
+          'data': [
+            for (final c in const [
+              {'id': 'co-acme', 'name': 'Acme Facility Services', 'city': 'Pune', 'logoUrl': null},
+              {'id': 'co-rajan', 'name': 'Rajan Estates', 'city': 'Chennai', 'logoUrl': null},
+            ])
+              if ((c['name'] as String).toLowerCase().contains(q)) c,
+          ],
+          'meta': {'page': 1, 'limit': 5, 'total': 2},
+        };
+      },
       'GET /categories/tree': (_) => [
         {
           'id': 'TECHNOLOGY_INNOVATION',
@@ -489,6 +518,50 @@ void main() {
       await pumpComposer(tester, repostOfId: 't-orig', initialBody: '↻ Reposted from Sarah Jenkins');
       await post(tester);
       expect(api.bodyOf('POST', '/forum/threads')['repostOfId'], 't-orig');
+    });
+
+    // Owner, 3 Nov 2026: "@vinay" in the Tags should offer the people and companies it may mean, in a discussion and
+    // a poll alike (one composer).
+    testWidgets('"@" in the Tags lists people and companies; a pick adds a person by handle, a company by name', (
+      tester,
+    ) async {
+      await pumpComposer(tester);
+      await tester.enterText(key('composer-title'), 'Who reviews the retrofit plan?');
+      await tester.enterText(key('composer-body'), 'Please review the retrofit plan before Friday.');
+      await tester.pump();
+      await tester.ensureVisible(key('composer-tag'));
+      await typeInto(tester, 'composer-tag', '@ra');
+      expect(api.to('GET', '/members/mentionable').last.queryParameters['search'], 'ra');
+      expect(api.to('GET', '/companies').last.queryParameters['search'], 'ra');
+      expect(key('tag-person:u-rahul'), findsOneWidget);
+      expect(key('tag-person:u-rakesh'), findsOneWidget);
+      expect(find.text('Head of FM at Prestige'), findsOneWidget, reason: "a person's headline under their name");
+      expect(key('tag-company:co-rajan'), findsOneWidget);
+      expect(find.text('Chennai'), findsOneWidget, reason: "a company's city under its name");
+
+      await tester.tap(key('tag-person:u-rahul'));
+      await tester.pump();
+      expect(find.text('#@rahul-sharma'), findsOneWidget, reason: 'the person by their profile handle');
+      expect(fieldText(tester, 'composer-tag'), isEmpty);
+      expect(key('tag-suggestions'), findsNothing);
+
+      await typeInto(tester, 'composer-tag', '#@acme');
+      await tester.tap(key('tag-company:co-acme'));
+      await tester.pump();
+      expect(find.text('#@acme-facility-services'), findsOneWidget, reason: 'the company by its name');
+
+      await post(tester);
+      expect(api.bodyOf('POST', '/forum/threads')['tags'], ['@rahul-sharma', '@acme-facility-services']);
+    });
+
+    testWidgets('a plain tag lists no one, and a name nobody has says so', (tester) async {
+      await pumpComposer(tester);
+      await tester.ensureVisible(key('composer-tag'));
+      await typeInto(tester, 'composer-tag', 'hvac');
+      expect(key('tag-suggestions'), findsNothing);
+      expect(api.to('GET', '/members/mentionable'), isEmpty);
+      await typeInto(tester, 'composer-tag', '@zz');
+      expect(key('tag-suggest-empty'), findsOneWidget);
     });
 
     testWidgets('an ordinary post carries no repostOfId', (tester) async {

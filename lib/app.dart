@@ -246,8 +246,11 @@ class _Home extends StatelessWidget {
                 callbacks: ForumCallbacks(
                   onBell: () => openNotifications(ctx),
                   // No `onOpenTag`: a tag on Home never opens the Forums tab (owner, 3 Nov 2026). A person's tag
-                  // ("#@name") opens their profile through `onOpenMember`; any other tag does nothing.
+                  // ("#@name") opens their profile through `onOpenMember`, a company's its page; any other tag does
+                  // nothing.
                   onOpenMember: (id) => openMemberProfile(ctx, id),
+                  onOpenCompany: (id) =>
+                      openCompanyInsightsById(ctx, companyId: id, jobs: ctx.read<JobsController>().repository),
                 ),
               ),
             ),
@@ -297,6 +300,8 @@ class _Home extends StatelessWidget {
                 callbacks: ForumCallbacks(
                   onBell: () => openNotifications(ctx),
                   onOpenMember: (id) => openMemberProfile(ctx, id),
+                  onOpenCompany: (id) =>
+                      openCompanyInsightsById(ctx, companyId: id, jobs: ctx.read<JobsController>().repository),
                 ),
               ),
             ),

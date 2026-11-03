@@ -9,6 +9,7 @@ import 'package:icr_mobile/features/forum/forums_controller.dart';
 import 'package:icr_mobile/features/forum/forums_screen.dart';
 import 'package:icr_mobile/features/forum/mentions/mention_person.dart';
 import 'package:icr_mobile/features/forum/mentions/tag_person.dart';
+import 'package:icr_mobile/features/forum/mentions/tag_suggestions.dart';
 import 'package:icr_mobile/features/shell/app_shell.dart';
 import 'package:provider/provider.dart';
 
@@ -53,6 +54,54 @@ void main() {
       expect(personNamed('pra', [prashant, pravin]), isNull, reason: 'several found, none by that name');
     });
 
+    test("the handle is the tag's text after the \"@\", as the forum stores it", () {
+      expect(personTagHandle('#@vinay-kumar'), 'vinay-kumar');
+      expect(personTagHandle('@Vinay-Kumar'), 'vinay-kumar');
+      expect(personTagHandle('#hvac'), isNull);
+      expect(personTagHandle('#@'), isNull);
+      expect(personTagName('#@vinay-kumar'), 'vinay kumar');
+    });
+
+    test('a handle names the person first; then the name; then a company of that name', () async {
+      final asked = <String>[];
+      final opened = <String>[];
+      final companies = <String>[];
+      Future<bool> open(String tag, {String? handleId, List<MentionPerson> people = const [], List<TagCompany> cos = const []}) =>
+          openTaggedPerson(
+            tag,
+            search: (q) async {
+              asked.add('people:$q');
+              return people;
+            },
+            onOpenMember: opened.add,
+            byHandle: (h) async {
+              asked.add('handle:$h');
+              return handleId;
+            },
+            searchCompanies: (q) async {
+              asked.add('companies:$q');
+              return cos;
+            },
+            onOpenCompany: companies.add,
+          );
+
+      expect(await open('#@vinay-kumar', handleId: 'u-vinay'), isTrue);
+      expect(asked, ['handle:vinay-kumar'], reason: 'an exact handle needs no search');
+      expect(opened, ['u-vinay']);
+
+      asked.clear();
+      expect(await open('#@acme-fm', cos: const [TagCompany(id: 'co-acme', name: 'Acme FM')]), isTrue);
+      expect(asked, ['handle:acme-fm', 'people:acme fm', 'companies:acme fm']);
+      expect(companies, ['co-acme']);
+
+      asked.clear();
+      expect(
+        await open('#@acme', cos: const [TagCompany(id: 'co-a', name: 'Acme FM'), TagCompany(id: 'co-b', name: 'Acme Ltd')]),
+        isFalse,
+        reason: 'no company is named exactly that',
+      );
+    });
+
     test('a failed look-up opens nothing', () async {
       final opened = <String>[];
       final done = await openTaggedPerson(
@@ -81,9 +130,11 @@ void main() {
       tester.view.devicePixelRatio = 2;
       addTearDown(tester.view.reset);
       final world = FeedWorld();
-      world.threads.first['tags'] = ['HVAC', '@prashant', '@divya', '@pravin'];
+      world.threads.first['tags'] = ['HVAC', '@prashant', '@divya', '@pravin', '@vinay-kumar'];
       api = FakeForum({
         ...world.routes(),
+        // A profile handle the API knows (a person picked from the Tags "@" list is tagged by it).
+        'GET /members/vinay-kumar': (_) => member('u-vinay', 'Vinay Kumar'),
         'GET /members/mentionable': (o) {
           final q = (o.queryParameters['search'] as String).toLowerCase();
           return [
@@ -152,8 +203,17 @@ void main() {
     testWidgets("a person's tag opens that person's profile", (tester) async {
       await pumpApp(tester);
       await tapTag(tester, '@prashant');
+      expect(api.to('GET', '/members/prashant'), hasLength(1), reason: 'the handle is tried first');
       expect(api.to('GET', '/members/mentionable').single.queryParameters['search'], 'prashant');
       expect(opened, ['u-prashant']);
+      expectNoForums();
+    });
+
+    testWidgets("a person picked from the Tags' list is found by their handle, with no search", (tester) async {
+      await pumpApp(tester);
+      await tapTag(tester, '@vinay-kumar');
+      expect(opened, ['u-vinay']);
+      expect(api.to('GET', '/members/mentionable'), isEmpty);
       expectNoForums();
     });
 

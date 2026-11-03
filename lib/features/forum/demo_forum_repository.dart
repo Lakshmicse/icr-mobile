@@ -6,6 +6,7 @@ import 'demo_forum_content.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
 import 'mentions/mention_person.dart';
+import 'mentions/tag_suggestions.dart' show TagCompany, tagHandleOf;
 
 /// The designs' sample content as a forum that lives in memory (`--dart-define=FEED_SOURCE=demo`): reading works,
 /// and every write changes this copy only, so the screens can be reviewed and clicked through without a database.
@@ -306,6 +307,22 @@ class DemoForumRepository implements ForumRepository {
       }
     }
     return people.take(limit).toList();
+  }
+
+  /// The sample content has no company list: the Tags "@" list offers people only.
+  @override
+  Future<List<TagCompany>> companies(String search, {int limit = 5}) async => const [];
+
+  /// A handle is the person's name in lower case with dashes ("priya-nambiar"), as the website makes one.
+  @override
+  Future<String?> memberIdByHandle(String handle) async {
+    final h = handle.trim().toLowerCase();
+    for (final p in _posts) {
+      for (final a in [p.author, for (final r in flattenReplies(_replies[p.slug] ?? const [])) r.author]) {
+        if (tagHandleOf(a.name) == h) return a.id;
+      }
+    }
+    return null;
   }
 
   @override

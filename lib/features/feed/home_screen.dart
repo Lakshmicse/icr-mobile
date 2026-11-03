@@ -227,6 +227,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) widget.callbacks.onOpenMember?.call(id);
   }
 
+  void _openCompanyIfShown(String id) {
+    if (mounted) widget.callbacks.onOpenCompany?.call(id);
+  }
+
   void _reactors(FeedPost post) {
     final forum = context.read<FeedController>().repository.forum;
     showReactorsSheet(context, load: () => forum.reactors(post.id), onOpenMember: widget.callbacks.onOpenMember);
@@ -399,6 +403,9 @@ class _HomeScreenState extends State<HomeScreen> {
               tag,
               search: feed.repository.forum.mentionable,
               onOpenMember: widget.callbacks.onOpenMember == null ? null : _openMemberIfShown,
+              byHandle: feed.repository.forum.memberIdByHandle,
+              searchCompanies: feed.repository.forum.companies,
+              onOpenCompany: widget.callbacks.onOpenCompany == null ? null : _openCompanyIfShown,
             ),
             onOpenMention: widget.callbacks.onOpenMember,
             onReactions: () => _reactors(post),

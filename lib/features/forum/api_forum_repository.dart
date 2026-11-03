@@ -11,6 +11,7 @@ import 'forum_models.dart';
 import 'forum_repository.dart';
 import 'mentions/mention_person.dart';
 import 'mentions/mention_text.dart';
+import 'mentions/tag_suggestions.dart' show TagCompany;
 
 /// The community forum (`/forum/*`), read and written as the signed-in member, the way the website's community
 /// pages do it.
@@ -338,6 +339,32 @@ class ApiForumRepository implements ForumRepository {
       for (final r in rows)
         if (r is Map<String, dynamic>) MentionPerson.fromJson(r, apiBase: base),
     ];
+  }
+
+  @override
+  Future<List<TagCompany>> companies(String search, {int limit = 5}) async {
+    final res = await _get('/companies', {'search': search.trim(), 'limit': limit.clamp(1, 20)});
+    final rows = res['data'];
+    final base = api.dio.options.baseUrl;
+    return [
+      if (rows is List)
+        for (final r in rows)
+          if (r is Map<String, dynamic> && r['id'] is String) TagCompany.fromJson(r, apiBase: base),
+    ];
+  }
+
+  @override
+  Future<String?> memberIdByHandle(String handle) async {
+    final h = handle.trim().toLowerCase();
+    if (h.isEmpty) return null;
+    try {
+      final profile = await _get('/members/${Uri.encodeComponent(h)}');
+      return profile['id'] as String?;
+    } on ApiError catch (e) {
+      // No public profile by that handle: not an error, just no one.
+      if (e.statusCode == 404 || e.statusCode == 403) return null;
+      rethrow;
+    }
   }
 
   @override

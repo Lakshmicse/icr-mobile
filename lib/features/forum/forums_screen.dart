@@ -106,8 +106,13 @@ class _ForumsScreenState extends State<ForumsScreen> {
     if (mounted) widget.callbacks.onOpenMember?.call(id);
   }
 
+  void _openCompanyIfShown(String id) {
+    if (mounted) widget.callbacks.onOpenCompany?.call(id);
+  }
+
   ForumCallbacks get _threadCallbacks => ForumCallbacks(
     onOpenMember: widget.callbacks.onOpenMember,
+    onOpenCompany: widget.callbacks.onOpenCompany,
     onBell: widget.callbacks.onBell,
     // A tag or a topic chosen on a discussion's page filters this tab.
     onOpenTag: (tag) {
@@ -364,6 +369,9 @@ class _ForumsScreenState extends State<ForumsScreen> {
                 tag,
                 search: f.repository.mentionable,
                 onOpenMember: widget.callbacks.onOpenMember == null ? null : _openMemberIfShown,
+                byHandle: f.repository.memberIdByHandle,
+                searchCompanies: f.repository.companies,
+                onOpenCompany: widget.callbacks.onOpenCompany == null ? null : _openCompanyIfShown,
               );
               return;
             }

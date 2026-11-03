@@ -1,6 +1,7 @@
 import '../feed/feed_models.dart';
 import 'forum_models.dart';
 import 'mentions/mention_person.dart';
+import 'mentions/tag_suggestions.dart' show TagCompany;
 
 /// Where the Forums tab, a discussion's page and the composer read and write: the community forum
 /// (`/forum/*` on the API), or the design's sample content.
@@ -68,6 +69,13 @@ abstract class ForumRepository {
   /// Who the "@" picker may offer for what was typed (`GET /members/mentionable`): up to [limit] people (10 at most).
   /// The API answers nothing for an empty or one-letter search.
   Future<List<MentionPerson>> mentionable(String search, {int limit = 8});
+
+  /// The companies a discussion's Tags "@" list may offer (`GET /companies?search=`, the public list): up to [limit].
+  Future<List<TagCompany>> companies(String search, {int limit = 5});
+
+  /// The member a profile handle names (`GET /members/<handle>`, a "@vinay-kumar" tag): their id, or null when no
+  /// public profile has that handle.
+  Future<String?> memberIdByHandle(String handle);
   Future<void> deleteReply(String replyId);
   Future<void> setReplyLiked(String replyId, bool like);
 

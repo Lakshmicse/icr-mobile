@@ -7,7 +7,7 @@ import 'forum_models.dart';
 /// works, and a missing one either does the nearest true thing (the bell opens the website's notifications page)
 /// or leaves the control inert (a member's name, until the app has a member page to open).
 class ForumCallbacks {
-  const ForumCallbacks({this.onOpenMember, this.onBell, this.onOpenTag, this.onOpenTopic});
+  const ForumCallbacks({this.onOpenMember, this.onBell, this.onOpenTag, this.onOpenTopic, this.onOpenCompany});
 
   /// A member's photo or name was tapped: open their profile. Gets the member's id.
   final ValueChanged<String>? onOpenMember;
@@ -20,6 +20,9 @@ class ForumCallbacks {
 
   /// The topic a discussion is filed under: show that topic's discussions.
   final ValueChanged<ForumTopicRef>? onOpenTopic;
+
+  /// A company tagged in a discussion's tags ("#@acme-facility-services") was tapped: open its page. Gets its id.
+  final ValueChanged<String>? onOpenCompany;
 }
 
 /// What a discussion's page hands back when it is left, so the list that opened it can show what the reader did
