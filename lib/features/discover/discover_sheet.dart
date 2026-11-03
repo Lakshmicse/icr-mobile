@@ -81,23 +81,15 @@ class DiscoverSheet extends StatelessWidget {
     ),
   ];
 
+  /// Where the business doors go is the website's Discover menu (owner, 3 Nov 2026): Hire opens Post a job
+  /// (`openPostJob`, which asks for a company only from someone who has none) and Sell the Supplier Mart, the
+  /// Marketplace tab. Both once opened "create a company", even for a member who had one. The design stays the
+  /// four doors (owner, 4 Nov 2026: "back to old design but the on click working as it is working now").
   static const business = [
     DiscoverRow(
       35,
-      DiscoverDoor(
-        'Hire',
-        icon: 'discover_hire.png',
-        iconLeft: 14,
-        textLeft: 45.5,
-        sitePath: '/account/companies/new?role=COMPANY_ADMIN',
-      ),
-      DiscoverDoor(
-        'Sell',
-        icon: 'discover_sell.png',
-        iconLeft: 12.5,
-        textLeft: 41.5,
-        sitePath: '/account/companies/new?role=VENDOR',
-      ),
+      DiscoverDoor('Hire', icon: 'discover_hire.png', iconLeft: 14, textLeft: 45.5, sitePath: '/manage/jobs/new'),
+      DiscoverDoor('Sell', icon: 'discover_sell.png', iconLeft: 12.5, textLeft: 41.5, sitePath: '/vendors'),
     ),
     DiscoverRow(
       35,

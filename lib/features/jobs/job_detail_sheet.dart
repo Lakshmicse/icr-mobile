@@ -85,7 +85,10 @@ class JobSheetBody extends StatelessWidget {
     final intro = blocks.takeWhile((b) => b.kind == BlockKind.paragraph).toList();
     final rest = blocks.skip(intro.length).toList();
     final skills = [...job.skills, ...job.preferredSkills.where((s) => !job.skills.contains(s))];
-    final match = controller.match;
+    // A match against your own company's job means nothing to the person posting it (the website hides it too).
+    final postsHere = controller.postsHere;
+    final match = postsHere ? null : controller.match;
+    final matchScore = postsHere ? null : job.matchScore;
     final people = controller.people;
     final posted = postedAgo(job.postedAt);
     final count = applicantsOrOpenings(job);
@@ -138,7 +141,7 @@ class JobSheetBody extends StatelessWidget {
                   ],
                 ],
               ),
-              if (salary != null || job.matchScore != null) ...[
+              if (salary != null || matchScore != null) ...[
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -153,10 +156,10 @@ class JobSheetBody extends StatelessWidget {
                         gap: 7,
                         textStyle: JobsText.chip,
                       ),
-                    if (salary != null && job.matchScore != null) const SizedBox(width: 9),
-                    if (job.matchScore != null)
+                    if (salary != null && matchScore != null) const SizedBox(width: 9),
+                    if (matchScore != null)
                       IcrChip(
-                        label: '${job.matchScore}% Profile Match',
+                        label: '$matchScore% Profile Match',
                         tone: ChipTone.tinted,
                         fill: AppColors.successTint,
                         height: 27,
@@ -356,11 +359,24 @@ class JobSheetBar extends StatelessWidget {
           onPressed: () => JobSheetBody._run(context, controller.toggleSave()),
         ),
         Expanded(
-          child: PrimaryButton(
-            label: label,
-            icon: job.applied ? LucideIcons.check : (job.externalApply ? LucideIcons.externalLink : LucideIcons.zap),
-            onPressed: job.applied || controller.applying ? null : () => startApplication(context, controller),
-          ),
+          // Someone who posts this company's jobs manages them and never applies to one: the website says so in
+          // place of its Apply button, and the API refuses the application anyway.
+          child: controller.postsHere
+              ? Padding(
+                  key: const ValueKey('posts-here'),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    'You post jobs for ${job.company.name}, so you manage this one rather than apply to it.',
+                    style: JobsText.meta,
+                  ),
+                )
+              : PrimaryButton(
+                  label: label,
+                  icon: job.applied
+                      ? LucideIcons.check
+                      : (job.externalApply ? LucideIcons.externalLink : LucideIcons.zap),
+                  onPressed: job.applied || controller.applying ? null : () => startApplication(context, controller),
+                ),
         ),
       ],
     );

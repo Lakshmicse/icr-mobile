@@ -387,7 +387,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
     final forward = moves.where((s) => s != 'REJECTED').toList();
     final liveOffer =
         d?.offers.any((o) => o.status == 'DRAFT' || o.status == 'SENT' || o.status == 'ACCEPTED') ?? false;
-    final canSchedule = const {'APPLIED', 'SCREENING', 'INTERVIEW'}.contains(a.stage);
+    final canSchedule = schedulableStages.contains(a.stage);
     final canOffer = const {'SCREENING', 'INTERVIEW', 'OFFER'}.contains(a.stage) && !liveOffer && d != null;
     final busy = _c.busy;
     return Container(

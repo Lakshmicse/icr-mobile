@@ -358,6 +358,21 @@ class ApiJobsRepository implements JobsRepository {
     );
   }
 
+  /// The roles that post a company's jobs (`JOB_POSTER_ROLES`).
+  static const jobPosterRoles = {'COMPANY_ADMIN', 'BRANCH_ADMIN', 'RECRUITER'};
+
+  @override
+  Future<bool> postsJobsFor(JobCompany company) async {
+    try {
+      final res = await _get('/me/companies');
+      final companies = (res['companies'] as List? ?? const []).whereType<Map>();
+      return companies.any((c) => c['companyId'] == company.id && jobPosterRoles.contains(c['role']));
+    } catch (_) {
+      // Signed out, or the memberships could not be read: the API still refuses an application it should.
+      return false;
+    }
+  }
+
   @override
   Future<void> setHidden(Job job, bool hidden) async {
     await _send(hidden ? 'POST' : 'DELETE', '/jobs/${job.id}/hide');

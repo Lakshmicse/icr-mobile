@@ -4,6 +4,9 @@ import 'jobs_repository.dart';
 
 /// The Jobs designs' sample content, bundled for design review.
 class DemoJobsRepository implements JobsRepository {
+  @override
+  Future<bool> postsJobsFor(JobCompany company) async => false;
+
   DemoJobsRepository();
 
   static const _cbre = JobCompany(id: 'cbre', name: 'CBRE South Asia', city: 'Mumbai', verified: true);

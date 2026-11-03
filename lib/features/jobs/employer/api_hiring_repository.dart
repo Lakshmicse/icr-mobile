@@ -39,12 +39,24 @@ class ApiHiringRepository implements HiringRepository {
         // The API decides on publish regardless.
       }
     }
+    final companyId = user['companyId'] as String?;
+    var held = 0;
+    // Acting as themselves: whether there is a company to switch to, or only one to create.
+    if (companyId == null && user['role'] != 'SUPER_ADMIN') {
+      try {
+        final mine = await _map('GET', '/me/companies');
+        held = (mine['companies'] as List?)?.length ?? 0;
+      } catch (_) {
+        // Told nothing: the way on is to create one, as before.
+      }
+    }
     return HiringAccess(
       userId: '${user['id']}',
       role: user['role'] as String? ?? 'PROFESSIONAL',
-      companyId: user['companyId'] as String?,
+      companyId: companyId,
       canPublish: canPublish,
       publishNote: note,
+      companiesHeld: held,
     );
   }
 
