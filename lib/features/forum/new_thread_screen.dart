@@ -11,6 +11,9 @@ import 'forum_file_picker.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
 import 'forum_styles.dart';
+import 'mentions/mention_controller.dart';
+import 'mentions/mention_widgets.dart';
+import 'mentions/tag_suggestions.dart';
 import 'rich_text_controller.dart';
 import 'widgets/forum_bits.dart';
 import 'widgets/forum_sheets.dart';
@@ -27,6 +30,7 @@ Future<ForumThread?> openComposer(
   String? topicSlug,
   String? initialTitle,
   String? initialBody,
+  String? repostOfId,
   Future<ForumFile?> Function()? pickFile,
 }) {
   return Navigator.of(context).push<ForumThread>(
@@ -39,6 +43,7 @@ Future<ForumThread?> openComposer(
         topicSlug: topicSlug,
         initialTitle: initialTitle,
         initialBody: initialBody,
+        repostOfId: repostOfId,
         pickFile: pickFile,
       ),
     ),
@@ -58,8 +63,12 @@ class NewThreadScreen extends StatefulWidget {
     this.topicSlug,
     this.initialTitle,
     this.initialBody,
+    this.repostOfId,
     this.pickFile,
   });
+
+  /// The discussion this post reposts, sent with it.
+  final String? repostOfId;
 
   final ForumRepository repository;
   final ForumThread? editing;
@@ -84,10 +93,20 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
     mode: widget.mode,
     initialTitle: widget.initialTitle,
     initialBody: widget.initialBody,
+    repostOfId: widget.repostOfId,
   );
   late final TextEditingController _title = TextEditingController(text: _c.title);
   late final RichTextController _body = RichTextController(doc: _c.doc, maxChars: ForumLimits.bodyMax);
+
+  /// The "@" picker of the details: who may be tagged, and who was.
+  late final MentionController _mentions = MentionController(search: (q) => widget.repository.mentionable(q));
   final _tag = TextEditingController();
+
+  /// The Tags field's "@" list: the people and companies a tag being typed may mean (owner, 3 Nov 2026).
+  late final TagSuggestController _tagSuggest = TagSuggestController(
+    searchPeople: (q) => widget.repository.mentionable(q),
+    searchCompanies: (q) => widget.repository.companies(q),
+  )..attach(_tag);
   final _options = <TextEditingController>[];
   final _scroll = ScrollController();
   String? _tagNote;
@@ -107,6 +126,8 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
   @override
   void dispose() {
     _body.removeListener(_bodyChanged);
+    _mentions.dispose();
+    _tagSuggest.dispose();
     _c.dispose();
     _title.dispose();
     _body.dispose();
@@ -122,12 +143,15 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
   void _bodyChanged() {
     if (_body.revision == _bodyRevision) return;
     _bodyRevision = _body.revision;
+    _c.setMentions(_mentions.mentionsIn(_body.text));
     _c.setDoc(_body.doc);
   }
 
   Future<void> _send() async {
     // A tag typed and not yet added counts: the reader meant it.
     if (_tag.text.trim().isNotEmpty) _addTag();
+    // Only the people whose "@Name" is still in the details are tagged.
+    _c.setMentions(_mentions.mentionsIn(_body.text));
     final saved = await _c.send();
     if (!mounted) return;
     if (saved != null) {
@@ -140,6 +164,14 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
 
   void _addTag() {
     final note = _c.addTags(_tag.text);
+    _tag.clear();
+    setState(() => _tagNote = note);
+  }
+
+  /// A pick from the Tags field's "@" list: the person by their profile handle ("@vinay-kumar" — the API tells them,
+  /// and a tap on the tag opens their profile), a company by its name; what was typed is replaced by it.
+  void _addTagged(String tag) {
+    final note = _c.addTags(tag);
     _tag.clear();
     setState(() => _tagNote = note);
   }
@@ -188,8 +220,12 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
       barrierColor: AppColors.sheetScrim,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       clipBehavior: Clip.antiAlias,
-      builder: (_) =>
-          _TopicSheet(nodes: _c.subtopics, selectedKey: _c.subtopicKey, title: 'Sub-category (optional)', allowNone: true),
+      builder: (_) => _TopicSheet(
+        nodes: _c.subtopics,
+        selectedKey: _c.subtopicKey,
+        title: 'Sub-category (optional)',
+        allowNone: true,
+      ),
     );
     if (picked != null) _c.setSubtopic(picked.node);
   }
@@ -286,6 +322,7 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
                               ? 'Add context for voters — why you are asking, and anything the options leave out.'
                               : 'Give enough context that someone can actually help — portfolio size, what you have tried, what constraints you are under.',
                           error: c.touched && c.bodyProblem != null,
+                          mentions: _mentions,
                         ),
                         if (c.editLosesFormatting && !c.bodyUnchanged)
                           Padding(
@@ -299,7 +336,17 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
                         const SizedBox(height: 20),
                         const Divider(height: 1, thickness: 1, color: AppColors.outlineVariant),
                         const SizedBox(height: 20),
-                        _Tags(controller: c, field: _tag, note: _tagNote, onAdd: _addTag),
+                        _Tags(
+                          controller: c,
+                          field: _tag,
+                          note: _tagNote,
+                          onAdd: _addTag,
+                          suggestions: TagSuggestions(
+                            controller: _tagSuggest,
+                            onPerson: (p) => _addTagged(tagForPerson(p)),
+                            onCompany: (co) => _addTagged(tagForCompany(co)),
+                          ),
+                        ),
                         const SizedBox(height: 16),
                         _FileRow(controller: c, onAttach: _attach),
                         const SizedBox(height: 22),
@@ -315,6 +362,8 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
                       ],
                     ),
                   ),
+                  // The people the "@" in the details may mean, above the keyboard.
+                  MentionSuggestions(controller: _mentions, margin: const EdgeInsets.fromLTRB(12, 6, 12, 8)),
                 ],
               ),
             ),
@@ -775,12 +824,21 @@ class _OptionRowState extends State<_OptionRow> {
 }
 
 class _Tags extends StatelessWidget {
-  const _Tags({required this.controller, required this.field, required this.note, required this.onAdd});
+  const _Tags({
+    required this.controller,
+    required this.field,
+    required this.note,
+    required this.onAdd,
+    this.suggestions,
+  });
 
   final ComposerController controller;
   final TextEditingController field;
   final String? note;
   final VoidCallback onAdd;
+
+  /// Under the field: the people and companies an "@" being typed may mean.
+  final Widget? suggestions;
 
   @override
   Widget build(BuildContext context) {
@@ -834,7 +892,7 @@ class _Tags extends StatelessWidget {
             style: composerFieldStyle,
             decoration: composerDecoration(
               label: 'Tags',
-              hint: 'Add up to ${ForumLimits.tags}',
+              hint: 'Add up to ${ForumLimits.tags} · @ to tag someone',
               helper: 'Tags are how someone finds this in six months.',
               suffix: InkResponse(
                 key: const ValueKey('tag-add'),
@@ -846,6 +904,7 @@ class _Tags extends StatelessWidget {
           )
         else
           Text('That is the most a discussion can carry (${ForumLimits.tags}).', style: ForumDesign.meta),
+        if (c.tags.length < ForumLimits.tags && suggestions != null) suggestions!,
         if (note != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),
@@ -986,7 +1045,13 @@ class _TopicSheetState extends State<_TopicSheet> {
       if (widget.searchAll && words.isNotEmpty)
         for (final top in widget.nodes)
           if (top.children.any((s) => _matches(words, [top.name, s.name])))
-            (top: top, subs: [for (final s in top.children) if (_matches(words, [top.name, s.name])) s]),
+            (
+              top: top,
+              subs: [
+                for (final s in top.children)
+                  if (_matches(words, [top.name, s.name])) s,
+              ],
+            ),
     ];
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),

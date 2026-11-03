@@ -9,6 +9,7 @@ import 'package:icr_mobile/core/api/api_client.dart';
 import 'package:icr_mobile/core/api/api_error.dart';
 import 'package:icr_mobile/core/auth/token_store.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
+import 'package:icr_mobile/core/widgets/buttons.dart';
 import 'package:icr_mobile/core/widgets/detail_sheet.dart';
 import 'package:icr_mobile/features/learning/api_learning_repository.dart';
 import 'package:icr_mobile/features/learning/course_sheet.dart';
@@ -25,6 +26,9 @@ import 'package:icr_mobile/features/learning/widgets/course_card.dart';
 import 'package:icr_mobile/features/learning/widgets/cover_pill.dart';
 import 'package:icr_mobile/features/learning/widgets/run_tile.dart';
 import 'package:icr_mobile/features/learning_hub/learning_doors.dart';
+import 'package:icr_mobile/features/library/pdf_engine.dart';
+import 'package:icr_mobile/features/library/preview_runner.dart';
+import 'package:icr_mobile/features/library/widgets/document_viewer_screen.dart';
 import 'package:icr_mobile/features/notifications/demo_notifications_repository.dart';
 import 'package:icr_mobile/features/notifications/notifications_repository.dart';
 import 'package:icr_mobile/features/notifications/notifications_screen.dart';
@@ -32,6 +36,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 
+import 'helpers/community_fakes.dart';
 import 'helpers/fonts.dart';
 
 class _NoTokens extends TokenStore {
@@ -245,6 +250,9 @@ class _Fake implements LearningRepository {
   final enrols = <(String, String?)>[];
   final withdrawals = <String>[];
   final enquiries = <({String code, String message, EnquiryKind kind, String? company, int? headcount})>[];
+  final brochureLeads = <(String code, BrochureLead lead, BrochureIntent intent)>[];
+  String? brochureRefusal;
+  List<int>? brochurePdf = [0x25, 0x50, 0x44, 0x46];
 
   MyEnrolment? _mineFor(Course c) {
     for (final m in mine) {
@@ -306,6 +314,28 @@ class _Fake implements LearningRepository {
     int? headcount,
   }) async {
     enquiries.add((code: course.code, message: message, kind: kind, company: company, headcount: headcount));
+  }
+
+  /// The account read behind the brochure form fails (a phone with a stale session, a slow network).
+  bool contactFails = false;
+
+  @override
+  Future<BrochureLead> brochureContact() async {
+    if (contactFails) throw ApiError('Session expired.', statusCode: 401);
+    return const BrochureLead(name: 'Bharat Buyer', email: 'buyer@icr.dev', phone: '+91 98450 12345');
+  }
+
+  @override
+  Future<void> requestBrochure(Course course, BrochureLead lead, {required BrochureIntent intent}) async {
+    if (brochureRefusal != null) throw ApiError(brochureRefusal!, statusCode: 400);
+    brochureLeads.add((course.code, lead, intent));
+  }
+
+  @override
+  Future<List<int>> brochureBytes(Course course) async {
+    final pdf = brochurePdf;
+    if (pdf == null) throw UnsupportedError('no brochure bytes');
+    return pdf;
   }
 
   @override
@@ -714,7 +744,7 @@ void main() {
     test('groups courses by kind, searches them, and rolls a refused place back', () async {
       final learning = LearningController(_Refusing(DemoLearningRepository()));
       await learning.start();
-      expect(learning.sections.single.title, 'Professional development');
+      expect(learning.sections.single.title, 'ICR certified programs', reason: 'the demo course has no awarding body');
       learning.setSearch('nothing like this');
       expect(learning.sections, isEmpty);
       learning.setSearch('leadership');
@@ -730,13 +760,21 @@ void main() {
       final fake = _Fake(
         catalogue: [
           _rich(code: 'AAA'),
-          _plain('BBB', 'Colloboration', kind: CourseKind.assessment),
-          _plain('CCC', 'Communication', kind: CourseKind.assessment),
+          _plain('BBB', 'Colloboration'),
+          _plain('CCC', 'Communication'),
+          _plain('DDD', 'Capital Planning', kind: CourseKind.assessment),
         ],
       );
       final learning = LearningController(fake);
       await learning.start();
-      expect(learning.sections.map((s) => s.title), ['Professional development', 'Certification programmes']);
+      // The website's /learning/professional-development: ICR's own taught courses, then the institutes'.
+      expect(learning.sections.map((s) => s.title), ['ICR certified programs', 'Related courses from our partners']);
+      expect(learning.sections.first.courses.map((c) => c.code), ['BBB', 'CCC']);
+      expect(learning.sections.last.courses.map((c) => c.code), ['AAA']);
+      learning.setSearch('capital');
+      expect(learning.sections, isEmpty, reason: 'a certification programme has Assess Your Knowledge, not this grid');
+      learning.setSearch('icr');
+      expect(learning.sections.single.courses.map((c) => c.code), ['BBB', 'CCC'], reason: "ICR's own, by ICR");
       learning.setSearch('collo');
       expect(learning.sections.single.courses.single.code, 'BBB');
       learning.setSearch('vinfraa');
@@ -777,7 +815,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(fake.courseCalls, 3);
       final section = learning.sections.single;
-      expect(section.title, 'My courses');
+      expect(section.title, 'ICR Courses', reason: "the website's shelves file a place by who runs the course");
       expect(section.courses.single.code, 'HELD');
       learning.setSearch('zzz');
       expect(learning.sections, isEmpty, reason: 'the search narrows within My courses');
@@ -919,22 +957,30 @@ void main() {
       return fake;
     }
 
+    /// Two of ICR's own taught courses, a partner's, and a certification programme the grid leaves to Assess Your
+    /// Knowledge.
     _Fake threeCourses() => _Fake(
       catalogue: [
         _rich(code: 'AAA'),
-        _plain('BBB', 'Colloboration', kind: CourseKind.assessment),
-        _plain('CCC', 'Communication', kind: CourseKind.assessment),
+        _plain('BBB', 'Colloboration'),
+        _plain('CCC', 'Communication'),
+        _plain('DDD', 'Capital Planning', kind: CourseKind.assessment),
       ],
     );
 
-    testWidgets('lists the courses under their kind as cards', (tester) async {
+    testWidgets("lists ICR's own courses, then the partners' under their own heading, as cards", (tester) async {
       await pumpTab(tester, threeCourses());
-      expect(find.text('Professional development'), findsOneWidget);
-      expect(find.text('Certification programmes'), findsOneWidget);
+      expect(find.text('ICR certified programs'), findsOneWidget);
+      expect(find.text('Related courses from our partners'), findsOneWidget);
+      expect(find.text('Professional development'), findsNothing, reason: 'one heading for both read as ICR’s own');
+      expect(find.text('Certification programmes'), findsNothing);
+      expect(find.text('Capital Planning'), findsNothing, reason: 'the programme has its own door');
       expect(find.byType(CourseCard), findsNWidgets(3));
       expect(find.text('Rich course AAA'), findsOneWidget);
       expect(find.text('5 days · 35 hours • In person'), findsOneWidget);
-      expect(find.text('Foundation • Certification programme'), findsNWidgets(2), reason: 'never a blank meta line');
+      final icr = tester.getTopLeft(find.text('Colloboration')).dy;
+      final partner = tester.getTopLeft(find.text('Rich course AAA')).dy;
+      expect(icr, lessThan(partner), reason: "ICR's own come first");
     });
 
     testWidgets("Back goes back, the bell opens the app's notifications", (tester) async {
@@ -953,7 +999,7 @@ void main() {
       await tester.pump();
       expect(find.byType(CourseCard), findsOneWidget);
       expect(find.text('Colloboration'), findsOneWidget);
-      expect(find.text('Professional development'), findsNothing, reason: 'a heading with no row under it goes');
+      expect(find.text('Related courses from our partners'), findsNothing, reason: 'a heading with no row under it goes');
       await tester.enterText(find.byType(TextField), 'zzzz');
       await tester.pump();
       expect(find.text('No courses match'), findsOneWidget);
@@ -987,7 +1033,8 @@ void main() {
       expect(find.text('Rich course AAA'), findsOneWidget);
       expect(find.text('Aug 23 - 27, 2027 • Riyadh, KSA'), findsOneWidget, reason: 'the run the place is on');
       expect(find.text('Professional development'), findsNothing);
-      expect(find.text('My courses'), findsNWidgets(2), reason: 'the chip and the heading');
+      expect(find.text('My courses'), findsOneWidget, reason: 'the chip; the shelf is named by who runs the course');
+      expect(find.text('Partner Courses'), findsOneWidget, reason: 'AAA is an institute\'s');
       await tester.tap(find.text('My courses').first);
       await tester.pumpAndSettle();
       expect(find.byType(CourseCard), findsNWidgets(3));
@@ -1115,9 +1162,9 @@ void main() {
         final fake = _Fake(
           catalogue: [
             _rich(code: 'AAA'),
-            _plain('BBB', 'Colloboration', kind: CourseKind.assessment),
-            _plain('CCC', 'Communication', kind: CourseKind.assessment),
-            _plain('DDD', 'Contract Management', kind: CourseKind.assessment),
+            _plain('BBB', 'Colloboration'),
+            _plain('CCC', 'Communication'),
+            _plain('DDD', 'Contract Management'),
           ],
         );
         await pump(tester, fake);
@@ -1146,22 +1193,22 @@ void main() {
       },
     );
 
-    testWidgets('each section keeps its heading and has the cards of its kind', (tester) async {
+    testWidgets("each section keeps its heading: ICR's own courses, then the partners'", (tester) async {
       final fake = _Fake(
         catalogue: [
           _rich(code: 'AAA'),
-          _plain('BBB', 'Colloboration', kind: CourseKind.assessment),
-          _plain('CCC', 'Communication', kind: CourseKind.assessment),
+          _plain('BBB', 'Colloboration'),
+          _plain('CCC', 'Communication'),
         ],
       );
       await pump(tester, fake);
-      final dev = tester.getRect(find.text('Professional development'));
-      final programmes = tester.getRect(find.text('Certification programmes'));
-      expect(dev.top, lessThan(tester.getRect(card('Rich course AAA')).top));
-      expect(programmes.top, greaterThan(tester.getRect(card('Rich course AAA')).bottom));
-      expect(programmes.top, lessThan(tester.getRect(card('Colloboration')).top));
+      final icr = tester.getRect(find.text('ICR certified programs'));
+      final partners = tester.getRect(find.text('Related courses from our partners'));
+      expect(icr.top, lessThan(tester.getRect(card('Colloboration')).top));
+      expect(partners.top, greaterThan(tester.getRect(card('Colloboration')).bottom));
+      expect(partners.top, lessThan(tester.getRect(card('Rich course AAA')).top));
       expect(
-        find.descendant(of: find.byType(CourseCard), matching: find.text('Professional development')),
+        find.descendant(of: find.byType(CourseCard), matching: find.text('ICR certified programs')),
         findsNothing,
       );
     });
@@ -1181,7 +1228,7 @@ void main() {
       final fake = _Fake(
         catalogue: [
           _rich(code: 'HELD', enrolment: held),
-          _plain('CP', 'Capital Planning', kind: CourseKind.assessment),
+          _plain('CP', 'Capital Planning'),
         ],
       );
       await pump(tester, fake);
@@ -1206,10 +1253,7 @@ void main() {
 
       // A course with no duration keeps its "what it is" line and its ribbon glyph.
       final programme = card('Capital Planning');
-      expect(
-        find.descendant(of: programme, matching: find.text('Foundation • Certification programme')),
-        findsOneWidget,
-      );
+      expect(find.descendant(of: programme, matching: find.text('Foundation • Course')), findsOneWidget);
       expect(find.descendant(of: programme, matching: find.byIcon(LucideIcons.award)), findsOneWidget);
       expect(find.descendant(of: programme, matching: find.byIcon(LucideIcons.clock3)), findsNothing);
       expect(
@@ -1225,12 +1269,17 @@ void main() {
       (tester) async {
         final fake = _Fake(
           catalogue: [
-            _plain('CP', 'Capital Planning', kind: CourseKind.assessment),
+            const Course(
+              id: 'c-CP',
+              code: 'CP',
+              title: 'Capital Planning',
+              level: 'Foundation Practitioner Level',
+              detailLoaded: true,
+            ),
             const Course(
               id: 'c-TIMED',
               code: 'TIMED',
               title: 'Timed programme',
-              kind: CourseKind.assessment,
               level: 'Foundation',
               durationLabel: '2 days',
               detailLoaded: true,
@@ -1238,10 +1287,11 @@ void main() {
           ],
         );
         await pump(tester, fake);
-        final meta = tester.widget<Text>(find.text('Foundation • Certification programme'));
+        const long = 'Foundation Practitioner Level • Course';
+        final meta = tester.widget<Text>(find.text(long));
         expect(meta.maxLines, 2);
         expect(
-          tester.renderObject<RenderParagraph>(find.text('Foundation • Certification programme')).didExceedMaxLines,
+          tester.renderObject<RenderParagraph>(find.text(long)).didExceedMaxLines,
           isFalse,
           reason: 'the whole line is shown, on two lines at 390 dp',
         );
@@ -1376,9 +1426,9 @@ void main() {
         catalogue: [
           long,
           _rich(code: 'TWO', title: 'Second', price: 5000),
-          _plain('BBB', 'Colloboration', kind: CourseKind.assessment),
-          _plain('CCC', 'Communication', kind: CourseKind.assessment),
-          _plain('DDD', 'Contract Management', kind: CourseKind.assessment),
+          _plain('BBB', 'Colloboration'),
+          _plain('CCC', 'Communication'),
+          _plain('DDD', 'Contract Management'),
         ],
       );
       await pump(tester, fake, size: small);
@@ -1719,21 +1769,108 @@ void main() {
       });
     });
 
-    testWidgets('DOWNLOAD BROCHURE and the bar glyph open the brochure', (tester) async {
-      await pumpSheet(tester, _Fake(catalogue: [_rich()]));
+    testWidgets('DOWNLOAD BROCHURE asks who is reading, prefilled; Download sends the lead, then hands the file '
+        'to the phone', (tester) async {
+      final (fake, _) = await pumpSheet(tester, _Fake(catalogue: [_rich()]));
       await tester.tap(find.text('DOWNLOAD BROCHURE'));
-      await tester.pump();
-      await tester.tap(find.byIcon(Symbols.download).last);
-      await tester.pump();
-      expect(launches.urls, ['https://files.test/brochure.pdf', 'https://files.test/brochure.pdf']);
+      await tester.pumpAndSettle();
+      expect(find.text('Get the brochure'), findsOneWidget);
+      expect(tester.widget<TextField>(find.byKey(const ValueKey('brochure-name'))).controller!.text, 'Bharat Buyer');
+      expect(tester.widget<TextField>(find.byKey(const ValueKey('brochure-email'))).controller!.text, 'buyer@icr.dev');
+      expect(launches.urls, isEmpty, reason: 'nothing opens before the lead is sent');
+      await tester.enterText(find.byKey(const ValueKey('brochure-company')), 'TechCorp');
+      await tester.tap(find.byKey(const ValueKey('brochure-download')));
+      await tester.pumpAndSettle();
+      expect(fake.brochureLeads, hasLength(1));
+      expect(fake.brochureLeads.single.$1, 'RICH');
+      expect(fake.brochureLeads.single.$2.company, 'TechCorp');
+      expect(fake.brochureLeads.single.$2.phone, '+919845012345', reason: 'the phone is normalised');
+      expect(fake.brochureLeads.single.$3, BrochureIntent.download);
+      expect(launches.urls, ['https://files.test/brochure.pdf']);
+      expect(find.text('Get the brochure'), findsNothing);
     });
 
-    testWidgets('a course with no brochure says so instead of opening one', (tester) async {
-      await pumpSheet(tester, _Fake(catalogue: [_rich(code: 'NOB', brochure: null)]));
-      await tester.tap(find.text('DOWNLOAD BROCHURE'));
-      await tester.pump();
-      expect(find.text('This course has no brochure yet.'), findsOneWidget);
+    testWidgets('View brochure sends the lead and opens the PDF in the app, nothing downloaded', (tester) async {
+      final pdf = FakePdfEngine();
+      CourseSheetBody.brochurePdf = () => pdf;
+      CourseSheetBody.brochureRunner = runHere;
+      addTearDown(() {
+        CourseSheetBody.brochurePdf = PlatformPdfEngine.new;
+        CourseSheetBody.brochureRunner = runInBackground;
+      });
+      final (fake, _) = await pumpSheet(tester, _Fake(catalogue: [_rich()]));
+      await tester.tap(find.byIcon(Symbols.download).last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('brochure-view')));
+      await tester.pumpAndSettle();
+      expect(fake.brochureLeads.single.$3, BrochureIntent.view);
+      expect(find.byType(DocumentViewerScreen), findsOneWidget);
+      expect(
+        tester.widget<DocumentViewerScreen>(find.byType(DocumentViewerScreen)).secure,
+        isFalse,
+        reason: 'a brochure is not screenshot-locked like a library document',
+      );
+      expect(pdf.opened, hasLength(1), reason: 'the brochure bytes went to the viewer');
       expect(launches.urls, isEmpty);
+
+      // Back on the sheet, the form comes back prefilled with what was sent, and the same lead goes only once.
+      tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('DOWNLOAD BROCHURE'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('brochure-download')));
+      await tester.pumpAndSettle();
+      expect(fake.brochureLeads, hasLength(1), reason: 'one brochure, one lead');
+      expect(launches.urls, ['https://files.test/brochure.pdf']);
+    });
+
+    testWidgets('the brochure form wants a name, a real email and a phone, and shows a refusal', (tester) async {
+      final (fake, _) = await pumpSheet(tester, _Fake(catalogue: [_rich()]));
+      await tester.tap(find.text('DOWNLOAD BROCHURE'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const ValueKey('brochure-phone')), '');
+      await tester.tap(find.byKey(const ValueKey('brochure-download')));
+      await tester.pump();
+      expect(find.text('Your phone number, so the institute can call you back.'), findsOneWidget);
+      await tester.enterText(find.byKey(const ValueKey('brochure-phone')), '+91 98450 12345');
+      await tester.enterText(find.byKey(const ValueKey('brochure-email')), 'nope');
+      await tester.tap(find.byKey(const ValueKey('brochure-download')));
+      await tester.pump();
+      expect(find.text('Enter the email address the brochure goes to.'), findsOneWidget);
+      await tester.enterText(find.byKey(const ValueKey('brochure-email')), 'buyer@icr.dev');
+      fake.brochureRefusal = 'Too many requests. Wait a minute and try again.';
+      await tester.tap(find.byKey(const ValueKey('brochure-download')));
+      await tester.pumpAndSettle();
+      expect(find.text('Too many requests. Wait a minute and try again.'), findsOneWidget);
+      expect(launches.urls, isEmpty);
+      expect(fake.brochureLeads, isEmpty);
+    });
+
+    testWidgets('a course with no brochure offers none, as the website shows no prospectus link', (tester) async {
+      await pumpSheet(tester, _Fake(catalogue: [_rich(code: 'NOB', brochure: null)]));
+      expect(find.text('DOWNLOAD BROCHURE'), findsNothing);
+      expect(find.text('ADD TO CART'), findsOneWidget, reason: 'the rest of the sheet stands');
+      expect(launches.urls, isEmpty);
+    });
+
+    testWidgets('the form works with the account read failing: blank fields, live buttons', (tester) async {
+      final (fake, _) = await pumpSheet(tester, _Fake(catalogue: [_rich()])..contactFails = true);
+      await tester.tap(find.text('DOWNLOAD BROCHURE'));
+      await tester.pumpAndSettle();
+      expect(find.text('Get the brochure'), findsOneWidget);
+      expect(tester.widget<TextField>(find.byKey(const ValueKey('brochure-name'))).controller!.text, '');
+      expect(
+        tester.widget<PrimaryButton>(find.byKey(const ValueKey('brochure-view'))).onPressed,
+        isNotNull,
+        reason: 'a read that failed must not hold the form',
+      );
+      await tester.enterText(find.byKey(const ValueKey('brochure-name')), 'Chetan S M');
+      await tester.enterText(find.byKey(const ValueKey('brochure-email')), 'chetan@example.com');
+      await tester.enterText(find.byKey(const ValueKey('brochure-phone')), '9876543210');
+      await tester.tap(find.byKey(const ValueKey('brochure-download')));
+      await tester.pumpAndSettle();
+      expect(fake.brochureLeads, hasLength(1));
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('the overview folds after four lines and "show more" unfolds it', (tester) async {
@@ -1953,6 +2090,16 @@ class _Refusing implements LearningRepository {
     String? company,
     int? headcount,
   }) => inner.enquire(course, message: message, kind: kind, company: company, headcount: headcount);
+  @override
+  Future<BrochureLead> brochureContact() => inner.brochureContact();
+
+  @override
+  Future<void> requestBrochure(Course course, BrochureLead lead, {required BrochureIntent intent}) =>
+      inner.requestBrochure(course, lead, intent: intent);
+
+  @override
+  Future<List<int>> brochureBytes(Course course) => inner.brochureBytes(course);
+
   @override
   Future<int> unreadNotifications() => inner.unreadNotifications();
   @override

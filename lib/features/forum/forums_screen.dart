@@ -20,6 +20,7 @@ import 'forum_models.dart';
 import 'forum_repository.dart';
 import 'forum_styles.dart';
 import 'forums_controller.dart';
+import 'mentions/tag_person.dart';
 import 'thread_screen.dart';
 import 'widgets/forum_bits.dart';
 import 'widgets/forum_filters_sheet.dart';
@@ -61,6 +62,15 @@ class _ForumsScreenState extends State<ForumsScreen> {
   final _scroll = ScrollController();
   late final ForumsController _forums;
   late final bool _ownsController;
+  String _querySearch = '';
+
+  /// A search set from outside (a tag tapped on Home drops it) shows in the field; what is being typed is left alone.
+  void _syncSearch() {
+    final asked = _forums.query.search;
+    if (asked == _querySearch) return;
+    _querySearch = asked;
+    if (_search.text.trim() != asked) _search.text = asked;
+  }
 
   @override
   void initState() {
@@ -70,6 +80,8 @@ class _ForumsScreenState extends State<ForumsScreen> {
         widget.controller ?? ForumsController(widget.repository ?? context.read<FeedController>().repository.forum);
     _forums.start();
     _search.text = _forums.query.search;
+    _querySearch = _forums.query.search;
+    _forums.addListener(_syncSearch);
     _scroll.addListener(() {
       if (_scroll.position.extentAfter < 600) _forums.loadMore();
     });
@@ -77,6 +89,7 @@ class _ForumsScreenState extends State<ForumsScreen> {
 
   @override
   void dispose() {
+    _forums.removeListener(_syncSearch);
     _search.dispose();
     _scroll.dispose();
     if (_ownsController) _forums.dispose();
@@ -88,8 +101,18 @@ class _ForumsScreenState extends State<ForumsScreen> {
     if (message != null && mounted) showMessage(context, message);
   }
 
+  /// A profile found after the tab was left (the look-up is a request) is not opened over whatever is there now.
+  void _openMemberIfShown(String id) {
+    if (mounted) widget.callbacks.onOpenMember?.call(id);
+  }
+
+  void _openCompanyIfShown(String id) {
+    if (mounted) widget.callbacks.onOpenCompany?.call(id);
+  }
+
   ForumCallbacks get _threadCallbacks => ForumCallbacks(
     onOpenMember: widget.callbacks.onOpenMember,
+    onOpenCompany: widget.callbacks.onOpenCompany,
     onBell: widget.callbacks.onBell,
     // A tag or a topic chosen on a discussion's page filters this tab.
     onOpenTag: (tag) {
@@ -187,6 +210,22 @@ class _ForumsScreenState extends State<ForumsScreen> {
     final picked = await showReactionPicker(context, anchor: anchor, current: post.myReaction);
     if (picked == null || !mounted) return;
     _run(_forums.react(post, picked == post.myReaction ? null : picked));
+  }
+
+  /// A reaction on the reader's own post is refused here, as the website refuses it (its sentence), before
+  /// anything is sent.
+  bool _refuseOwnReaction(FeedPost post) {
+    if (post.author.id != widget.viewer.id) return false;
+    showMessage(context, 'You cannot react to your own post.');
+    return true;
+  }
+
+  /// Saving says so, as the website's toast does.
+  Future<void> _save(FeedPost post) async {
+    final wasSaved = post.saved;
+    final message = await _forums.toggleSave(post);
+    if (!mounted) return;
+    showMessage(context, message ?? (wasSaved ? 'Removed from saved discussions' : 'Saved'));
   }
 
   void _share(FeedPost post) {
@@ -296,10 +335,13 @@ class _ForumsScreenState extends State<ForumsScreen> {
           key: ValueKey('forum-card:${post.id}'),
           post: post,
           commentsOpen: false,
+          isOwn: post.author.id == widget.viewer.id,
           onFollow: () => _run(f.follow(post)),
-          onSave: () => _run(f.toggleSave(post)),
+          onSave: () => _save(post),
           onMore: () => _menu(post),
-          onLike: () => _run(f.toggleLike(post)),
+          onLike: () {
+            if (!_refuseOwnReaction(post)) _run(f.toggleLike(post));
+          },
           onComments: () => _open(post, toReplies: true),
           onRepost: () => repostDiscussion(
             context,
@@ -313,17 +355,38 @@ class _ForumsScreenState extends State<ForumsScreen> {
           ),
           onShare: () => _share(post),
           onVote: (option) => _run(f.vote(post, option)),
+          onVoters: () => showPollVotersSheet(
+            context,
+            poll: post.poll!,
+            load: () => f.repository.pollVoters(post.id),
+            onOpenMember: widget.callbacks.onOpenMember,
+          ),
           onOpen: () => _open(post),
           onTag: (tag) {
+            // A person's tag ("#@prashant") opens their profile or does nothing; it never filters the tab.
+            if (personTagName(tag) != null) {
+              openTaggedPerson(
+                tag,
+                search: f.repository.mentionable,
+                onOpenMember: widget.callbacks.onOpenMember == null ? null : _openMemberIfShown,
+                byHandle: f.repository.memberIdByHandle,
+                searchCompanies: f.repository.companies,
+                onOpenCompany: widget.callbacks.onOpenCompany == null ? null : _openCompanyIfShown,
+              );
+              return;
+            }
             _search.clear();
             f.setTag(tag);
           },
+          onOpenMention: widget.callbacks.onOpenMember,
           onReactions: () => showReactorsSheet(
             context,
             load: () => f.repository.reactors(post.id),
             onOpenMember: widget.callbacks.onOpenMember,
           ),
-          onPickReaction: (rect) => _pickReaction(post, rect),
+          onPickReaction: (rect) {
+            if (!_refuseOwnReaction(post)) _pickReaction(post, rect);
+          },
           onOpenAuthor: widget.callbacks.onOpenMember == null
               ? null
               : () => widget.callbacks.onOpenMember!(post.author.id),

@@ -54,7 +54,9 @@ class JobsToolbar extends StatelessWidget {
               iconSize: 14.4,
               padding: const EdgeInsets.only(left: 11.5, right: 13),
               gap: 5.5,
-              onTap: () => _postAJob(context, jobs),
+              // The composer for a hiring team; anyone else is told the way to a company to post for — the same gate
+              // as the Discover sheet's Hire.
+              onTap: () => openPostJob(context),
             ),
             IcrChip(
               label: 'My jobs',
@@ -153,25 +155,6 @@ class JobsToolbar extends StatelessWidget {
         const Hairline(color: AppColors.blockRule),
       ],
     );
-  }
-
-  /// "Post a job": the composer for a member on a company's hiring team; for anyone else, the way
-  /// to a company of their own.
-  static Future<void> _postAJob(BuildContext context, JobsController jobs) async {
-    final navigation = JobsNavigationScope.of(context);
-    final access = await jobs.hiringAccess();
-    if (!context.mounted) return;
-    if (access == null) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(content: Text("Couldn't check your account. Try again in a moment.")));
-      return;
-    }
-    if (access.canManage) {
-      await hiringRoutesOf(context).postJob();
-      return;
-    }
-    await showHirersOnly(context, navigation: navigation, links: jobs.links);
   }
 
   /// The API has no "in my network" (no connections, and no job filter that

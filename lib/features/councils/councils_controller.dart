@@ -46,6 +46,26 @@ class CouncilsController extends ChangeNotifier {
   /// A join or leave in flight for the council.
   bool isBusy(Council council) => _busy.contains(council.id);
 
+  /// What a council's own page reads, when the repository gives it (the API's and the sample's do). A source that
+  /// only feeds the board has none, and the screen then opens the council's page on the website instead.
+  CouncilPageRepository? get pages => switch (repository) {
+    final CouncilPageRepository r => r,
+    _ => null,
+  };
+
+  /// A council's own page changed the member's seat: the board follows it, the rail of joined councils included.
+  /// Only the seat moves; the card keeps the rest of what the directory read.
+  void follow(Council changed) {
+    final role = changed.membership;
+    final council = find(changed.id);
+    if (council == null || council.membership == role) return;
+    if (role == null) {
+      _apply(council.id, (c) => c.copyWith(clearMembership: true), removeFromJoined: true);
+    } else {
+      _apply(council.id, (c) => c.copyWith(membership: role), addToJoined: true);
+    }
+  }
+
   /// The category chips: each council's category (its first segment), in the
   /// order the directory first meets them, so the chips follow the cards.
   List<String> get categories {

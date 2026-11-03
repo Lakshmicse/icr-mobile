@@ -151,7 +151,7 @@ Future<PostResult> _post(
   final c = PostRfqController(repository: repo, initialKind: kind);
   await c.start();
   expect(c.loadError, isNull);
-  expect(c.mustRegisterCompany, isFalse);
+  expect(c.personal, isFalse);
   final pune = (await c.searchPlaces('Pune')).first;
   expect(c.addPlace(pune), isTrue);
   c.update((d) {
@@ -365,7 +365,7 @@ void main() {
           addTearDown(composer.dispose);
           await composer.start();
           expect(composer.loadError, isNull, reason: who.label);
-          expect(composer.mustRegisterCompany, isFalse, reason: '${who.label}: a company that sells may buy');
+          expect(composer.personal, isFalse, reason: '${who.label}: a company that sells may buy');
           expect(composer.companyFromAccount, company);
           final mine = MyRfqsController(repo);
           addTearDown(mine.dispose);
@@ -1835,9 +1835,9 @@ void main() {
           ),
           size: const Size(390, 1200),
         );
-        await pumpUntilFound(tester, find.text('Bengaluru Care 101'));
+        await pumpUntilFound(tester, find.textContaining('Bengaluru Care 101'));
         await settled(tester);
-        expect(find.text('Bengaluru Care 101'), findsWidgets);
+        expect(find.textContaining('Bengaluru Care 101'), findsWidgets);
         final thread = tester.widget<ConversationTile>(find.byType(ConversationTile).first).conversation;
         expect(thread.asCompanyId, vikramCompanyId);
         await finishLive(tester);

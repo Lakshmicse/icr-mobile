@@ -17,6 +17,7 @@ class MarketplaceNavigation {
     this.onPostRfq,
     this.onMyRfqs,
     this.onAlerts,
+    this.onFindWork,
     this.onNotifications,
     this.onOpenProduct,
     this.onOpenService,
@@ -46,6 +47,9 @@ class MarketplaceNavigation {
 
   /// The "Alerts" chip.
   final VoidCallback? onAlerts;
+
+  /// The "Find work" chip: the open requirements a supplier can bid on (the website's Find Work & Bid).
+  final VoidCallback? onFindWork;
 
   /// The bell.
   final VoidCallback? onNotifications;
@@ -78,6 +82,7 @@ class MarketplaceNavigation {
     onPostRfq: onPostRfq ?? other.onPostRfq,
     onMyRfqs: onMyRfqs ?? other.onMyRfqs,
     onAlerts: onAlerts ?? other.onAlerts,
+    onFindWork: onFindWork ?? other.onFindWork,
     onNotifications: onNotifications ?? other.onNotifications,
     onOpenProduct: onOpenProduct ?? other.onOpenProduct,
     onOpenService: onOpenService ?? other.onOpenService,
@@ -103,6 +108,12 @@ class MarketplaceNavigation {
     final open = onAlerts;
     if (open != null) return open();
     await links.openSite(context, '/manage/requirements');
+  }
+
+  Future<void> findWork(BuildContext context, MarketplaceLinks links) async {
+    final open = onFindWork;
+    if (open != null) return open();
+    await links.openSite(context, '/manage/bids');
   }
 
   Future<void> notifications(BuildContext context, MarketplaceLinks links) async {

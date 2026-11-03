@@ -11,7 +11,14 @@ import 'pills.dart';
 /// One card in the "Your Joined Councils" rail: 210 × 160, the seat and the
 /// unread count, the name, a line of copy, and the peers with the room link.
 class JoinedCouncilCard extends StatelessWidget {
-  const JoinedCouncilCard({super.key, required this.council, required this.onOpen, this.onRoom, this.onUnread});
+  const JoinedCouncilCard({
+    super.key,
+    required this.council,
+    required this.onOpen,
+    this.onRoom,
+    this.onUnread,
+    this.onSeat,
+  });
 
   static const width = 211.0;
   static const height = 182.0;
@@ -23,6 +30,9 @@ class JoinedCouncilCard extends StatelessWidget {
 
   /// "Room Link" / "Meeting link"; the card's own tap when not given.
   final VoidCallback? onRoom;
+
+  /// The seat pill ("Member", "Executive Seat"): where the seat is managed; the card's own tap when not given.
+  final VoidCallback? onSeat;
 
   /// The "N unread" pill: where the council's announcements are; the card's
   /// own tap when not given.
@@ -50,12 +60,17 @@ class JoinedCouncilCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                StatusPill(
-                  label: council.membership?.label ?? CouncilRole.member.label,
-                  height: 19,
-                  fill: lead ? CouncilsColors.green50 : CouncilsColors.blue50,
-                  style: lead ? CouncilsText.rolePill : CouncilsText.rolePill.copyWith(color: AppColors.primary),
-                  dot: lead ? CouncilsColors.green700 : AppColors.primary,
+                GestureDetector(
+                  key: ValueKey('seat-pill-${council.id}'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onSeat ?? onOpen,
+                  child: StatusPill(
+                    label: council.membership?.label ?? CouncilRole.member.label,
+                    height: 19,
+                    fill: lead ? CouncilsColors.green50 : CouncilsColors.blue50,
+                    style: lead ? CouncilsText.rolePill : CouncilsText.rolePill.copyWith(color: AppColors.primary),
+                    dot: lead ? CouncilsColors.green700 : AppColors.primary,
+                  ),
                 ),
                 const SizedBox(width: 4),
                 // Takes what the seat leaves, so a long seat and a date never overflow the card.

@@ -28,6 +28,7 @@ class ThreadHeaderActions {
     required this.onVote,
     required this.onReactors,
     required this.onViewers,
+    this.onVoters,
     this.onOpenAuthor,
     this.onTag,
     this.onTopic,
@@ -46,6 +47,9 @@ class ThreadHeaderActions {
   final ValueChanged<String> onVote;
   final VoidCallback onReactors;
   final VoidCallback onViewers;
+
+  /// "N votes" under the poll: who voted and for what.
+  final VoidCallback? onVoters;
   final VoidCallback? onOpenAuthor;
   final ValueChanged<String>? onTag;
   final ValueChanged<ForumTopicRef>? onTopic;
@@ -138,7 +142,13 @@ class ThreadHeader extends StatelessWidget {
           ],
           if (poll != null) ...[
             const SizedBox(height: 14),
-            PollView(poll: poll, onVote: actions.onVote, onViewDiscussion: () {}, showLink: false),
+            PollView(
+              poll: poll,
+              onVote: actions.onVote,
+              onVoters: actions.onVoters,
+              onViewDiscussion: () {},
+              showLink: false,
+            ),
           ],
           if (post.tags.isNotEmpty) ...[
             const SizedBox(height: 12),

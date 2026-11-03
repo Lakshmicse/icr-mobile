@@ -592,14 +592,6 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          FactLine(
-            'Mentees at a time',
-            Text(
-              '${m?.capacity ?? MentorLimits.capacityDefault}',
-              key: const ValueKey('capacity-line'),
-              style: MentoringText.body,
-            ),
-          ),
           FactLine("How you'll meet", Text(modes.isEmpty ? 'Not set' : modes.join(' · '), style: MentoringText.body)),
           FactLine(
             'Cadence',

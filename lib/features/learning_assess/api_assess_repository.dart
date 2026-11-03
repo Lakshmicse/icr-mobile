@@ -4,6 +4,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
 import '../../core/config.dart';
 import 'assess_models.dart';
+import '../payments/checkout_start.dart';
 import 'assess_repository.dart';
 
 /// The Assess and Mock Exams screens from the API: programmes
@@ -155,6 +156,7 @@ class ApiAssessRepository implements AssessRepository {
     final plan = json['plan'] as Map<String, dynamic>? ?? const {};
     final courses = plan['assessmentCourses'] as Map<String, dynamic>? ?? const {};
     final mocks = plan['mockExams'] as Map<String, dynamic>? ?? const {};
+    final decks = (plan['flashCardDecks'] as Map?)?.cast<String, dynamic>() ?? const <String, dynamic>{};
     return MemberAccess(
       allOpen: json['allOpen'] == true,
       paperIds: _strings(json['paperIds']).toSet(),
@@ -164,6 +166,7 @@ class ApiAssessRepository implements AssessRepository {
       rupeesPerCredit: (json['rupeesPerCredit'] as num?)?.toInt() ?? 100,
       courses: PlanPlaces(limit: (courses['limit'] as num?)?.toInt(), opened: _strings(courses['openedCourseIds'])),
       mocks: PlanPlaces(limit: (mocks['limit'] as num?)?.toInt(), opened: _strings(mocks['openedTopicIds'])),
+      decks: PlanPlaces(limit: (decks['limit'] as num?)?.toInt(), opened: _strings(decks['openedDeckIds'])),
       upgradePlan: _text(plan['upgradePlan']),
       mockUpgradePlan: _text(plan['mockUpgradePlan']),
     );
@@ -233,6 +236,18 @@ class ApiAssessRepository implements AssessRepository {
           ),
       ],
     );
+  }
+
+  @override
+  Future<CheckoutStart> checkout(AssessPaper paper) async {
+    final res = await _send('POST', '/learning/papers/${Uri.encodeComponent(paper.slug)}/checkout');
+    return CheckoutStart.fromJson((res as Map?)?.cast<String, dynamic>() ?? const {});
+  }
+
+  @override
+  Future<CheckoutStart> checkoutBundle(PaperKind kind, String key) async {
+    final res = await _send('POST', '${_bundlePath(kind, key)}/checkout');
+    return CheckoutStart.fromJson((res as Map?)?.cast<String, dynamic>() ?? const {});
   }
 
   @override

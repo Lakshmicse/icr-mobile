@@ -13,6 +13,10 @@ const stageMoves = <String, List<String>>{
   'WITHDRAWN': [],
 };
 
+/// The stages at which an interview round can be booked (the website's `SCHEDULABLE_STAGES`): everything live
+/// short of Hired, Offer included, since a round can still be held while an offer is out.
+const schedulableStages = {'APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER'};
+
 /// The stage as the hiring team words it.
 String stageWord(String stage) => switch (stage) {
   'APPLIED' => 'Applied',

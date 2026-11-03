@@ -16,7 +16,7 @@ Every call site (`openSitePage`, `openUrl`, `JobLinks` / `MarketplaceLinks` / `R
 - **Links inside the page**: a page of the website (`SitePolicy.isSite`: same scheme, host and port as `SITE_URL`) stays in the view; another host, `mailto:`, `tel:`, `intent:`, a payment return (`/api/`, `/payments/`), `/uploads/…` and file extensions (`pdf ics zip doc(x) xls(x) ppt(x) csv apk vcf`) go to the phone. A frame inside the page (video, map) is the page's business.
 - **Signed in**: the website keeps its session in `localStorage` (`icr.accessToken`, `icr.refreshToken`; `frontend/src/lib/api.ts`). The view loads `/robots.txt` of the same origin, writes the ACCESS token there, then loads the page. **Only the access token goes across**: the API's refresh tokens are single use and rotated (`AuthService.refresh`), so a web view that held the app's would spend it and sign the app out. The page gets a fresh 15-minute token (renewed through the app's own session first when under 3 minutes are left) and a new one every 9 minutes while the screen is open (`WebSessionBridge`); the session is removed from the page's storage when the screen closes. A page of another site never gets it.
 - **Verified** against the local site (headless Chromium, the same mechanism: access token only, from `/robots.txt`): `/profile` and `/dashboard` render signed in as the persona, the same page without it does not. Not run inside an Android WebView, and not against production.
-- A website page that opens a **payment** (PayU is another host) hands over to the browser; the app is not told when it ends (as before).
+- A **payment** no longer leaves the app (2 Nov 2026, owner's call: "all payments should be in the app itself"): a rail's checkout (`POST …/checkout`, answered with `{ action, fields }`) is posted to the gateway inside the app's own payment view (`lib/features/payments/payment_screen.dart`: PayU's and the bank's pages stay in the view, a UPI or wallet app's link is opened by the phone, and the website page the API's callback redirects to — `?status=success|failure` — ends it), then the screen reads its data again. Wired: a level or set, a bundle, the exam brief's "Pay now", a membership plan. Still the website's: a course place, a mentor's service or plan, an event ticket, a job boost.
 
 ## Destinations
 
@@ -28,10 +28,10 @@ by its id goes through `lib/app_records.dart` (the same code the notification op
 |---|---|---|
 | `/notifications` | every bell fallback | NATIVE: Notifications |
 | `/pricing`, `/pricing/<audience>`, `/career/plans`, `/membership`, `/membership/history` | "See plans" in Learning locks, mentor plans, career and RFQ quotas, notifications | NATIVE: Membership |
-| checkout of a plan (`/pricing/<slug>` with `inApp: false`) | Membership "Choose" | EXT: a payment |
+| checkout of a plan | Membership "Choose" | **NATIVE (2 Nov 2026)**: `POST /subscriptions/checkout`, paid in the app's payment view |
 | `/chapters`, `/councils`, `/events`, `/documents`, `/get-involved` | Discover doors, profile menu, banners | NATIVE |
 | `/chapters/<slug>` | chapter cards' page link, share | **NATIVE (round 2)**: the chapter page (`openChapterPage`) |
-| `/councils/<slug>[?tab=]` | council cards' page link | **NATIVE (round 2)**: the councils directory (the app has no page per council) |
+| `/councils/<slug>[?tab=]` | council cards' page link, a link in a message, a notification, a member's councils, a saved council | **NATIVE (2 Nov 2026)**: the council page (`openCouncilPage`, `council_screen.dart`), opened on the `?tab=` section (`overview`, `events`, `leadership`, `members`, `knowledge`, `updates`, `gallery`); an id works as well as a slug. Round 2 sent it to the app's councils directory, which made a joined card, its Meeting link and Manage all look like one screen (the owner's report) |
 | `/events/<slug>` | event cards, share, roundtables | NATIVE: the event sheet. **Get Tickets** (a priced event) is a payment: it opens the page with the phone (`openExternal`), never the sheet again (round 3) |
 | `/mentorship/mentors/<id>`, `…#reviews` | mentor cards, mentoring links | NATIVE: the mentor profile (Recommendations tab) |
 | `/mentorship/mentors` | mentorship banners | **NATIVE (round 2)**: Find Mentors |
@@ -49,7 +49,8 @@ by its id goes through `lib/app_records.dart` (the same code the notification op
 | `/manage/jobs`, `/manage/jobs/new`, `/manage/jobs/<id>[/edit\|/applicants]` | employer "post a job" | **NATIVE (round 2)**: the hiring screens. **Promote** is a payment: it opens `/manage/jobs` with the phone (round 3) |
 | `/companies/<id>[?tab=reviews\|people\|salaries\|interviews]` | company links, share | **NATIVE (round 2)**: the company page, on that tab |
 | `/products/<id>` | product links, share | **NATIVE (round 2)**: the product page |
-| `/vendors`, `/services`, `/products`, `/rfq` | links, fallback tab | **NATIVE (round 2)**: the Marketplace tab |
+| `/vendors`, `/services`, `/products` | links, fallback tab | **NATIVE (round 2)**: the Marketplace tab |
+| `/rfq` | links, the profile menu's Requirements row | **NATIVE (3 Nov 2026)**: the Requirements board, everything posted (it was the Marketplace tab, which lists no requirements) |
 | `/rfq/<id>`, `/manage/requirements/<id>` | requirement links | **NATIVE (round 2)**: the supplier's page / the buyer's page |
 | `/community`, `/community/<slug>[?reply=]` | Forums fallback, post link, notifications | **NATIVE (round 2)**: the Forums tab; the thread page by slug, at the reply |
 | `/learning`, `/learning/professional-development` | "Coming to the app" fallback, links | **NATIVE (round 2)**: the Learning tab |
@@ -65,7 +66,7 @@ by its id goes through `lib/app_records.dart` (the same code the notification op
 | `/manage/team`, `/manage/articles`, `/manage/interviews/<id>`, `/talent`, `/invite/<token>` | team, articles, hiring-manager and talent notifications | WEB: staff-of-a-company consoles the app does not have |
 | `/support`, `/support/<id>` | the support notifications | WEB: the support desk (tickets with messages, attachments, rating, reopening) is a build of its own; the API has it |
 | a path nobody mapped, and `/events/<slug>/extra`, `/community/category/<x>` | a notification's `path`, an old link | WEB, on white with the app's loading state |
-| `/uploads/…`, `*.pdf` / `*.ics` / `*.zip` / Office files, `/api/…`, `/payments/…` | attachments, brochures, certificates, calendar files, a payment's return leg | EXT |
+| `/uploads/…`, `*.pdf` / `*.ics` / `*.zip` / Office files, `/api/…`, `/payments/…` | attachments, brochures, certificates, calendar files, a payment's return leg | EXT — except a **course brochure** (30 Oct 2026): the course sheet asks a lead form first, then **View brochure** reads the PDF in the app's own viewer; only **Download instead** hands the file out (EXT) |
 | `/auth/callback` | where Google / LinkedIn sign-in returns | EXT, on purpose: the secure browser tab that started the sign-in hands it back to the app through the manifest's https intent filter, so neither the routing nor the web view takes it (`SitePolicy.externalPrefixes`). The sign-in buttons open that tab, never the web view: Google blocks embedded web views |
 | Zoom / Google Meet / Teams session links | every "Join" | EXT: another site |
 | employer apply links, an institute's own website, flash-card and formula resource links | Jobs, Learning | EXT: another site |
@@ -81,10 +82,13 @@ An inventory of every hand-off (194 call sites) found two faults that `SiteRoute
 1. **Payments that never reached checkout.** A page the app has a screen for resolves to that screen, so a payment
    button that called plain `openUrl` opened the member's own sheet again: the course sheet's "add to cart" for a paid
    place, "Get Tickets", a mentor's "Purchase Guide" / "Subscribe", the mentoring "Pay ₹… on the website" (a session or
-   a programme term), the exam brief's "Pay on the website", the employer's "Promote", and the certificate's
-   "Download PDF on the website". Each now leaves the app with the phone: `openExternal` (`core/util/links.dart`),
-   `ExamServices.openExternal`, `JobLinks.openExternal`, `MentorshipLinks.openPayment`. PayU runs on the website and
-   its return leg is the website's, so these stay there by design.
+   a programme term), the exam brief's "Pay on the website" and the employer's "Promote". Each now leaves the app
+   with the phone: `openExternal` (`core/util/links.dart`), `ExamServices.openExternal`, `JobLinks.openExternal`,
+   `MentorshipLinks.openPayment`. PayU runs on the website and its return leg is the website's, so these stay there
+   by design. (The certificate's "Download PDF on the website" was the seventh of these until 2 Nov 2026, when the
+   PDF moved into the app: **Download PDF** on the certificate sheet builds the file on the phone, a port of the
+   website's own PDF writer (`certificate_pdf.dart`), and saves it through the system "Save as" sheet. No website
+   page is involved, so it is not a hand-off any more.)
 2. **Links that only opened the screen they sat on.** Removed: the job sheet's "Open on the ICR website" and "Show
    comparative applicant insights"; the course sheet's schedule link, its "See More Dates" with nothing more to show,
    and "read all N reviews on the website" (the sheet says "Showing the newest N of M."); the event sheet's "Overview"
@@ -93,8 +97,8 @@ An inventory of every hand-off (194 call sites) found two faults that `SiteRoute
    next booked event's sheet, where its pass and Cancel are. A product with an unreadable supplier opens the quote form.
 
 Still the web view, each a build of its own: the company verification dossier (`/company?tab=verification`, from the
-post-job gate), "Write an article" (`/manage/articles`), and a council's own page (`/councils/<slug>`, which opens the
-directory; eight taps on the councils screen, a saved council and a profile's council row all land there).
+post-job gate) and "Write an article" (`/manage/articles`). (A council's own page was on this list until 2 Nov 2026; it
+is native now.)
 
 ## No black frame
 
@@ -111,7 +115,7 @@ Three things used to put a dark frame before a page, all fixed (`test/web_test.d
 - `lib/features/feed/home_screen.dart` hands the promoted card's link to `openSitePage` as a *path*; a full external URL there would be glued onto the site address.
 - The `UpcomingTab` "coming to the app" screens in `AppShell` are defaults for a tab the shell is not given a screen for; the app gives every tab one, so they are unreachable (tests build a bare shell).
 - Payments stay on the website, as before: the app cannot finish a PayU checkout (`docs/backend-requests/membership.md`).
-- The council pages: the app has the councils directory, not a page per council, so `/councils/<slug>` opens the directory (a page per council is the next thing to build: updates, events, the Member Lounge).
+- The council pages are native since 2 Nov 2026 (`/councils/<slug>[?tab=]`, `council_screen.dart`). What stays the website's is its sidebar (the next-event countdown, related councils, "Contact the chair"), which the Events section and the chips stand in for, and the Discussions tab, a "coming soon" card there too; see `docs/screens/councils.md`.
 - The legal pages are the words the website had at the last build; run `node tool/legal/extract.cjs` from the portal when they change.
 
 ## API gap

@@ -17,6 +17,7 @@ class JobsNavigation {
     this.onFindJobs,
     this.onEditProfile,
     this.onCreateCompany,
+    this.onSwitchCompany,
     this.onVerifyCompany,
     this.onDemonstrateSkills,
   });
@@ -45,6 +46,10 @@ class JobsNavigation {
   /// "Create a company" (the account builder's screen): a member who is not on a hiring team posts jobs
   /// from a company page they found.
   final VoidCallback? onCreateCompany;
+
+  /// "Switch company" (the account builder's list of the member's companies): someone acting as themselves who
+  /// belongs to companies posts jobs once they act for one (the website's `NoCompany`).
+  final VoidCallback? onSwitchCompany;
 
   /// The company's verification (its KYC check, the account builder's screen): a posting cannot go live
   /// until the company is verified.
@@ -81,6 +86,16 @@ class JobsNavigation {
       return;
     }
     await links.openSite(context, '/account/companies/new');
+  }
+
+  /// The member's companies, to switch to one: the app's screen, else `/account/companies` on the website.
+  Future<void> switchCompany(BuildContext context, JobLinks links) async {
+    final open = onSwitchCompany;
+    if (open != null) {
+      open();
+      return;
+    }
+    await links.openSite(context, '/account/companies');
   }
 
   /// The member's profile editor: the app's, else `/profile` on the website.

@@ -714,6 +714,17 @@ export async function seedMentoring(prisma: PrismaClient, log: Log = console.log
     await prisma.mentorshipRequest.upsert({ where: { id }, update: d as never, create: { id, ...d } as never });
   }
 
+  // Live runs leave cancelled, declined and open asks behind (each run cleans its own; a run that times out
+  // cannot). Fifty of them and a member's first page of purchases (the app reads 50) no longer shows a fresh one,
+  // so the unprefixed leftovers are swept here. Paid and fulfilled rows carry ledger entries and stay.
+  await c.prisma.mentorServicePurchase.deleteMany({
+    where: {
+      buyerId: { in: Object.values(menteeIds) },
+      NOT: { id: { startsWith: PREFIX } },
+      status: { in: ['REQUESTED', 'CANCELLED', 'DECLINED'] as never[] },
+    },
+  });
+
   // 1:1 sessions and products: bought by the two mentees and by Anand's other members.
   const price = (k: keyof Storefront['svc']) => ({ discovery: 0, strategy: 149900, review: 79900, kit: 49900, workbook: 0, draft: 99900 })[k];
   for (const key of Object.keys(menteeIds).filter((k) => k !== 'pooja')) {

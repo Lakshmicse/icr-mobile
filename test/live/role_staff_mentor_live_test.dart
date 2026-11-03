@@ -101,8 +101,6 @@ void main() {
         expect(d.isListed, isTrue);
         expect(d.profile!.rating, 5);
         expect(d.profile!.ratingCount, (raw['profile'] as Map)['ratingCount']);
-        expect(d.capacityTotal, (raw['capacity'] as Map)['total']);
-        expect(d.capacityActive + d.capacityOpen, d.capacityTotal);
         expect(d.menteesActive, (raw['mentees'] as Map)['active']);
 
         // Mentees: the two live ones and the finished ones, from the same roster the API sends.
@@ -115,7 +113,6 @@ void main() {
         // Hours and settings: the week Monday, Thursday and Saturday evenings; places, link and note.
         final s = c.settings.data!;
         expect(s.status, DeskStatus.approved);
-        expect(s.capacity, d.capacityTotal);
         expect(s.timezone, 'Asia/Kolkata');
         expect(s.blocks, isNotEmpty);
         expect(s.blocks.every((b) => b.endMin > b.startMin && b.weekday >= 0 && b.weekday <= 6), isTrue);
@@ -234,75 +231,70 @@ void main() {
   });
 
   group('hours, settings and the directory switch: changed, read back, put back', () {
-    liveTest('weekly hours and the settings save what changed only, and the switch hides and lists the profile', () async {
-      final c = await _loadedDesk();
-      addTearDown(c.dispose);
-      await c.settings.load();
-      final hours = [...c.settings.data!.blocks];
-      final before = c.settings.data!;
-      try {
-        // Hours: one more window on a day Srikanth has none (Tuesday), refused when it overlaps or ends before it starts.
-        const extra = WeeklyBlock(weekday: 2, startMin: 18 * 60, endMin: 19 * 60);
-        expect(await c.saveHours([...hours, extra]), isNull);
-        expect(c.settings.data!.blocks, contains(extra));
-        expect((await c.repository.settings()).blocks, hasLength(hours.length + 1), reason: 'the API agrees');
-        expect(
-          await c.saveHours([extra, const WeeklyBlock(weekday: 2, startMin: 18 * 60 + 30, endMin: 20 * 60)]),
-          'Windows on the same day must not overlap.',
-        );
-        expect(
-          await c.saveHours([const WeeklyBlock(weekday: 2, startMin: 600, endMin: 600)]),
-          'Each window must end after it starts.',
-        );
-        expect(
-          (await c.repository.settings()).blocks,
-          hasLength(hours.length + 1),
-          reason: 'a refused save changes nothing',
-        );
-        // Mentees now see a slot on Tuesday evening.
-        final slots = await MentoringRepository(api: await clientFor(rohan)).slots(srikanthProfileId, durationMin: 30);
-        expect(
-          slots.any((s) => s.at.toUtc().add(const Duration(hours: 5, minutes: 30)).weekday == DateTime.tuesday),
-          isTrue,
-        );
+    liveTest(
+      'weekly hours and the settings save what changed only, and the switch hides and lists the profile',
+      () async {
+        final c = await _loadedDesk();
+        addTearDown(c.dispose);
+        await c.settings.load();
+        final hours = [...c.settings.data!.blocks];
+        final before = c.settings.data!;
+        try {
+          // Hours: one more window on a day Srikanth has none (Tuesday), refused when it overlaps or ends before it starts.
+          const extra = WeeklyBlock(weekday: 2, startMin: 18 * 60, endMin: 19 * 60);
+          expect(await c.saveHours([...hours, extra]), isNull);
+          expect(c.settings.data!.blocks, contains(extra));
+          expect((await c.repository.settings()).blocks, hasLength(hours.length + 1), reason: 'the API agrees');
+          expect(
+            await c.saveHours([extra, const WeeklyBlock(weekday: 2, startMin: 18 * 60 + 30, endMin: 20 * 60)]),
+            'Windows on the same day must not overlap.',
+          );
+          expect(
+            await c.saveHours([const WeeklyBlock(weekday: 2, startMin: 600, endMin: 600)]),
+            'Each window must end after it starts.',
+          );
+          expect(
+            (await c.repository.settings()).blocks,
+            hasLength(hours.length + 1),
+            reason: 'a refused save changes nothing',
+          );
+          // Mentees now see a slot on Tuesday evening.
+          final slots = await MentoringRepository(
+            api: await clientFor(rohan),
+          ).slots(srikanthProfileId, durationMin: 30);
+          expect(
+            slots.any((s) => s.at.toUtc().add(const Duration(hours: 5, minutes: 30)).weekday == DateTime.tuesday),
+            isTrue,
+          );
 
-        // Settings: a note and one more place; what was not sent is left alone; a bad link and a bad count are refused.
-        expect(
-          await c.saveSettings({
-            'capacity': before.capacity + 1,
-            'availabilityNote': 'A staff live test wrote this note.',
-          }),
-          isNull,
-        );
-        expect(c.settings.data!.capacity, before.capacity + 1);
-        expect(c.settings.data!.availabilityNote, 'A staff live test wrote this note.');
-        expect(c.settings.data!.timezone, before.timezone);
-        expect(c.settings.data!.bioHtml, before.bioHtml, reason: 'an untouched bio keeps its formatting');
-        expect((await deskFigures()).total, before.capacity + 1);
-        expect(await c.saveSettings({'meetingLink': 'not a link'}), isNotNull);
-        expect(await c.saveSettings({'capacity': 0}), isNotNull);
-        expect(await c.saveSettings({'capacity': 11}), isNotNull);
+          // Settings: a note; what was not sent is left alone; a bad link is refused. (No places: the portal keeps no
+          // limit on mentees since 27 Oct 2026.)
+          expect(await c.saveSettings({'availabilityNote': 'A staff live test wrote this note.'}), isNull);
+          expect(c.settings.data!.availabilityNote, 'A staff live test wrote this note.');
+          expect(c.settings.data!.timezone, before.timezone);
+          expect(c.settings.data!.bioHtml, before.bioHtml, reason: 'an untouched bio keeps its formatting');
+          expect(await c.saveSettings({'meetingLink': 'not a link'}), isNotNull);
 
-        // The directory switch: off hides the profile from the directory, on lists it again.
-        expect(await c.setVisibility(false), isNull);
-        expect(c.dashboard.data!.isListed, isFalse);
-        final directoryApi = await clientFor(rohan);
-        final hidden = await getJson(directoryApi, '/mentorship/mentors', {'search': 'Sriramagiri', 'limit': 5});
-        expect((hidden['data'] as List).where((m) => (m as Map)['id'] == srikanthProfileId), isEmpty);
-        expect(await c.setVisibility(true), isNull);
-        final listed = await getJson(directoryApi, '/mentorship/mentors', {'search': 'Sriramagiri', 'limit': 5});
-        expect((listed['data'] as List).where((m) => (m as Map)['id'] == srikanthProfileId), hasLength(1));
-      } finally {
-        await c.setVisibility(true);
-        await c.saveHours(hours);
-        await c.saveSettings({'capacity': before.capacity, 'availabilityNote': before.availabilityNote});
-      }
-      await c.settings.load();
-      expect(c.settings.data!.blocks, unorderedEquals(hours));
-      expect(c.settings.data!.capacity, before.capacity);
-      expect(c.settings.data!.availabilityNote, before.availabilityNote);
-      expect(c.dashboard.data?.isListed ?? true, isTrue);
-    });
+          // The directory switch: off hides the profile from the directory, on lists it again.
+          expect(await c.setVisibility(false), isNull);
+          expect(c.dashboard.data!.isListed, isFalse);
+          final directoryApi = await clientFor(rohan);
+          final hidden = await getJson(directoryApi, '/mentorship/mentors', {'search': 'Sriramagiri', 'limit': 5});
+          expect((hidden['data'] as List).where((m) => (m as Map)['id'] == srikanthProfileId), isEmpty);
+          expect(await c.setVisibility(true), isNull);
+          final listed = await getJson(directoryApi, '/mentorship/mentors', {'search': 'Sriramagiri', 'limit': 5});
+          expect((listed['data'] as List).where((m) => (m as Map)['id'] == srikanthProfileId), hasLength(1));
+        } finally {
+          await c.setVisibility(true);
+          await c.saveHours(hours);
+          await c.saveSettings({'availabilityNote': before.availabilityNote});
+        }
+        await c.settings.load();
+        expect(c.settings.data!.blocks, unorderedEquals(hours));
+        expect(c.settings.data!.availabilityNote, before.availabilityNote);
+        expect(c.dashboard.data?.isListed ?? true, isTrue);
+      },
+    );
   });
 
   group('offerings: the storefront, a 1:1 session, a plan and a group session with a seat', () {
@@ -523,9 +515,15 @@ void main() {
           expect(find.text('Active mentees'), findsOneWidget, reason: 'the desk is still his');
           print('[pause] 5 callout seen');
           final desk = (await tester.runAsync(_loadedDesk))!;
+          print('[pause] 5a desk loaded');
           expect(desk.gate, DeskGate.ready);
           expect(desk.profile!.status, DeskStatus.paused);
-          expect(await desk.setVisibility(true), isNotNull, reason: 'a paused profile cannot list itself');
+          // The portal takes the switch (it is the mentor's own setting) but the pause is ICR's: he stays out
+          // of the directory until staff lift it. The desk's own switch is disabled while paused (unit-tested).
+          final refusal = await tester.runAsync(() => desk.setVisibility(true));
+          print('[pause] 5b visibility answered: $refusal');
+          expect(refusal, isNull, reason: 'the switch is accepted');
+          expect((await tester.runAsync(inDirectory))!, isFalse, reason: 'and changes nothing while paused');
           desk.dispose();
 
           print('[pause] 6 visibility refused');
@@ -711,7 +709,7 @@ void main() {
           await settle(tester, ready: () => find.byType(ConversationScreen).evaluate().isNotEmpty);
           expect(find.byType(ConversationScreen), findsOneWidget, reason: "the pairing's thread opens in the app");
           expect(thrown(tester), isNull);
-          await tester.pageBack();
+          await tester.tap(find.bySemanticsLabel('Back').first);
           await settle(tester);
 
           // The mentee's page of the same pairing: the other way round.
@@ -777,7 +775,7 @@ void main() {
         }
         expect(find.text('Listed in the directory'), findsOneWidget);
         expect(find.text('Active mentees'), findsOneWidget);
-        expect(find.text('Places open'), findsOneWidget);
+        expect(find.text('Completed'), findsWidgets, reason: 'the tile that replaced Places open (no mentee limit)');
         expect(find.byKey(const ValueKey('completeness')), findsOneWidget);
 
         final probes = <DeskTab, List<String>>{
@@ -789,7 +787,7 @@ void main() {
           DeskTab.hours: ['Monday', 'Save hours', 'Add a window'],
           DeskTab.earnings: ['No earnings yet', 'Awaiting payout', 'Paid out'],
           DeskTab.reviews: ['FROM YOUR MENTEES', 'A mentee', 'Rating'],
-          DeskTab.settings: ['How you meet', 'Mentees at a time', 'Your standing meeting link'],
+          DeskTab.settings: ['How you meet', 'Your timezone', 'Your standing meeting link'],
         };
         for (final entry in probes.entries) {
           final tab = find.text(entry.key.label);

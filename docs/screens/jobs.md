@@ -56,7 +56,8 @@ Each row has the design's circle (filled when met, empty when not) and the detai
 - a role open only to some groups (`diversityOnly`) asks which group applies (checkboxes, at least one) and says it is kept private to the hiring team; a role for one gender asks for it (chips) and says it is kept with the profile once given. The API locks a profile's gender for good, so the live tests never send one: they prove the refusals instead;
 - the month's application allowance, when the plan has one ("3 of 10 applications left this month", or all used), with **See plans**;
 - a job that takes applications on the employer's own site reads "Apply on company site" and opens that link (the API refuses an application for it); no form;
-- once sent the bar reads "Applied" and the board's "My jobs" count grows; an application the API refuses (already applied, plan quota, own company's job…) shows its sentence in the form.
+- once sent the bar reads "Applied" and the board's "My jobs" count grows; an application the API refuses (already applied, plan quota…) shows its sentence in the form.
+- **your own company's job**: someone who posts the company's jobs (an admin, office admin or recruiter of it by any membership — `GET /me/companies`, `JobsRepository.postsJobsFor`, read as an aside of the sheet) gets no Apply button and no match: the bar says "You post jobs for {company}, so you manage this one rather than apply to it." (the website's sentence; the API refuses the application too).
 
 ## Controls and the tests that prove them
 

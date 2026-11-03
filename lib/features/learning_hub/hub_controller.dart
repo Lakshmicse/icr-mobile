@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/api/api_error.dart';
 import '../learning/learning_controller.dart';
 import '../learning/learning_models.dart';
+import '../learning/opened_learning.dart';
 import '../learning_assess/assess_models.dart';
 import '../learning_assess/assess_repository.dart';
 import '../learning_study/study_models.dart';
@@ -60,6 +61,7 @@ class LearningHubController extends ChangeNotifier {
   String? _decksError;
   MyLearning _mine = const MyLearning();
   bool _mineLoading = false;
+  MemberAccess? _access;
   String _search = '';
   bool _started = false;
   bool _disposed = false;
@@ -137,18 +139,45 @@ class LearningHubController extends ChangeNotifier {
   /// The ICR Courses rail: the first few matches.
   List<Course> get courseRail => matchingCourses.take(courseRailLimit).toList();
 
-  /// "ICR Certifications": the courses ICR itself awards, the first few.
-  List<Course> get icrCourses => matchingCourses.where(isIcr).take(gridLimit).toList();
+  /// "ICR Certifications": the taught courses ICR itself runs, the first few — the website's dashboard rail, which
+  /// reads only `kind=DEVELOPMENT` (`useDevelopmentCourses`). The certification programmes are ICR's too but sit
+  /// behind Assess Your Knowledge; listing them here filled the row with Capital Planning, Colloboration… where
+  /// production's website shows one card, Facility Management Professional (owner's report, 3 Nov 2026).
+  List<Course> get icrCourses =>
+      matchingCourses.where((c) => c.kind == CourseKind.development && isIcr(c)).take(gridLimit).toList();
 
   /// "Partner Courses": the institutes' courses, the first few.
   List<Course> get partnerCourses => matchingCourses.where((c) => !isIcr(c)).take(gridLimit).toList();
 
-  /// ICR's own course: no awarding body, or ICR's institute as the body.
-  static bool isIcr(Course c) {
-    final p = c.provider;
-    if (p == null) return true;
-    final slug = p.slug?.toLowerCase() ?? '';
-    return slug == 'icr' || slug == 'icr-institute' || p.name.trim().toUpperCase().startsWith('ICR');
+  /// ICR's own course: one with no awarding body, as the website's "ICR certified programs" lists them
+  /// (`!course.provider`). An institute's course is a partner's even when the institute is ICR's own — the
+  /// website files it under the institute, and production has one ICR-certified programme where this grid once
+  /// showed the institute's whole catalogue (owner's report, 2 Nov 2026).
+  static bool isIcr(Course c) => c.provider == null;
+
+  // --- "My courses" -----------------------------------------------------------------
+
+  /// The hub's My courses row (owner, 3 Nov 2026): everything the member holds, in the order the My courses page
+  /// shelves it (the website's): the mock exams, then the Assess Your Knowledge programmes and levels, then the
+  /// flash-card decks they opened (a plan place, ICR credits or a purchase), then the courses they hold a place on —
+  /// ICR's, then the institutes', running places before finished ones. What the search matches; empty when the
+  /// member holds nothing, and the row is then left out.
+  List<MyLearningEntry> get myLearning {
+    final opened = openedLearning(access: _access, courses: _assessments, mocks: _mocks, decks: _decks);
+    final places = [...learning.mine]
+      ..sort(
+        (a, b) =>
+            (a.enrolment?.status == EnrolmentStatus.completed ? 1 : 0) -
+            (b.enrolment?.status == EnrolmentStatus.completed ? 1 : 0),
+      );
+    return [
+      for (final kind in const [OpenedKind.mock, OpenedKind.course, OpenedKind.deck])
+        for (final item in opened)
+          if (item.kind == kind && _hit(item.title)) MyLearningEntry.opened(item),
+      for (final own in const [true, false])
+        for (final course in places)
+          if (isIcr(course) == own && _hit(course.title)) MyLearningEntry.course(course),
+    ];
   }
 
   // --- the doors and "My learning" ---------------------------------------------
@@ -176,8 +205,11 @@ class LearningHubController extends ChangeNotifier {
       assessmentsShown.isEmpty &&
       mocksShown.isEmpty &&
       decksShown.isEmpty &&
-      matchingCourses.isEmpty &&
+      // What the ICR Certifications row shows, not every course: a search that finds only a certification
+      // programme (Assess Your Knowledge's) would otherwise leave a page with no section and no notice.
+      icrCourses.isEmpty &&
       institutesShown.isEmpty &&
+      myLearning.isEmpty &&
       !assessLoading &&
       !mockLoading &&
       !decksLoading &&
@@ -196,6 +228,7 @@ class LearningHubController extends ChangeNotifier {
       _loadAssess(notify: false),
       _loadMocks(notify: false),
       _loadDecks(notify: false),
+      _loadAccess(),
     ]);
   }
 
@@ -207,12 +240,16 @@ class LearningHubController extends ChangeNotifier {
     _loadAssess(),
     _loadMocks(),
     _loadDecks(),
+    _loadAccess(),
   ]);
 
   Future<void> reloadInstitutes() => _loadInstitutes();
   Future<void> reloadAssess() => _loadAssess();
   Future<void> reloadMocks() => _loadMocks();
   Future<void> reloadDecks() => _loadDecks();
+
+  /// What the member has opened, read again (after a page where they may have opened a level, a set or a course).
+  Future<void> reloadAccess() => _loadAccess();
 
   void setSearch(String query) {
     final next = query.trim().toLowerCase();
@@ -318,6 +355,19 @@ class LearningHubController extends ChangeNotifier {
     }
   }
 
+  /// The member's places and unlocks, for the My courses row. An aside: a failed read keeps what was known, and the
+  /// courses they hold a place on still show.
+  Future<void> _loadAccess() async {
+    final source = assess;
+    if (source == null) return;
+    try {
+      _access = (await source.member(PaperKind.assessment)).access;
+    } catch (_) {
+      return;
+    }
+    _notify();
+  }
+
   void _relay() => _notify();
 
   void _notify() {
@@ -331,4 +381,17 @@ class LearningHubController extends ChangeNotifier {
     if (ownsLearning) learning.dispose();
     super.dispose();
   }
+}
+
+/// One card of the hub's My courses row: an exam, programme, level, set or deck the member opened, or a course they
+/// hold a place on.
+class MyLearningEntry {
+  const MyLearningEntry.opened(OpenedItem this.opened) : course = null;
+  const MyLearningEntry.course(Course this.course) : opened = null;
+
+  final OpenedItem? opened;
+  final Course? course;
+
+  String get key => opened?.key ?? 'course:${course!.id}';
+  String get title => opened?.title ?? course!.title;
 }

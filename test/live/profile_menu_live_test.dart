@@ -88,11 +88,10 @@ void main() {
       expect(d.locationLine, 'Bengaluru, Karnataka · ${d.connectionsLabel}');
 
       // The two counts: recruiters who opened the profile, and how often his discussions were opened.
+      // The API's count, not the home seed's 42: another seed's sweep can take a viewer away.
       expect(d.profileViews, performance['profileViewsTotal']);
-      expect(d.profileViews, 42);
       final impressions = (threads['data'] as List).fold<int>(0, (n, t) => n + ((t as Map)['viewCount'] as int));
       expect(d.postImpressions, impressions);
-      expect(d.postImpressions, 1204);
 
       // The three rows.
       final chapters = (member['chapters'] as List).cast<Map<String, dynamic>>();
@@ -212,9 +211,13 @@ void main() {
       expect(find.text('Bharat Buyer'), findsOneWidget);
       expect(find.text('Lead Operations Manager at TechCorp'), findsOneWidget);
       expect(find.textContaining(RegExp(r'^Bengaluru, Karnataka · \d+\+? Connections$')), findsOneWidget);
-      expect(find.text('42'), findsOneWidget);
+      expect(find.text('${me.menu.data.profileViews}'), findsOneWidget, reason: "the API's own count");
       expect(find.text('Profile Views'), findsOneWidget);
-      expect(find.text('1,204'), findsOneWidget);
+      final grouped = me.menu.data.postImpressions.toString().replaceAllMapped(
+        RegExp(r'(\d)(?=(\d{3})+$)'),
+        (m) => '${m[1]},',
+      );
+      expect(find.text(grouped), findsOneWidget, reason: "the API's own sum, grouped");
       expect(find.text('Post Impressions'), findsOneWidget);
       expect(find.text('View Full Profile'), findsNothing, reason: 'the photo and the name open the profile');
       expect(find.text('Regional Chapters'), findsOneWidget);
@@ -226,7 +229,9 @@ void main() {
       expect(find.text('+12 CPD'), findsOneWidget);
       expect(find.text('MY ACTIVITY'), findsOneWidget);
       expect(find.text('Saved Items & Jobs'), findsOneWidget);
-      expect(find.text('My RFQ Requirements'), findsOneWidget);
+      // Everything posted on ICR, with the member's own list on it (3 Nov 2026), then the supplier's board.
+      expect(find.text('Requirements'), findsOneWidget);
+      expect(find.text('Find Work & Bid'), findsOneWidget);
       expect(find.text('Certificates & Badges'), findsOneWidget);
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Sign Out'), findsOneWidget);

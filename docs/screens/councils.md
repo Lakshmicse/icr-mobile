@@ -4,7 +4,7 @@ The Councils screen (`docs/designs/councils.png`): one long page — the stat ti
 
 ## Screens and wiring
 
-- `CouncilsScreen({required VoidCallback onBack, opener})` — `lib/features/councils/councils_screen.dart`. Reads a `CouncilsController` from Provider and calls `start()` on first build. `opener` hands a page to the browser (default `openUrl`); tests give their own to see which page a control asks for.
+- `CouncilsScreen({required VoidCallback onBack, opener, handoffs})` — `lib/features/councils/councils_screen.dart`. Reads a `CouncilsController` from Provider and calls `start()` on first build. `opener` hands a page to the browser (default `openUrl`); tests give their own to see which page a control asks for. `handoffs` (a `CouncilHandoffs`) is what lets a council's controls open its own page in the app (see "A council's own page" below); without it they hand the website's page to `opener`.
 - The controller is provided where the route is built (`lib/app_screens.dart`, `'/councils'`):
 
   ```dart
@@ -12,11 +12,11 @@ The Councils screen (`docs/designs/councils.png`): one long page — the stat ti
     create: (c) => CouncilsController(
       sample ? DemoCouncilsRepository() : ApiCouncilsRepository(api: c.read<ApiClient>()),
     ),
-    child: CouncilsScreen(onBack: () => Navigator.of(ctx).pop()),
+    child: CouncilsScreen(onBack: () => Navigator.of(ctx).pop(), handoffs: appCouncilHandoffs(ctx)),
   )
   ```
 
-- `CouncilsRepository` (abstract) → `ApiCouncilsRepository({required ApiClient api, clock})` and `DemoCouncilsRepository()`. Besides `overview`/`join`/`leave`/`unreadNotifications` it hands out the pages a control opens: `link(council, {tab})`, `eventLink`, `calendarLink`, `chapterLink`. Models in `council_models.dart`, formatting and the small rules (peer label, lead line, roundtable mode, age tier, calendar entry, rail order) in `council_format.dart`, type and colours in `councils_styles.dart`, widgets under `widgets/`.
+- `CouncilsRepository` (abstract) → `ApiCouncilsRepository({required ApiClient api, clock})` and `DemoCouncilsRepository()`. Besides `overview`/`join`/`leave`/`unreadNotifications` it hands out the pages a control opens: `link(council, {tab})`, `eventLink`, `calendarLink`, `chapterLink`. `CouncilPageRepository` (also implemented by both) is what a council's own page reads: `detail`, `members`, `events`, `updates`, `resources`. Models in `council_models.dart`, formatting and the small rules (peer label, lead line, roundtable mode, age tier, calendar entry, rail order) in `council_format.dart`, type and colours in `councils_styles.dart`, widgets under `widgets/`.
 - Golden: `test/golden/councils_golden_test.dart` renders the demo screen at the design's frame, 390 × 2829.5 dp at 2x (`Size(780, 5659)`), writes `build/screens/councils.png` and matches `test/golden/goldens/councils.png`. Unit and control tests: `test/councils_test.dart` (formatting, the API mapping, the controller, every control on the screen) and `test/council_card_test.dart` (the cards, the row and the tiles). Live tests against the local API: `test/live/councils_live_test.dart` (`flutter test test/live/councils_live_test.dart`; it also writes `build/screens/councils_live.png`, the screen drawn from the live API, for `tool/design` comparisons).
 
 ## Design frame
@@ -33,10 +33,10 @@ The export is 283 × 2000 px, a phone frame drawn with a 1 px border at x = 5 an
 | `GET /events?when=upcoming` (every page) | each council's "Next: Apr 18" (its soonest event of any kind) and each chapter's next date (events with a `chapter`) |
 | `GET /events?when=upcoming&kind=ROUNDTABLE` | the three Upcoming Roundtables rows and the "Active Roundtables" tile (the council-hosted ones) |
 | `GET /chapters?limit=50` | the footer's four city tiles, the ones with the soonest event first |
-| `POST /councils/:id/join`, `DELETE /councils/:id/join` | Join Council; leave through a long press on "Open Member Lounge" |
+| `POST /councils/:id/join`, `DELETE /councils/:id/join` | Join Council; leave through a long press on "Open Member Lounge", or from the Your councils sheet (Manage →, a joined card's seat pill) |
 | `GET /notifications/unread-count` | the bell's dot |
 
-Pages the screen hands to the browser (`SITE_URL`): `/councils/<slug>` (Preview Chapter, a joined card's body), `/councils/<slug>?tab=events` (Room Link, Meeting link), `/councils/<slug>?tab=updates` (Open Member Lounge, the "N unread" pill; the website's Updates tab is the council's announcements), `/councils` (Manage →), `/events/<slug>` (a roundtable row), `/events` (the caption at the right of Upcoming Roundtables), `/chapters/<slug>` (a city tile), `/chapters` (View Regional Chapters Directory), `/notifications` (the bell). The calendar glyph on a row opens a Google Calendar "new event" page (`calendar.google.com/calendar/render?action=TEMPLATE…`) with the event's own title, start, end and venue and a link back to its page: the API has no .ics file for an event (the website builds one in the browser).
+Pages the screen hands to the browser (`SITE_URL`): `/events/<slug>` (a roundtable row, and Room Link / Meeting link when the council has an upcoming session; with none the card says so and opens nothing), `/events` (the caption at the right of Upcoming Roundtables), `/chapters/<slug>` (a city tile), `/chapters` (View Regional Chapters Directory), `/notifications` (the bell). A council's own page (`/councils/<slug>`, `?tab=updates` for Open Member Lounge and the "N unread" pill) is **not** one of them any more: it is the app's `CouncilScreen` since 2 Nov 2026, below. The calendar glyph on a row opens a Google Calendar "new event" page (`calendar.google.com/calendar/render?action=TEMPLATE…`) with the event's own title, start, end and venue and a link back to its page: the API has no .ics file for an event (the website builds one in the browser).
 
 ## What the API cannot give, and what is shown instead
 
@@ -48,7 +48,7 @@ Pages the screen hands to the browser (`SITE_URL`): `/councils/<slug>` (Preview 
 | "Domains Covered — 152" | the number of distinct `segments` across the councils (the website's "industries covered" KPI) |
 | "Active Roundtables — 14" with a green dot | the number of upcoming council-hosted events of the roundtable kind (the rows' own set); the dot only while it is above zero |
 | "3 unread" on a joined card | **"N unread" = the announcements the council posted in the last 30 days** (`GET /councils/:slug/announcements`). Nothing in the API says what a member has read: `CouncilAnnouncement` has no read state and posting one sends no notification. A council with nothing recent shows "Next Sync: Apr 18" (its next event) instead, as the design's second card does. The pill opens the council's Updates tab |
-| "Room Link" / "Meeting link" | an executive seat gets the blue Room Link, a member the outlined Meeting link; the API has no room or meeting URL, so both open the council's Events tab on the website, where its sessions are |
+| "Room Link" / "Meeting link" | an executive seat gets the blue Room Link, a member the outlined Meeting link; the API has no room or meeting URL, so both open the council's **next upcoming session** (its event page, where the website's "View & RSVP" goes), and with no session scheduled say so ("No session is scheduled for … yet") instead of opening a page that looks like the card's own |
 | "Live Chatham-House" | "All events", opening `/events`; the API has no house rule |
 | the roundtable rows | **council-hosted events of kind ROUNDTABLE, soonest first** (the website's own roundtable kind; the portal's other council events are workshops, webinars and a conference and are not rows). A row's "Next:" on the card above still counts any kind |
 | "VIRTUAL" / "HYBRID BLR" / "CLOSED-DOOR" | from the event: `inviteOnly` → CLOSED-DOOR (grey); a venue naming "Hybrid" → "HYBRID" + the city's code taken from the venue ("Bengaluru (Hybrid)" → BLR, green, with the green date tile); a venue of "Online"/"Virtual" or a webinar → VIRTUAL (blue); anything else → IN-PERSON (green) |
@@ -84,6 +84,38 @@ Rows in the controller, not a list of names: `CouncilsController` (tests in `cou
 - **Most members**, **Most active** (upcoming events × 10 + members, the website's), **Newest**, **A to Z**: ties keep the API's order.
 - The joined rail lists an executive seat first, then the soonest session, then by name; a join slots in where it belongs.
 
+## A council's own page (native since 2 Nov 2026)
+
+`CouncilScreen` (`lib/features/councils/council_screen.dart`) is the website's `/councils/<slug>`, drawn the way the chapter's page is (the two are twins on the website, and the page borrows the chapter feature's rows and section frame: `PersonRow`, `MeetupRow`, `ChapterSectionFrame`, `SectionState`, `community_kit.dart`). Until 2 Nov 2026 the app had no page per council: round 2 routed `/councils/<slug>` to the councils directory, so a joined card, its Meeting link and Manage all opened the screen the member was already on ("redirecting the same page", the owner's report), and for one day the route was left to the in-app web view. Now every control that names a council opens this page.
+
+**Opening it.** `openCouncilPage(context, repository:, idOrSlug:, handoffs:, tab:, onChanged:)` pushes it (the style of `openChapterPage`); `councilPage(...)` is the builder, which creates a `CouncilController` on a `CouncilPageRepository`. From the board: a joined card's body, **Open Member Lounge** (on Updates), the "N unread" pill (on Updates), **Preview Chapter**, and the rows of the Your councils sheet. From the website's address: `appSitePage`'s `case 'councils'` (`lib/app_site_pages.dart`), so a link in a message, a notification, a member's profile or a saved council arrives here too; `?tab=` is passed on. An id works as well as a slug (a notification names an id; the API reads by slug, so the id is looked up on the directory first). **Room Link / Meeting link** and **Manage →** / the seat pill are unchanged: the council's next session (its event sheet), and the Your councils sheet.
+
+**What is on it**, top to bottom: the cover (photo, or the website's slug-hashed gradient) with the industry glyph, the name with the official badge, "Industry Council", the segments as pills, the description, "Chaired by <chair> · <title>"; **Join Council**, or **Joined** + **Leave** (confirmation first), or **Council lead** with no Leave (as the website's `JoinButton`: a lead's seat is the council's to change; the Your councils sheet on the board still offers Leave for every seat); **Share** (the phone's share sheet with `/councils/<slug>`), **Email the council** (`mailto:` the contact address, only when there is one). Then the website's five KPI tiles (Members, Companies, Upcoming Events, Events Hosted, Leadership), the chips (**Overview, Events, Leadership, Members, Knowledge, Updates**, plus **Gallery** when the council has pictures), and the sections, each loading on its own so one that fails shows its own sentence and Try again and leaves the page standing:
+
+| Section (`?tab=`) | Draws | Read from |
+|---|---|---|
+| About this council (`overview`) | `aboutHtml` as headings, paragraphs and bullets (the description when there is none), then "Industries covered": the segments | `GET /councils/:slug` |
+| Events (`events`) | Upcoming / Past, each row the meetup row (date tile, kind, time, venue, going), the member's place on it; a row opens the event sheet by the event's slug (else its id). There is no RSVP button here: the sheet has it, with tickets | `GET /events?councilSlug=&when=upcoming\|past&limit=12` and `GET /events/rsvps/mine` (a CANCELLED row is no RSVP) |
+| Council leadership (`leadership`) | the chair and office-bearers: a row opens the member's profile, the message glyph starts a conversation, the link glyph opens LinkedIn | `GET /councils/:slug` (`leads`) |
+| Members (`members`) | search by name, All members / Corporate only / Committee, the rows (a row opens the member), "Showing n of N members", Show more members | `GET /councils/:slug/members?page&limit=12&search&hasCompany=true&role=LEAD` |
+| Knowledge library (`knowledge`) | the files, each with its PPTX / PDF / XLSX / MP4 / FILE tag, opening where it points | `GET /councils/:slug/resources` |
+| News & updates (`updates`) | announcements, pinned first (blue, "PINNED"), then newest | `GET /councils/:slug/announcements` |
+| Gallery (`gallery`) | the pictures, tap to enlarge; only when there are some | `GET /councils/:slug` (`galleryUrls`) |
+
+The page also reads `GET /councils/memberships/mine` (the member's seat; a 401 reads as none) and `GET /notifications/unread-count` (the bell). Joining and leaving are the board's calls, `POST|DELETE /councils/:id/join`.
+
+**`?tab=`** opens the page on that section: it scrolls there once the council **and** its sections have answered (`CouncilController.settled`), because the sections above the target change height as they load and a jump made earlier would land short. A reader who has already scrolled is left where they are. An unknown tab, and the website's `discussions` (a "coming soon" card there), open at the top. The website's Gallery tab is the last one and only drawn here when there is a gallery.
+
+**The board follows the page.** A seat taken or given back on the page reaches the board underneath through `onChanged` → `CouncilsController.follow(council)`: the card turns to JOINED / Join Council, the joined rail grows or shrinks and the "N Active" pill follows. Only the seat moves: the card keeps what the directory read of the council (its next date, tags, unread count). The page's own member count moves at once (+1 / -1) and is rolled back with the API's sentence if the join is refused.
+
+**Hand-offs** (`CouncilHandoffs`, one value like `ChapterHandoffs`; the shell wires them in `appCouncilHandoffs`, `lib/app_screens.dart`, which the board and the website route share): `onOpenEvent` (the event sheet, `openEventBySlug`), `onOpenMember` (`openMemberProfile`), `onMessage` (`MessagingLauncher.withPerson`), `onBell` (`openNotifications`; the website's page when null), and `opener` / `share` (a file, a LinkedIn profile or a `mailto:`; the share sheet). `CouncilsScreen` opens the page only when it is given `handoffs` **and** its repository is also a `CouncilPageRepository` (`CouncilsController.pages`; the API and the sample both are). Without either (a preview, a board-only test double such as the live test's `_OfflineCovers`) a council's controls hand its website page to `opener` as before.
+
+**What is still the website's:** the website's sidebar (the next-event countdown and its "View & RSVP", related councils, quick links, "Contact the chair") has no counterpart: the Events section shows the next sessions and the chips are the quick links; RSVP and tickets are the event sheet's; the Discussions tab is a "coming soon" card on the website too. A file or a LinkedIn profile opens outside ICR, as everywhere else.
+
+The sample source (`DemoCouncilsRepository`) fills the page for the six designed councils: the chair and two deputies lead, a roster of nine pages six at a time, each council has a session (its roundtable, or a working session), a past forum, a pinned and an ordinary dispatch, and three files.
+
+Tests: `test/council_page_test.dart` (the sections and `?tab=` ids; the API mapping with the API's own rows; the controller; every control and section of the page; `?tab=` landing, waiting for a slow roster and leaving a reader who scrolled alone; the board opening the page from each control and following a join or leave; the website route; the sample source), and the changed controls in `test/councils_test.dart`, `test/web_test.dart` (the council URL is taken natively).
+
 ## Controls and the tests that prove them
 
 `W` is a widget test (`test/councils_test.dart` unless noted); `L` is a live test (`test/live/councils_live_test.dart`, API up and seeded).
@@ -92,10 +124,10 @@ Rows in the controller, not a list of names: `CouncilsController` (tests in `cou
 |---|---|---|
 | Back arrow | `onBack` | W "Back and the bell" |
 | Bell | opens `/notifications`; its dot is the unread count | W "Back and the bell"; L "the bell's count is the member's unread notifications" |
-| Manage → | opens `/councils` | W "Manage and the roundtables' caption open the website" |
-| a joined card | opens the council's page | W "a joined card opens its council…"; `council_card_test.dart` "the joined card" |
-| Room Link / Meeting link | open the council's Events tab | W "a joined card opens its council…"; `council_card_test.dart` "an executive seat has Room Link, a member Meeting link, and each is its own tap" |
-| "N unread" pill | opens the council's Updates tab; N is the last 30 days' announcements | W the same; W "maps the directory…"; L "the member's rail is their seats…" |
+| Manage → | opens the **Your councils** sheet: every seat with its page (tap) and **Leave** (asks first); the seat pill on a joined card opens the same sheet. The website has no manage page — a seat is managed where it is shown (its Joined button) — and this is that for every seat at once | W "Manage opens the member's seats…", "a card's seat pill opens the seats too, and Leave there asks first" |
+| a joined card | opens the council's own page in the app | W "a joined card opens its council…"; `council_card_test.dart` "the joined card"; `council_page_test.dart` "the board opens the council's page" |
+| Room Link / Meeting link | open the council's next session (its event sheet); with none scheduled they say so | W "a joined card opens its council…"; `council_card_test.dart` "an executive seat has Room Link, a member Meeting link, and each is its own tap" |
+| "N unread" pill | opens the council's page on Updates; N is the last 30 days' announcements | W the same; W "maps the directory…"; L "the member's rail is their seats…" |
 | roundtable row | opens the event's page | W "a roundtable row opens its event and its calendar glyph the calendar entry"; L "the links open pages the API knows…" |
 | calendar glyph | opens a calendar entry with the event's own title, times and venue | W the same; L "the links open pages the API knows, and the calendar entry is the event's own" |
 | "All events" / "Live Chatham-House" | opens `/events` | W "Manage and the roundtables' caption open the website" |
@@ -103,9 +135,9 @@ Rows in the controller, not a list of names: `CouncilsController` (tests in `cou
 | category chips | narrow to a category; again, or All Categories, widens | W "a category chip narrows the cards…"; W "a category narrows to the councils filed under it…"; L the same live test |
 | filters glyph + sort sheet | five choices, the current one ticked, a choice reorders | W "the filters glyph opens the sort choices and a choice reorders the cards"; W "the other sorts are the website's…"; L the same live test |
 | Join Council | takes the seat at once (`POST /councils/:id/join`), keeps what the API answers, rolls back with the API's sentence on a refusal | W "Join Council takes a seat at once, and a refusal puts it back…"; W "a join shows at once, is busy until the API answers…"; L "a council joined is a seat the API keeps, and leaving gives it back" (Pooja); L "the controller takes a seat at once, keeps it across a refresh, and gives it up"; L "a refusal from the API rolls the seat back and says why" (signed out, 401; and an unknown council, 404) |
-| Open Member Lounge | opens the council's Updates tab | W "Open Member Lounge opens the council's updates…" |
+| Open Member Lounge | opens the council's page on Updates | W "Open Member Lounge opens the council's updates…" |
 | long press on Open Member Lounge | offers "Leave <council>"; leaving is `DELETE /councils/:id/join`, rolled back on a refusal | W the same; W "a refused leave puts the seat back"; L "the controller takes a seat at once…" |
-| Preview Chapter | opens the council's page | W "Preview Chapter opens the council's page" |
+| Preview Chapter | opens the council's own page in the app | W "Preview Chapter opens the council's page"; W "without hand-offs … a council opens on the website" |
 | city tile / View Regional Chapters Directory | open the chapter / `/chapters` | W "a city tile opens its chapter and the directory button the chapters page"; L "the In-Person Summits tiles are the four chapters…" |
 | pull to refresh | reads everything again, the bell too | W "pulling down reads the councils again"; W "a refresh reads the councils again, and the bell with them"; L "pulling down reads what the server holds now" |
 | a failed read | "Couldn't load councils" + Try again | W "a failed read offers Try again, which reads again" |

@@ -1,7 +1,8 @@
 /// Bundles in ICR credits and in money, against the LOCAL portal API (the build with `bundleCreditCost`, the
 /// `mock-bundles` routes and `unlockedCourseIds`): the app's repository on the API's real answers, so the parsers,
 /// the paths and the owner's rule (27 Oct 2026: a bundle's credits are the levels' or sets' summed, less the bundle
-/// discount, never below the dearest one) are read from what the API sends, not from a fixture.
+/// discount, at least one credit — a bundle of small levels may cost less than its dearest level, the owner's rule
+/// as stated) are read from what the API sends, not from a fixture.
 /// Run with the API up: `flutter test test/live/learning_bundles_live_test.dart`.
 ///
 /// The reads are Bharat Buyer's (100 credits: they take nothing). The one test that redeems runs as the study
@@ -47,7 +48,7 @@ Future<int> _undo(String email, List<String> paperIds) async {
 String _js(String s) => '"${s.replaceAll('"', r'\"')}"';
 
 void main() {
-  liveTest('a mock exam\'s bundle: credits summed, less the discount, never below the dearest; each set at its own', () async {
+  liveTest('a mock exam\'s bundle: credits summed, less the discount, at least one; each set at its own', () async {
     final repo = await _repoFor(bharat);
     final subjects = await repo.groups(PaperKind.mock);
     expect(subjects, isNotEmpty);
@@ -66,7 +67,8 @@ void main() {
       final each = [for (final l in q.creditLevels) l.credits!];
       expect(each.length, greaterThanOrEqualTo(2), reason: '${subject.key}: a bundle is two or more');
       expect(q.separateCredits, each.reduce((a, b) => a + b), reason: '${subject.key}: separately is the sum');
-      expect(q.credits, greaterThanOrEqualTo(each.reduce((a, b) => a > b ? a : b)), reason: 'never below the dearest');
+      expect(q.credits, greaterThanOrEqualTo(1), reason: 'at least one credit, even below the dearest level');
+      expect(q.credits, lessThan(q.separateCredits!), reason: 'the bundle costs less than the levels apart');
       expect(q.creditsSaved, q.separateCredits! - q.credits!);
       expect(q.creditsSaved, greaterThan(0), reason: 'offered only while it saves something');
       expect(q.inCredits, q.credits);
@@ -127,51 +129,54 @@ void main() {
     expect(m.access!.unlockedCourseIds, isNotEmpty);
   });
 
-  liveTest('redeeming a mock exam\'s bundle opens every set, takes the quoted credits, refuses a second go — and is undone', () async {
-    final repo = await _repoFor(_study);
-    final before = (await repo.member(PaperKind.mock)).access!;
-    expect(before.paperIds, isEmpty, reason: 'the study persona holds no paper: run tool/seed/learning-study.ts');
-    final held = before.icrCredits;
+  liveTest(
+    'redeeming a mock exam\'s bundle opens every set, takes the quoted credits, refuses a second go — and is undone',
+    () async {
+      final repo = await _repoFor(_study);
+      final before = (await repo.member(PaperKind.mock)).access!;
+      expect(before.paperIds, isEmpty, reason: 'the study persona holds no paper: run tool/seed/learning-study.ts');
+      final held = before.icrCredits;
 
-    BundleQuote? picked;
-    for (final subject in await repo.groups(PaperKind.mock)) {
-      final q = await repo.bundleQuote(subject.key, kind: PaperKind.mock);
-      if (q.inCredits != null && q.inCredits! <= held) {
-        picked = q;
-        break;
+      BundleQuote? picked;
+      for (final subject in await repo.groups(PaperKind.mock)) {
+        final q = await repo.bundleQuote(subject.key, kind: PaperKind.mock);
+        if (q.inCredits != null && q.inCredits! <= held) {
+          picked = q;
+          break;
+        }
       }
-    }
-    if (picked == null) {
-      markTestSkipped('No mock bundle the study persona can afford with $held credits.');
-      return;
-    }
-    final ids = [for (final l in picked.creditLevels) l.paperId];
-    try {
-      final r = await repo.redeemBundle(PaperKind.mock, picked.courseCode);
-      expect(r.spent, picked.credits, reason: 'the quote is what it takes');
-      expect(r.credits, held - picked.credits!);
-      expect(r.paperIds.toSet(), ids.toSet());
+      if (picked == null) {
+        markTestSkipped('No mock bundle the study persona can afford with $held credits.');
+        return;
+      }
+      final ids = [for (final l in picked.creditLevels) l.paperId];
+      try {
+        final r = await repo.redeemBundle(PaperKind.mock, picked.courseCode);
+        expect(r.spent, picked.credits, reason: 'the quote is what it takes');
+        expect(r.credits, held - picked.credits!);
+        expect(r.paperIds.toSet(), ids.toSet());
 
-      final after = (await repo.member(PaperKind.mock)).access!;
-      expect(after.paperIds, containsAll(ids));
-      expect(after.creditPaperIds, containsAll(ids));
-      expect(after.icrCredits, held - picked.credits!);
+        final after = (await repo.member(PaperKind.mock)).access!;
+        expect(after.paperIds, containsAll(ids));
+        expect(after.creditPaperIds, containsAll(ids));
+        expect(after.icrCredits, held - picked.credits!);
 
-      // Nothing is left to bundle, and a second go is refused in the API's own words.
-      final again = await repo.bundleQuote(picked.courseCode, kind: PaperKind.mock);
-      expect(again.hasOffer, isFalse);
-      await expectLater(
-        repo.redeemBundle(PaperKind.mock, picked.courseCode),
-        throwsA(isA<ApiError>().having((e) => e.message, 'message', isNotEmpty)),
-      );
-    } finally {
-      final removed = await _undo(_study.email, ids);
-      expect(removed, ids.length, reason: 'every unlock the redemption made is deleted');
-    }
-    final restored = (await repo.member(PaperKind.mock)).access!;
-    expect(restored.paperIds, isEmpty);
-    expect(restored.icrCredits, held, reason: 'the credits are given back with the rows');
-  });
+        // Nothing is left to bundle, and a second go is refused in the API's own words.
+        final again = await repo.bundleQuote(picked.courseCode, kind: PaperKind.mock);
+        expect(again.hasOffer, isFalse);
+        await expectLater(
+          repo.redeemBundle(PaperKind.mock, picked.courseCode),
+          throwsA(isA<ApiError>().having((e) => e.message, 'message', isNotEmpty)),
+        );
+      } finally {
+        final removed = await _undo(_study.email, ids);
+        expect(removed, ids.length, reason: 'every unlock the redemption made is deleted');
+      }
+      final restored = (await repo.member(PaperKind.mock)).access!;
+      expect(restored.paperIds, isEmpty);
+      expect(restored.icrCredits, held, reason: 'the credits are given back with the rows');
+    },
+  );
 
   liveTest('a bundle the member cannot afford is refused with the API\'s sentence, and nothing changes', () async {
     final repo = await _repoFor(_study);

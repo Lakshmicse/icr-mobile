@@ -232,6 +232,9 @@ Future<void> loadScreen(
   Size size = const Size(390, 900),
   Duration timeout = const Duration(seconds: 15),
 }) async {
+  // The learning cards' covers go through cached_network_image, which asks the phone for a temp folder and a
+  // SQLite index; the fakes answer so a cover loads like on a device instead of failing the screen.
+  mockImageCachePlugins();
   await pumpScreen(tester, screen, providers: providers, appProviders: appProviders, size: size);
   await settleLive(tester, timeout: timeout);
 }

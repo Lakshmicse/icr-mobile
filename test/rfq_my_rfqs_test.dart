@@ -124,6 +124,9 @@ void main() {
 
   testWidgets('the sort chip reorders the list', (tester) async {
     await open(tester);
+    // The row scrolls: "Find work" sits before the sort chip since the supplier's door was added.
+    await tester.drag(chip('rfq-post'), const Offset(-240, 0));
+    await settle(tester);
     await tester.tap(chip('rfq-sort'));
     await settle(tester);
     await tester.tap(find.text('Title A–Z'));

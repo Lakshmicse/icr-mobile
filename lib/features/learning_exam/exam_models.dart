@@ -126,6 +126,10 @@ class PaperInfo {
   /// website names a sitting everywhere.
   String get name => context == null ? title : '$context – $title';
 
+  /// "ASHRAE BEMP Set 1", "Capital Planning Foundation": what the brief and the exam title themselves with, the
+  /// subject and then the set or the rung, as the designs write it (the website's [name] has a dash between).
+  String get heading => context == null ? title : '$context $title';
+
   /// "Foundation" for a level paper; null for a mock set.
   String? get levelLabel => kind == PaperKind.assessment ? assessmentLevelLabel(level) : null;
 

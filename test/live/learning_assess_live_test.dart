@@ -23,6 +23,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/api/api_client.dart';
+import 'package:icr_mobile/features/payments/checkout_start.dart';
 import 'package:icr_mobile/core/api/api_error.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/learning_assess/api_assess_repository.dart';
@@ -141,6 +142,10 @@ class _Bare implements AssessRepository {
   Future<AssessmentPricing> pricing() => inner.pricing();
   @override
   Future<RedeemResult> redeem(AssessPaper paper) => inner.redeem(paper);
+  @override
+  Future<CheckoutStart> checkout(AssessPaper paper) => inner.checkout(paper);
+  @override
+  Future<CheckoutStart> checkoutBundle(PaperKind kind, String key) => inner.checkoutBundle(kind, key);
   @override
   Future<void> openWithPlan(PaperKind kind, String targetId) => inner.openWithPlan(kind, targetId);
   @override
@@ -707,6 +712,7 @@ void main() {
             repository: _Bare(ApiAssessRepository(api: _screenClient(api))),
             opener: RecordingOpener().call,
             launcher: launcher.call,
+            payLauncher: launcher.call,
           ),
         );
         await _settle(tester, until: () => find.byType(GroupCard).evaluate().isNotEmpty);
@@ -769,10 +775,10 @@ void main() {
     await tester.pump();
     await _settle(tester, until: () => find.byType(PaperCard).evaluate().length >= 2);
     expect(find.byType(PaperCard), findsNWidgets(2));
-    expect(find.text('SET 01'), findsOneWidget);
-    expect(find.text('SET 02'), findsOneWidget);
+    expect(find.text('Set 1'), findsOneWidget);
+    expect(find.text('Set 2'), findsOneWidget);
     expect(find.text('Up to 3 attempts'), findsWidgets);
-    expect(find.text('Exam sets'), findsOneWidget);
+    expect(find.text('Mock Exam'), findsOneWidget, reason: 'the bar over the sets page');
   });
 
   liveWidgetTest(
@@ -838,10 +844,12 @@ void main() {
       await _tapOnline(tester, find.widgetWithText(ActionButton, 'Redeem ${creditsShort(cost)}'));
       await _settle(
         tester,
-        until: () => find.descendant(of: _card(id), matching: find.text('Unlocked')).evaluate().isNotEmpty,
+        until: () => find
+            .descendant(of: _card(id), matching: find.widgetWithText(ActionButton, 'Start Test'))
+            .evaluate()
+            .isNotEmpty,
       );
-      expect(find.descendant(of: _card(id), matching: find.text('Unlocked')), findsOneWidget);
-      expect(find.descendant(of: _card(id), matching: find.text('Opened with ICR credits')), findsOneWidget);
+      expect(find.descendant(of: _card(id), matching: find.widgetWithText(ActionButton, 'Start Test')), findsOneWidget);
       expect(find.textContaining('You enrolled into this mock exam'), findsWidgets);
 
       // The API agrees: the set is Pooja's for good, the credits are gone, and a second redemption costs nothing.

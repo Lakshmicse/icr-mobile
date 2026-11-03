@@ -35,11 +35,17 @@ class HiringAccess {
     this.companyId,
     this.canPublish = true,
     this.publishNote,
+    this.companiesHeld = 0,
   });
 
   final String userId;
   final String role;
   final String? companyId;
+
+  /// How many companies the person belongs to (`GET /me/companies`), read while they act as themselves: the
+  /// website's `NoCompany` offers "Switch company" to someone who has one, and "Create a company" only to someone
+  /// who has none.
+  final int companiesHeld;
 
   /// The company is verified (`GET /employer-verification/gate`): publishing a job is allowed.
   final bool canPublish;

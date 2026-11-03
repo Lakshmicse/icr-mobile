@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/util/time_ago.dart';
+import '../../forum/mentions/mention_widgets.dart';
 import '../feed_models.dart';
 import '../feed_styles.dart';
 import 'feed_avatar.dart';
@@ -36,7 +37,16 @@ class PostCard extends StatelessWidget {
     this.onPickReaction,
     this.onOpenAuthor,
     this.onTag,
+    this.onOpenMention,
+    this.isOwn = false,
+    this.onVoters,
   });
+
+  /// A member tagged in the words ("@Name") was tapped: gets their id. Absent, the names are plain.
+  final ValueChanged<String>? onOpenMention;
+
+  /// "N votes" under a poll: who voted and for what.
+  final VoidCallback? onVoters;
 
   final FeedPost post;
   final bool commentsOpen;
@@ -64,6 +74,9 @@ class PostCard extends StatelessWidget {
   /// Holding Like: pick another reaction. Gets the Like button's place on screen.
   final ValueChanged<Rect>? onPickReaction;
 
+  /// The reader wrote this post: a poll of theirs shows its results and takes no vote from them.
+  final bool isOwn;
+
   /// The photo and the name: the author's profile.
   final VoidCallback? onOpenAuthor;
 
@@ -83,13 +96,7 @@ class PostCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _PostHeader(
-                  post: post,
-                  onFollow: onFollow,
-                  onSave: onSave,
-                  onMore: onMore,
-                  onOpenAuthor: onOpenAuthor,
-                ),
+                _PostHeader(post: post, onFollow: onFollow, onSave: onSave, onMore: onMore, onOpenAuthor: onOpenAuthor),
                 const SizedBox(height: 6),
                 _Openable(
                   id: post.id,
@@ -99,14 +106,26 @@ class PostCard extends StatelessWidget {
                 if (poll != null) ...[
                   if (post.body.isNotEmpty) ...[const SizedBox(height: 2), Text(post.body, style: HomeType.pollHint)],
                   const SizedBox(height: 10),
-                  PollView(poll: poll, onVote: onVote, onViewDiscussion: onOpen ?? onComments),
+                  PollView(
+                    poll: poll,
+                    isAuthor: isOwn,
+                    onVote: onVote,
+                    onVoters: onVoters,
+                    onViewDiscussion: onOpen ?? onComments,
+                  ),
                 ] else ...[
                   if (post.body.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     _Openable(
                       id: '${post.id}-body',
                       onOpen: onOpen,
-                      child: _ClampedText(text: post.body, style: HomeType.body, moreStyle: HomeType.more),
+                      child: _ClampedText(
+                        text: post.body,
+                        style: HomeType.body,
+                        moreStyle: HomeType.more,
+                        mentions: post.mentions,
+                        onOpenMention: onOpenMention,
+                      ),
                     ),
                   ],
                   if (post.tags.isNotEmpty) ...[const SizedBox(height: 4), _Tags(tags: post.tags, onTag: onTag)],
@@ -151,11 +170,21 @@ class _Openable extends StatelessWidget {
 /// cuts a post. A text that fits is drawn whole. Tapping "…more" opens the rest in place, in the feed itself; a tap
 /// anywhere else on the words is the card's own (the discussion's page).
 class _ClampedText extends StatefulWidget {
-  const _ClampedText({required this.text, required this.style, required this.moreStyle});
+  const _ClampedText({
+    required this.text,
+    required this.style,
+    required this.moreStyle,
+    this.mentions = const [],
+    this.onOpenMention,
+  });
 
   final String text;
   final TextStyle style;
   final TextStyle moreStyle;
+
+  /// The members tagged in [text], whose "@Name" opens their profile through [onOpenMention].
+  final List<Mention> mentions;
+  final ValueChanged<String>? onOpenMention;
 
   static const maxLines = 3;
 
@@ -168,18 +197,30 @@ class _ClampedTextState extends State<_ClampedText> {
 
   bool _expanded = false;
   late final TapGestureRecognizer _open = TapGestureRecognizer()..onTap = () => setState(() => _expanded = true);
+  final _mentions = MentionSpans();
 
   @override
   void dispose() {
     _open.dispose();
+    _mentions.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    _mentions.clear();
     final text = widget.text;
     final style = widget.style;
-    if (_expanded) return Text(text, key: const ValueKey('post-body-open'), style: style);
+    final linked = widget.onOpenMention != null && widget.mentions.isNotEmpty;
+    List<InlineSpan> spansOf(String part) =>
+        linked ? _mentions.build(part, widget.mentions, onOpen: widget.onOpenMention) : [TextSpan(text: part)];
+    if (_expanded) {
+      if (!linked) return Text(text, key: const ValueKey('post-body-open'), style: style);
+      return Text.rich(
+        TextSpan(style: style, children: spansOf(text)),
+        key: const ValueKey('post-body-open'),
+      );
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
@@ -190,7 +231,9 @@ class _ClampedTextState extends State<_ClampedText> {
           textScaler: scale,
           maxLines: _ClampedText.maxLines,
         )..layout(maxWidth: width);
-        if (!whole.didExceedMaxLines) return Text(text, style: style);
+        if (!whole.didExceedMaxLines) {
+          return linked ? Text.rich(TextSpan(style: style, children: spansOf(text))) : Text(text, style: style);
+        }
 
         final tail = TextPainter(
           text: TextSpan(text: ' $_more', style: widget.moreStyle),
@@ -206,7 +249,7 @@ class _ClampedTextState extends State<_ClampedText> {
         return Text.rich(
           TextSpan(
             children: [
-              TextSpan(text: head, style: style),
+              TextSpan(style: style, children: spansOf(head)),
               TextSpan(text: ' $_more', style: widget.moreStyle, recognizer: _open),
             ],
           ),

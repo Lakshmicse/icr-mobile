@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/api/api_client.dart';
+import 'package:icr_mobile/features/payments/payment_screen.dart';
 import 'package:icr_mobile/core/api/api_error.dart';
 import 'package:icr_mobile/core/auth/token_store.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
@@ -449,7 +450,7 @@ void main() {
         ..gateway = true;
       await c.choose(c.plans[1]);
       expect(c.gateway?.gatewayAction, 'https://test.payu.in/_payment');
-      expect(c.message, contains('continues on the ICR website'));
+      expect(c.message, 'Complete the payment to start Silver.');
     });
 
     test('the free rung, the plan held and a plan with no price are never bought', () async {
@@ -636,12 +637,19 @@ void main() {
       expect(repo.checkouts, ['price-gold']);
     });
 
-    testWidgets('a gateway checkout hands the payment to the website\'s plans page, never the app\'s', (tester) async {
+    testWidgets("a gateway checkout is paid in the app's own payment view, never on the website", (tester) async {
+      final paid = <String>[];
+      PaymentServices.pay = (_, {required action, required fields, title = 'Payment'}) async {
+        paid.add('$title → $action');
+        return PaymentOutcome.success;
+      };
+      addTearDown(PaymentServices.reset);
       await pump(tester, repo: _Plans(gateway: true));
       await tester.tap(find.byKey(const ValueKey('plan-choose-silver')));
       await tester.pumpAndSettle();
-      expect(launches.urls.single, endsWith('/pricing/professional'));
-      expect(find.text('The payment for Silver continues on the ICR website.'), findsOneWidget);
+      expect(paid, ['Pay for your plan → https://test.payu.in/_payment']);
+      expect(launches.urls, isEmpty, reason: 'the payment never leaves the app');
+      expect(find.text('Payment received. Your plan is open.'), findsOneWidget);
     });
 
     testWidgets('a member who cannot buy here reads why, with no buttons', (tester) async {

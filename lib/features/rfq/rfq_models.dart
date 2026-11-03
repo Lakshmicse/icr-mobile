@@ -1347,6 +1347,17 @@ class Poster {
   /// manager): the API refuses every call with "Insufficient role permissions", and a new company is not the fix.
   bool get roleCannotPost => companyId != null && !canPost;
 
+  /// Whether this person runs [r], the portal's `managesRequirement`: ICR staff run every one; acting for a company,
+  /// its buyers, sellers and admins run the company's; acting as themselves, the person runs what they posted with no
+  /// company. Anyone else reads it the way a supplier does.
+  bool manages(Requirement r) {
+    if (role == 'SUPER_ADMIN') return true;
+    if (companyId != null) {
+      return r.companyId == companyId && const {'BUYER', 'COMPANY_ADMIN', 'VENDOR'}.contains(role);
+    }
+    return r.buyerId == id && r.companyId == null;
+  }
+
   /// The role in words, for [cannotPostMessage].
   String get roleWords => switch (role) {
     'BRANCH_ADMIN' => 'an office admin',
@@ -1360,6 +1371,54 @@ class Poster {
     final at = (companyName ?? '').trim().isEmpty ? '' : ' at $companyName';
     return "Posting and running requirements is for a company's admins and buyers. As $roleWords$at you can't post or "
         "manage them. Ask one of the company's admins to post it for you.";
+  }
+}
+
+/// A company the person belongs to in a role that posts requirements, which "Posting for" offers to switch to.
+class PostingCompany {
+  const PostingCompany({required this.id, required this.name});
+
+  final String id;
+  final String name;
+}
+
+/// What "Posting for" offers someone acting for no company, who may send an enquiry (the website's
+/// `PostingForEmployer`): the companies they work at now, from their profile's current roles and the companies they
+/// belong to in another role ([names], which only name the enquiry), and the companies they may post for
+/// ([companies], which switch the account to that company, so the requirement is the company's).
+class PostingOptions {
+  const PostingOptions({this.names = const [], this.companies = const []});
+
+  final List<String> names;
+  final List<PostingCompany> companies;
+
+  bool get isEmpty => names.isEmpty && companies.isEmpty;
+
+  /// The website's rule: current roles first, then companies the person is a plain member of; never a name that is
+  /// also a company they may post for, never one twice (case aside), never a blank.
+  factory PostingOptions.from({
+    required List<({String organisation, bool current})> roles,
+    required List<({String id, String name, String role})> memberships,
+  }) {
+    const team = {'BUYER', 'COMPANY_ADMIN', 'VENDOR'};
+    final canPostFor = [
+      for (final m in memberships)
+        if (team.contains(m.role) && m.name.trim().isNotEmpty) PostingCompany(id: m.id, name: m.name.trim()),
+    ];
+    final taken = {for (final c in canPostFor) c.name.toLowerCase()};
+    final seen = <String>{};
+    final names = <String>[];
+    for (final n in [
+      for (final r in roles)
+        if (r.current) r.organisation.trim(),
+      for (final m in memberships)
+        if (!team.contains(m.role)) m.name.trim(),
+    ]) {
+      final key = n.toLowerCase();
+      if (n.isEmpty || taken.contains(key) || !seen.add(key)) continue;
+      names.add(n);
+    }
+    return PostingOptions(names: names, companies: canPostFor);
   }
 }
 

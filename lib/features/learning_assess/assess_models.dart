@@ -33,10 +33,11 @@ enum PaperAccess { open, planPlace, closed }
 /// more (Leadership, Specialist) that no assessment is filed at.
 const assessLadder = ['FOUNDATION', 'INTERMEDIATE', 'ADVANCED'];
 
-/// The order of the level cards on a programme's page: the ladder, Foundation, Professional, Advanced. The
-/// website lays them Foundation, Advanced, Professional left to right (owner's call, 1 Oct 2026, a choice of its
-/// three columns); stacked on a phone they read as the climb they are.
-const assessCardOrder = assessLadder;
+/// The order of the level cards on a programme's page: Foundation, Advanced, Professional, as the owner's design of
+/// 29 Oct 2026 draws them (two cards in a row, the third centred under them) and as the website lays them out. A
+/// paper filed at any other level, or none, follows in the order the API sends. [assessLadder] stays the order a
+/// candidate climbs them, which the landing's cards still say ("Foundation · Professional · Advanced").
+const assessCardOrder = ['FOUNDATION', 'ADVANCED', 'INTERMEDIATE'];
 
 /// "Professional" for the middle rung: the name nobody should see is "Intermediate".
 String? assessLevelLabel(String? level) => switch (level) {
@@ -172,6 +173,19 @@ class PaperGroup {
     return sorted;
   }
 
+  /// A programme's level cards: the rungs in [assessCardOrder], then any paper at another level or none in the
+  /// order the API sent them. Only the levels the programme has are here: a rung with no paper is not drawn.
+  List<AssessPaper> get levelCards {
+    final rank = {for (final (i, l) in assessCardOrder.indexed) l: i};
+    final indexed = [for (final (i, p) in papers.indexed) (i, p)];
+    indexed.sort((a, b) {
+      final ra = rank[a.$2.level] ?? 99;
+      final rb = rank[b.$2.level] ?? 99;
+      return ra != rb ? ra.compareTo(rb) : a.$1.compareTo(b.$1);
+    });
+    return [for (final e in indexed) e.$2];
+  }
+
   /// A mock subject's sets, in the order staff set.
   List<AssessPaper> get sets {
     final sorted = [...papers];
@@ -257,6 +271,7 @@ class MemberAccess {
     this.rupeesPerCredit = 100,
     this.courses = const PlanPlaces(),
     this.mocks = const PlanPlaces(),
+    this.decks = const PlanPlaces(),
     this.upgradePlan,
     this.mockUpgradePlan,
   });
@@ -277,6 +292,9 @@ class MemberAccess {
   final int rupeesPerCredit;
   final PlanPlaces courses;
   final PlanPlaces mocks;
+
+  /// The plan's flash-card deck places (`plan.flashCardDecks`): how many decks it opens, and which the member opened.
+  final PlanPlaces decks;
 
   /// The Professional plan that opens more, named on "See plan".
   final String? upgradePlan;

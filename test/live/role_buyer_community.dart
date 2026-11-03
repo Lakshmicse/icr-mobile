@@ -166,7 +166,7 @@ void roleBuyerCommunity() {
           size: const Size(390, 1800),
         );
         final text = expectHealthy(tester, 'Home as ${w.email}');
-        expect(text, contains('Post a requirement or insight'));
+        expect(find.byKey(const ValueKey('home-compose')), findsOneWidget, reason: 'the header\'s "+" is the composer');
         for (final f in ['All Feed', 'Trending', 'Following', 'Unanswered', 'Polls']) {
           expect(text, contains(f), reason: '${w.email}: the $f chip');
         }

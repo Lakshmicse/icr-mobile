@@ -97,6 +97,24 @@ Notes: a withdrawn quote on a staged RFQ leaves the supplier's `RfqSupplierRespo
 
 The same applies to `budget` on a requirement if its column is the same size (not checked).
 
-## 3. Nothing else so far
+## 3. `GET /rfq` answers every page with the first one (found 3 Nov 2026, Requirements board): not to be changed
+
+**Owner's decision, 3 Nov 2026: the portal stays as it is.** For the app, the portal is changed only for payments and for forum features the app needs from the API; the app works within this one. Kept here as a record of the fault and its cause, not as a request.
+
+The public list of everything posted (`RfqService.findAll`, the website's `/rfq`) cannot page: `?page=2`, `?page=3`… return exactly the rows of `?page=1`, while `meta` still says `hasNext: true` and the right `total`. The website never shows it because it asks for page 1 only (`limit: 30`).
+
+Cause: `findAll` copies the query with an object spread, `this.list({ ...query, status: undefined } as RfqQueryDto, …)`. `skip` is a getter on `PaginationQueryDto` (`(page - 1) * limit`), and a spread copies own fields only, so `list` reads `query.skip` as `undefined` and Prisma starts every page at row 0. One-line fix in `backend/src/modules/rfq/rfq.service.ts`:
+
+```ts
+// findAll: the spread stays (it blanks `status`, so `?status=DRAFT` cannot override the draft guard in `status`
+// above); carry the paging across with it, since a getter is not copied.
+const page = await this.list({ ...query, status: undefined, skip: query.skip } as unknown as RfqQueryDto, {
+```
+
+Do not pass `query` unchanged instead: `list` sets `where.status = query.status` when one is sent, and that would let `?status=DRAFT` list drafts. A spec beside `open-board.spec.ts`: page 2 of a 15-row board at `limit=10` holds the last five, and `?status=DRAFT` still lists none.
+
+**App side, how it lives with it:** the Requirements board (`requirements_board_controller.dart`) asks for pages of 100 (the API's `MAX_LIMIT`), so it shows the newest 100 of each tab and of each search (today every posted requirement: local 25). It stops paging when a page brings nothing new instead of asking again on every scroll, and when the API counts more than it could read it says so under the last card: "Showing the newest 100 of N. Search, or pick a tab, to find the others." (`cutShort`). If the portal ever pages correctly, the app pages past 100 with no change; the live test `the portal's list answers every page with the first…` (`test/live/rfq_posted_live_test.dart`) pins today's behaviour and would then flip.
+
+## 4. Nothing else so far
 
 Everything else the screens use is an existing endpoint (`/rfq/*`, `/vendors/me/access`, `/notifications`, `/categories`, `/locations`, `/uploads`).

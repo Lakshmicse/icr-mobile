@@ -48,7 +48,13 @@ class AppNotification {
 
   bool get unread => readAt == null;
 
-  NotificationCategory get category => notificationCategoryOf(type);
+  /// The category of its [type]; a row with a type of no category that links to a discussion (`/community/...`) is
+  /// still a community row, so a reaction, a repost or a mention sits under that chip whatever type the API gave it.
+  NotificationCategory get category {
+    final byType = notificationCategoryOf(type);
+    if (byType.id == 'general' && (link ?? '').startsWith('/community/')) return categoryById('community');
+    return byType;
+  }
 
   AppNotification read(DateTime at) => AppNotification(
     id: id,

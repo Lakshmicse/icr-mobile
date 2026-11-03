@@ -1,17 +1,31 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_error.dart';
+import '../learning_assess/assess_models.dart';
+import '../learning_assess/assess_repository.dart';
+import '../learning_study/study_models.dart';
+import '../learning_study/study_repository.dart';
 import 'learning_models.dart';
 import 'learning_repository.dart';
 import 'notify_safely.dart';
+import 'opened_learning.dart';
 
 /// The Learning tab's state: the published courses grouped by kind, a search
 /// over them, and the member's own places (taken at once, rolled back if the
 /// API refuses).
 class LearningController extends ChangeNotifier with NotifySafely {
-  LearningController(this.repository);
+  LearningController(this.repository, {this.assess, this.study});
 
   final LearningRepository repository;
+
+  /// The assessments and mock exams, for the My courses shelves of what the member opened; null leaves them out.
+  final AssessRepository? assess;
+
+  /// The flash-card decks, for the Flash Cards shelf (a deck that came with an open course, or took a deck place);
+  /// null leaves that shelf out.
+  final StudyRepository? study;
+
+  List<OpenedItem> _opened = const [];
 
   List<Course> _courses = const [];
   String _search = '';
@@ -40,25 +54,60 @@ class LearningController extends ChangeNotifier with NotifySafely {
       if (c.enrolled) c,
   ];
 
-  /// The courses that match the search, under their kind's heading.
+  /// What the member opened outside an enrolment (a plan place, ICR credits or a purchase), read while the
+  /// My courses chip is on.
+  List<OpenedItem> get opened => _opened;
+
+  /// The My courses shelves of opened learning (Mock Exams, Assess Your Knowledge), narrowed by the search; empty
+  /// while the chip is off.
+  List<OpenedShelf> get openedShelves {
+    if (!_mineOnly) return const [];
+    final q = _search.toLowerCase();
+    return openedShelvesOf([
+      for (final i in _opened)
+        if (q.isEmpty || i.title.toLowerCase().contains(q)) i,
+    ]);
+  }
+
+  /// The courses that match the search, under who runs them.
   List<CourseSection> get sections {
     final q = _search.toLowerCase();
+    // The website's search also finds ICR's own courses by "ICR" (`c.provider?.name ?? 'ICR'`).
     bool matches(Course c) =>
         q.isEmpty ||
         c.title.toLowerCase().contains(q) ||
         (c.summary?.toLowerCase().contains(q) ?? false) ||
-        (c.provider?.name.toLowerCase().contains(q) ?? false) ||
+        (c.provider?.name ?? 'ICR').toLowerCase().contains(q) ||
         c.code.toLowerCase().contains(q);
     if (_mineOnly) {
+      // The website's My Courses files a place by who runs the course: ICR's own, then the partner institutes'.
       final rows = mine.where(matches).toList();
-      return rows.isEmpty
-          ? const []
-          : [CourseSection(kind: CourseKind.development, courses: rows, heading: 'My courses')];
+      return [
+        for (final (title, own) in [('ICR Courses', true), ('Partner Courses', false)])
+          if (rows.any((c) => (c.provider == null) == own))
+            CourseSection(
+              kind: CourseKind.development,
+              courses: rows.where((c) => (c.provider == null) == own).toList(),
+              heading: title,
+            ),
+      ];
     }
+    // The catalogue is the website's /learning/professional-development: taught courses only (the certification
+    // programmes have Assess Your Knowledge), ICR's own first and the institutes' under their own heading, never
+    // mixed. One "Professional development" list of every course read as ICR's (owner's report, 3 Nov 2026:
+    // production's website shows one ICR course, the app showed Skystar's, Moon studio's and BrightCore's).
+    final taught = _courses.where((c) => c.kind == CourseKind.development && matches(c)).toList();
     return [
-      for (final kind in CourseKind.values)
-        if (_courses.any((c) => c.kind == kind && matches(c)))
-          CourseSection(kind: kind, courses: _courses.where((c) => c.kind == kind && matches(c)).toList()),
+      for (final (title, own) in [
+        ('ICR certified programs', true),
+        ('Related courses from our partners', false),
+      ])
+        if (taught.any((c) => (c.provider == null) == own))
+          CourseSection(
+            kind: CourseKind.development,
+            courses: taught.where((c) => (c.provider == null) == own).toList(),
+            heading: title,
+          ),
     ];
   }
 
@@ -81,6 +130,7 @@ class LearningController extends ChangeNotifier with NotifySafely {
       final courses = await repository.courses();
       if (generation != _generation) return;
       _courses = courses;
+      if (_mineOnly) await _loadOpened(generation);
     } catch (e) {
       if (generation != _generation) return;
       _error = ApiError.from(e).message;
@@ -89,6 +139,32 @@ class LearningController extends ChangeNotifier with NotifySafely {
         _loading = false;
         notifyListeners();
       }
+    }
+  }
+
+  /// The My courses shelves of what the member opened, read beside the enrolments while the chip is on. An aside:
+  /// a read that fails leaves the shelves empty and the places shown.
+  Future<void> _loadOpened(int generation) async {
+    final a = assess;
+    if (a == null) return;
+    try {
+      final s = study;
+      final results = await Future.wait<Object>([
+        a.member(PaperKind.assessment),
+        a.groups(PaperKind.assessment),
+        a.groups(PaperKind.mock),
+        // The decks are an aside of the aside: a failed read leaves that shelf out, the others stand.
+        if (s != null) s.topics().catchError((Object _) => const <StudyTopic>[]),
+      ]);
+      if (generation != _generation) return;
+      _opened = openedLearning(
+        access: (results[0] as MemberLearning).access,
+        courses: results[1] as List<PaperGroup>,
+        mocks: results[2] as List<PaperGroup>,
+        decks: results.length > 3 ? results[3] as List<StudyTopic> : const [],
+      );
+    } catch (_) {
+      if (generation == _generation) _opened = const [];
     }
   }
 

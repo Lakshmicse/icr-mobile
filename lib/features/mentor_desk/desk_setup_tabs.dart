@@ -12,7 +12,6 @@ import 'mentor_desk_models.dart';
 
 /// The API's limits (`MAX_AVAILABILITY_BLOCKS`, `MAX_MENTOR_CAPACITY`, the profile DTO).
 const maxAvailabilityBlocks = 21;
-const maxMentorCapacity = 10;
 const maxAvailabilityNote = 280;
 const maxBio = 20000;
 const maxTimezone = 64;
@@ -363,7 +362,6 @@ class _DeskSettingsTabState extends State<DeskSettingsTab> {
   final _bio = TextEditingController();
   Set<String> _modes = {};
   String? _cadence;
-  int _capacity = 2;
   DeskSettings? _loadedFor;
   String? _problem;
   bool _busy = false;
@@ -387,13 +385,11 @@ class _DeskSettingsTabState extends State<DeskSettingsTab> {
     _bio.text = plainText(s.bioHtml);
     _modes = {...s.preferredModes};
     _cadence = s.cadence;
-    _capacity = s.capacity.clamp(1, maxMentorCapacity);
   }
 
   Map<String, dynamic> _changes(DeskSettings s) => {
     if (!_sameSet(_modes, s.preferredModes.toSet())) 'preferredModes': _modes.toList(),
     if (_cadence != null && _cadence != s.cadence) 'cadence': _cadence,
-    if (_capacity != s.capacity) 'capacity': _capacity,
     if (_timezone.text.trim() != s.timezone) 'timezone': _timezone.text.trim(),
     if (_link.text.trim() != s.meetingLink) 'meetingLink': _link.text.trim().isEmpty ? '' : normaliseLink(_link.text),
     if (_note.text.trim() != s.availabilityNote.trim()) 'availabilityNote': _note.text.trim(),
@@ -480,32 +476,6 @@ class _DeskSettingsTabState extends State<DeskSettingsTab> {
                   selected: _cadence == key,
                   onSelected: (_) => setState(() => _cadence = key),
                 ),
-            ],
-          ),
-        ),
-        FieldBlock(
-          label: 'Mentees at a time',
-          help: 'Places for free mentoring, 1 to $maxMentorCapacity. A paid programme or plan is separate.',
-          child: Row(
-            children: [
-              IconButton.outlined(
-                key: const ValueKey('capacity-down'),
-                tooltip: 'Fewer places',
-                onPressed: _capacity > 1 ? () => setState(() => _capacity--) : null,
-                icon: const Icon(LucideIcons.minus, size: 16),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                child: Text('$_capacity', key: const ValueKey('capacity-value'), style: MentoringText.statValue),
-              ),
-              IconButton.outlined(
-                key: const ValueKey('capacity-up'),
-                tooltip: 'More places',
-                onPressed: _capacity < maxMentorCapacity ? () => setState(() => _capacity++) : null,
-                icon: const Icon(LucideIcons.plus, size: 16),
-              ),
-              const SizedBox(width: 12),
-              Text('${s.openSlots} open now', style: MentoringText.meta),
             ],
           ),
         ),

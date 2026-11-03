@@ -33,29 +33,64 @@ class ExamColors {
   static const greyInk = AppColors.onSurfaceVariant;
   static const greyMuted = AppColors.outline;
 
-  /// The deep navy of a filled "current" square.
-  static const current = Color(0xFF0F2F55);
-  static const green = Color(0xFF0E9F6E);
-  static const red = Color(0xFFC62828);
-
-  /// The exam's Finish button, and the answered square in its number strip.
-  static const finish = Color(0xFFE12D39);
-  static const stripAnswered = Color(0xFF1DAE7A);
-  static const stripBlank = Color(0xFFEEF1F4);
   static const stripBlankInk = Color(0xFF5B6472);
-
-  static const blueTint = Color(0xFFE8F0FA);
-  static const redTint = Color(0xFFFDECEC);
-  static const greenTint = Color(0xFFE8F7F0);
   static const greyTint = AppColors.surfaceContainer;
-  static const chosenFill = Color(0xFFF3F7FC);
+
+  // The brief, exam window, Test Results and Review Answers designs (30 Oct 2026), sampled from their PNGs.
+  /// Take test, Next, Retake test, the option that is chosen, a heading in the explanation.
+  static const action = Color(0xFF004B83);
+
+  /// The ink of the small chips ("TEST ANALYSIS", "Core Topic").
+  static const chipInk = Color(0xFF001C37);
+
+  /// Finish, in the exam's bar.
+  static const finishRed = Color(0xFFDC2626);
+
+  /// The strip: answered, and the open question.
+  static const questionDone = Color(0xFF10B981);
+  static const questionOpen = AppColors.slate900;
+
+  /// The edge of a card, an option and a pager button; the slate the rest of Learning uses.
+  static const line = AppColors.slate200;
+
+  /// Right and wrong in the review and on the result, with the tints they sit on.
+  static const right = AppColors.tertiary;
+  static const rightTint = Color(0xFFEBFCF3);
+  static const wrong = AppColors.error;
+  static const wrongTint = Color(0xFFFFF8F7);
+
+  /// The chip that means "wrong", and the pale blue of "Correct" and of an unanswered number.
+  static const wrongChip = AppColors.errorContainer;
+  static const wrongChipInk = AppColors.onErrorContainer;
+  static const paleBlue = Color(0xFFE7EEFF);
+
+  /// The ring round the question on show in the review's strip.
+  static const ring = Color(0xFFCBDAE5);
+
+  /// What the chosen option is filled with.
+  static const optionChosen = Color(0xFFF6FAFF);
 }
 
-/// Type for the exam screens, sized for a phone (body 14 to 16, titles 18 to 24).
+/// Type for the exam screens, on the app's own steps (12, 13, 14, 16, 18, 22 sp: `AppText.sp`).
+///
+/// The v2 designs (30 Oct 2026) were sized by measuring a line of each against Roboto, the app's face: a step is
+/// the largest whose line is no wider than the design's, so nothing draws bigger than the design does. A style
+/// names the step and the design's own line pitch (dp).
 class ExamText {
   ExamText._();
 
-  static final screenTitle = AppText.workSans(17, FontWeight.w700, AppColors.onSurface, lineHeight: 22);
+  /// A style on [step], with the line pitch the design has. `AppText.sp` snaps a size to its step, so the step is
+  /// given back as the size that snaps to itself (12 is asked for as 11, 13 as 12.5).
+  static TextStyle at(double step, FontWeight weight, Color color, {required double line, double spacing = 0}) {
+    final raw = switch (step) {
+      12 => 11.0,
+      13 => 12.5,
+      _ => step,
+    };
+    return AppText.plexSans(raw, weight, color, spacing: spacing).copyWith(height: line / step);
+  }
+
+  // Shared by the sheets, the dialogs and the certificate screens.
   static final heroTitle = AppText.workSans(22, FontWeight.w800, AppColors.onSurface, lineHeight: 28);
   static final heading = AppText.workSans(16, FontWeight.w700, AppColors.onSurface, lineHeight: 22);
   static final subheading = AppText.workSans(14, FontWeight.w700, AppColors.onSurface, lineHeight: 20);
@@ -63,44 +98,57 @@ class ExamText {
   static final bodyStrong = AppText.plexSans(14, FontWeight.w600, AppColors.onSurface, lineHeight: 21);
   static final small = AppText.plexSans(12, FontWeight.w500, AppColors.inkMuted, lineHeight: 17);
   static final eyebrow = AppText.plexSans(11, FontWeight.w700, AppColors.primary, lineHeight: 15, spacing: 0.8);
-  static final question = AppText.workSans(17, FontWeight.w600, AppColors.onSurface, lineHeight: 25);
-  static final option = AppText.plexSans(15, FontWeight.w500, AppColors.onSurface, lineHeight: 22);
-  static final optionLetter = AppText.workSans(13, FontWeight.w700, AppColors.slate600, lineHeight: 16);
   static final button = AppText.workSans(14, FontWeight.w700, Colors.white, lineHeight: 18);
   static final buttonQuiet = AppText.workSans(14, FontWeight.w700, AppColors.onSurface, lineHeight: 18);
   static final link = AppText.plexSans(13, FontWeight.w600, AppColors.primary, lineHeight: 18);
-  static final statNumber = AppText.workSans(26, FontWeight.w800, AppColors.onSurface, lineHeight: 30);
+  static final statNumber = AppText.workSans(22, FontWeight.w800, AppColors.onSurface, lineHeight: 30);
   static final statLabel = AppText.plexSans(10.5, FontWeight.w700, AppColors.inkMuted, lineHeight: 14, spacing: 0.8);
-  static final clock = AppText.workSans(16, FontWeight.w800, AppColors.primary, lineHeight: 20);
+
+  // The title bar of the exam, the result and the review.
+  static final barTitle = at(16, FontWeight.w700, ExamColors.ink, line: 24);
+
+  // The brief.
+  static final briefTitle = at(18, FontWeight.w700, ExamColors.ink, line: 24);
+  static final briefHeading = at(16, FontWeight.w700, ExamColors.ink, line: 22);
+  static final briefLine = at(13, FontWeight.w400, ExamColors.greyInk, line: 20);
+  static final detailLabel = at(14, FontWeight.w500, ExamColors.greyInk, line: 20);
+  static final detailValue = at(16, FontWeight.w700, ExamColors.ink, line: 22);
+  static final attemptsCount = at(13, FontWeight.w400, ExamColors.greyMuted, line: 18);
+  static final attemptNumber = at(13, FontWeight.w700, ExamColors.ink, line: 18);
+  static final attemptDate = at(16, FontWeight.w400, ExamColors.ink, line: 22);
+  static final figureLabel = at(13, FontWeight.w400, ExamColors.greyMuted, line: 16);
+  static final figureValue = at(14, FontWeight.w700, ExamColors.ink, line: 20);
+
+  // The exam window.
+  static final timeLeft = at(12, FontWeight.w700, ExamColors.wrong, line: 16);
+  static final stripNumber = at(12, FontWeight.w600, ExamColors.stripBlankInk, line: 16);
+  static final examQuestionNumber = at(18, FontWeight.w700, ExamColors.ink, line: 24);
+  static final difficulty = at(12, FontWeight.w500, ExamColors.greyMuted, line: 16, spacing: 0.4);
+  static final examPrompt = at(16, FontWeight.w400, ExamColors.ink, line: 26);
+  static final examOption = at(14, FontWeight.w400, ExamColors.ink, line: 19.5);
+  static final barButton = at(14, FontWeight.w700, Colors.white, line: 20);
 
   // Test Results.
-  static final barTitle = AppText.workSans(18, FontWeight.w700, ExamColors.ink, lineHeight: 24);
-  static final resultHeadline = AppText.workSans(26, FontWeight.w700, ExamColors.ink, lineHeight: 32);
-  static final resultSubline = AppText.plexSans(13, FontWeight.w400, ExamColors.greyMuted, lineHeight: 19);
-  static final tag = AppText.plexSans(12, FontWeight.w600, AppColors.primary, lineHeight: 16, spacing: 0.5);
-  static final tileValue = AppText.workSans(22, FontWeight.w700, ExamColors.ink, lineHeight: 28);
-  static final tileLabel = AppText.plexSans(12, FontWeight.w400, ExamColors.greyMuted, lineHeight: 16);
-  static final sectionTitle = AppText.workSans(17, FontWeight.w700, ExamColors.ink, lineHeight: 24);
-  static final cardTitle = AppText.plexSans(15, FontWeight.w600, ExamColors.ink, lineHeight: 20);
-  static final reviewQuestion = AppText.plexSans(16, FontWeight.w600, ExamColors.ink, lineHeight: 22.4);
-  static final reviewOption = AppText.plexSans(15, FontWeight.w400, ExamColors.greyInk, lineHeight: 21);
-  static final reviewLetter = AppText.workSans(15, FontWeight.w700, ExamColors.greyInk, lineHeight: 21);
-  static final reviewMark = AppText.plexSans(13, FontWeight.w600, ExamColors.green, lineHeight: 18);
-  static final rationaleTitle = AppText.workSans(15, FontWeight.w700, AppColors.primary, lineHeight: 20);
-  static final rationale = AppText.plexSans(13, FontWeight.w400, ExamColors.greyInk, lineHeight: 19.5);
-  static final topicPill = AppText.plexSans(12, FontWeight.w600, ExamColors.ink, lineHeight: 16);
-  static final pagerLabel = AppText.plexSans(12, FontWeight.w400, ExamColors.greyMuted, lineHeight: 16);
-  static final attemptNumber = AppText.workSans(15, FontWeight.w700, ExamColors.ink, lineHeight: 20);
-  static final attemptDate = AppText.plexSans(15, FontWeight.w500, ExamColors.ink, lineHeight: 20);
-  static final summaryValue = AppText.workSans(14, FontWeight.w700, ExamColors.ink, lineHeight: 20);
+  static final tag = at(13, FontWeight.w600, ExamColors.chipInk, line: 16);
+  static final resultHeadline = at(18, FontWeight.w700, ExamColors.ink, line: 28);
+  static final resultSubline = at(14, FontWeight.w400, ExamColors.greyInk, line: 20);
+  static final tileValue = at(18, FontWeight.w700, ExamColors.ink, line: 24);
+  static final tileLabel = at(13, FontWeight.w400, ExamColors.greyMuted, line: 16);
+  static final cardTitle = at(14, FontWeight.w600, ExamColors.ink, line: 20);
 
-  // Mock Test.
-  static final examTitle = AppText.workSans(20, FontWeight.w700, ExamColors.ink, lineHeight: 26);
-  static final timeLeft = AppText.plexSans(13, FontWeight.w700, ExamColors.red, lineHeight: 18);
-  static final stripNumber = AppText.workSans(15, FontWeight.w700, ExamColors.stripBlankInk, lineHeight: 20);
-  static final examQuestionNumber = AppText.workSans(22, FontWeight.w700, ExamColors.ink, lineHeight: 28);
-  static final difficulty = AppText.plexSans(12, FontWeight.w500, ExamColors.greyMuted, lineHeight: 16, spacing: 0.6);
-  static final examPrompt = AppText.plexSans(18, FontWeight.w400, ExamColors.ink, lineHeight: 26);
-  static final examOption = AppText.plexSans(16, FontWeight.w400, ExamColors.ink, lineHeight: 22.4);
-  static final barButton = AppText.workSans(14, FontWeight.w700, Colors.white, lineHeight: 18);
+  // Review Answers.
+  static final sectionTitle = at(16, FontWeight.w700, ExamColors.ink, line: 22);
+  static final filterChip = at(13, FontWeight.w600, ExamColors.greyInk, line: 18);
+  static final reviewNumber = at(12, FontWeight.w600, ExamColors.greyMuted, line: 16);
+  static final reviewTag = at(12, FontWeight.w500, ExamColors.ink, line: 16);
+  static final reviewOutcome = at(12, FontWeight.w600, ExamColors.ink, line: 16);
+  static final reviewMarks = at(13, FontWeight.w500, ExamColors.greyMuted, line: 18);
+  static final reviewQuestion = at(16, FontWeight.w600, ExamColors.ink, line: 24);
+  static final reviewOption = at(14, FontWeight.w400, ExamColors.greyInk, line: 20);
+  static final reviewLetter = at(14, FontWeight.w700, ExamColors.ink, line: 20);
+  static final reviewMark = at(13, FontWeight.w600, ExamColors.right, line: 18);
+  static final rationaleTitle = at(14, FontWeight.w700, ExamColors.action, line: 20);
+  static final rationale = at(12, FontWeight.w400, ExamColors.greyInk, line: 18);
+  static final topicPill = at(12, FontWeight.w600, ExamColors.chipInk, line: 16);
+  static final pagerLabel = at(13, FontWeight.w600, ExamColors.greyInk, line: 18);
 }

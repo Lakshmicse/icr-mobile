@@ -34,7 +34,7 @@ abstract class FeedRepository {
   Future<FeedPostDetail?> detail(FeedPost post) async => null;
 
   Future<List<FeedReply>> replies(FeedPost post);
-  Future<void> reply(FeedPost post, String text, {String? parentId});
+  Future<void> reply(FeedPost post, String text, {String? parentId, List<Mention> mentions = const []});
   Future<void> deleteReply(FeedReply reply);
   Future<void> setReplyLiked(FeedReply reply, bool like);
 

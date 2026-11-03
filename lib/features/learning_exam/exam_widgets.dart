@@ -16,10 +16,13 @@ bool popOnce<T>(BuildContext context, [T? result]) {
   return true;
 }
 
-/// The bar at the top of the result and the exam: white, a soft shadow below, a back arrow and the title.
-/// [backLabel] is what a screen reader hears for the arrow ("Leave the exam" in the exam).
+/// The bar at the top of the exam, the result and the review: white, a soft shadow below, a back arrow and the
+/// title, 52 dp tall as the designs draw it. [backLabel] is what a screen reader hears for the arrow ("Leave the
+/// exam" in the exam).
 class ExamTitleBar extends StatelessWidget {
   const ExamTitleBar({super.key, required this.title, required this.onBack, this.style, this.backLabel = 'Back'});
+
+  static const height = 52.0;
 
   final String title;
   final VoidCallback onBack;
@@ -29,7 +32,7 @@ class ExamTitleBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 56,
+      height: height,
       decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [BoxShadow(color: Color(0x14000000), blurRadius: 6, offset: Offset(0, 2))],
@@ -44,9 +47,15 @@ class ExamTitleBar extends StatelessWidget {
               onTap: onBack,
               radius: 26,
               child: const SizedBox(
-                width: 56,
-                height: 56,
-                child: Icon(Symbols.arrow_back, size: 24, color: AppColors.onSurfaceVariant),
+                width: 60,
+                height: height,
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Padding(
+                    padding: EdgeInsetsDirectional.only(start: 17),
+                    child: Icon(Symbols.arrow_back, size: 24, color: AppColors.onSurfaceVariant),
+                  ),
+                ),
               ),
             ),
           ),
@@ -169,24 +178,16 @@ class Notice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (IconData icon, Color ink, Color fill, Color edge) = switch (tone) {
-      NoticeTone.info => (LucideIcons.info, AppColors.primary, const Color(0xFFEFF6FF), const Color(0xFFBFDBFE)),
-      NoticeTone.success => (
-        LucideIcons.circleCheck,
-        AppColors.emerald700,
-        ExamColors.correctFill,
-        AppColors.emerald200,
-      ),
-      NoticeTone.warning => (LucideIcons.triangleAlert, AppColors.amber800, ExamColors.warnFill, ExamColors.warnBorder),
-      NoticeTone.error => (LucideIcons.circleAlert, AppColors.error, ExamColors.wrongFill, ExamColors.wrongBorder),
+    // A tint says what kind of notice it is; no outline (the owner's rule of 3 Nov 2026).
+    final (IconData icon, Color ink, Color fill) = switch (tone) {
+      NoticeTone.info => (LucideIcons.info, AppColors.primary, const Color(0xFFEFF6FF)),
+      NoticeTone.success => (LucideIcons.circleCheck, AppColors.emerald700, ExamColors.correctFill),
+      NoticeTone.warning => (LucideIcons.triangleAlert, AppColors.amber800, ExamColors.warnFill),
+      NoticeTone.error => (LucideIcons.circleAlert, AppColors.error, ExamColors.wrongFill),
     };
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: fill,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: edge),
-      ),
+      decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(10)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

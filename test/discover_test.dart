@@ -151,7 +151,8 @@ void main() {
     for (final label in ['Regional Chapters', 'Events', 'Post requirement', 'Hire']) {
       await tester.tap(find.text(label));
     }
-    expect(opened, ['/chapters', '/events', '/rfq/new', '/account/companies/new?role=COMPANY_ADMIN']);
+    // Hire opens Post a job (owner, 3 Nov 2026).
+    expect(opened, ['/chapters', '/events', '/rfq/new', '/manage/jobs/new']);
   });
 
   group('every door', () {
@@ -243,8 +244,8 @@ void main() {
       const doors = {
         'Regional Chapters': 'https://icr.org.in/chapters',
         'Digital Library': 'https://icr.org.in/documents',
-        'Hire': 'https://icr.org.in/account/companies/new?role=COMPANY_ADMIN',
-        'Sell': 'https://icr.org.in/account/companies/new?role=VENDOR',
+        'Hire': 'https://icr.org.in/manage/jobs/new',
+        'Sell': 'https://icr.org.in/vendors',
         'Post requirement': 'https://icr.org.in/rfq/new',
         'Advertise': 'https://icr.org.in/advertise',
       };
@@ -266,7 +267,7 @@ void main() {
       final box = tester.getRect(find.text('Hire'));
       await tester.tapAt(Offset(box.right + 60, box.center.dy));
       await tester.pumpAndSettle();
-      expect(launched.single.queryParameters['role'], 'COMPANY_ADMIN');
+      expect(launched.single.path, '/manage/jobs/new');
     });
 
     testWidgets('dragging the sheet down closes it, and a short drag settles back open', (tester) async {

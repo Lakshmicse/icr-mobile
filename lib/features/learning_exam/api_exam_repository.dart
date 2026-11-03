@@ -4,6 +4,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
 import '../../core/config.dart';
 import 'exam_models.dart';
+import '../payments/checkout_start.dart';
 import 'exam_repository.dart';
 
 /// The exam flow from the API: the paper (`GET /learning/papers/:slug`), what it
@@ -62,6 +63,16 @@ class ApiExamRepository implements ExamRepository {
     try {
       final res = await _dio.get<Map<String, dynamic>>('/learning/papers/${Uri.encodeComponent(slug)}/quote');
       return PaperQuote.fromJson(res.data ?? const {});
+    } catch (e) {
+      throw ApiError.from(e);
+    }
+  }
+
+  @override
+  Future<CheckoutStart> checkout(String slug) async {
+    try {
+      final res = await _dio.post<Map<String, dynamic>>('/learning/papers/${Uri.encodeComponent(slug)}/checkout');
+      return CheckoutStart.fromJson(res.data ?? const {});
     } catch (e) {
       throw ApiError.from(e);
     }

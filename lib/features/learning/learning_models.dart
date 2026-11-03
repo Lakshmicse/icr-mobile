@@ -403,3 +403,24 @@ class CourseSection {
 
   String get title => heading ?? kind.sectionTitle;
 }
+
+/// Who asked for a course's brochure (the owner's rule of 30 Oct 2026: the brochure is handed over only after a
+/// lead — name, email, phone, company — the way the reference sites do it). Prefilled from the member's account
+/// and sent with the request; the institute (or ICR, for its own course) gets the lead.
+class BrochureLead {
+  const BrochureLead({this.name = '', this.email = '', this.phone = '', this.company = ''});
+
+  final String name;
+  final String email;
+  final String phone;
+  final String company;
+}
+
+/// What the member wants to do with the brochure once the lead is sent.
+enum BrochureIntent {
+  /// Read it in the app's own viewer, nothing saved.
+  view,
+
+  /// Hand it to the phone (the browser's download), as before.
+  download,
+}

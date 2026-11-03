@@ -385,7 +385,7 @@ void main() {
 
     // A chapter's date is its soonest upcoming event of any kind. The portal's own seed also holds chapter events
     // sooner than the designed 2027 summits for Bengaluru and Mumbai, so read them back rather than assume.
-    final events = await _rows(api, '/events', {'when': 'upcoming'});
+    final events = await _rows(api, '/events', {'when': 'upcoming', 'limit': 100});
     DateTime? soonest(String slug) {
       final dates = [
         for (final e in events)
@@ -397,9 +397,8 @@ void main() {
     for (final c in chapters) {
       expect(c.nextEventAt, soonest(c.slug), reason: c.slug);
     }
-    // The designed summits are there to be found: Delhi NCR and Hyderabad have nothing sooner.
-    expect(monthDay(chapters.firstWhere((c) => c.slug == 'delhi-ncr').nextEventAt!), 'May 17');
-    expect(monthDay(chapters.firstWhere((c) => c.slug == 'hyderabad').nextEventAt!), 'Jun 05');
+    // (The designed 2027 summits are no longer every chapter's soonest: the portal's own seed gives Delhi NCR a
+    // chapter event on 8 Nov 2026, so the dates are read from the API above rather than assumed.)
     // Soonest first.
     final dates = chapters.map((c) => c.nextEventAt!).toList();
     expect(dates, orderedEquals([...dates]..sort()));

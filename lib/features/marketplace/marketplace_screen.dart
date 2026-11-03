@@ -34,6 +34,7 @@ class MarketplaceScreen extends StatefulWidget {
     this.onPostRfq,
     this.onMyRfqs,
     this.onRfqAlerts,
+    this.onFindWork,
     this.onBell,
     this.onMessageSupplier,
     this.counts,
@@ -53,6 +54,9 @@ class MarketplaceScreen extends StatefulWidget {
 
   /// The "Alerts" chip: the requirement alerts.
   final VoidCallback? onRfqAlerts;
+
+  /// The "Find work" chip: the open requirements a supplier bids on.
+  final VoidCallback? onFindWork;
 
   /// The bell: the notifications.
   final VoidCallback? onBell;
@@ -142,6 +146,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     onPostRfq: widget.onPostRfq,
     onMyRfqs: widget.onMyRfqs,
     onAlerts: widget.onRfqAlerts,
+    onFindWork: widget.onFindWork,
     onNotifications: widget.onBell,
     onMessage: widget.onMessageSupplier == null ? null : (s) => widget.onMessageSupplier!(s.id),
   ).merge(widget.navigation);

@@ -177,7 +177,6 @@ void main() {
         expect(c.hasProfile, isTrue);
         expect(c.status, MentorStatus.draft);
         expect(c.mentor!.bioHtml, '<p>Short.</p>');
-        expect(c.mentor!.capacity, 2);
         expect(c.mentor!.preferredModes, ['VIDEO']);
         expect(c.mentor!.availability, isEmpty);
 
@@ -247,14 +246,12 @@ void main() {
         expect(c.mentor!.competencies, hasLength(2), reason: 'a patch writes only what is sent');
         expect(
           await c.saveProfile({
-            'capacity': 4,
             'preferredModes': ['VIDEO', 'PHONE'],
             'cadence': 'WEEKLY',
             'availabilityNote': 'Weekday evenings after 7pm IST',
           }),
           isNull,
         );
-        expect(c.mentor!.capacity, 4);
         expect(c.mentor!.preferredModes, ['VIDEO', 'PHONE']);
         expect(c.mentor!.cadence, 'WEEKLY');
         expect(c.mentor!.availabilityNote, 'Weekday evenings after 7pm IST');
@@ -262,7 +259,6 @@ void main() {
         expect(await c.saveProfile({'cadence': null, 'availabilityNote': null}), isNull);
         expect(c.mentor!.cadence, isNull);
         expect(c.mentor!.availabilityNote, isNull);
-        expect(c.mentor!.capacity, 4);
         await cleanProfile(c.repository);
       },
     );
@@ -293,8 +289,7 @@ void main() {
         contains('no more than 8'),
       );
       expect(await c.saveProfile({'bioHtml': '<p>${'a' * 20001}</p>'}), contains('20000'));
-      expect(await c.saveProfile({'capacity': 11}), isNotNull);
-      expect(await c.saveProfile({'capacity': 0}), isNotNull);
+      // (No capacity rule: the portal keeps no limit on mentees since 27 Oct 2026.)
       expect(
         await c.saveProfile({'meetingLink': 'nope'}),
         'Enter the full meeting link, for example https://meet.google.com/abc-defg-hij',
@@ -598,7 +593,6 @@ void main() {
         expect(mine.status.canSubmit, isFalse);
         expect(mine.competencies, isNotEmpty);
         expect(mine.availability, isNotEmpty);
-        expect(mine.capacity, greaterThan(0));
         final readiness = await repo.readiness();
         expect(readiness.conductAccepted, isTrue);
         expect(readiness.trainingComplete, isTrue);

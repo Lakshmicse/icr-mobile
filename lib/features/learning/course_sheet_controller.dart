@@ -32,6 +32,31 @@ class CourseSheetController extends ChangeNotifier with NotifySafely {
 
   Course get course => _course;
 
+  /// The lead sent for this course's brochure while the sheet has been open; null until one is sent.
+  BrochureLead? get brochureLead => _brochureLead;
+  BrochureLead? _brochureLead;
+
+  /// Sends who is asking for the brochure, then remembers it. A refusal's sentence comes back; null when sent.
+  /// The same details sent again while the sheet is open go nowhere: one brochure, one lead.
+  Future<String?> sendBrochureLead(BrochureLead lead, {required BrochureIntent intent}) async {
+    final sent = _brochureLead;
+    if (sent != null &&
+        sent.name == lead.name &&
+        sent.email == lead.email &&
+        sent.phone == lead.phone &&
+        sent.company == lead.company) {
+      return null;
+    }
+    try {
+      await repository.requestBrochure(_course, lead, intent: intent);
+    } on Object catch (e) {
+      return ApiError.from(e).message;
+    }
+    _brochureLead = lead;
+    notifyListeners();
+    return null;
+  }
+
   /// The published reviews, newest first; the sheet draws the first as the
   /// design's testimonial and the rest on "see all".
   List<CourseReview> get reviews => _reviews.items;

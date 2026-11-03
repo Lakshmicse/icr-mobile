@@ -541,6 +541,12 @@ class DemoRfqRepository implements RfqRepository {
   @override
   Future<Poster> me() => _later(poster);
 
+  /// What "Posting for" offers when [poster] acts for no company; none by default (the sample person has a company).
+  PostingOptions posting = const PostingOptions();
+
+  @override
+  Future<PostingOptions> postingOptions() => _later(posting);
+
   // ---- The buyer's requirements ---------------------------------------------------
 
   bool _inView(Requirement r, MyView v) => switch (v) {
@@ -628,6 +634,21 @@ class DemoRfqRepository implements RfqRepository {
 
   @override
   Future<Requirement> requirement(String id) async => _withCounts(_rfq(id));
+
+  @override
+  Future<RequirementPage> posted({String search = '', RfqStatus? status, int page = 1, int limit = 20}) {
+    final q = search.trim().toLowerCase();
+    final rows =
+        [..._rfqs.values.map(_withCounts), ..._board]
+            .where((r) => r.visibility == RfqVisibility.public && r.status != RfqStatus.draft)
+            .where((r) => status == null || r.status == status)
+            .where((r) => q.isEmpty || r.title.toLowerCase().contains(q) || (r.text ?? '').toLowerCase().contains(q))
+            .toList()
+          ..sort((a, b) => (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+    final from = (page - 1) * limit;
+    final slice = rows.skip(from).take(limit).toList();
+    return _later(RequirementPage(rows: slice, total: rows.length, hasMore: from + slice.length < rows.length));
+  }
 
   @override
   Future<PostResult> create(Map<String, dynamic> body) async {

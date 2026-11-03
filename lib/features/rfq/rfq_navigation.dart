@@ -65,6 +65,7 @@ Future<PostResult?> pushComposer(
       onOpenConversation: hooks.onOpenConversation,
       onOpenSupplier: hooks.onOpenSupplier,
       onCreateCompany: hooks.onCreateCompany,
+      onSwitchCompany: hooks.onSwitchCompany,
     ),
   ),
 );

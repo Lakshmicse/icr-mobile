@@ -9,7 +9,9 @@ import 'role_staff_support.dart';
 
 void main() {
   setUpAll(loadAppFonts);
-  testWidgets('spike srikanth navigation', tags: const ['live'], timeout: const Timeout(Duration(minutes: 5)), (tester) async {
+  testWidgets('spike srikanth navigation', tags: const ['live'], timeout: const Timeout(Duration(minutes: 5)), (
+    tester,
+  ) async {
     if (!await liveScreenReady(tester)) return;
     await bootApp(tester, srikanth);
     await pumpUntil(tester, find.byKey(const ValueKey('home-avatar')));

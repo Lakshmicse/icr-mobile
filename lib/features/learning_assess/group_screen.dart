@@ -3,24 +3,26 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/api/api_error.dart';
 import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
-import '../../core/widgets/title_bar.dart';
+import '../../core/widgets/section_heading.dart' show Hairline;
 import '../learning_exam/open_paper.dart';
 import 'assess_format.dart';
 import 'assess_models.dart';
+import '../payments/checkout_start.dart';
 import 'assess_styles.dart';
 import 'catalogue_controller.dart';
 import 'assess_types.dart';
 import 'group_controller.dart';
-import 'widgets/assess_picture.dart';
+import 'widgets/assess_bar.dart';
 import 'widgets/bundle_offer.dart';
 import 'widgets/confirm_sheet.dart';
+import 'widgets/knowledge_areas.dart';
 import 'widgets/open_plan_card.dart';
 import 'widgets/paper_card.dart';
 import 'widgets/states.dart';
-import '../notifications/notifications_screen.dart';
 
 /// A programme's levels (Assess Your Knowledge) or a subject's sets (Mock Exams): the cover and its name, what
 /// the programme covers, what the member's plan opens, then one card per level or set, and the bundle offer.
@@ -35,6 +37,7 @@ class GroupScreen extends StatelessWidget {
     required this.opener,
     this.launcher = openUrl,
     this.payLauncher = openExternal,
+    this.share = shareAssessLink,
   });
 
   final PaperGroup seed;
@@ -48,6 +51,9 @@ class GroupScreen extends StatelessWidget {
   /// for the same address (it would land back on this page), and the app cannot run the payment.
   final SiteLauncher payLauncher;
 
+  /// Opens the phone's share sheet with the exam's or a set's page on the website.
+  final ShareLink share;
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<GroupController>(
@@ -55,18 +61,25 @@ class GroupScreen extends StatelessWidget {
         final catalogue = c.read<CatalogueController>();
         return GroupController(repository: catalogue.repository, catalogue: catalogue, seed: seed);
       },
-      child: _GroupView(onBack: onBack, opener: opener, launcher: launcher, payLauncher: payLauncher),
+      child: _GroupView(onBack: onBack, opener: opener, launcher: launcher, payLauncher: payLauncher, share: share),
     );
   }
 }
 
 class _GroupView extends StatefulWidget {
-  const _GroupView({required this.onBack, required this.opener, required this.launcher, required this.payLauncher});
+  const _GroupView({
+    required this.onBack,
+    required this.opener,
+    required this.launcher,
+    required this.payLauncher,
+    required this.share,
+  });
 
   final VoidCallback onBack;
   final PaperOpener opener;
   final SiteLauncher launcher;
   final SiteLauncher payLauncher;
+  final ShareLink share;
 
   @override
   State<_GroupView> createState() => _GroupViewState();
@@ -100,8 +113,45 @@ class _GroupViewState extends State<_GroupView> with WidgetsBindingObserver {
 
   Future<void> _site(Uri uri) => widget.launcher(context, uri);
 
-  /// A payment: the website's page, in the phone's browser.
-  Future<void> _pay(Uri uri) => widget.payLauncher(context, uri);
+  /// Buys a level or set in the app (owner's call, 2 Nov 2026 — every payment used to hand the website's page to
+  /// the phone's browser): the rail's checkout, then the gateway in the app's own payment view, then what the
+  /// member holds read again, so what they paid for shows open without a pull.
+  Future<void> _buy(PaperEntry entry) async {
+    final g = _group;
+    CheckoutStart start;
+    try {
+      start = await g.repository.checkout(entry.paper);
+    } catch (e) {
+      if (mounted) showMessage(context, ApiError.from(e).message);
+      return;
+    }
+    if (!mounted) return;
+    final outcome = await runCheckout(context, start, title: 'Pay for ${entry.paper.title}');
+    if (!mounted) return;
+    await g.refresh();
+    if (mounted) showMessage(context, paymentMessage(outcome, what: '${g.group.title} – ${entry.paper.title}'));
+  }
+
+  /// Buys every closed level or set together, the same way.
+  Future<void> _buyBundle() async {
+    final g = _group;
+    final quote = g.bundle;
+    if (quote == null) return;
+    CheckoutStart start;
+    try {
+      start = await g.repository.checkoutBundle(g.group.kind, g.group.key);
+    } catch (e) {
+      if (mounted) showMessage(context, ApiError.from(e).message);
+      return;
+    }
+    if (!mounted) return;
+    final outcome = await runCheckout(context, start, title: 'Pay for ${g.group.title}');
+    if (!mounted) return;
+    await g.refresh();
+    if (mounted) {
+      showMessage(context, paymentMessage(outcome, what: 'Every ${quote.mock ? 'set' : 'level'} of ${g.group.title}'));
+    }
+  }
 
   Future<void> _start(AssessPaper paper) async {
     final g = _group;
@@ -187,10 +237,23 @@ class _GroupViewState extends State<_GroupView> with WidgetsBindingObserver {
     showMessage(context, message ?? '${g.group.title} is open with your plan.');
   }
 
+  /// The phone's share sheet with the exam's page on the website (the bar's glyph).
+  void _shareGroup() {
+    final g = _group;
+    widget.share(g.group.title, g.repository.groupLink(g.group));
+  }
+
+  /// The phone's share sheet with one set's page on the website (the glyph beside Start Test).
+  void _shareSet(AssessPaper paper) {
+    final g = _group;
+    widget.share(paperName(paper, g.group), g.repository.paperLink(g.group, paper));
+  }
+
   @override
   Widget build(BuildContext context) {
     final g = context.watch<GroupController>();
     final group = g.group;
+    final isMock = g.kind == PaperKind.mock;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.white),
       child: Scaffold(
@@ -200,7 +263,7 @@ class _GroupViewState extends State<_GroupView> with WidgetsBindingObserver {
           child: Stack(
             children: [
               Positioned.fill(
-                top: TitleBar.height,
+                top: AssessBar.height,
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: g.refresh,
@@ -215,16 +278,16 @@ class _GroupViewState extends State<_GroupView> with WidgetsBindingObserver {
                 top: 0,
                 left: 0,
                 right: 0,
-                child: TitleBar(
+                child: AssessBar(
+                  title: isMock ? 'Mock Exam' : 'Assess Your Knowledge',
                   onBack: widget.onBack,
-                  middle: Text(group.title, style: AssessText.section, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  unread: g.catalogue.unread,
-                  onBell: () => openNotifications(context),
+                  onShare: isMock && !g.notFound ? _shareGroup : null,
+                  shareLabel: 'Share ${group.title}',
                 ),
               ),
               if (g.loading)
                 const Positioned(
-                  top: TitleBar.height,
+                  top: AssessBar.height,
                   left: 0,
                   right: 0,
                   child: LinearProgressIndicator(
@@ -257,18 +320,36 @@ class _GroupViewState extends State<_GroupView> with WidgetsBindingObserver {
     final state = g.placeState;
     final repo = g.repository;
     final children = <Widget>[];
+    // The blocks follow each other with a thin line between them, never a box around one (owner, 3 Nov 2026).
+    void rule() => children.add(const Hairline(color: AppColors.cardRule));
 
-    children.add(_Hero(group: group));
-
-    final blurb = group.summary;
-    if (blurb != null) {
-      children.add(
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: Text(blurb, style: AssessText.setBody),
-        ),
-      );
+    if (isMock) {
+      children.add(_SetsHeader(group: group));
+    } else {
+      children.add(_ProgrammeHeader(group: group));
+      if (group.knowledgeAreas.isNotEmpty) {
+        // The topics are the programme's own; with none, the section is left out rather than invented.
+        rule();
+        children.add(const SizedBox(height: 16));
+        children.add(
+          KnowledgeAreas(
+            areas: group.knowledgeAreas,
+            blurb: group.summary ?? defaultAreasBlurb,
+            showAll: _allAreas,
+            onToggle: () => setState(() => _allAreas = !_allAreas),
+          ),
+        );
+        children.add(const SizedBox(height: 4));
+      } else if (group.summary != null) {
+        children.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Text(group.summary!, style: AssessText.sectionHint, maxLines: 3, overflow: TextOverflow.ellipsis),
+          ),
+        );
+      }
     }
+    rule();
 
     if (g.error != null) {
       children.add(
@@ -279,102 +360,89 @@ class _GroupViewState extends State<_GroupView> with WidgetsBindingObserver {
       );
     }
 
-    if (!isMock && group.knowledgeAreas.isNotEmpty) {
-      children.add(
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 14, 12, 0),
-          child: _KnowledgeAreas(
-            areas: group.knowledgeAreas,
-            showAll: _allAreas,
-            onToggle: () => setState(() => _allAreas = !_allAreas),
-          ),
-        ),
-      );
-    }
-
-    // The heading of the choice.
     children.add(
       Padding(
-        padding: const EdgeInsets.fromLTRB(16, 22, 16, 0),
-        child: Text(isMock ? 'Exam sets' : 'Select your proficiency level', style: AssessText.section),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        child: Text(isMock ? 'Sets' : 'Select Your Proficiency Level', style: AssessText.section),
       ),
     );
-    if (isMock) {
-      children.add(
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 2, 16, 0),
-          child: Text(
-            group.papers.isEmpty
-                ? 'No sets are published under this subject yet.'
-                : '${plural(group.papers.length, 'set')}, each with its own questions.',
-            style: AssessText.sectionHint,
-          ),
-        ),
-      );
-    }
 
     if (g.showDiscount) {
       children.add(
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
           child: _DiscountStrip(percent: g.pricing.discountPercent),
         ),
       );
     }
 
-    if (access != null && state != null && group.papers.isNotEmpty) {
+    // The member's credits once, above the rows, rather than under every Redeem button.
+    final redeemable = group.papers.any((p) {
+      final e = g.entry(p);
+      return e.access == PaperAccess.closed && e.credits != null;
+    });
+    if (access != null && !access.allOpen && redeemable) {
       children.add(
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-          child: OpenPlanCard(
-            kind: g.kind,
-            access: access,
-            state: state,
-            opening: g.openingWithPlan,
-            anyPriced: g.anyPriced,
-            allPriced: g.allPriced,
-            onOpen: _openWithPlan,
-            onSeePlans: () => _site(repo.plansLink()),
-            onEarnMore: () => _site(AppConfig.sitePage('/refer')),
-          ),
-        ),
-      );
-    }
-    final redeemed = g.redeemedPapers;
-    if (redeemed.isNotEmpty) {
-      children.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: RedeemedNote(group: group, papers: redeemed),
+        _CreditsLine(
+          credits: access.icrCredits,
+          rupeesPerCredit: access.rupeesPerCredit,
+          onEarnMore: () => _site(AppConfig.sitePage('/refer')),
         ),
       );
     }
 
-    // Every level or set still closed, together, cheaper: above the cards, where a member choosing one sees it.
-    // A programme's offer is for a member whose plan has not opened the whole course; a mock exam's the website
-    // draws only while the exam is closed to the plan (`locked`), not while a plan place could open it all.
+    // The levels or sets first (the owner's rule, 30 Oct 2026: they are what the page is for, and they stay in the
+    // first view): one row each, a thin line between them. Each closed row carries its own way in — Redeem, Pay,
+    // Open with my plan — so the bundle and the plan line below add the wider offers, not the only ones.
+    final papers = isMock ? group.sets : group.levelCards;
+    if (papers.isEmpty && !isMock) {
+      children.add(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Text('No levels are published under this programme yet.', style: AssessText.sectionHint),
+        ),
+      );
+    } else {
+      children.add(const SizedBox(height: 4));
+      children.add(_paperRows(g, papers));
+    }
+
+    // Every level or set still closed, together, cheaper. A programme's offer is for a member whose plan has not
+    // opened the whole course; a mock exam's the website draws only while the exam is closed to the plan
+    // (`locked`), not while a plan place could open it all.
     final bundle = g.bundle;
-    final bundleSeen = access != null && state != null && (isMock ? state == PlaceState.locked : state != PlaceState.open);
+    final bundleSeen =
+        access != null && state != null && (isMock ? state == PlaceState.locked : state != PlaceState.open);
     if (bundle != null && bundle.hasOffer && bundleSeen) {
+      rule();
       children.add(
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 14, 12, 0),
-          child: BundleOffer(
-            quote: bundle,
-            heldCredits: access.icrCredits,
-            redeeming: g.redeemingBundle,
-            onPay: () => _pay(repo.groupLink(group)),
-            onRedeem: _redeemBundle,
-            onEarnMore: () => _site(AppConfig.sitePage('/refer')),
-          ),
+        BundleOffer(
+          quote: bundle,
+          heldCredits: access.icrCredits,
+          redeeming: g.redeemingBundle,
+          onPay: _buyBundle,
+          onRedeem: _redeemBundle,
         ),
       );
     }
 
-    // The cards.
-    final cards = isMock ? _setCards(g) : _levelCards(g);
-    for (final card in cards) {
-      children.add(Padding(padding: const EdgeInsets.fromLTRB(12, 12, 12, 0), child: card));
+    // What the member's plan does here, in a line. Nothing for staff and for a plan that opens every course or exam.
+    if (access != null &&
+        state != null &&
+        group.papers.isNotEmpty &&
+        !access.allOpen &&
+        access.places(g.kind).limit != null) {
+      rule();
+      children.add(
+        OpenPlanCard(
+          kind: g.kind,
+          access: access,
+          state: state,
+          opening: g.openingWithPlan,
+          onOpen: _openWithPlan,
+          onSeePlans: () => _site(repo.plansLink()),
+        ),
+      );
     }
     return children;
   }
@@ -383,167 +451,100 @@ class _GroupViewState extends State<_GroupView> with WidgetsBindingObserver {
     onStart: () => _start(e.paper),
     onRedeem: () => _redeem(e),
     onOpenWithPlan: _openWithPlan,
-    onBuy: () => _pay(g.repository.paperLink(g.group, e.paper)),
+    onBuy: () => _buy(e),
     onSeePlans: () => _site(g.repository.plansLink()),
+    // A set is shared on its own (its row carries the glyph); a level is shared with its programme.
+    onShare: g.kind == PaperKind.mock ? () => _shareSet(e.paper) : null,
   );
 
-  /// The website's three rungs in its order (Foundation, Advanced, Professional), a rung with no paper greyed
-  /// as "Coming soon", then any paper filed without a level.
-  List<Widget> _levelCards(GroupController g) {
-    final group = g.group;
-    final held = g.member.access?.icrCredits;
-    final out = <Widget>[];
-    final used = <String>{};
-    for (final level in assessCardOrder) {
-      final paper = group.papers.where((p) => p.level == level).firstOrNull;
-      if (paper == null) {
-        out.add(ComingSoonLevelCard(level: level));
-        continue;
-      }
-      used.add(paper.id);
-      final entry = g.entry(paper);
-      out.add(
-        PaperCard(entry: entry, index: out.length, actions: _actions(g, entry), heldCredits: held, canPlan: true),
-      );
-    }
-    for (final paper in group.papers) {
-      if (used.contains(paper.id) || assessLadder.contains(paper.level)) continue;
-      final entry = g.entry(paper);
-      out.add(
-        PaperCard(entry: entry, index: out.length, actions: _actions(g, entry), heldCredits: held, canPlan: true),
-      );
-    }
-    return out;
-  }
-
-  List<Widget> _setCards(GroupController g) {
+  /// The levels or sets as list rows, a thin line between them inset to the text (no card around any).
+  Widget _paperRows(GroupController g, List<AssessPaper> papers) {
     final held = g.member.access?.icrCredits;
     // A mock exam's page offers no plan link when no plan on sale opens more of them.
-    final canPlan = g.member.access?.mockUpgradePlan != null || g.member.access == null;
-    return [
-      for (final (i, paper) in g.group.sets.indexed)
-        PaperCard(
-          entry: g.entry(paper),
-          index: i,
-          actions: _actions(g, g.entry(paper)),
-          heldCredits: held,
-          canPlan: canPlan,
-        ),
-    ];
+    final canPlan = g.kind != PaperKind.mock || g.member.access?.mockUpgradePlan != null || g.member.access == null;
+    return Column(
+      key: const ValueKey('level-cards'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (i, paper) in papers.indexed) ...[
+          if (i > 0) const Hairline(color: AppColors.cardRule, indent: 68),
+          PaperCard(
+            entry: g.entry(paper),
+            index: i,
+            actions: _actions(g, g.entry(paper)),
+            heldCredits: held,
+            canPlan: canPlan,
+          ),
+        ],
+      ],
+    );
   }
 }
 
-/// The cover with the name over its foot.
-class _Hero extends StatelessWidget {
-  const _Hero({required this.group});
+/// A programme's name — "Capital Planning Assessment" — and its levels in a line.
+class _ProgrammeHeader extends StatelessWidget {
+  const _ProgrammeHeader({required this.group});
 
   final PaperGroup group;
 
   @override
   Widget build(BuildContext context) {
-    final isMock = group.kind == PaperKind.mock;
-    final title = isMock || RegExp(r'assessment$', caseSensitive: false).hasMatch(group.title.trim())
+    final title = RegExp(r'assessment$', caseSensitive: false).hasMatch(group.title.trim())
         ? group.title
         : '${group.title} Assessment';
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: AspectRatio(
-          aspectRatio: 16 / 8,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              AssessPicture(
-                picture: group.cover,
-                child: Center(
-                  child: Icon(isMock ? LucideIcons.timer : LucideIcons.award, color: Colors.white54, size: 44),
-                ),
-              ),
-              const DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0x00081422), Color(0xB3081422)],
-                    stops: [0.35, 1],
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: 14,
-                child: Text(
-                  title,
-                  key: const ValueKey('hero-title'),
-                  style: AssessText.pageTitle.copyWith(color: Colors.white),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    final names = [for (final p in group.levelCards) p.levelName ?? p.title];
+    return _Header(
+      title: title,
+      line: names.isEmpty ? null : '${plural(names.length, 'level')}: ${names.join(', ')}',
     );
   }
 }
 
-/// "Knowledge areas covered": what the programme's papers test, as chips; folded after four.
-class _KnowledgeAreas extends StatelessWidget {
-  const _KnowledgeAreas({required this.areas, required this.showAll, required this.onToggle});
+/// A mock exam's name, and how many sets it has.
+class _SetsHeader extends StatelessWidget {
+  const _SetsHeader({required this.group});
 
-  static const folded = 4;
-
-  final List<String> areas;
-  final bool showAll;
-  final VoidCallback onToggle;
+  final PaperGroup group;
 
   @override
   Widget build(BuildContext context) {
-    final shown = showAll || areas.length <= folded ? areas : areas.take(folded).toList();
-    return Container(
-      key: const ValueKey('knowledge-areas'),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AssessColors.panelBorder),
-      ),
+    final sets = group.papers.length;
+    // The sentence promises unlimited attempts only while no set limits them.
+    final unlimited = group.papers.every((p) => p.attemptLimit == null);
+    final line = sets == 0
+        ? 'No sets are published under this subject yet.'
+        : '${plural(sets, 'Set')} ${sets == 1 ? 'with' : 'each with'} its own questions'
+              '${unlimited ? ' and unlimited attempts' : ''}';
+    return _Header(title: group.title, line: line, summary: group.summary);
+  }
+}
+
+/// The page's name and a line under it, the same on a programme's page and an exam's.
+class _Header extends StatelessWidget {
+  const _Header({required this.title, this.line, this.summary});
+
+  final String title;
+  final String? line;
+  final String? summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Knowledge areas covered', style: AssessText.section),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final area in shown)
-                Container(
-                  constraints: const BoxConstraints(minHeight: 32),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: AppColors.outlineVariant),
-                  ),
-                  child: Text(area, style: AssessText.cardMeta.copyWith(color: AppColors.onSurface)),
-                ),
-            ],
+          Text(
+            title,
+            key: const ValueKey('hero-title'),
+            style: AssessText.examTitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          if (areas.length > folded) ...[
-            const SizedBox(height: 6),
-            InkWell(
-              onTap: onToggle,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 48),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(showAll ? 'Show fewer' : 'Show all ${areas.length}', style: AssessText.noteLink),
-                ),
-              ),
-            ),
+          if (line != null) ...[const SizedBox(height: 4), Text(line!, style: AssessText.sectionHint)],
+          if (summary != null) ...[
+            const SizedBox(height: 4),
+            Text(summary!, style: AssessText.sectionHint, maxLines: 3, overflow: TextOverflow.ellipsis),
           ],
         ],
       ),
@@ -551,7 +552,40 @@ class _KnowledgeAreas extends StatelessWidget {
   }
 }
 
-/// The offer above the ladder: one bold strip, so the discount reads before the prices do.
+/// The member's ICR credits, once, over the rows: "You have 0 ICR credits · 1 credit = ₹100", and Earn more.
+class _CreditsLine extends StatelessWidget {
+  const _CreditsLine({required this.credits, required this.rupeesPerCredit, required this.onEarnMore});
+
+  final int credits;
+  final int rupeesPerCredit;
+  final VoidCallback onEarnMore;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 4, 0),
+      child: Row(
+        children: [
+          const Icon(LucideIcons.coins, size: 16, color: AppColors.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'You have ${creditsLabel(credits)} · 1 credit = ${rupees(rupeesPerCredit * 100)}',
+              key: const ValueKey('credits-line'),
+              style: AssessText.progressNote,
+            ),
+          ),
+          TextButton(
+            onPressed: onEarnMore,
+            child: Text('Earn more', style: AssessText.noteLink),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The offer over the rows, in one line: the discount reads before the prices do.
 class _DiscountStrip extends StatelessWidget {
   const _DiscountStrip({required this.percent});
 
@@ -561,35 +595,21 @@ class _DiscountStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       key: const ValueKey('discount-strip'),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        gradient: const LinearGradient(colors: [Color(0xFF0B5E3B), Color(0xFF0E8A55), Color(0xFF19A974)]),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(color: AssessColors.successWash, borderRadius: BorderRadius.circular(8)),
       child: Row(
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(color: AssessColors.gold, shape: BoxShape.circle),
-            child: Text(
-              '$percent%\nOFF',
-              textAlign: TextAlign.center,
-              style: AssessText.coverPill.copyWith(color: AssessColors.goldInk, fontSize: 14, height: 1.1),
-            ),
-          ),
-          const SizedBox(width: 14),
+          const Icon(LucideIcons.badgePercent, size: 18, color: AppColors.successInk),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '$percent% off every assessment level',
-                  style: AssessText.bundleTitle.copyWith(fontSize: 16, height: 1.25),
+                  style: AssessText.progressTitle.copyWith(color: AppColors.successInk),
                 ),
-                const SizedBox(height: 2),
-                Text('Applied automatically at checkout. No code needed.', style: AssessText.bundleBody),
+                Text('Applied automatically at checkout. No code needed.', style: AssessText.progressNote),
               ],
             ),
           ),

@@ -13,6 +13,9 @@ class RfqText {
   static final cardTitle = AppText.workSans(13.5, FontWeight.w600, AppColors.slate900, lineHeight: 18);
   static final pageTitle = AppText.workSans(17, FontWeight.w700, AppColors.slate900, lineHeight: 22);
   static final section = AppText.workSans(14.5, FontWeight.w600, AppColors.slate900, lineHeight: 20);
+
+  /// A requirement kind's name on the composer's two cards ("ENQUIRY", "RFQ"): the website's 18 px, extra bold, spaced.
+  static final kindName = AppText.workSans(17, FontWeight.w800, AppColors.slate900, lineHeight: 22, spacing: 0.6);
   static final meta = AppText.plexSans(11, FontWeight.w500, AppColors.slate600, lineHeight: 15);
   static final metaStrong = AppText.plexSans(11, FontWeight.w600, AppColors.slate900, lineHeight: 15);
   static final body = AppText.plexSans(12, FontWeight.w400, AppColors.slate700, lineHeight: 18);

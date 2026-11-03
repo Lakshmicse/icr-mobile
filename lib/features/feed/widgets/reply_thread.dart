@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../forum/mentions/mention_controller.dart';
 import '../feed_models.dart';
 import '../feed_styles.dart';
 import 'reply_widgets.dart';
@@ -19,6 +20,8 @@ class ReplyThread extends StatefulWidget {
     required this.onMore,
     this.onOpenThread,
     this.onOpenAuthor,
+    this.onOpenMention,
+    this.searchPeople,
     this.look = ReplyLook.home,
     this.now,
   });
@@ -27,7 +30,15 @@ class ReplyThread extends StatefulWidget {
   final bool loading;
   final FeedAuthor viewer;
   final ValueChanged<FeedReply> onLike;
-  final Future<bool> Function(String text, String? parentId) onSend;
+
+  /// Sends the reply: its words, the reply it answers, and the people tagged in it. True once it is posted.
+  final Future<bool> Function(String text, String? parentId, List<Mention> mentions) onSend;
+
+  /// Who the "@" in the box may mean; absent, "@" is just a character.
+  final MentionSearch? searchPeople;
+
+  /// A member tagged in a reply was tapped: gets their id.
+  final ValueChanged<String>? onOpenMention;
 
   /// A reply's three dots: its menu.
   final ValueChanged<FeedReply> onMore;
@@ -51,12 +62,22 @@ class ReplyThread extends StatefulWidget {
 class _ReplyThreadState extends State<ReplyThread> {
   final _input = TextEditingController();
   final _focus = FocusNode();
+  late final MentionController _mentions = MentionController(
+    search: (q) => widget.searchPeople?.call(q) ?? Future.value(const <MentionPerson>[]),
+  );
   bool _showAll = false;
   bool _sending = false;
   FeedReply? _replyingTo;
 
   @override
+  void initState() {
+    super.initState();
+    _mentions.attach(_input, _focus);
+  }
+
+  @override
   void dispose() {
+    _mentions.dispose();
     _input.dispose();
     _focus.dispose();
     super.dispose();
@@ -72,12 +93,13 @@ class _ReplyThreadState extends State<ReplyThread> {
     final text = _input.text.trim();
     if (text.isEmpty || _sending) return;
     setState(() => _sending = true);
-    final ok = await widget.onSend(text, (_replyingTo ?? _defaultTarget)?.id);
+    final ok = await widget.onSend(text, (_replyingTo ?? _defaultTarget)?.id, _mentions.mentionsIn(text));
     if (!mounted) return;
     setState(() {
       _sending = false;
       if (ok) {
         _input.clear();
+        _mentions.reset();
         _replyingTo = null;
         // Show the whole thread, so the reply just sent is there to see.
         _showAll = true;
@@ -140,6 +162,7 @@ class _ReplyThreadState extends State<ReplyThread> {
             onReply: () => _replyTo(entry.reply),
             onMore: () => widget.onMore(entry.reply),
             onOpenAuthor: widget.onOpenAuthor == null ? null : () => widget.onOpenAuthor!(entry.reply),
+            onOpenMention: widget.onOpenMention,
           ),
         ),
       );
@@ -206,6 +229,7 @@ class _ReplyThreadState extends State<ReplyThread> {
           sending: _sending,
           hint: 'Reply to ${target?.author.name ?? post.replyTo ?? post.author.name}...',
           onSend: _send,
+          mentions: widget.searchPeople == null ? null : _mentions,
         ),
       ),
     );

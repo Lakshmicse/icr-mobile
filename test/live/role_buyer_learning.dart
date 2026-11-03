@@ -14,6 +14,8 @@ import 'package:icr_mobile/features/learning_study/flash_cards_screen.dart';
 import 'package:icr_mobile/features/learning_study/knowledge_center_screen.dart';
 import 'package:icr_mobile/features/learning_study/widgets/deck_card.dart';
 import 'package:icr_mobile/features/learning_hub/learning_hub_screen.dart';
+import 'package:icr_mobile/features/learning_hub/widgets/hub_section.dart';
+import 'package:icr_mobile/features/learning/widgets/course_card.dart';
 import 'package:provider/provider.dart';
 
 import '../helpers/fonts.dart';
@@ -65,32 +67,37 @@ void roleBuyerLearning() {
             size: const Size(390, 2000),
           );
           var text = expectHealthy(tester, 'the Learning hub as ${w.email}');
-          for (final door in [
-            'Assess Your Knowledge',
-            'Mock Exams',
-            'Flash Cards',
-            'Knowledge Center',
-            'ICR Courses',
-            'Partner Courses',
-          ]) {
+          // The catalogue rail's four doors (the hub since the 27 Oct redesign) and the Catalogue heading, whose
+          // View More opens the six doors as tiles (the categories; owner's call, 2 Nov 2026).
+          for (final door in ['Assess your knowledge', 'Mock Exams', 'Flash Cards', 'Knowledge Centre', 'Catalogue']) {
             expect(text, contains(door), reason: '${w.email}: the $door door');
           }
-          expect(text, contains('My courses'));
-          expect(text, contains('My attempts'));
-          expect(text, contains('Certificates'));
+          // My courses, My attempts and Certificates are chips of ICR Courses since the 30 Oct hub (no strip).
 
-          // Every door and both tiles open a screen that reads, then Back returns to the hub.
+          // Every catalogue tile and both View More headings open a screen that reads, then Back returns to the hub.
+          // The heading's key sits on the HubSectionHeading itself; a title's text sits inside one.
+          Finder viewMoreOf(Finder heading, {bool byTitle = false}) => find.descendant(
+            of: byTitle ? find.ancestor(of: heading, matching: find.byType(HubSectionHeading)) : heading,
+            matching: find.text('View More'),
+          );
+          // The Partner Courses section is drawn only when an institute other than ICR's own has a course; the
+          // local database seeds only ICR Institute, so it is opened when present and left out otherwise.
+          final partnerMore = find.descendant(
+            of: find.byKey(const ValueKey('partner-heading')),
+            matching: find.byType(InkWell),
+          );
+          final hasPartners = partnerMore.evaluate().isNotEmpty;
           final doors = <String, Finder>{
-            'Assess Your Knowledge': find.byKey(const ValueKey('door-assessment')),
-            'Mock Exams': find.byKey(const ValueKey('door-mockTests')),
-            'Flash Cards': find.byKey(const ValueKey('door-flashCards')),
-            'Knowledge Center': find.byKey(const ValueKey('door-knowledgeCenter')),
-            'ICR Courses': find.byKey(const ValueKey('door-icrCourses')),
-            'Partner Courses': find.byKey(const ValueKey('door-partnerCourses')),
-            'My attempts': find.byKey(const ValueKey('my-learning-attempts')),
-            'Certificates': find.byKey(const ValueKey('my-learning-certificates')),
+            'Assess Your Knowledge': find.byKey(const ValueKey('catalogue-assessment')),
+            'Mock Exams': find.byKey(const ValueKey('catalogue-mockTests')),
+            'Flash Cards': find.byKey(const ValueKey('catalogue-flashCards')),
+            'Knowledge Center': find.byKey(const ValueKey('catalogue-knowledgeCenter')),
+            'Catalogue': viewMoreOf(find.text('Catalogue'), byTitle: true),
+            if (hasPartners) 'Partner Courses': partnerMore,
           };
           for (final entry in doors.entries) {
+            // The sections load one by one; a Partner heading that was drawn a moment ago may have gone.
+            if (entry.key == 'Partner Courses' && entry.value.evaluate().isEmpty) continue;
             expect(entry.value, findsOneWidget, reason: '${w.email}: ${entry.key} is on the hub');
             await tester.ensureVisible(entry.value);
             await tester.tap(entry.value, warnIfMissed: false);
@@ -103,7 +110,7 @@ void roleBuyerLearning() {
           }
           await unmount(tester);
           record(
-            'Learning: hub and its six doors, My attempts, Certificates',
+            'Learning: hub, its four catalogue tiles and both course grids',
             w.person,
             'works',
             'each door opened and read',
@@ -129,8 +136,8 @@ void roleBuyerLearning() {
             size: size,
           );
           await waitFor(tester, find.byType(GroupCard));
-          expectHealthy(tester, 'Assess as ${w.email}');
-          expect(find.byType(GroupCard), findsWidgets);
+          final assessText = expectHealthy(tester, 'Assess as ${w.email}');
+          expect(find.byType(GroupCard), findsWidgets, reason: '${w.email}: on screen: $assessText');
           await tester.tap(find.byType(GroupCard).first);
           await afterTap(tester);
           var text = expectHealthy(tester, 'a programme page as ${w.email}');
@@ -164,7 +171,7 @@ void roleBuyerLearning() {
           await tester.tap(find.byType(GroupCard).first);
           await afterTap(tester);
           text = expectHealthy(tester, 'a subject page as ${w.email}');
-          expect(text, contains('Exam sets'));
+          expect(text, contains('Set 1'));
           await unmount(tester);
 
           // Flash Cards: a plan with no deck places marks every deck Locked and the deck says why, in the API's words.
@@ -182,10 +189,23 @@ void roleBuyerLearning() {
           if (locked.evaluate().isNotEmpty) {
             await tester.tap(find.byType(DeckCard).first);
             await afterTap(tester);
-            await waitFor(tester, find.text("This deck isn't open on your plan"));
+            // A deck of its own says the plan does not open it; a deck that belongs with a course says it opens
+            // with the course (and links to it).
+            final lockTitle = find.byWidgetPredicate(
+              (x) =>
+                  x is Text &&
+                  (x.data == "This deck isn't open on your plan" || (x.data ?? '').startsWith('Opens with')),
+            );
+            await waitFor(tester, lockTitle);
             text = expectHealthy(tester, 'a locked deck as ${w.email}');
-            expect(text, contains("This deck isn't open on your plan"));
-            expect(text, contains('not included in your plan'), reason: '${w.email}: the API sentence is shown');
+            if (text.contains("This deck isn't open on your plan")) {
+              expect(text, contains('not included in your plan'), reason: '${w.email}: the API sentence is shown');
+            } else {
+              expect(text, contains('Opens with'), reason: '${w.email}: the deck follows its course');
+            }
+            await tester.drag(find.byType(Scrollable).first, const Offset(0, -3000), warnIfMissed: false);
+            await tester.pump(const Duration(milliseconds: 400));
+            text = expectHealthy(tester, 'a locked deck, scrolled, as ${w.email}');
             expect(text, contains('See plans'));
             deckNote = 'Locked: the deck page shows the API sentence';
           }
@@ -231,24 +251,35 @@ void roleBuyerLearning() {
             appProviders: [Provider<ApiClient>.value(value: w.api)],
             size: const Size(390, 2000),
           );
-          await waitFor(tester, keyed('rail-course-'));
-          final course = keyed('rail-course-').first;
+          // The hub has no course rail since the 27 Oct redesign: ICR Courses opens from the Catalogue heading's
+          // View More, and the first card of that grid is the course.
+          await waitFor(tester, find.text('Catalogue'));
+          await tester.ensureVisible(find.text('Catalogue'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('View More').first);
+          await afterTap(tester);
+          await waitFor(tester, find.byType(CourseCard));
+          final course = find.byType(CourseCard).first;
           await tester.ensureVisible(course);
           await tester.tap(course);
           await afterTap(tester);
           var text = expectHealthy(tester, 'a course sheet as ${w.email}');
           expect(text.toLowerCase(), contains('overview'), reason: '${w.email}: the sheet shows the course overview');
+          // The wide button, or — for a place the person holds — the bar's lower-case word (the sheet shows the
+          // place's status and Withdraw instead of a button, as the website's panel does).
           const holds = ['ADD TO CART', 'ENROLLED', 'PLACE REQUESTED', 'ON THE WAITLIST', 'ENROLMENT CLOSED'];
+          final lower = text.toLowerCase();
           final button = [
             for (final h in holds)
-              if (text.contains(h)) h,
+              if (lower.contains(h.toLowerCase())) h,
           ];
           expect(button, isNotEmpty, reason: '${w.email}: the button says where the person stands');
           tester.state<NavigatorState>(find.byType(Navigator).first).pop();
           await tester.pump(const Duration(milliseconds: 900));
 
-          if (w.email == gita?.email) {
+          if (w.email == gita?.email && keyed('institute-').evaluate().isNotEmpty) {
             // The enquiry: name and email come from the account; a lead reaches the institute (it cannot be taken back).
+            // (The hub lists institutes in its Partner section, drawn only for an institute other than ICR's own.)
             final institute = keyed('institute-');
             await waitFor(tester, institute);
             await tester.ensureVisible(institute.first);

@@ -69,6 +69,7 @@ class JobDetailController extends ChangeNotifier {
   Job _job;
   JobMatch? _match;
   CompanyPeople? _people;
+  bool _postsHere = false;
   bool _loading = true;
   bool _applying = false;
   String? _error;
@@ -90,6 +91,9 @@ class JobDetailController extends ChangeNotifier {
   Job get job => _job;
   JobMatch? get match => _match;
   CompanyPeople? get people => _people;
+
+  /// The member posts this company's jobs, so they manage this one rather than apply to it: no Apply, no match.
+  bool get postsHere => _postsHere;
   bool get loading => _loading;
   bool get applying => _applying;
   String? get error => _error;
@@ -113,9 +117,11 @@ class JobDetailController extends ChangeNotifier {
       final results = await Future.wait([
         _aside(() => repository.match(_job)),
         _aside(() => repository.peopleAt(_job.company)),
+        _aside(() => repository.postsJobsFor(_job.company)),
       ]);
       _match = results[0] as JobMatch?;
       _people = results[1] as CompanyPeople?;
+      _postsHere = results[2] as bool? ?? false;
       if (_match?.score != null) _job = _job.copyWith(matchScore: _match!.score);
     } catch (e) {
       _error = ApiError.from(e).message;

@@ -77,32 +77,85 @@ HiringRoutes hiringRoutesOf(
   );
 }
 
-/// What a member who is not on a hiring team gets from "Post a job": jobs are posted for a company,
-/// so the way in is to set one up (or to ask the company's admin for the recruiter role).
-Future<void> showHirersOnly(BuildContext context, {required JobsNavigation navigation, required JobLinks links}) {
+/// "Post a job" from anywhere — the Jobs board's chip, the Discover sheet's Hire and Post a Job, a link to the
+/// website's `/manage/jobs/new`: the composer for someone on a company's hiring team, read afresh (a company
+/// switch changes it). Anyone else gets [showHirersOnly], never the create-company screen while they have a
+/// company (owner's report, 3 Nov 2026: Hire opened "create a company" for a member who already had one).
+Future<void> openPostJob(BuildContext context, {JobsNavigation? navigation}) async {
+  final jobs = context.read<JobsController>();
+  final nav = navigation ?? JobsNavigationScope.of(context);
+  final access = await jobs.hiringAccess(refresh: true);
+  if (!context.mounted) return;
+  if (access == null) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text("Couldn't check your account. Try again in a moment.")));
+    return;
+  }
+  if (access.canManage) {
+    await hiringRoutesOf(context, navigation: nav).postJob();
+    return;
+  }
+  await showHirersOnly(context, navigation: nav, links: jobs.links, access: access);
+}
+
+/// What a member who is not on a hiring team gets from "Post a job", in the website's order (`NoCompany` on
+/// `/manage/jobs/new`): acting as themselves while they belong to companies, switch to one; belonging to none,
+/// create one; acting for a company in a role that does not post, ask its admin for the recruiter role.
+Future<void> showHirersOnly(
+  BuildContext context, {
+  required JobsNavigation navigation,
+  required JobLinks links,
+  HiringAccess? access,
+}) {
+  final actingForCompany = access?.companyId != null;
+  final canSwitch = !actingForCompany && (access?.companiesHeld ?? 0) > 0;
+  final (title, body) = actingForCompany
+      ? (
+          'Jobs are posted by the hiring team',
+          'Your role at this company does not post jobs. Ask its admin to make you a recruiter, and you can post '
+              'jobs, run applicants and make offers here.',
+        )
+      : canSwitch
+      ? (
+          "You're using your personal account",
+          'Jobs belong to a company. Switch to one of your companies to post a job on its behalf.',
+        )
+      : (
+          'Jobs are posted for a company',
+          'Set up your company on ICR and you can post jobs, run applicants and make offers. '
+              'If your company is already here, ask its admin to make you a recruiter.',
+        );
   return showDialog<void>(
     context: context,
     builder: (dialog) => AlertDialog(
       key: const ValueKey('hirers-only-dialog'),
-      title: const Text('Jobs are posted for a company'),
-      content: const Text(
-        'Set up your company on ICR and you can post jobs, run applicants and make offers. '
-        'If your company is already here, ask its admin to make you a recruiter.',
-      ),
+      title: Text(title),
+      content: Text(body),
       actions: [
         TextButton(
           key: const ValueKey('hirers-only-later'),
           onPressed: () => Navigator.pop(dialog),
-          child: const Text('Not now'),
+          child: Text(actingForCompany ? 'OK' : 'Not now'),
         ),
-        TextButton(
-          key: const ValueKey('hirers-only-create'),
-          onPressed: () {
-            Navigator.pop(dialog);
-            navigation.createCompany(context, links);
-          },
-          child: const Text('Create a company'),
-        ),
+        if (canSwitch)
+          TextButton(
+            key: const ValueKey('hirers-only-switch'),
+            onPressed: () {
+              Navigator.pop(dialog);
+              navigation.switchCompany(context, links);
+            },
+            child: const Text('Switch company'),
+          )
+        else if (!actingForCompany)
+          TextButton(
+            key: const ValueKey('hirers-only-create'),
+            onPressed: () {
+              Navigator.pop(dialog);
+              navigation.createCompany(context, links);
+            },
+            child: const Text('Create a company'),
+          ),
       ],
     ),
   );

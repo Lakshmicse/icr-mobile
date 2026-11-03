@@ -415,11 +415,9 @@ void main() {
     testWidgets('only what changed is sent, and a bio left alone keeps its formatting', (tester) async {
       final w = DeskWorld();
       final (api, _) = await pumpDesk(tester, w, tab: DeskTab.settings);
-      expect(find.byKey(const ValueKey('capacity-value')), findsOneWidget);
-      expect(tester.widget<Text>(find.byKey(const ValueKey('capacity-value'))).data, '6');
+      expect(find.byKey(const ValueKey('capacity-value')), findsNothing, reason: 'no mentee limit since 27 Oct');
       await tapKey(tester, 'mode-IN_PERSON');
       await tapKey(tester, 'cadence-MONTHLY');
-      await tapKey(tester, 'capacity-up');
       await tester.enterText(find.byKey(const ValueKey('timezone')), 'Asia/Dubai');
       await tester.enterText(find.byKey(const ValueKey('standing-link')), 'meet.google.com/new-room');
       await tester.enterText(find.byKey(const ValueKey('availability-note')), 'Weekday evenings');
@@ -427,13 +425,11 @@ void main() {
       expect(api.bodyOf('PUT /mentorship/mentors/me'), {
         'preferredModes': ['VIDEO', 'PHONE', 'IN_PERSON'],
         'cadence': 'MONTHLY',
-        'capacity': 7,
         'timezone': 'Asia/Dubai',
         'meetingLink': 'https://meet.google.com/new-room',
         'availabilityNote': 'Weekday evenings',
       });
       expect(find.text('Saved.'), findsOneWidget);
-      expect(w.capacity, 7);
       expect(w.bioHtml, '<p>Nine years running facilities for large campuses.</p>');
     });
 
@@ -476,25 +472,16 @@ void main() {
       expect(api.bodyOf('PUT /mentorship/mentors/me'), {'meetingLink': ''});
     });
 
-    testWidgets('capacity stays between 1 and 10, and an API refusal keeps what was typed', (tester) async {
-      final w = DeskWorld();
+    testWidgets('an API refusal keeps what was typed', (tester) async {
       final (_, _) = await pumpDesk(
         tester,
-        w,
+        DeskWorld(),
         tab: DeskTab.settings,
-        extra: {'PUT /mentorship/mentors/me': (_) => refuse('You have more active mentees than that.')},
+        extra: {'PUT /mentorship/mentors/me': (_) => refuse('That note is too long.')},
       );
-      for (var i = 0; i < 8; i++) {
-        await tester.ensureVisible(find.byKey(const ValueKey('capacity-up')));
-        await tester.tap(find.byKey(const ValueKey('capacity-up')), warnIfMissed: false);
-        await tester.pump();
-      }
-      expect(tester.widget<Text>(find.byKey(const ValueKey('capacity-value'))).data, '10');
-      expect(tester.widget<IconButton>(find.byKey(const ValueKey('capacity-up'))).onPressed, isNull);
       await tester.enterText(find.byKey(const ValueKey('availability-note')), 'Evenings');
       await tapText(tester, 'Save settings');
-      expect(find.text('You have more active mentees than that.'), findsOneWidget);
-      expect(tester.widget<Text>(find.byKey(const ValueKey('capacity-value'))).data, '10');
+      expect(find.text('That note is too long.'), findsOneWidget);
       expect(find.text('Evenings'), findsOneWidget);
     });
   });

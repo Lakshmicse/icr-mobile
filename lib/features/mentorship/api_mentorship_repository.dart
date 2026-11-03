@@ -75,6 +75,7 @@ class ApiMentorshipRepository implements MentorshipRepository {
       categories: categories,
       selectedCategory: chosen,
       domainsBadge: domainsBadgeFor(competencies.length),
+      domains: competencies,
       companies: groupByEmployer(rated).take(_companyCount).toList(),
       shelves: [
         if (first.isNotEmpty) MentorShelf(key: 'network', title: mentorNetworkTitle, mentors: first),

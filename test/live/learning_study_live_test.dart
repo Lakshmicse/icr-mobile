@@ -77,8 +77,14 @@ Future<({DeckPlan plan, List<StudyTopic> open, List<StudyTopic> shut})> _fillPla
   }
   return (
     plan: plan,
-    open: [for (final d in decks) if (plan.stateFor(d) == DeckState.open) d],
-    shut: [for (final d in decks) if (plan.stateFor(d) == DeckState.locked) d],
+    open: [
+      for (final d in decks)
+        if (plan.stateFor(d) == DeckState.open) d,
+    ],
+    shut: [
+      for (final d in decks)
+        if (plan.stateFor(d) == DeckState.locked) d,
+    ],
   );
 }
 
@@ -301,14 +307,24 @@ void main() {
           );
           return;
         }
-        expect(decks.planNote, 'Flash cards are not included in your plan.');
-        expect(decks.decks.every((d) => decks.stateOf(d) == DeckState.locked), isTrue);
+        // A deck that belongs with a course opens with it and takes no place, so when every deck is linked there
+        // is no note to draw; the sentence stands while some deck takes a place of its own.
+        final alone = decks.decks.where((d) => d.courseId == null);
+        expect(decks.planNote, alone.isEmpty ? isNull : 'Flash cards are not included in your plan.');
+        // A deck that belongs with a course the member holds is open with it; every deck of its own is locked.
+        expect(alone.every((d) => decks.stateOf(d) == DeckState.locked), isTrue);
 
+        // A deck the grid marks Locked: of its own (no course), and not at the Limited level that opens to all.
+        final ownDeck = alone.firstWhere(
+          (d) => decks.stateOf(d) == DeckState.locked,
+          orElse: () => decks.decks.firstWhere((d) => decks.stateOf(d) == DeckState.locked),
+        );
         await expectLater(
-          repo.topic(decks.decks.first.slug),
+          repo.topic(ownDeck.slug),
           throwsA(
             isA<DeckLocked>()
-                .having((e) => e.message, 'message', _locked)
+                // A deck of its own: the plan's sentence; one that follows a course: the course is named first.
+                .having((e) => e.message, 'message', contains('not included in your plan'))
                 .having((e) => e.pricingSlug, 'pricingSlug', 'professional')
                 .having((e) => e.statusCode, 'statusCode', 403),
           ),
@@ -477,10 +493,16 @@ void main() {
         physical: const Size(780, 14000),
       );
       final decks = snapshot._topics.where((t) => t.isDeck).toList();
-      expect(find.text('Flash cards are not included in your plan.'), findsOneWidget);
+      final alone = decks.where((t) => t.courseId == null).toList();
+      expect(
+        find.text('Flash cards are not included in your plan.'),
+        alone.isEmpty ? findsNothing : findsOneWidget,
+        reason: 'the note is drawn only while some deck takes a place of its own',
+      );
       expect(find.text('${decks.length} decks'), findsOneWidget);
-      expect(find.text('Locked'), findsNWidgets(decks.length));
-      expect(find.text('Study'), findsNothing);
+      // Each card says Locked, or Study for a deck whose course the member holds (Capital Planning, by credits).
+      expect(find.text('Locked').evaluate().length + find.text('Study').evaluate().length, decks.length);
+      expect(find.text('Locked'), findsWidgets);
       expect(find.text('Capital Planning'), findsOneWidget);
     });
 
@@ -499,19 +521,19 @@ void main() {
 
         await _show(tester, DeckStudyScreen.deck(repository: clean, deck: deck));
         expect(find.text(card.front), findsOneWidget);
-        expect(find.text('1 of ${deck.cardCount}'), findsOneWidget);
+        expect(find.text('Card 1 of ${deck.cardCount}'), findsOneWidget);
 
         await tester.tap(find.byKey(const ValueKey('study-flip')));
         await tester.pumpAndSettle();
-        expect(find.text('Tap to flip back'), findsOneWidget);
+        expect(find.text('Tap card to see the question again'), findsOneWidget);
         expect(find.textContaining(card.back.substring(0, 20)), findsOneWidget);
 
         await tester.tap(find.byKey(const ValueKey('study-next')));
         await tester.pumpAndSettle();
-        expect(find.text('2 of ${deck.cardCount}'), findsOneWidget);
+        expect(find.text('Card 2 of ${deck.cardCount}'), findsOneWidget);
         await tester.tap(find.byKey(const ValueKey('study-previous')));
         await tester.pumpAndSettle();
-        expect(find.text('1 of ${deck.cardCount}'), findsOneWidget);
+        expect(find.text('Card 1 of ${deck.cardCount}'), findsOneWidget);
 
         try {
           await _tapOnline(tester, find.byKey(const ValueKey('study-star')));
@@ -547,32 +569,39 @@ void main() {
       expect(plan.unlockedCourseIds, isA<List<String>>());
     });
 
-    liveTest('the grid mark of a linked deck is what the API answers for it: open exactly when its course is', () async {
-      final repo = (await _repoFor(bharat))!;
-      final decks = (await repo.topics()).where((t) => t.isDeck && t.linked).toList();
-      if (decks.isEmpty) {
-        markTestSkipped('this API does not link decks to courses yet');
-        return;
-      }
-      final plan = (await repo.deckPlan())!;
-      var open = 0, closed = 0;
-      for (final deck in decks) {
-        // Reading a deck that goes with a course takes none of the plan's places, so this changes nothing.
-        final preview = plan.stateFor(deck);
-        try {
-          await repo.topic(deck.slug);
-          expect(preview, DeckState.open, reason: '${deck.title}: the API opened it, so the grid must not mark it locked');
-          open++;
-        } on DeckLocked catch (lock) {
-          expect(preview, DeckState.locked, reason: '${deck.title}: the API refused it (${lock.message})');
-          expect(lock.course?.code, deck.course?.code, reason: 'the refusal names the own course of the deck');
-          expect(lock.opensWithCourse, isTrue);
-          closed++;
+    liveTest(
+      'the grid mark of a linked deck is what the API answers for it: open exactly when its course is',
+      () async {
+        final repo = (await _repoFor(bharat))!;
+        final decks = (await repo.topics()).where((t) => t.isDeck && t.linked).toList();
+        if (decks.isEmpty) {
+          markTestSkipped('this API does not link decks to courses yet');
+          return;
         }
-      }
-      // ignore: avoid_print
-      print('linked decks for Bharat: $open open, $closed closed, of ${decks.length}');
-    });
+        final plan = (await repo.deckPlan())!;
+        var open = 0, closed = 0;
+        for (final deck in decks) {
+          // Reading a deck that goes with a course takes none of the plan's places, so this changes nothing.
+          final preview = plan.stateFor(deck);
+          try {
+            await repo.topic(deck.slug);
+            expect(
+              preview,
+              DeckState.open,
+              reason: '${deck.title}: the API opened it, so the grid must not mark it locked',
+            );
+            open++;
+          } on DeckLocked catch (lock) {
+            expect(preview, DeckState.locked, reason: '${deck.title}: the API refused it (${lock.message})');
+            expect(lock.course?.code, deck.course?.code, reason: 'the refusal names the own course of the deck');
+            expect(lock.opensWithCourse, isTrue);
+            closed++;
+          }
+        }
+        // ignore: avoid_print
+        print('linked decks for Bharat: $open open, $closed closed, of ${decks.length}');
+      },
+    );
 
     liveTest('signed out, a deck that goes with a course is refused naming its course', () async {
       final visitor = ApiStudyRepository(api: liveAnonymous());

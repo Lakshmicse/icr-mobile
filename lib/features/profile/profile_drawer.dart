@@ -249,10 +249,20 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                             onTap: () => _open('/career/saved'),
                           ),
                           const SizedBox(height: 2),
+                          // Everything posted on ICR (owner, 3 Nov 2026: "whatever is posted needs to be seen"), with
+                          // the member's own list one chip away on it. It was "My RFQ Requirements", the member's own
+                          // only, which is empty, or refused, for most accounts.
                           _ActivityLink(
                             icon: const Icon(LucideIcons.filePlus2, size: 14, color: AppColors.slate500),
-                            label: 'My RFQ Requirements',
-                            onTap: () => _open('/manage/requirements'),
+                            label: 'Requirements',
+                            onTap: () => _open('/rfq'),
+                          ),
+                          const SizedBox(height: 2),
+                          // The supplier's side of the same board (the website's Find Work & Bid).
+                          _ActivityLink(
+                            icon: const Icon(LucideIcons.compass, size: 14, color: AppColors.slate500),
+                            label: 'Find Work & Bid',
+                            onTap: () => _open('/manage/bids'),
                           ),
                           const SizedBox(height: 2),
                           _ActivityLink(
@@ -394,7 +404,9 @@ class _Header extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Expanded(child: _Metric(value: data.profileViews, label: 'Profile Views')),
+                Expanded(
+                  child: _Metric(value: data.profileViews, label: 'Profile Views'),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Container(
@@ -416,7 +428,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// "Your companies": up to three of the companies the member belongs to, the one they are acting for marked, each
+/// "My companies" (the owner's wording, 2 Nov 2026): up to three of the companies the member belongs to, the one they are acting for marked, each
 /// a tap away from its page (or from becoming the one they act for). A member with none sees no block at all (no
 /// "Create a company" row: the owner's call, 28 Oct 2026), and neither does a read that failed, never an error in
 /// the menu.
@@ -472,7 +484,7 @@ class _CompaniesFrame extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
             children: [
-              Expanded(child: Text('YOUR COMPANIES', style: AppText.drawerSection)),
+              Expanded(child: Text('MY COMPANIES', style: AppText.drawerSection)),
               if (onSeeAll != null)
                 InkWell(
                   key: const ValueKey('drawer-companies-all'),

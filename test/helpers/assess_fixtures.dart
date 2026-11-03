@@ -3,6 +3,7 @@ import 'package:icr_mobile/core/api/api_error.dart';
 import 'package:icr_mobile/features/learning_assess/assess_models.dart';
 import 'package:icr_mobile/features/learning_assess/assess_repository.dart';
 import 'package:icr_mobile/features/learning_exam/open_paper.dart';
+import 'package:icr_mobile/features/payments/checkout_start.dart';
 
 /// A recording stand-in for the Assess and Mock Exams source: every call is logged by name, a call can be made to
 /// fail with an [ApiError], and the member's unlocks change as redemptions and plan places are taken, the way the
@@ -114,6 +115,24 @@ class FakeAssess implements AssessRepository {
 
   @override
   Future<AssessmentPricing> pricing() => _call('pricing', () => pricingNow);
+
+  /// What a checkout answers: the gateway's form by default; a test-mode answer when a test sets it.
+  CheckoutStart checkoutAnswer = const CheckoutStart(action: 'https://pay.test/_payment', fields: {'txnid': 'T1'});
+
+  /// The slugs (or `bundle:<key>`) checked out, in order.
+  final checkouts = <String>[];
+
+  @override
+  Future<CheckoutStart> checkout(AssessPaper paper) => _call('checkout', () {
+    checkouts.add(paper.slug);
+    return checkoutAnswer;
+  });
+
+  @override
+  Future<CheckoutStart> checkoutBundle(PaperKind kind, String key) => _call('checkoutBundle', () {
+    checkouts.add('bundle:$key');
+    return checkoutAnswer;
+  });
 
   @override
   Future<RedeemResult> redeem(AssessPaper paper) => _call('redeem', () {

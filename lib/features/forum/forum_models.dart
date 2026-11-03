@@ -306,7 +306,16 @@ class ForumDraft {
     this.tags = const [],
     this.attachment,
     this.pollOptions,
+    this.mentions = const [],
+    this.repostOfId,
   });
+
+  /// The people tagged in [body] (a plain-text body; [bodyHtml] already carries its own links): each "@Name" of
+  /// theirs is sent as a link to their profile.
+  final List<Mention> mentions;
+
+  /// The discussion this one reposts (`repostOfId`); a new post only.
+  final String? repostOfId;
 
   /// The taxonomy key of the topic; null on an edit that leaves the topic alone (the forum then re-checks nothing).
   final String? categoryKey;
@@ -374,6 +383,15 @@ class ForumReactor {
   final FeedAuthor person;
   final ReactionKind reaction;
   final DateTime at;
+}
+
+/// Someone who voted in a discussion's poll, and for what (`GET /forum/threads/:id/poll/voters`).
+class ForumPollVoter {
+  const ForumPollVoter({required this.person, required this.optionId, required this.votedAt});
+
+  final FeedAuthor person;
+  final String optionId;
+  final DateTime votedAt;
 }
 
 /// Someone who read a discussion (`GET /forum/threads/:id/viewers`).

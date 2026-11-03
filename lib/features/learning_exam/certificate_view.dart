@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +12,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
 import '../../core/util/links.dart';
 import '../../core/widgets/detail_sheet.dart';
+import 'certificate_marks.dart';
+import 'certificate_pdf.dart';
 import 'exam_format.dart';
 import 'exam_models.dart';
 import 'exam_services.dart';
@@ -17,15 +21,12 @@ import 'exam_styles.dart';
 import 'exam_widgets.dart';
 import 'qr_code.dart';
 
+// The verification address and the signatory live with the PDF builder (which prints both); the screen's tests
+// and the other screens still reach them through here.
+export 'certificate_pdf.dart' show certificateLevelLabel, certificateNameFont, certificateSignatory, verifyUri;
+
 /// Printed when the account has no name: English in every language, as the website's.
 const certificateFallbackHolder = 'ICR Candidate';
-
-/// The signatory every assessment certificate carries (the website's constant).
-const certificateSignatory = (
-  name: 'VINAY KUMAR SHETTY',
-  title: 'DIRECTOR, PROFESSIONAL DEVELOPMENT',
-  organisation: 'INSTITUTE FOR CORPORATE REAL ESTATE',
-);
 
 /// Who the certificate is made out to: the signed-in person, else the name the
 /// verification page returned, else the fallback.
@@ -38,10 +39,6 @@ String holderNameOf(BuildContext context, [ExamCertificate? certificate]) {
   }
   return certificate?.holder ?? certificateFallbackHolder;
 }
-
-/// The public page that proves a certificate: anyone can check the number there.
-Uri verifyUri(String certificateId) =>
-    AppConfig.sitePage('/learning/verify?id=${Uri.encodeQueryComponent(certificateId)}');
 
 /// LinkedIn's "add to profile" hand-off, with the verification page as the credential's URL.
 Uri linkedInUri(ExamCertificate c) {
@@ -103,7 +100,7 @@ class CertificateDetail extends StatelessWidget {
             children: [
               _Fact('Credential', c.title),
               _Fact('Awarded by', c.providerName ?? 'Institute for Corporate Real Estate'),
-              if (c.levelLabel != null) _Fact('Level', c.levelLabel!),
+              if (certificateLevelLabel(c.level) != null) _Fact('Level', certificateLevelLabel(c.level)!),
               _Fact('Result', '${c.percentage}% against a ${c.passPercentage}% pass standard'),
               _Fact('Cleared on', longDayLabel(c.clearedAt ?? c.issuedAt)),
               _Fact('Issued', dayLabel(c.issuedAt)),
@@ -117,7 +114,7 @@ class CertificateDetail extends StatelessWidget {
           style: ExamText.small,
         ),
         const SizedBox(height: 16),
-        CertificateActions(certificate: c),
+        CertificateActions(certificate: c, holder: holder),
       ],
     );
   }
@@ -161,18 +158,51 @@ class _Fact extends StatelessWidget {
   }
 }
 
-/// Copy the number, share the verification link, open the PDF page, add to LinkedIn.
-class CertificateActions extends StatelessWidget {
-  const CertificateActions({super.key, required this.certificate, this.compact = false});
+/// Copy the number, share the verification link, save the certificate as a PDF, add to LinkedIn.
+class CertificateActions extends StatefulWidget {
+  const CertificateActions({super.key, required this.certificate, this.holder, this.compact = false});
 
   final ExamCertificate certificate;
+
+  /// Who the certificate is made out to, for the PDF; the signed-in person when not given.
+  final String? holder;
 
   /// For a card in a list: the two quick actions only.
   final bool compact;
 
   @override
+  State<CertificateActions> createState() => _CertificateActionsState();
+}
+
+class _CertificateActionsState extends State<CertificateActions> {
+  /// The PDF is being made and saved; the button waits.
+  bool _downloading = false;
+
+  /// Builds the certificate in the app and hands it to the system "Save as" sheet. Nothing is said when the
+  /// person cancels that sheet.
+  Future<void> _download() async {
+    if (_downloading) return;
+    final c = widget.certificate;
+    final holder = widget.holder ?? holderNameOf(context, c);
+    setState(() => _downloading = true);
+    String? message;
+    try {
+      final marks = await CertificatePdfServices.marks(c, holder);
+      final bytes = await buildCertificatePdf(c, holder, marks: marks);
+      final saved = await CertificatePdfServices.save('${c.certificateId}.pdf', bytes);
+      if (saved != null) message = 'Saved ${c.certificateId}.pdf';
+    } catch (_) {
+      message = "Couldn't make the PDF. Try again.";
+    }
+    if (!mounted) return;
+    setState(() => _downloading = false);
+    if (message != null) showMessage(context, message);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final c = certificate;
+    final c = widget.certificate;
+    final compact = widget.compact;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -205,15 +235,12 @@ class CertificateActions extends StatelessWidget {
         if (!compact) ...[
           const SizedBox(height: 10),
           ExamButton(
-            label: 'Download PDF on the website',
+            label: 'Download PDF',
             icon: LucideIcons.download,
             quiet: true,
             height: 44,
-            // The website draws the PDF; the app's own certificate sheet is the page this would otherwise open.
-            onPressed: () => ExamServices.openExternal(
-              context,
-              AppConfig.sitePage('/learning/certificates/${c.paperSlug ?? c.paperId}'),
-            ),
+            busy: _downloading,
+            onPressed: _download,
           ),
           const SizedBox(height: 10),
           ExamButton(
@@ -268,14 +295,10 @@ class CertificateSheetView extends StatelessWidget {
             height: canvasHeight,
             child: Stack(
               children: [
-                const Positioned.fill(child: ColoredBox(color: ExamColors.azure)),
-                Positioned(
-                  left: 11.5,
-                  top: 11.5,
-                  right: 11.5,
-                  bottom: 11.5,
-                  child: ColoredBox(
-                    color: Colors.white,
+                const Positioned.fill(child: ColoredBox(color: Colors.white)),
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: _border),
                     child: Row(
                       children: [
                         _MarksPanel(certificate: certificate),
@@ -286,8 +309,24 @@ class CertificateSheetView extends StatelessWidget {
                     ),
                   ),
                 ),
-                const Positioned(left: 0, top: 130, child: _Wedge(topLeft: true)),
-                const Positioned(right: 0, bottom: 130, child: _Wedge(topLeft: false)),
+                // The border (the website's redesign of 2 Nov 2026): bars along the top and bottom, and a leg down
+                // the left from the top corner and up the right from the bottom one, each ending in a slant.
+                const Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  height: _border,
+                  child: ColoredBox(color: ExamColors.azure),
+                ),
+                const Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: _border,
+                  child: ColoredBox(color: ExamColors.azure),
+                ),
+                const Positioned(left: 0, top: 0, child: _BorderLeg(topLeft: true)),
+                const Positioned(right: 0, bottom: 0, child: _BorderLeg(topLeft: false)),
               ],
             ),
           ),
@@ -297,43 +336,56 @@ class CertificateSheetView extends StatelessWidget {
   }
 }
 
-/// The fold where the frame cuts back into the sheet.
-class _Wedge extends StatelessWidget {
-  const _Wedge({required this.topLeft});
+/// The border's measures on the 1000-wide canvas: the website's 1.5 / 15 / 16.4 cqw.
+const _border = 15.0;
+const _legInner = 150.0;
+const _legOuter = 164.0;
+
+/// The border's leg from a corner along the side, ending in the design's slant: [_legInner] long on the side facing
+/// the sheet and [_legOuter] at the page's edge.
+class _BorderLeg extends StatelessWidget {
+  const _BorderLeg({required this.topLeft});
 
   final bool topLeft;
 
   @override
   Widget build(BuildContext context) {
     return ClipPath(
-      clipper: _WedgeClip(topLeft),
-      child: const SizedBox(width: 31, height: 47, child: ColoredBox(color: ExamColors.azure)),
+      clipper: _LegClip(topLeft),
+      child: const SizedBox(
+        width: _border,
+        height: _legOuter,
+        child: ColoredBox(color: ExamColors.azure),
+      ),
     );
   }
 }
 
-class _WedgeClip extends CustomClipper<Path> {
-  _WedgeClip(this.topLeft);
+class _LegClip extends CustomClipper<Path> {
+  _LegClip(this.topLeft);
 
   final bool topLeft;
 
   @override
-  Path getClip(Size s) => topLeft
-      ? (Path()
-          ..moveTo(0, 0)
-          ..lineTo(s.width, s.height * .3)
-          ..lineTo(s.width, s.height * .7)
-          ..lineTo(0, s.height)
-          ..close())
-      : (Path()
-          ..moveTo(s.width, 0)
-          ..lineTo(0, s.height * .3)
-          ..lineTo(0, s.height * .7)
-          ..lineTo(s.width, s.height)
-          ..close());
+  Path getClip(Size s) {
+    final slant = s.height * _legInner / _legOuter;
+    return topLeft
+        ? (Path()
+            ..moveTo(0, 0)
+            ..lineTo(s.width, 0)
+            ..lineTo(s.width, slant)
+            ..lineTo(0, s.height)
+            ..close())
+        : (Path()
+            ..moveTo(s.width, 0)
+            ..lineTo(s.width, s.height)
+            ..lineTo(0, s.height)
+            ..lineTo(0, s.height - slant)
+            ..close());
+  }
 
   @override
-  bool shouldReclip(_WedgeClip old) => old.topLeft != topLeft;
+  bool shouldReclip(_LegClip old) => old.topLeft != topLeft;
 }
 
 const _ink = Color(0xFF1A1A1A);
@@ -426,7 +478,8 @@ class _Attestation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = certificate;
-    final level = c.levelLabel;
+    // The certificate's own word for the level (the website's "INTERMEDIATE LEVEL"), not the programme pages'.
+    final level = certificateLevelLabel(c.level);
     return Padding(
       padding: const EdgeInsets.fromLTRB(30, 34, 30, 34),
       child: Column(
@@ -445,19 +498,28 @@ class _Attestation extends StatelessWidget {
           ),
           const SizedBox(height: 22),
           Text('This is to certify that', style: _t(19, FontWeight.w400, _ink)),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-            child: Text(
-              holder,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: AppText.workSans(
-                holder.length > 26 ? 52 : 66,
-                FontWeight.w700,
-                ExamColors.gold,
-                lineHeight: holder.length > 26 ? 56 : 70,
-              ).copyWith(fontStyle: FontStyle.italic),
+          // The holder's name in the certificate's display serif, on one line that holds whatever the name's length
+          // so the footer never moves: a long name shrinks to stay on it (the website's NAME_FIT, 72 over its
+          // length, against the 4.6 cqw size — 46 and 720 on this canvas).
+          SizedBox(
+            height: 98,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Text(
+                  holder,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: certificateNameFont,
+                    fontWeight: FontWeight.w600,
+                    fontSize: math.min(46.0, 720.0 / holder.length),
+                    height: 1,
+                    color: ExamColors.gold,
+                  ),
+                ),
+              ),
             ),
           ),
           Text('For successfully completing :', style: _t(19, FontWeight.w400, _ink)),
@@ -501,10 +563,15 @@ class _Attestation extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Image.asset(
-                      'assets/images/demo/learning/cert_signature.png',
-                      height: 42,
-                      alignment: Alignment.centerLeft,
+                    // Taller than the footer's text: it grows into the space above, so nothing below moves.
+                    SizedBox(
+                      height: 54,
+                      width: double.infinity,
+                      child: Image.asset(
+                        'assets/images/demo/learning/cert_signature.png',
+                        fit: BoxFit.contain,
+                        alignment: Alignment.bottomCenter,
+                      ),
                     ),
                     Container(height: 1, color: const Color(0xFF8C9AAA)),
                     const SizedBox(height: 5),

@@ -63,7 +63,8 @@ Every read fails on its own: the drawer keeps what the others returned, and a li
 | Working Councils | the app's own Councils screen; with no screen it falls back to `/councils` | W "a row the app has a screen for opens it, and the others still open the website"; W the rows test |
 | Get Involved & Volunteer | `/get-involved` on the website | W rows test |
 | Saved Items & Jobs | `/career/saved` | W rows test |
-| My RFQ Requirements | `/manage/requirements` | W rows test |
+| Requirements (was "My RFQ Requirements" until 3 Nov 2026) | `/rfq`: the app's Requirements board, everything posted on ICR, with the member's own list (My RFQ's), Post RFQ and Find work as chips on it (owner: "whatever is posted needs to be seen"; `docs/screens/rfq.md`) | W rows test; W `test/rfq_requirements_board_test.dart` |
+| Find Work & Bid | `/manage/bids`: the supplier board | W rows test |
 | Certificates & Badges | `/learning/certificates` | W rows test |
 | Settings | `/profile?tab=security` (the website's security settings) | W rows test |
 | Sign Out | closes the menu, signs out: the saved tokens go and `POST /auth/logout` carries the saved refresh token | W "Sign Out ends the session..." (the request's body is `{refreshToken: 'refresh'}`); L "Sign Out really ends the session..." (a throwaway Pooja sign-in, then `/auth/refresh` with the old token answers 401); L "Sign Out in the menu signs a throwaway Pooja session out, and the API then refuses its token" (the same through the drawer's button) |
@@ -85,7 +86,7 @@ Deviation that remains: the design's drawer shows a different photo from its Hom
 
 ## The Discover sheet
 
-Eight doors in four rows, the design's order, with a "For Business" rule between the pairs; each door is its whole box.
+The design's four association doors in two rows (each door its whole box), then — since 3 Nov 2026, the owner's call that the website's menu should show in the app — **the website's Discover menu**: its "Create a Company Page +" link, the "For Business" rule, the five actions of its "Explore more for business" list in its order and words with their captions (Hire Facility Managers → `/talent`, the talent search, the one page the app opens in its web view; Post a Job → the app's job composer; Sell on Supplier Mart → the Marketplace; Post RFQ / Requirement → the app's requirement form; Advertise Commercial Space → the app's Advertise screen), and its Enterprise spotlight card, whose "Get Premium Access →" opens the plans. The sheet is 590 dp tall and scrolls inside that on a short phone.
 
 | Door | Opens |
 |---|---|
@@ -105,10 +106,10 @@ Tapping a door closes the sheet first; Back from an in-app screen returns to the
 | Discover tab opens, Back closes | "Discover opens the sheet over the tab, and Back closes it" |
 | tab toggles, another tab closes | "the Discover tab toggles the sheet and another tab closes it" |
 | tap behind closes; with the sheet closed the tab gets every tap | "tapping the page behind the sheet closes it", "with the sheet closed the tab gets every tap" |
-| eight doors in order, the For Business rule | "the sheet has the eight doors in the design's order..." |
+| the four doors, the company link, the For Business rule, the five actions with captions, the spotlight | "the sheet has the design's four doors, then the website's business menu, in its order" |
 | each door's artwork is bundled | "each door's artwork is a bundled picture" |
 | Councils, Events (in-app, Back returns, nothing to the browser) | "Councils and Events open the app's own screens; Back brings the shell back each time"; "a door with an in-app screen opens it, and Back returns to the shell" |
-| Regional Chapters, Digital Library, Hire, Sell, Post requirement, Advertise (website URL, query and all, sheet closes) | "every other door opens its page on the website, query and all, and closes the sheet"; "each door names the page it opens on the website" |
+| every door's target is the website's own path, query and all (the app resolves each to its screen; the sheet closes) | "every other door opens its page on the website, query and all, and closes the sheet" |
 | a door's whole box | "a door's whole box is the target, not only its words" |
 | long drag closes, short drag springs back | "dragging the sheet down closes it, and a short drag settles back open" |
 | a screen a door opened can open the profile menu | "a screen a door opened can open the profile menu, which leaves it first" |

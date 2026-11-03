@@ -90,7 +90,11 @@ class RichTextController extends TextEditingController {
       }
       if ((m & RichMark.italic) != 0) s = s.copyWith(fontStyle: FontStyle.italic);
       if (RichMark.link(m) > 0) {
-        s = s.copyWith(color: AppColors.primary, decoration: TextDecoration.underline, decorationColor: AppColors.primary);
+        s = s.copyWith(
+          color: AppColors.primary,
+          decoration: TextDecoration.underline,
+          decorationColor: AppColors.primary,
+        );
       }
       return s;
     }

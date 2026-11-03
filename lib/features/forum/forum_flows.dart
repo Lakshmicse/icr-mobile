@@ -22,6 +22,7 @@ Future<ForumThread?> startDiscussion(
   int unread = 0,
   String? initialTitle,
   String? initialBody,
+  String? repostOfId,
 }) async {
   final saved = await openComposer(
     context,
@@ -30,6 +31,7 @@ Future<ForumThread?> startDiscussion(
     mode: mode,
     initialTitle: initialTitle,
     initialBody: initialBody,
+    repostOfId: repostOfId,
   );
   if (saved == null || !context.mounted) return saved;
   if (saved.moderation != 'APPROVED') {

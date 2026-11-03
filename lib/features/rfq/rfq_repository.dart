@@ -10,6 +10,10 @@ abstract class RfqRepository {
   /// The signed-in person and the company they act for.
   Future<Poster> me();
 
+  /// What "Posting for" offers someone acting for no company (`GET /me/companies` and the profile's current roles,
+  /// `GET /profile/experience`): the employers an enquiry may name, and the companies they may switch to and post for.
+  Future<PostingOptions> postingOptions();
+
   // ---- The buyer's requirements -------------------------------------------------
 
   /// The counts on the tabs and tiles, and the action items (`GET /rfq/mine/summary`).
@@ -26,6 +30,10 @@ abstract class RfqRepository {
 
   /// One requirement, as its reader may see it (`GET /rfq/:id`).
   Future<Requirement> requirement(String id);
+
+  /// Everything posted on ICR, one page of it, newest first: the website's Requirements page (`GET /rfq`, open to
+  /// every member and to visitors). Public requirements in every status but draft, or only [status]'s.
+  Future<RequirementPage> posted({String search = '', RfqStatus? status, int page = 1, int limit = 20});
 
   /// Posts a requirement (`POST /rfq`).
   Future<PostResult> create(Map<String, dynamic> body);

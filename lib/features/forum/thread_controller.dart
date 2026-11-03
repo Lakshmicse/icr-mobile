@@ -6,6 +6,7 @@ import '../feed/forum_json.dart';
 import '../feed/post_reactions.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
+import 'mentions/mention_person.dart';
 import 'reply_tree.dart';
 
 /// One discussion's page: the discussion itself, its replies as the forum nests them, and what the reader does to
@@ -335,7 +336,13 @@ class ThreadController extends ChangeNotifier {
 
   Future<ForumViewersPage> viewers({int page = 1}) => repository.viewers(post!.id, page: page);
 
+  /// Who voted in the poll and for what.
+  Future<List<ForumPollVoter>> pollVoters() => repository.pollVoters(post!.id);
+
   // --- replies -----------------------------------------------------------------------------------------------
+
+  /// Who the "@" in the reply box may mean (`GET /members/mentionable`).
+  Future<List<MentionPerson>> mentionable(String search) => repository.mentionable(search);
 
   void _setReplies(List<FeedReply> replies) {
     _replies = replies;
@@ -344,7 +351,7 @@ class ThreadController extends ChangeNotifier {
 
   /// Sends a reply (under [parentId] when it answers one). The reply the forum stored joins the tree; a reply
   /// that waits for a moderator is shown to its author, marked, and not counted.
-  Future<String?> sendReply(String text, {String? parentId}) async {
+  Future<String?> sendReply(String text, {String? parentId, List<Mention> mentions = const []}) async {
     final t = _thread;
     if (t == null) return null;
     if (text.trim().isEmpty) return 'Write something before posting.';
@@ -352,7 +359,7 @@ class ThreadController extends ChangeNotifier {
       return 'A reply can be at most ${ForumLimits.replyMax} characters.';
     }
     try {
-      final reply = await repository.reply(t.id, text, parentId: parentId);
+      final reply = await repository.reply(t.id, text, parentId: parentId, mentions: mentions);
       _replies = insertReply(_replies, reply);
       _lastSentId = reply.id;
       if (!reply.pending) {
@@ -369,17 +376,22 @@ class ThreadController extends ChangeNotifier {
 
   /// Saves [text] as the words of [reply]. An edit that changes nothing sends nothing (the forum may have the
   /// website editor's formatting, which the app's plain text would flatten).
-  Future<String?> editReply(FeedReply reply, String text) async {
+  Future<String?> editReply(FeedReply reply, String text, {List<Mention> mentions = const []}) async {
     if (text.trim().isEmpty) return 'The reply cannot be emptied. Delete it instead.';
     final before = ForumJson.htmlToText(reply.bodyHtml ?? '');
     if (reply.bodyHtml != null && text.trim() == before) return null;
     try {
-      final saved = await repository.editReply(reply.id, text);
+      final saved = await repository.editReply(reply.id, text, mentions: mentions);
       _setReplies(
         mapReplies(
           _replies,
           reply.id,
-          (r) => r.copyWith(body: saved.body, bodyHtml: saved.bodyHtml ?? r.bodyHtml, edited: true),
+          (r) => r.copyWith(
+            body: saved.body,
+            bodyHtml: saved.bodyHtml ?? r.bodyHtml,
+            mentions: saved.mentions,
+            edited: true,
+          ),
         ),
       );
       return null;

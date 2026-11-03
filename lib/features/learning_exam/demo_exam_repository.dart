@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../../core/config.dart';
 import 'exam_models.dart';
+import '../payments/checkout_start.dart';
 import 'exam_repository.dart';
 
 /// A little sample content for the design-review build (`--dart-define=FEED_SOURCE=demo`): one paper of five
@@ -102,6 +103,9 @@ class DemoExamRepository implements ExamRepository {
 
   @override
   Future<RedeemResult> redeem(String slug) async => const RedeemResult(spent: 0, credits: 100);
+
+  @override
+  Future<CheckoutStart> checkout(String slug) async => const CheckoutStart(devActivated: true);
 
   @override
   Future<void> openWithPlan({required String target, required String targetId}) async {}

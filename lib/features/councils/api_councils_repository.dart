@@ -3,6 +3,9 @@ import 'package:dio/dio.dart' show Options;
 import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
 import '../../core/config.dart';
+import '../chapters/chapter_models.dart' show ChapterRole;
+import '../chapters/community_api.dart';
+import '../chapters/community_kit.dart' show htmlBlocks, htmlParagraphs;
 import 'council_format.dart';
 import 'council_models.dart';
 import 'councils_repository.dart';
@@ -18,14 +21,23 @@ const unreadWindow = Duration(days: 30);
 /// the upcoming roundtables (the same call with `kind=ROUNDTABLE`, those a
 /// council hosts), the city chapters (`GET /chapters`) and, for each council
 /// the member belongs to, its announcements.
-class ApiCouncilsRepository implements CouncilsRepository {
+///
+/// A council's own page reads `GET /councils/:slug` (the card, About, gallery, figures, leadership), its
+/// `/members` (page, limit 12, search, `hasCompany`, `role=LEAD`), `/resources` and `/announcements`,
+/// `GET /events?councilSlug=&when=upcoming|past` with `GET /events/rsvps/mine`, and joins and leaves through
+/// `POST|DELETE /councils/:id/join`, as the board does.
+class ApiCouncilsRepository implements CouncilsRepository, CouncilPageRepository {
   ApiCouncilsRepository({required this.api, DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
 
   final ApiClient api;
   final DateTime Function() _clock;
 
+  /// The reads a council's page shares with the chapter's (the envelope, the member's own lists, pictures).
+  late final CommunityApi _community = CommunityApi(api);
+
   static const _pageSize = 100;
   static const _maxPages = 10;
+  static const membersPageSize = 12;
 
   @override
   Future<CouncilsOverview> overview() async {
@@ -134,6 +146,167 @@ class ApiCouncilsRepository implements CouncilsRepository {
 
   @override
   Uri chapterLink(ChapterSummit chapter) => AppConfig.sitePage('/chapters/${chapter.slug}');
+
+  // --- a council's own page ----------------------------------------------------
+
+  @override
+  Future<CouncilDetail> detail(String idOrSlug) async {
+    final results = await Future.wait<Object>([_councilJson(idOrSlug), _list('/councils/memberships/mine')]);
+    final json = results[0] as Map<String, dynamic>;
+    final roles = {
+      for (final m in results[1] as List<Map<String, dynamic>>)
+        if (m['councilId'] is String) m['councilId'] as String: CouncilRole.fromApi(m['role'] as String?),
+    };
+    final stats = json['stats'] as Map<String, dynamic>? ?? const {};
+    final nextEvents = [
+      for (final e in (json['upcomingEvents'] as List? ?? const []).cast<Map<String, dynamic>>())
+        ?CommunityApi.date(e['startsAt']),
+    ]..sort();
+    final aboutHtml = CommunityApi.text(json['aboutHtml']);
+    final description = CommunityApi.text(json['description']);
+    return CouncilDetail(
+      council: _council(json, roles[json['id']], nextEvents.firstOrNull, _clock()),
+      contactEmail: CommunityApi.text(json['contactEmail']),
+      about: aboutHtml != null
+          ? htmlBlocks(aboutHtml)
+          : [if (description != null) AboutBlock(AboutKind.paragraph, description)],
+      gallery: [
+        for (final url in (json['galleryUrls'] as List? ?? const []).whereType<String>()) ?_community.picture(url),
+      ],
+      stats: CouncilKpis(
+        memberCount: CommunityApi.count(stats['memberCount']),
+        memberCompanyCount: CommunityApi.count(stats['memberCompanyCount']),
+        upcomingEventCount: CommunityApi.count(stats['upcomingEventCount']),
+        pastEventCount: CommunityApi.count(stats['pastEventCount']),
+        leadershipCount: CommunityApi.count(stats['leadershipCount']),
+      ),
+      leads: [
+        for (final p in (json['leads'] as List? ?? const []).cast<Map<String, dynamic>>()) _person(p, ChapterRole.lead),
+      ],
+    );
+  }
+
+  @override
+  Future<CouncilMembersPage> members(
+    String slug, {
+    int page = 1,
+    String? search,
+    MemberFilter filter = MemberFilter.all,
+  }) async {
+    final res = await _community.page('/councils/$slug/members', {
+      'page': page,
+      'limit': membersPageSize,
+      if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+      if (filter == MemberFilter.corporate) 'hasCompany': 'true',
+      if (filter == MemberFilter.committee) 'role': 'LEAD',
+    });
+    return CouncilMembersPage(
+      members: [for (final row in res.items) _person(row, ChapterRole.fromApi(row['role'] as String?))],
+      total: res.total,
+      page: res.page,
+      hasNext: res.hasNext,
+    );
+  }
+
+  @override
+  Future<List<CouncilEvent>> events(String slug, {bool past = false}) async {
+    final results = await Future.wait<Object>([
+      _community.page('/events', {'councilSlug': slug, 'when': past ? 'past' : 'upcoming', 'limit': 12}),
+      _community.mine('/events/rsvps/mine'),
+    ]);
+    final page = results[0] as ApiPage<Map<String, dynamic>>;
+    // The API keeps a CANCELLED row after a member gives a place back: a cancelled place is no RSVP.
+    final rsvps = {
+      for (final r in results[1] as List<Map<String, dynamic>>)
+        if (r['eventId'] is String && r['status'] is String && r['status'] != 'CANCELLED')
+          r['eventId'] as String: r['status'] as String,
+    };
+    return [
+      for (final e in page.items)
+        if (CommunityApi.date(e['startsAt']) != null) _event(e).withStatus(rsvps[e['id']]),
+    ];
+  }
+
+  @override
+  Future<List<CouncilUpdate>> updates(String slug) async {
+    final rows = await _community.getList('/councils/$slug/announcements');
+    final out = [
+      for (final r in rows)
+        CouncilUpdate(
+          id: r['id'] as String,
+          title: r['title'] as String? ?? '',
+          body: r['body'] as String? ?? '',
+          pinned: r['pinned'] == true,
+          createdAt: CommunityApi.date(r['createdAt']),
+        ),
+    ];
+    // Pinned first, then newest, as the website orders them.
+    out.sort((a, b) {
+      if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
+      return (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0));
+    });
+    return out;
+  }
+
+  @override
+  Future<List<CouncilResource>> resources(String slug) async {
+    final rows = await _community.getList('/councils/$slug/resources');
+    return [
+      for (final r in rows)
+        CouncilResource(
+          id: r['id'] as String,
+          title: r['title'] as String? ?? '',
+          kind: r['kind'] as String? ?? 'OTHER',
+          url: AppConfig.absoluteUrl(r['url'] as String?, apiBase: api.dio.options.baseUrl) ?? '',
+          sizeLabel: CommunityApi.text(r['sizeLabel']),
+          createdAt: CommunityApi.date(r['createdAt']),
+        ),
+    ];
+  }
+
+  /// A council by slug; an id (what a notification or a membership names) is looked up on the directory first,
+  /// since the API reads councils by slug.
+  Future<Map<String, dynamic>> _councilJson(String idOrSlug) async {
+    try {
+      return await _community.getMap('/councils/$idOrSlug');
+    } on ApiError catch (e) {
+      if (e.statusCode != 404) rethrow;
+      final (rows, _) = await _pages('/councils');
+      final match = rows.where((r) => r['id'] == idOrSlug).firstOrNull;
+      if (match == null) rethrow;
+      return _community.getMap('/councils/${match['slug']}');
+    }
+  }
+
+  CouncilPerson _person(Map<String, dynamic> p, ChapterRole? role) {
+    final company = p['company'];
+    return CouncilPerson(
+      id: p['id'] as String,
+      firstName: p['firstName'] as String? ?? '',
+      lastName: p['lastName'] as String? ?? '',
+      photo: _community.picture(p['avatarUrl'] as String?),
+      title: CommunityApi.text(p['title']),
+      company: company is Map ? CommunityApi.text(company['name']) : null,
+      linkedinUrl: CommunityApi.text(p['linkedinUrl']),
+      role: role,
+      joinedAt: CommunityApi.date(p['joinedAt']),
+    );
+  }
+
+  CouncilEvent _event(Map<String, dynamic> e) => CouncilEvent(
+    id: e['id'] as String,
+    slug: CommunityApi.text(e['slug']),
+    title: e['title'] as String? ?? '',
+    kind: e['kind'] as String? ?? 'OTHER',
+    description: htmlParagraphs(e['description'] as String?).join(' '),
+    location: CommunityApi.text(e['location']),
+    startsAt: CommunityApi.date(e['startsAt'])!,
+    endsAt: CommunityApi.date(e['endsAt']),
+    capacity: (e['capacity'] as num?)?.toInt(),
+    attendeeCount: CommunityApi.count(e['attendeeCount']),
+    priceAmount: (e['priceAmount'] as num?)?.toInt(),
+    inviteOnly: e['inviteOnly'] == true,
+  );
 
   // --- mapping -------------------------------------------------------------
 

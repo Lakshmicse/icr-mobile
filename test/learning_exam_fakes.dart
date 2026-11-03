@@ -7,6 +7,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:icr_mobile/core/api/api_client.dart';
+import 'package:icr_mobile/features/payments/checkout_start.dart';
 import 'package:icr_mobile/core/api/api_error.dart';
 import 'package:icr_mobile/core/auth/token_store.dart';
 import 'package:icr_mobile/features/learning_exam/api_exam_repository.dart';
@@ -143,6 +144,7 @@ Attempt sampleAttempt({
   int pass = 70,
   DateTime? startedAt,
   PaperInfo? paper,
+  int timeTakenMs = 724000,
 }) {
   final p = paper ?? samplePaper();
   final correct = (total * percentage / 100).round();
@@ -152,7 +154,7 @@ Attempt sampleAttempt({
     attempt: attempt,
     startedAt: startedAt ?? DateTime(2026, 10, 20, 9),
     submittedAt: DateTime(2026, 10, 20, 9, 12, 4),
-    timeTakenMs: 724000,
+    timeTakenMs: timeTakenMs,
     totalQuestions: total,
     correct: correct,
     wrong: total - correct,
@@ -268,6 +270,16 @@ class FakeExam implements ExamRepository {
   Future<PaperQuote> quote(String slug) async {
     calls.add('quote $slug');
     return quoteValue ?? (throw ApiError('no quote'));
+  }
+
+  /// What a checkout answers; test mode (paid at once) unless a test sets the gateway's form.
+  CheckoutStart checkoutAnswer = const CheckoutStart(devActivated: true);
+
+  @override
+  Future<CheckoutStart> checkout(String slug) async {
+    calls.add('checkout $slug');
+    if (checkoutAnswer.devActivated) lock = null;
+    return checkoutAnswer;
   }
 
   @override

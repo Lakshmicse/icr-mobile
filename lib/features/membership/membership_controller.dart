@@ -113,7 +113,7 @@ class MembershipController extends ChangeNotifier {
         await _loadMine();
       } else if (outcome.needsGateway) {
         _gateway = outcome;
-        _message = 'The payment for $planName continues on the ICR website.';
+        _message = 'Complete the payment to start $planName.';
       } else {
         _message = 'The checkout for $planName was started; ICR will confirm it.';
       }

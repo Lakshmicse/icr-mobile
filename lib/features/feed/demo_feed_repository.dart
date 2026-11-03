@@ -100,7 +100,7 @@ class DemoFeedRepository implements FeedRepository {
       _posts.firstWhere((p) => p.id == post.id, orElse: () => post).replies;
 
   @override
-  Future<void> reply(FeedPost post, String text, {String? parentId}) async {}
+  Future<void> reply(FeedPost post, String text, {String? parentId, List<Mention> mentions = const []}) async {}
 
   @override
   Future<void> deleteReply(FeedReply reply) async {}

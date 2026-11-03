@@ -13,9 +13,17 @@ class PollView extends StatelessWidget {
     required this.onVote,
     required this.onViewDiscussion,
     this.showLink = true,
+    this.isAuthor = false,
+    this.onVoters,
   });
 
+  /// "N votes": who voted and for what (the website's voters dialog); absent, the count is plain text.
+  final VoidCallback? onVoters;
+
   final FeedPoll poll;
+
+  /// The reader wrote the poll: they see its results and cannot vote, as on the website.
+  final bool isAuthor;
   final ValueChanged<String> onVote;
   final VoidCallback onViewDiscussion;
 
@@ -25,6 +33,9 @@ class PollView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final percents = poll.percents;
+    // The shares show once the reader has voted, to the author, or once the poll is closed; before that the
+    // options are plain, as the website's, so a result never sways a vote.
+    final showResults = poll.myOptionId != null || isAuthor || !poll.open;
     final footer = [
       '${poll.totalVotes} ${poll.totalVotes == 1 ? 'vote' : 'votes'}',
       // The API gives a poll no closing date, so a live one says what it knows: it takes votes, or it does not.
@@ -38,15 +49,28 @@ class PollView extends StatelessWidget {
           _OptionBar(
             key: ValueKey('poll-option:${poll.options[i].id}'),
             option: poll.options[i],
-            percent: percents[i],
+            percent: showResults ? percents[i] : null,
             mine: poll.options[i].id == poll.myOptionId,
-            onTap: poll.open ? () => onVote(poll.options[i].id) : null,
+            onTap: poll.open && !isAuthor ? () => onVote(poll.options[i].id) : null,
           ),
         ],
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(child: Text(footer, style: HomeType.pollFooter)),
+            Expanded(
+              child: onVoters != null && poll.totalVotes > 0
+                  ? Semantics(
+                      button: true,
+                      label: '$footer. Who voted',
+                      child: GestureDetector(
+                        key: const ValueKey('poll-voters'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: onVoters,
+                        child: Text(footer, style: HomeType.pollFooter),
+                      ),
+                    )
+                  : Text(footer, style: HomeType.pollFooter),
+            ),
             if (showLink)
               Semantics(
                 button: true,
@@ -68,7 +92,9 @@ class _OptionBar extends StatelessWidget {
   const _OptionBar({super.key, required this.option, required this.percent, required this.mine, required this.onTap});
 
   final FeedPollOption option;
-  final int percent;
+
+  /// The option's share of the votes; null while the results are not shown.
+  final int? percent;
   final bool mine;
   final VoidCallback? onTap;
 
@@ -78,11 +104,13 @@ class _OptionBar extends StatelessWidget {
     return Semantics(
       button: onTap != null,
       selected: mine,
-      label: '${option.label}, $percent percent${mine ? ', your vote' : ''}',
+      label: '${option.label}${percent == null ? '' : ', $percent percent'}${mine ? ', your vote' : ''}',
       excludeSemantics: true,
       child: Material(
         color: HomeLook.card,
-        shape: StadiumBorder(side: BorderSide(color: ink, width: mine ? 1.5 : 1)),
+        shape: StadiumBorder(
+          side: BorderSide(color: ink, width: mine ? 1.5 : 1),
+        ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
@@ -90,11 +118,12 @@ class _OptionBar extends StatelessWidget {
             height: 36,
             child: Stack(
               children: [
-                FractionallySizedBox(
-                  widthFactor: percent / 100,
-                  heightFactor: 1,
-                  child: ColoredBox(color: mine ? HomeLook.searchFill : const Color(0xFFE8F3FB)),
-                ),
+                if (percent != null)
+                  FractionallySizedBox(
+                    widthFactor: percent! / 100,
+                    heightFactor: 1,
+                    child: ColoredBox(color: mine ? HomeLook.searchFill : const Color(0xFFE8F3FB)),
+                  ),
                 Positioned.fill(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -112,7 +141,7 @@ class _OptionBar extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Text('$percent%', style: HomeType.pollPercent.copyWith(color: ink)),
+                        if (percent != null) Text('$percent%', style: HomeType.pollPercent.copyWith(color: ink)),
                       ],
                     ),
                   ),

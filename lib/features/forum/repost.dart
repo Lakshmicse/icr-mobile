@@ -59,6 +59,7 @@ Future<void> repostDiscussion(
       unread: unread,
       initialTitle: repostTitle(post),
       initialBody: repostQuote(post, link),
+      repostOfId: post.id,
     );
     if (saved != null) onReposted?.call();
   }
@@ -74,12 +75,15 @@ Future<void> repostDiscussion(
         title: repostTitle(post),
         body: repostQuote(post, link),
         tags: repostTags(post),
+        repostOfId: post.id,
       ),
     );
     if (!context.mounted) return;
     showMessage(
       context,
-      saved.moderation == 'APPROVED' ? 'Reposted to your feed.' : 'Reposted. A moderator will read it before it goes public.',
+      saved.moderation == 'APPROVED'
+          ? 'Reposted to your feed.'
+          : 'Reposted. A moderator will read it before it goes public.',
     );
     onReposted?.call();
   } catch (e) {

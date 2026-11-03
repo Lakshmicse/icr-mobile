@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../core/api/api_error.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/util/links.dart' show showMessage;
 import '../../career/career_format.dart';
@@ -83,6 +84,46 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
       ),
     );
     if (mounted) _c.refresh();
+  }
+
+  /// Books a round from the list, as the website's row menu does: the same sheet the applicant's page opens.
+  Future<void> _schedule(Applicant a) async {
+    final repo = widget.repository;
+    var team = const <TeamMember>[];
+    String? me;
+    try {
+      team = await repo.teamMembers();
+    } catch (_) {
+      // The panel starts empty.
+    }
+    try {
+      me = (await repo.access()).userId;
+    } catch (_) {
+      // Then nobody is ticked by default.
+    }
+    if (!mounted) return;
+    var booked = false;
+    await showInterviewSheet(
+      context,
+      team: team,
+      meId: me,
+      applicantName: a.name,
+      clock: () => _now,
+      onSubmit: (draft) async {
+        final problem = draft.problem(_now);
+        if (problem != null) return problem;
+        try {
+          await repo.scheduleInterview(a.id, draft);
+        } catch (e) {
+          return ApiError.from(e).message;
+        }
+        booked = true;
+        return null;
+      },
+    );
+    if (!mounted) return;
+    if (booked) showMessage(context, 'Interview booked with ${a.name}.');
+    _c.refresh();
   }
 
   Future<void> _move(Applicant a, String to) async {
@@ -248,6 +289,7 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
             busy: _c.busy(a.id),
             onOpen: () => _open(a),
             onMove: (to) => _move(a, to),
+            onSchedule: () => _schedule(a),
             onRate: (n) => _rate(a, n),
           ),
     ];
@@ -353,7 +395,11 @@ class ApplicantRow extends StatelessWidget {
     required this.onOpen,
     required this.onMove,
     required this.onRate,
+    this.onSchedule,
   });
+
+  /// The menu's "Schedule interview" entry carries this value; a stage name carries the move.
+  static const scheduleItem = 'SCHEDULE';
 
   final Applicant applicant;
   final DateTime now;
@@ -362,10 +408,14 @@ class ApplicantRow extends StatelessWidget {
   final ValueChanged<String> onMove;
   final ValueChanged<int> onRate;
 
+  /// "Schedule interview" in the row's menu, at a stage that takes one; absent, the menu offers moves only.
+  final VoidCallback? onSchedule;
+
   @override
   Widget build(BuildContext context) {
     final a = applicant;
     final moves = stageMoves[a.stage] ?? const [];
+    final canSchedule = onSchedule != null && schedulableStages.contains(a.stage);
     final facts = [
       if (a.headline != null && a.headline!.isNotEmpty) a.headline!,
       if (a.currentCompany != null && a.currentCompany!.isNotEmpty) a.currentCompany!,
@@ -453,12 +503,12 @@ class ApplicantRow extends StatelessWidget {
                       padding: EdgeInsets.all(12),
                       child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
                     )
-                  else if (moves.isNotEmpty)
+                  else if (moves.isNotEmpty || canSchedule)
                     PopupMenuButton<String>(
                       key: ValueKey('applicant-menu-${a.id}'),
                       tooltip: 'Move ${a.name}',
                       icon: const Icon(LucideIcons.ellipsisVertical, size: 18, color: AppColors.onSurfaceVariant),
-                      onSelected: onMove,
+                      onSelected: (value) => value == ApplicantRow.scheduleItem ? onSchedule!() : onMove(value),
                       itemBuilder: (_) => [
                         for (final to in moves)
                           PopupMenuItem(
@@ -468,6 +518,12 @@ class ApplicantRow extends StatelessWidget {
                               moveVerb(to),
                               style: TextStyle(color: to == 'REJECTED' ? AppColors.error : null),
                             ),
+                          ),
+                        if (canSchedule)
+                          PopupMenuItem(
+                            key: ValueKey('schedule-${a.id}'),
+                            value: ApplicantRow.scheduleItem,
+                            child: const Text('Schedule interview'),
                           ),
                       ],
                     )

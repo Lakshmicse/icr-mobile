@@ -1,4 +1,5 @@
 import 'exam_models.dart';
+import '../payments/checkout_start.dart';
 
 /// Thrown when the API refuses to serve a paper: the member has not opened it.
 /// Carries what would open it.
@@ -38,6 +39,10 @@ abstract class ExamRepository {
 
   /// Spends ICR credits to open the paper for good.
   Future<RedeemResult> redeem(String slug);
+
+  /// Buys the paper (`POST /learning/papers/:slug/checkout`): opened at once in test mode, else the gateway's
+  /// form, which the app runs in its own payment view.
+  Future<CheckoutStart> checkout(String slug);
 
   /// Opens the whole course or mock exam the paper sits under with one of the
   /// plan's places ([target] is `COURSE` or `MOCK_EXAM`).

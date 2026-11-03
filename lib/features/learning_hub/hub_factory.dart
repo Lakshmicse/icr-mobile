@@ -23,20 +23,30 @@ import 'hub_controller.dart';
 /// controller down instead, so a pushed screen shares the loaded courses.
 LearningHubController createHubController(BuildContext context) {
   if (AppConfig.demo) {
+    final assess = DemoAssessRepository();
+    final study = DemoStudyRepository();
     return LearningHubController(
       repository: DemoLearningHubRepository(),
-      learning: LearningController(DemoLearningRepository()),
-      assess: DemoAssessRepository(),
-      study: DemoStudyRepository(),
+      learning: LearningController(DemoLearningRepository(), assess: assess, study: study),
+      assess: assess,
+      study: study,
       ownsLearning: true,
     );
   }
   final api = context.read<ApiClient>();
+  final assess = ApiAssessRepository(api: api);
+  final study = ApiStudyRepository(api: api);
   return LearningHubController(
     repository: ApiLearningHubRepository(api: api),
-    learning: LearningController(ApiLearningRepository(api: api)),
-    assess: ApiAssessRepository(api: api),
-    study: ApiStudyRepository(api: api),
+    // The course grid's My courses reads the same assessments, mock exams and decks for its shelves of opened
+    // learning.
+    learning: LearningController(
+      ApiLearningRepository(api: api),
+      assess: assess,
+      study: study,
+    ),
+    assess: assess,
+    study: study,
     ownsLearning: true,
   );
 }

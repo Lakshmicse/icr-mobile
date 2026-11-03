@@ -20,6 +20,7 @@ class ComposerController extends ChangeNotifier {
     ComposerMode mode = ComposerMode.discussion,
     String? initialTitle,
     String? initialBody,
+    this.repostOfId,
   }) : _mode = mode,
        title = editing?.card.title ?? initialTitle ?? '',
        doc = editing != null
@@ -38,6 +39,9 @@ class ComposerController extends ChangeNotifier {
 
   /// The discussion being edited; null for a new one.
   final ForumThread? editing;
+
+  /// The discussion a new post reposts (sent as `repostOfId`); null for an ordinary post.
+  final String? repostOfId;
 
   ComposerMode _mode;
   String title;
@@ -188,8 +192,18 @@ class ComposerController extends ChangeNotifier {
   /// The details as plain words, a line each: what the rules read.
   String get body => doc.plainText;
 
-  /// The details as the forum's HTML (what is sent).
-  String get bodyHtml => _html ??= doc.toHtml();
+  /// The details as the forum's HTML (what is sent): each tagged member still in the words is a link to their
+  /// profile.
+  String get bodyHtml => _html ??= doc.withMentions(_mentions).toHtml();
+
+  List<Mention> _mentions = const [];
+
+  /// The people picked with "@" whose "@Name" is still in the details (the screen's picker knows them). Taken before
+  /// the next [bodyHtml]; changes nothing on screen by itself.
+  void setMentions(List<Mention> mentions) {
+    _mentions = mentions;
+    _html = null;
+  }
 
   /// The editor's document changed.
   void setDoc(RichDoc value) {
@@ -366,6 +380,7 @@ class ComposerController extends ChangeNotifier {
     tags: tags,
     attachment: !isEdit || _attachmentChanged ? _attachment : null,
     pollOptions: isPoll && !isEdit ? filledOptions : null,
+    repostOfId: isEdit ? null : repostOfId,
   );
 
   /// Sends the draft. Returns what the forum stored, or null when it refused (see [error]) or the form is short of

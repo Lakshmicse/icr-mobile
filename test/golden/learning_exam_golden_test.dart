@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/api/api_error.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/learning_exam/brief_controller.dart';
-import 'package:icr_mobile/features/learning_exam/brief_sheet.dart';
+import 'package:icr_mobile/features/learning_exam/brief_screen.dart';
 import 'package:icr_mobile/features/learning_exam/certificate_view.dart';
 import 'package:icr_mobile/features/learning_exam/certificates_screen.dart';
 import 'package:icr_mobile/features/learning_exam/exam_controller.dart';
@@ -99,15 +99,15 @@ void main() {
     await expectLater(find.byKey(boundary), matchesGoldenFile('goldens/$name.png'));
   }
 
-  /// A button that opens the brief.
-  Future<void> openBrief(WidgetTester tester, BriefController brief) async {
-    phone(tester);
+  /// A button that opens the brief, as a page; [height] is the frame (the design's is 912).
+  Future<void> openBrief(WidgetTester tester, BriefController brief, {double height = 912}) async {
+    phone(tester, height: height);
     await tester.pumpWidget(
       app(
         Scaffold(
           body: Builder(
             builder: (context) => Center(
-              child: TextButton(onPressed: () => showBriefSheet(context, brief), child: const Text('open brief')),
+              child: TextButton(onPressed: () => showBriefPage(context, brief), child: const Text('open brief')),
             ),
           ),
         ),
@@ -125,8 +125,16 @@ void main() {
     now: clock.call,
   );
 
-  shadowed('the brief of an open paper', (tester) async {
-    await openBrief(tester, briefFor('capital-planning-foundation'));
+  /// The ASHRAE BEMP mock set the design shows, sat once and missed.
+  void satOnce() {
+    final bemp = PaperSitting.fromJson(recorded('sitting_bemp') as Map<String, dynamic>);
+    repo.sittingValue = bemp;
+    repo.attemptsValue = [sampleAttempt(paper: bemp.paper, percentage: 0, total: bemp.questions.length)];
+  }
+
+  shadowed('the brief of an open mock set, sat once (the design)', (tester) async {
+    satOnce();
+    await openBrief(tester, briefFor('ashrae-bemp-set-1'));
     await shoot(tester, 'exam_brief');
   });
 
@@ -138,7 +146,7 @@ void main() {
       for (final r in (recorded('certificates_bharat') as List).cast<Map<String, dynamic>>())
         ExamCertificate.fromJson(r),
     ];
-    await openBrief(tester, briefFor('capital-planning-foundation'));
+    await openBrief(tester, briefFor('capital-planning-foundation'), height: 1200);
     await shoot(tester, 'exam_brief_record');
   });
 
@@ -150,12 +158,17 @@ void main() {
       ),
     );
     repo.quoteValue = PaperQuote.fromJson(recorded('quote_procurement') as Map<String, dynamic>);
-    await openBrief(tester, briefFor('procurement-management-foundation'));
+    await openBrief(tester, briefFor('procurement-management-foundation'), height: 1200);
     await shoot(tester, 'exam_brief_locked');
   });
 
-  Future<ExamController> pumpExam(WidgetTester tester, PaperSitting sitting, {ExamSnapshot? resume}) async {
-    phone(tester);
+  Future<ExamController> pumpExam(
+    WidgetTester tester,
+    PaperSitting sitting, {
+    ExamSnapshot? resume,
+    double height = 844,
+  }) async {
+    phone(tester, height: height);
     final c = ExamController(
       sitting: sitting,
       repository: repo,
@@ -170,7 +183,7 @@ void main() {
   }
 
   shadowed('the exam window on a single-choice question, answered', (tester) async {
-    final c = await pumpExam(tester, repo.sittingValue!);
+    final c = await pumpExam(tester, repo.sittingValue!, height: 752);
     c.select(1);
     c.goTo(1);
     c.select(0);
@@ -182,7 +195,7 @@ void main() {
 
   shadowed('the exam window on a multiple-choice question, flagged, with the clock low', (tester) async {
     final sitting = PaperSitting.fromJson(recorded('sitting_bemp') as Map<String, dynamic>);
-    final c = await pumpExam(tester, sitting);
+    final c = await pumpExam(tester, sitting, height: 752);
     c.select(0);
     c.goTo(1);
     c.select(0);
@@ -249,14 +262,20 @@ void main() {
     await shoot(tester, 'exam_send_failed');
   });
 
-  Future<void> pumpResult(WidgetTester tester, AttemptResult result, {String? suffix}) async {
-    phone(tester);
+  Future<void> pumpResult(
+    WidgetTester tester,
+    AttemptResult result, {
+    String? suffix,
+    bool certifying = true,
+    double height = 742,
+  }) async {
+    phone(tester, height: height);
     await tester.pumpWidget(
       app(
         ResultScreen(
           result: result,
           paperName: 'Capital Planning – Foundation',
-          certificateEnabled: true,
+          certificateEnabled: certifying,
           firstName: 'Bharat',
           onRetake: () {},
           eyebrowSuffix: suffix,
@@ -265,6 +284,11 @@ void main() {
     );
     await settle(tester);
   }
+
+  shadowed('the result of a practice sitting that missed (the design)', (tester) async {
+    await pumpResult(tester, AttemptResult.fromJson(recorded('result_cp1') as Map<String, dynamic>), certifying: false);
+    await shoot(tester, 'exam_result');
+  });
 
   shadowed('the result of a sitting that passed, with its certificate', (tester) async {
     await pumpResult(
@@ -275,21 +299,32 @@ void main() {
     await shoot(tester, 'exam_result_pass');
   });
 
-  shadowed('the result of a sitting that missed, reviewed', (tester) async {
-    await pumpResult(tester, AttemptResult.fromJson(recorded('result_cp1') as Map<String, dynamic>));
+  /// Review Answers, opened from the result as a member opens it, on question [n] when one is named.
+  Future<void> pumpReview(WidgetTester tester, {int? n}) async {
+    await pumpResult(
+      tester,
+      AttemptResult.fromJson(recorded('result_cp1') as Map<String, dynamic>),
+      certifying: false,
+      height: 927,
+    );
     await tester.tap(find.text('Review answers'));
     await settle(tester);
-    await shoot(tester, 'exam_result_review');
+    if (n != null) {
+      await tester.tap(find.byKey(ValueKey('review-q-$n')));
+      await settle(tester);
+    }
+  }
+
+  shadowed('Review Answers, on a question that missed (the design)', (tester) async {
+    await pumpReview(tester, n: 7);
+    await shoot(tester, 'exam_review_answers');
   });
 
-  shadowed('the result, its last question and its attempts', (tester) async {
-    await pumpResult(tester, AttemptResult.fromJson(recorded('result_cp1') as Map<String, dynamic>));
-    await tester.ensureVisible(find.byKey(const ValueKey('review-q-7')));
-    await tester.tap(find.byKey(const ValueKey('review-q-7')));
+  shadowed('Review Answers, on a question that was right, filtered to Correct', (tester) async {
+    await pumpReview(tester);
+    await tester.tap(find.textContaining('Correct ('));
     await settle(tester);
-    await tester.ensureVisible(find.text('My attempts'));
-    await settle(tester);
-    await shoot(tester, 'exam_result_attempts');
+    await shoot(tester, 'exam_review_correct');
   });
 
   shadowed('My attempts', (tester) async {

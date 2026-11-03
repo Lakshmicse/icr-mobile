@@ -20,6 +20,28 @@ const _tower = FeedPicture.asset('assets/images/demo/post_green_tower.jpg');
 const _roof = FeedPicture.asset('assets/images/demo/post_rooftop_hvac.jpg');
 const _control = FeedPicture.asset('assets/images/demo/post_control_room.jpg');
 
+/// The topics of the owner's design (assess-programme.png) — seventeen chips under an "18 Topics" pill — on
+/// Capital Planning.
+const _designAreas = [
+  'MEP Systems',
+  'HVAC Operations',
+  'Life Safety & HSE',
+  'Space Management',
+  'CMMS/CAFM',
+  'Maintenance',
+  'Smart BMS/BAS',
+  'Net-Zero ESG',
+  'LEED Tracking',
+  'Energy Auditing',
+  'Waste Circularity',
+  'Indoor Air Quality',
+  'CapEx/OpEx Budgeting',
+  'SLA Governance',
+  'Vendor Contracts',
+  'Portfolio Risk',
+  'Business Continuity',
+];
+
 /// Every programme with a different cover, so the grid reads as the live one does.
 List<PaperGroup> _programmes() {
   final covers = [_tower, _roof, _control, _tower];
@@ -33,7 +55,7 @@ List<PaperGroup> _programmes() {
         title: g.title,
         summary: g.summary,
         cover: i < 4 ? covers[i] : null,
-        knowledgeAreas: g.knowledgeAreas,
+        knowledgeAreas: g.key == 'CP' ? _designAreas : g.knowledgeAreas,
         papers: g.papers,
         sortOrder: g.sortOrder,
         partner: g.partner,
@@ -57,6 +79,24 @@ List<PaperGroup> _topics() {
       ),
   ];
 }
+
+/// AEE CBCP as the owner's mock-sets.png draws it: three sets of 100 questions, ten minutes, 30% to pass.
+PaperGroup _designExam() => topic('aee-cbcp', 'AEE CBCP', [
+  for (var n = 1; n <= 3; n++)
+    AssessPaper(
+      id: 'aee-cbcp-set-$n',
+      slug: 'aee-cbcp-set-$n',
+      title: 'Set $n',
+      kind: PaperKind.mock,
+      description:
+          'Validates operational workplace delivery, critical MEP plant servicing, and statutory safety protocols.',
+      questions: 100,
+      durationMinutes: 10,
+      passPercentage: 30,
+      topicId: 'topic-aee-cbcp',
+      sortOrder: n,
+    ),
+]);
 
 /// What Bharat Buyer has done: the Advanced Capital Planning level opened with credits and passed (with its
 /// certificate), the Foundation one sat once and failed.
@@ -160,16 +200,40 @@ void main() {
     await expectLater(find.byType(AssessmentScreen), matchesGoldenFile('goldens/learning_assess_programmes.png'));
   });
 
-  shadowedWidgets('Assess Your Knowledge: Capital Planning (a level passed and certified, one failed), at 390 × 2300', (
+  shadowedWidgets('Assess Your Knowledge: the programme page as designed (assess-programme.png), at 390 × 1010', (
     tester,
   ) async {
-    await pump(tester, assessment(_fake()), 2300);
+    // A staff sign-in sees no lock, price or plan card, so the page is the design's and nothing else.
+    final fake = _fake(
+      member: assessMember(allOpen: true, open: {}, redeemed: {}),
+    );
+    await pump(tester, assessment(fake), 1010);
+    await openGroup(tester, 'Capital Planning');
+    await export(tester, find.byType(ShellPage).last, 'learning_assess_programme_design');
+    await expectLater(find.byType(ShellPage).last, matchesGoldenFile('goldens/learning_assess_programme_design.png'));
+  });
+
+  shadowedWidgets('Mock Exams: the sets page as designed (mock-sets.png), at 390 × 1127', (tester) async {
+    final fake = FakeAssess(
+      topics: [_designExam()],
+      member: assessMember(allOpen: true, open: {}, redeemed: {}),
+    );
+    await pump(tester, mock(fake), 1127);
+    await openGroup(tester, 'AEE CBCP');
+    await export(tester, find.byType(ShellPage).last, 'learning_assess_mock_sets_design');
+    await expectLater(find.byType(ShellPage).last, matchesGoldenFile('goldens/learning_assess_mock_sets_design.png'));
+  });
+
+  shadowedWidgets('Assess Your Knowledge: Capital Planning (a level passed and certified, one failed), at 390 × 1500', (
+    tester,
+  ) async {
+    await pump(tester, assessment(_fake()), 1500);
     await openGroup(tester, 'Capital Planning');
     await export(tester, find.byType(ShellPage).last, 'learning_assess_levels_capital');
     await expectLater(find.byType(ShellPage).last, matchesGoldenFile('goldens/learning_assess_levels_capital.png'));
   });
 
-  shadowedWidgets('Assess Your Knowledge: Contract Management (every level priced, a bundle, a sale), at 390 × 2900', (
+  shadowedWidgets('Assess Your Knowledge: Contract Management (every level priced, a bundle, a sale), at 390 × 1720', (
     tester,
   ) async {
     final fake = _fake(
@@ -202,13 +266,13 @@ void main() {
               )
             : e.value,
     };
-    await pump(tester, assessment(fake), 2900);
+    await pump(tester, assessment(fake), 1720);
     await openGroup(tester, 'Contract Management');
     await export(tester, find.byType(ShellPage).last, 'learning_assess_levels_priced');
     await expectLater(find.byType(ShellPage).last, matchesGoldenFile('goldens/learning_assess_levels_priced.png'));
   });
 
-  shadowedWidgets('Assess Your Knowledge: a plan place free, at 390 × 1700', (tester) async {
+  shadowedWidgets('Assess Your Knowledge: a plan place free, at 390 × 640', (tester) async {
     final fake = _fake(
       member: assessMember(
         open: {},
@@ -217,8 +281,11 @@ void main() {
         upgradePlan: 'Pro Plus',
       ),
     );
-    await pump(tester, assessment(fake), 1700);
+    // The grid is taller than the page: open the programme from a tall view, then cut the view to the page.
+    await pump(tester, assessment(fake), 1180);
     await openGroup(tester, 'Human Capital');
+    tester.view.physicalSize = const Size(780, 640 * 2);
+    await tester.pumpAndSettle();
     await export(tester, find.byType(ShellPage).last, 'learning_assess_levels_plan');
     await expectLater(find.byType(ShellPage).last, matchesGoldenFile('goldens/learning_assess_levels_plan.png'));
   });
@@ -229,14 +296,14 @@ void main() {
     await expectLater(find.byType(MockTestsScreen), matchesGoldenFile('goldens/learning_assess_mock_topics.png'));
   });
 
-  shadowedWidgets('Mock Exams: AEE CBCP (a set sat three times, a set locked), at 390 × 1500', (tester) async {
-    await pump(tester, mock(_fake()), 1500);
+  shadowedWidgets('Mock Exams: AEE CBCP (a set sat three times, a set locked), at 390 × 1100', (tester) async {
+    await pump(tester, mock(_fake()), 1100);
     await openGroup(tester, 'AEE CBCP');
     await export(tester, find.byType(ShellPage).last, 'learning_assess_mock_sets');
     await expectLater(find.byType(ShellPage).last, matchesGoldenFile('goldens/learning_assess_mock_sets.png'));
   });
 
-  shadowedWidgets('Mock Exams: AEE CBCP, both sets closed, the bundle in ICR credits above the sets, at 390 × 1900', (
+  shadowedWidgets('Mock Exams: AEE CBCP, both sets closed, the bundle in ICR credits below the sets, at 390 × 1580', (
     tester,
   ) async {
     final fake = _fake(
@@ -255,13 +322,16 @@ void main() {
         ],
       ),
     );
-    await pump(tester, mock(fake), 1900);
+    await pump(tester, mock(fake), 1580);
     await openGroup(tester, 'AEE CBCP');
     await export(tester, find.byType(ShellPage).last, 'learning_assess_mock_bundle_credits');
-    await expectLater(find.byType(ShellPage).last, matchesGoldenFile('goldens/learning_assess_mock_bundle_credits.png'));
+    await expectLater(
+      find.byType(ShellPage).last,
+      matchesGoldenFile('goldens/learning_assess_mock_bundle_credits.png'),
+    );
   });
 
-  shadowedWidgets('Assess Your Knowledge: Contract Management, the bundle in money and in credits, at 390 × 3100', (
+  shadowedWidgets('Assess Your Knowledge: Contract Management, the bundle in money and in credits, at 390 × 1720', (
     tester,
   ) async {
     final fake = _fake(
@@ -288,10 +358,9 @@ void main() {
         ],
       ),
     );
-    await pump(tester, assessment(fake), 3100);
+    await pump(tester, assessment(fake), 1720);
     await openGroup(tester, 'Contract Management');
     await export(tester, find.byType(ShellPage).last, 'learning_assess_levels_bundle_both');
     await expectLater(find.byType(ShellPage).last, matchesGoldenFile('goldens/learning_assess_levels_bundle_both.png'));
   });
-
 }

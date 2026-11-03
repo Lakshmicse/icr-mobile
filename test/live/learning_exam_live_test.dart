@@ -16,6 +16,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/api/api_error.dart';
+import 'package:icr_mobile/features/payments/checkout_start.dart';
 import 'package:icr_mobile/features/learning_exam/api_exam_repository.dart';
 import 'package:icr_mobile/features/learning_exam/attempts_controller.dart';
 import 'package:icr_mobile/features/learning_exam/brief_controller.dart';
@@ -77,6 +78,8 @@ class _LosesTheFirstReply implements ExamRepository {
   Future<PaperQuote> quote(String slug) => inner.quote(slug);
   @override
   Future<RedeemResult> redeem(String slug) => inner.redeem(slug);
+  @override
+  Future<CheckoutStart> checkout(String slug) => inner.checkout(slug);
   @override
   Future<void> openWithPlan({required String target, required String targetId}) =>
       inner.openWithPlan(target: target, targetId: targetId);

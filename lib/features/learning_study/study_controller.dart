@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -7,30 +8,49 @@ import 'study_models.dart';
 import 'study_repository.dart';
 import '../learning/notify_safely.dart';
 
+/// How long auto-play stays on a card's question ([flipped] false) or on its answer, before it turns the card over
+/// or goes on to the next one.
+typedef StudyPacing = Duration Function(StudyCard card, {required bool flipped});
+
+/// Reading time: a few seconds and a little more for every character, never less than a glance and never more
+/// than a slow reader needs for a long answer.
+Duration readingTime(StudyCard card, {required bool flipped}) {
+  final length = flipped ? card.back.length + (card.example?.length ?? 0) : card.front.length;
+  final ms = (flipped ? 3500 : 2500) + 45 * length;
+  return Duration(milliseconds: ms.clamp(flipped ? 4500 : 3000, flipped ? 20000 : 9000));
+}
+
 /// Studying one deck (or the member's starred cards from every deck): which card is showing and whether it is
-/// turned over, the order, a category filter, what the member marked as known, and the stars, which are kept by
-/// the API (taken at once, put back if it refuses).
+/// turned over, the order, a category filter and a search over the cards, what the member marked as known, the
+/// stars, which are kept by the API (taken at once, put back if it refuses), and auto-play.
 ///
 /// Order is a list of indexes into the cards on show, so shuffling never copies or changes the cards, and a star
 /// is keyed by the card's id, so it survives a shuffle and a filter. The "got it / still learning" marks are the
 /// session's: they are not saved anywhere (the API has no place for them).
+///
+/// Auto-play ([play]) turns each card over and goes on to the next by itself, at [StudyPacing]'s pace, and
+/// finishes the pass after the last card's answer. Anything the member does by hand (a tap on the card, previous,
+/// next, a mark, the shuffle, a filter, a search) pauses it: a person who reaches for the cards is reading them.
 class DeckStudyController extends ChangeNotifier with NotifySafely {
   /// A deck: its cards come from `GET /learning/resources/:slug`.
-  DeckStudyController.deck(this.repository, StudyTopic deck, {math.Random? random})
+  DeckStudyController.deck(this.repository, StudyTopic deck, {math.Random? random, StudyPacing? pacing})
     : title = deck.title,
       _slug = deck.slug,
-      _random = random ?? math.Random();
+      _random = random ?? math.Random(),
+      _pacing = pacing ?? readingTime;
 
   /// The member's starred cards, from every deck.
-  DeckStudyController.starred(this.repository, {math.Random? random})
+  DeckStudyController.starred(this.repository, {math.Random? random, StudyPacing? pacing})
     : title = 'Starred cards',
       _slug = null,
-      _random = random ?? math.Random();
+      _random = random ?? math.Random(),
+      _pacing = pacing ?? readingTime;
 
   final StudyRepository repository;
   final String title;
   final String? _slug;
   final math.Random _random;
+  final StudyPacing _pacing;
 
   List<StudyCard> _all = const [];
   final Set<String> _stars = {};
@@ -39,7 +59,10 @@ class DeckStudyController extends ChangeNotifier with NotifySafely {
 
   String? _category;
 
-  /// The ids that were starred when the Starred chip was pressed, not the live set: taking a star back while
+  /// What the member typed in the search: lower case and trimmed; empty when there is none.
+  String _query = '';
+
+  /// The ids that were starred when the Starred pass was chosen, not the live set: taking a star back while
   /// studying the starred cards leaves the card in the deck, as the website does.
   Set<String>? _starredOnly;
 
@@ -52,6 +75,8 @@ class DeckStudyController extends ChangeNotifier with NotifySafely {
   bool _finished = false;
   bool _loading = false;
   bool _loaded = false;
+  bool _playing = false;
+  Timer? _timer;
   String? _error;
   DeckLocked? _lock;
   int _generation = 0;
@@ -71,14 +96,28 @@ class DeckStudyController extends ChangeNotifier with NotifySafely {
   bool get starredOnly => _starredOnly != null;
   bool get restricted => _only != null;
 
-  /// The cards on show: the category, the Starred chip and the review restriction applied.
+  /// The search as typed, trimmed and in lower case.
+  String get query => _query;
+  bool get searching => _query.isNotEmpty;
+
+  /// Whether auto-play is running.
+  bool get playing => _playing;
+
+  /// The cards on show: the category, the Starred pass, the search and the review restriction applied.
   List<StudyCard> get visible => [
     for (final c in _all)
       if ((_category == null || c.category == _category) &&
           (_starredOnly == null || _starredOnly!.contains(c.id)) &&
-          (_only == null || _only!.contains(c.id)))
+          (_only == null || _only!.contains(c.id)) &&
+          (_query.isEmpty || _matches(c, _query)))
         c,
   ];
+
+  /// Every word of the search is somewhere in the card: its question, answer, example or category.
+  static bool _matches(StudyCard card, String query) {
+    final text = [card.front, card.back, card.example, card.category].whereType<String>().join(' ').toLowerCase();
+    return query.split(RegExp(r'\s+')).every(text.contains);
+  }
 
   int get total => _order.length;
 
@@ -120,6 +159,7 @@ class DeckStudyController extends ChangeNotifier with NotifySafely {
 
   Future<void> load() async {
     final generation = ++_generation;
+    _stopPlaying();
     _loading = true;
     _error = null;
     _lock = null;
@@ -173,12 +213,14 @@ class DeckStudyController extends ChangeNotifier with NotifySafely {
 
   void flip() {
     if (current == null || _finished) return;
+    _stopPlaying();
     _flipped = !_flipped;
     notifyListeners();
   }
 
   void next() {
     if (current == null || _finished) return;
+    _stopPlaying();
     if (_pos >= total - 1) {
       finish();
       return;
@@ -190,6 +232,7 @@ class DeckStudyController extends ChangeNotifier with NotifySafely {
 
   void previous() {
     if (current == null || _pos == 0) return;
+    _stopPlaying();
     if (_finished) {
       _finished = false;
       notifyListeners();
@@ -203,14 +246,74 @@ class DeckStudyController extends ChangeNotifier with NotifySafely {
   /// Ends the pass: the summary.
   void finish() {
     if (_finished || total == 0) return;
+    _stopPlaying();
     _finished = true;
     notifyListeners();
   }
+
+  // --- auto-play ----------------------------------------------------------------
+
+  /// Starts auto-play on the card showing: its question for a while, then its answer, then the next card.
+  void play() {
+    if (_playing || current == null || _finished) return;
+    _playing = true;
+    _arm();
+    notifyListeners();
+  }
+
+  /// Stops auto-play where it is.
+  void pause() {
+    if (!_playing) return;
+    _stopPlaying();
+    notifyListeners();
+  }
+
+  void togglePlay() => _playing ? pause() : play();
+
+  void _stopPlaying() {
+    _playing = false;
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  void _arm() {
+    _timer?.cancel();
+    final card = current;
+    if (card == null) return;
+    _timer = Timer(_pacing(card, flipped: _flipped), _step);
+  }
+
+  /// One beat of auto-play: turn the card over, or go on; after the last answer the pass is over.
+  void _step() {
+    if (!_playing || current == null) return;
+    if (!_flipped) {
+      _flipped = true;
+    } else if (_pos >= total - 1) {
+      _stopPlaying();
+      _finished = true;
+      notifyListeners();
+      return;
+    } else {
+      _pos++;
+      _flipped = false;
+    }
+    notifyListeners();
+    _arm();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  // --- marks, order, filters ------------------------------------------------------
 
   /// "Got it" ([known] true) or "Still learning", then the next card (the summary after the last).
   void mark({required bool known}) {
     final card = current;
     if (card == null || _finished) return;
+    _stopPlaying();
     if (known) {
       _known.add(card.id);
       _learning.remove(card.id);
@@ -227,6 +330,7 @@ class DeckStudyController extends ChangeNotifier with NotifySafely {
   }
 
   void toggleShuffle() {
+    _stopPlaying();
     _shuffled = !_shuffled;
     _rebuild();
     notifyListeners();
@@ -234,20 +338,33 @@ class DeckStudyController extends ChangeNotifier with NotifySafely {
 
   /// A category chip (null is "All"): back to the first card of what is left.
   void setCategory(String? name) {
+    _stopPlaying();
     _category = name == _category ? null : name;
     _starredOnly = null;
     _rebuild();
     notifyListeners();
   }
 
-  /// The Starred chip: the cards starred right now, frozen for the pass.
+  /// The Starred pass: the cards starred right now, frozen for the pass.
   void toggleStarredOnly() {
+    _stopPlaying();
     if (_starredOnly != null) {
       _starredOnly = null;
     } else {
       _category = null;
       _starredOnly = {..._stars.where((id) => _all.any((c) => c.id == id))};
     }
+    _rebuild();
+    notifyListeners();
+  }
+
+  /// The search over the cards: only those holding every word are studied, from the first of them. An empty
+  /// search is no search.
+  void setQuery(String text) {
+    final next = text.trim().toLowerCase();
+    if (next == _query) return;
+    _stopPlaying();
+    _query = next;
     _rebuild();
     notifyListeners();
   }
@@ -269,6 +386,7 @@ class DeckStudyController extends ChangeNotifier with NotifySafely {
 
   /// Another pass over the whole of what was on show, from the first card, marks cleared.
   void studyAgain() {
+    _stopPlaying();
     _known.clear();
     _learning.clear();
     _only = null;
@@ -280,13 +398,15 @@ class DeckStudyController extends ChangeNotifier with NotifySafely {
   void studyTheRest() {
     final rest = toReview.map((c) => c.id).toSet();
     if (rest.isEmpty) return;
+    _stopPlaying();
     _only = rest;
     _rebuild();
     notifyListeners();
   }
 
-  /// Leaves the review restriction (and the chips) for the whole deck.
+  /// Leaves the review restriction and the category and Starred filters for the whole deck; a search stays.
   void showAll() {
+    _stopPlaying();
     _only = null;
     _category = null;
     _starredOnly = null;

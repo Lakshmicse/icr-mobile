@@ -63,7 +63,7 @@ Future<PostResult> _post(
   final c = PostRfqController(repository: repo, initialKind: kind);
   await c.start();
   expect(c.loadError, isNull);
-  expect(c.mustRegisterCompany, isFalse);
+  expect(c.personal, isFalse);
   expect(c.companyFromAccount, expectCompany ?? companyName);
   final pune = (await c.searchPlaces('Pune')).first;
   expect(c.addPlace(pune), isTrue);
@@ -422,13 +422,13 @@ void main() {
         expect(r.contactEmail, 'companyadmin@icr.test');
         expect(r.category, 'SECURITY');
         expect(r.facilityType, 'IT & ITES');
-        expect(r.budget, 650000);
+        // The website's composer asks no budget, line items or reply-by day (3 Nov 2026): none is sent.
+        expect(r.budget, isNull);
         expect(r.locations, ['Pune']);
         expect(r.state, 'Maharashtra');
-        expect(r.items.single.name, 'Security guards');
-        expect(r.items.single.quantity, 24);
+        expect(r.items, isEmpty);
         expect(r.files.single.title, 'Site layout, ground floor');
-        expect(r.dueDate, isNotNull);
+        expect(r.dueDate, isNull);
         expect((await repo.mine(search: 'zz company live')).rows.map((x) => x.id), contains(posted.id));
         final summary = await repo.summary();
         expect(summary.count(MyView.live), greaterThanOrEqualTo(1));
@@ -451,7 +451,7 @@ void main() {
       final edit = PostRfqController(repository: other, editingId: posted.id);
       await edit.start();
       expect(edit.editing, isTrue);
-      expect(edit.draft.budget, '650000');
+      expect(edit.draft.budget, isEmpty, reason: 'the composer asks no budget; editing may add one');
       edit.update((d) => d.budget = '7,25,000');
       expect(await edit.submit(publish: true), isTrue, reason: edit.error ?? '${edit.problems}');
       var r = await repo.requirement(posted.id);
@@ -482,12 +482,24 @@ void main() {
         final repo = await _repo(companyAdmin);
         final blue = await _repo(bluepeak);
         final bluepeakVendor = (await blue.access()).vendorId!;
-        final posted = await _post(
-          companyAdmin,
-          tweak: (d) => d
-            ..audience = Audience.invited
-            ..invited = [SupplierRef(vendorId: bluepeakVendor, name: 'Bluepeak Security')],
+        // A private enquiry starts, as on the website, from a supplier's "Request a quote" (the composer posts open
+        // requirements only since 3 Nov 2026).
+        final ask = PostRfqController(
+          repository: repo,
+          target: QuoteTarget(vendorId: bluepeakVendor, supplierName: 'Bluepeak Security', categoryKey: 'PHYSICAL_SECURITY'),
         );
+        await ask.start();
+        ask.quote
+          ..title = 'zz company live invite ${DateTime.now().millisecondsSinceEpoch}'
+          ..city = 'Pune'
+          ..description = 'Round-the-clock guarding for a Pune campus: 24 guards, three shifts.';
+        expect(await ask.submit(publish: true), isTrue, reason: ask.error ?? '${ask.problems}');
+        final posted = ask.result!;
+        addTearDown(() async {
+          try {
+            await repo.deleteDraft(posted.id);
+          } catch (_) {}
+        });
         final r = await repo.requirement(posted.id);
         expect(r.visibility, RfqVisibility.targeted);
         expect(r.status, RfqStatus.published, reason: 'an invite-only enquiry goes out at once');

@@ -143,7 +143,7 @@ void roleBuyerMarketScreens() {
     });
 
     testWidgets(
-      'Post RFQ tells a person with no company so before the form, and offers Create a company',
+      'Post your requirement opens on an enquiry for a person with no company; an RFQ asks for a company',
       tags: const ['live'],
       (tester) async {
         if (!await liveScreenReady(tester)) return;
@@ -152,18 +152,23 @@ void roleBuyerMarketScreens() {
           await loadScreen(
             tester,
             PostRfqScreen(repository: rfqOf(w), onBack: () {}, onCreateCompany: () => created++),
-            size: const Size(390, 1200),
+            size: const Size(390, 3000),
           );
-          final text = expectHealthy(tester, 'Post RFQ as ${w.email}');
-          expect(text, contains('Requirements are posted for a company'));
-          await tester.tap(find.text('Create a company'));
+          final text = expectHealthy(tester, 'Post your requirement as ${w.email}');
+          // As on the website (3 Nov 2026): an enquiry needs no company.
+          expect(text, contains('Your details'));
+          expect(find.text('Send enquiry'), findsOneWidget);
+          await tester.tap(find.byKey(const ValueKey('kind-rfq')));
+          await tester.pump();
+          expect(find.byKey(const ValueKey('rfq-needs-company')), findsOneWidget);
+          await tester.tap(find.byKey(const ValueKey('rfq-create-company')));
           await tester.pump();
           expect(created, 1);
           record(
             'Requirements: Post RFQ screen',
             w.person,
-            'refused correctly',
-            'the form says so first + Create a company',
+            'works',
+            'an enquiry form; an RFQ says it needs a company + Create a company',
           );
           await unmount(tester);
         }

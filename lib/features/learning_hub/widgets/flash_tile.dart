@@ -5,14 +5,14 @@ import '../../feed/feed_models.dart' show FeedPicture;
 import '../../learning/widgets/course_picture.dart';
 import '../hub_styles.dart';
 
-/// One deck in the design's "Flash Cards" rail: a 107.75 × 62 dp photo with 8
-/// dp corners, darkened towards its foot, the deck's name and "45 Cards" in
-/// white at the bottom left and an arrow at the bottom right.
+/// One deck in the design's "Flash Cards" rail (`docs/designs/learning-hub-v2.png`): a 107.5 × 70 dp photo with
+/// 8 dp corners, darkened towards its foot, the deck's name and "45 Cards" in white at the bottom left (the name
+/// runs to within 4 dp of the edge) and a small arrow at the bottom right, on the count's line.
 class FlashTile extends StatelessWidget {
   const FlashTile({super.key, required this.title, required this.count, required this.cover, required this.onTap});
 
-  static const width = 107.75;
-  static const height = 62.0;
+  static const width = 107.5;
+  static const height = 70.0;
   static const gap = 6.25;
 
   final String title;
@@ -51,20 +51,25 @@ class FlashTile extends StatelessWidget {
                   ),
                   Positioned(
                     left: 8,
-                    right: 22,
-                    bottom: 5,
+                    right: 4,
+                    bottom: 12.3,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(title, style: HubText.flashTitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text(cards, style: HubText.flashCount, maxLines: 1),
+                        const SizedBox(height: 1.6),
+                        // Clear of the arrow, which sits at the right of this line.
+                        Padding(
+                          padding: const EdgeInsets.only(right: 14),
+                          child: Text(cards, style: HubText.flashCount, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ),
                       ],
                     ),
                   ),
                   const Positioned(
-                    right: 6,
-                    bottom: 7,
+                    right: 4.4,
+                    bottom: 7.25,
                     child: Icon(LucideIcons.arrowRight, size: 14, color: Colors.white),
                   ),
                 ],

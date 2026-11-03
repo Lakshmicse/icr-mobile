@@ -10,6 +10,7 @@
 ///     flutter test test/live/mentoring_live_test.dart --concurrency=1
 library;
 
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/api/api_client.dart';
 import 'package:icr_mobile/features/mentorship_my/mentoring_models.dart';
@@ -132,7 +133,29 @@ const pastGroup = 'dsgn-mentoring-group-past';
 /// A first start Anand can take, [days] days out or later, for a [minutes]-minute call.
 Future<DateTime> anandSlot({int minutes = 30, int skipDays = 1}) async {
   final repo = await repoFor(anand);
-  final slots = await repo.slots(anandUserProfile, durationMin: minutes);
+  // A time Anand has set for another request that still waits for its mentee's answer cannot be set again
+  // (the portal refuses it), so those times are left out before a day's first slot is picked.
+  final held = <(DateTime start, DateTime end)>[
+    for (final p in await repo.purchases(seller: true))
+      if (p.status.open) ...[
+        if (p.request?.scheduledAt != null)
+          (
+            p.request!.scheduledAt!.toUtc(),
+            p.request!.scheduledAt!.toUtc().add(Duration(minutes: p.request!.durationMin ?? 60)),
+          ),
+        if (p.booking != null)
+          (
+            p.booking!.scheduledAt.toUtc(),
+            p.booking!.scheduledAt.toUtc().add(Duration(minutes: p.booking!.durationMin)),
+          ),
+      ],
+  ];
+  bool clashes(DateTime at) {
+    final end = at.add(Duration(minutes: minutes));
+    return held.any((h) => at.isBefore(h.$2) && end.isAfter(h.$1));
+  }
+
+  final slots = (await repo.slots(anandUserProfile, durationMin: minutes)).where((s) => !clashes(s.at.toUtc()));
   final firsts = <String, DateTime>{};
   for (final s in slots) {
     final l = s.at.toLocal();
@@ -159,10 +182,15 @@ Future<String> askAnand(String serviceId, {String? topic}) async {
 /// Anand sets the time on a request (the mentor's half, done as the API takes it).
 Future<void> anandAccepts(String purchaseId, DateTime at) async {
   final api = await liveClient(anand);
-  await api.dio.post<dynamic>(
-    '/mentor-services/purchases/$purchaseId/accept',
-    data: {'scheduledAt': at.toUtc().toIso8601String()},
-  );
+  try {
+    await api.dio.post<dynamic>(
+      '/mentor-services/purchases/$purchaseId/accept',
+      data: {'scheduledAt': at.toUtc().toIso8601String()},
+    );
+  } on DioException catch (e) {
+    // The API's own sentence, so a refusal in a run's log says why (a time already past, a request answered).
+    fail('accept $purchaseId at $at refused: ${e.response?.statusCode} ${e.response?.data}');
+  }
 }
 
 /// Takes a fixture session back whatever state a failed test left it in.
@@ -177,7 +205,11 @@ Future<void> cleanUpPurchase(String id) async {
 
 Future<ServicePurchase> purchaseOf(MyMentoringController c, String id) async {
   await c.book.purchases.load();
-  return c.book.purchases.data!.firstWhere((p) => p.id == id);
+  final listed = c.book.purchases.data!.where((p) => p.id == id);
+  if (listed.isNotEmpty) return listed.first;
+  // The tab reads the member's first fifty; a sender who has sat through many runs holds more than that, and the
+  // API orders them by state, so a fresh one can fall off the page. The purchase itself is then read directly.
+  return (await repoFor(rohan)).purchase(id);
 }
 
 void main() {

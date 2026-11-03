@@ -6,11 +6,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/forum/composer_controller.dart';
 import 'package:icr_mobile/features/forum/demo_forum_repository.dart';
+import 'package:icr_mobile/features/forum/mentions/tag_suggestions.dart';
 import 'package:icr_mobile/features/forum/new_thread_screen.dart';
 import 'package:icr_mobile/features/forum/rich_document.dart';
 import 'package:icr_mobile/features/forum/rich_text_controller.dart';
 
 import '../helpers/fonts.dart';
+
+/// The sample forum with a company list, for the Tags field's "@" list.
+class _WithCompanies extends DemoForumRepository {
+  @override
+  Future<List<TagCompany>> companies(String search, {int limit = 5}) async => [
+    for (final c in const [
+      TagCompany(id: 'co-1', name: 'Prism Facility Services', city: 'Bengaluru'),
+      TagCompany(id: 'co-2', name: 'Pristine Estates', city: 'Pune'),
+    ])
+      if (c.name.toLowerCase().contains(search.toLowerCase())) c,
+  ];
+}
 
 /// The composer is the website's "Create a post" form on a phone (360 wide, 2x): the discussion and the poll, empty
 /// and filled in with formatted details. Refresh with
@@ -20,7 +33,11 @@ void main() {
 
   Finder key(String k) => find.byKey(ValueKey(k));
 
-  Future<void> open(WidgetTester tester, {ComposerMode mode = ComposerMode.discussion}) async {
+  Future<void> open(
+    WidgetTester tester, {
+    ComposerMode mode = ComposerMode.discussion,
+    DemoForumRepository? repository,
+  }) async {
     tester.view.physicalSize = const Size(720, 3000);
     tester.view.devicePixelRatio = 2;
     addTearDown(tester.view.reset);
@@ -28,7 +45,7 @@ void main() {
       MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: buildAppTheme(),
-        home: NewThreadScreen(repository: DemoForumRepository(), mode: mode),
+        home: NewThreadScreen(repository: repository ?? DemoForumRepository(), mode: mode),
       ),
     );
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
@@ -90,6 +107,16 @@ void main() {
     await tester.enterText(key('topic-search'), 'techno');
     await tester.pumpAndSettle();
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('goldens/composer_category_search.png'));
+  });
+
+  // Owner, 3 Nov 2026: "@" in the Tags lists the people and companies it may mean.
+  testWidgets('the Tags field listing people and companies for "@pri" (360 wide)', (tester) async {
+    await open(tester, repository: _WithCompanies());
+    await fillIn(tester, poll: false);
+    await tester.enterText(key('composer-tag'), '@pri');
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    await expectLater(find.byType(NewThreadScreen), matchesGoldenFile('goldens/composer_tag_suggestions.png'));
   });
 
   testWidgets('a poll, filled in (360 wide)', (tester) async {

@@ -10,7 +10,9 @@ import '../../core/util/links.dart';
 import '../../core/widgets/chips.dart';
 import '../../core/widgets/section_heading.dart';
 import '../../core/widgets/title_bar.dart';
+import 'council_format.dart';
 import 'council_models.dart';
+import 'council_screen.dart';
 import 'councils_controller.dart';
 import 'councils_styles.dart';
 import 'widgets/chapters_footer.dart';
@@ -22,15 +24,24 @@ import 'widgets/stat_tiles.dart';
 
 /// The Councils screen: the stats, the member's seats, the upcoming
 /// roundtables, the directory and the city chapters, as the design.
+///
+/// A council's card, its Open Member Lounge, Preview Chapter and the rows of the Your councils sheet open the
+/// council's own page ([CouncilScreen], since 2 Nov 2026), through [handoffs] and the controller's page
+/// repository. Without either (a preview, a test double that only feeds the board) they hand the council's page
+/// on the website to [opener] instead.
 class CouncilsScreen extends StatefulWidget {
-  const CouncilsScreen({super.key, required this.onBack, this.opener = openUrl});
+  const CouncilsScreen({super.key, required this.onBack, this.opener = openUrl, this.handoffs});
 
   /// The arrow at the top left; the shell goes back to Home.
   final VoidCallback onBack;
 
   /// Hands a page to the browser (or the calendar app). Tests give their own
-  /// to see which page a control asks for.
+  /// to see which page a control asks for. A council's page uses it too.
   final Future<void> Function(BuildContext context, Uri uri) opener;
+
+  /// Where a council's page hands a person on to (an event, a member, a conversation, the bell); the shell wires
+  /// them. A council's page opens in the app only when this is given.
+  final CouncilHandoffs? handoffs;
 
   @override
   State<CouncilsScreen> createState() => _CouncilsScreenState();
@@ -55,6 +66,28 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
   Future<void> _open(Uri uri) => widget.opener(context, uri);
 
   Future<void> _site(String path) => _open(AppConfig.sitePage(path));
+
+  void _bell() {
+    final go = widget.handoffs?.onBell;
+    if (go != null) return go();
+    _site('/notifications');
+  }
+
+  /// The council's own page, on [tab] (the website's `?tab=`) when given. The page's seat changes reach the board
+  /// through [CouncilsController.follow].
+  Future<void> _openPage(CouncilsController councils, Council council, {String? tab}) {
+    final handoffs = widget.handoffs;
+    final pages = councils.pages;
+    if (handoffs == null || pages == null) return _open(councils.repository.link(council, tab: tab));
+    return openCouncilPage(
+      context,
+      repository: pages,
+      idOrSlug: council.slug,
+      handoffs: handoffs.withOpener(widget.opener),
+      tab: tab,
+      onChanged: councils.follow,
+    );
+  }
 
   Future<void> _run(Future<String?> action) async {
     final message = await action;
@@ -88,12 +121,7 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
                 top: 0,
                 left: 0,
                 right: 0,
-                child: TitleBar(
-                  title: 'Councils',
-                  onBack: widget.onBack,
-                  unread: councils.unread,
-                  onBell: () => _site('/notifications'),
-                ),
+                child: TitleBar(title: 'Councils', onBack: widget.onBack, unread: councils.unread, onBell: _bell),
               ),
             ],
           ),
@@ -133,7 +161,7 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
       const _SoftRule(color: CouncilsColors.rowRule),
       if (joined.isNotEmpty) ...[
         const SizedBox(height: 10),
-        _JoinedHeading(count: joined.length, onManage: () => _site('/councils')),
+        _JoinedHeading(count: joined.length, onManage: () => _manageSeats(context, councils)),
         const SizedBox(height: 9),
         SizedBox(
           height: JoinedCouncilCard.height,
@@ -145,9 +173,10 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
             separatorBuilder: (_, _) => const SizedBox(width: 6),
             itemBuilder: (context, i) => JoinedCouncilCard(
               council: joined[i],
-              onOpen: () => _open(repo.link(joined[i])),
-              onRoom: () => _open(repo.link(joined[i], tab: 'events')),
-              onUnread: () => _open(repo.link(joined[i], tab: 'updates')),
+              onOpen: () => _openPage(councils, joined[i]),
+              onSeat: () => _manageSeats(context, councils),
+              onRoom: () => _room(joined[i], roundtables),
+              onUnread: () => _openPage(councils, joined[i], tab: 'updates'),
             ),
           ),
         ),
@@ -225,8 +254,8 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
             busy: councils.isBusy(c),
             onJoin: () => _run(councils.join(c)),
             onLeave: () => _confirmLeave(context, councils, c),
-            onOpen: () => _open(repo.link(c, tab: 'updates')),
-            onPreview: () => _open(repo.link(c)),
+            onOpen: () => _openPage(councils, c, tab: 'updates'),
+            onPreview: () => _openPage(councils, c),
           ),
         ),
       ],
@@ -238,6 +267,81 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
       ),
       const SizedBox(height: 24),
     ];
+  }
+
+  /// "Room Link" / "Meeting link": the council's next session, where the website's "View & RSVP" goes. The API
+  /// has no standing room URL, so with no session scheduled the card says so instead of opening a page that
+  /// looks like the one the card itself opens.
+  Future<void> _room(Council council, List<Roundtable> roundtables) async {
+    final next = roundtables.where((r) => r.councilId == council.id).toList()
+      ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
+    if (next.isEmpty) {
+      showMessage(
+        context,
+        'No session is scheduled for ${council.name} yet. The meeting link appears here once one is.',
+      );
+      return;
+    }
+    await _open(context.read<CouncilsController>().repository.eventLink(next.first));
+  }
+
+  /// "Manage" and a card's seat pill: the member's seats, each with its page and the way out. The website has
+  /// no manage page; a seat is managed where it is shown (the Joined button), and this is that, in one place.
+  Future<void> _manageSeats(BuildContext context, CouncilsController councils) {
+    return showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      builder: (sheet) => ListenableBuilder(
+        listenable: councils,
+        builder: (sheet, _) {
+          final seats = councils.joined;
+          return SafeArea(
+            child: Column(
+              key: const ValueKey('manage-seats'),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Your councils', style: CouncilsText.sheetTitle),
+                  ),
+                ),
+                if (seats.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                    child: Text('You have left every council.', style: CouncilsText.sheetRow),
+                  ),
+                for (final c in seats)
+                  ListTile(
+                    key: ValueKey('seat-${c.id}'),
+                    leading: Icon(
+                      c.membership == CouncilRole.lead ? LucideIcons.crown : LucideIcons.users,
+                      color: AppColors.primary,
+                    ),
+                    title: Text(c.name, style: CouncilsText.sheetRow, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    subtitle: Text(
+                      '${(c.membership ?? CouncilRole.member).label} · ${groupThousands(c.memberCount)} peers',
+                    ),
+                    trailing: TextButton(
+                      key: ValueKey('leave-${c.id}'),
+                      onPressed: councils.isBusy(c) ? null : () => _confirmLeave(sheet, councils, c),
+                      style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                      child: const Text('Leave'),
+                    ),
+                    onTap: () {
+                      Navigator.pop(sheet);
+                      _openPage(councils, c);
+                    },
+                  ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _pickSort(BuildContext context, CouncilsController councils) async {

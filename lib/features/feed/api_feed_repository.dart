@@ -6,6 +6,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
 import '../../core/config.dart';
 import '../forum/api_forum_repository.dart';
+import '../forum/mentions/mention_text.dart';
 import 'feed_models.dart';
 import 'feed_repository.dart';
 import 'forum_json.dart';
@@ -63,10 +64,13 @@ class ApiFeedRepository implements FeedRepository {
     final query = <String, dynamic>{
       'page': filtered ? 1 : page,
       'limit': filtered ? _filteredWindow : _pageSize,
+      // All Feed is the newest discussions first (the owner's call, 30 Oct 2026): what was posted most recently
+      // leads, pinned or not. The forum's `latest` order put pinned threads first and then last activity, which
+      // kept a member's fresh post under the pinned ones.
       'sort': switch (filter) {
         FeedFilter.trending => 'top',
         FeedFilter.unanswered => 'unanswered',
-        _ => 'latest',
+        _ => 'newest',
       },
       if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
       'tag': ?tag,
@@ -79,6 +83,21 @@ class ApiFeedRepository implements FeedRepository {
       posts = posts.where((p) => following.contains(p.author.id)).toList();
     } else if (filter == FeedFilter.polls) {
       posts = posts.where((p) => p.poll != null).toList();
+    }
+    if (filter == FeedFilter.all || filtered) {
+      // The API's `newest` still raises pinned threads above the rest; on Home the newest post leads whatever
+      // is pinned (a stable sort, so equal moments keep the API's order).
+      final dated = List<FeedPost>.of(posts);
+      for (var i = 1; i < dated.length; i++) {
+        final p = dated[i];
+        var j = i - 1;
+        while (j >= 0 && dated[j].createdAt.isBefore(p.createdAt)) {
+          dated[j + 1] = dated[j];
+          j--;
+        }
+        dated[j + 1] = p;
+      }
+      posts = dated;
     }
     return FeedPage(posts: posts, hasMore: !filtered && meta['hasNext'] == true);
   }
@@ -125,6 +144,7 @@ class ApiFeedRepository implements FeedRepository {
     final urls = [for (final p in photos) ?AppConfig.absoluteUrl(p, apiBase: base)];
     return FeedPostDetail(
       body: ForumJson.plainText(html),
+      mentions: mentionsInHtml(html),
       images: [for (final url in urls.take(2)) FeedPicture.network(url)],
       // A caption is drawn on a lone photo only.
       caption: urls.length == 1 ? caption : null,
@@ -139,10 +159,10 @@ class ApiFeedRepository implements FeedRepository {
   }
 
   @override
-  Future<void> reply(FeedPost post, String text, {String? parentId}) => _send(
+  Future<void> reply(FeedPost post, String text, {String? parentId, List<Mention> mentions = const []}) => _send(
     'POST',
     '/forum/threads/${post.id}/replies',
-    {'bodyHtml': ForumJson.textToHtml(text), 'parentId': ?parentId},
+    {'bodyHtml': mentionedHtml(text, mentions), 'parentId': ?parentId},
   );
 
   @override

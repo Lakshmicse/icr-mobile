@@ -512,7 +512,8 @@ void main() {
       await openDetail(tester, 'app-ishita');
       expect(action('detail-move-HIRED'), findsOneWidget);
       expect(action('detail-offer'), findsNothing);
-      expect(action('detail-schedule'), findsNothing);
+      // A round can still be held while an offer is out (the website's schedulable stages include Offer).
+      expect(action('detail-schedule'), findsOneWidget);
       expect(find.text('₹21,00,000 / yr'), findsOneWidget);
       expect(find.text('Sent'), findsOneWidget);
     });

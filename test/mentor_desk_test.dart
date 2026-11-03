@@ -124,8 +124,9 @@ void main() {
     testWidgets('shows how the mentor stands and what needs them, each line a way in', (tester) async {
       await pumpDesk(tester, DeskWorld());
       expect(find.text('Active mentees'), findsOneWidget);
-      expect(find.text('5 of 6'), findsOneWidget);
-      expect(find.text('Places open'), findsOneWidget);
+      // No places: the portal keeps no limit on mentees (27 Oct 2026); the tile counts finished pairings instead.
+      expect(find.text('Places open'), findsNothing);
+      expect(find.text('Completed'), findsWidgets);
       expect(find.text('4.8'), findsOneWidget);
       expect(find.text('14 reviews'), findsOneWidget);
       expect(find.text('50%'), findsOneWidget);
@@ -210,16 +211,6 @@ void main() {
       expect(find.text('Add your work history'), findsOneWidget);
       await tapText(tester, 'Finish my profile');
       expect(rec.sites, ['/profile']);
-    });
-
-    testWidgets('with every place taken, a request cannot be accepted: the desk says so and points to Settings', (
-      tester,
-    ) async {
-      final w = DeskWorld()..capacity = 1;
-      await pumpDesk(tester, w);
-      expect(find.textContaining('All 1 of your places are taken'), findsOneWidget);
-      await tapText(tester, 'Open Settings');
-      expect(find.text('Save settings'), findsOneWidget);
     });
 
     testWidgets('a paused profile says so, switches the directory control off, and leads back to the application', (

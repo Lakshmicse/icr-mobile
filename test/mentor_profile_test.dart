@@ -791,6 +791,39 @@ void main() {
       return controller;
     }
 
+    testWidgets('a long role description folds to four lines with "...read more", and opens in place', (tester) async {
+      final sentence =
+          'Corporate real estate, facility management, project management, HSE and sustainability across global portfolios.';
+      final long = List.filled(8, sentence).join(' ');
+      final role = {...(_profileJson['experience'] as List).first as Map<String, Object?>, 'description': long};
+      await pumpApi(
+        tester,
+        _routes(
+          profile: {
+            ..._profileJson,
+            'experience': [role],
+          },
+        ),
+      );
+      Text description() => tester.widget<Text>(find.text(long));
+      await tester.ensureVisible(find.text(long));
+      await tester.pumpAndSettle();
+      expect(description().maxLines, 4, reason: 'folded, as About is');
+      expect(find.text('...read more'), findsWidgets);
+      await tester.tap(find.byKey(const ValueKey('role-more-0')));
+      await tester.pumpAndSettle();
+      expect(description().maxLines, isNull, reason: 'the whole description, in place');
+      expect(find.text('show less'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('role-more-0')));
+      await tester.pumpAndSettle();
+      expect(description().maxLines, 4);
+    });
+
+    testWidgets('a short role description has no "...read more"', (tester) async {
+      await pumpApi(tester, _routes());
+      expect(find.byKey(const ValueKey('role-more-0')), findsNothing);
+    });
+
     testWidgets('Back leaves the page, the bell opens notifications, Verified Mentor says what it means', (
       tester,
     ) async {

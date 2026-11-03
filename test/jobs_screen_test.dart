@@ -104,6 +104,14 @@ Future<void> scrollSheetTo(WidgetTester tester, Finder finder) async {
 }
 
 /// A hiring source that cannot be reached: the account cannot be told.
+/// Who the member is changes between reads (a company switch).
+class _SwitchingHiring extends DemoHiringRepository {
+  HiringAccess who = const HiringAccess(userId: 'me', role: 'PROFESSIONAL');
+
+  @override
+  Future<HiringAccess> access() async => who;
+}
+
 class _UnreachableHiring extends DemoHiringRepository {
   @override
   Future<HiringAccess> access() => Future.error(ApiError('offline'));
@@ -202,6 +210,59 @@ void main() {
       await tester.pumpAndSettle();
       expect(made, 1);
       expect(board.links.opened, isEmpty);
+    });
+
+    testWidgets('Post a job offers a member acting as themselves a switch to one of their companies, not a new one', (
+      tester,
+    ) async {
+      // The website's `NoCompany`: someone who belongs to companies switches; only someone with none creates one
+      // (owner's report, 3 Nov 2026: Hire opened "create a company" for a member who had a company).
+      final board = await pumpBoard(
+        tester,
+        hiring: DemoHiringRepository(access: const HiringAccess(userId: 'me', role: 'PROFESSIONAL', companiesHeld: 2)),
+      );
+      await tester.tap(find.text('Post a job'));
+      await tester.pumpAndSettle();
+      expect(find.text("You're using your personal account"), findsOneWidget);
+      expect(find.byKey(const ValueKey('hirers-only-create')), findsNothing, reason: 'they have a company already');
+      await tester.tap(find.byKey(const ValueKey('hirers-only-switch')));
+      await tester.pumpAndSettle();
+      expect(board.links.paths, ['/account/companies']);
+      expect(find.byType(PostJobScreen), findsNothing);
+    });
+
+    testWidgets('Post a job tells a member whose role does not post to ask its admin, and offers no new company', (
+      tester,
+    ) async {
+      final board = await pumpBoard(
+        tester,
+        hiring: DemoHiringRepository(access: const HiringAccess(userId: 'me', role: 'VENDOR', companyId: 'c')),
+      );
+      await tester.tap(find.text('Post a job'));
+      await tester.pumpAndSettle();
+      expect(find.text('Jobs are posted by the hiring team'), findsOneWidget);
+      expect(find.byKey(const ValueKey('hirers-only-create')), findsNothing);
+      expect(find.byKey(const ValueKey('hirers-only-switch')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('hirers-only-later')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('hirers-only-dialog')), findsNothing);
+      expect(board.links.opened, isEmpty);
+    });
+
+    testWidgets('Post a job reads the account afresh: a switch to a company that hires opens the composer', (
+      tester,
+    ) async {
+      final hiring = _SwitchingHiring();
+      await pumpBoard(tester, hiring: hiring);
+      await tester.tap(find.text('Post a job'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('hirers-only-dialog')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('hirers-only-later')));
+      await tester.pumpAndSettle();
+      hiring.who = const HiringAccess(userId: 'me', role: 'COMPANY_ADMIN', companyId: 'c');
+      await tester.tap(find.text('Post a job'));
+      await tester.pumpAndSettle();
+      expect(find.byType(PostJobScreen), findsOneWidget);
     });
 
     testWidgets('Post a job says so when the account cannot be checked, and opens nothing', (tester) async {

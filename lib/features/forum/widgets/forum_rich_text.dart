@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text.dart';
 import '../forum_html.dart';
@@ -56,7 +57,8 @@ class _ForumRichTextState extends State<ForumRichText> {
               fontWeight: run.bold ? FontWeight.w700 : null,
               fontStyle: run.italic ? FontStyle.italic : null,
               decoration: TextDecoration.combine([
-                if (run.underline) TextDecoration.underline,
+                // A tagged member reads as blue "@Name", as on the cards; every other link is underlined.
+                if (run.underline && !_isMember(run.href)) TextDecoration.underline,
                 if (run.strike) TextDecoration.lineThrough,
               ]),
               fontFamily: run.code ? 'monospace' : null,
@@ -69,8 +71,12 @@ class _ForumRichTextState extends State<ForumRichText> {
     );
   }
 
+  static bool _isMember(String? href) => href != null && href.startsWith('/members/');
+
   TapGestureRecognizer _linkTap(String href) {
-    final recognizer = TapGestureRecognizer()..onTap = () => widget.onLink?.call(href);
+    // A page of the website without its address (a tagged member) is the website's page for the app's routes.
+    final target = href.startsWith('/') ? AppConfig.sitePage(href).toString() : href;
+    final recognizer = TapGestureRecognizer()..onTap = () => widget.onLink?.call(target);
     _recognizers.add(recognizer);
     return recognizer;
   }

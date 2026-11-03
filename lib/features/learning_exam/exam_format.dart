@@ -43,8 +43,14 @@ String clockSpoken(Duration d) {
 }
 
 /// "12m 04s", as the website writes how long a sitting took.
-String takenLabel(Duration d) {
-  final total = (d.inMilliseconds / 1000).round();
+///
+/// With [limit] (the paper's time), a record longer than it reads as the limit. The API times a sitting from the
+/// start the app sent to the moment it was submitted, so one left open for days and then submitted ("Submit my
+/// saved answers") was shown as "10088m 38s" on a 50-minute paper (owner's report, 3 Nov 2026) — but the paper
+/// stops taking answers when its time runs out, so no sitting answered for longer than that.
+String takenLabel(Duration d, {Duration? limit}) {
+  final shown = limit != null && limit > Duration.zero && d > limit ? limit : d;
+  final total = (shown.inMilliseconds / 1000).round();
   return '${total ~/ 60}m ${_two(total % 60)}s';
 }
 

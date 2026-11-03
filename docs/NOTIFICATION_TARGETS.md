@@ -60,7 +60,7 @@ in a real person's list.
 | `learning.workspace` | `/learning/courses/:code` | The same sheet (the learner's workspace is a website page) |
 | `learning.partners` | `/learning/partners` | The Learning tab |
 | `event` | `/events/:slug` | The event's sheet |
-| `forum.thread` | `/community/:slug#reply-:id` | The discussion's page, scrolled to the reply |
+| `forum.thread` | `/community/:slug#reply-:id` | The discussion's page, scrolled to the reply. One target for every discussion notification: a comment (`forum.replied`), a reaction to a post or a comment (`forum.reacted`, `forum.reactedToReply`), a repost (`forum.reposted`) and a tag in a post or a comment (`forum.mentioned`, `forum.mentionedInReply`). The row wears the actor's photo, sits under Community and articles (a `forum_` type, or any type that links to `/community/...`), and `#reply-:id` brings the comment into view |
 | `forum` | `/community` | The Forums tab |
 | `member` | `/members/:id` | The member's public profile |
 | `documents` | `/documents` | The Digital Library |

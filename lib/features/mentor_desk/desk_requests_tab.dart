@@ -40,7 +40,6 @@ class DeskRequestsTab extends StatelessWidget {
       });
     final pending = all.where((r) => r.status == RequestStatus.pending).toList();
     final answered = all.where((r) => r.status != RequestStatus.pending).take(5).toList();
-    final d = c.dashboard.data;
     final empty =
         pending.isEmpty &&
         c.sessionRequests.isEmpty &&
@@ -48,12 +47,6 @@ class DeskRequestsTab extends StatelessWidget {
         c.programmeRequests.isEmpty &&
         c.unpaidTerms.isEmpty;
     final children = <Widget>[
-      if (d != null && d.capacityTotal > 0 && d.capacityOpen == 0)
-        Callout(
-          key: const ValueKey('capacity-full'),
-          tone: PillTone.amber,
-          text: 'All ${d.capacityTotal} of your places are taken: you cannot accept another mentee until one frees up.',
-        ),
       if (empty && answered.isEmpty)
         const EmptyNote(
           icon: LucideIcons.inbox,

@@ -7,11 +7,12 @@ import '../../../core/util/links.dart';
 import '../study_models.dart';
 import '../study_styles.dart';
 
-/// One face of a flash card: the question, or the answer with its example and source link.
+/// One face of a flash card (flashcards-study.png): a white card with soft corners, the star at the top right, the
+/// question at the left and, along the foot under a dashed rule, what a tap does with a Flip Card pill. The back
+/// is the same card with the answer, its worked example and source link in place of the question.
 ///
-/// The card's frame (white, a slate edge, a soft shadow, 16 dp corners) is the Learning grid's; along the foot a
-/// strip says what a tap does. The star sits at the top right of both faces: it belongs to the card, not to the
-/// face, and takes its own tap, so it never flips the card.
+/// The card has no speaker: nothing in the app can read text aloud yet, and a glyph that does nothing is a dead
+/// control. The star belongs to the card, not to the face, and takes its own tap, so it never flips it.
 class StudyCardFace extends StatelessWidget {
   const StudyCardFace({
     super.key,
@@ -19,6 +20,7 @@ class StudyCardFace extends StatelessWidget {
     required this.back,
     required this.starred,
     required this.onStar,
+    required this.onFlip,
     this.caption,
   });
 
@@ -29,18 +31,21 @@ class StudyCardFace extends StatelessWidget {
   final bool starred;
   final VoidCallback onStar;
 
+  /// The Flip Card pill's tap (a tap anywhere else on the card flips it too, through the card).
+  final VoidCallback onFlip;
+
   /// Over the question: where it comes from ("Strategy & Fundamentals"); the answer is labelled "Answer".
   final String? caption;
 
   @override
   Widget build(BuildContext context) {
-    final label = back ? 'ANSWER' : (caption == null || caption!.isEmpty ? 'QUESTION' : caption!.toUpperCase());
+    final label = caption == null || caption!.isEmpty ? null : caption!.toUpperCase();
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: StudyColors.border),
-        boxShadow: const [BoxShadow(color: StudyColors.shadow, blurRadius: 18, offset: Offset(0, 6))],
+        border: Border.all(color: StudyColors.cardEdge),
+        boxShadow: const [BoxShadow(color: StudyColors.shadow, blurRadius: 14, offset: Offset(0, 3))],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(15),
@@ -52,50 +57,48 @@ class StudyCardFace extends StatelessWidget {
               child: Row(
                 children: [
                   const SizedBox(width: 18),
-                  if (back)
-                    const _Tag(label: 'ANSWER', fill: StudyColors.greenFill, ink: StudyColors.greenInk)
-                  else
+                  if (back) ...[
+                    const _Tag(label: 'ANSWER', fill: StudyColors.greenFill, ink: StudyColors.greenInk),
+                    const Spacer(),
+                  ] else if (label != null)
                     Expanded(
                       child: Text(label, style: StudyText.faceLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    ),
-                  if (back) const Spacer(),
+                    )
+                  else
+                    const Spacer(),
                   StarButton(starred: starred, onPressed: onStar),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 6),
                 ],
               ),
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 22),
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
                 child: back ? _Answer(card: card) : _Question(card: card),
               ),
             ),
-            if (!back && card.tags.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 6,
-                  children: [
-                    for (final t in card.tags)
-                      _Tag(label: t, fill: AppColors.surfaceContainer, ink: AppColors.onSurfaceVariant),
-                  ],
-                ),
-              )
-            else
-              const SizedBox(height: 12),
-            Container(
-              height: 44,
-              alignment: Alignment.center,
-              color: back ? StudyColors.backBand : StudyColors.frontBand,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(LucideIcons.rotateCw, size: 15, color: back ? Colors.white : AppColors.slate600),
-                  const SizedBox(width: 8),
-                  Text(
-                    back ? 'Tap to flip back' : 'Tap to see the answer',
-                    style: back ? StudyText.bandOnBlue : StudyText.band,
+                  const SizedBox(height: 1, child: CustomPaint(painter: _DashedRule())),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const _Dot(),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          back ? 'Tap card to see the question again' : 'Tap card to reveal standard explanation',
+                          style: StudyText.footerHint,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _FlipPill(onTap: onFlip),
+                    ],
                   ),
                 ],
               ),
@@ -107,6 +110,7 @@ class StudyCardFace extends StatelessWidget {
   }
 }
 
+/// The question at the left, vertically in the middle of the room the card has; a long one scrolls.
 class _Question extends StatelessWidget {
   const _Question({required this.card});
 
@@ -120,8 +124,26 @@ class _Question extends StatelessWidget {
           physics: const ClampingScrollPhysics(),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: box.maxHeight),
-            child: Center(
-              child: Text(card.front, textAlign: TextAlign.center, style: StudyText.front),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(card.front, style: StudyText.question),
+                  if (card.tags.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final t in card.tags)
+                          _Tag(label: t, fill: AppColors.surfaceContainer, ink: AppColors.onSurfaceVariant),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ),
@@ -145,18 +167,18 @@ class _Answer extends StatelessWidget {
         physics: const ClampingScrollPhysics(),
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: box.maxHeight),
-          child: Center(
+          child: Align(
+            alignment: Alignment.centerLeft,
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ExcludeSemantics(
-                  child: Text(card.back, textAlign: TextAlign.center, style: StudyText.back),
-                ),
+                ExcludeSemantics(child: Text(card.back, style: StudyText.answer)),
                 if (example != null) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: StudyColors.formulaPlate,
                       borderRadius: BorderRadius.circular(10),
@@ -175,7 +197,7 @@ class _Answer extends StatelessWidget {
                   ),
                 ],
                 if (link != null) ...[
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 8),
                   TextButton.icon(
                     onPressed: () => openUrl(context, Uri.parse(link)),
                     icon: const Icon(LucideIcons.fileText, size: 16),
@@ -212,7 +234,76 @@ class _Tag extends StatelessWidget {
   }
 }
 
-/// The star over a flash card: amber and filled when starred, a grey outline when not. 48 dp to tap.
+/// The blue dot before the footer's hint.
+class _Dot extends StatelessWidget {
+  const _Dot();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox(
+    width: 6,
+    height: 6,
+    child: DecoratedBox(
+      decoration: BoxDecoration(color: StudyColors.dot, shape: BoxShape.circle),
+    ),
+  );
+}
+
+/// "Flip Card": the footer's pill, a tinted rectangle with the turn glyph and the words in the primary blue.
+class _FlipPill extends StatelessWidget {
+  const _FlipPill({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Flip card',
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        key: const ValueKey('study-flip-pill'),
+        color: StudyColors.flipFill,
+        borderRadius: BorderRadius.circular(6),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(6),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(LucideIcons.refreshCw, size: 12, color: AppColors.primary),
+                const SizedBox(width: 5),
+                Text('Flip Card', style: StudyText.flipPill),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A 1 dp rule of 3 dp dashes with 2 dp between, the footer's.
+class _DashedRule extends CustomPainter {
+  const _DashedRule();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = StudyColors.dash
+      ..strokeWidth = 1;
+    for (double x = 0; x < size.width; x += 5) {
+      canvas.drawLine(Offset(x, 0.5), Offset((x + 3).clamp(0, size.width), 0.5), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedRule old) => false;
+}
+
+/// The star over a flash card: amber with a darker edge when starred, a grey outline when not. 48 dp to tap.
 class StarButton extends StatelessWidget {
   const StarButton({super.key, required this.starred, required this.onPressed});
 
@@ -234,12 +325,18 @@ class StarButton extends StatelessWidget {
         child: SizedBox(
           width: 48,
           height: 48,
-          child: Icon(
-            Symbols.star,
-            fill: starred ? 1 : 0,
-            weight: starred ? 600 : 500,
-            size: 26,
-            color: starred ? StudyColors.star : AppColors.slate400,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              if (starred) const Icon(Symbols.star, fill: 1, size: 17, color: StudyColors.cardStar),
+              Icon(
+                Symbols.star,
+                fill: 0,
+                weight: starred ? 500 : 400,
+                size: 17,
+                color: starred ? StudyColors.cardStarEdge : AppColors.slate400,
+              ),
+            ],
           ),
         ),
       ),

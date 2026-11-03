@@ -202,6 +202,19 @@ class ForumsController extends ChangeNotifier {
   /// A tag (without "#"), or none when null.
   Future<void> setTag(String? tag) => apply(tag == null ? _query.copyWith(clearTag: true) : _query.copyWith(tag: tag));
 
+  /// Shows the discussions with this tag and nothing narrower (a tag tapped on the Home feed): the plain list, no
+  /// search, topic, kind or other view. When the tab has not been opened yet the question is only set; opening the
+  /// tab reads the first page for it.
+  Future<void> showTag(String tag) {
+    final next = ForumQuery(tag: tag);
+    if (!_started) {
+      _query = next;
+      notifyListeners();
+      return Future.value();
+    }
+    return apply(next);
+  }
+
   /// Shows the discussions of the topic with this slug (a topic chip on a discussion's page), whether or not the
   /// topic row has it: a topic the forum lists is used as it is, any other is filed under its own name.
   Future<void> showTopic(ForumTopicRef ref) {
