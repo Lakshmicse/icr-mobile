@@ -13,6 +13,7 @@ import 'package:icr_mobile/core/widgets/chips.dart' show ChipRow;
 import 'package:icr_mobile/features/councils/api_councils_repository.dart';
 import 'package:icr_mobile/features/councils/council_format.dart';
 import 'package:icr_mobile/features/councils/council_models.dart';
+import 'package:icr_mobile/features/councils/council_screen.dart';
 import 'package:icr_mobile/features/councils/councils_controller.dart';
 import 'package:icr_mobile/features/councils/councils_repository.dart';
 import 'package:icr_mobile/features/councils/councils_screen.dart';
@@ -316,8 +317,8 @@ Future<CouncilsController> _started(List<Council> councils) async {
 
 // --- the screen's fixtures -------------------------------------------------------
 
-/// The demo source, recording what the screen asks of it.
-class _Spy implements CouncilsRepository {
+/// The demo source, recording what the screen asks of it (and what a council's page behind it asks).
+class _Spy implements CouncilsRepository, CouncilPageRepository {
   _Spy({this.refuseJoin = false});
 
   final inner = DemoCouncilsRepository();
@@ -325,6 +326,29 @@ class _Spy implements CouncilsRepository {
   int overviewCalls = 0;
   final joinedIds = <String>[];
   final leftIds = <String>[];
+
+  /// The council pages read, by slug.
+  final pageReads = <String>[];
+
+  @override
+  Future<CouncilDetail> detail(String idOrSlug) {
+    pageReads.add(idOrSlug);
+    return inner.detail(idOrSlug);
+  }
+
+  @override
+  Future<CouncilMembersPage> members(
+    String slug, {
+    int page = 1,
+    String? search,
+    MemberFilter filter = MemberFilter.all,
+  }) => inner.members(slug, page: page, search: search, filter: filter);
+  @override
+  Future<List<CouncilEvent>> events(String slug, {bool past = false}) => inner.events(slug, past: past);
+  @override
+  Future<List<CouncilUpdate>> updates(String slug) => inner.updates(slug);
+  @override
+  Future<List<CouncilResource>> resources(String slug) => inner.resources(slug);
 
   @override
   Future<CouncilsOverview> overview() {
@@ -364,6 +388,9 @@ class _Screen {
   final CouncilsRepository repository;
   final CouncilsController controller;
   final opened = <Uri>[];
+
+  /// The slug (or id) of each event a council's page handed to the shell.
+  final events = <String>[];
   int backs = 0;
 
   Future<void> open(BuildContext context, Uri uri) async => opened.add(uri);
@@ -387,7 +414,11 @@ Future<_Screen> _pumpScreen(WidgetTester tester, [CouncilsRepository? repository
       theme: buildAppTheme(),
       home: ChangeNotifierProvider.value(
         value: screen.controller,
-        child: CouncilsScreen(onBack: () => screen.backs++, opener: screen.open),
+        child: CouncilsScreen(
+          onBack: () => screen.backs++,
+          opener: screen.open,
+          handoffs: CouncilHandoffs(onOpenEvent: screen.events.add),
+        ),
       ),
     ),
   );
@@ -395,9 +426,40 @@ Future<_Screen> _pumpScreen(WidgetTester tester, [CouncilsRepository? repository
   return screen;
 }
 
+/// The council page on top of the board (and the title it carries), after a control opened it.
+Future<void> _expectPage(WidgetTester tester, String name, {String? tab}) async {
+  await tester.pumpAndSettle();
+  final page = find.byType(CouncilScreen);
+  expect(page, findsOneWidget);
+  expect(tester.widget<CouncilScreen>(page).tab, tab);
+  expect(find.descendant(of: page, matching: find.text(name)), findsWidgets);
+}
+
+Future<void> _backToBoard(WidgetTester tester) async {
+  await tester.tap(find.byIcon(Symbols.arrow_back));
+  await tester.pumpAndSettle();
+  expect(find.byType(CouncilScreen), findsNothing);
+}
+
 Finder _inCard(String id, Finder inside) => find.descendant(of: find.byKey(ValueKey(id)), matching: inside);
 
 Uri _site(String path) => AppConfig.sitePage(path);
+
+/// The sample without its roundtables: no council has a session to open.
+class _NoSessions extends DemoCouncilsRepository {
+  @override
+  Future<CouncilsOverview> overview() async {
+    final o = await super.overview();
+    return CouncilsOverview(
+      stats: o.stats,
+      councils: o.councils,
+      joined: o.joined,
+      roundtables: const [],
+      roundtablesCaption: o.roundtablesCaption,
+      chapters: o.chapters,
+    );
+  }
+}
 
 void main() {
   setUpAll(loadAppFonts);
@@ -973,34 +1035,79 @@ void main() {
       expect(screen.lastOpened, _site('/notifications'));
     });
 
-    testWidgets('Manage and the roundtables\' caption open the website', (tester) async {
+    testWidgets("Manage opens the member's seats, with the way out of each; the roundtables' caption the website", (
+      tester,
+    ) async {
       final screen = await _pumpScreen(tester);
+      // The website has no manage page: a seat is managed where it is shown (its Joined button), and this sheet
+      // is that for every seat at once. Nothing opens on the website.
       await tester.tap(find.text('Manage'));
-      expect(screen.lastOpened, _site('/councils'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('manage-seats')), findsOneWidget);
+      expect(find.text('Your councils'), findsOneWidget);
+      expect(find.byKey(const ValueKey('leave-demo-cxo')), findsOneWidget);
+      expect(find.byKey(const ValueKey('leave-demo-sustainability')), findsOneWidget);
+      expect(screen.opened, isEmpty);
+      // A row opens the council's own page, in the app (not the website).
+      await tester.tap(find.byKey(const ValueKey('seat-demo-cxo')));
+      await _expectPage(tester, 'CXO Workplace Strategy & FM Leadership');
+      expect(find.byKey(const ValueKey('manage-seats')), findsNothing);
+      expect(screen.opened, isEmpty);
+      await _backToBoard(tester);
+
       await tester.tap(find.text('Live Chatham-House'));
       expect(screen.lastOpened, _site('/events'));
     });
 
-    testWidgets('a joined card opens its council; Room Link, the unread count and Meeting link open its tabs', (
-      tester,
-    ) async {
+    testWidgets("a card's seat pill opens the seats too, and Leave there asks first", (tester) async {
       final screen = await _pumpScreen(tester);
-      final first = find.byType(JoinedCouncilCard).first;
-
-      await tester.tap(find.descendant(of: first, matching: find.text('CXO Workplace Strategy & FM Leadership')));
-      expect(screen.lastOpened, _site('/councils/cxo-workplace-strategy'));
-      await tester.tap(find.text('Room Link'));
-      expect(screen.lastOpened, _site('/councils/cxo-workplace-strategy?tab=events'));
-      await tester.tap(find.text('3 unread'));
-      expect(screen.lastOpened, _site('/councils/cxo-workplace-strategy?tab=updates'));
-
-      // The member's card is the next in the rail, which scrolls.
-      await tester.drag(first, const Offset(-300, 0));
+      await tester.tap(find.byKey(const ValueKey('seat-pill-demo-cxo')));
       await tester.pumpAndSettle();
-      expect(find.text('Next Sync: Apr 18'), findsOneWidget);
-      await tester.tap(find.text('Meeting link').first);
-      expect(screen.lastOpened, _site('/councils/sustainability-esg-net-zero?tab=events'));
-      expect(screen.opened, hasLength(4));
+      expect(find.byKey(const ValueKey('manage-seats')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('leave-demo-cxo')));
+      await tester.pumpAndSettle();
+      expect(find.text('Leave CXO Workplace Strategy & FM Leadership'), findsOneWidget);
+      expect(screen.opened, isEmpty);
+    });
+
+    testWidgets(
+      'a joined card opens its council; Room Link and Meeting link its next session; the unread count its updates',
+      (tester) async {
+        final screen = await _pumpScreen(tester);
+        final first = find.byType(JoinedCouncilCard).first;
+
+        await tester.tap(find.descendant(of: first, matching: find.text('CXO Workplace Strategy & FM Leadership')));
+        await _expectPage(tester, 'CXO Workplace Strategy & FM Leadership');
+        await _backToBoard(tester);
+        // The API has no standing room URL: the link is the council's next session (the sample's rows have no
+        // page of their own, so the events board), where the website's "View & RSVP" goes.
+        await tester.tap(find.text('Room Link'));
+        expect(screen.lastOpened, _site('/events'));
+        // The unread count is the council's Updates, on its own page.
+        await tester.tap(find.text('3 unread'));
+        await _expectPage(tester, 'CXO Workplace Strategy & FM Leadership', tab: 'updates');
+        await _backToBoard(tester);
+
+        // The member's card is the next in the rail, which scrolls.
+        await tester.drag(first, const Offset(-300, 0));
+        await tester.pumpAndSettle();
+        expect(find.text('Next Sync: Apr 18'), findsOneWidget);
+        await tester.tap(find.text('Meeting link').first);
+        expect(screen.lastOpened, _site('/events'));
+        // Only the two session links left the app; the card and the unread count opened the council's page.
+        expect(screen.opened, hasLength(2));
+      },
+    );
+
+    testWidgets('Meeting link on a council with no session says so instead of opening a page', (tester) async {
+      final screen = await _pumpScreen(tester, _NoSessions());
+      await tester.tap(find.text('Room Link'));
+      await tester.pump();
+      expect(
+        find.textContaining('No session is scheduled for CXO Workplace Strategy & FM Leadership yet'),
+        findsOneWidget,
+      );
+      expect(screen.opened, isEmpty);
     });
 
     testWidgets('a roundtable row opens its event and its calendar glyph the calendar entry', (tester) async {
@@ -1127,7 +1234,9 @@ void main() {
         final spy = _Spy();
         final screen = await _pumpScreen(tester, spy);
         await tester.tap(_inCard('demo-cxo', find.text('Open Member Lounge')));
-        expect(screen.lastOpened, _site('/councils/cxo-workplace-strategy?tab=updates'));
+        await _expectPage(tester, 'CXO Workplace Strategy & FM Leadership', tab: 'updates');
+        expect(screen.opened, isEmpty);
+        await _backToBoard(tester);
 
         await tester.longPress(_inCard('demo-cxo', find.text('Open Member Lounge')));
         await tester.pumpAndSettle();
@@ -1144,7 +1253,33 @@ void main() {
     testWidgets('Preview Chapter opens the council\'s page', (tester) async {
       final screen = await _pumpScreen(tester);
       await tester.tap(_inCard('demo-legal', find.text('Preview Chapter')));
-      expect(screen.lastOpened, _site('/councils/legal-compliance-procurement'));
+      await _expectPage(tester, 'Legal, Compliance & Procurement Council');
+      expect(screen.opened, isEmpty);
+    });
+
+    testWidgets('without hand-offs (a preview, a source that only feeds the board) a council opens on the website', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(780, 5659);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+      final opened = <Uri>[];
+      final controller = CouncilsController(_Fixed((_) => _overviewOf([_c('J', role: CouncilRole.member)])));
+      await tester.runAsync(controller.start);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildAppTheme(),
+          home: ChangeNotifierProvider.value(
+            value: controller,
+            child: CouncilsScreen(onBack: () {}, opener: (context, uri) async => opened.add(uri)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Preview Chapter'));
+      await tester.pump();
+      expect(opened, [_site('/councils/j')]);
+      expect(find.byType(CouncilScreen), findsNothing);
     });
 
     testWidgets('pulling down reads the councils again', (tester) async {

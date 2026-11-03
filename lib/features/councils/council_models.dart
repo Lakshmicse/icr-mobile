@@ -1,10 +1,16 @@
 /// What the Councils screen draws. The live source fills it from
 /// `GET /councils`, `GET /councils/memberships/mine`, `GET /events` and
-/// `GET /chapters`; the demo source holds the design's sample content.
+/// `GET /chapters`; the demo source holds the design's sample content. A council's own page (since 2 Nov 2026) adds
+/// `GET /councils/:slug` and its members, resources and announcements, and `GET /events?councilSlug=`.
 library;
 
+import '../chapters/chapter_models.dart'
+    show ChapterEvent, ChapterMembersPage, ChapterPerson, ChapterResource, ChapterUpdate;
+import '../chapters/community_kit.dart' show AboutBlock;
 import '../feed/feed_models.dart' show FeedPicture;
 
+export '../chapters/chapter_models.dart' show MemberFilter;
+export '../chapters/community_kit.dart' show AboutBlock, AboutKind;
 export '../feed/feed_models.dart' show FeedPicture;
 
 /// The member's standing in a council (`AssociationRole`).
@@ -331,4 +337,100 @@ enum CouncilSort {
 
   const CouncilSort(this.label);
   final String label;
+}
+
+// --- A council's own page ---------------------------------------------------------------------------------------
+
+/// A council's people, files, dispatches and events are the chapter's, field for field (`AssociationPersonDto`,
+/// `CouncilResourceDto`, `CouncilAnnouncementDto` and `EventDto` have the shapes of the chapter ones), so the
+/// council's page reads and draws them with the chapter's types and rows. A person's `role` is the chapter's
+/// (`LEAD` / `MEMBER`); the member's own seat in a council stays a [CouncilRole].
+typedef CouncilPerson = ChapterPerson;
+typedef CouncilEvent = ChapterEvent;
+typedef CouncilResource = ChapterResource;
+typedef CouncilUpdate = ChapterUpdate;
+typedef CouncilMembersPage = ChapterMembersPage;
+
+/// The five figures under a council's banner (`CouncilStatsDto`): the website's KPI strip.
+class CouncilKpis {
+  const CouncilKpis({
+    this.memberCount = 0,
+    this.memberCompanyCount = 0,
+    this.upcomingEventCount = 0,
+    this.pastEventCount = 0,
+    this.leadershipCount = 0,
+  });
+
+  final int memberCount;
+  final int memberCompanyCount;
+  final int upcomingEventCount;
+  final int pastEventCount;
+  final int leadershipCount;
+
+  /// The member count after a seat is taken (+1) or given back (-1).
+  CouncilKpis withMembers(int delta) => CouncilKpis(
+    memberCount: (memberCount + delta).clamp(0, 1 << 30),
+    memberCompanyCount: memberCompanyCount,
+    upcomingEventCount: upcomingEventCount,
+    pastEventCount: pastEventCount,
+    leadershipCount: leadershipCount,
+  );
+}
+
+/// A council's page (`GET /councils/:slug`): the card with the member's seat, the contact address, the About text,
+/// the gallery, the five figures and the leadership (the chair first).
+class CouncilDetail {
+  const CouncilDetail({
+    required this.council,
+    this.contactEmail,
+    this.about = const [],
+    this.gallery = const [],
+    this.stats = const CouncilKpis(),
+    this.leads = const [],
+  });
+
+  final Council council;
+  final String? contactEmail;
+
+  /// `aboutHtml` as headings, paragraphs and bullet points (the description when there is none).
+  final List<AboutBlock> about;
+  final List<FeedPicture> gallery;
+  final CouncilKpis stats;
+  final List<CouncilPerson> leads;
+
+  CouncilDetail copyWith({Council? council, CouncilKpis? stats}) => CouncilDetail(
+    council: council ?? this.council,
+    contactEmail: contactEmail,
+    about: about,
+    gallery: gallery,
+    stats: stats ?? this.stats,
+    leads: leads,
+  );
+}
+
+/// The parts of a council's page, in the order of the website's tabs. `?tab=` on `/councils/<slug>` names one
+/// ([tab] is the id the website uses) and the page opens on it; the chips under the figures scroll to one.
+enum CouncilSection {
+  overview('overview', 'Overview'),
+  events('events', 'Events'),
+  leadership('leadership', 'Leadership'),
+  members('members', 'Members'),
+  knowledge('knowledge', 'Knowledge'),
+  updates('updates', 'Updates'),
+  gallery('gallery', 'Gallery');
+
+  const CouncilSection(this.tab, this.label);
+
+  /// The website's tab id.
+  final String tab;
+  final String label;
+
+  /// The section a `?tab=` names; null for no tab or one the page does not have (the website's `discussions` is
+  /// a "coming soon" card, not built there either).
+  static CouncilSection? fromTab(String? tab) {
+    for (final s in values) {
+      if (s.tab == tab) return s;
+    }
+    return null;
+  }
 }
