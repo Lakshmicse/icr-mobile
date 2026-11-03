@@ -19,8 +19,10 @@ import 'features/feed/demo_feed_repository.dart';
 import 'features/feed/feed_controller.dart';
 import 'features/feed/feed_models.dart';
 import 'features/feed/home_screen.dart';
+import 'features/feed/session_viewer.dart';
 import 'features/forum/forum_callbacks.dart';
 import 'features/forum/forum_flows.dart' show startDiscussion;
+import 'features/forum/forums_controller.dart';
 import 'features/forum/forums_screen.dart';
 import 'features/jobs/api_jobs_repository.dart';
 import 'features/jobs/jobs_navigation.dart';
@@ -113,15 +115,7 @@ class _Home extends StatelessWidget {
 
   final SessionUser? user;
 
-  FeedAuthor get _viewer {
-    if (AppConfig.demoFeed) return DemoFeedRepository.me;
-    final url = AppConfig.absoluteUrl(user?.avatarUrl);
-    return FeedAuthor(
-      id: user?.id ?? 'me',
-      name: user?.fullName ?? 'You',
-      photo: url == null ? null : FeedPicture.network(url),
-    );
-  }
+  FeedAuthor get _viewer => viewerOf(user);
 
   /// A mentor's profile, over whatever screen asked for it. It draws its own
   /// action bar, so it has no tab bar.
@@ -192,11 +186,19 @@ class _Home extends StatelessWidget {
             AppConfig.demoFeed ? DemoFeedRepository() : ApiFeedRepository(api: c.read<ApiClient>(), viewerId: user?.id),
           )..start(),
         ),
+        // The Forums tab's list, held here above the tabs. Held, not
+        // listened to (an InheritedProvider, not a ChangeNotifierProvider): the tab listens to it itself, and starts
+        // it while it is being built, when a provider's own listener must not be told.
+        InheritedProvider<ForumsController>(
+          create: (c) => ForumsController(c.read<FeedController>().repository.forum),
+          dispose: (_, forums) => forums.dispose(),
+        ),
         ChangeNotifierProvider<ProfileDrawerController>(
           create: (c) => AppConfig.demoFeed
               ? ProfileDrawerController.demo()
               : ProfileDrawerController.live(
                   api: c.read<ApiClient>(),
+                  session: c.read<AuthController>(),
                   userId: user?.id ?? '',
                   seed: ProfileDrawerData(
                     name: user?.fullName ?? 'You',
@@ -237,28 +239,31 @@ class _Home extends StatelessWidget {
                 jobs: shellContext.read<JobsController>().repository,
               ),
             ),
-            home: Builder(
-              builder: (ctx) => HomeScreen(
-                viewer: _viewer,
+            home: SessionViewer(
+              builder: (ctx, viewer) => HomeScreen(
+                viewer: viewer,
                 onAccount: () => AppShell.openDrawer(ctx),
                 callbacks: ForumCallbacks(
                   onBell: () => openNotifications(ctx),
+                  // No `onOpenTag`: a tag on Home never opens the Forums tab (owner, 3 Nov 2026). A person's tag
+                  // ("#@name") opens their profile through `onOpenMember`; any other tag does nothing.
                   onOpenMember: (id) => openMemberProfile(ctx, id),
                 ),
               ),
             ),
-            learning: Builder(
-              builder: (ctx) => LearningHubScreen(
-                viewer: _viewer,
+            learning: SessionViewer(
+              builder: (ctx, viewer) => LearningHubScreen(
+                viewer: viewer,
                 onBack: () => AppShell.selectHome(ctx),
                 onAccount: () => AppShell.openDrawer(ctx),
                 // The banner's "Know more": the Events screen, as the Discover door opens it.
                 onMasterclasses: () => AppShell.push<void>(ctx, screens['/events']!),
               ),
             ),
-            mentorship: Builder(
-              builder: (ctx) => MentorshipScreen(
-                viewer: _viewer,
+            mentorship: SessionViewer(
+              builder: (ctx, viewer) => MentorshipScreen(
+                viewer: viewer,
+                offerMentoring: canOfferToMentor(user),
                 onBack: () => AppShell.selectHome(ctx),
                 onAccount: () => AppShell.openDrawer(ctx),
                 onOpenMentor: _openMentor,
@@ -284,9 +289,10 @@ class _Home extends StatelessWidget {
                 ),
               ),
             ),
-            forums: Builder(
-              builder: (ctx) => ForumsScreen(
-                viewer: _viewer,
+            forums: SessionViewer(
+              builder: (ctx, viewer) => ForumsScreen(
+                viewer: viewer,
+                controller: ctx.read<ForumsController>(),
                 onBack: () => AppShell.selectHome(ctx),
                 callbacks: ForumCallbacks(
                   onBell: () => openNotifications(ctx),
@@ -301,6 +307,7 @@ class _Home extends StatelessWidget {
                 onPostRfq: () => pushComposer(ctx, appRfqHooks(ctx)),
                 onMyRfqs: () => pushMyRfqs(ctx, appRfqHooks(ctx)),
                 onRfqAlerts: () => pushAlerts(ctx, appRfqHooks(ctx)),
+                onFindWork: () => pushBoard(ctx, appRfqHooks(ctx)),
                 navigation: appMarketplaceNavigation(ctx),
               ),
             ),

@@ -751,9 +751,15 @@ void main() {
           ),
         );
         expect(tester.takeException(), isNull);
+        // The inbox switcher sits in the sliders menu (the designed inbox has no bar for it).
+        await tester.tap(find.byKey(const ValueKey('inbox-options')));
+        // The menu slides and fades in on the test's clock: pump it to rest before an item is tapped.
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(milliseconds: 400));
         expect(find.byKey(const ValueKey('inbox-personal')), findsOneWidget);
         expect(find.byKey(ValueKey('inbox-$company')), findsOneWidget);
         await tester.tap(find.byKey(ValueKey('inbox-$company')));
+        await tester.pump(const Duration(milliseconds: 400));
         await settleLive(tester);
         for (final v in ['open', 'unread', 'mine', 'done', 'spam']) {
           expect(find.byKey(ValueKey('view-$v')), findsOneWidget, reason: 'the company inbox\'s $v view');
@@ -780,13 +786,14 @@ void main() {
             initialInbox: company,
           ),
         );
+        // The inbox switcher sits in the menu since the redesign, so what proves the inbox opened on the company
+        // is the company's own views being drawn.
         expect(
-          await waitFor(tester, find.byKey(ValueKey('inbox-$company'))),
+          await waitFor(tester, find.byKey(const ValueKey('view-open'))),
           isTrue,
           reason: 'her inbox opens on the company',
         );
         expect(tester.takeException(), isNull);
-        expect(find.byKey(ValueKey('inbox-$company')), findsOneWidget);
         expect(find.byKey(const ValueKey('topic-SALES')), findsNothing, reason: 'sales is not hers');
         expect(find.byKey(const ValueKey('topic-all')), findsNothing, reason: 'one topic needs no topic chips');
         expect(find.byKey(const ValueKey('view-open')), findsOneWidget);

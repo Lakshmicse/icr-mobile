@@ -186,9 +186,18 @@ String chapterCodeFor(String city) {
 /// Loads the drawer for the signed-in member. Each endpoint fails on its own:
 /// a line the API cannot fill stays empty rather than hiding the drawer.
 class ProfileDrawerController extends ChangeNotifier {
-  ProfileDrawerController.live({required this.api, required this.userId, required ProfileDrawerData seed})
-    : _data = seed,
-      _demo = false;
+  /// [session] is the signed-in session: whenever it is read anew (a new photo, name or headline saved on the profile
+  /// page, `AuthController.refreshUser`) the menu reads what it shows again, so it never keeps the old photo.
+  ProfileDrawerController.live({
+    required this.api,
+    required this.userId,
+    required ProfileDrawerData seed,
+    Listenable? session,
+  }) : _data = seed,
+       _demo = false,
+       _session = session {
+    session?.addListener(_sessionChanged);
+  }
 
   ProfileDrawerController.demo()
     : api = null,
@@ -200,9 +209,29 @@ class ProfileDrawerController extends ChangeNotifier {
   final ApiClient? api;
   final String? userId;
   final bool _demo;
+  Listenable? _session;
   ProfileDrawerData _data;
   bool _loaded = false;
   bool _loading = false;
+  bool _disposed = false;
+
+  void _sessionChanged() {
+    // Not read yet: opening the menu reads it. Reading now would only race that first read.
+    if (_loaded && !_loading) refresh();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _session?.removeListener(_sessionChanged);
+    _session = null;
+    super.dispose();
+  }
 
   ProfileDrawerData get data => _data;
   bool get loaded => _loaded;

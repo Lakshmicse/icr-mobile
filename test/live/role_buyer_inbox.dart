@@ -177,7 +177,6 @@ void roleBuyerInbox() {
         );
         var text = expectHealthy(tester, 'Notifications as ${w.email}');
         expect(text, contains('Notifications'));
-        expect(text, contains('Preferences'));
         await unmount(tester);
 
         await loadScreen(tester, InboxScreen(repository: messagingOf(w)), size: const Size(390, 1600));

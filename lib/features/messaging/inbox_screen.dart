@@ -623,7 +623,7 @@ class _OptionsMenu extends StatelessWidget {
           const PopupMenuDivider(),
           for (final i in c.inboxes)
             PopupMenuItem<String>(
-              key: ValueKey('inbox-${i.id}'),
+              key: ValueKey(i.personal ? 'inbox-personal' : 'inbox-${i.id}'),
               value: 'inbox:${i.id}',
               child: Row(
                 children: [

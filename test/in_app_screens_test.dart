@@ -68,19 +68,30 @@ Future<void> _frames(WidgetTester tester) async {
 void main() {
   setUpAll(loadAppFonts);
 
-  test('every Discover door but Advertise (a paid placement) opens an app screen, never the website', () {
-    final screens = inAppScreens(viewer: DemoFeedRepository.me, demo: true);
-    final doors = [
-      for (final row in [...DiscoverSheet.community, ...DiscoverSheet.business]) ...[row.left, row.right],
-    ];
-    expect(doors, hasLength(8));
-    final leaving = [
-      for (final d in doors)
-        if (!screens.containsKey(d.sitePath)) d.sitePath,
-    ];
-    // Hire and Sell once fell through to Chrome because only `/profile` and the community doors were mapped.
-    expect(leaving, ['/advertise']);
-  });
+  test(
+    'every Discover door is taken by the app; Hire opens Post a job, not the talent search the app has no screen for',
+    () {
+      final me = DemoFeedRepository.me;
+      bool native(String path) => inAppSiteRoute(Uri.parse('https://icr.org.in$path'), viewer: me, shell: null) != null;
+      final community = [
+        for (final row in DiscoverSheet.community) ...[row.left, row.right],
+      ];
+      expect(community, hasLength(4));
+      for (final d in community) {
+        expect(native(d.sitePath), isTrue, reason: d.label);
+      }
+      // The four business doors. Hire opens Post a job (owner, 3 Nov 2026: not the create-company screen, and not
+      // the talent search, which has no app screen); Post a job needs the shell's providers (web_test proves it with
+      // one). Sell is the website's: the Supplier Mart, the Marketplace tab.
+      final business = [
+        for (final row in DiscoverSheet.business) ...[row.left, row.right],
+      ];
+      expect(business.map((d) => d.sitePath), ['/manage/jobs/new', '/vendors', '/rfq/new', '/advertise']);
+      for (final path in ['/vendors', '/rfq/new', '/advertise']) {
+        expect(native(path), isTrue, reason: path);
+      }
+    },
+  );
 
   testWidgets('Working Councils opens from the profile menu without a framework error', (tester) async {
     await _pumpShell(tester);

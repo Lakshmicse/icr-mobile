@@ -297,7 +297,14 @@ void main() {
         'https://icr.org.in/rfq/R1?section=bids',
         'https://icr.org.in/manage/requirements/R1',
         'https://icr.org.in/chapters/bengaluru',
+        // A council's own page is native (`council_screen.dart`, since 2 Nov 2026), and `?tab=` opens it on a
+        // section. It was routed to the councils directory before that, and left to the web view for a day, which
+        // made a joined card, its Meeting link and Manage all look like the same screen (the owner's report).
         'https://icr.org.in/councils/sustainability-esg',
+        'https://icr.org.in/councils/sustainability-esg?tab=events',
+        // The supplier's side of the requirements board (the website's Find Work & Bid) and its tabs.
+        'https://icr.org.in/manage/bids',
+        'https://icr.org.in/manage/bids?tab=submitted',
       ]) {
         expect(takes(url), isTrue, reason: url);
       }

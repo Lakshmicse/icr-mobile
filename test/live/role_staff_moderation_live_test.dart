@@ -289,12 +289,14 @@ void main() {
         final target = NotificationTarget.parse(bell.link);
         expect(target.kind, NotificationKinds.adminForum);
         expect(target['reportId'], reportId);
-        // The app has no opener for it, so it goes to the website's console: that is the handoff.
+        // The app has no opener for it and opens no console: the tap reads the bell and says the queue is the
+        // website's (the owner's rule: nothing in the app sends people to the website), so nothing is handed over.
         final opened = <String>[];
         final router = NotificationRouter(openSite: (context, path) async => opened.add(path));
         expect(router.registeredKinds, isNot(contains(NotificationKinds.adminForum)));
+        expect(NotificationRouter.staffKinds, contains(NotificationKinds.adminForum));
         await openWithoutScreen(router, target, opened);
-        expect(opened, [bell.link]);
+        expect(opened, isEmpty, reason: 'a console link opens nothing from the app');
       } finally {
         if (reportId != null) {
           await admin.api.dio.patch<dynamic>(
@@ -548,14 +550,14 @@ void main() {
         final target = NotificationTarget.parse(n.link);
         kinds[target.kind] = (kinds[target.kind] ?? 0) + 1;
         if (target.kind.startsWith('admin.') || target.kind == NotificationKinds.adminMarketing) {
-          // A console link: no screen of the app takes it, so it opens the website's page. It never throws.
+          // A console link: no screen of the app takes it and none opens the website; the tap only reads it. It
+          // never throws.
           await openWithoutScreen(router, target, handedOver);
         }
       }
       final consoleLinks = kinds.entries.where((e) => e.key.startsWith('admin.')).fold<int>(0, (n, e) => n + e.value);
       expect(consoleLinks, greaterThan(0), reason: 'a SUPER_ADMIN is told about reviews and reports');
-      expect(handedOver, hasLength(consoleLinks));
-      expect(handedOver.every((href) => href.startsWith('/admin/')), isTrue);
+      expect(handedOver, isEmpty, reason: 'the consoles are the website\'s; the app opens none of them');
       // ignore: avoid_print
       print('bell kinds: $kinds');
     });
@@ -608,4 +610,8 @@ Future<void> openWithoutScreen(NotificationRouter router, NotificationTarget tar
 
 class _NoContext extends Fake implements BuildContext {
   static final instance = _NoContext();
+
+  /// Nothing is drawn, so the router's "if still mounted, say so" never speaks.
+  @override
+  bool get mounted => false;
 }

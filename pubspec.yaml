@@ -2,7 +2,7 @@ name: icr_mobile
 description: "ICR — Institute for Corporate Real Estate mobile app"
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.0+10
 
 environment:
   sdk: ^3.11.1
@@ -70,6 +70,12 @@ flutter:
           weight: 600
         - asset: assets/fonts/Roboto-Bold.ttf
           weight: 700
+    # The holder's name on an assessment certificate, the website's display serif since 2 Nov 2026 (Google Fonts,
+    # SIL Open Font Licence); used nowhere else.
+    - family: Playfair Display
+      fonts:
+        - asset: assets/fonts/PlayfairDisplay-SemiBold.ttf
+          weight: 600
 
 # App icon: the ICR mark. Regenerate with `dart run flutter_launcher_icons`.
 flutter_launcher_icons:

@@ -56,18 +56,31 @@ class MemoryTokens extends TokenStore {
 bool? _reachable;
 
 /// True when the local API answers; cached for the test run.
+///
+/// The limiter (120 calls a minute per IP) answers 429 to the first call of a file that follows a busy one; that
+/// is the API running, not down, so the probe waits for it (up to a minute and a half) before giving up. Without
+/// this, a full run skipped every file after the first dozen as "API not running".
 Future<bool> liveApiReachable() async {
   if (_reachable != null) return _reachable!;
   HttpOverrides.global = null; // flutter_test blocks HTTP by default
-  try {
-    final res = await Dio(
-      BaseOptions(baseUrl: liveBaseUrl, connectTimeout: const Duration(seconds: 3)),
-    ).get<dynamic>('/events', queryParameters: {'limit': 1});
-    _reachable = res.statusCode == 200;
-  } catch (_) {
-    _reachable = false;
+  final dio = Dio(BaseOptions(baseUrl: liveBaseUrl, connectTimeout: const Duration(seconds: 3)));
+  for (var attempt = 0; attempt < 12; attempt++) {
+    try {
+      final res = await dio.get<dynamic>('/events', queryParameters: {'limit': 1});
+      return _reachable = res.statusCode == 200;
+    } on DioException catch (e) {
+      // A 429 is the limiter; a refused connection is the dev server restarting (it rebuilds and comes back in
+      // seconds). Both mean the API exists: wait, then ask again.
+      if (e.response?.statusCode == 429 || e.type == DioExceptionType.connectionError) {
+        await Future<void>.delayed(const Duration(seconds: 8));
+        continue;
+      }
+      return _reachable = false;
+    } catch (_) {
+      return _reachable = false;
+    }
   }
-  return _reachable!;
+  return _reachable = false;
 }
 
 final _signedIn = <String, Future<ApiClient>>{};

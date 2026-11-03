@@ -9,6 +9,8 @@ class SessionUser {
     this.avatarUrl,
     this.emailVerified = false,
     this.companyId,
+    this.mentorStatus,
+    this.mentorsSomeone = false,
   });
 
   final String id;
@@ -21,6 +23,13 @@ class SessionUser {
 
   /// The company the person is acting for; null when acting as themselves.
   final String? companyId;
+
+  /// The person's mentor profile, in whatever state (DRAFT, PENDING, APPROVED, PAUSED, REJECTED); null when they
+  /// never applied.
+  final String? mentorStatus;
+
+  /// Whether anyone is being mentored by them right now, listed or not.
+  final bool mentorsSomeone;
 
   String get fullName => '$firstName $lastName'.trim();
 
@@ -40,5 +49,14 @@ class SessionUser {
     avatarUrl: json['avatarUrl'] as String?,
     emailVerified: json['emailVerified'] == true,
     companyId: json['companyId'] as String?,
+    mentorStatus: json['mentorStatus'] as String?,
+    mentorsSomeone: json['mentorsSomeone'] == true,
   );
 }
+
+/// Whether the recruitment pitch ("Become an ICR Mentor", "Apply as Mentor") is for this person: the website's
+/// `canOfferToMentor`. A visitor, yes; a member only when they never applied (no mentor profile in any state),
+/// mentor nobody, and are not ICR staff. A mentor, an applicant or a staffer would be pitched something they
+/// already have or cannot have.
+bool canOfferToMentor(SessionUser? user) =>
+    user == null || (user.role != 'SUPER_ADMIN' && user.mentorStatus == null && !user.mentorsSomeone);

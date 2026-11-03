@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/api/api_client.dart';
+import 'core/auth/auth_controller.dart';
 import 'core/config.dart';
 import 'app_site_pages.dart';
 import 'core/util/links.dart' show SiteRouteOpener;
 import 'features/councils/api_councils_repository.dart';
+import 'features/councils/council_screen.dart' show CouncilHandoffs;
 import 'features/councils/councils_controller.dart';
 import 'features/councils/councils_screen.dart';
 import 'features/councils/demo_councils_repository.dart';
@@ -18,6 +20,7 @@ import 'features/account/members/member_profile_screen.dart';
 import 'features/account/profile/my_profile_screen.dart';
 import 'features/account/saved/saved_items_screen.dart';
 import 'features/account/settings/settings_screen.dart';
+import 'features/account/widgets/account_session.dart' show accountRepositoryOf;
 import 'features/chapters/api_chapters_repository.dart';
 import 'features/chapters/chapters_controller.dart';
 import 'features/chapters/chapters_screen.dart';
@@ -50,8 +53,11 @@ import 'features/messaging/messaging_launcher.dart';
 import 'features/network/network_screen.dart' show networkRoute;
 import 'features/notifications/notifications_bell.dart';
 import 'features/notifications/notifications_screen.dart' show openNotifications;
+import 'features/rfq/my_bids_screen.dart';
 import 'features/rfq/my_rfqs_screen.dart';
+import 'features/rfq/open_requirements_screen.dart';
 import 'features/rfq/post_rfq_screen.dart';
+import 'features/rfq/requirements_board_screen.dart';
 import 'features/rfq/rfq_navigation.dart';
 import 'features/rfq/rfq_scope.dart';
 import 'features/shell/app_shell.dart';
@@ -117,6 +123,15 @@ Widget chaptersScreen(BuildContext ctx) => ChangeNotifierProvider<ChaptersContro
     onOpenMember: (id) => openMemberProfile(ctx, id),
     onMessage: (id) => MessagingLauncher.withPerson(ctx, id),
   ),
+);
+
+/// What a council's own page hands on to the app: the event sheet, a member's profile, a conversation and the
+/// bell. The councils board and a link to `/councils/<slug>` (`app_site_pages.dart`) give the page the same ones.
+CouncilHandoffs appCouncilHandoffs(BuildContext ctx) => CouncilHandoffs(
+  onOpenEvent: (slugOrId) => openEventBySlug(ctx, slugOrId),
+  onBell: () => openNotifications(ctx),
+  onOpenMember: (id) => openMemberProfile(ctx, id),
+  onMessage: (id) => MessagingLauncher.withPerson(ctx, id),
 );
 
 Widget libraryScreen(BuildContext ctx) => ChangeNotifierProvider<LibraryController>(
@@ -296,6 +311,13 @@ RfqHooks appRfqHooks(BuildContext ctx) => rfqHooksFor(
   onOpenConversation: (id) => MessagingLauncher.openConversation(ctx, id),
   onOpenSupplier: (id) => showSupplierSheetById(ctx, id, navigation: appMarketplaceNavigation(ctx)),
   onCreateCompany: () => AppShell.push<void>(ctx, (c) => CreateCompanyScreen()),
+  // "Posting for" and "Switch company" on the requirement form: the account's switch, with its fresh session
+  // adopted, as the profile menu's companies switch.
+  onSwitchCompany: (companyId) async {
+    final auth = ctx.read<AuthController>();
+    final tokens = await accountRepositoryOf(ctx).switchCompany(companyId);
+    await auth.adoptSession(accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, user: tokens.user);
+  },
 );
 
 /// Screens the Discover doors and the profile menu open in the app, keyed by
@@ -307,8 +329,10 @@ Map<String, WidgetBuilder> inAppScreens({required FeedAuthor viewer, bool? demo}
     '/chapters': chaptersScreen,
     '/documents': libraryScreen,
     '/get-involved': getInvolvedScreen,
-    // Hire and Sell are the same page on the website: one company buys, sells and hires, and selling is switched on
-    // afterwards ("Start selling"). Founding it is an app screen, so neither door leaves the app.
+    // Founding a company: the website's "Create a Company Page +" and "what brings you here" links (which it shows
+    // only to someone acting for no company). The Discover sheet's Hire and Sell no longer come here: Hire is Post a
+    // job (`openPostJob`, which asks for a company only from someone who has none) and Sell the Supplier Mart, as on
+    // the website — mapping them here sent a member with a company to "create a company" (owner, 3 Nov 2026).
     '/account/companies/new?role=COMPANY_ADMIN': (ctx) => CreateCompanyScreen(),
     '/account/companies/new?role=VENDOR': (ctx) => CreateCompanyScreen(),
     '/profile': (ctx) => myProfileScreen(ctx),
@@ -319,6 +343,18 @@ Map<String, WidgetBuilder> inAppScreens({required FeedAuthor viewer, bool? demo}
       onOpenSupplier: (id) => showSupplierSheetById(ctx, id, navigation: appMarketplaceNavigation(ctx)),
     ),
     '/learning/certificates': (ctx) => CertificatesScreen(onBack: () => Navigator.of(ctx).pop()),
+    // Everything posted on ICR, the website's Requirements page: the profile menu's Requirements row, and every
+    // `/rfq` link (it opened the Marketplace tab until 3 Nov 2026, which lists no requirements).
+    '/rfq': (ctx) {
+      final hooks = appRfqHooks(ctx);
+      return RequirementsBoardScreen(
+        repository: hooks.repository,
+        links: hooks.links,
+        onOpenConversation: hooks.onOpenConversation,
+        onOpenSupplier: hooks.onOpenSupplier,
+        onCreateCompany: hooks.onCreateCompany,
+      );
+    },
     '/manage/requirements': (ctx) {
       final hooks = appRfqHooks(ctx);
       return MyRfqsScreen(
@@ -329,6 +365,26 @@ Map<String, WidgetBuilder> inAppScreens({required FeedAuthor viewer, bool? demo}
         onCreateCompany: hooks.onCreateCompany,
       );
     },
+    // The supplier's side of the board: Find Work & Bid, and its tabs of the member's own bids.
+    '/manage/bids': (ctx) {
+      final hooks = appRfqHooks(ctx);
+      return OpenRequirementsScreen(
+        repository: hooks.repository,
+        links: hooks.links,
+        onOpenConversation: hooks.onOpenConversation,
+        onOpenSupplier: hooks.onOpenSupplier,
+      );
+    },
+    for (final tab in const ['submitted', 'negotiation', 'awarded', 'archived'])
+      '/manage/bids?tab=$tab': (ctx) {
+        final hooks = appRfqHooks(ctx);
+        return MyBidsScreen(
+          repository: hooks.repository,
+          links: hooks.links,
+          onOpenConversation: hooks.onOpenConversation,
+          onOpenSupplier: hooks.onOpenSupplier,
+        );
+      },
     '/rfq/new': (ctx) {
       final hooks = appRfqHooks(ctx);
       return PostRfqScreen(
@@ -337,12 +393,13 @@ Map<String, WidgetBuilder> inAppScreens({required FeedAuthor viewer, bool? demo}
         onOpenConversation: hooks.onOpenConversation,
         onOpenSupplier: hooks.onOpenSupplier,
         onCreateCompany: hooks.onCreateCompany,
+        onSwitchCompany: hooks.onSwitchCompany,
       );
     },
     '/councils': (ctx) => ChangeNotifierProvider<CouncilsController>(
       create: (c) =>
           CouncilsController(sample ? DemoCouncilsRepository() : ApiCouncilsRepository(api: c.read<ApiClient>())),
-      child: CouncilsScreen(onBack: () => Navigator.of(ctx).pop()),
+      child: CouncilsScreen(onBack: () => Navigator.of(ctx).pop(), handoffs: appCouncilHandoffs(ctx)),
     ),
     '/events': (ctx) => ChangeNotifierProvider<EventsController>(
       create: (c) => EventsController(sample ? DemoEventsRepository() : ApiEventsRepository(api: c.read<ApiClient>())),

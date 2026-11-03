@@ -361,7 +361,16 @@ async function seedBharat(prisma: PrismaClient, manifest: Manifest, log: (m: str
 
   await prisma.user.update({
     where: { id: bharat.id },
-    data: { languages: ['English', 'Hindi', 'Kannada'], linkedinUrl: 'https://linkedin.com/in/bharat-buyer', yearsExperience: 9 },
+    data: {
+      languages: ['English', 'Hindi', 'Kannada'],
+      linkedinUrl: 'https://linkedin.com/in/bharat-buyer',
+      yearsExperience: 9,
+      // Acting as himself (the live tests and docs assume "a buyer with no company"); a run that switched him
+      // into TechCorp and did not switch back left the whole RFQ suite refused with 403s (29 Oct 2026).
+      companyId: null,
+      branchId: null,
+      role: 'BUYER' as never,
+    },
   });
   if (resume) {
     // The API's own profile reads the about text, the title and the place from `content`.

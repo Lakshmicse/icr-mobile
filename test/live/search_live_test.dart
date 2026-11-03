@@ -62,8 +62,16 @@ void main() {
     expect(page.hits, isNotEmpty, reason: 'seeded: Pooja Professional has a public profile');
     expect(page.hits.first.title, contains('Pooja'));
     final self = await ask(sources, SearchKind.person, 'Bharat');
-    expect(self.hits.where((h) => h.title.contains('Bharat Buyer')), isEmpty, reason: 'the caller is not offered to themselves');
-    expect((await ask(sources, SearchKind.person, 'P')).hits, isEmpty, reason: 'one character is below the API\'s minimum');
+    expect(
+      self.hits.where((h) => h.title.contains('Bharat Buyer')),
+      isEmpty,
+      reason: 'the caller is not offered to themselves',
+    );
+    expect(
+      (await ask(sources, SearchKind.person, 'P')).hits,
+      isEmpty,
+      reason: 'one character is below the API\'s minimum',
+    );
   });
 
   liveTest('jobs: the board answers, each hit carries the job the sheet opens', () async {
@@ -140,7 +148,10 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 100));
     }
     expect(c.anyLoading, isFalse, reason: 'every source answered, or failed, within 20 s');
-    final failed = [for (final k in c.kinds) if (c.groupOf(k).status == GroupStatus.failed) k.name];
+    final failed = [
+      for (final k in c.kinds)
+        if (c.groupOf(k).status == GroupStatus.failed) k.name,
+    ];
     expect(failed, isEmpty, reason: 'sources that failed against the real API: $failed');
     expect(c.hasResults, isTrue);
     expect(c.offline, isFalse);

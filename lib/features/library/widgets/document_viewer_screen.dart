@@ -30,9 +30,14 @@ class DocumentViewerScreen extends StatelessWidget {
     required this.kind,
     this.pdf = const PlatformPdfEngine(),
     this.runner = runInBackground,
+    this.secure = true,
   });
 
   final DocumentBytes file;
+
+  /// Whether the window refuses screenshots while this is open ([ScreenGuard]): the library's documents are
+  /// members' private files and do; a course brochure, made to be passed around, does not.
+  final bool secure;
 
   /// How to draw [file] (`LibraryFile.previewKind`).
   final PreviewKind kind;
@@ -49,22 +54,21 @@ class DocumentViewerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScreenGuard(
-      child: Scaffold(
-        backgroundColor: _dark ? (kind == PreviewKind.pdf ? _pdfBackdrop : Colors.black) : Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          title: Text(
-            file.fileName,
-            style: const TextStyle(fontSize: 14, color: Colors.white),
-            overflow: TextOverflow.ellipsis,
-          ),
+    final page = Scaffold(
+      backgroundColor: _dark ? (kind == PreviewKind.pdf ? _pdfBackdrop : Colors.black) : Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          file.fileName,
+          style: const TextStyle(fontSize: 14, color: Colors.white),
+          overflow: TextOverflow.ellipsis,
         ),
-        body: SafeArea(child: _body(context)),
       ),
+      body: SafeArea(child: _body(context)),
     );
+    return secure ? ScreenGuard(child: page) : page;
   }
 
   Widget _body(BuildContext context) {

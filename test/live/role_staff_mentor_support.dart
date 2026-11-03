@@ -19,13 +19,15 @@ Future<void> clearPhone(ApiClient api) async {
 Future<Map<String, dynamic>> getJson(ApiClient api, String path, [Map<String, dynamic>? query]) async =>
     (await api.dio.get<Map<String, dynamic>>(path, queryParameters: query)).data!;
 
-/// Srikanth's dashboard numbers: places taken, places in all, requests waiting.
+/// Srikanth's dashboard numbers: mentees active, requests waiting. (The portal keeps no limit on mentees since
+/// 27 Oct 2026, so the dashboard sends no `capacity`; `total` is kept at 0 for callers that still read it.)
 Future<({int active, int total, int pending})> deskFigures() async {
   final raw = await getJson(await clientFor(srikanth), '/mentorship/mentors/me/dashboard');
-  final capacity = raw['capacity'] as Map;
+  final capacity = raw['capacity'] as Map?;
+  final mentees = raw['mentees'] as Map?;
   return (
-    active: (capacity['active'] as num).toInt(),
-    total: (capacity['total'] as num).toInt(),
+    active: ((capacity?['active'] ?? mentees?['active'] ?? 0) as num).toInt(),
+    total: ((capacity?['total'] ?? 0) as num).toInt(),
     pending: ((raw['requests'] as Map)['pending'] as num).toInt(),
   );
 }

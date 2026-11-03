@@ -18,6 +18,9 @@ import 'features/chapters/api_chapters_repository.dart';
 import 'features/chapters/chapter_screen.dart' show ChapterHandoffs, openChapterPage;
 import 'features/chapters/demo_chapters_repository.dart';
 import 'features/contact/contact_screen.dart' show contactRoute;
+import 'features/councils/api_councils_repository.dart';
+import 'features/councils/council_screen.dart' show openCouncilPage;
+import 'features/councils/demo_councils_repository.dart';
 import 'features/feed/feed_models.dart';
 import 'features/jobs/employer/hiring_routes.dart';
 import 'features/jobs/jobs_controller.dart';
@@ -121,7 +124,7 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
     case '/vendors':
     case '/services':
     case '/products':
-    case '/rfq':
+      // `/rfq` is not here: it is the app's Requirements board (`inAppScreens`), found before this is asked.
       return tab(AppTab.marketplace);
   }
 
@@ -220,8 +223,11 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
       case 'chapters':
         return (ctx) => _openChapter(ctx, parts[1]);
       case 'councils':
-        // The app has the councils directory, not a page per council: it opens there.
-        return (ctx) => AppShell.push<void>(ctx, inAppScreens(viewer: viewer)['/councils']!);
+        // A council's own page is native since 2 Nov 2026 (`council_screen.dart`: overview, events, leadership,
+        // members, knowledge, updates; `?tab=` opens on one). Until then the app had no page per council, so this
+        // opened the councils directory, and a joined card, its Meeting link and Manage all looked like the same
+        // screen (the owner's report).
+        return (ctx) => _openCouncil(ctx, parts[1], tab: q['tab']);
       case 'rfq':
         return (ctx) async => openRfqRecord(ctx, parts[1], owner: false, section: q['section']);
     }
@@ -234,7 +240,10 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
   if (shell != null && parts.isNotEmpty && parts[0] == 'manage' && parts.length >= 2 && parts[1] == 'jobs') {
     HiringRoutes hiring() => hiringRoutesOf(shell, navigation: appJobsNavigation(shell));
     if (parts.length == 2) return (ctx) => hiring().jobs();
-    if (parts.length == 3 && parts[2] == 'new') return (ctx) => hiring().postJob();
+    // The website's page gates the composer on a company to post for (`NoCompany`); so does the app's.
+    if (parts.length == 3 && parts[2] == 'new') {
+      return (ctx) => openPostJob(shell, navigation: appJobsNavigation(shell));
+    }
     if (parts.length == 3) return (ctx) => hiring().editJob(parts[2]);
     if (parts.length == 4 && parts[3] == 'edit') return (ctx) => hiring().editJob(parts[2]);
     if (parts.length == 4 && parts[3] == 'applicants') return (ctx) => hiring().applicants(parts[2]);
@@ -271,6 +280,16 @@ Future<void> _openChapter(BuildContext ctx, String idOrSlug) => openChapterPage(
     onOpenMember: (id) => openMemberProfile(ctx, id),
     onMessage: (id) => MessagingLauncher.withPerson(ctx, id),
   ),
+);
+
+/// A council's page by its slug or id, on the website's `?tab=` when it names one, with the hand-overs the
+/// Councils board gives it.
+Future<void> _openCouncil(BuildContext ctx, String idOrSlug, {String? tab}) => openCouncilPage(
+  ctx,
+  repository: AppConfig.demo ? DemoCouncilsRepository() : ApiCouncilsRepository(api: ctx.read<ApiClient>()),
+  idOrSlug: idOrSlug,
+  handoffs: appCouncilHandoffs(ctx),
+  tab: tab,
 );
 
 /// The tracker's tab a `?tab=` names (`/career/applications?tab=offers`); the first tab otherwise.
