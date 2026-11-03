@@ -194,6 +194,15 @@ void main() {
       expect(takenLabel(const Duration(milliseconds: 1277000)), '21m 17s');
     });
 
+    test("a sitting recorded longer than the paper's time reads as that time", () {
+      // A sitting left open for a week and then submitted: the API timed it to the submit (owner, 3 Nov 2026).
+      const week = Duration(minutes: 10088, seconds: 38);
+      expect(takenLabel(week), '10088m 38s', reason: 'with no limit, as recorded');
+      expect(takenLabel(week, limit: const Duration(minutes: 50)), '50m 00s');
+      expect(takenLabel(const Duration(minutes: 12, seconds: 4), limit: const Duration(minutes: 50)), '12m 04s');
+      expect(takenLabel(week, limit: Duration.zero), '10088m 38s', reason: 'an untimed paper caps nothing');
+    });
+
     test('dates, money and letters', () {
       final d = DateTime(2026, 8, 5, 9, 7);
       expect(dayLabel(d), '5 Aug 2026');

@@ -26,7 +26,6 @@ import 'catalogue_controller.dart';
 import 'demo_assess_repository.dart';
 import 'group_screen.dart';
 import 'widgets/group_card.dart';
-import 'widgets/intro_banner.dart';
 import 'widgets/states.dart';
 
 /// The repository a door uses when its screen was not given one: the API, or the sample content.
@@ -43,6 +42,7 @@ class CatalogueScreen extends StatelessWidget {
     required this.opener,
     this.launcher = openUrl,
     this.payLauncher = openExternal,
+    this.share = shareAssessLink,
     this.repository,
   });
 
@@ -53,13 +53,16 @@ class CatalogueScreen extends StatelessWidget {
 
   /// Where a payment page goes: the phone's browser (the group pages' Pay buttons use it).
   final SiteLauncher payLauncher;
+
+  /// The phone's share sheet, for an exam's or a set's page.
+  final ShareLink share;
   final AssessRepository? repository;
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<CatalogueController>(
       create: (c) => CatalogueController(repository: repository ?? defaultAssessRepository(c), kind: kind),
-      child: _CatalogueView(onBack: onBack, opener: opener, launcher: launcher, payLauncher: payLauncher),
+      child: _CatalogueView(onBack: onBack, opener: opener, launcher: launcher, payLauncher: payLauncher, share: share),
     );
   }
 }
@@ -70,12 +73,14 @@ class _CatalogueView extends StatefulWidget {
     required this.opener,
     required this.launcher,
     required this.payLauncher,
+    required this.share,
   });
 
   final VoidCallback onBack;
   final PaperOpener opener;
   final SiteLauncher launcher;
   final SiteLauncher payLauncher;
+  final ShareLink share;
 
   @override
   State<_CatalogueView> createState() => _CatalogueViewState();
@@ -127,6 +132,7 @@ class _CatalogueViewState extends State<_CatalogueView> with WidgetsBindingObser
               opener: widget.opener,
               launcher: widget.launcher,
               payLauncher: widget.payLauncher,
+              share: widget.share,
             ),
           ),
         ),
@@ -162,7 +168,8 @@ class _CatalogueViewState extends State<_CatalogueView> with WidgetsBindingObser
                       SliverToBoxAdapter(
                         child: _Toolbar(search: _search, isMock: isMock),
                       ),
-                      SliverToBoxAdapter(child: _banner(isMock)),
+                      // No intro banner (owner, 3 Nov 2026: "remove these 2 banners"): the cards open the page.
+                      const SliverToBoxAdapter(child: SizedBox(height: 12)),
                       ..._body(catalogue, isMock),
                     ],
                   ),
@@ -185,24 +192,6 @@ class _CatalogueViewState extends State<_CatalogueView> with WidgetsBindingObser
       ),
     );
   }
-
-  Widget _banner(bool isMock) => isMock
-      ? const IntroBanner(
-          eyebrow: 'Global Certification Mock Exams',
-          headline: 'Practice · Prepare · Perform',
-          body:
-              'Experience full-length, exam-style mock papers that help you assess your readiness, identify '
-              'knowledge gaps and build confidence before your professional certification exam.',
-          steps: ['Assess', 'Improve', 'Practice'],
-        )
-      : const IntroBanner(
-          eyebrow: 'Assess Your Knowledge.',
-          headline: 'Validate Your Expertise.',
-          body:
-              'Test your competency across CRE & FM knowledge areas through ICR Knowledge Area Assessments. '
-              'Choose your level, take the assessment, and earn an ICR Certificate upon successful completion.',
-          steps: ['Foundation', 'Professional', 'Advanced'],
-        );
 
   List<Widget> _body(CatalogueController catalogue, bool isMock) {
     final noun = isMock ? 'subjects' : 'certifications';

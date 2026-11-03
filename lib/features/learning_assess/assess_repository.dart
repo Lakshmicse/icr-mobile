@@ -1,4 +1,5 @@
 import 'assess_models.dart';
+import '../payments/checkout_start.dart';
 
 /// Where the Assess Your Knowledge and Mock Exams screens get their programmes,
 /// subjects and papers: the API, or a little sample content.
@@ -33,6 +34,13 @@ abstract class AssessRepository {
 
   /// Opens one level or set for good with ICR credits (`POST /learning/papers/:slug/redeem`).
   Future<RedeemResult> redeem(AssessPaper paper);
+
+  /// Buys the level or set (`POST /learning/papers/:slug/checkout`): opened at once in test mode, else the
+  /// gateway's form, which the app runs in its own payment view (`payInApp`).
+  Future<CheckoutStart> checkout(AssessPaper paper);
+
+  /// Buys every closed level or set of a programme or subject together (`POST …-bundles/:key/checkout`).
+  Future<CheckoutStart> checkoutBundle(PaperKind kind, String key);
 
   /// Opens a whole programme or mock exam with one of the plan's places
   /// (`POST /learning/me/opens`); idempotent for one already open.

@@ -192,11 +192,7 @@ class CatalogueController extends ChangeNotifier {
 
   /// Every level or set of a bundle opened with ICR credits shows open at once (the API's answer is read again
   /// straight after); the courses they belong to are noted for the flash-card decks that follow them.
-  void unlockBundleLocally(
-    Iterable<String> paperIds, {
-    required int credits,
-    Iterable<String> courseIds = const [],
-  }) {
+  void unlockBundleLocally(Iterable<String> paperIds, {required int credits, Iterable<String> courseIds = const []}) {
     final access = _member.access;
     if (access == null) return;
     _member = _member.copyWith(

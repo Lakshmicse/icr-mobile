@@ -137,19 +137,21 @@ class LearningHubController extends ChangeNotifier {
   /// The ICR Courses rail: the first few matches.
   List<Course> get courseRail => matchingCourses.take(courseRailLimit).toList();
 
-  /// "ICR Certifications": the courses ICR itself awards, the first few.
-  List<Course> get icrCourses => matchingCourses.where(isIcr).take(gridLimit).toList();
+  /// "ICR Certifications": the taught courses ICR itself runs, the first few — the website's dashboard rail, which
+  /// reads only `kind=DEVELOPMENT` (`useDevelopmentCourses`). The certification programmes are ICR's too but sit
+  /// behind Assess Your Knowledge; listing them here filled the row with Capital Planning, Colloboration… where
+  /// production's website shows one card, Facility Management Professional (owner's report, 3 Nov 2026).
+  List<Course> get icrCourses =>
+      matchingCourses.where((c) => c.kind == CourseKind.development && isIcr(c)).take(gridLimit).toList();
 
   /// "Partner Courses": the institutes' courses, the first few.
   List<Course> get partnerCourses => matchingCourses.where((c) => !isIcr(c)).take(gridLimit).toList();
 
-  /// ICR's own course: no awarding body, or ICR's institute as the body.
-  static bool isIcr(Course c) {
-    final p = c.provider;
-    if (p == null) return true;
-    final slug = p.slug?.toLowerCase() ?? '';
-    return slug == 'icr' || slug == 'icr-institute' || p.name.trim().toUpperCase().startsWith('ICR');
-  }
+  /// ICR's own course: one with no awarding body, as the website's "ICR certified programs" lists them
+  /// (`!course.provider`). An institute's course is a partner's even when the institute is ICR's own — the
+  /// website files it under the institute, and production has one ICR-certified programme where this grid once
+  /// showed the institute's whole catalogue (owner's report, 2 Nov 2026).
+  static bool isIcr(Course c) => c.provider == null;
 
   // --- the doors and "My learning" ---------------------------------------------
 
@@ -176,7 +178,9 @@ class LearningHubController extends ChangeNotifier {
       assessmentsShown.isEmpty &&
       mocksShown.isEmpty &&
       decksShown.isEmpty &&
-      matchingCourses.isEmpty &&
+      // What the ICR Certifications row shows, not every course: a search that finds only a certification
+      // programme (Assess Your Knowledge's) would otherwise leave a page with no section and no notice.
+      icrCourses.isEmpty &&
       institutesShown.isEmpty &&
       !assessLoading &&
       !mockLoading &&

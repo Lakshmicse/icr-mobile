@@ -21,6 +21,7 @@ class MockTestsScreen extends StatelessWidget {
     this.opener = openPaper,
     this.launcher = openUrl,
     this.payLauncher = openExternal,
+    this.share = shareAssessLink,
     this.repository,
   });
 
@@ -36,6 +37,9 @@ class MockTestsScreen extends StatelessWidget {
   /// Hands a payment page to the phone's browser (PayU runs on the website, not in the app).
   final SiteLauncher payLauncher;
 
+  /// Opens the phone's share sheet with a set's or an exam's page on the website.
+  final ShareLink share;
+
   /// The subjects' source; the API (or the sample content) when null.
   final AssessRepository? repository;
 
@@ -46,6 +50,7 @@ class MockTestsScreen extends StatelessWidget {
     opener: opener,
     launcher: launcher,
     payLauncher: payLauncher,
+    share: share,
     repository: repository,
   );
 }

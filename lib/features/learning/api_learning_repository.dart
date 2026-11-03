@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart' show Options;
+import 'package:dio/dio.dart' show Options, ResponseType;
 
 import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
@@ -118,6 +118,51 @@ class ApiLearningRepository implements LearningRepository {
       if (corporate && company != null && company.trim().isNotEmpty) 'company': company.trim(),
       if (corporate && headcount != null) 'headcount': headcount,
     });
+  }
+
+  @override
+  Future<BrochureLead> brochureContact() async {
+    final me = await _get('/auth/me');
+    final user = (me['user'] as Map<String, dynamic>?) ?? me;
+    return BrochureLead(
+      name: '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim(),
+      email: user['email'] as String? ?? '',
+      phone: user['phone'] as String? ?? '',
+    );
+  }
+
+  @override
+  Future<void> requestBrochure(Course course, BrochureLead lead, {required BrochureIntent intent}) async {
+    final what = intent == BrochureIntent.view ? 'read in the app' : 'downloaded';
+    final message = 'Brochure request from the ICR app ($what): ${course.title} (${course.code}).';
+    if (course.provider != null) {
+      // The institute's lead, as the course page's enquiry: the website's `LearningLead` with the course on it.
+      await _send('POST', '/learning/courses/${Uri.encodeComponent(course.code)}/enquire', {
+        'name': lead.name,
+        'email': lead.email,
+        if (lead.phone.isNotEmpty) 'phone': lead.phone,
+        if (lead.company.isNotEmpty) 'company': lead.company,
+        'message': message,
+      });
+      return;
+    }
+    // A course ICR runs itself has no institute to write to (the API refuses the course enquiry), so the lead
+    // goes to ICR's contact desk, where the website sends such questions.
+    await _send('POST', '/contact', {
+      'name': lead.name,
+      'email': lead.email,
+      if (lead.phone.isNotEmpty) 'phone': lead.phone,
+      'topic': 'OTHER',
+      'message': lead.company.isEmpty ? message : '$message Company: ${lead.company}.',
+    });
+  }
+
+  @override
+  Future<List<int>> brochureBytes(Course course) async {
+    final url = course.brochureUrl;
+    if (url == null) throw UnsupportedError('no brochure');
+    final res = await api.dio.get<List<int>>(url, options: Options(responseType: ResponseType.bytes));
+    return res.data ?? const [];
   }
 
   @override

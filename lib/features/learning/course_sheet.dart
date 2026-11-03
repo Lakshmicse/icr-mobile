@@ -1,12 +1,19 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/api/api_error.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
 import '../../core/widgets/detail_sheet.dart';
 import '../../core/widgets/section_heading.dart';
+import '../library/library_models.dart' show DocumentBytes, PreviewKind;
+import '../library/pdf_engine.dart';
+import '../library/preview_runner.dart';
+import '../library/widgets/document_viewer_screen.dart';
 import 'course_sheet_controller.dart';
 import 'learning_controller.dart';
 import 'learning_format.dart';
@@ -15,6 +22,7 @@ import 'learning_styles.dart';
 import 'widgets/course_bottom_bar.dart';
 import 'widgets/course_picture.dart';
 import 'widgets/cover_pill.dart';
+import 'widgets/brochure_sheet.dart';
 import 'widgets/course_sections.dart';
 import 'widgets/enquiry_sheet.dart';
 import 'widgets/place_status.dart';
@@ -130,18 +138,22 @@ class CourseSheetBody extends StatelessWidget {
                     onPressed: () => addToCart(context, controller),
                   ),
           ),
-          const SizedBox(height: 9.5),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.5),
-            child: _WideButton(
-              label: 'DOWNLOAD BROCHURE',
-              icon: Symbols.download,
-              iconWeight: 700,
-              height: 40,
-              enabled: course.brochureUrl != null,
-              onPressed: () => openBrochure(context, course),
+          // Only a course with a brochure offers it, as the website's course page shows its prospectus link only
+          // then (owner, 2 Nov 2026: a greyed button on the 35 courses without one read as a form that would not
+          // open).
+          if (course.brochureUrl != null) ...[
+            const SizedBox(height: 9.5),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15.5),
+              child: _WideButton(
+                label: 'DOWNLOAD BROCHURE',
+                icon: Symbols.download,
+                iconWeight: 700,
+                height: 40,
+                onPressed: () => openBrochure(context, controller),
+              ),
             ),
-          ),
+          ],
           const SizedBox(height: 24.6),
           const Hairline(color: AppColors.outlineVariant),
           if (overview != null) ...[CourseOverview(text: overview), const SizedBox(height: 6.6), const SectionRule()],
@@ -212,13 +224,52 @@ class CourseSheetBody extends StatelessWidget {
     showMessage(context, message ?? placeMessage(controller.course));
   }
 
-  static Future<void> openBrochure(BuildContext context, Course course) async {
+  /// The phone's PDF renderer and the background runner the brochure viewer uses; a test swaps them.
+  static PdfEngine Function() brochurePdf = PlatformPdfEngine.new;
+  static PreviewRunner brochureRunner = runInBackground;
+
+  /// The brochure, behind a lead (the owner's rule, 30 Oct 2026): the form asks who is reading, then **View
+  /// brochure** opens the PDF in the app's own viewer (nothing saved; the website's link would have had the
+  /// phone download it) and **Download** hands it to the phone's browser. Once a lead is sent, the form is not
+  /// asked again while the sheet is open; with no brochure, a snackbar says so.
+  static Future<void> openBrochure(BuildContext context, CourseSheetController controller) async {
+    final course = controller.course;
     final url = course.brochureUrl;
     if (url == null) {
       showMessage(context, 'This course has no brochure yet.');
       return;
     }
-    await openUrl(context, Uri.parse(url));
+    final intent = await showBrochureSheet(context, controller);
+    if (intent == null || !context.mounted) return;
+    if (intent == BrochureIntent.download) {
+      await openExternal(context, Uri.parse(url));
+      return;
+    }
+    List<int> bytes;
+    try {
+      bytes = await controller.repository.brochureBytes(course);
+    } on UnsupportedError {
+      // A source with no file of its own (the demo's brochure is a web page): the page, in the app.
+      if (context.mounted) await openUrl(context, Uri.parse(url));
+      return;
+    } on Object catch (e) {
+      if (context.mounted) showMessage(context, ApiError.from(e).message);
+      return;
+    }
+    if (!context.mounted) return;
+    final name = Uri.parse(url).pathSegments.lastOrNull ?? '${course.code}-brochure.pdf';
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => DocumentViewerScreen(
+          file: DocumentBytes(bytes: Uint8List.fromList(bytes), fileName: name, mimeType: 'application/pdf'),
+          kind: PreviewKind.pdf,
+          pdf: brochurePdf(),
+          runner: brochureRunner,
+          // A brochure is made to be passed around: no screenshot lock, unlike a library document.
+          secure: false,
+        ),
+      ),
+    );
   }
 
   /// "mailto:" with the course in the subject.
@@ -268,7 +319,7 @@ class CourseSheetBar extends StatelessWidget {
       enabled: controller.canAct,
       held: course.enrolled,
       onAction: () => CourseSheetBody.addToCart(context, controller),
-      onBrochure: () => CourseSheetBody.openBrochure(context, course),
+      onBrochure: () => CourseSheetBody.openBrochure(context, controller),
     );
   }
 }

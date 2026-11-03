@@ -23,14 +23,17 @@ import 'package:icr_mobile/features/learning/learning_format.dart';
 import 'package:icr_mobile/features/learning/learning_models.dart';
 import 'package:icr_mobile/features/learning/learning_repository.dart';
 import 'package:icr_mobile/features/learning/learning_screen.dart';
+import 'package:icr_mobile/features/learning_assess/assess_models.dart';
 import 'package:icr_mobile/features/learning_assess/demo_assess_repository.dart';
 import 'package:icr_mobile/features/learning_study/demo_study_repository.dart';
+import 'package:icr_mobile/features/learning_study/study_models.dart';
 import 'package:icr_mobile/features/learning_hub/hub_controller.dart';
 import 'package:icr_mobile/features/learning_hub/hub_models.dart';
 import 'package:icr_mobile/features/learning_hub/hub_repository.dart';
 import 'package:icr_mobile/features/learning_hub/learning_hub_screen.dart';
 import 'package:icr_mobile/features/learning_hub/partner_courses_screen.dart';
 import 'package:icr_mobile/features/learning_hub/partner_screen.dart';
+import 'package:icr_mobile/features/learning_hub/widgets/learn_card.dart' show designCardCovers;
 import 'package:provider/provider.dart';
 
 import '../helpers/fonts.dart';
@@ -147,6 +150,15 @@ class _WithBundledPictures implements LearningRepository {
     int? headcount,
   }) => inner.enquire(course, message: message, kind: kind, company: company, headcount: headcount);
   @override
+  Future<BrochureLead> brochureContact() async => const BrochureLead();
+
+  @override
+  Future<void> requestBrochure(Course course, BrochureLead lead, {required BrochureIntent intent}) async {}
+
+  @override
+  Future<List<int>> brochureBytes(Course course) async => throw UnsupportedError('no brochure bytes');
+
+  @override
   Future<int> unreadNotifications() async => 1;
   @override
   Uri link(Course course) => inner.link(course);
@@ -245,6 +257,71 @@ class _HubSource implements LearningHubRepository {
 
   @override
   Future<void> enquireInstitute(Institute institute, {required String message}) async {}
+}
+
+/// The hub's sample content, as `docs/designs/learning-hub-v2.png` draws it: six cards in every grid (Capital
+/// Planning, Collaboration, Communication and Compliance Standards three times), each on the design's photo for
+/// its place, four decks in the Flash Cards rail. Held here so the hub's goldens do not move when the sample
+/// content of the paper catalogues or the decks changes.
+const _designTitles = [
+  'Capital Planning',
+  'Collaboration',
+  'Communication',
+  'Compliance Standards',
+  'Compliance Standards',
+  'Compliance Standards',
+];
+
+FeedPicture _designCover(int i) => FeedPicture.asset(designCardCovers[i > 3 ? 3 : i]);
+
+class _DesignAssess extends DemoAssessRepository {
+  @override
+  Future<List<PaperGroup>> groups(PaperKind kind) async => [
+    for (final (i, title) in _designTitles.indexed)
+      PaperGroup(kind: kind, id: '${kind.name}-$i', key: '${kind.name}-$i', title: title, cover: _designCover(i)),
+  ];
+}
+
+class _DesignStudy extends DemoStudyRepository {
+  @override
+  Future<List<StudyTopic>> topics() async => [
+    for (final (i, (title, count)) in [
+      ('HVAC Systems', 45),
+      ('Fire Safety', 32),
+      ('Leasing', 60),
+      ('Energy Audits', 28),
+    ].indexed)
+      StudyTopic(id: 'deck-$i', slug: 'deck-$i', title: title, cardCount: count, cover: _designCover(i)),
+  ];
+}
+
+/// Six of ICR's own programmes (no awarding body) and six of an institute's with no logo of its own, so both
+/// grids wear the "ICR" tab as the design draws them.
+class _DesignCourses extends DemoLearningRepository {
+  @override
+  Future<List<Course>> courses() async => [
+    for (final (i, title) in _designTitles.indexed)
+      Course(
+        id: 'icr-$i',
+        code: 'ICR$i',
+        title: title,
+        kind: CourseKind.assessment,
+        level: 'Foundation',
+        cover: _designCover(i),
+        badge: coverBadge('FOUNDATION', CourseKind.assessment),
+      ),
+    for (final (i, title) in _designTitles.indexed)
+      Course(
+        id: 'par-$i',
+        code: 'PAR$i',
+        title: title,
+        kind: CourseKind.development,
+        level: 'Foundation',
+        provider: const CourseProvider(id: 'p', name: 'Vinfraa Institute', verified: true),
+        cover: _designCover(i),
+        badge: coverBadge('FOUNDATION', CourseKind.development),
+      ),
+  ];
 }
 
 /// The Learning screens at the designs' frames, exported at 2x to build/screens/.
@@ -389,22 +466,41 @@ void main() {
   Widget hubTab(LearningHubController c) =>
       LearningHubScreen(onBack: () {}, viewer: DemoFeedRepository.me, onAccount: () {}, controller: c);
 
-  // The design is a 390 × 2815 frame (docs/designs/hires/learning-centre.png at 4x): the phone-height export is
-  // the first fold, the whole-page export the design's full height, for compare.py.
+  /// The hub on the design's sample content (six cards a grid, four decks), phone-wide at [width] dp.
+  Future<LearningHubController> pumpHubDesign(WidgetTester tester, {required Size physical}) async {
+    tester.view.physicalSize = physical;
+    tester.view.devicePixelRatio = 2;
+    addTearDown(tester.view.reset);
+    final hub = LearningHubController(
+      repository: _HubSource(),
+      learning: LearningController(_DesignCourses()),
+      assess: _DesignAssess(),
+      study: _DesignStudy(),
+    );
+    addTearDown(hub.dispose);
+    await tester.runAsync(hub.start);
+    await tester.pumpWidget(MaterialApp(debugShowCheckedModeBanner: false, theme: buildAppTheme(), home: hubTab(hub)));
+    await precacheAll(tester);
+    return hub;
+  }
+
+  // The design is a 390 × 2194 frame (docs/designs/learning-hub-v2.png at 1x, its bottom bar and a 57 dp header
+  // included): the phone-height export is the first fold, the whole-page export the page's full height (the
+  // header and the content, no bar), for compare.py.
   shadowedWidgets('learning hub (the tab) at 390 × 844', (tester) async {
-    await pumpHubScreen(tester, hubTab, physical: const Size(780, 1688));
+    await pumpHubDesign(tester, physical: const Size(780, 1688));
     await export(tester, find.byType(LearningHubScreen), 'learning_hub');
     await expectLater(find.byType(LearningHubScreen), matchesGoldenFile('goldens/learning_hub.png'));
   });
 
-  shadowedWidgets('learning hub, the whole page, at 390 × 2815', (tester) async {
-    await pumpHubScreen(tester, hubTab, physical: const Size(780, 5630));
+  shadowedWidgets('learning hub, the whole page, at 390 × 2143', (tester) async {
+    await pumpHubDesign(tester, physical: const Size(780, 4286));
     await export(tester, find.byType(LearningHubScreen), 'learning_hub_full');
     await expectLater(find.byType(LearningHubScreen), matchesGoldenFile('goldens/learning_hub_full.png'));
   });
 
-  shadowedWidgets('learning hub at 320 × 1500 (export only)', (tester) async {
-    await pumpHubScreen(tester, hubTab, physical: const Size(640, 3000));
+  shadowedWidgets('learning hub at 320 × 2300 (export only)', (tester) async {
+    await pumpHubDesign(tester, physical: const Size(640, 4600));
     await export(tester, find.byType(LearningHubScreen), 'learning_hub_320');
   });
 

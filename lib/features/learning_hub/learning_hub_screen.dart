@@ -28,7 +28,11 @@ import '../learning_study/study_repository.dart';
 import '../notifications/notification_scope.dart';
 import '../notifications/notifications_bell.dart';
 import '../notifications/notifications_screen.dart';
+import 'catalogue_screen.dart';
+import 'partner_screen.dart';
+import 'widgets/institute_card.dart';
 import 'hub_controller.dart';
+import 'hub_models.dart';
 import 'hub_factory.dart';
 import 'learning_doors.dart';
 import 'partner_courses_screen.dart';
@@ -124,13 +128,32 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
       context,
       (route, back) => ChangeNotifierProvider<LearningController>.value(
         value: learning,
-        child: LearningScreen(onBack: back, title: 'ICR Courses', routes: widget.routes),
+        child: LearningScreen(onBack: back, title: 'ICR Courses', routes: widget.routes, onOpenDeck: _openDeck),
       ),
     );
   }
 
   void _openPartners() {
     pushLearningPage<void>(context, (route, back) => PartnerCoursesScreen(onBack: back, hub: _hub));
+  }
+
+  /// An institute's page: its courses, as the directory opens it.
+  void _openInstitute(Institute institute) {
+    pushLearningPage<void>(context, (route, back) => PartnerScreen(institute: institute, onBack: back, hub: _hub));
+  }
+
+  /// "Catalogue · View More": the six doors as tiles — the categories — not the ICR Courses list, which is one
+  /// door of the six (owner's call, 2 Nov 2026).
+  void _openCatalogue() {
+    pushLearningPage<void>(
+      context,
+      (route, back) => CatalogueScreen(
+        onBack: back,
+        onOpen: _openDoor,
+        unread: _hub.learning.unread,
+        onBell: () => openNotifications(route),
+      ),
+    );
   }
 
   AssessRepository get _assess =>
@@ -243,99 +266,123 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
     final mocks = _hub.mocksShown;
     final decks = _hub.decksShown;
     final certifications = _hub.icrCourses;
-    final partners = _hub.partnerCourses;
-    return [
-      // The design's rhythm from the header: 15 dp, the heading line, 10 dp, the tiles.
-      if (!_hub.narrowed) ...[
-        const SizedBox(height: 15 - HubSectionHeading.lineInset),
-        HubSectionHeading(title: 'Catalogue', onAction: _openCourses),
-        const SizedBox(height: 10 - HubSectionHeading.lineInset),
-        CatalogueRail(onOpen: _openDoor),
-        const SizedBox(height: 7),
-        const HubRule(),
-      ],
-      ..._grid(
-        key: 'assess',
-        title: 'Assess Your Knowledge',
-        onMore: () => pushLearningPage(context, widget.routes.assessment),
-        loading: _hub.assessLoading,
-        error: _hub.assessError,
-        onRetry: _hub.reloadAssess,
-        cards: [
-          for (final (i, g) in assessments.indexed)
-            LearnCard(
-              key: ValueKey('assess-${g.key}'),
-              title: g.title,
-              cover: coverFor(g.cover, i),
-              onTap: () => _openGroup(PaperKind.assessment, g),
-            ),
-        ],
-        absent: _hub.assess == null,
+    // The institutes, as the website's "Partner institutes" rail lists them (ICR's own institute among them).
+    final institutes = _hub.institutesShown.take(LearningHubController.gridLimit).toList();
+    // Each section is its heading row (36 dp) and what it holds; `rule` says whether a hairline closes it when
+    // another section follows (the export draws none between Mock Exams and Flash Cards).
+    final sections = <({List<Widget> body, bool rule})>[
+      (
+        body: _grid(
+          key: 'assess',
+          title: 'Assess Your Knowledge',
+          onMore: () => pushLearningPage(context, widget.routes.assessment),
+          loading: _hub.assessLoading,
+          error: _hub.assessError,
+          onRetry: _hub.reloadAssess,
+          cards: [
+            for (final (i, g) in assessments.indexed)
+              LearnCard(
+                key: ValueKey('assess-${g.key}'),
+                title: g.title,
+                cover: coverFor(g.cover, i),
+                onTap: () => _openGroup(PaperKind.assessment, g),
+              ),
+          ],
+          absent: _hub.assess == null,
+        ),
+        rule: true,
       ),
-      ..._grid(
-        key: 'mock',
-        title: 'Mock Exams',
-        onMore: () => pushLearningPage(context, widget.routes.mockTests),
-        loading: _hub.mockLoading,
-        error: _hub.mockError,
-        onRetry: _hub.reloadMocks,
-        cards: [
-          for (final (i, g) in mocks.indexed)
-            LearnCard(
-              key: ValueKey('mock-${g.key}'),
-              title: g.title,
-              cover: coverFor(g.cover, i),
-              onTap: () => _openGroup(PaperKind.mock, g),
-            ),
-        ],
-        absent: _hub.assess == null,
-      ),
-      ..._flashRail(decks),
-      ..._grid(
-        key: 'cert',
-        title: 'ICR Certifications',
-        onMore: () => _openCourses(search: _search.text.trim()),
-        loading: _hub.coursesLoading,
-        error: _hub.coursesError,
-        onRetry: _hub.refresh,
-        cards: [
-          for (final (i, c) in certifications.indexed)
-            LearnCard(
-              key: ValueKey('cert-${c.id}'),
-              title: c.title,
-              cover: coverFor(c.cover, i),
-              badge: 'ICR',
-              onTap: () => showCourseSheet(context, c),
-            ),
-        ],
-      ),
-      ..._grid(
-        key: 'partner',
-        title: 'Partner Courses',
-        onMore: _openPartners,
-        loading: _hub.coursesLoading,
-        error: null,
-        onRetry: _hub.refresh,
-        cards: [
-          for (final (i, c) in partners.indexed)
-            LearnCard(
-              key: ValueKey('partner-${c.id}'),
-              title: c.title,
-              cover: coverFor(c.cover, i),
-              // The design draws ICR's tab there too; an institute's is only its own.
-              badge: c.provider?.logo == null ? 'ICR' : null,
-              onTap: () => showCourseSheet(context, c),
-            ),
-        ],
+      (
+        body: _grid(
+          key: 'mock',
+          title: 'Mock Exams',
+          onMore: () => pushLearningPage(context, widget.routes.mockTests),
+          loading: _hub.mockLoading,
+          error: _hub.mockError,
+          onRetry: _hub.reloadMocks,
+          cards: [
+            for (final (i, g) in mocks.indexed)
+              LearnCard(
+                key: ValueKey('mock-${g.key}'),
+                title: g.title,
+                cover: coverFor(g.cover, i),
+                onTap: () => _openGroup(PaperKind.mock, g),
+              ),
+          ],
+          absent: _hub.assess == null,
+        ),
         rule: false,
       ),
-      if (!_hub.narrowed) ...[const SizedBox(height: 8), MasterclassBanner(onKnowMore: _knowMore)],
-      const SizedBox(height: 24),
+      (body: _flashRail(decks), rule: true),
+      (
+        body: _grid(
+          key: 'cert',
+          title: 'ICR Certifications',
+          onMore: () => _openCourses(search: _search.text.trim()),
+          loading: _hub.coursesLoading,
+          error: _hub.coursesError,
+          onRetry: _hub.refresh,
+          cards: [
+            for (final (i, c) in certifications.indexed)
+              LearnCard(
+                key: ValueKey('cert-${c.id}'),
+                title: c.title,
+                cover: coverFor(c.cover, i),
+                badge: 'ICR',
+                onTap: () => showCourseSheet(context, c),
+              ),
+          ],
+        ),
+        rule: true,
+      ),
+      (
+        body: _grid(
+          key: 'partner',
+          title: 'Partner Courses',
+          onMore: _openPartners,
+          loading: _hub.institutesLoading,
+          error: _hub.institutesError,
+          onRetry: _hub.refresh,
+          // Each institute with its logo and how many courses it runs; a card opens the institute's own course
+          // list, as the website's "Explore courses" does (owner's call, 2 Nov 2026: the section listed the
+          // institutes' courses mixed together).
+          cards: [for (final i in institutes) InstituteCard(institute: i, onTap: () => _openInstitute(i))],
+        ),
+        rule: false,
+      ),
+    ].where((s) => s.body.isNotEmpty).toList();
+
+    return [
+      // The design's rhythm (docs/designs/learning-hub-v2.png, below its 57 dp header): the Catalogue row at the
+      // header's edge, the tiles 1 dp under it, a hairline 5 dp under their shadow, then each section's 36 dp
+      // heading row 6 dp under that.
+      if (!_hub.narrowed) ...[
+        HubSectionHeading(title: 'Catalogue', onAction: _openCatalogue),
+        const SizedBox(height: 1),
+        CatalogueRail(onOpen: _openDoor),
+        const SizedBox(height: 5.1),
+        const HubRule(),
+        const SizedBox(height: 6.2),
+      ],
+      for (final (i, section) in sections.indexed) ...[
+        ...section.body,
+        // 10.2 dp under the last card (or tile), the hairline, 5.9 dp, the next heading — or, with no hairline,
+        // the same 16 dp of white; the last section leaves 10 dp for the banner.
+        if (i == sections.length - 1)
+          const SizedBox(height: 10)
+        else if (section.rule) ...[
+          const SizedBox(height: 10.2),
+          const HubRule(),
+          const SizedBox(height: 5.9),
+        ] else
+          const SizedBox(height: 16),
+      ],
+      if (!_hub.narrowed) MasterclassBanner(onKnowMore: _knowMore),
     ];
   }
 
-  /// A heading, two cards a row, and the rule under the last row — or the
-  /// section's loading boxes, its failure, or nothing when it has nothing.
+  /// A heading row and the cards, two a row, under it — or the section's loading boxes, its failure, or nothing
+  /// when it has nothing (an empty list).
   List<Widget> _grid({
     required String key,
     required String title,
@@ -345,7 +392,6 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
     required Future<void> Function() onRetry,
     required List<Widget> cards,
     bool absent = false,
-    bool rule = true,
   }) {
     if (absent) return const [];
     if (!loading && error == null && cards.isEmpty) return const [];
@@ -370,14 +416,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
         rows.add(LearnGridRow(left: cards[i], right: i + 1 < cards.length ? cards[i + 1] : null));
       }
     }
-    return [
-      const SizedBox(height: 13 - HubSectionHeading.lineInset),
-      HubSectionHeading(key: ValueKey('$key-heading'), title: title, onAction: onMore),
-      const SizedBox(height: 10 - HubSectionHeading.lineInset),
-      ...rows,
-      const SizedBox(height: 2.25),
-      if (rule) const HubRule(),
-    ];
+    return [HubSectionHeading(key: ValueKey('$key-heading'), title: title, onAction: onMore), ...rows];
   }
 
   List<Widget> _flashRail(List<StudyTopic> decks) {
@@ -386,13 +425,11 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
     final error = _hub.decksError;
     if (!loading && error == null && decks.isEmpty) return const [];
     return [
-      const SizedBox(height: 13 - HubSectionHeading.lineInset),
       HubSectionHeading(
         key: const ValueKey('flash-heading'),
         title: 'Flash Cards',
         onAction: () => pushLearningPage(context, widget.routes.flashCards),
       ),
-      const SizedBox(height: 8.75 - HubSectionHeading.lineInset),
       if (loading)
         SizedBox(
           key: const ValueKey('flash-skeleton'),
@@ -432,8 +469,6 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
             ),
           ),
         ),
-      const SizedBox(height: 10),
-      const HubRule(),
     ];
   }
 }

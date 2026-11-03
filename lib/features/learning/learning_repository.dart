@@ -34,6 +34,19 @@ abstract class LearningRepository {
     int? headcount,
   });
 
+  /// The member's own details, to prefill the brochure form (name, email and phone from the account; the
+  /// company is theirs to type).
+  Future<BrochureLead> brochureContact();
+
+  /// Records who asked for [course]'s brochure before it is handed over: the institute's lead
+  /// (`POST /learning/courses/:code/enquire`), or ICR's contact desk for a course ICR runs itself. A refusal
+  /// surfaces as the API's own sentence.
+  Future<void> requestBrochure(Course course, BrochureLead lead, {required BrochureIntent intent});
+
+  /// The brochure's bytes, for the app's own viewer. A source without a file throws [UnsupportedError], and the
+  /// sheet opens the brochure's address instead.
+  Future<List<int>> brochureBytes(Course course);
+
   Future<int> unreadNotifications();
 
   /// The course's page on the website.

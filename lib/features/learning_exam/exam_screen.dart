@@ -75,7 +75,6 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
       _handedOver = true;
       final result = c.result!;
       final paper = c.paper;
-      final repository = c.repository;
       final marks = {for (final q in c.questions) q.id: q.marks};
       final navigator = Navigator.of(context);
       navigator.popUntil((r) => r is! PopupRoute);
@@ -89,7 +88,6 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
             onRetake: widget.onRetake,
             onClosed: widget.onFlowEnd,
             setName: paper.title,
-            repository: repository,
             questionMarks: marks,
           ),
         ),
@@ -182,12 +180,8 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
               children: [
                 Column(
                   children: [
-                    ExamTitleBar(
-                      title: c.paper.isMock ? 'Mock Test' : 'Assessment',
-                      style: ExamText.examTitle,
-                      backLabel: 'Leave the exam',
-                      onBack: _leave,
-                    ),
+                    // The paper's own name and set ("Mock Exam Name Set 1"), as the design titles the window.
+                    ExamTitleBar(title: c.paper.heading, backLabel: 'Leave the exam', onBack: _leave),
                     Expanded(
                       child: _QuestionPane(controller: c, onPalette: _openPalette),
                     ),
@@ -227,20 +221,20 @@ class ClockChip extends StatelessWidget {
       valueListenable: controller.remaining,
       builder: (context, left, _) {
         final low = left < const Duration(minutes: 5);
-        final fill = low ? ExamColors.red : ExamColors.redTint;
-        final ink = low ? Colors.white : ExamColors.red;
+        final fill = low ? ExamColors.wrong : const Color(0xFFFFECEB);
+        final ink = low ? Colors.white : ExamColors.wrong;
         return Semantics(
           label: 'Time remaining ${clockSpoken(left)}',
           excludeSemantics: true,
           child: Container(
-            height: 30,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            height: 21,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(999)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(LucideIcons.alarmClock, size: 16, color: ink),
-                const SizedBox(width: 6),
+                Icon(Symbols.timer, size: 14, fill: 1, color: ink),
+                const SizedBox(width: 5),
                 Text(
                   'Time Left: ${clockLabel(left)}',
                   style: ExamText.timeLeft.copyWith(color: ink, fontFeatures: const [FontFeature.tabularFigures()]),
@@ -266,64 +260,72 @@ class _QuestionPane extends StatelessWidget {
     final c = controller;
     final q = c.question;
     final picked = c.picked(q.id);
-    final difficulty = q.difficultyLabel;
+    // The paper's level beside the question number, where a difficulty tag (EASY) used to sit (owner, 3 Nov 2026:
+    // "that EASY tag is not required; mention the level of the assessment"). A mock set has none.
+    final level = c.paper.levelLabel;
     final canClear = c.editable && picked.isNotEmpty;
     return Column(
       children: [
         if (c.paper.durationMinutes > 0)
           Padding(
-            padding: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.only(top: 8),
             child: ClockChip(controller: c),
           ),
         Expanded(
           child: ListView(
             key: ValueKey('question-${c.current}'),
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+            padding: const EdgeInsets.fromLTRB(13, 4, 13, 16),
             children: [
-              _Strip(controller: c, onPalette: onPalette),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: ExamColors.hairline),
-                  boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 12, offset: Offset(0, 3))],
-                ),
+              // The strip sits 5 dp further in than the card under it, and its 28 dp squares have 4 dp of
+              // reach above and below for a finger.
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                child: _Strip(controller: c, onPalette: onPalette),
+              ),
+              const SizedBox(height: 10),
+              const Divider(height: 1, thickness: 1, color: ExamColors.line),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(2, 12, 2, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Wrap(
-                      spacing: 12,
+                      spacing: 10,
                       runSpacing: 6,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text('Question ${c.current + 1}', style: ExamText.examQuestionNumber),
-                        if (difficulty != null) _DifficultyChip(label: difficulty),
+                        if (level != null) _LevelChip(label: level),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     Semantics(header: true, child: Text(q.prompt, style: ExamText.examPrompt)),
                     if (q.multiple) ...[
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                       Text(
                         'Select all that apply.',
-                        style: ExamText.small.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
+                        style: ExamText.at(13, FontWeight.w600, ExamColors.action, line: 18),
                       ),
                     ],
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: Semantics(header: true, child: Text('Answer', style: ExamText.sectionTitle)),
-                  ),
-                  _ClearButton(onTap: canClear ? c.clearAnswer : null),
-                ],
+              SizedBox(
+                height: 30,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 2),
+                        child: Semantics(header: true, child: Text('Answer', style: ExamText.sectionTitle)),
+                      ),
+                    ),
+                    _ClearButton(onTap: canClear ? c.clearAnswer : null),
+                  ],
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
+              const Divider(height: 1, thickness: 1, color: ExamColors.line),
               for (var i = 0; i < q.options.length; i++) ...[
                 OptionTile(
                   index: i,
@@ -333,7 +335,7 @@ class _QuestionPane extends StatelessWidget {
                   enabled: c.editable,
                   onTap: () => c.select(i),
                 ),
-                if (i < q.options.length - 1) const SizedBox(height: 14),
+                const Divider(height: 1, thickness: 1, color: ExamColors.line),
               ],
             ],
           ),
@@ -343,24 +345,27 @@ class _QuestionPane extends StatelessWidget {
   }
 }
 
-/// EASY, MEDIUM or HARD: an outlined, spaced-out label beside the question number.
-class _DifficultyChip extends StatelessWidget {
-  const _DifficultyChip({required this.label});
+/// The paper's level ("Foundation", "Professional", "Advanced"), in the words the Assess pages use: a pale tint, no
+/// outline.
+class _LevelChip extends StatelessWidget {
+  const _LevelChip({required this.label});
 
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Difficulty $label',
+      label: 'Level $label',
       excludeSemantics: true,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: ExamColors.hairline),
+        key: const ValueKey('question-level'),
+        height: 24,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(color: ExamColors.paleBlue, borderRadius: BorderRadius.circular(999)),
+        child: Center(
+          widthFactor: 1,
+          child: Text(label, style: ExamText.at(12, FontWeight.w600, ExamColors.action, line: 16)),
         ),
-        child: Text(label.toUpperCase(), style: ExamText.difficulty),
       ),
     );
   }
@@ -374,7 +379,7 @@ class _ClearButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ink = onTap == null ? AppColors.slate300 : AppColors.primary;
+    final ink = onTap == null ? AppColors.slate300 : ExamColors.action;
     return Semantics(
       button: true,
       enabled: onTap != null,
@@ -384,15 +389,15 @@ class _ClearButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
+          constraints: const BoxConstraints(minHeight: 30, minWidth: 44),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(LucideIcons.eraser, size: 16, color: ink),
-                const SizedBox(width: 6),
-                Text('Clear', style: ExamText.link.copyWith(color: ink)),
+                Icon(LucideIcons.eraser, size: 14, color: ink),
+                const SizedBox(width: 5),
+                Text('Clear', style: ExamText.at(13, FontWeight.w600, ink, line: 18)),
               ],
             ),
           ),
@@ -409,6 +414,9 @@ class _Strip extends StatelessWidget {
   final ExamController controller;
   final VoidCallback onPalette;
 
+  static const cell = 28.0;
+  static const gap = 4.0;
+
   @override
   Widget build(BuildContext context) {
     final c = controller;
@@ -419,69 +427,56 @@ class _Strip extends StatelessWidget {
     final window = [for (var i = lo; i <= hi; i++) i];
     final more = hi < total - 1;
     final ellipsis = hi < total - 2;
-    return LayoutBuilder(
-      builder: (context, box) {
-        final items = window.length + (more ? 1 : 0) + 1;
-        double size = 44;
-        double space = 8;
-        double need() => items * size + (ellipsis ? 24 : 0) + items * space;
-        if (need() > box.maxWidth) {
-          size = 40;
-          space = 6;
-        }
-        if (need() > box.maxWidth) {
-          size = 36;
-          space = 4;
-        }
-        Widget cell(int i) => _NumberCell(
-          index: i,
-          size: size,
-          answered: c.isAnswered(i),
-          flagged: c.isFlagged(i),
-          current: i == c.current,
-          onTap: () => c.goTo(i),
-        );
-        return Row(
-          children: [
-            for (final i in window) ...[cell(i), SizedBox(width: space)],
-            if (ellipsis) ...[
-              ExcludeSemantics(
-                child: SizedBox(
-                  width: 24,
-                  child: Text('…', textAlign: TextAlign.center, style: ExamText.stripNumber),
-                ),
+    Widget numberCell(int i) => _NumberCell(
+      index: i,
+      size: cell,
+      answered: c.isAnswered(i),
+      flagged: c.isFlagged(i),
+      current: i == c.current,
+      onTap: () => c.goTo(i),
+    );
+    return SizedBox(
+      height: cell + 8,
+      child: Row(
+        children: [
+          for (final i in window) ...[numberCell(i), const SizedBox(width: gap)],
+          if (ellipsis) ...[
+            ExcludeSemantics(
+              child: SizedBox(
+                width: 16,
+                child: Text('…', textAlign: TextAlign.center, style: ExamText.stripNumber),
               ),
-              SizedBox(width: space),
-            ],
-            if (more) cell(total - 1),
-            const Spacer(),
-            Semantics(
-              button: true,
-              label: 'Question palette',
-              excludeSemantics: true,
-              child: Material(
-                color: ExamColors.greyTint,
-                borderRadius: BorderRadius.circular(8),
-                child: InkWell(
-                  onTap: onPalette,
-                  borderRadius: BorderRadius.circular(8),
-                  child: SizedBox(
-                    width: size,
-                    height: size,
-                    child: const Icon(LucideIcons.layoutGrid, size: 20, color: ExamColors.ink),
-                  ),
+            ),
+            const SizedBox(width: gap),
+          ],
+          if (more) numberCell(total - 1),
+          const Spacer(),
+          Semantics(
+            button: true,
+            label: 'Question palette',
+            excludeSemantics: true,
+            child: Material(
+              color: ExamColors.greyTint,
+              borderRadius: BorderRadius.circular(6),
+              child: InkWell(
+                onTap: onPalette,
+                borderRadius: BorderRadius.circular(6),
+                child: const SizedBox(
+                  width: cell,
+                  height: cell,
+                  child: Icon(LucideIcons.layoutGrid, size: 15, color: ExamColors.greyInk),
                 ),
               ),
             ),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
     );
   }
 }
 
 /// One number of the strip: green when answered, deep navy when open, grey when not answered, outlined in amber
-/// when flagged for review.
+/// when flagged for review. The square is 28 dp; the touch area is 4 dp taller each way.
 class _NumberCell extends StatelessWidget {
   const _NumberCell({
     required this.index,
@@ -502,10 +497,10 @@ class _NumberCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (Color fill, Color ink) = current
-        ? (ExamColors.current, Colors.white)
+        ? (ExamColors.questionOpen, Colors.white)
         : answered
-        ? (ExamColors.stripAnswered, Colors.white)
-        : (ExamColors.stripBlank, ExamColors.stripBlankInk);
+        ? (ExamColors.questionDone, Colors.white)
+        : (ExamColors.greyTint, ExamColors.greyInk);
     return Semantics(
       button: true,
       selected: current,
@@ -516,24 +511,33 @@ class _NumberCell extends StatelessWidget {
         key: ValueKey('strip-${index + 1}'),
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: Container(
-          width: size,
-          height: size,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: fill,
-            borderRadius: BorderRadius.circular(8),
-            border: flagged ? Border.all(color: ExamColors.answeredFlagged, width: 2) : null,
+        child: SizedBox(
+          height: size + 8,
+          child: Center(
+            child: Container(
+              width: size,
+              height: size,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: fill,
+                borderRadius: BorderRadius.circular(6),
+                border: flagged ? Border.all(color: ExamColors.answeredFlagged, width: 2) : null,
+              ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text('${index + 1}', style: ExamText.stripNumber.copyWith(color: ink)),
+              ),
+            ),
           ),
-          child: Text('${index + 1}', style: ExamText.stripNumber.copyWith(color: ink)),
         ),
       ),
     );
   }
 }
 
-/// One answer option: a radio (a tick box on a multiple-choice question) and the text. The whole card is the
-/// target; the chosen one wears a primary border and a pale blue fill.
+/// One answer option: a radio (a tick box on a multiple-choice question) and the text, on a row at least 48 dp
+/// tall that is the whole target. The chosen one wears a pale blue fill and its filled radio; no outline (the
+/// owner's rule of 3 Nov 2026 — the page draws hairlines between the options).
 class OptionTile extends StatelessWidget {
   const OptionTile({
     super.key,
@@ -554,10 +558,6 @@ class OptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-      side: BorderSide(color: selected ? AppColors.primary : ExamColors.hairline, width: selected ? 2 : 1),
-    );
     return Semantics(
       container: true,
       checked: selected,
@@ -567,19 +567,22 @@ class OptionTile extends StatelessWidget {
       label: 'Option ${optionLetter(index)}. $text',
       excludeSemantics: true,
       child: Material(
-        color: selected ? ExamColors.chosenFill : Colors.white,
-        shape: shape,
+        color: selected ? ExamColors.optionChosen : Colors.white,
         child: InkWell(
           onTap: enabled ? onTap : null,
-          customBorder: shape,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _Marker(selected: selected, multiple: multiple),
-                const SizedBox(width: 14),
-                Expanded(child: Text(text, style: ExamText.examOption)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: selected ? ExamText.examOption.copyWith(fontWeight: FontWeight.w600) : ExamText.examOption,
+                  ),
+                ),
               ],
             ),
           ),
@@ -589,7 +592,7 @@ class OptionTile extends StatelessWidget {
   }
 }
 
-/// The 24 dp radio, or the square tick box of a multiple-choice question.
+/// The 16 dp radio, or the square tick box of a multiple-choice question.
 class _Marker extends StatelessWidget {
   const _Marker({required this.selected, required this.multiple});
 
@@ -598,30 +601,32 @@ class _Marker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ink = selected ? ExamColors.action : const Color(0xFF7A7F88);
     return Container(
-      width: 24,
-      height: 24,
+      width: 16,
+      height: 16,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: selected ? AppColors.primary : Colors.white,
+        color: selected && multiple ? ExamColors.action : Colors.white,
         shape: multiple ? BoxShape.rectangle : BoxShape.circle,
-        borderRadius: multiple ? BorderRadius.circular(6) : null,
-        border: Border.all(color: selected ? AppColors.primary : AppColors.slate400, width: 2),
+        borderRadius: multiple ? BorderRadius.circular(4) : null,
+        border: Border.all(color: ink, width: selected ? 2 : 1.5),
       ),
       child: !selected
           ? null
           : multiple
-          ? const Icon(LucideIcons.check, size: 16, color: Colors.white)
+          ? const Icon(LucideIcons.check, size: 12, color: Colors.white)
           : Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              width: 6,
+              height: 6,
+              decoration: const BoxDecoration(color: ExamColors.action, shape: BoxShape.circle),
             ),
     );
   }
 }
 
-/// Finish, and Review, Skip, Submit & Next.
+/// Finish at the left; Review and Next at the right. Next goes to the next question, and on the last opens the
+/// overview, as Finish does.
 class _ActionBar extends StatelessWidget {
   const _ActionBar({required this.controller, required this.onFinish});
 
@@ -633,11 +638,6 @@ class _ActionBar extends StatelessWidget {
     final c = controller;
     final flagged = c.isFlagged(c.current);
     final last = c.current == c.total - 1;
-    final editable = c.editable;
-    final width = MediaQuery.sizeOf(context).width;
-    // Four buttons across: Review keeps only its bookmark where the words would not fit.
-    final iconOnly = width < 340;
-    final space = iconOnly ? 4.0 : 6.0;
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -646,49 +646,23 @@ class _ActionBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          padding: const EdgeInsets.fromLTRB(13, 10, 13, 10),
           child: Row(
             children: [
-              Expanded(
-                flex: 5,
-                child: _BarButton(label: 'Finish', fill: ExamColors.finish, ink: Colors.white, onTap: onFinish),
+              _BarButton(label: 'Finish', fill: ExamColors.finishRed, ink: Colors.white, onTap: onFinish),
+              const Spacer(),
+              _BarButton(
+                label: 'Review',
+                spoken: flagged ? 'Unflag' : 'Flag for review',
+                icon: flagged ? Symbols.bookmark : LucideIcons.bookmark,
+                filledIcon: flagged,
+                fill: flagged ? AppColors.amber50 : Colors.white,
+                edge: flagged ? ExamColors.answeredFlagged : ExamColors.line,
+                ink: flagged ? AppColors.amber800 : ExamColors.greyInk,
+                onTap: c.editable ? c.toggleFlag : null,
               ),
-              SizedBox(width: space),
-              Expanded(
-                flex: iconOnly ? 4 : 7,
-                child: _BarButton(
-                  label: 'Review',
-                  spoken: flagged ? 'Unflag' : 'Flag for review',
-                  icon: flagged ? Symbols.bookmark : LucideIcons.bookmark,
-                  filledIcon: flagged,
-                  iconOnly: iconOnly,
-                  fill: flagged ? AppColors.amber50 : Colors.white,
-                  edge: flagged ? ExamColors.answeredFlagged : ExamColors.hairline,
-                  ink: flagged ? AppColors.amber800 : ExamColors.ink,
-                  onTap: editable ? c.toggleFlag : null,
-                ),
-              ),
-              SizedBox(width: space),
-              Expanded(
-                flex: 4,
-                child: _BarButton(
-                  label: 'Skip',
-                  fill: Colors.white,
-                  edge: ExamColors.hairline,
-                  ink: ExamColors.ink,
-                  onTap: last ? null : c.next,
-                ),
-              ),
-              SizedBox(width: space),
-              Expanded(
-                flex: 9,
-                child: _BarButton(
-                  label: last ? 'Submit' : 'Submit & Next',
-                  fill: AppColors.primary,
-                  ink: Colors.white,
-                  onTap: last ? onFinish : c.next,
-                ),
-              ),
+              const SizedBox(width: 7),
+              _BarButton(label: 'Next', fill: ExamColors.action, ink: Colors.white, onTap: last ? onFinish : c.next),
             ],
           ),
         ),
@@ -697,7 +671,7 @@ class _ActionBar extends StatelessWidget {
   }
 }
 
-/// One of the exam bar's buttons: 56 dp, radius 8, filled or outlined, with a glyph if it has one.
+/// One of the exam bar's buttons: 40 dp tall, radius 6, filled or outlined, with a glyph if it has one.
 class _BarButton extends StatelessWidget {
   const _BarButton({
     required this.label,
@@ -707,7 +681,6 @@ class _BarButton extends StatelessWidget {
     this.edge,
     this.icon,
     this.filledIcon = false,
-    this.iconOnly = false,
     this.spoken,
   });
 
@@ -722,14 +695,13 @@ class _BarButton extends StatelessWidget {
 
   /// A Material Symbols glyph drawn solid, for a flagged question.
   final bool filledIcon;
-  final bool iconOnly;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final enabled = onTap != null;
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(6),
       side: edge == null ? BorderSide.none : BorderSide(color: enabled ? edge! : AppColors.slate200),
     );
     final colour = enabled ? ink : AppColors.slate400;
@@ -744,22 +716,21 @@ class _BarButton extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           customBorder: shape,
-          child: SizedBox(
-            height: 56,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 40, minWidth: 56),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
+              padding: EdgeInsets.symmetric(horizontal: icon == null ? 12 : 8),
               child: Center(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (icon != null) Icon(icon, size: 18, color: colour, fill: filledIcon ? 1 : 0),
-                      if (icon != null && !iconOnly) const SizedBox(width: 6),
-                      if (!iconOnly)
-                        Text(label, maxLines: 1, softWrap: false, style: ExamText.barButton.copyWith(color: colour)),
+                widthFactor: 1,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (icon != null) ...[
+                      Icon(icon, size: 16, color: colour, fill: filledIcon ? 1 : 0),
+                      const SizedBox(width: 4),
                     ],
-                  ),
+                    Text(label, maxLines: 1, softWrap: false, style: ExamText.barButton.copyWith(color: colour)),
+                  ],
                 ),
               ),
             ),

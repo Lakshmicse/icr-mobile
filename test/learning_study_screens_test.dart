@@ -12,6 +12,7 @@ import 'package:icr_mobile/features/learning_study/knowledge_center_screen.dart'
 import 'package:icr_mobile/features/notifications/demo_notifications_repository.dart';
 import 'package:icr_mobile/features/notifications/notifications_repository.dart';
 import 'package:icr_mobile/features/notifications/notifications_screen.dart';
+import 'package:icr_mobile/features/shell/icr_bottom_nav.dart';
 import 'package:icr_mobile/features/learning_study/study_models.dart';
 import 'package:icr_mobile/features/learning_study/widgets/flip_card.dart';
 
@@ -265,7 +266,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(portal.calls, contains('GET /learning/resources/capital-planning'));
       expect(find.byKey(const ValueKey('study-position')), findsOneWidget);
-      expect(find.text('1 of 14'), findsOneWidget);
+      expect(find.text('Card 1 of 14'), findsOneWidget);
       final unlocksBefore = portal.calls.where((c) => c == 'GET /learning/me/paper-unlocks').length;
       await tester.tap(find.byKey(const ValueKey('study-back')));
       await tester.pumpAndSettle();
@@ -312,20 +313,19 @@ void main() {
         expect(find.text('What is capital planning in CRE & FM?'), findsOneWidget);
         expect(find.text('STRATEGY & FUNDAMENTALS'), findsOneWidget);
         expect(find.text('Beginner'), findsOneWidget);
-        expect(find.text('Tap to see the answer'), findsOneWidget);
+        expect(find.text('Tap card to reveal standard explanation'), findsOneWidget);
         expect(find.textContaining('A structured process for forecasting'), findsNothing);
 
         await tester.tap(find.byKey(const ValueKey('study-flip')));
         await tester.pumpAndSettle();
         expect(find.textContaining('A structured process for forecasting'), findsOneWidget);
         expect(find.text('ANSWER'), findsOneWidget);
-        expect(find.text('Tap to flip back'), findsOneWidget);
+        expect(find.text('Tap card to see the question again'), findsOneWidget);
         expect(find.text('What is capital planning in CRE & FM?'), findsNothing);
 
         await tester.tap(find.byKey(const ValueKey('study-flip')));
         await tester.pumpAndSettle();
         expect(find.text('What is capital planning in CRE & FM?'), findsOneWidget);
-        expect(find.text('Did you get it?'), findsNothing);
       },
     );
 
@@ -333,23 +333,23 @@ void main() {
       'Next and Previous move through the deck and always show the next card\'s question; the position and the progress follow',
       (tester) async {
         await _pump(tester, _deck(FakePortal()));
-        expect(find.text('1 of 14'), findsOneWidget);
+        expect(find.text('Card 1 of 14'), findsOneWidget);
         expect(_progress(tester), closeTo(1 / 14, 1e-6));
 
         await tester.tap(find.byKey(const ValueKey('study-flip')));
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('study-next')));
         await tester.pumpAndSettle();
-        expect(find.text('2 of 14'), findsOneWidget);
+        expect(find.text('Card 2 of 14'), findsOneWidget);
         expect(find.text('What is the difference between CapEx and OpEx?'), findsOneWidget, reason: 'front up again');
         expect(_progress(tester), closeTo(2 / 14, 1e-6));
 
         await tester.tap(find.byKey(const ValueKey('study-previous')));
         await tester.pumpAndSettle();
-        expect(find.text('1 of 14'), findsOneWidget);
+        expect(find.text('Card 1 of 14'), findsOneWidget);
         await tester.tap(find.byKey(const ValueKey('study-previous')));
         await tester.pumpAndSettle();
-        expect(find.text('1 of 14'), findsOneWidget, reason: 'nothing before the first card');
+        expect(find.text('Card 1 of 14'), findsOneWidget, reason: 'nothing before the first card');
       },
     );
 
@@ -357,10 +357,10 @@ void main() {
       await _pump(tester, _deck(FakePortal()));
       await tester.fling(find.byKey(const ValueKey('study-flip')), const Offset(-300, 0), 1500);
       await tester.pumpAndSettle();
-      expect(find.text('2 of 14'), findsOneWidget);
+      expect(find.text('Card 2 of 14'), findsOneWidget);
       await tester.fling(find.byKey(const ValueKey('study-flip')), const Offset(300, 0), 1500);
       await tester.pumpAndSettle();
-      expect(find.text('1 of 14'), findsOneWidget);
+      expect(find.text('Card 1 of 14'), findsOneWidget);
     });
 
     testWidgets('Shuffle reorders the deck from the first card and a second press restores it', (tester) async {
@@ -371,7 +371,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('study-shuffle')));
       await tester.pumpAndSettle();
-      expect(find.text('1 of 14'), findsOneWidget, reason: 'a shuffled deck starts again');
+      expect(find.text('Card 1 of 14'), findsOneWidget, reason: 'a shuffled deck starts again');
       expect(find.bySemanticsLabel('Restore the original order'), findsOneWidget);
       expect(find.text('What is capital planning in CRE & FM?'), findsNothing, reason: 'another card is first');
       await tester.tap(find.byKey(const ValueKey('study-shuffle')));
@@ -390,7 +390,11 @@ void main() {
       expect(portal.starred, ['cmv6lubcf01dfmyt8t4g9it5d']);
       expect(find.bySemanticsLabel('Remove star'), findsOneWidget);
       expect(find.byKey(const ValueKey('study-flip')), findsOneWidget);
-      expect(find.text('Tap to see the answer'), findsOneWidget, reason: 'starring does not flip the card');
+      expect(
+        find.text('Tap card to reveal standard explanation'),
+        findsOneWidget,
+        reason: 'starring does not flip the card',
+      );
       await tester.tap(find.byKey(const ValueKey('study-star')));
       await tester.pumpAndSettle();
       expect(portal.starred, isEmpty);
@@ -412,26 +416,336 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('the category chips narrow the deck; All brings it back; Starred keeps the starred cards', (
+    testWidgets('the category chips narrow the deck; All and the lit chip bring it back', (tester) async {
+      final portal = FakePortal(starred: ['alpha-c1', 'alpha-c6']);
+      portal.extra['alpha'] = bigDeck('alpha', count: 20, categories: 4);
+      await _pump(tester, DeckStudyScreen.deck(repository: repoOn(portal), deck: _topic('alpha')));
+      expect(find.text('Categories'), findsOneWidget);
+      expect(find.text('Card 1 of 20'), findsOneWidget);
+      expect(find.text('Category 0'), findsWidgets, reason: 'a chip, and the category over the first card');
+
+      await tester.tap(find.byKey(const ValueKey('study-chip-Category 2')));
+      await tester.pumpAndSettle();
+      expect(find.text('Card 1 of 5'), findsOneWidget);
+      expect(find.text('Question 2 of alpha?'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('study-chip-Category 2')));
+      await tester.pumpAndSettle();
+      expect(find.text('Card 1 of 20'), findsOneWidget, reason: 'pressing the lit chip again is All');
+
+      await tester.tap(find.byKey(const ValueKey('study-chip-Category 3')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('study-chip-all')));
+      await tester.pumpAndSettle();
+      expect(find.text('Card 1 of 20'), findsOneWidget);
+    });
+
+    testWidgets('a deck of one category draws no chips at all, and the card has the room', (tester) async {
+      await _pump(tester, _deck(FakePortal()));
+      expect(find.text('Categories'), findsNothing);
+      expect(find.byKey(const ValueKey('study-chip-all')), findsNothing);
+      expect(find.text('Card 1 of 14'), findsOneWidget);
+    });
+
+    testWidgets('thirty categories take six rows at most and scroll inside them; the card is never pushed off', (
+      tester,
+    ) async {
+      final portal = FakePortal();
+      portal.extra['wide'] = bigDeck('wide', count: 60, categories: 30);
+      await _pump(tester, DeckStudyScreen.deck(repository: repoOn(portal), deck: _topic('wide')));
+      final box = find.byKey(const ValueKey('study-categories'));
+      expect(tester.getSize(box).height, lessThanOrEqualTo(6 * 29.0));
+      final last = find.byKey(const ValueKey('study-chip-Category 29'));
+      expect(tester.getRect(last).top, greaterThanOrEqualTo(tester.getRect(box).bottom - 0.5), reason: 'past the rows');
+      final navTop = tester.getTopLeft(find.byType(IcrBottomNav)).dy;
+      expect(tester.getRect(find.byKey(const ValueKey('study-got-it'))).bottom, lessThanOrEqualTo(navTop + 0.5));
+      expect(tester.getSize(find.byKey(const ValueKey('study-flip'))).height, greaterThanOrEqualTo(210));
+
+      await tester.ensureVisible(last);
+      await tester.pumpAndSettle();
+      expect(tester.getRect(last).bottom, lessThanOrEqualTo(tester.getRect(box).bottom + 0.5));
+      await tester.tap(find.byKey(const ValueKey('study-chip-Category 29')));
+      await tester.pumpAndSettle();
+      expect(find.text('Card 1 of 2'), findsOneWidget);
+      expect(find.text('Question 29 of wide?'), findsOneWidget);
+    });
+
+    testWidgets('the Starred pass is in the ⋮ menu: the starred cards only, a note with the way back to the deck', (
       tester,
     ) async {
       final portal = FakePortal(starred: ['alpha-c1', 'alpha-c6']);
       portal.extra['alpha'] = bigDeck('alpha', count: 20, categories: 4);
       await _pump(tester, DeckStudyScreen.deck(repository: repoOn(portal), deck: _topic('alpha')));
-      expect(find.text('All 20'), findsOneWidget);
-      expect(find.text('Starred 2'), findsOneWidget);
-      expect(find.text('1 of 20'), findsOneWidget);
-
-      await _tapChip(tester, 'study-chip-Category 2');
-      expect(find.text('1 of 5'), findsOneWidget);
-      expect(find.text('Question 2 of alpha?'), findsOneWidget);
-
-      await _tapChip(tester, 'study-chip-starred');
-      expect(find.text('1 of 2'), findsOneWidget);
+      await _menu(tester, 'study-menu-starred');
+      expect(find.text('Card 1 of 2'), findsOneWidget);
       expect(find.text('Question 1 of alpha?'), findsOneWidget);
+      expect(find.byKey(const ValueKey('study-starred-pass')), findsOneWidget);
+      expect(find.text('Studying your 2 starred cards'), findsOneWidget);
+      expect(find.byKey(const ValueKey('study-chip-all')), findsNothing, reason: 'the note stands in for the chips');
 
-      await _tapChip(tester, 'study-chip-all');
-      expect(find.text('1 of 20'), findsOneWidget);
+      // The menu now offers the way back too.
+      await tester.tap(find.byKey(const ValueKey('study-menu')));
+      await tester.pumpAndSettle();
+      expect(find.text('Back to all cards'), findsOneWidget);
+      await tester.tap(find.text('Back to all cards'));
+      await tester.pumpAndSettle();
+      expect(find.text('Card 1 of 20'), findsOneWidget);
+      expect(find.byKey(const ValueKey('study-starred-pass')), findsNothing);
+
+      await _menu(tester, 'study-menu-starred');
+      await tester.tap(find.byKey(const ValueKey('study-starred-off')));
+      await tester.pumpAndSettle();
+      expect(find.text('Card 1 of 20'), findsOneWidget, reason: 'Whole deck on the note leaves the pass too');
+    });
+
+    testWidgets('with nothing starred the menu has no Starred pass to offer; the summary is always there', (
+      tester,
+    ) async {
+      await _pump(tester, _deck(FakePortal()));
+      await tester.tap(find.byKey(const ValueKey('study-menu')));
+      await tester.pumpAndSettle();
+      final starred = tester.widget<PopupMenuItem<Object?>>(find.byKey(const ValueKey('study-menu-starred')));
+      expect(starred.enabled, isFalse);
+      expect(find.text('Study starred cards (0)'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('study-menu-summary')));
+      await tester.pumpAndSettle();
+      expect(find.text('Deck complete'), findsOneWidget);
+      expect(find.byKey(const ValueKey('study-summary')), findsOneWidget);
+    });
+
+    testWidgets('the starred session has no Starred pass in its menu: every card in it is starred', (tester) async {
+      final portal = FakePortal(starred: ['cmv6lubcf01dfmyt8t4g9it5d']);
+      await _pump(tester, DeckStudyScreen.starred(repository: repoOn(portal)));
+      await tester.tap(find.byKey(const ValueKey('study-menu')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('study-menu-starred')), findsNothing);
+      expect(find.byKey(const ValueKey('study-menu-summary')), findsOneWidget);
+    });
+
+    testWidgets("the bar names the deck and offers search and a menu; the app's bottom bar stays, Learning lit", (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await _pump(tester, _deck(FakePortal()));
+      expect(tester.widget<Text>(find.byKey(const ValueKey('study-title'))).data, 'Capital Planning');
+      expect(find.bySemanticsLabel('Search the cards'), findsOneWidget);
+      expect(find.byKey(const ValueKey('study-menu')), findsOneWidget);
+      expect(tester.widget<IcrBottomNav>(find.byType(IcrBottomNav)).current, AppTab.learning);
+      expect(find.byIcon(Icons.volume_up), findsNothing, reason: 'nothing reads text aloud, so there is no speaker');
+      handle.dispose();
+    });
+
+    testWidgets('the Flip Card pill turns the card over, and back, like a tap on the card', (tester) async {
+      final handle = tester.ensureSemantics();
+      await _pump(tester, _deck(FakePortal()));
+      expect(find.bySemanticsLabel('Flip card'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('study-flip-pill')));
+      await tester.pumpAndSettle();
+      expect(find.text('ANSWER'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('study-flip-pill')));
+      await tester.pumpAndSettle();
+      expect(find.text('What is capital planning in CRE & FM?'), findsOneWidget);
+      expect(find.text('ANSWER'), findsNothing);
+      handle.dispose();
+    });
+
+    for (final (name, size) in [
+      ('390 × 844', const Size(390, 844)),
+      ('360 × 740', const Size(360, 740)),
+      ('320 × 640', const Size(320, 640)),
+    ]) {
+      testWidgets('one view on $name: the chips, the card, the player and the marks are all on screen', (tester) async {
+        final portal = FakePortal(starred: ['fm-core-c13']);
+        portal.extra['fm-core'] = designDeck();
+        await _pumpAt(
+          tester,
+          DeckStudyScreen.deck(
+            repository: repoOn(portal),
+            deck: const StudyTopic(id: 'topic-fm-core', slug: 'fm-core', title: 'FM Core Fundamentals & Operations'),
+          ),
+          size,
+        );
+        final navTop = tester.getTopLeft(find.byType(IcrBottomNav)).dy;
+        for (final key in [
+          'study-chip-all',
+          'study-flip',
+          'study-play',
+          'study-shuffle',
+          'study-previous',
+          'study-next',
+          'study-position',
+          'study-still-learning',
+          'study-got-it',
+        ]) {
+          final rect = tester.getRect(find.byKey(ValueKey(key)));
+          expect(rect.top, greaterThanOrEqualTo(0), reason: key);
+          expect(rect.bottom, lessThanOrEqualTo(navTop + 0.5), reason: '$key above the bottom bar');
+          expect(rect.right, lessThanOrEqualTo(size.width + 0.5), reason: key);
+        }
+        // The card keeps room for a question of four lines and the answer's example.
+        expect(tester.getSize(find.byKey(const ValueKey('study-flip'))).height, greaterThanOrEqualTo(210));
+        await tester.tap(find.byKey(const ValueKey('study-flip')));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(tester.getRect(find.byKey(const ValueKey('study-got-it'))).bottom, lessThanOrEqualTo(navTop + 0.5));
+      });
+    }
+
+    testWidgets("the bottom bar stays while the card scrolls a long answer", (tester) async {
+      final portal = FakePortal();
+      portal.extra['long'] = bigDeck('long', count: 2)
+        ..['cards'][0]['back'] = List.filled(80, 'A long, long explanation that keeps going.').join(' ');
+      await _pump(tester, DeckStudyScreen.deck(repository: repoOn(portal), deck: _topic('long')));
+      await tester.tap(find.byKey(const ValueKey('study-flip')));
+      await tester.pumpAndSettle();
+      final before = tester.getTopLeft(find.byType(IcrBottomNav));
+      await tester.drag(
+        find.descendant(of: find.byKey(const ValueKey('study-flip')), matching: find.byType(Scrollable)).first,
+        const Offset(0, -200),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester.getTopLeft(find.byType(IcrBottomNav)),
+        before,
+        reason: "a scroll inside the card is not the screen's",
+      );
+    });
+
+    testWidgets(
+      'the search glyph turns the title into a field; every word narrows the cards; closing it restores them',
+      (tester) async {
+        final portal = FakePortal();
+        portal.extra['alpha'] = bigDeck('alpha', count: 20, categories: 4);
+        await _pump(tester, DeckStudyScreen.deck(repository: repoOn(portal), deck: _topic('alpha')));
+        expect(find.byKey(const ValueKey('study-search')), findsNothing);
+        await tester.tap(find.byKey(const ValueKey('study-search-button')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('study-search')), findsOneWidget);
+        expect(find.byKey(const ValueKey('study-title')), findsNothing);
+
+        await tester.enterText(find.byKey(const ValueKey('study-search')), 'answer 12');
+        await tester.pumpAndSettle();
+        expect(find.text('Card 1 of 1'), findsOneWidget, reason: 'a word of the answer and a word of the question');
+        expect(find.text('Question 12 of alpha?'), findsOneWidget);
+
+        await tester.enterText(find.byKey(const ValueKey('study-search')), 'category 3');
+        await tester.pumpAndSettle();
+        expect(
+          find.text('Card 1 of 6'),
+          findsOneWidget,
+          reason: 'the five of Category 3 and Question 13, which holds a 3',
+        );
+
+        await tester.enterText(find.byKey(const ValueKey('study-search')), 'zebra');
+        await tester.pumpAndSettle();
+        expect(find.text('No card matches “zebra”'), findsOneWidget);
+        expect(find.byKey(const ValueKey('study-play')), findsNothing, reason: 'no cards, no player');
+        await tester.tap(find.text('Clear search'));
+        await tester.pumpAndSettle();
+        expect(find.text('Card 1 of 20'), findsOneWidget);
+        expect(tester.widget<TextField>(find.byKey(const ValueKey('study-search'))).controller!.text, isEmpty);
+
+        await tester.enterText(find.byKey(const ValueKey('study-search')), 'question 7 ');
+        await tester.pumpAndSettle();
+        expect(find.text('Card 1 of 2'), findsOneWidget, reason: 'question 7 and question 17');
+        await tester.tap(find.byKey(const ValueKey('study-search-button')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('study-search')), findsNothing);
+        expect(tester.widget<Text>(find.byKey(const ValueKey('study-title'))).data, 'Deck alpha');
+        expect(find.text('Card 1 of 20'), findsOneWidget, reason: 'closing the search ends it');
+      },
+    );
+
+    testWidgets('a search and a category work together', (tester) async {
+      final portal = FakePortal();
+      portal.extra['alpha'] = bigDeck('alpha', count: 20, categories: 4);
+      await _pump(tester, DeckStudyScreen.deck(repository: repoOn(portal), deck: _topic('alpha')));
+      await tester.tap(find.byKey(const ValueKey('study-search-button')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const ValueKey('study-search')), 'question 1');
+      await tester.pumpAndSettle();
+      expect(find.text('Card 1 of 13'), findsOneWidget, reason: 'a 1 in the question, or in Category 1');
+      await tester.tap(find.byKey(const ValueKey('study-chip-Category 1')));
+      await tester.pumpAndSettle();
+      expect(find.text('Card 1 of 5'), findsOneWidget, reason: 'the five cards of Category 1');
+    });
+
+    testWidgets('Play turns each card over and goes on by itself; a tap on Play, or on the card, stops it', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final portal = FakePortal();
+      portal.extra['alpha'] = bigDeck('alpha', count: 3);
+      await _pump(
+        tester,
+        DeckStudyScreen.deck(
+          repository: repoOn(portal),
+          deck: _topic('alpha'),
+          pacing: (card, {required flipped}) => const Duration(seconds: 2),
+        ),
+      );
+      expect(find.bySemanticsLabel('Play the cards'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('study-play')));
+      await tester.pump();
+      expect(find.bySemanticsLabel('Pause'), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(find.textContaining('Answer 0 of alpha'), findsOneWidget, reason: 'the question had its turn');
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(find.text('Card 2 of 3'), findsOneWidget, reason: 'the answer had its turn');
+      expect(find.text('Question 1 of alpha?'), findsOneWidget, reason: 'the next card starts on its question');
+
+      await tester.tap(find.byKey(const ValueKey('study-play')));
+      await tester.pump();
+      expect(find.bySemanticsLabel('Play the cards'), findsOneWidget, reason: 'a tap on Pause stops it');
+      await tester.pump(const Duration(seconds: 30));
+      expect(find.text('Card 2 of 3'), findsOneWidget, reason: 'nothing moves while it is paused');
+
+      // A tap on the card by hand stops it too.
+      await tester.tap(find.byKey(const ValueKey('study-play')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('study-flip')));
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(find.bySemanticsLabel('Play the cards'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 30));
+      expect(find.text('Card 2 of 3'), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('Play goes through the whole pass and ends on the summary; leaving the app pauses it', (tester) async {
+      final handle = tester.ensureSemantics();
+      final portal = FakePortal();
+      portal.extra['alpha'] = bigDeck('alpha', count: 2);
+      await _pump(
+        tester,
+        DeckStudyScreen.deck(
+          repository: repoOn(portal),
+          deck: _topic('alpha'),
+          pacing: (card, {required flipped}) => const Duration(seconds: 1),
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('study-play')));
+      await tester.pump();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      expect(find.bySemanticsLabel('Play the cards'), findsOneWidget, reason: 'out of sight it stops');
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+
+      await tester.tap(find.byKey(const ValueKey('study-play')));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 4));
+      await tester.pumpAndSettle();
+      expect(find.text('Deck complete'), findsOneWidget, reason: 'two cards, a question and an answer each');
+      expect(find.text('You went through 2 cards.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('study-play')), findsNothing, reason: 'the summary has no player');
+      handle.dispose();
     });
 
     testWidgets('Got it and Still learning mark the card, move on and keep the tally', (tester) async {
@@ -441,10 +755,10 @@ void main() {
       expect(find.byKey(const ValueKey('study-tally')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('study-got-it')));
       await tester.pumpAndSettle();
-      expect(find.text('2 of 5'), findsOneWidget);
+      expect(find.text('Card 2 of 5'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('study-still-learning')));
       await tester.pumpAndSettle();
-      expect(find.text('3 of 5'), findsOneWidget);
+      expect(find.text('Card 3 of 5'), findsOneWidget);
       expect(find.text('Got it 1 · Still learning 1'), findsOneWidget);
     });
 
@@ -475,11 +789,11 @@ void main() {
       // Study the rest: three cards, the restriction banner, Whole deck leaves it.
       await tester.tap(find.byKey(const ValueKey('study-summary-rest')));
       await tester.pumpAndSettle();
-      expect(find.text('1 of 3'), findsOneWidget);
+      expect(find.text('Card 1 of 3'), findsOneWidget);
       expect(find.text('Studying the 3 you have not got yet'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('study-show-all')));
       await tester.pumpAndSettle();
-      expect(find.text('1 of 4'), findsOneWidget);
+      expect(find.text('Card 1 of 4'), findsOneWidget);
       expect(find.byKey(const ValueKey('study-restricted')), findsNothing);
     });
 
@@ -499,12 +813,12 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('study-summary-last')));
       await tester.pumpAndSettle();
-      expect(find.text('3 of 3'), findsOneWidget);
+      expect(find.text('Card 3 of 3'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('study-next')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('study-summary-rest'))); // "Study them again"
       await tester.pumpAndSettle();
-      expect(find.text('1 of 3'), findsOneWidget);
+      expect(find.text('Card 1 of 3'), findsOneWidget);
       expect(find.byKey(const ValueKey('study-tally')), findsNothing, reason: 'the marks are cleared');
     });
 
@@ -521,7 +835,7 @@ void main() {
       expect(find.text('Study the 2 you have not got'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('study-summary-again')));
       await tester.pumpAndSettle();
-      expect(find.text('1 of 3'), findsOneWidget);
+      expect(find.text('Card 1 of 3'), findsOneWidget);
       expect(find.byKey(const ValueKey('study-tally')), findsNothing);
       expect(find.byKey(const ValueKey('study-restricted')), findsNothing);
     });
@@ -624,7 +938,7 @@ void main() {
       portal.shelfFails.clear();
       await tester.tap(find.text('Try again'));
       await tester.pumpAndSettle();
-      expect(find.text('1 of 14'), findsOneWidget);
+      expect(find.text('Card 1 of 14'), findsOneWidget);
     });
 
     testWidgets('a deck with no cards says so', (tester) async {
@@ -969,13 +1283,13 @@ void main() {
 
         await tester.tap(find.text('Energy Management'));
         await tester.pumpAndSettle();
-        expect(find.text('1 of 6'), findsOneWidget, reason: 'a deck on its own with a place to spare opens');
+        expect(find.text('Card 1 of 6'), findsOneWidget, reason: 'a deck on its own with a place to spare opens');
         await tester.tap(find.byKey(const ValueKey('study-back')));
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Capital Planning'));
         await tester.pumpAndSettle();
-        expect(find.text('1 of 6'), findsOneWidget);
+        expect(find.text('Card 1 of 6'), findsOneWidget);
         await tester.tap(find.byKey(const ValueKey('study-star')));
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('study-back')));
@@ -1009,8 +1323,11 @@ Widget _host(Widget home) => MaterialApp(
 );
 
 /// 390 × 844 dp, the design's frame.
-Future<void> _pump(WidgetTester tester, Widget home) async {
-  tester.view.physicalSize = const Size(1170, 2532);
+Future<void> _pump(WidgetTester tester, Widget home) => _pumpAt(tester, home, const Size(390, 844));
+
+/// [home] on a phone of [dp] logical pixels.
+Future<void> _pumpAt(WidgetTester tester, Widget home, Size dp) async {
+  tester.view.physicalSize = dp * 3;
   tester.view.devicePixelRatio = 3;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(_host(home));
@@ -1051,6 +1368,14 @@ Future<void> _tapChip(WidgetTester tester, String key) async {
   await tester.ensureVisible(chip);
   await tester.pumpAndSettle();
   await tester.tap(chip);
+  await tester.pumpAndSettle();
+}
+
+/// Opens the ⋮ menu and picks one of its rows.
+Future<void> _menu(WidgetTester tester, String item) async {
+  await tester.tap(find.byKey(const ValueKey('study-menu')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(ValueKey(item)));
   await tester.pumpAndSettle();
 }
 

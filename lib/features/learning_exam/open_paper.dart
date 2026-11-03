@@ -8,7 +8,7 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/config.dart';
 import 'api_exam_repository.dart';
 import 'brief_controller.dart';
-import 'brief_sheet.dart';
+import 'brief_screen.dart';
 import 'demo_exam_repository.dart';
 import 'exam_controller.dart';
 import 'exam_models.dart';
@@ -18,7 +18,7 @@ import 'exam_services.dart';
 
 export 'exam_models.dart' show PaperRef;
 
-/// Opens a paper: its brief (what it is, how long, what it costs or whether the member holds it, their
+/// Opens a paper: its brief, a page (what it is, how long, what it costs or whether the member holds it, their
 /// record on it), then the exam as a full-screen route with no tab bar, then the result.
 ///
 /// Completes when the member has left the flow: closed the brief, left the exam, or closed the result, so a
@@ -36,7 +36,7 @@ Future<void> openPaper(BuildContext context, PaperRef paper, {ExamRepository? re
     userId: userId,
     now: ExamServices.now,
   );
-  final start = await showBriefSheet(context, brief);
+  final start = await showBriefPage(context, brief);
   if (start == null || !navigator.mounted) return;
 
   final controller = ExamController(
@@ -47,16 +47,28 @@ Future<void> openPaper(BuildContext context, PaperRef paper, {ExamRepository? re
     resume: start.resume,
     now: ExamServices.now,
   );
+  // The flow ends when the exam (or its result) closes — unless the result's Retake opened the paper again, in
+  // which case it ends when that sitting's flow does. Until 30 Oct 2026 a retake was a flow of its own, so the
+  // programme page behind read its attempts and best score after the first result and never after the retake:
+  // a level just passed still said "Not passed yet" until a pull to refresh.
   final done = Completer<void>();
+  var retaking = false;
   final route = MaterialPageRoute<void>(
     builder: (_) => ExamScreen(
       controller: controller,
       firstName: firstName,
       onFlowEnd: () {
-        if (!done.isCompleted) done.complete();
+        if (!retaking && !done.isCompleted) done.complete();
       },
-      onRetake: () {
-        if (context.mounted) unawaited(openPaper(context, paper, repository: repository));
+      onRetake: () async {
+        if (!context.mounted) return;
+        retaking = true;
+        try {
+          await openPaper(context, paper, repository: repository);
+        } finally {
+          retaking = false;
+          if (!done.isCompleted) done.complete();
+        }
       },
     ),
   );

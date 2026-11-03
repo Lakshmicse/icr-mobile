@@ -39,10 +39,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  FakePortal portalWith(Map<String, dynamic> unlocks, {Set<String> linked = const {'capital-planning', 'communication'}}) =>
-      FakePortal()
-        ..list = linkedDeckList(linkedSlugs: linked)
-        ..unlocks = unlocks;
+  FakePortal portalWith(
+    Map<String, dynamic> unlocks, {
+    Set<String> linked = const {'capital-planning', 'communication'},
+  }) => FakePortal()
+    ..list = linkedDeckList(linkedSlugs: linked)
+    ..unlocks = unlocks;
 
   group('DeckPlan: where a deck stands', () {
     const cp = StudyTopic(
@@ -67,7 +69,14 @@ void main() {
       const plan = DeckPlan(limit: 1, openedCourseIds: ['course-x', 'course-cp']);
       expect(plan.courseOpen('course-x'), isTrue);
       expect(plan.courseOpen('course-cp'), isFalse, reason: 'the plan dropped to one place');
-      expect(const DeckPlan(limit: 1, openedCourseIds: ['course-x', 'course-cp'], unlockedCourseIds: ['course-cp']).courseOpen('course-cp'), isTrue);
+      expect(
+        const DeckPlan(
+          limit: 1,
+          openedCourseIds: ['course-x', 'course-cp'],
+          unlockedCourseIds: ['course-cp'],
+        ).courseOpen('course-cp'),
+        isTrue,
+      );
     });
 
     test('a deck on its own keeps the number of decks', () {
@@ -82,7 +91,11 @@ void main() {
       expect(plan.noteFor([alone], anyLinked: true), startsWith('Your plan opens 3 flash-card decks (1 used).'));
       expect(plan.noteFor([alone], anyLinked: true), endsWith('opens with that course.'));
       expect(plan.noteFor([alone]), 'Your plan opens 3 flash-card decks (1 used).');
-      expect(plan.noteFor(const [], anyLinked: true), isNull, reason: 'every deck goes with a course: no number to tell');
+      expect(
+        plan.noteFor(const [], anyLinked: true),
+        isNull,
+        reason: 'every deck goes with a course: no number to tell',
+      );
       expect(const DeckPlan(limit: 0).noteFor([alone]), 'Flash cards are not included in your plan.');
       expect(const DeckPlan(allOpen: true).noteFor([alone]), isNull);
     });
@@ -100,7 +113,9 @@ void main() {
     });
 
     test('the plan carries the courses it opened and the ones of which a level is held', () async {
-      final plan = await repoOn(portalWith(unlocksOf(courses: ['course-cp'], unlockedCourses: ['course-comm']))).deckPlan();
+      final plan = await repoOn(
+        portalWith(unlocksOf(courses: ['course-cp'], unlockedCourses: ['course-comm'])),
+      ).deckPlan();
       expect(plan!.openedCourseIds, ['course-cp']);
       expect(plan.unlockedCourseIds, ['course-comm']);
       expect(plan.limit, 3);
@@ -167,7 +182,9 @@ void main() {
       );
     });
 
-    testWidgets('a course opened with a plan place opens its deck, which then says where it comes from', (tester) async {
+    testWidgets('a course opened with a plan place opens its deck, which then says where it comes from', (
+      tester,
+    ) async {
       final portal = portalWith(unlocksOf(courses: ['course-cp']));
       await pump(tester, FlashCardsScreen(onBack: () {}, repository: repoOn(portal)));
       expect(courseNote(_capital), 'Included in the course');
@@ -200,7 +217,9 @@ void main() {
       expect(find.text('Locked'), findsNothing);
     });
 
-    testWidgets('when every deck goes with a course there is no line about the plan\'s number of decks', (tester) async {
+    testWidgets('when every deck goes with a course there is no line about the plan\'s number of decks', (
+      tester,
+    ) async {
       final portal = portalWith(
         unlocksOf(),
         linked: {'capital-planning', 'collabaration', 'communication', 'esg-and-sustainability'},
@@ -332,7 +351,7 @@ void main() {
 
       expect(assess.calls, contains('group:CP'));
       expect(find.byType(GroupScreen), findsOneWidget);
-      expect(find.text('Capital Planning'), findsWidgets);
+      expect(find.textContaining('Capital Planning'), findsWidgets, reason: 'the programme the code names');
 
       // Leaving the page completes the future: that is when the caller reads what the member opened.
       Navigator.of(tester.element(find.byType(GroupScreen))).pop();

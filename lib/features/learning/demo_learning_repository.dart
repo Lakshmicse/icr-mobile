@@ -164,6 +164,16 @@ class DemoLearningRepository implements LearningRepository {
   }) async {}
 
   @override
+  Future<BrochureLead> brochureContact() async =>
+      const BrochureLead(name: 'Bharat Buyer', email: 'buyer@icr.dev', phone: '+91 98450 12345', company: 'TechCorp');
+
+  @override
+  Future<void> requestBrochure(Course course, BrochureLead lead, {required BrochureIntent intent}) async {}
+
+  @override
+  Future<List<int>> brochureBytes(Course course) async => throw UnsupportedError('the demo brochure is a web page');
+
+  @override
   Future<int> unreadNotifications() async => 1;
 
   @override

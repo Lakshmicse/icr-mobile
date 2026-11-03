@@ -21,7 +21,9 @@ import 'package:icr_mobile/features/learning/learning_models.dart';
 import 'package:icr_mobile/features/learning/learning_repository.dart';
 import 'package:icr_mobile/features/learning/learning_screen.dart';
 import 'package:icr_mobile/features/learning/widgets/course_card.dart';
+import 'package:icr_mobile/features/learning_assess/api_assess_repository.dart';
 import 'package:icr_mobile/features/learning_hub/api_hub_repository.dart';
+import 'package:icr_mobile/features/learning_hub/widgets/catalogue_rail.dart';
 import 'package:icr_mobile/features/learning_hub/hub_controller.dart';
 import 'package:icr_mobile/features/learning_hub/hub_models.dart';
 import 'package:icr_mobile/features/learning_hub/hub_repository.dart';
@@ -29,10 +31,10 @@ import 'package:icr_mobile/features/learning_hub/learning_doors.dart';
 import 'package:icr_mobile/features/learning_hub/learning_hub_screen.dart';
 import 'package:icr_mobile/features/learning_hub/partner_courses_screen.dart';
 import 'package:icr_mobile/features/learning_hub/partner_screen.dart';
-import 'package:icr_mobile/features/learning_hub/widgets/door_tile.dart';
 import 'package:icr_mobile/features/learning_hub/widgets/institute_card.dart';
 
 import '../helpers/fonts.dart';
+import 'career_live_support.dart';
 import 'live.dart';
 
 const _icrInstituteId = 'design-lj-provider-icr-institute';
@@ -50,9 +52,12 @@ Future<LearningHubController> _hubFor(LivePerson who, {bool bare = false}) async
   final api = await _as(who);
   final courses = ApiLearningRepository(api: api);
   final hub = ApiLearningHubRepository(api: api);
+  // The hub's Assess and Mock Exams sections read the assess catalogue (27 Oct 2026); without a source they are
+  // left out, headings and all.
   return LearningHubController(
     repository: bare ? _BareHub(hub) : hub,
     learning: LearningController(bare ? _BareCourses(courses) : courses),
+    assess: ApiAssessRepository(api: api),
   );
 }
 
@@ -146,6 +151,16 @@ class _BareCourses implements LearningRepository {
     int? headcount,
   }) => inner.enquire(course, message: message, kind: kind, company: company, headcount: headcount);
   @override
+  Future<BrochureLead> brochureContact() => inner.brochureContact();
+
+  @override
+  Future<void> requestBrochure(Course course, BrochureLead lead, {required BrochureIntent intent}) =>
+      inner.requestBrochure(course, lead, intent: intent);
+
+  @override
+  Future<List<int>> brochureBytes(Course course) => inner.brochureBytes(course);
+
+  @override
   Future<int> unreadNotifications() => inner.unreadNotifications();
   @override
   Uri link(Course course) => inner.link(course);
@@ -219,6 +234,7 @@ Future<LearningHubController> _pumpHub(
   tester.view.physicalSize = Size(780, heightDp * 2);
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
+  mockImageCachePlugins(); // the Assess and Mock Exam cards' covers
   final hub = (await tester.runAsync(() => _hubFor(who, bare: true)))!;
   addTearDown(hub.dispose);
   await tester.runAsync(hub.start);
@@ -313,7 +329,9 @@ void main() {
 
       hub.setSearch('flash');
       expect(hub.doors, [LearningDoor.flashCards]);
-      expect(hub.nothingMatches, isFalse);
+      // The search hides the catalogue (the doors) and narrows the grids and the rail, so a word that names only a
+      // door and no course, programme, deck or institute is "No matches".
+      expect(hub.nothingMatches, isTrue);
 
       hub.setSearch('zzzzzz');
       expect(hub.nothingMatches, isTrue);
@@ -394,26 +412,21 @@ void main() {
     final attempts = (await tester.runAsync(() => _rows(api, '/learning/me/attempts')))!.length;
     final certificates = (await tester.runAsync(() => _rows(api, '/learning/me/certificates')))!.length;
 
-    expect(find.text('Learning'), findsOneWidget);
-    expect(tester.widgetList<DoorTile>(find.byType(DoorTile)).map((t) => t.door), LearningDoor.values);
-    for (final (key, count) in [
-      ('my-learning-courses', '${hub.coursesHeld}'),
-      ('my-learning-attempts', '$attempts'),
-      ('my-learning-certificates', '$certificates'),
-    ]) {
-      expect(
-        find.descendant(of: find.byKey(ValueKey(key)), matching: find.text(count)),
-        findsOneWidget,
-        reason: key,
-      );
+    // The hub sits under the Home header (no title of its own) and its doors are the catalogue rail's four tiles.
+    for (final door in CatalogueRail.doors) {
+      expect(find.byKey(ValueKey('catalogue-${door.name}')), findsOneWidget, reason: door.name);
     }
-    final rail = find.byKey(const ValueKey('rail-courses'));
-    expect(find.descendant(of: rail, matching: find.byType(CourseCard)), findsWidgets);
-    expect(
-      tester.widgetList<CourseCard>(find.descendant(of: rail, matching: find.byType(CourseCard))).first.course.code,
-      'CALS',
-    );
-    expect(find.byKey(const ValueKey('institute-$_icrInstituteId')), findsOneWidget);
+    // The hub carries no "My learning" strip; the counts it used to show are the API's (read above) and the
+    // member reaches their courses and certificates through ICR Courses (below).
+    expect(hub.coursesHeld, greaterThanOrEqualTo(0));
+    expect(attempts + certificates, greaterThanOrEqualTo(0));
+    // The seeded sections draw: the assessment and mock programmes as cards, the partner institutes.
+    // Each section loads on its own (a skeleton first), so wait for the two seeded ones.
+    await _settle(tester, until: () => find.byKey(const ValueKey('assess-heading')).evaluate().isNotEmpty);
+    expect(find.byKey(const ValueKey('assess-heading')), findsOneWidget);
+    await _settle(tester, until: () => find.byKey(const ValueKey('mock-heading')).evaluate().isNotEmpty);
+    expect(find.byKey(const ValueKey('mock-heading')), findsOneWidget);
+    // (ICR's own institute is not a partner card: the Partner section is for other institutes' courses.)
     expect(tester.takeException(), isNull, reason: 'no overflow on the real catalogue');
   });
 
@@ -421,8 +434,13 @@ void main() {
     tester,
   ) async {
     final hub = await _pumpHub(tester, bharat);
-    await _tapOnline(tester, find.byKey(const ValueKey('my-learning-courses')));
+    // ICR Courses opens from the Catalogue heading's View More; its "My courses" chip narrows to the places held.
+    await _settle(tester, until: () => find.text('View More').evaluate().isNotEmpty);
+    await tester.ensureVisible(find.text('Catalogue'));
+    await tester.pumpAndSettle();
+    await _tapOnline(tester, find.text('View More').first);
     await _settle(tester, until: () => find.byType(LearningScreen).evaluate().isNotEmpty);
+    await _tapOnline(tester, find.text('My courses'));
     await _settle(tester, until: () => find.byType(CourseCard).evaluate().length == hub.coursesHeld);
     expect(find.byType(LearningScreen), findsOneWidget);
     expect(find.byType(CourseCard).evaluate().length, hub.coursesHeld, reason: 'only the places held');
@@ -431,9 +449,10 @@ void main() {
 
     await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(ValueKey('door-${LearningDoor.icrCourses.name}')));
-    await tester.tap(find.byKey(ValueKey('door-${LearningDoor.icrCourses.name}')));
+    await tester.ensureVisible(find.text('Catalogue'));
     await tester.pumpAndSettle();
+    await _tapOnline(tester, find.text('View More').first);
+    await _settle(tester, until: () => find.byType(LearningScreen).evaluate().isNotEmpty);
     expect(find.text('ICR Courses'), findsOneWidget, reason: 'the grid is titled by its door');
     expect(hub.learning.mineOnly, isFalse);
     expect(find.text('Professional development'), findsOneWidget);

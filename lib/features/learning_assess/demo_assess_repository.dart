@@ -1,6 +1,7 @@
 import '../../core/api/api_error.dart';
 import '../../core/config.dart';
 import 'assess_models.dart';
+import '../payments/checkout_start.dart';
 import 'assess_repository.dart';
 
 /// A little sample content for `--dart-define=FEED_SOURCE=demo`: three programmes and three mock subjects, a
@@ -16,6 +17,9 @@ class DemoAssessRepository implements AssessRepository {
   int _credits;
   final _unlocked = <String>{'cp-foundation'};
   final _byCredits = <String>{};
+
+  /// Papers bought with money (the sample's checkout is test mode: paid at once).
+  final _bought = <String>{};
   final _openCourses = <String>[];
 
   static AssessPaper _level(
@@ -142,7 +146,7 @@ class DemoAssessRepository implements AssessRepository {
   @override
   Future<MemberLearning> member(PaperKind kind) async => MemberLearning(
     access: MemberAccess(
-      paperIds: {..._unlocked, ..._byCredits},
+      paperIds: {..._unlocked, ..._byCredits, ..._bought},
       creditPaperIds: {..._byCredits},
       icrCredits: _credits,
       courses: PlanPlaces(limit: 0, opened: _openCourses),
@@ -176,7 +180,7 @@ class DemoAssessRepository implements AssessRepository {
     final group = await this.group(kind, key);
     final closed = [
       for (final p in group.papers)
-        if (!_unlocked.contains(p.id) && !_byCredits.contains(p.id)) p,
+        if (!_unlocked.contains(p.id) && !_byCredits.contains(p.id) && !_bought.contains(p.id)) p,
     ];
     final costs = [for (final p in closed) (await quote(p)).credits ?? 5];
     if (costs.length < 2) return BundleQuote(courseCode: key, kind: kind, programmeTitle: group.title);
@@ -192,7 +196,8 @@ class DemoAssessRepository implements AssessRepository {
       creditsSaved: separate - bundle,
       creditsOffered: separate - bundle > 0,
       creditLevels: [
-        for (final (i, p) in closed.indexed) BundleLevel(paperId: p.id, title: p.title, level: p.level, credits: costs[i]),
+        for (final (i, p) in closed.indexed)
+          BundleLevel(paperId: p.id, title: p.title, level: p.level, credits: costs[i]),
       ],
     );
   }
@@ -224,6 +229,19 @@ class DemoAssessRepository implements AssessRepository {
     _credits -= cost;
     _byCredits.add(paper.id);
     return RedeemResult(unlocked: true, spent: cost, credits: _credits);
+  }
+
+  @override
+  Future<CheckoutStart> checkout(AssessPaper paper) async {
+    _bought.add(paper.id);
+    return const CheckoutStart(devActivated: true);
+  }
+
+  @override
+  Future<CheckoutStart> checkoutBundle(PaperKind kind, String key) async {
+    final group = await this.group(kind, key);
+    _bought.addAll(group.papers.map((p) => p.id));
+    return const CheckoutStart(devActivated: true);
   }
 
   @override

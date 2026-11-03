@@ -406,11 +406,140 @@ void main() {
   });
 
   group('the study controller', () {
-    DeckStudyController study(FakePortal portal, {String slug = 'alpha', int count = 20, math.Random? random}) {
+    DeckStudyController study(
+      FakePortal portal, {
+      String slug = 'alpha',
+      int count = 20,
+      math.Random? random,
+      StudyPacing? pacing,
+    }) {
       portal.extra[slug] = bigDeck(slug, count: count);
       final deck = StudyTopic(id: 'topic-$slug', slug: slug, title: 'Deck $slug');
-      return DeckStudyController.deck(repoOn(portal), deck, random: random ?? math.Random(7));
+      return DeckStudyController.deck(repoOn(portal), deck, random: random ?? math.Random(7), pacing: pacing);
     }
+
+    test(
+      'a search keeps the cards that hold every word: in the question, the answer, the example or the category',
+      () async {
+        final c = study(FakePortal());
+        await c.load();
+        c.next();
+        c.setQuery('  Answer 12 ');
+        expect(c.query, 'answer 12', reason: 'trimmed, and case does not matter');
+        expect(c.searching, isTrue);
+        expect(c.total, 1);
+        expect(c.position, 1, reason: 'a search starts the cards again');
+        expect(c.current!.id, 'alpha-c12');
+        c.setQuery('zebra');
+        expect(c.total, 0);
+        expect(c.current, isNull);
+        expect(c.progress, 0);
+        c.setQuery('  ');
+        expect(c.searching, isFalse);
+        expect(c.total, 20, reason: 'blank is no search');
+      },
+    );
+
+    test('a search works with a category, survives Whole deck, and ends with an empty one', () async {
+      final c = study(FakePortal());
+      await c.load();
+      c.setQuery('question 1');
+      expect(c.total, 13, reason: 'a 1 in the question, or in the name of Category 1');
+      c.setCategory('Category 1');
+      expect(c.total, 5);
+      c.showAll();
+      expect(c.category, isNull);
+      expect(c.query, 'question 1', reason: 'what is typed in the bar stays while the cards are studied');
+      expect(c.total, 13);
+      c.setQuery('');
+      expect(c.total, 20);
+    });
+
+    test('reading time: a glance for a short question, longer for a long answer, always within limits', () {
+      const short = StudyCard(id: 'a', front: 'Hi', back: 'Yes');
+      expect(readingTime(short, flipped: false), const Duration(seconds: 3));
+      expect(readingTime(short, flipped: true), const Duration(milliseconds: 4500));
+      final middling = StudyCard(id: 'b', front: 'q' * 100, back: 'a' * 100, example: 'e' * 100);
+      expect(readingTime(middling, flipped: false), const Duration(milliseconds: 7000));
+      expect(readingTime(middling, flipped: true), const Duration(milliseconds: 3500 + 45 * 200));
+      final long = StudyCard(id: 'c', front: 'q' * 1000, back: 'a' * 1000, example: 'e' * 1000);
+      expect(readingTime(long, flipped: false), const Duration(seconds: 9));
+      expect(readingTime(long, flipped: true), const Duration(seconds: 20));
+    });
+
+    testWidgets('auto-play turns the card over, goes on, and finishes after the last answer', (tester) async {
+      final c = study(FakePortal(), count: 2, pacing: (card, {required flipped}) => const Duration(seconds: 3));
+      await tester.runAsync(c.load);
+      expect(c.playing, isFalse);
+      c.play();
+      expect(c.playing, isTrue);
+      await tester.pump(const Duration(seconds: 2));
+      expect(c.flipped, isFalse, reason: 'the question is still having its time');
+      await tester.pump(const Duration(seconds: 1));
+      expect(c.flipped, isTrue);
+      await tester.pump(const Duration(seconds: 3));
+      expect((c.position, c.flipped), (2, false), reason: 'the next card starts on its question');
+      await tester.pump(const Duration(seconds: 3));
+      expect(c.flipped, isTrue);
+      expect(c.finished, isFalse);
+      await tester.pump(const Duration(seconds: 3));
+      expect(c.finished, isTrue, reason: 'after the last answer the pass is over');
+      expect(c.playing, isFalse);
+      c.play();
+      expect(c.playing, isFalse, reason: 'there is nothing to play on a summary');
+      c.dispose();
+    });
+
+    testWidgets('anything done by hand stops auto-play; Play starts again from where the member is', (tester) async {
+      final c = study(
+        FakePortal(starred: ['alpha-c0']),
+        pacing: (card, {required flipped}) => const Duration(seconds: 3),
+      );
+      await tester.runAsync(c.load);
+      void stopsIt(String what, void Function() act) {
+        c.play();
+        expect(c.playing, isTrue, reason: what);
+        act();
+        expect(c.playing, isFalse, reason: what);
+      }
+
+      stopsIt('flip', c.flip);
+      stopsIt('next', c.next);
+      stopsIt('previous', c.previous);
+      stopsIt('mark', () => c.mark(known: true));
+      stopsIt('shuffle', c.toggleShuffle);
+      stopsIt('a category', () => c.setCategory('Category 1'));
+      stopsIt('a search', () => c.setQuery('question'));
+      stopsIt('the starred pass', c.toggleStarredOnly);
+      stopsIt('finish', c.finish);
+      c.studyAgain();
+
+      final at = c.position;
+      c.play();
+      c.pause();
+      await tester.pump(const Duration(seconds: 30));
+      expect(c.position, at, reason: 'nothing moves once it is paused');
+      expect(c.flipped, isFalse);
+      c.play();
+      await tester.pump(const Duration(seconds: 3));
+      expect(c.flipped, isTrue);
+      c.dispose(); // with a timer running: it must not fire after the screen is left
+      await tester.pump(const Duration(seconds: 10));
+    });
+
+    testWidgets('a card with no cards to play is not played, and a new load stops it', (tester) async {
+      final c = study(FakePortal(), count: 3, pacing: (card, {required flipped}) => const Duration(seconds: 3));
+      await tester.runAsync(c.load);
+      c.setQuery('zebra');
+      c.play();
+      expect(c.playing, isFalse, reason: 'no cards on show');
+      c.setQuery('');
+      c.play();
+      expect(c.playing, isTrue);
+      await tester.runAsync(c.load);
+      expect(c.playing, isFalse, reason: 'asking for the deck again starts it afresh');
+      c.dispose();
+    });
 
     test('it opens on the first card, front side up', () async {
       final c = study(FakePortal());

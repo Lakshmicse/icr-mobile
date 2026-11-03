@@ -175,9 +175,31 @@ void main() {
     await shoot(tester, DeckStudyScreen, 'study_deck_course_lock');
   });
 
-  shadowedWidgets('flash cards: the first card, its question', (tester) async {
-    await show(tester, DeckStudyScreen.deck(repository: repoOn(FakePortal()), deck: capital));
+  const fmCore = StudyTopic(id: 'topic-fm-core', slug: 'fm-core', title: 'FM Core Fundamentals & Operations');
+
+  /// The deck the design draws, on its 14th card with that card starred: the pass the design shows.
+  Future<void> openDesignDeck(WidgetTester tester, {Size physical = const Size(780, 1688)}) async {
+    final portal = FakePortal(starred: ['fm-core-c13']);
+    portal.extra['fm-core'] = designDeck();
+    await show(
+      tester,
+      DeckStudyScreen.deck(repository: repoOn(portal), deck: fmCore),
+      physical: physical,
+    );
+    for (var i = 0; i < 13; i++) {
+      await tester.tap(find.byKey(const ValueKey('study-next')));
+      await tester.pumpAndSettle();
+    }
+  }
+
+  shadowedWidgets('flash cards: the card of the design (flashcards-study.png), its question', (tester) async {
+    await openDesignDeck(tester);
     await shoot(tester, DeckStudyScreen, 'study_card_front');
+  });
+
+  shadowedWidgets('flash cards: a deck with one category, the first card', (tester) async {
+    await show(tester, DeckStudyScreen.deck(repository: repoOn(FakePortal()), deck: capital));
+    await shoot(tester, DeckStudyScreen, 'study_card_front_plain');
   });
 
   shadowedWidgets('flash cards: the same card half way through its flip (export only)', (tester) async {
@@ -190,11 +212,43 @@ void main() {
   });
 
   shadowedWidgets('flash cards: the answer, starred', (tester) async {
+    await openDesignDeck(tester);
+    await tester.tap(find.byKey(const ValueKey('study-flip')));
+    await tester.pumpAndSettle();
+    await shoot(tester, DeckStudyScreen, 'study_card_back');
+  });
+
+  shadowedWidgets('flash cards: the answer with its example and source link (export only)', (tester) async {
     final portal = FakePortal(starred: ['cmv6lubcf01dfmyt8t4g9it5d']);
     await show(tester, DeckStudyScreen.deck(repository: repoOn(portal), deck: capital));
     await tester.tap(find.byKey(const ValueKey('study-flip')));
     await tester.pumpAndSettle();
-    await shoot(tester, DeckStudyScreen, 'study_card_back');
+    await export(tester, find.byType(DeckStudyScreen), 'study_card_back_plain');
+  });
+
+  shadowedWidgets('flash cards: the ⋮ menu open (export only)', (tester) async {
+    await openDesignDeck(tester);
+    await tester.tap(find.byKey(const ValueKey('study-menu')));
+    await tester.pumpAndSettle();
+    await export(tester, find.byType(DeckStudyScreen), 'study_menu');
+  });
+
+  shadowedWidgets('flash cards: searching, and nothing matches (export only)', (tester) async {
+    await openDesignDeck(tester);
+    await tester.tap(find.byKey(const ValueKey('study-search-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('study-search')), 'zebra');
+    await tester.pumpAndSettle();
+    await export(tester, find.byType(DeckStudyScreen), 'study_search_none');
+  });
+
+  shadowedWidgets('flash cards: auto-play running (export only)', (tester) async {
+    await openDesignDeck(tester);
+    await tester.tap(find.byKey(const ValueKey('study-play')));
+    await tester.pump(const Duration(milliseconds: 300));
+    await export(tester, find.byType(DeckStudyScreen), 'study_playing');
+    await tester.tap(find.byKey(const ValueKey('study-play')));
+    await tester.pumpAndSettle();
   });
 
   shadowedWidgets('flash cards: the end of a pass', (tester) async {
@@ -284,12 +338,19 @@ void main() {
     await export(tester, find.byType(DetailSheetFrame), 'study_formula_wacc');
   });
 
-  shadowedWidgets('flash cards at 320 dp (export only)', (tester) async {
-    await show(
-      tester,
-      DeckStudyScreen.deck(repository: repoOn(FakePortal()), deck: capital),
-      physical: const Size(640, 1136),
-    );
+  shadowedWidgets('flash cards at 360 dp: the question and the answer (export only)', (tester) async {
+    await openDesignDeck(tester, physical: const Size(720, 1280));
+    await export(tester, find.byType(DeckStudyScreen), 'study_card_front_360');
+    await tester.tap(find.byKey(const ValueKey('study-flip')));
+    await tester.pumpAndSettle();
+    await export(tester, find.byType(DeckStudyScreen), 'study_card_back_360');
+  });
+
+  shadowedWidgets('flash cards at 320 dp: the question and the answer (export only)', (tester) async {
+    await openDesignDeck(tester, physical: const Size(640, 1280));
     await export(tester, find.byType(DeckStudyScreen), 'study_card_front_320');
+    await tester.tap(find.byKey(const ValueKey('study-flip')));
+    await tester.pumpAndSettle();
+    await export(tester, find.byType(DeckStudyScreen), 'study_card_back_320');
   });
 }

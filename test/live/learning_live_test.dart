@@ -121,6 +121,16 @@ class _WithoutPictures implements LearningRepository {
     int? headcount,
   }) => inner.enquire(course, message: message, kind: kind, company: company, headcount: headcount);
   @override
+  Future<BrochureLead> brochureContact() => inner.brochureContact();
+
+  @override
+  Future<void> requestBrochure(Course course, BrochureLead lead, {required BrochureIntent intent}) =>
+      inner.requestBrochure(course, lead, intent: intent);
+
+  @override
+  Future<List<int>> brochureBytes(Course course) => inner.brochureBytes(course);
+
+  @override
   Future<int> unreadNotifications() => inner.unreadNotifications();
   @override
   Uri link(Course course) => inner.link(course);

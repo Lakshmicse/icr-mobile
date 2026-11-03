@@ -32,17 +32,19 @@ import 'package:icr_mobile/features/learning_assess/mock_tests_screen.dart';
 import 'package:icr_mobile/features/learning_assess/widgets/group_card.dart';
 import 'package:icr_mobile/features/learning_assess/widgets/paper_card.dart';
 import 'package:icr_mobile/features/learning_exam/api_exam_repository.dart';
-import 'package:icr_mobile/features/learning_exam/brief_sheet.dart';
+import 'package:icr_mobile/features/learning_exam/brief_controller.dart';
+import 'package:icr_mobile/features/learning_exam/brief_screen.dart';
 import 'package:icr_mobile/features/learning_exam/certificate_view.dart';
 import 'package:icr_mobile/features/learning_exam/certificates_screen.dart';
 import 'package:icr_mobile/features/learning_exam/exam_controller.dart';
 import 'package:icr_mobile/features/learning_exam/exam_progress_store.dart';
 import 'package:icr_mobile/features/learning_exam/exam_screen.dart';
+import 'package:icr_mobile/features/learning_exam/exam_widgets.dart';
 import 'package:icr_mobile/features/learning_exam/exam_services.dart';
-import 'package:icr_mobile/features/learning_exam/my_attempts_screen.dart';
 import 'package:icr_mobile/features/learning_hub/learning_doors.dart';
 import 'package:icr_mobile/features/learning_hub/learning_hub_screen.dart';
 import 'package:icr_mobile/features/learning_hub/partner_courses_screen.dart';
+import 'package:icr_mobile/features/learning_hub/widgets/hub_section.dart';
 import 'package:icr_mobile/features/learning_hub/widgets/institute_card.dart';
 import 'package:icr_mobile/features/learning_study/flash_cards_screen.dart';
 import 'package:icr_mobile/features/learning_study/knowledge_center_screen.dart';
@@ -240,13 +242,14 @@ Future<void> _sit(
         await tester.pump();
       }
       if (i < c.total - 1) {
-        await tester.tap(find.text('Submit & Next'));
+        await tester.tap(find.text('Next'));
         await tester.pump(const Duration(milliseconds: 200));
       }
     }
     expect(c.counts.answered, c.total, reason: 'every question answered from the screen');
   }
-  await tester.tap(find.text(key == null ? 'Finish' : 'Submit'));
+  // On the last question Next opens the overview, as Finish does.
+  await tester.tap(find.text(key == null ? 'Finish' : 'Next'));
   await tester.pump(const Duration(milliseconds: 400));
   await _waitFor(tester, find.text('Submit test'), 'the overview');
   await tester.pump(const Duration(milliseconds: 300));
@@ -292,6 +295,23 @@ Future<void> _frames(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 300));
 }
 
+/// A level card's own button once the level is open (the Assess programme page of 30 Oct 2026): "Start
+/// Assessment" before a first sitting, "Retake assessment" after one.
+Finder _openButton(Finder card) => find.descendant(
+  of: card,
+  matching: find.byWidgetPredicate(
+    (w) => w is ActionButton && RegExp(r'^(Start|Retake) assessment$', caseSensitive: false).hasMatch(w.label),
+  ),
+);
+
+/// Where the study screen says it is ("Card 3 of 12", or "3 of 12" when the bar is short), without the word.
+String? _position(WidgetTester tester) {
+  final found = find.byKey(const ValueKey('study-position')).evaluate();
+  if (found.isEmpty) return null;
+  final text = found.single.widget as Text;
+  return (text.data ?? text.textSpan?.toPlainText() ?? '').replaceFirst('Card ', '');
+}
+
 /// The frames a closing sheet needs: it slides away on the first and is taken off the stack on the next.
 Future<void> _closeSheet(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 400));
@@ -312,7 +332,9 @@ Future<void> _pump(WidgetTester tester, ApiClient api, Widget home, {double heig
   );
 }
 
-Finder _door(LearningDoor d) => find.byKey(ValueKey('door-${d.name}'));
+/// A door of the catalogue rail (the hub's "doors" since the 27 Oct redesign: four tiles; the course grids open
+/// from the Catalogue and Partner headings' View More).
+Finder _door(LearningDoor d) => find.byKey(ValueKey('catalogue-${d.name}'));
 
 void main() {
   setUpAll(loadAppFonts);
@@ -330,10 +352,10 @@ void main() {
       (LearningDoor.mockTests, MockTestsScreen, find.byType(GroupCard)),
       (LearningDoor.flashCards, FlashCardsScreen, find.byType(DeckCard)),
       (LearningDoor.knowledgeCenter, KnowledgeCenterScreen, find.textContaining(' formulas')),
-      (LearningDoor.icrCourses, LearningScreen, find.byType(CourseCard)),
-      (LearningDoor.partnerCourses, PartnerCoursesScreen, find.byType(InstituteCard)),
     ];
     for (final (door, screen, content) in doors) {
+      await tester.ensureVisible(_door(door));
+      await tester.pumpAndSettle();
       await _tap(tester, _door(door));
       await _waitFor(tester, find.byType(screen), '${door.title}: its screen');
       await _waitFor(tester, content, '${door.title}: real content from the API');
@@ -342,12 +364,38 @@ void main() {
       expect(find.byType(LearningHubScreen), findsOneWidget, reason: '${door.title}: Back returns to the hub');
     }
 
-    // The two tiles of My learning that open other doors' screens.
-    await _tap(tester, find.byKey(const ValueKey('my-learning-attempts')));
-    await _waitFor(tester, find.byType(AttemptCard), 'his attempts, listed');
-    await _back(tester);
-    await _tap(tester, find.byKey(const ValueKey('my-learning-certificates')));
+    // The course grids open from their headings' View More: ICR Courses from the Catalogue's, the institutes
+    // from the Partner section's.
+    for (final (heading, screen, content, title) in [
+      ('Catalogue', LearningScreen, find.byType(CourseCard), 'ICR Courses'),
+      ('partner-heading', PartnerCoursesScreen, find.byType(InstituteCard), 'Partner Courses'),
+    ]) {
+      final head = heading == 'Catalogue' ? find.text('Catalogue') : find.byKey(ValueKey(heading));
+      if (heading != 'Catalogue' && head.evaluate().isEmpty) {
+        // The Partner Courses section is drawn only when an institute other than ICR's own has a course; the
+        // local database seeds only ICR Institute, so there is no heading to open here.
+        continue;
+      }
+      await tester.ensureVisible(head);
+      await tester.pumpAndSettle();
+      final headingWidget = heading == 'Catalogue'
+          ? find.ancestor(of: head, matching: find.byType(HubSectionHeading))
+          : head;
+      final more = find.descendant(of: headingWidget, matching: find.text('View More'));
+      await _tap(tester, more.evaluate().isEmpty ? find.text('View More').first : more);
+      await _waitFor(tester, find.byType(screen), '$title: its screen');
+      await _waitFor(tester, content, '$title: real content from the API');
+      await _back(tester);
+      expect(find.byType(LearningHubScreen), findsOneWidget, reason: '$title: Back returns to the hub');
+    }
+    // The member's certificates are a chip of the ICR Courses screen (the hub has no "My learning" strip).
+    await tester.ensureVisible(find.text('Catalogue'));
+    await tester.pumpAndSettle();
+    await _tap(tester, find.text('View More').first);
+    await _waitFor(tester, find.byType(LearningScreen), 'ICR Courses');
+    await _tap(tester, find.text('Certificates'));
     await _waitFor(tester, find.byType(CertificateCard), 'his certificates, listed');
+    await _back(tester);
     await _back(tester);
     expect(find.byType(LearningHubScreen), findsOneWidget);
   });
@@ -383,10 +431,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 500));
         expect(find.textContaining('This level opens for good'), findsOneWidget, reason: 'it asks before it spends');
         await _tap(tester, find.descendant(of: find.byType(BottomSheet), matching: find.textContaining('Redeem')));
-        await _settle(
-          tester,
-          until: () => find.descendant(of: card, matching: find.text('Unlocked')).evaluate().isNotEmpty,
-        );
+        await _settle(tester, until: () => _openButton(card).evaluate().isNotEmpty);
         final left =
             (await tester.runAsync(
                   () => signed.dio.get<Map<String, dynamic>>('/learning/me/paper-unlocks'),
@@ -397,20 +442,37 @@ void main() {
         // The snackbar is the app's, not the screen's: it would sit over the next screens' bottom bars for 4 s.
         await tester.pump(const Duration(seconds: 6));
       }
-      expect(find.descendant(of: card, matching: find.text('Unlocked')), findsOneWidget);
+      expect(_openButton(card), findsOneWidget, reason: 'the level is open, so its card offers Start Assessment');
 
       // Start -> the real brief.
-      await _tap(tester, find.descendant(of: card, matching: find.byType(ActionButton)).last);
+      await _tap(tester, _openButton(card));
       final take = find.descendant(
-        of: find.byType(BriefBar),
+        of: find.byType(BriefScreen),
         matching: find.textContaining(RegExp(r'^(Take|Retake) test$')),
       );
       await _waitFor(tester, take, 'the brief, ready to start');
-      expect(find.text('Test parameters'), findsOneWidget);
+      expect(find.text('Assessment details'), findsOneWidget);
 
       // The key is read from the Exam Persona's earlier sittings; a first-ever sitting is sat blank to get it.
       Map<String, List<int>>? key = await tester.runAsync<Map<String, List<int>>?>(() => _keyFrom(signed, slug));
       await _tap(tester, take);
+      // What the brief holds right after the tap, for a run's log: the exam not opening has no other trace.
+      await tester.pump(const Duration(milliseconds: 300));
+      final briefScreens = find.byType(BriefScreen);
+      if (briefScreens.evaluate().isNotEmpty) {
+        final bc = Provider.of<BriefController>(tester.element(briefScreens.first), listen: false);
+        final briefRoute = ModalRoute.of(tester.element(briefScreens.first));
+        // ignore: avoid_print
+        print(
+          '[assess] briefs on screen=${briefScreens.evaluate().length} briefRouteCurrent=${briefRoute?.isCurrent} '
+          'exams=${find.byType(ExamScreen).evaluate().length}',
+        );
+        // ignore: avoid_print
+        print(
+          '[assess] after Take test: status=${bc.status} canStart=${bc.canStart} noQuestions=${bc.noQuestions} '
+          'exhausted=${bc.exhausted} lock=${bc.lock?.message} error=${bc.error} action=${bc.actionError}',
+        );
+      }
       await _waitFor(tester, find.byType(ExamScreen), 'the exam');
       if (key == null) {
         await _sit(tester);
@@ -428,7 +490,7 @@ void main() {
 
       // The pass: the result, the certificate, and the level it earned.
       expect(find.text('Outstanding result'), findsOneWidget);
-      expect(find.text('Passed'), findsWidgets);
+      expect(find.text('Summative'), findsOneWidget, reason: 'a certifying paper is not a formative one');
       expect(find.textContaining('Certificate issued: ICR-'), findsOneWidget);
       await _tap(tester, find.text('View certificate').first);
       await _waitFor(tester, find.byType(CertificateSheetView), 'the certificate');
@@ -437,17 +499,18 @@ void main() {
       await _closeSheet(tester);
       expect(find.byType(CertificateSheetView), findsNothing, reason: 'the certificate sheet closed');
 
-      // Retake on the result opens the brief again, ready for another sitting (closing it ends the flow).
-      await _tap(tester, find.text('Retake Test').last);
+      // Retake on the result opens the brief again, ready for another sitting (Back on it ends the flow).
+      await _tap(tester, find.text('Retake test'));
       await _waitFor(tester, take, 'the brief again, after Retake');
-      await tester.tapAt(const Offset(195, 12));
+      await _tap(tester, find.text('Back'));
       await _closeSheet(tester);
 
-      // Back on the programme: the level now says it earned the certificate and how the person did.
-      await _settle(tester, until: () => find.text('CERTIFIED').evaluate().isNotEmpty);
-      expect(find.descendant(of: card, matching: find.text('CERTIFIED')), findsOneWidget);
+      // Back on the programme: the level now says how the person did and that it earned the certificate (the
+      // card of 30 Oct 2026 has no badge for it; its pass line reads "Passed · Certified").
+      final certified = find.descendant(of: card, matching: find.text('Passed · Certified'));
+      await _settle(tester, until: () => certified.evaluate().isNotEmpty);
+      expect(certified, findsOneWidget, reason: 'on screen: ${_texts(tester)}');
       expect(find.descendant(of: card, matching: find.textContaining('Best score')), findsOneWidget);
-      expect(find.descendant(of: card, matching: find.text('Passed')), findsOneWidget);
     },
   );
 
@@ -493,13 +556,13 @@ void main() {
       final open = find.byKey(ValueKey('paper-$set1'));
       await _tap(tester, find.descendant(of: open, matching: find.byType(ActionButton)).last);
       final take = find.descendant(
-        of: find.byType(BriefBar),
+        of: find.byType(BriefScreen),
         matching: find.textContaining(RegExp(r'^(Take|Retake) test$')),
       );
       await _waitFor(tester, take, 'the brief');
       expect(
-        find.text('Mock exam'),
-        findsWidgets,
+        find.text('Mock Exam details'),
+        findsOneWidget,
         reason: 'the brief says what the paper is; on screen: ${_texts(tester)}',
       );
       await _tap(tester, take);
@@ -516,7 +579,7 @@ void main() {
               if (q.multiple) i,
           ].first;
           while (c.current < multiple) {
-            await tester.tap(find.text('Submit & Next'));
+            await tester.tap(find.text('Next'));
             await tester.pump(const Duration(milliseconds: 200));
           }
           expect(find.text('Select all that apply.'), findsOneWidget, reason: 'a multiple-choice question says so');
@@ -531,7 +594,8 @@ void main() {
       // A mock set is practice: it says what was scored, and never "Certificate".
       expect(find.textContaining(RegExp(r'^You scored \d+%$')), findsOneWidget);
       expect(find.textContaining('Certificate issued'), findsNothing);
-      await _tap(tester, find.text('Back').last);
+      // The result has no Back button: its title bar's arrow closes it, and the flow with it.
+      await _tap(tester, find.descendant(of: find.byType(ExamTitleBar), matching: find.byType(InkResponse)));
       await _closeSheet(tester);
 
       // The API kept the sitting, and the set's card counts it.
@@ -566,13 +630,29 @@ void main() {
         final open = decks.where((d) => d.state == DeckState.open).toList();
         expect(open, isNotEmpty, reason: 'the three decks her places opened');
         expect(locked, isNotEmpty, reason: 'every other deck is locked by her plan');
-        expect(find.byKey(const ValueKey('study-plan-note')), findsOneWidget);
-        expect(find.textContaining('Your plan opens 3 flash-card decks'), findsOneWidget);
+        // The plan note stands while some deck takes a place of its own; a deck that belongs with a course opens
+        // with the course, so when every deck is linked there is none to draw.
+        final alone = decks.where((d) => d.deck.courseId == null);
+        expect(find.byKey(const ValueKey('study-plan-note')), alone.isEmpty ? findsNothing : findsOneWidget);
+        if (alone.isNotEmpty) expect(find.textContaining('Your plan opens 3 flash-card decks'), findsOneWidget);
 
         // A locked deck still opens, and the API's own sentence says why; the plans page is a link.
         await _tap(tester, find.widgetWithText(DeckCard, locked.first.deck.title));
-        await _waitFor(tester, find.text("This deck isn't open on your plan"), 'the lock notice');
-        expect(find.textContaining('opened them all'), findsOneWidget, reason: "the API's sentence");
+        await _waitFor(
+          tester,
+          find.byWidgetPredicate(
+            (x) =>
+                x is Text && (x.data == "This deck isn't open on your plan" || (x.data ?? '').startsWith('Opens with')),
+          ),
+          'the lock notice',
+        );
+        // A deck of its own: "Flash-card decks are not included in your plan."; one that follows a course: how
+        // many courses the plan opens.
+        expect(
+          find.textContaining(RegExp('open with|Your plan opens|not included in your plan')),
+          findsWidgets,
+          reason: "the API's sentence",
+        );
         await _tap(tester, find.text('See plans'));
         expect(_urls.last, endsWith('/pricing/professional'));
         await _tap(tester, find.text('All decks'));
@@ -584,14 +664,14 @@ void main() {
         final deck = open.first.deck;
         await _tap(tester, find.widgetWithText(DeckCard, deck.title));
         await _waitFor(tester, find.byKey(const ValueKey('study-position')), 'the first card');
-        expect(find.text('1 of ${deck.cardCount}'), findsOneWidget);
-        expect(find.text('Tap to see the answer'), findsOneWidget);
+        expect(_position(tester), '1 of ${deck.cardCount}');
+        expect(find.text('Tap card to reveal standard explanation'), findsOneWidget);
         await tester.tap(find.byKey(const ValueKey('study-flip')));
         await _frames(tester);
         expect(find.text('ANSWER'), findsWidgets, reason: 'the card turned over');
         await tester.tap(find.byKey(const ValueKey('study-got-it')));
         await _frames(tester);
-        expect(find.text('2 of ${deck.cardCount}'), findsOneWidget, reason: 'Got it moves to the next card');
+        expect(_position(tester), '2 of ${deck.cardCount}', reason: 'Got it moves to the next card');
         expect(find.byKey(const ValueKey('study-tally')), findsOneWidget);
 
         // Star this card and the next: the API keeps both, and the Starred chip appears.
@@ -605,13 +685,15 @@ void main() {
         await _eventually(tester, () async => (await starredIds()).length == 2);
         expect(await tester.runAsync(starredIds), hasLength(2), reason: "both stars are the API's");
 
-        // The Starred pass is those two cards; Finish ends it with the summary.
-        await tester.tap(find.byKey(const ValueKey('study-chip-starred')));
+        // The Starred pass is those two cards (from the bar's menu since 30 Oct 2026); Finish ends it with the summary.
+        await tester.tap(find.byKey(const ValueKey('study-menu')));
+        await _waitFor(tester, find.byKey(const ValueKey('study-menu-starred')), 'the study menu');
+        await tester.tap(find.byKey(const ValueKey('study-menu-starred')));
         await _frames(tester);
-        expect(find.text('1 of 2'), findsOneWidget);
+        expect(_position(tester), '1 of 2');
         await tester.tap(find.byKey(const ValueKey('study-next')));
         await _frames(tester);
-        expect(find.text('2 of 2'), findsOneWidget);
+        expect(_position(tester), '2 of 2');
         await tester.tap(find.byKey(const ValueKey('study-next')));
         await _frames(tester);
         expect(find.byKey(const ValueKey('study-summary')), findsOneWidget);
@@ -626,7 +708,8 @@ void main() {
         expect(find.textContaining('Study starred (2)'), findsOneWidget);
         await _tap(tester, find.textContaining('Study starred (2)'));
         await _waitFor(tester, find.text('Starred cards'), 'the starred session');
-        await _waitFor(tester, find.text('1 of 2'), 'the two starred cards');
+        await _settle(tester, until: () => _position(tester) == '1 of 2');
+        expect(_position(tester), '1 of 2', reason: 'the two starred cards; on screen: ${_texts(tester)}');
 
         // Taking the stars back is the API's too.
         await _tap(tester, find.byKey(const ValueKey('study-star')));

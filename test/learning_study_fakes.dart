@@ -52,6 +52,43 @@ Map<String, dynamic> bigDeck(String slug, {int count = 20, int categories = 4}) 
   ],
 };
 
+/// The categories of the chip wrap in the design (`docs/designs/flashcards-study.png`). The design draws "Asset
+/// Lifecycle" and "Lifecycle of Assets" twice; a deck's categories are its cards' names, so a repeat is one chip.
+const designCategories = [
+  'MEP & HVAC',
+  'Fire Safety & HSE',
+  'Smart BMS',
+  'Statutory Code',
+  'Asset Lifecycle',
+  'Equipment Management Cycle',
+  'Lifecycle of Assets',
+  'Asset Management Process',
+  'Asset Management Journey',
+  'Asset Lifecycle Overview',
+];
+
+/// The question the design shows on its 14th card.
+const designQuestion =
+    'What is the permissible AHU static pressure differential threshold before mandatory HEPA filter replacement '
+    'under ASHRAE 62.1 standards?';
+
+/// The deck the design draws: "FM Core Fundamentals & Operations", 48 cards over [designCategories] (the 14th, id
+/// `fm-core-c13`, is the question the design shows), with no level tag on its cards.
+Map<String, dynamic> designDeck() {
+  final deck = bigDeck('fm-core', count: 48, categories: designCategories.length);
+  deck['title'] = 'FM Core Fundamentals & Operations';
+  for (final (i, card) in (deck['cards'] as List).cast<Map<String, dynamic>>().indexed) {
+    card['category'] = designCategories[i % designCategories.length];
+    card['tags'] = <String>[];
+  }
+  final fourteenth = (deck['cards'] as List)[13] as Map<String, dynamic>;
+  fourteenth['front'] = designQuestion;
+  fourteenth['back'] =
+      "Replace the HEPA filter when the pressure drop across it reaches the final resistance its manufacturer rates "
+      "it for.";
+  return deck;
+}
+
 class FakePortal implements HttpClientAdapter {
   FakePortal({
     String unlocks = 'paper_unlocks_study',
