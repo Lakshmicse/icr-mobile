@@ -9,6 +9,8 @@ import '../feed/feed_models.dart';
 import '../feed/forum_json.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
+import 'mentions/mention_person.dart';
+import 'mentions/mention_text.dart';
 
 /// The community forum (`/forum/*`), read and written as the signed-in member, the way the website's community
 /// pages do it.
@@ -158,6 +160,7 @@ class ApiForumRepository implements ForumRepository {
     return ForumThread(
       card: card.copyWith(
         body: ForumJson.plainText(html),
+        mentions: mentionsInHtml(html),
         images: [for (final url in photos.take(2)) FeedPicture.network(url)],
         imageCaption: photos.length == 1 && attachment != null ? ForumJson.caption(attachment.fileName) : null,
         morePhotos: math.max(0, photos.length - 2),
@@ -222,6 +225,19 @@ class ApiForumRepository implements ForumRepository {
     ];
   }
 
+  @override
+  Future<List<ForumPollVoter>> pollVoters(String threadId) async {
+    final res = await _get('/forum/threads/$threadId/poll/voters', {'page': 1, 'limit': 50});
+    return [
+      for (final r in (res['data'] as List).cast<Map<String, dynamic>>())
+        ForumPollVoter(
+          person: _json.author(r['user'] as Map<String, dynamic>),
+          optionId: r['optionId'] as String? ?? '',
+          votedAt: DateTime.tryParse(r['votedAt'] as String? ?? '') ?? DateTime.now(),
+        ),
+    ];
+  }
+
   // --- the reader's actions ----------------------------------------------------------------------------------
 
   @override
@@ -275,7 +291,7 @@ class ApiForumRepository implements ForumRepository {
   /// API takes it) and no body on an edit (the API refuses to empty one); an edit that leaves the body alone
   /// (`ForumDraft.body` null) sends none, so a body the website's editor formatted is kept as it is.
   Map<String, dynamic> _draftBody(ForumDraft d, {required bool creating}) {
-    final html = d.bodyHtml ?? (d.body == null ? '' : ForumJson.textToHtml(d.body!));
+    final html = d.bodyHtml ?? (d.body == null ? '' : mentionedHtml(d.body!, d.mentions));
     final poll = d.pollOptions?.map((o) => o.trim()).where((o) => o.isNotEmpty).toList();
     return {
       if (d.categoryKey != null) ...{'topicCategory': d.categoryKey, 'topicSubcategory': d.subcategoryKey},
@@ -291,6 +307,8 @@ class ApiForumRepository implements ForumRepository {
       'fileName': ?d.attachment?.fileName,
       'fileSize': ?d.attachment?.fileSize,
       if (creating && poll != null && poll.isNotEmpty) 'pollOptions': poll,
+      // A repost names the discussion it brings to the reader's feed; the API files it as a repost of that one.
+      if (creating) 'repostOfId': ?d.repostOfId,
     };
   }
 
@@ -298,18 +316,28 @@ class ApiForumRepository implements ForumRepository {
   Future<void> deleteThread(String threadId) => _send('DELETE', '/forum/threads/$threadId');
 
   @override
-  Future<FeedReply> reply(String threadId, String text, {String? parentId}) async {
+  Future<FeedReply> reply(String threadId, String text, {String? parentId, List<Mention> mentions = const []}) async {
     final res = await _send('POST', '/forum/threads/$threadId/replies', {
-      'bodyHtml': ForumJson.textToHtml(text),
+      'bodyHtml': mentionedHtml(text, mentions),
       'parentId': ?parentId,
     });
     return _json.reply(res as Map<String, dynamic>);
   }
 
   @override
-  Future<FeedReply> editReply(String replyId, String text) async {
-    final res = await _send('PATCH', '/forum/replies/$replyId', {'bodyHtml': ForumJson.textToHtml(text)});
+  Future<FeedReply> editReply(String replyId, String text, {List<Mention> mentions = const []}) async {
+    final res = await _send('PATCH', '/forum/replies/$replyId', {'bodyHtml': mentionedHtml(text, mentions)});
     return _json.reply(res as Map<String, dynamic>);
+  }
+
+  @override
+  Future<List<MentionPerson>> mentionable(String search, {int limit = 8}) async {
+    final rows = await _getList('/members/mentionable', {'search': search.trim(), 'limit': limit.clamp(1, 10)});
+    final base = api.dio.options.baseUrl;
+    return [
+      for (final r in rows)
+        if (r is Map<String, dynamic>) MentionPerson.fromJson(r, apiBase: base),
+    ];
   }
 
   @override

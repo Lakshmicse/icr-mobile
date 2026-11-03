@@ -117,7 +117,7 @@ void main() {
       expect(post.shares, isNull, reason: 'the API counts no shares');
       expect(post.saved, isTrue);
       expect(post.showFollow, isTrue);
-      expect(adapter.seen.last.queryParameters['sort'], 'latest');
+      expect(adapter.seen.last.queryParameters['sort'], 'newest', reason: 'All Feed is the newest first');
     });
 
     test('maps the chips onto the forum sorts', () async {
@@ -483,6 +483,54 @@ void main() {
       feed.dispose();
     });
 
+    test("a refresh reads an open thread's replies again, quietly: a commenter's new photo comes in", () async {
+      final world = FeedWorld();
+      final api = FakeForum(world.routes());
+      final feed = FeedController(repositoryOn(api));
+      await feed.start();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(feed.isOpen(feed.posts.first), isTrue);
+      final reads = api.to('GET', '/forum/threads/slug-iot/replies').length;
+      // The commenter changed their photo since the feed was read (owner, 3 Nov 2026: comments kept the old one).
+      (world.replies['slug-iot']!.first['author']! as Map<String, Object?>)['avatarUrl'] = '/uploads/new-face.jpg';
+
+      final refreshing = feed.refresh();
+      await Future<void>.delayed(Duration.zero);
+      expect(feed.isLoadingReplies(feed.posts.first), isFalse, reason: 'replies already shown draw no loading row');
+      await refreshing;
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(api.to('GET', '/forum/threads/slug-iot/replies'), hasLength(reads + 1));
+      expect(feed.posts.first.replies.first.author.photo?.url, contains('/uploads/new-face.jpg'));
+      feed.dispose();
+    });
+
+    test("the reader's new photo and name are drawn on their own posts and comments at once", () async {
+      final world = FeedWorld();
+      final api = FakeForum(world.routes());
+      final feed = FeedController(repositoryOn(api));
+      await feed.start();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      final post = feed.posts.first;
+      final reply = post.replies.first;
+      const photo = FeedPicture.network('https://site.test/uploads/me-now.jpg');
+
+      // The reader wrote the first comment (not the post).
+      feed.restampViewer(FeedAuthor(id: reply.author.id, name: 'Arvind S', photo: photo));
+      final after = feed.posts.first;
+      expect(after.replies.first.author.photo?.url, photo.url);
+      expect(after.replies.first.author.name, 'Arvind S');
+      expect(after.replies.first.author.headline, reply.author.headline, reason: 'the headline it was read with stays');
+      expect(after.replies.first.body, reply.body);
+      expect(after.author.photo?.url, post.author.photo?.url, reason: "someone else's post keeps its author");
+      expect(after.replies.length, post.replies.length);
+
+      // The reader wrote the post.
+      feed.restampViewer(FeedAuthor(id: post.author.id, name: post.author.name, photo: photo));
+      expect(feed.posts.first.author.photo?.url, photo.url);
+      expect(feed.posts.first.author.headline, post.author.headline);
+      feed.dispose();
+    });
+
     test('an answer that arrives after the screen has gone does nothing', () async {
       final world = FeedWorld();
       final api = FakeForum(world.routes());
@@ -575,7 +623,8 @@ void main() {
       });
       final posts = (await repositoryOn(api).load(FeedFilter.all)).posts;
       expect(api.to('GET', '/members/me/following'), hasLength(2));
-      expect(posts.map((p) => p.showFollow), [false, false, true]);
+      // By id: the page is laid out newest first, so the fixture's order is not the feed's.
+      expect({for (final p in posts) p.id: p.showFollow}, {'x': false, 'y': false, 'z': true});
     });
 
     test('a topic is tinted green for the sustainability families and blue for the rest and for polls', () async {

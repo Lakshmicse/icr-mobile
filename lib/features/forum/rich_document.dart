@@ -12,8 +12,10 @@ library;
 
 import 'dart:math' as math;
 
+import '../feed/feed_models.dart' show Mention;
 import '../feed/forum_json.dart';
 import 'forum_html.dart';
+import 'mentions/mention_text.dart';
 
 /// What a character of the details can carry. The bits above [heading] hold the link's number (1-based into
 /// [RichDoc.links]; 0 is none).
@@ -161,6 +163,23 @@ class RichDoc {
 
   bool get isBlank => text.trim().isEmpty || plainText.trim().isEmpty;
 
+  /// This document with each of [mentions] still in its text made a link to the member's profile
+  /// (`/members/{id}`), so [toHtml] sends the forum `<a href="/members/{id}">@Name</a>`. A mention that is no longer
+  /// in the text is not sent, and words already linked keep the link they have.
+  RichDoc withMentions(List<Mention> mentions) {
+    final found = mentionSpans(text, mentions);
+    if (found.isEmpty) return this;
+    final b = RichBuffer.of(this);
+    for (final s in found) {
+      var linked = false;
+      for (var i = s.start; i < s.end && !linked; i++) {
+        linked = RichMark.link(b.marks[i]) != 0;
+      }
+      if (!linked) b.setLink(s.start, s.end, '/members/${s.mention.id}');
+    }
+    return b.snapshot();
+  }
+
   /// The document as the forum's HTML: `<p>`, `<h3>`, `<ul>`/`<ol>` with `<li>`, `<strong>`, `<em>` and `<a href>`.
   /// Every character of text is escaped; a link goes out only when it is http, https or mailto. An empty line
   /// separates nothing and is dropped.
@@ -247,10 +266,11 @@ class RichDoc {
   }
 }
 
-/// A link a post may carry: http, https or mailto.
+/// A link a post may carry: http, https or mailto, or a tagged member (`/members/{id}`).
 bool _safeHref(String href) {
   final uri = Uri.tryParse(href);
-  if (uri == null || !uri.hasScheme) return false;
+  if (uri == null) return false;
+  if (!uri.hasScheme) return memberPath.hasMatch(href);
   return const {'http', 'https', 'mailto'}.contains(uri.scheme.toLowerCase());
 }
 
@@ -355,9 +375,7 @@ class RichBuffer {
     }
     final newText = out.toString();
     if (newText == text && _same(outMarks, marks)) return offsets;
-    final mapped = [
-      for (final o in offsets) _remap(o, spans, starts, prefixes),
-    ];
+    final mapped = [for (final o in offsets) _remap(o, spans, starts, prefixes)];
     text = newText;
     marks = outMarks;
     return mapped;
@@ -548,15 +566,7 @@ class RichBuffer {
     }
     String assembled() => before + inserted + after;
 
-    final insertedMarks = _insertedMarks(
-      old,
-      inserted,
-      start,
-      oldEnd,
-      lineStart + prefix,
-      pending,
-      autoPrefix,
-    );
+    final insertedMarks = _insertedMarks(old, inserted, start, oldEnd, lineStart + prefix, pending, autoPrefix);
     final newMarks = <int>[...marks.sublist(0, start), ...insertedMarks, ...marks.sublist(oldEnd)];
     text = assembled();
     marks = newMarks;

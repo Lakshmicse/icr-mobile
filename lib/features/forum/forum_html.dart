@@ -202,6 +202,7 @@ String? _safeHref(String attrs) {
   if (raw.isEmpty) return null;
   final uri = Uri.tryParse(raw);
   if (uri == null) return null;
-  if (!uri.hasScheme) return null;
+  // A tagged member is the one link without a scheme: `/members/{id}`, a page of the website itself.
+  if (!uri.hasScheme) return RegExp(r'^/members/[A-Za-z0-9_\-]+$').hasMatch(raw) ? raw : null;
   return const {'http', 'https', 'mailto'}.contains(uri.scheme.toLowerCase()) ? raw : null;
 }

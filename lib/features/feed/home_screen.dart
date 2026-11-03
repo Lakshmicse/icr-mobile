@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
 import '../forum/forum_callbacks.dart';
 import '../forum/forum_flows.dart';
+import '../forum/mentions/tag_person.dart';
 import '../forum/repost.dart';
 import '../forum/thread_screen.dart';
 import '../forum/widgets/forum_sheets.dart';
@@ -44,6 +45,21 @@ class _HomeScreenState extends State<HomeScreen> {
     _scroll.addListener(() {
       if (_scroll.position.extentAfter < 600) context.read<FeedController>().loadMore();
     });
+  }
+
+  @override
+  void didUpdateWidget(HomeScreen old) {
+    super.didUpdateWidget(old);
+    // A new photo or name from the profile page: the reader's own posts and comments are drawn with it at once.
+    // After this frame, because telling the feed's listeners rebuilds widgets and this runs while they are built.
+    final before = old.viewer;
+    final now = widget.viewer;
+    if (before.id == now.id &&
+        (before.name != now.name || before.photo?.url != now.photo?.url || before.photo?.asset != now.photo?.asset)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.read<FeedController>().restampViewer(widget.viewer);
+      });
+    }
   }
 
   @override
@@ -177,6 +193,38 @@ class _HomeScreenState extends State<HomeScreen> {
     final picked = await showReactionPicker(context, anchor: anchor, current: post.myReaction);
     if (picked == null || !mounted) return;
     _run(feed.react(post, picked == post.myReaction ? null : picked));
+  }
+
+  /// A reaction on the reader's own post is refused here, as the website refuses it (its sentence), before
+  /// anything is sent: the API would say no too, in other words.
+  bool _refuseOwnReaction(FeedPost post) {
+    if (post.author.id != widget.viewer.id) return false;
+    showMessage(context, 'You cannot react to your own post.');
+    return true;
+  }
+
+  /// Saving says so, as the website's toast does: the bookmark filling in alone is easy to miss.
+  Future<void> _save(FeedPost post) async {
+    final wasSaved = post.saved;
+    final message = await context.read<FeedController>().toggleSave(post);
+    if (!mounted) return;
+    showMessage(context, message ?? (wasSaved ? 'Removed from saved discussions' : 'Saved'));
+  }
+
+  /// "N votes": who voted and for what — the website's dialog; the API's sentence for someone who has not voted.
+  void _voters(FeedPost post) {
+    final forum = context.read<FeedController>().repository.forum;
+    showPollVotersSheet(
+      context,
+      poll: post.poll!,
+      load: () => forum.pollVoters(post.id),
+      onOpenMember: widget.callbacks.onOpenMember,
+    );
+  }
+
+  /// A profile found after the feed was left (the look-up is a request) is not opened over whatever is there now.
+  void _openMemberIfShown(String id) {
+    if (mounted) widget.callbacks.onOpenMember?.call(id);
   }
 
   void _reactors(FeedPost post) {
@@ -337,13 +385,26 @@ class _HomeScreenState extends State<HomeScreen> {
           child: PostCard(
             post: post,
             commentsOpen: open,
+            isOwn: post.author.id == widget.viewer.id,
             onFollow: () => _run(feed.follow(post)),
-            onSave: () => _run(feed.toggleSave(post)),
+            onSave: () => _save(post),
             onMore: () => _postMenu(post),
-            onLike: () => _run(feed.toggleLike(post)),
+            onLike: () {
+              if (!_refuseOwnReaction(post)) _run(feed.toggleLike(post));
+            },
             onOpen: () => _openThread(post),
+            // A person's tag ("#@prashant") opens their profile, or does nothing when no profile fits; any other tag does
+            // nothing on Home (owner, 3 Nov 2026: a Home tag never opens the Forums tab).
+            onTag: (tag) => openTaggedPerson(
+              tag,
+              search: feed.repository.forum.mentionable,
+              onOpenMember: widget.callbacks.onOpenMember == null ? null : _openMemberIfShown,
+            ),
+            onOpenMention: widget.callbacks.onOpenMember,
             onReactions: () => _reactors(post),
-            onPickReaction: (rect) => _pickReaction(post, rect),
+            onPickReaction: (rect) {
+              if (!_refuseOwnReaction(post)) _pickReaction(post, rect);
+            },
             onOpenAuthor: widget.callbacks.onOpenMember == null
                 ? null
                 : () => widget.callbacks.onOpenMember!(post.author.id),
@@ -351,6 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onRepost: () => _repost(post),
             onShare: () => _share(post),
             onVote: (option) => _run(feed.vote(post, option)),
+            onVoters: () => _voters(post),
             afterPlacement: i == 2,
             replies: open
                 ? ReplyThread(
@@ -358,11 +420,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     loading: feed.isLoadingReplies(post),
                     viewer: widget.viewer,
                     onLike: (reply) => _run(feed.toggleReplyLike(post, reply)),
-                    onSend: (text, parentId) async {
-                      final message = await feed.sendReply(post, text, parentId: parentId);
+                    onSend: (text, parentId, mentions) async {
+                      final message = await feed.sendReply(post, text, parentId: parentId, mentions: mentions);
                       if (message != null && mounted) showMessage(context, message);
                       return message == null;
                     },
+                    searchPeople: feed.repository.forum.mentionable,
+                    onOpenMention: widget.callbacks.onOpenMember,
                     onMore: (reply) => _replyMenu(post, reply),
                     onOpenThread: () => _openThread(post),
                     onOpenAuthor: widget.callbacks.onOpenMember == null

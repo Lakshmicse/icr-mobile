@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text.dart';
 import '../forum_styles.dart';
+import '../mentions/mention_controller.dart';
+import '../mentions/mention_widgets.dart';
 import '../rich_document.dart';
 import '../rich_text_controller.dart';
 
@@ -20,7 +22,11 @@ class RichEditor extends StatefulWidget {
     this.fieldKey = const ValueKey('composer-body'),
     this.error = false,
     this.minLines = 6,
+    this.mentions,
   });
+
+  /// The "@" picker of the writing area (its list is drawn by the screen, above the keyboard).
+  final MentionController? mentions;
 
   final RichTextController controller;
   final String placeholder;
@@ -40,7 +46,14 @@ class _RichEditorState extends State<RichEditor> {
   final _focus = FocusNode();
 
   @override
+  void initState() {
+    super.initState();
+    widget.mentions?.attach(widget.controller, _focus);
+  }
+
+  @override
   void dispose() {
+    widget.mentions?.detach();
     _focus.dispose();
     super.dispose();
   }
@@ -61,6 +74,11 @@ class _RichEditorState extends State<RichEditor> {
     if (!mounted) return;
     if (result != null) c.setLink(result);
     _focus.requestFocus();
+  }
+
+  Widget _escapable(Widget field) {
+    final picker = widget.mentions;
+    return picker == null ? field : MentionEscape(controller: picker, child: field);
   }
 
   @override
@@ -90,24 +108,26 @@ class _RichEditorState extends State<RichEditor> {
               const Divider(height: 1, thickness: 1, color: AppColors.outlineVariant),
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-                child: TextField(
-                  key: widget.fieldKey,
-                  controller: c,
-                  focusNode: _focus,
-                  keyboardType: TextInputType.multiline,
-                  textCapitalization: TextCapitalization.sentences,
-                  minLines: widget.minLines,
-                  maxLines: null,
-                  style: composerFieldStyle,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    hintText: widget.placeholder,
-                    hintMaxLines: 5,
-                    hintStyle: composerFieldStyle.copyWith(color: AppColors.outline),
+                child: _escapable(
+                  TextField(
+                    key: widget.fieldKey,
+                    controller: c,
+                    focusNode: _focus,
+                    keyboardType: TextInputType.multiline,
+                    textCapitalization: TextCapitalization.sentences,
+                    minLines: widget.minLines,
+                    maxLines: null,
+                    style: composerFieldStyle,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      hintText: widget.placeholder,
+                      hintMaxLines: 5,
+                      hintStyle: composerFieldStyle.copyWith(color: AppColors.outline),
+                    ),
                   ),
                 ),
               ),
@@ -164,13 +184,7 @@ class _Toolbar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       child: Row(
         children: [
-          _Tool(
-            toolKey: 'rich-bold',
-            label: 'Bold',
-            icon: Icons.format_bold,
-            active: c.isBold,
-            onTap: c.toggleBold,
-          ),
+          _Tool(toolKey: 'rich-bold', label: 'Bold', icon: Icons.format_bold, active: c.isBold, onTap: c.toggleBold),
           _Tool(
             toolKey: 'rich-italic',
             label: 'Italic',

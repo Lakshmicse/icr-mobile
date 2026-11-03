@@ -29,6 +29,7 @@ class OfflineFeed implements FeedRepository {
     createdAt: p.createdAt,
     title: p.title,
     body: p.body,
+    mentions: p.mentions,
     topic: p.topic,
     topicTone: p.topicTone,
     tags: p.tags,
@@ -72,6 +73,7 @@ class OfflineFeed implements FeedRepository {
     canEdit: r.canEdit,
     accepted: r.accepted,
     pending: r.pending,
+    mentions: r.mentions,
   );
 
   @override
@@ -90,6 +92,7 @@ class OfflineFeed implements FeedRepository {
             images: [for (final i in d.images) ?_offline(i)],
             caption: d.caption,
             morePhotos: d.morePhotos,
+            mentions: d.mentions,
           );
   }
 
@@ -115,7 +118,8 @@ class OfflineFeed implements FeedRepository {
   @override
   Future<FeedPoll> vote(FeedPost post, String optionId) => inner.vote(post, optionId);
   @override
-  Future<void> reply(FeedPost post, String text, {String? parentId}) => inner.reply(post, text, parentId: parentId);
+  Future<void> reply(FeedPost post, String text, {String? parentId, List<Mention> mentions = const []}) =>
+      inner.reply(post, text, parentId: parentId, mentions: mentions);
   @override
   Future<void> deleteReply(FeedReply reply) => inner.deleteReply(reply);
   @override

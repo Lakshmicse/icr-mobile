@@ -5,6 +5,7 @@ import 'api_forum_repository.dart' show threadLink;
 import 'demo_forum_content.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
+import 'mentions/mention_person.dart';
 
 /// The designs' sample content as a forum that lives in memory (`--dart-define=FEED_SOURCE=demo`): reading works,
 /// and every write changes this copy only, so the screens can be reviewed and clicked through without a database.
@@ -170,6 +171,28 @@ class DemoForumRepository implements ForumRepository {
   ];
 
   @override
+  Future<List<ForumPollVoter>> pollVoters(String threadId) async {
+    final posts = [..._content.designed, ..._content.more];
+    final poll = posts.where((p) => p.id == threadId).firstOrNull?.poll;
+    if (poll == null || poll.options.isEmpty) return const [];
+    final first = poll.options.first.id;
+    final second = poll.options.length > 1 ? poll.options[1].id : first;
+    return [
+      ForumPollVoter(person: DemoForumContent.arvind, optionId: first, votedAt: _content.now),
+      ForumPollVoter(
+        person: DemoForumContent.priya,
+        optionId: second,
+        votedAt: _content.now.subtract(const Duration(hours: 2)),
+      ),
+      ForumPollVoter(
+        person: DemoForumContent.vikram,
+        optionId: first,
+        votedAt: _content.now.subtract(const Duration(days: 1)),
+      ),
+    ];
+  }
+
+  @override
   Future<ForumViewersPage> viewers(String threadId, {int page = 1}) async => ForumViewersPage(
     viewers: [
       ForumViewer(person: DemoForumContent.vikram, viewedAt: _content.now.subtract(const Duration(minutes: 20))),
@@ -227,7 +250,7 @@ class DemoForumRepository implements ForumRepository {
   ];
 
   @override
-  Future<FeedReply> reply(String threadId, String text, {String? parentId}) async {
+  Future<FeedReply> reply(String threadId, String text, {String? parentId, List<Mention> mentions = const []}) async {
     final post = _find(threadId);
     final reply = FeedReply(
       id: 'demo-reply-${++_sequence}',
@@ -236,6 +259,7 @@ class DemoForumRepository implements ForumRepository {
       createdAt: DateTime.now(),
       parentId: parentId,
       canEdit: true,
+      mentions: mentions,
     );
     final list = _replies[post.slug] ?? const <FeedReply>[];
     _replies[post.slug] = parentId == null
@@ -246,13 +270,42 @@ class DemoForumRepository implements ForumRepository {
   }
 
   @override
-  Future<FeedReply> editReply(String replyId, String text) async {
+  Future<FeedReply> editReply(String replyId, String text, {List<Mention> mentions = const []}) async {
     late FeedReply edited;
     _replies = {
       for (final e in _replies.entries)
-        e.key: mapReplies(e.value, replyId, (r) => edited = r.copyWith(body: text.trim())),
+        e.key: mapReplies(e.value, replyId, (r) => edited = r.copyWith(body: text.trim(), mentions: mentions)),
     };
     return edited;
+  }
+
+  @override
+  Future<List<MentionPerson>> mentionable(String search, {int limit = 8}) async {
+    final q = search.trim().toLowerCase();
+    if (q.length < 2) return const [];
+    final seen = <String>{};
+    final people = <MentionPerson>[];
+    void add(FeedAuthor a) {
+      if (a.id == DemoForumContent.me.id || !seen.add(a.id) || !a.name.toLowerCase().contains(q)) return;
+      final parts = a.name.split(' ');
+      people.add(
+        MentionPerson(
+          id: a.id,
+          firstName: parts.first,
+          lastName: parts.skip(1).join(' '),
+          photo: a.photo,
+          headline: a.headline,
+        ),
+      );
+    }
+
+    for (final p in _posts) {
+      add(p.author);
+      for (final r in flattenReplies(_replies[p.slug] ?? const [])) {
+        add(r.author);
+      }
+    }
+    return people.take(limit).toList();
   }
 
   @override

@@ -251,6 +251,31 @@ Future<void> showReactorsSheet(
   );
 }
 
+/// Who voted in a poll and for what, newest vote first — the website's voters dialog, with the option each person
+/// picked under their name. The API opens it to the poll's voters, its author and staff (and to everyone once
+/// the discussion is closed); for anyone else its sentence shows ("Vote in the poll to see who voted.").
+Future<void> showPollVotersSheet(
+  BuildContext context, {
+  required FeedPoll poll,
+  required Future<List<ForumPollVoter>> Function() load,
+  ValueChanged<String>? onOpenMember,
+}) {
+  final labels = {for (final o in poll.options) o.id: o.label};
+  return _sheet<void>(
+    context,
+    (sheet) => _PeopleSheet<ForumPollVoter>(
+      title: 'Votes',
+      load: load,
+      emptyText: 'Nobody has voted yet.',
+      rowOf: (v) => _PersonRow(
+        person: v.person,
+        caption: labels[v.optionId] ?? timeAgo(v.votedAt),
+        onTap: onOpenMember == null ? null : () => onOpenMember(v.person.id),
+      ),
+    ),
+  );
+}
+
 /// Who read a discussion, most recent first.
 Future<void> showViewersSheet(
   BuildContext context, {

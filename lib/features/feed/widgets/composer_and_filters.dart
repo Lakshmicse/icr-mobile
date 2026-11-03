@@ -25,10 +25,7 @@ class ComposerBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: HomeLook.pad),
       child: Row(
         children: [
-          if (initials != null) ...[
-            FeedAvatar(photo: photo, initials: initials!, size: 36),
-            const SizedBox(width: 8),
-          ],
+          if (initials != null) ...[FeedAvatar(photo: photo, initials: initials!, size: 36), const SizedBox(width: 8)],
           Expanded(
             child: Material(
               color: HomeLook.card,
@@ -133,9 +130,7 @@ class FeedChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shape = StadiumBorder(
-      side: active ? BorderSide.none : const BorderSide(color: HomeLook.soft, width: 1),
-    );
+    final shape = StadiumBorder(side: active ? BorderSide.none : const BorderSide(color: HomeLook.soft, width: 1));
     return Semantics(
       selected: active,
       button: true,

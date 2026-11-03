@@ -1,5 +1,6 @@
 import '../feed/feed_models.dart';
 import 'forum_models.dart';
+import 'mentions/mention_person.dart';
 
 /// Where the Forums tab, a discussion's page and the composer read and write: the community forum
 /// (`/forum/*` on the API), or the design's sample content.
@@ -47,6 +48,11 @@ abstract class ForumRepository {
   /// Who reacted to a discussion (`GET /forum/threads/:id/reactions`).
   Future<List<ForumReactor>> reactors(String threadId);
 
+  /// Who voted in a discussion's poll and for what (`GET /forum/threads/:id/poll/voters`): open to its voters,
+  /// its author and staff, and to anyone once the discussion is closed; the API refuses the rest ("Vote in the
+  /// poll to see who voted.").
+  Future<List<ForumPollVoter>> pollVoters(String threadId);
+
   /// Who read a discussion (`GET /forum/threads/:id/viewers`): everyone for its author, public profiles for the rest.
   Future<ForumViewersPage> viewers(String threadId, {int page = 1});
 
@@ -54,9 +60,14 @@ abstract class ForumRepository {
   Future<ForumThread> update(String threadId, ForumDraft draft);
   Future<void> deleteThread(String threadId);
 
-  /// Sends a reply (under [parentId] when it answers one) and returns it as the forum stored it.
-  Future<FeedReply> reply(String threadId, String text, {String? parentId});
-  Future<FeedReply> editReply(String replyId, String text);
+  /// Sends a reply (under [parentId] when it answers one) and returns it as the forum stored it. [mentions] are the
+  /// people tagged in [text]: each "@Name" of theirs goes out as a link to their profile.
+  Future<FeedReply> reply(String threadId, String text, {String? parentId, List<Mention> mentions = const []});
+  Future<FeedReply> editReply(String replyId, String text, {List<Mention> mentions = const []});
+
+  /// Who the "@" picker may offer for what was typed (`GET /members/mentionable`): up to [limit] people (10 at most).
+  /// The API answers nothing for an empty or one-letter search.
+  Future<List<MentionPerson>> mentionable(String search, {int limit = 8});
   Future<void> deleteReply(String replyId);
   Future<void> setReplyLiked(String replyId, bool like);
 

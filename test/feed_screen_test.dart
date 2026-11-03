@@ -173,17 +173,22 @@ void main() {
       expect(_dot(), findsNothing);
     });
 
-    testWidgets('the header\'s + opens the composer in the app, not the website; there is no second "Start a post" card', (
-      tester,
-    ) async {
-      await pumpHome(tester);
-      expect(find.byKey(const ValueKey('home-composer')), findsNothing, reason: 'the + is the one way to start a post');
-      expect(find.text('Start a post'), findsNothing);
-      await tapKey(tester, 'home-compose');
-      expect(find.byType(NewThreadScreen), findsOneWidget);
-      expect(find.text('New discussion'), findsOneWidget);
-      expect(launched, isEmpty);
-    });
+    testWidgets(
+      'the header\'s + opens the composer in the app, not the website; there is no second "Start a post" card',
+      (tester) async {
+        await pumpHome(tester);
+        expect(
+          find.byKey(const ValueKey('home-composer')),
+          findsNothing,
+          reason: 'the + is the one way to start a post',
+        );
+        expect(find.text('Start a post'), findsNothing);
+        await tapKey(tester, 'home-compose');
+        expect(find.byType(NewThreadScreen), findsOneWidget);
+        expect(find.text('New discussion'), findsOneWidget);
+        expect(launched, isEmpty);
+      },
+    );
 
     group('"…more" on the words of a post', () {
       Finder card() => find.byKey(const ValueKey('iot'));
@@ -193,7 +198,9 @@ void main() {
         await pumpHome(tester);
         expect(cut(), findsOneWidget, reason: 'a long post is cut at three lines');
         // Where the "…more" words sit in the paragraph.
-        final paragraph = tester.renderObject<RenderParagraph>(find.descendant(of: cut(), matching: find.byType(RichText)));
+        final paragraph = tester.renderObject<RenderParagraph>(
+          find.descendant(of: cut(), matching: find.byType(RichText)),
+        );
         final at = paragraph.text.toPlainText().indexOf('…more');
         final box = paragraph.getBoxesForSelection(TextSelection(baseOffset: at, extentOffset: at + 5)).first;
         await tester.tapAt(paragraph.localToGlobal(box.toRect().center));
@@ -272,7 +279,8 @@ void main() {
         await pumpHome(
           tester,
           extra: {
-            'POST /forum/threads': (_) => (400, '{"statusCode":400,"message":"You have reached your daily posting limit."}'),
+            'POST /forum/threads': (_) =>
+                (400, '{"statusCode":400,"message":"You have reached your daily posting limit."}'),
           },
         );
         await tapKey(tester, 'repost:iot');
@@ -350,7 +358,7 @@ void main() {
 
       await tapChip('All Feed');
       await settle(tester);
-      expect(lastQuery()['sort'], 'latest');
+      expect(lastQuery()['sort'], 'newest');
       expect(feed.posts, hasLength(6));
     });
 
@@ -409,11 +417,18 @@ void main() {
       expect(iot.reactionKinds, [ReactionKind.like, ReactionKind.insightful, ReactionKind.celebrate]);
       // LinkedIn's one row: each count sits beside its glyph (the API counts no shares, so Repost has none).
       expect(find.descendant(of: find.byKey(const ValueKey('like:iot')), matching: find.text('184')), findsOneWidget);
-      expect(find.descendant(of: find.byKey(const ValueKey('comments:iot')), matching: find.text('12')), findsOneWidget);
+      expect(
+        find.descendant(of: find.byKey(const ValueKey('comments:iot')), matching: find.text('12')),
+        findsOneWidget,
+      );
       expect(find.descendant(of: find.byKey(const ValueKey('repost:iot')), matching: find.byType(Text)), findsNothing);
       expect(find.textContaining('views'), findsNothing);
       expect(find.textContaining('Sustainability', findRichText: true), findsWidgets);
-      expect(find.textContaining('#SUSTAINABILITY', findRichText: true), findsNothing, reason: 'a label, not a hashtag');
+      expect(
+        find.textContaining('#SUSTAINABILITY', findRichText: true),
+        findsNothing,
+        reason: 'a label, not a hashtag',
+      );
       expect(iot.topicTone, TopicTone.green);
       expect(post('photo').topic, 'Real Estate Tech');
       expect(post('photo').topicTone, TopicTone.blue);
@@ -441,16 +456,10 @@ void main() {
       expect(find.text('+3 photos'), findsOneWidget);
     });
 
-    testWidgets("Like reacts at once, again takes it back, and a refusal puts it back with the forum's sentence", (
+    testWidgets("Like reacts at once, again takes it back, and the reader's own post refuses it before sending", (
       tester,
     ) async {
-      await pumpHome(
-        tester,
-        extra: {
-          'POST /forum/threads/mine/vote': (_) =>
-              (400, '{"statusCode":400,"message":"You cannot vote on your own discussion."}'),
-        },
-      );
+      await pumpHome(tester);
       expect(post('photo').reactions, 20);
       await tapKey(tester, 'like:photo');
       expect(api.to('POST', '/forum/threads/photo/vote').single.data, {'value': 1, 'reaction': 'LIKE'});
@@ -463,10 +472,50 @@ void main() {
       expect(post('photo').myReaction, isNull);
       expect(post('photo').reactions, 20);
 
+      // The website refuses a reaction on your own post itself, with this sentence, and sends nothing; the API
+      // would refuse too ("You cannot vote on your own discussion."), but nobody has to wait for it.
       await tapKey(tester, 'like:mine');
-      expect(find.text('You cannot vote on your own discussion.'), findsOneWidget);
+      expect(find.text('You cannot react to your own post.'), findsOneWidget);
+      expect(api.to('POST', '/forum/threads/mine/vote'), isEmpty);
       expect(post('mine').myReaction, isNull);
       expect(post('mine').reactions, 0);
+    });
+
+    testWidgets('the votes count opens who voted, with the option each person picked', (tester) async {
+      await pumpHome(
+        tester,
+        extra: {
+          'GET /forum/threads/poll/poll/voters': (_) => (
+            200,
+            '{"data":[{"user":{"id":"u-priya","firstName":"Priya","lastName":"Nambiar","headline":"FM Lead"},'
+                '"optionId":"o3","votedAt":"2026-10-30T10:00:00Z"},'
+                '{"user":{"id":"u-arvind","firstName":"Arvind","lastName":"Swamy"},"optionId":"o1",'
+                '"votedAt":"2026-10-29T10:00:00Z"}],"meta":{"total":2}}',
+          ),
+        },
+      );
+      await tapKey(tester, 'poll-voters');
+      await tester.pumpAndSettle();
+      expect(find.text('Votes'), findsOneWidget);
+      expect(find.text('Priya Nambiar'), findsOneWidget);
+      expect(find.text('Arvind Swamy'), findsWidgets, reason: 'in the sheet (and as a reply author on the feed)');
+      // The option each picked, under the name (the bars carry the same words, so more than one).
+      expect(find.text('Archibus'), findsWidgets);
+      expect(find.text('IBM TRIRIGA'), findsWidgets);
+      expect(api.to('GET', '/forum/threads/poll/poll/voters'), hasLength(1));
+    });
+
+    testWidgets("someone who has not voted reads the API's sentence instead of the list", (tester) async {
+      await pumpHome(
+        tester,
+        extra: {
+          'GET /forum/threads/poll/poll/voters': (_) =>
+              (403, '{"statusCode":403,"message":"Vote in the poll to see who voted."}'),
+        },
+      );
+      await tapKey(tester, 'poll-voters');
+      await tester.pumpAndSettle();
+      expect(find.text('Vote in the poll to see who voted.'), findsOneWidget);
     });
 
     testWidgets('the bookmark saves and unsaves, and a refusal leaves it as it was', (tester) async {
@@ -511,23 +560,24 @@ void main() {
       expect(find.byKey(const ValueKey('follow:photo')), findsOneWidget);
     });
 
-    testWidgets('the repost glyph asks how to repost and files nothing by itself, and Share hands the discussion to the share sheet', (
-      tester,
-    ) async {
-      await pumpHome(tester);
-      final calls = api.calls.length;
-      await tapKey(tester, 'repost:iot');
-      expect(find.text('Repost with your thoughts'), findsOneWidget);
-      expect(api.calls.length, calls, reason: 'asking how to repost asks the forum for nothing');
-      await tester.tapAt(const Offset(10, 10)); // the scrim
-      await settle(tester);
-      expect(find.text('Repost with your thoughts'), findsNothing);
+    testWidgets(
+      'the repost glyph asks how to repost and files nothing by itself, and Share hands the discussion to the share sheet',
+      (tester) async {
+        await pumpHome(tester);
+        final calls = api.calls.length;
+        await tapKey(tester, 'repost:iot');
+        expect(find.text('Repost with your thoughts'), findsOneWidget);
+        expect(api.calls.length, calls, reason: 'asking how to repost asks the forum for nothing');
+        await tester.tapAt(const Offset(10, 10)); // the scrim
+        await settle(tester);
+        expect(find.text('Repost with your thoughts'), findsNothing);
 
-      await tapKey(tester, 'share:iot');
-      expect(shared.single['text'], contains('Implementing IoT sensors for HVAC efficiency: Best practices?'));
-      expect(shared.single['text'], endsWith('https://icr.org.in/community/slug-iot'));
-      expect(shared.single['subject'], 'Implementing IoT sensors for HVAC efficiency: Best practices?');
-    });
+        await tapKey(tester, 'share:iot');
+        expect(shared.single['text'], contains('Implementing IoT sensors for HVAC efficiency: Best practices?'));
+        expect(shared.single['text'], endsWith('https://icr.org.in/community/slug-iot'));
+        expect(shared.single['subject'], 'Implementing IoT sensors for HVAC efficiency: Best practices?');
+      },
+    );
 
     testWidgets("the three dots copy the discussion's link or open the discussion", (tester) async {
       await pumpHome(tester);
@@ -665,7 +715,10 @@ void main() {
       expect(sent['bodyHtml'], '<p>Thanks all, very helpful.</p>');
       expect(sent['parentId'], 'r10', reason: 'under the reply the box named');
       expect(post('iot').comments, 13);
-      expect(find.descendant(of: find.byKey(const ValueKey('comments:iot')), matching: find.text('13')), findsOneWidget);
+      expect(
+        find.descendant(of: find.byKey(const ValueKey('comments:iot')), matching: find.text('13')),
+        findsOneWidget,
+      );
       // The replies were read again, and the whole thread is showing so the new reply is there to see.
       expect(api.to('GET', '/forum/threads/slug-iot/replies'), hasLength(2));
       expect(find.text('Great tips everyone.'), findsOneWidget);

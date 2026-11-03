@@ -11,6 +11,8 @@ import 'forum_file_picker.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
 import 'forum_styles.dart';
+import 'mentions/mention_controller.dart';
+import 'mentions/mention_widgets.dart';
 import 'rich_text_controller.dart';
 import 'widgets/forum_bits.dart';
 import 'widgets/forum_sheets.dart';
@@ -27,6 +29,7 @@ Future<ForumThread?> openComposer(
   String? topicSlug,
   String? initialTitle,
   String? initialBody,
+  String? repostOfId,
   Future<ForumFile?> Function()? pickFile,
 }) {
   return Navigator.of(context).push<ForumThread>(
@@ -39,6 +42,7 @@ Future<ForumThread?> openComposer(
         topicSlug: topicSlug,
         initialTitle: initialTitle,
         initialBody: initialBody,
+        repostOfId: repostOfId,
         pickFile: pickFile,
       ),
     ),
@@ -58,8 +62,12 @@ class NewThreadScreen extends StatefulWidget {
     this.topicSlug,
     this.initialTitle,
     this.initialBody,
+    this.repostOfId,
     this.pickFile,
   });
+
+  /// The discussion this post reposts, sent with it.
+  final String? repostOfId;
 
   final ForumRepository repository;
   final ForumThread? editing;
@@ -84,9 +92,13 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
     mode: widget.mode,
     initialTitle: widget.initialTitle,
     initialBody: widget.initialBody,
+    repostOfId: widget.repostOfId,
   );
   late final TextEditingController _title = TextEditingController(text: _c.title);
   late final RichTextController _body = RichTextController(doc: _c.doc, maxChars: ForumLimits.bodyMax);
+
+  /// The "@" picker of the details: who may be tagged, and who was.
+  late final MentionController _mentions = MentionController(search: (q) => widget.repository.mentionable(q));
   final _tag = TextEditingController();
   final _options = <TextEditingController>[];
   final _scroll = ScrollController();
@@ -107,6 +119,7 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
   @override
   void dispose() {
     _body.removeListener(_bodyChanged);
+    _mentions.dispose();
     _c.dispose();
     _title.dispose();
     _body.dispose();
@@ -122,12 +135,15 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
   void _bodyChanged() {
     if (_body.revision == _bodyRevision) return;
     _bodyRevision = _body.revision;
+    _c.setMentions(_mentions.mentionsIn(_body.text));
     _c.setDoc(_body.doc);
   }
 
   Future<void> _send() async {
     // A tag typed and not yet added counts: the reader meant it.
     if (_tag.text.trim().isNotEmpty) _addTag();
+    // Only the people whose "@Name" is still in the details are tagged.
+    _c.setMentions(_mentions.mentionsIn(_body.text));
     final saved = await _c.send();
     if (!mounted) return;
     if (saved != null) {
@@ -188,8 +204,12 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
       barrierColor: AppColors.sheetScrim,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       clipBehavior: Clip.antiAlias,
-      builder: (_) =>
-          _TopicSheet(nodes: _c.subtopics, selectedKey: _c.subtopicKey, title: 'Sub-category (optional)', allowNone: true),
+      builder: (_) => _TopicSheet(
+        nodes: _c.subtopics,
+        selectedKey: _c.subtopicKey,
+        title: 'Sub-category (optional)',
+        allowNone: true,
+      ),
     );
     if (picked != null) _c.setSubtopic(picked.node);
   }
@@ -286,6 +306,7 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
                               ? 'Add context for voters — why you are asking, and anything the options leave out.'
                               : 'Give enough context that someone can actually help — portfolio size, what you have tried, what constraints you are under.',
                           error: c.touched && c.bodyProblem != null,
+                          mentions: _mentions,
                         ),
                         if (c.editLosesFormatting && !c.bodyUnchanged)
                           Padding(
@@ -315,6 +336,8 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
                       ],
                     ),
                   ),
+                  // The people the "@" in the details may mean, above the keyboard.
+                  MentionSuggestions(controller: _mentions, margin: const EdgeInsets.fromLTRB(12, 6, 12, 8)),
                 ],
               ),
             ),
@@ -986,7 +1009,13 @@ class _TopicSheetState extends State<_TopicSheet> {
       if (widget.searchAll && words.isNotEmpty)
         for (final top in widget.nodes)
           if (top.children.any((s) => _matches(words, [top.name, s.name])))
-            (top: top, subs: [for (final s in top.children) if (_matches(words, [top.name, s.name])) s]),
+            (
+              top: top,
+              subs: [
+                for (final s in top.children)
+                  if (_matches(words, [top.name, s.name])) s,
+              ],
+            ),
     ];
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),

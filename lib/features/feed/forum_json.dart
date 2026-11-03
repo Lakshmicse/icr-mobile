@@ -108,8 +108,25 @@ class ForumJson {
       attachmentName: uploadId == null ? null : (attachment?['fileName'] as String? ?? uploadId),
       attachmentUrl: uploadId == null ? null : AppConfig.absoluteUrl('/uploads/$uploadId', apiBase: apiBase),
       bodyHtml: json['bodyHtml'] as String?,
+      mentions: mentionsIn(json['bodyHtml'] as String?),
       children: (json['children'] as List? ?? const []).cast<Map<String, dynamic>>().map(reply).toList(),
     );
+  }
+
+  static final _mentionAnchor = RegExp(
+    r'''<a\b[^>]*?\bhref\s*=\s*["']/members/([^"'#?/\s]+)["'][^>]*>\s*@([^<]+?)\s*</a>''',
+    caseSensitive: false,
+  );
+
+  /// The members a post's or reply's HTML tags: each `<a href="/members/{id}">@Name</a>`, once.
+  static List<Mention> mentionsIn(String? html) {
+    if (html == null || html.isEmpty || !html.contains('/members/')) return const [];
+    final seen = <Mention>{};
+    for (final m in _mentionAnchor.allMatches(html)) {
+      final name = decodeEntities(m.group(2)!).trim();
+      if (name.isNotEmpty) seen.add(Mention(id: Uri.decodeComponent(m.group(1)!), name: name));
+    }
+    return seen.toList();
   }
 
   static final _separator = RegExp(r'\s(?:at|@|·)\s+');

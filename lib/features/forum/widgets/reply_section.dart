@@ -7,6 +7,7 @@ import '../../feed/feed_models.dart';
 import '../../feed/feed_styles.dart';
 import '../../feed/widgets/reply_widgets.dart';
 import '../forum_styles.dart';
+import '../mentions/mention_controller.dart';
 import '../thread_controller.dart';
 import 'forum_bits.dart';
 import 'thread_header.dart';
@@ -25,10 +26,14 @@ class ReplySection extends StatelessWidget {
     required this.onAccept,
     this.onOpenAuthor,
     this.onOpenUrl,
+    this.onOpenMention,
     this.focusId,
   });
 
   final ThreadController controller;
+
+  /// A member tagged in a reply was tapped: opens their profile.
+  final ValueChanged<String>? onOpenMention;
 
   /// A key for the reply with this id, so the page can scroll to it.
   final GlobalKey Function(String id) keyFor;
@@ -82,6 +87,7 @@ class ReplySection extends StatelessWidget {
               onReply: () => onReplyTo(reply),
               onMore: () => onMore(reply),
               onOpenAuthor: onOpenAuthor == null ? null : () => onOpenAuthor!(reply),
+              onOpenMention: onOpenMention,
               below: reply.attachmentUrl == null ? null : ReplyAttachment(reply: reply, onOpen: onOpenUrl),
               actions: [
                 if (controller.canAccept && !reply.accepted && !mine)
@@ -253,7 +259,11 @@ class ReplyComposerBar extends StatelessWidget {
     required this.onClearTarget,
     this.error,
     this.lockedReason,
+    this.mentions,
   });
+
+  /// The "@" picker of the box.
+  final MentionController? mentions;
 
   final FeedAuthor viewer;
   final TextEditingController input;
@@ -325,6 +335,7 @@ class ReplyComposerBar extends StatelessWidget {
                       hint: target.hint,
                       onSend: onSend,
                       newlines: true,
+                      mentions: mentions,
                     ),
                   ],
                 ),

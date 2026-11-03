@@ -26,6 +26,10 @@ class FeedAuthor {
     final last = parts.length > 1 ? parts.last[0] : '';
     return '$first$last'.toUpperCase();
   }
+
+  /// [read] (this same person as the forum sent them) drawn with this one's name and photo, keeping the headline it
+  /// was read with: how the reader's own posts and comments look right after they change their photo.
+  FeedAuthor drawnOver(FeedAuthor read) => FeedAuthor(id: read.id, name: name, headline: read.headline, photo: photo);
 }
 
 /// The forum's reaction kinds (`ForumReaction`).
@@ -70,6 +74,27 @@ const reactionLabels = {
   ReactionKind.sustainable: 'Sustainable',
 };
 
+/// A member tagged in a post's or a reply's words ("@Priya Nambiar"): the id their profile opens by, and the name as
+/// the words print it, without the "@". The forum stores one as `<a href="/members/{id}">@Priya Nambiar</a>`.
+class Mention {
+  const Mention({required this.id, required this.name});
+
+  final String id;
+  final String name;
+
+  /// As the words print it.
+  String get handle => '@$name';
+
+  @override
+  bool operator ==(Object other) => other is Mention && other.id == id && other.name == name;
+
+  @override
+  int get hashCode => Object.hash(id, name);
+
+  @override
+  String toString() => 'Mention($id, $name)';
+}
+
 class FeedReply {
   const FeedReply({
     required this.id,
@@ -89,6 +114,7 @@ class FeedReply {
     this.attachmentUrl,
     this.edited = false,
     this.bodyHtml,
+    this.mentions = const [],
   });
 
   final String id;
@@ -129,7 +155,11 @@ class FeedReply {
   /// The body as the forum stores it (sanitised HTML), which an edit starts from; null for sample content.
   final String? bodyHtml;
 
+  /// The members tagged in its words (read from the anchors in [bodyHtml]): their "@Name" opens their profile.
+  final List<Mention> mentions;
+
   FeedReply copyWith({
+    FeedAuthor? author,
     int? likes,
     bool? liked,
     String? body,
@@ -137,9 +167,10 @@ class FeedReply {
     List<FeedReply>? children,
     bool? accepted,
     bool? edited,
+    List<Mention>? mentions,
   }) => FeedReply(
     id: id,
-    author: author,
+    author: author ?? this.author,
     body: body ?? this.body,
     createdAt: createdAt,
     meta: meta,
@@ -155,6 +186,7 @@ class FeedReply {
     attachmentUrl: attachmentUrl,
     edited: edited ?? this.edited,
     bodyHtml: bodyHtml ?? this.bodyHtml,
+    mentions: mentions ?? this.mentions,
   );
 
   /// This reply and every answer under it, in tree order.
@@ -183,6 +215,15 @@ List<FeedReply> mapReplies(List<FeedReply> replies, String id, FeedReply Functio
 ];
 
 /// The tree without one reply (and the answers under it).
+/// [replies] with every one [who] wrote drawn with their name and photo as they are now ([FeedAuthor.drawnOver]).
+List<FeedReply> restampReplies(List<FeedReply> replies, FeedAuthor who) => [
+  for (final r in replies)
+    r.copyWith(
+      author: r.author.id == who.id ? who.drawnOver(r.author) : null,
+      children: r.children.isEmpty ? null : restampReplies(r.children, who),
+    ),
+];
+
 List<FeedReply> removeReply(List<FeedReply> replies, String id) => [
   for (final r in replies)
     if (r.id != id) r.children.isEmpty ? r : r.copyWith(children: removeReply(r.children, id)),
@@ -236,10 +277,19 @@ class FeedPoll {
 /// 220-character excerpt and no photos, so the live feed reads the discussion itself (`GET /forum/threads/:slug`)
 /// for each card that comes on screen.
 class FeedPostDetail {
-  const FeedPostDetail({required this.body, this.images = const [], this.caption, this.morePhotos = 0});
+  const FeedPostDetail({
+    required this.body,
+    this.images = const [],
+    this.caption,
+    this.morePhotos = 0,
+    this.mentions = const [],
+  });
 
   /// The body as plain text, paragraphs on their own lines.
   final String body;
+
+  /// The members tagged in it.
+  final List<Mention> mentions;
 
   /// The first two photos, drawn as the design draws them.
   final List<FeedPicture> images;
@@ -286,10 +336,15 @@ class FeedPost {
     this.answered = false,
     this.categoryKey,
     this.subcategoryKey,
+    this.mentions = const [],
   });
 
   final String id;
   final String slug;
+
+  /// The members tagged in the words (from the discussion's own page; the list's excerpt carries none), so
+  /// their "@Name" on the card opens their profile.
+  final List<Mention> mentions;
 
   /// The taxonomy keys the discussion is filed under (`category.key`, `subcategory.key`): what a repost is filed
   /// under. Null for a post the API did not describe (the demo's).
@@ -371,6 +426,7 @@ class FeedPost {
   }
 
   FeedPost copyWith({
+    FeedAuthor? author,
     String? title,
     String? body,
     List<String>? tags,
@@ -390,10 +446,11 @@ class FeedPost {
     List<FeedReply>? replies,
     bool? repliesLoaded,
     bool? answered,
+    List<Mention>? mentions,
   }) => FeedPost(
     id: id,
     slug: slug,
-    author: author,
+    author: author ?? this.author,
     createdAt: createdAt,
     title: title ?? this.title,
     body: body ?? this.body,
@@ -424,6 +481,7 @@ class FeedPost {
     answered: answered ?? this.answered,
     categoryKey: categoryKey,
     subcategoryKey: subcategoryKey,
+    mentions: mentions ?? this.mentions,
   );
 }
 

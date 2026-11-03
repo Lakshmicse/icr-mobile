@@ -74,7 +74,7 @@ void main() {
       expect(sarah.author.name, 'Sarah Jenkins');
       expect(sarah.comments, 52);
       expect(sarah.reactions, 184);
-      expect(sarah.topic, '#SUSTAINABILITY');
+      expect(sarah.topic, 'Sustainability', reason: "the category's label, never a hashtag");
       expect(sarah.tags, ['#HVAC', '#PropTech', '#SmartBMS']);
       expect(page.total, greaterThanOrEqualTo(9));
       expect(page.hasMore, page.total! > ApiForumRepository.pageSize);
@@ -669,7 +669,7 @@ void main() {
         stored = await c.send();
         expect(c.error, isNull);
         expect(stored!.card.poll!.options.map((o) => o.label), ['Chillers', 'VRF']);
-        expect(stored.card.topic, '#POLL');
+        expect(stored.card.topic, 'Poll');
         expect(stored.bodyHtml, isEmpty);
 
         // Edited later: the options are fixed, the title changes, the details stay optional.

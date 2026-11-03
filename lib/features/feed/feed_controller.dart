@@ -83,7 +83,10 @@ class FeedController extends ChangeNotifier {
 
   void _noteTags(Iterable<FeedPost> posts) {
     for (final post in posts) {
-      _tagsByPost[post.id] = [for (final tag in post.tags) if (tag.length > 1) tag.startsWith('#') ? tag.substring(1) : tag];
+      _tagsByPost[post.id] = [
+        for (final tag in post.tags)
+          if (tag.length > 1) tag.startsWith('#') ? tag.substring(1) : tag,
+      ];
     }
   }
 
@@ -147,7 +150,8 @@ class FeedController extends ChangeNotifier {
       final posts = await _withDetails(page.posts);
       if (generation != _generation) return;
       _noteTags(posts);
-      // A thread that was open keeps the replies it showed while they are read again, so it does not blink.
+      // A thread that was open keeps the replies it showed while they are read again, so it does not blink; the
+      // reading again is what brings in a comment's new likes, edits and its author's new photo.
       final shown = {
         for (final p in _posts)
           if (p.repliesLoaded) p.id: p,
@@ -164,8 +168,8 @@ class FeedController extends ChangeNotifier {
         final lead = _posts.isEmpty ? null : _posts.first;
         if (lead != null && lead.comments > 0 && lead.poll == null) _open.add(lead.id);
       }
-      for (final post in _posts.where((p) => _open.contains(p.id) && !p.repliesLoaded)) {
-        _fetchReplies(post);
+      for (final post in _posts.where((p) => _open.contains(p.id))) {
+        _fetchReplies(post, quiet: shown.containsKey(post.id));
       }
     } catch (e) {
       if (generation != _generation) return;
@@ -176,6 +180,19 @@ class FeedController extends ChangeNotifier {
         notifyListeners();
       }
     }
+  }
+
+  /// The reader changed their photo or name on the profile page: their own posts and comments show it at once,
+  /// without waiting for the next read of the feed.
+  void restampViewer(FeedAuthor viewer) {
+    _posts = [
+      for (final p in _posts)
+        p.copyWith(
+          author: p.author.id == viewer.id ? viewer.drawnOver(p.author) : null,
+          replies: p.replies.isEmpty ? null : restampReplies(p.replies, viewer),
+        ),
+    ];
+    notifyListeners();
   }
 
   Future<void> loadMore() async {
@@ -215,6 +232,7 @@ class FeedController extends ChangeNotifier {
       ? post.copyWith(detailLoaded: true)
       : post.copyWith(
           body: detail.body.isEmpty ? post.body : detail.body,
+          mentions: detail.mentions,
           images: detail.images,
           imageCaption: detail.caption,
           morePhotos: detail.morePhotos,
@@ -253,6 +271,7 @@ class FeedController extends ChangeNotifier {
       _replace(
         latest.copyWith(
           body: read.body,
+          mentions: read.mentions,
           images: read.images,
           imageCaption: read.imageCaption,
           morePhotos: read.morePhotos,
@@ -318,9 +337,12 @@ class FeedController extends ChangeNotifier {
     toggleReplies(post);
   }
 
-  Future<void> _fetchReplies(FeedPost post) async {
-    _loadingReplies.add(post.id);
-    notifyListeners();
+  /// Reads a thread's replies. [quiet] when the thread already shows replies: no loading row while they are read again.
+  Future<void> _fetchReplies(FeedPost post, {bool quiet = false}) async {
+    if (!quiet) {
+      _loadingReplies.add(post.id);
+      notifyListeners();
+    }
     try {
       final replies = await repository.replies(post);
       _replace(_find(post.id)?.copyWith(replies: replies, repliesLoaded: true));
@@ -332,10 +354,10 @@ class FeedController extends ChangeNotifier {
     }
   }
 
-  Future<String?> sendReply(FeedPost post, String text, {String? parentId}) async {
+  Future<String?> sendReply(FeedPost post, String text, {String? parentId, List<Mention> mentions = const []}) async {
     if (text.trim().isEmpty) return null;
     try {
-      await repository.reply(post, text, parentId: parentId);
+      await repository.reply(post, text, parentId: parentId, mentions: mentions);
       final current = _find(post.id) ?? post;
       _replace(current.copyWith(comments: current.comments + 1));
       await _fetchReplies(current);

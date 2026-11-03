@@ -160,6 +160,28 @@ any more), "Post a requirement or insight..." is the composer. Proved by `test/f
 tests updated where the behaviour moved) and `test/forum_home_test.dart` (7 W). A bug fixed on the way:
 `FeedController.toggleReplyLike` rebuilt every other reply without its role, parent, accepted and pending flags.
 
+## Tagging people ("@") and tags (3 Nov 2026)
+
+- **Typing "@"** in the new-discussion details, in a comment on a Home card and in the discussion page's reply bar lists people
+  (`lib/features/forum/mentions/`): the caret right after an "@" (not inside an address) and the letters since, up to two
+  words ("@ra sh"); a second space in a row, the caret moving off, Escape or losing focus closes it. Up to 8 people
+  (photo, name, headline), asked for after a 250 ms pause through `GET /members/mentionable?search=&limit=8`; a loading row, "No
+  one found", "Type a name to tag someone." under two letters. A pick puts `@First Last ` in the words and records the person.
+- **What is sent:** the words stay `@First Last` while writing; on send each recorded person whose `@First Last` is still in the
+  words becomes `<a href="/members/{id}">@First Last</a>` (`mentionedHtml`; the composer's rich text does the same through
+  `RichDoc.withMentions`); everything else is escaped as before. A mention deleted from the words is not sent. Editing a reply
+  or a post keeps the people already tagged in it (their anchors are read back).
+- **What shows as a link:** the discussion page (its words, through `ForumRichText`: a root-relative `/members/{id}` link is the
+  one link without a scheme the parser keeps, made absolute and opened in the app's member profile), each comment (page and
+  Home), and a Home card's words once its discussion was read (the cards read it as they come on screen). **Forums-tab cards
+  are plain**: the list sends a 220-character plain excerpt, not the HTML, so there is no id to link; they link once the
+  discussion is opened.
+- **Tags:** a tag on a Home card opens the Forums tab already filtered by it (`openForumsTag`, `ForumsController.showTag`: the
+  plain list for that tag, search dropped), as a tag on a Forums-tab card filters that tab. The tab's controller is held above the
+  tabs (`InheritedProvider<ForumsController>`) so Home can reach it.
+- **Repost** sends `repostOfId` (the original's id) with the quote it always filed, from "Repost" and "Repost with your thoughts".
+- **Notifications** for a reaction, a repost or a tag all open this discussion (`forum.thread`), see `docs/NOTIFICATION_TARGETS.md`.
+
 ## Endpoints (all read from `backend/src/modules/forum`; each proved by a live test)
 
 `GET /forum/threads` (`page, limit, sort, search, tag, categorySlug, subcategorySlug, kind, savedOnly, mineOnly`),

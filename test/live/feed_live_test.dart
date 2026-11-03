@@ -139,30 +139,41 @@ bool _sandboxed(_Person person) {
   return false;
 }
 
-/// The first four slugs of the feed as the API orders it now (`GET /forum/threads?sort=latest`).
+/// The first four slugs of the feed as the app orders it: the API's `newest` page, newest first whether pinned or
+/// not (`GET /forum/threads?sort=newest`, then by `createdAt`).
 Future<List<String>> _topSlugs(_Person person) async {
   final res = await person.api.dio.get<Map<String, dynamic>>(
     '/forum/threads',
-    queryParameters: {'limit': 5, 'sort': 'latest'},
+    queryParameters: {'limit': 5, 'sort': 'newest'},
   );
-  return [for (final t in (res.data!['data'] as List).take(4)) (t as Map)['slug'] as String];
+  final rows = (res.data!['data'] as List).cast<Map<String, dynamic>>()
+    ..sort((a, b) => (b['createdAt'] as String).compareTo(a['createdAt'] as String));
+  return [for (final t in rows.take(4)) t['slug'] as String];
 }
 
 void main() {
   setUpAll(loadAppFonts);
 
   liveTest(
-    'the feed is the API\'s, with the designed posts first and in the design\'s order, worded as the design words them',
+    'the feed is the API\'s, newest first (pinned or not), with the designed posts worded as the design words them',
     () async {
       final me = await _bharat.open();
       expect(me.feed.error, isNull, reason: 'the feed should load from the local API');
       if (!_seeded(me)) return;
 
-      // Every discussion the API lists is a card, in the API's order.
-      final raw = (await me.api.dio.get<Map<String, dynamic>>('/forum/threads', queryParameters: {'limit': 20})).data!;
-      final rows = (raw['data'] as List).cast<Map<String, dynamic>>();
+      // Every discussion the API lists is a card, the newest first whether pinned or not (the owner's call, 30 Oct
+      // 2026: a member's fresh post leads the pinned ones).
+      final raw = (await me.api.dio.get<Map<String, dynamic>>(
+        '/forum/threads',
+        queryParameters: {'limit': 20, 'sort': 'newest'},
+      )).data!;
+      final rows = (raw['data'] as List).cast<Map<String, dynamic>>()
+        ..sort((a, b) => (b['createdAt'] as String).compareTo(a['createdAt'] as String));
       expect(me.feed.posts.map((p) => p.id), rows.map((r) => r['id']));
-      expect(me.feed.posts.take(4).map((p) => p.slug), _designSlugs);
+      for (var i = 1; i < me.feed.posts.length; i++) {
+        expect(me.feed.posts[i].createdAt.isAfter(me.feed.posts[i - 1].createdAt), isFalse, reason: 'newest first');
+      }
+      expect(me.feed.posts.map((p) => p.slug), containsAll(_designSlugs), reason: 'the designed posts are in the feed');
 
       final sarah = me.post(_sarah)!, david = me.post(_david)!, marcus = me.post(_marcus)!, elena = me.post(_elena)!;
       expect([sarah, david, marcus, elena].map((p) => p.title), [
@@ -185,10 +196,10 @@ void main() {
 
       // The word beside the time, and its tint: green for sustainability, blue for the rest.
       expect([sarah, david, marcus, elena].map((p) => p.topic), [
-        '#SUSTAINABILITY',
-        '#REALESTATETECH',
-        '#POLL',
-        '#SITEAUDIT',
+        'Sustainability',
+        'Real Estate Tech',
+        'Poll',
+        'Site Audit',
       ]);
       expect([sarah, david, marcus, elena].map((p) => p.topicTone), [
         TopicTone.green,
@@ -302,7 +313,7 @@ void main() {
       expect(feed.posts.every((p) => p.tags.contains('#HVAC')), isTrue);
       await feed.setTag('HVAC');
       expect(feed.tag, isNull);
-      expect(feed.posts.map((p) => p.slug).take(4), _designSlugs);
+      expect(feed.posts.map((p) => p.slug), containsAll(_designSlugs), reason: 'the designed posts are back');
 
       await feed.setSearch('IoT sensors');
       expect(feed.posts.map((p) => p.slug), contains(_sarah));
@@ -484,6 +495,7 @@ void main() {
     // Opening the discussion reads its replies, the way tapping the speech bubble does.
     me.feed.openReplies(me.post(_sandbox)!);
     await _repliesRead(me.feed);
+    final top = await _topSlugs(me);
     final sandbox = me.post(_sandbox)!;
     expect(sandbox.repliesLoaded, isTrue);
     final before = sandbox.comments;
@@ -515,8 +527,8 @@ void main() {
       (_flatten(me.post(_sandbox)!.replies).firstWhere((r) => r.id == target.id)).children.map((r) => r.id),
       contains(sentId),
     );
-    // The reply made the sandbox "active now", and that is all it moved: the designed posts still lead, in order.
-    expect(await _topSlugs(me), _designSlugs, reason: 'a reply must never reorder the designed posts');
+    // The reply made the sandbox "active now", and that is all it moved: the feed's order (newest first) stands.
+    expect(await _topSlugs(me), top, reason: 'a reply must never reorder the feed');
 
     // Like another reply of the thread, and take it back.
     final arvind = me.post(_sandbox)!.replies.first;
@@ -542,7 +554,7 @@ void main() {
     expect(me.post(_sandbox)!.comments, before);
     expect((await me.replies(_sandbox)).where((r) => (r['author'] as Map)['id'] == me.id), isEmpty);
     expect((await me.thread(_sandbox))['replyCount'], before);
-    expect(await _topSlugs(me), _designSlugs);
+    expect(await _topSlugs(me), top);
   });
 
   liveTest('a refused reply says why: a reply to a reply the forum no longer has', () async {
@@ -550,11 +562,12 @@ void main() {
     if (!_seeded(me) || !_sandboxed(me)) return;
     await me.feed.refresh();
     final before = me.post(_sandbox)!.comments;
+    final top = await _topSlugs(me);
     final message = await me.feed.sendReply(me.post(_sandbox)!, 'This goes nowhere.', parentId: 'no-such-reply');
     expect(message, 'The reply you are answering is no longer here.');
     expect(me.post(_sandbox)!.comments, before);
     expect((await me.thread(_sandbox))['replyCount'], before);
-    expect(await _topSlugs(me), _designSlugs);
+    expect(await _topSlugs(me), top, reason: 'a refused reply moves nothing');
   });
 
   liveTest('pulling down reads what the server holds now', () async {
@@ -683,17 +696,22 @@ void main() {
       expect(find.text('Sarah Jenkins'), findsOneWidget);
       expect(find.text('Follow'), findsNWidgets(2), reason: 'Sarah and David are not followed; Marcus and Elena are');
       expect(find.text('Senior Facilities Manager at Google'), findsOneWidget);
-      expect(find.textContaining('#SUSTAINABILITY', findRichText: true), findsOneWidget);
-      expect(find.textContaining('#REALESTATETECH', findRichText: true), findsOneWidget);
-      expect(find.textContaining('#POLL', findRichText: true), findsOneWidget);
-      expect(find.textContaining('#SITEAUDIT', findRichText: true), findsOneWidget);
+      // The word beside the time is the category's own label, never a hashtag (a typed #tag sits under the words).
+      expect(find.textContaining('Sustainability', findRichText: true), findsWidgets);
+      expect(find.textContaining('Real Estate Tech', findRichText: true), findsWidgets);
+      expect(find.textContaining('Poll', findRichText: true), findsWidgets);
+      expect(find.textContaining('Site Audit', findRichText: true), findsWidgets);
       expect(find.text('#HVAC'), findsWidgets);
       expect(find.text('#SmartBMS'), findsOneWidget);
-      expect(find.text('184 reactions'), findsNWidgets(3));
-      expect(find.text('52 comments'), findsNWidgets(3));
-      expect(find.textContaining(RegExp(r'^ · [\d,]+ views$')), findsNWidgets(3));
+      expect(find.text('184'), findsWidgets, reason: "Sarah's reactions, a bare count beside the thumb");
+      expect(find.text('52'), findsWidgets, reason: 'her comments');
       expect(find.text('BIM Feasibility Lab'), findsOneWidget);
       expect(find.text('+3 photos'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Archibus (Your vote)'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Archibus (Your vote)'), findsOneWidget);
       expect(find.textContaining(RegExp(r'^\d+ votes • Open$')), findsOneWidget);
       expect(find.text('SPONSORED PARTNER'), findsOneWidget);

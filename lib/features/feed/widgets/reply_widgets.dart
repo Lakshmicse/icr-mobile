@@ -4,6 +4,8 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/util/time_ago.dart';
+import '../../forum/mentions/mention_controller.dart';
+import '../../forum/mentions/mention_widgets.dart';
 import '../feed_models.dart';
 import '../feed_styles.dart';
 import 'feed_avatar.dart';
@@ -151,12 +153,16 @@ class ReplyTile extends StatelessWidget {
     this.badge,
     this.focused = false,
     this.onOpenAuthor,
+    this.onOpenMention,
     this.look = ReplyLook.section,
     this.now,
     this.below,
   });
 
   final FeedReply reply;
+
+  /// A member tagged in the words ("@Name") was tapped: gets their id. Absent, the names are plain.
+  final ValueChanged<String>? onOpenMention;
   final VoidCallback onLike;
   final VoidCallback onReply;
   final VoidCallback onMore;
@@ -262,9 +268,11 @@ class ReplyTile extends StatelessWidget {
                     const SizedBox(height: 6),
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: Text(
-                        reply.body,
+                      child: MentionText(
+                        text: reply.body,
                         style: HomeType.replyBody,
+                        mentions: reply.mentions,
+                        onOpen: onOpenMention,
                         maxLines: maxBodyLines,
                         overflow: maxBodyLines == null ? TextOverflow.clip : TextOverflow.ellipsis,
                       ),
@@ -409,9 +417,11 @@ class ReplyTile extends StatelessWidget {
                 Baseline(
                   baseline: ReplyDesign.bodyBaseline,
                   baselineType: TextBaseline.alphabetic,
-                  child: Text(
-                    reply.body,
+                  child: MentionText(
+                    text: reply.body,
                     style: ReplyDesign.body,
+                    mentions: reply.mentions,
+                    onOpen: onOpenMention,
                     maxLines: maxBodyLines,
                     overflow: maxBodyLines == null ? TextOverflow.clip : TextOverflow.ellipsis,
                   ),
@@ -632,7 +642,12 @@ class ReplyBox extends StatelessWidget {
     this.enabled = true,
     this.look = ReplyLook.section,
     this.newlines = false,
+    this.mentions,
   });
+
+  /// The "@" picker for this box: its list opens above the box while a name is being typed, and a pick puts
+  /// "@First Last " in the words. Absent, "@" is just a character.
+  final MentionController? mentions;
 
   final FeedAuthor viewer;
   final TextEditingController controller;
@@ -647,8 +662,48 @@ class ReplyBox extends StatelessWidget {
   /// wants; off, Enter sends, as the Home feed's one-line box does.
   final bool newlines;
 
+  Widget _field(bool home) {
+    final field = TextField(
+      key: const ValueKey('reply-input'),
+      controller: controller,
+      focusNode: focusNode,
+      enabled: enabled && !sending,
+      minLines: 1,
+      maxLines: 4,
+      style: home ? HomeType.replyInput : ReplyDesign.input,
+      textInputAction: newlines ? TextInputAction.newline : TextInputAction.send,
+      keyboardType: newlines ? TextInputType.multiline : null,
+      textCapitalization: TextCapitalization.sentences,
+      onSubmitted: newlines ? null : (_) => onSend(),
+      decoration: InputDecoration(
+        isCollapsed: true,
+        border: InputBorder.none,
+        hintText: hint,
+        hintStyle: home ? HomeType.replyHint : ReplyDesign.hint,
+        hintMaxLines: 1,
+        contentPadding: EdgeInsets.symmetric(vertical: home ? 9 : 6),
+      ),
+    );
+    return mentions == null ? field : MentionEscape(controller: mentions!, child: field);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final box = _box(context);
+    final picker = mentions;
+    if (picker == null) return box;
+    // The list opens above the box: the box sits over the keyboard (or at the foot of a card), so there is no room under it.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MentionSuggestions(controller: picker, margin: const EdgeInsets.only(bottom: 6)),
+        box,
+      ],
+    );
+  }
+
+  Widget _box(BuildContext context) {
     final home = look == ReplyLook.home;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -670,29 +725,7 @@ class ReplyBox extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SizedBox(width: home ? 16 : 12.2),
-                Expanded(
-                  child: TextField(
-                    key: const ValueKey('reply-input'),
-                    controller: controller,
-                    focusNode: focusNode,
-                    enabled: enabled && !sending,
-                    minLines: 1,
-                    maxLines: 4,
-                    style: home ? HomeType.replyInput : ReplyDesign.input,
-                    textInputAction: newlines ? TextInputAction.newline : TextInputAction.send,
-                    keyboardType: newlines ? TextInputType.multiline : null,
-                    textCapitalization: TextCapitalization.sentences,
-                    onSubmitted: newlines ? null : (_) => onSend(),
-                    decoration: InputDecoration(
-                      isCollapsed: true,
-                      border: InputBorder.none,
-                      hintText: hint,
-                      hintStyle: home ? HomeType.replyHint : ReplyDesign.hint,
-                      hintMaxLines: 1,
-                      contentPadding: EdgeInsets.symmetric(vertical: home ? 9 : 6),
-                    ),
-                  ),
-                ),
+                Expanded(child: _field(home)),
                 Semantics(
                   button: true,
                   label: 'Send reply',
@@ -719,9 +752,7 @@ class ReplyBox extends StatelessWidget {
                               builder: (context, _) => Icon(
                                 LucideIcons.send,
                                 size: 20,
-                                color: enabled && controller.text.trim().isNotEmpty
-                                    ? AppColors.primary
-                                    : HomeLook.soft,
+                                color: enabled && controller.text.trim().isNotEmpty ? AppColors.primary : HomeLook.soft,
                               ),
                             )
                           : Icon(Symbols.send, size: 16, color: enabled ? AppColors.primary : AppColors.outline),

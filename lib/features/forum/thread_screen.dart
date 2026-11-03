@@ -12,6 +12,9 @@ import '../feed/forum_json.dart';
 import 'forum_callbacks.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
+import 'mentions/mention_controller.dart';
+import 'mentions/mention_text.dart' show memberIdOf;
+import 'mentions/tag_person.dart';
 import 'new_thread_screen.dart';
 import 'thread_controller.dart';
 import 'widgets/forum_bits.dart';
@@ -87,6 +90,7 @@ class ThreadScreen extends StatefulWidget {
 class _ThreadScreenState extends State<ThreadScreen> {
   final _input = TextEditingController();
   final _focus = FocusNode();
+  late final MentionController _mentions = MentionController(search: (q) => _c.mentionable(q));
   final _scroll = ScrollController();
   final _keys = <String, GlobalKey>{};
 
@@ -105,10 +109,12 @@ class _ThreadScreenState extends State<ThreadScreen> {
     _input.addListener(() {
       if (_sendError != null && _input.text.isNotEmpty) setState(() => _sendError = null);
     });
+    _mentions.attach(_input, _focus);
   }
 
   @override
   void dispose() {
+    _mentions.dispose();
     _input.dispose();
     _focus.dispose();
     _scroll.dispose();
@@ -232,6 +238,13 @@ class _ThreadScreenState extends State<ThreadScreen> {
 
   void _reactors() => showReactorsSheet(context, load: _c.reactors, onOpenMember: widget.callbacks.onOpenMember);
 
+  void _voters() => showPollVotersSheet(
+    context,
+    poll: _c.post!.poll!,
+    load: _c.pollVoters,
+    onOpenMember: widget.callbacks.onOpenMember,
+  );
+
   // --- replies -----------------------------------------------------------------------------------------------
 
   void _replyTo(FeedReply? reply) {
@@ -247,6 +260,10 @@ class _ThreadScreenState extends State<ThreadScreen> {
       _editing = reply;
       _replyingTo = null;
       _sendError = null;
+      // The people already tagged in the reply stay tagged when it is saved.
+      _mentions
+        ..reset()
+        ..seed(reply.mentions);
       _input.text = ForumJson.htmlToText(reply.bodyHtml ?? reply.body);
       _input.selection = TextSelection.collapsed(offset: _input.text.length);
     });
@@ -255,7 +272,10 @@ class _ThreadScreenState extends State<ThreadScreen> {
 
   void _clearTarget() {
     setState(() {
-      if (_editing != null) _input.clear();
+      if (_editing != null) {
+        _input.clear();
+        _mentions.reset();
+      }
       _replyingTo = null;
       _editing = null;
       _sendError = null;
@@ -271,14 +291,17 @@ class _ThreadScreenState extends State<ThreadScreen> {
       _sendError = null;
     });
     final editing = _editing;
+    // Only the people whose "@Name" is still in the words are tagged.
+    final mentions = _mentions.mentionsIn(text);
     final message = editing != null
-        ? await c.editReply(editing, text)
-        : await c.sendReply(text, parentId: _replyingTo?.id);
+        ? await c.editReply(editing, text, mentions: mentions)
+        : await c.sendReply(text, parentId: _replyingTo?.id, mentions: mentions);
     if (!mounted) return;
     setState(() {
       _sending = false;
       if (message == null) {
         _input.clear();
+        _mentions.reset();
         _replyingTo = null;
         _editing = null;
         _focus.unfocus();
@@ -344,7 +367,15 @@ class _ThreadScreenState extends State<ThreadScreen> {
 
   Future<void> _openUrl(String url) async {
     final uri = Uri.tryParse(url);
-    if (uri != null) await openUrl(context, uri);
+    if (uri == null) return;
+    // A tagged member's link opens their profile in the app; any other link goes through the app's site routes.
+    final member = memberIdOf(uri);
+    final openMember = widget.callbacks.onOpenMember;
+    if (member != null && openMember != null) {
+      openMember(member);
+      return;
+    }
+    await openUrl(context, uri);
   }
 
   // --- the page ----------------------------------------------------------------------------------------------
@@ -404,6 +435,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
                     lockedReason: c.lockedReason,
                     onSend: _submit,
                     onClearTarget: _clearTarget,
+                    mentions: _mentions,
                   ),
               ],
             ),
@@ -458,10 +490,11 @@ class _ThreadScreenState extends State<ThreadScreen> {
               onVote: (option) => _run(c.votePoll(option)),
               onReactors: _reactors,
               onViewers: _viewers,
+              onVoters: _voters,
               onOpenAuthor: widget.callbacks.onOpenMember == null
                   ? null
                   : () => widget.callbacks.onOpenMember!(post.author.id),
-              onTag: widget.callbacks.onOpenTag == null ? null : (tag) => _openTag(tag),
+              onTag: _onTag,
               onTopic: widget.callbacks.onOpenTopic == null ? null : (topic) => _openTopic(topic),
               onLink: _openUrl,
               onOpenAttachment: (a) => a.url == null ? null : _openUrl(a.url!),
@@ -480,6 +513,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
               onOpenAuthor: widget.callbacks.onOpenMember == null
                   ? null
                   : (reply) => widget.callbacks.onOpenMember!(reply.author.id),
+              onOpenMention: widget.callbacks.onOpenMember,
               onOpenUrl: _openUrl,
             )
           else if (c.loading && c.thread == null)
@@ -487,6 +521,24 @@ class _ThreadScreenState extends State<ThreadScreen> {
         ],
       ),
     );
+  }
+
+  /// A person's tag ("#@prashant") opens their profile over this page, or does nothing when no profile fits; any
+  /// other tag leaves the page for the Forums tab filtered by it, where the app offers that (not from Home).
+  void _onTag(String tag) {
+    if (personTagName(tag) != null) {
+      openTaggedPerson(
+        tag,
+        search: _c.mentionable,
+        onOpenMember: widget.callbacks.onOpenMember == null
+            ? null
+            : (id) {
+                if (mounted) widget.callbacks.onOpenMember!(id);
+              },
+      );
+      return;
+    }
+    if (widget.callbacks.onOpenTag != null) _openTag(tag);
   }
 
   void _openTag(String tag) {
