@@ -378,6 +378,7 @@ MemberLearning assessMember({
   bool allOpen = false,
   Map<String, PaperProgress> progress = const {},
   Set<String> certified = const {},
+  Map<String, ExamCertificate> certificates = const {},
   String? upgradePlan,
   String? mockUpgradePlan,
 }) => MemberLearning(
@@ -392,7 +393,8 @@ MemberLearning assessMember({
     mockUpgradePlan: mockUpgradePlan,
   ),
   progress: progress,
-  certified: certified,
+  certified: {...certified, ...certificates.keys},
+  certificates: certificates,
 );
 
 /// What the quote endpoint says for the papers of [assessWorld] and [mockWorld] that are closed to Bharat.

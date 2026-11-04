@@ -156,6 +156,22 @@ class DemoAssessRepository implements AssessRepository {
         ? {'cp-foundation': const PaperProgress(attempts: 2, bestPercent: 80, bestScore: 8, maxScore: 10, passed: true)}
         : const {},
     certified: kind == PaperKind.assessment ? {'cp-foundation'} : const {},
+    certificates: kind == PaperKind.assessment ? {'cp-foundation': _foundationCertificate} : const {},
+  );
+
+  static final _foundationCertificate = ExamCertificate(
+    id: 'demo-cp-foundation',
+    certificateId: 'ICR-CP-2026-DEMO0001',
+    title: 'Capital Planning',
+    paperId: 'cp-foundation',
+    level: 'FOUNDATION',
+    issuedAt: DateTime(2026, 10, 12),
+    clearedAt: DateTime(2026, 10, 12),
+    attempt: 2,
+    percentage: 80,
+    passPercentage: 70,
+    paperSlug: 'cp-foundation',
+    paperTitle: 'Capital Planning Foundation',
   );
 
   @override
