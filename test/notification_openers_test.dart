@@ -6,12 +6,14 @@ import 'package:icr_mobile/features/feed/demo_feed_repository.dart';
 import 'package:icr_mobile/features/feed/feed_controller.dart';
 import 'package:icr_mobile/features/forum/thread_screen.dart';
 import 'package:icr_mobile/features/jobs/demo_jobs_repository.dart';
+import 'package:icr_mobile/features/jobs/employer/interview_brief_screen.dart';
 import 'package:icr_mobile/features/jobs/job_models.dart';
 import 'package:icr_mobile/features/jobs/jobs_controller.dart';
 import 'package:icr_mobile/features/notifications/notification_router.dart';
 import 'package:icr_mobile/features/notifications/notification_target.dart';
 import 'package:icr_mobile/features/notifications/notifications_screen.dart';
 import 'package:icr_mobile/features/notifications/unread_counts.dart';
+import 'package:icr_mobile/features/web/in_app_web_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'helpers/fonts.dart';
@@ -144,9 +146,9 @@ void main() {
       await pumpShell(tester, (_) => const SizedBox());
       final inApp = {...openers.keys, ...NotificationRouter.builtInKinds};
       expect(openers.keys.toSet(), appNotificationKinds, reason: 'the constant and the map say the same');
-      expect(inApp.length, 42, reason: '39 registered openers + the 3 the router has built in');
+      expect(inApp.length, 43, reason: '40 registered openers + the 3 the router has built in');
       expect(NotificationRouter.staffKinds.length, 14);
-      expect(webViewKinds.length - 1, 8, reason: 'without the catch-all `path`');
+      expect(webViewKinds.length - 1, 7, reason: 'without the catch-all `path`');
     });
   });
 
@@ -263,6 +265,15 @@ void main() {
       final title = DemoJobsRepository().detailJob.title;
       expect(find.textContaining(title), findsWidgets);
       expect(find.text('This is no longer available.'), findsNothing);
+    });
+
+    testWidgets('an interview panel notification opens the app\'s interview page, not the website in a web view', (
+      tester,
+    ) async {
+      await tapThrough(tester, '/manage/interviews/iv-7');
+      expect(find.byType(InterviewBriefScreen), findsOneWidget);
+      expect(find.byType(InAppWebScreen), findsNothing);
+      expect(find.text('This interview'), findsOneWidget);
     });
 
     testWidgets('a job that cannot be read says so calmly and opens nothing', (tester) async {

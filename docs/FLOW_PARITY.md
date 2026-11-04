@@ -185,7 +185,7 @@ yet built) · `read` — the app shows it, the action itself is the website's (p
 | Review your office team `/manage/team` | — | **web** |
 | Source candidates `/talent` | — | **web** |
 | A hiring manager's assigned interviews | Interviews (the panel) | works |
-| Submit interview feedback | — | — (not exercised by a live test) |
+| Submit interview feedback `/manage/interviews/<id>` | the interview's page (`InterviewBriefScreen`): the scorecard opens when the round starts | works — `interview_brief_live_test` reads the seeded rounds as panelist, recruiter and stranger, and proves the body through the API's refusals; an accepted submit is covered only by widget tests (the API cannot delete a scorecard) |
 
 ### GUEST and staff
 

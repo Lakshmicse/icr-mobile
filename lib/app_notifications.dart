@@ -33,6 +33,7 @@ import 'features/mentorship_my/pairing_screen.dart';
 import 'features/mentorship_my/programmes_screen.dart';
 import 'features/messaging/messaging_launcher.dart';
 import 'features/notifications/notification_router.dart';
+import 'features/notifications/notification_seen.dart';
 import 'features/notifications/notification_target.dart';
 import 'features/notifications/notifications_screen.dart' show openNotifications;
 import 'features/shell/app_shell.dart';
@@ -46,6 +47,7 @@ const appNotificationKinds = <String>{
   NotificationKinds.job,
   NotificationKinds.jobEdit,
   NotificationKinds.applicationEmployer,
+  NotificationKinds.interviewPanel,
   NotificationKinds.applicationCandidate,
   NotificationKinds.jobAlert,
   NotificationKinds.career,
@@ -87,7 +89,6 @@ const appNotificationKinds = <String>{
 /// The ICR pages the app has no screen for: a tap opens the website's page in the app's web view, signed in
 /// (never the phone's browser). `docs/NOTIFICATION_TARGETS.md` says why for each.
 const notificationKindsInWebView = <String>{
-  NotificationKinds.interviewPanel,
   NotificationKinds.talentSearch,
   NotificationKinds.team,
   NotificationKinds.teamInvite,
@@ -151,6 +152,17 @@ Map<String, NotificationOpener> appNotificationOpeners({required BuildContext sh
     ),
     NotificationKinds.jobEdit: withId('jobId', (ctx, id, t) => unawaited(hiring().editJob(id))),
     NotificationKinds.applicationEmployer: withId('jobId', (ctx, id, t) => unawaited(hiring().applicants(id))),
+    // The panel's page for the round, as the website's `/manage/interviews/:id` (it was that page in a web view
+    // until 4 Nov 2026). Opening it reads every notification about the round, as the website's page does.
+    NotificationKinds.interviewPanel: withId(
+      'interviewId',
+      (ctx, id, t) => unawaited(
+        hiring().interview(
+          id,
+          onOpened: (c) => unawaited(markNotificationsSeen(c, NotificationKinds.interviewPanel, id)),
+        ),
+      ),
+    ),
     NotificationKinds.applicationCandidate: withId(
       'applicationId',
       (ctx, id, t) => openRecord(ctx, () => careerRepositoryOf(shell).application(id), (app) => career().application(app)),

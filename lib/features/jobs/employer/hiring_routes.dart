@@ -8,6 +8,7 @@ import 'applicants_screen.dart';
 import 'employer_jobs_screen.dart';
 import 'hiring_models.dart';
 import 'hiring_repository.dart';
+import 'interview_brief_screen.dart';
 import 'post_job_screen.dart';
 
 /// Opens each part of the employer area over whatever is showing, with the source, the links and the
@@ -44,6 +45,18 @@ class HiringRoutes {
   /// "Edit job".
   Future<void> editJob(String jobId) =>
       _push(PostJobScreen(repository: repository, jobId: jobId, links: links, navigation: navigation, clock: clock));
+
+  /// An interview's page for its panel (the website's `/manage/interviews/:id`). [onOpened] runs once it is up.
+  Future<void> interview(String interviewId, {void Function(BuildContext context)? onOpened}) => _push(
+    InterviewBriefScreen(
+      repository: repository,
+      interviewId: interviewId,
+      links: links,
+      navigation: navigation,
+      onOpened: onOpened,
+      clock: clock,
+    ),
+  );
 
   /// A job's applicants, on [stage] (all when none).
   Future<void> applicants(String jobId, {String? title, String? stage}) => _push(

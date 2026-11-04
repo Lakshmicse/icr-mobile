@@ -38,6 +38,8 @@ import 'features/mentorship/find_mentors_screen.dart';
 import 'features/mentorship_my/my_mentoring_controller.dart' show MyTab;
 import 'features/mentorship_my/my_mentoring_screen.dart';
 import 'features/messaging/messaging_launcher.dart';
+import 'features/notifications/notification_seen.dart';
+import 'features/notifications/notification_target.dart' show NotificationKinds;
 import 'features/notifications/notifications_screen.dart' show openNotifications;
 import 'features/shell/app_shell.dart';
 import 'features/shell/icr_bottom_nav.dart' show AppTab;
@@ -247,6 +249,14 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
     if (parts.length == 3) return (ctx) => hiring().editJob(parts[2]);
     if (parts.length == 4 && parts[3] == 'edit') return (ctx) => hiring().editJob(parts[2]);
     if (parts.length == 4 && parts[3] == 'applicants') return (ctx) => hiring().applicants(parts[2]);
+  }
+  // An interview's page for its panel (`/manage/interviews/<id>`): the app's own since 4 Nov 2026. Opening it reads
+  // what told the person about the round, as the website's page does (`useMarkSeen`).
+  if (shell != null && parts.length == 3 && parts[0] == 'manage' && parts[1] == 'interviews') {
+    return (ctx) => hiringRoutesOf(shell, navigation: appJobsNavigation(shell)).interview(
+      parts[2],
+      onOpened: (c) => unawaited(markNotificationsSeen(c, NotificationKinds.interviewPanel, parts[2])),
+    );
   }
   return null;
 }

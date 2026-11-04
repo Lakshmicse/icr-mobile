@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'hiring_models.dart';
+import 'interview_brief_models.dart';
 
 /// Where the employer screens get the company's jobs and applicants: the API, or
 /// sample content.
@@ -75,6 +78,15 @@ abstract class HiringRepository {
 
   /// `PATCH /interviews/:id`: a new time or place, or a status (CANCELLED, COMPLETED, NO_SHOW).
   Future<TeamInterview> updateInterview(String interviewId, {InterviewDraft? draft, String? status});
+
+  /// An interview as its panel reads it (`GET /interviews/:id`): the website's `/manage/interviews/:id`.
+  Future<InterviewBrief> interviewBrief(String interviewId);
+
+  /// `POST /interviews/:id/feedback`: the viewer's own scorecard for a round they sit on.
+  Future<void> submitScorecard(String interviewId, ScorecardDraft draft);
+
+  /// A private upload's bytes (an applicant's résumé), read with the session, never by a browser link.
+  Future<Uint8List> fileBytes(String url);
 
   /// `POST /applications/:id/offers`, then `POST /offers/:id/send` when [send].
   Future<TeamOffer> makeOffer(String applicationId, OfferDraft draft, {bool send = true});

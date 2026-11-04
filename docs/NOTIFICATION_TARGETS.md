@@ -26,18 +26,19 @@ in a real person's list.
 
 | Where a tap goes | Kinds |
 |---|---|
-| The app's own screen | **42** (39 registered openers + 3 built into the router) |
+| The app's own screen | **43** (40 registered openers + 3 built into the router) |
 | Nothing (staff consoles) | **14** |
-| The website's page in the app's web view | **8**, plus the catch-all `path` |
+| The website's page in the app's web view | **7**, plus the catch-all `path` |
 | No page | `none`: only read |
 
-## Opens in the app (42)
+## Opens in the app (43)
 
 | Kind | The page it stands for | What opens in the app |
 |---|---|---|
 | `job` | `/jobs/:jobId` | The job's sheet, read with `GET /jobs/:id`, over the list |
 | `job.edit` | `/manage/jobs/:id/edit` | The job composer on that job |
 | `application.employer` | `/manage/jobs/:id/pipeline?applicant=` | The job's applicants |
+| `interview.panel` | `/manage/interviews/:id` | The interview's page for its panel (`InterviewBriefScreen`, `GET /interviews/:id`): the candidate and résumé, notes for the panel, the round, screening, team notes, earlier rounds, and the scorecard (`POST /interviews/:id/feedback`). Opening it reads the round's notifications. In the web view until 4 Nov 2026 |
 | `application.candidate` | `/career/applications/:id` | The application's page, read by id |
 | `jobAlert` | `/career/alerts?search=` | Job alerts |
 | `career` | `/career` | Your career hub |
@@ -77,15 +78,16 @@ in a real person's list.
 | `messaging` *(router)* | `/messaging?inbox=` | The inbox |
 | `notifications` *(router)* | `/notifications?tab=` | This list |
 
-## The website's page in the app's web view (8 + `path`)
+## The website's page in the app's web view (7 + `path`)
 
 These are ICR pages that have **no screen in the app**; they open signed in, inside the app, on the app's own white
-loading state (never a dark frame), with a close button and back through the page's history. Five kinds that used to be
-here have screens now (below).
+loading state (never a dark frame), with a close button and back through the page's history. Six kinds that used to be
+here have screens now (above), `interview.panel` the latest (4 Nov 2026). The session is written from `/robots.txt`
+first, which the page then replaces in the history, so Back never lands on it; should it ever come back, the screen
+closes.
 
 | Kind | Page | Why it is not a native screen |
 |---|---|---|
-| `interview.panel` | `/manage/interviews/:id` | The hiring manager's feedback form; the app has the candidate side of interviews only |
 | `talentSearch` | `/talent?savedSearch=` | The employer's talent search is not in the app |
 | `team` | `/manage/team?tab=` | Team admin (members, join requests, roles) |
 | `team.invite` | `/invite/:token` | Accepting an invitation is the website's page |
