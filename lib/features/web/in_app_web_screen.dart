@@ -86,7 +86,7 @@ class _InAppWebScreenState extends State<InAppWebScreen> {
           onWebResourceError: (e) {
             if (e.isForMainFrame ?? true) _set(() => _error = e);
           },
-          onUrlChange: (_) => _refreshHistory(),
+          onUrlChange: _onUrlChange,
         ),
       );
     unawaited(_start());
@@ -130,7 +130,9 @@ class _InAppWebScreenState extends State<InAppWebScreen> {
       _pendingToken = null;
       await _web.runJavaScript(WebSessionBridge.script(token));
       _renew = Timer.periodic(WebSessionBridge.renewEvery, (_) => _renewSession());
-      if (mounted) await _web.loadRequest(widget.uri);
+      // The page takes the static page's place in the history rather than following it: loaded after it, Back
+      // from the page went back to `/robots.txt` (4 Nov 2026: the owner saw it in a dark page from an interview).
+      if (mounted) await _web.runJavaScript(WebSessionBridge.replaceWith(widget.uri));
       return;
     }
     // The Android WebView says "finished" for the priming page again once the real page has been requested from
@@ -143,6 +145,16 @@ class _InAppWebScreenState extends State<InAppWebScreen> {
       _shown = true;
     });
     await _refreshHistory();
+  }
+
+  /// The static page coming back once the page has shown can only be history going back past the page: there is
+  /// nothing of the person's before it, so the screen closes rather than show `/robots.txt`.
+  void _onUrlChange(UrlChange change) {
+    if (_shown && _isPrimingPage(change.url ?? '')) {
+      if (mounted) Navigator.of(context).maybePop();
+      return;
+    }
+    unawaited(_refreshHistory());
   }
 
   Future<void> _renewSession() async {

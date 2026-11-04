@@ -488,8 +488,34 @@ void main() {
 
       web.delegate.onPageFinished!('https://icr.org.in/robots.txt');
       await tester.pump();
-      expect(web.scripts.single, contains('"tok.en.value"'));
-      expect(web.loaded, ['https://icr.org.in/robots.txt', 'https://icr.org.in/dashboard']);
+      expect(web.scripts.first, contains('"tok.en.value"'));
+      expect(
+        web.scripts.last,
+        'location.replace("https://icr.org.in/dashboard");',
+        reason: 'the page takes the static page\'s place in the history, never follows it',
+      );
+      expect(web.loaded, ['https://icr.org.in/robots.txt']);
+    });
+
+    testWidgets('Back can never show the static page the session went through: the screen closes instead', (
+      tester,
+    ) async {
+      await pump(tester, accessToken: () async => 'tok.en.value', uri: Uri.parse('https://icr.org.in/dashboard'));
+      web.delegate.onUrlChange!(UrlChange(url: 'https://icr.org.in/robots.txt'));
+      web.delegate.onPageFinished!('https://icr.org.in/robots.txt');
+      await tester.pump();
+      expect(find.byType(InAppWebScreen), findsOneWidget, reason: 'going to the static page first is the start');
+
+      web.delegate.onUrlChange!(UrlChange(url: 'https://icr.org.in/dashboard'));
+      web.delegate.onPageFinished!('https://icr.org.in/dashboard');
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(InAppWebScreen), findsOneWidget);
+
+      // 4 Nov 2026: Back from an interview's page landed on /robots.txt, drawn black.
+      web.delegate.onUrlChange!(UrlChange(url: 'https://icr.org.in/robots.txt'));
+      await tester.pumpAndSettle();
+      expect(find.byType(InAppWebScreen), findsNothing);
     });
 
     testWidgets('a page of another site never gets the session', (tester) async {
