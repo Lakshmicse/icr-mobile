@@ -28,6 +28,7 @@ import 'package:icr_mobile/features/learning_hub/demo_hub_repository.dart';
 import 'package:icr_mobile/features/learning_hub/hub_controller.dart';
 import 'package:icr_mobile/features/learning_hub/hub_models.dart';
 import 'package:icr_mobile/features/learning_hub/hub_repository.dart';
+import 'package:icr_mobile/features/learning_hub/my_courses_screen.dart';
 import 'package:icr_mobile/features/learning_hub/catalogue_screen.dart';
 import 'package:icr_mobile/features/payments/checkout_start.dart';
 import 'package:icr_mobile/features/learning_hub/learning_doors.dart';
@@ -39,6 +40,7 @@ import 'package:icr_mobile/features/learning_hub/widgets/hub_section.dart';
 import 'package:icr_mobile/features/learning_hub/widgets/institute_card.dart';
 import 'package:icr_mobile/features/learning_hub/widgets/learn_card.dart';
 import 'package:icr_mobile/features/learning_hub/widgets/masterclass_banner.dart';
+import 'package:icr_mobile/features/site/partner_apply_screen.dart' show ApiPartnerApplyRepository;
 import 'package:icr_mobile/features/learning_study/deck_study_screen.dart';
 import 'package:icr_mobile/features/learning_study/demo_study_repository.dart';
 import 'package:icr_mobile/features/learning_study/study_models.dart';
@@ -1045,7 +1047,11 @@ void main() {
     ) async {
       await pumpHub(tester, assess: holding());
       final heading = tester.getRect(find.byKey(const ValueKey('my-courses-heading')));
-      expect(heading.top, greaterThan(tester.getRect(find.byType(CatalogueRail)).bottom), reason: 'under the Catalogue');
+      expect(
+        heading.top,
+        greaterThan(tester.getRect(find.byType(CatalogueRail)).bottom),
+        reason: 'under the Catalogue',
+      );
       expect(
         heading.bottom,
         lessThanOrEqualTo(tester.getRect(find.byKey(const ValueKey('assess-heading'))).top),
@@ -1114,6 +1120,37 @@ void main() {
       expect(find.byType(GroupScreen), findsOneWidget, reason: "the mock exam's sets");
     });
 
+    testWidgets("the menu's My courses is the page alone: what the member holds, no Learning page around it", (
+      tester,
+    ) async {
+      // Owner, 6 Nov 2026: "My courses means only the courses which are enrolled, not the Learning page."
+      tester.view.physicalSize = const Size(780, 6000);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+      final assess = holding();
+      final study = _Study();
+      final hub = LearningHubController(
+        repository: _Hub(list: _institutes()),
+        learning: LearningController(_Courses(_catalogue()), assess: assess, study: study),
+        assess: assess,
+        study: study,
+        ownsLearning: true,
+      );
+      addTearDown(hub.dispose);
+      await tester.pumpWidget(_app(MyCoursesScreen(onBack: () => backs++, controller: hub, routes: _stubRoutes)));
+      await tester.pumpAndSettle();
+      expect(find.byType(LearningHubScreen), findsNothing, reason: 'not the Learning page');
+      expect(find.byType(LearningScreen), findsOneWidget);
+      expect(hub.learning.mineOnly, isTrue);
+      expect(find.text('My courses'), findsWidgets);
+      for (final heading in ['Mock Exams', 'Assess Your Knowledge', 'Partner Courses']) {
+        expect(find.text(heading), findsOneWidget, reason: heading);
+      }
+      expect(find.byKey(const ValueKey('my-courses-heading')), findsNothing, reason: "the hub's own row is not here");
+      await tester.tap(find.bySemanticsLabel('Back'));
+      expect(backs, 1);
+    });
+
     testWidgets('the search narrows the row with the rest of the page', (tester) async {
       final hub = await pumpHub(tester, assess: holding());
       hub.setSearch('leadership');
@@ -1126,13 +1163,19 @@ void main() {
   });
 
   group('Partner Courses (the directory)', () {
-    Future<LearningHubController> pumpDirectory(WidgetTester tester, {_Hub? hub, Size? size}) async {
+    Future<LearningHubController> pumpDirectory(
+      WidgetTester tester, {
+      _Hub? hub,
+      Size? size,
+      Future<List<PartnerStanding>> Function()? standing,
+    }) async {
       tester.view.physicalSize = size ?? const Size(780, 2400);
       tester.view.devicePixelRatio = 2;
       addTearDown(tester.view.reset);
       final controller = LearningHubController(
         repository: hub ?? _Hub(list: _institutes()),
         learning: LearningController(_Courses(_catalogue())),
+        standingReader: standing,
       );
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(PartnerCoursesScreen(onBack: () => backs++, hub: controller)));
@@ -1213,6 +1256,154 @@ void main() {
       expect(launches.urls.last, 'https://icr.org.in/learning/partners/apply');
     });
 
+    testWidgets(
+      'the banner carries the website\'s words: "Apply to become Partner Institute" and the dialog\'s first lines',
+      (tester) async {
+        await pumpDirectory(tester);
+        expect(find.text('Apply to become Partner Institute'), findsOneWidget);
+        expect(
+          find.text('Partners apply as a company. Choose a company you run on ICR, or register a new one.'),
+          findsOneWidget,
+        );
+        expect(find.text('Run a training institute?'), findsNothing, reason: 'the old words are gone');
+      },
+    );
+
+    testWidgets('Apply is there with no institutes listed and when the list failed, as the website\'s heading has it', (
+      tester,
+    ) async {
+      await pumpDirectory(tester, hub: _Hub());
+      expect(find.text('No institutes yet'), findsOneWidget);
+      expect(find.byKey(const ValueKey('apply-to-partner')), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      await pumpDirectory(tester, hub: _Hub(institutesError: 'Institutes are down.'));
+      expect(find.text("Couldn't load institutes"), findsOneWidget);
+      expect(find.byKey(const ValueKey('apply-to-partner')), findsOneWidget);
+    });
+
+    testWidgets(
+      "a member's standing is read again when the application is closed, so a new application shows at once",
+      (tester) async {
+        var reads = 0;
+        await pumpDirectory(
+          tester,
+          standing: () async {
+            reads++;
+            return reads == 1
+                ? const <PartnerStanding>[]
+                : const [PartnerStanding(companyId: 'c1', name: 'Skystar', applicationStatus: 'PENDING')];
+          },
+        );
+        expect(reads, 1);
+        await tester.ensureVisible(find.byKey(const ValueKey('apply-to-partner')));
+        await tester.tap(find.byKey(const ValueKey('apply-to-partner')));
+        await tester.pumpAndSettle();
+        expect(reads, 2, reason: 'back from the application, the companies are read again');
+        expect(find.byKey(const ValueKey('apply-to-partner')), findsNothing);
+        expect(find.text("Skystar's learning partner application is with ICR"), findsOneWidget);
+      },
+    );
+
+    group('"Apply" is for someone it applies to', () {
+      const apply = ValueKey('apply-to-partner');
+      const partner = PartnerStanding(companyId: 'c1', name: 'Skystar', isPartner: true, active: true);
+
+      testWidgets(
+        'a member of a company that is already a partner is not asked to apply: the standing, and the console',
+        (tester) async {
+          await pumpDirectory(tester, standing: () async => [partner]);
+          expect(find.byKey(apply), findsNothing);
+          expect(find.text('Run a training institute?'), findsNothing);
+          expect(find.text('Skystar is a learning partner'), findsOneWidget);
+          await tester.ensureVisible(find.byKey(const ValueKey('open-partner-console')));
+          await tester.tap(find.byKey(const ValueKey('open-partner-console')));
+          await tester.pump();
+          expect(launches.urls.last, 'https://icr.org.in/admin/learning');
+        },
+      );
+
+      testWidgets('a partner company the member is not acting for says how to reach it, with no console button', (
+        tester,
+      ) async {
+        await pumpDirectory(
+          tester,
+          standing: () async => [const PartnerStanding(companyId: 'c1', name: 'Skystar', isPartner: true)],
+        );
+        expect(find.byKey(apply), findsNothing);
+        expect(find.text('Skystar is a learning partner'), findsOneWidget);
+        expect(find.textContaining('Switch to this company'), findsOneWidget);
+        expect(find.byKey(const ValueKey('open-partner-console')), findsNothing);
+      });
+
+      testWidgets('a company whose application is with ICR (pending or under review) is not asked to apply again', (
+        tester,
+      ) async {
+        await pumpDirectory(
+          tester,
+          standing: () async => [
+            const PartnerStanding(companyId: 'c1', name: 'Skystar', applicationStatus: 'PENDING'),
+            const PartnerStanding(companyId: 'c2', name: 'Bluecrest', applicationStatus: 'UNDER_REVIEW'),
+          ],
+        );
+        expect(find.byKey(apply), findsNothing);
+        expect(find.text("Skystar's learning partner application is with ICR"), findsOneWidget);
+        expect(find.text("Bluecrest's learning partner application is with ICR"), findsOneWidget);
+        expect(find.byKey(const ValueKey('open-partner-console')), findsNothing);
+      });
+
+      testWidgets(
+        'a declined or queried company, a company that never applied, or one of several that can, still sees Apply',
+        (tester) async {
+          for (final standing in [
+            [const PartnerStanding(companyId: 'c1', name: 'Skystar', applicationStatus: 'REJECTED')],
+            [const PartnerStanding(companyId: 'c1', name: 'Skystar', applicationStatus: 'INFO_REQUESTED')],
+            [const PartnerStanding(companyId: 'c1', name: 'Skystar')],
+            [partner, const PartnerStanding(companyId: 'c2', name: 'Bluecrest')],
+            const <PartnerStanding>[],
+          ]) {
+            await pumpDirectory(tester, standing: () async => standing);
+            expect(find.byKey(apply), findsOneWidget, reason: '$standing');
+            expect(find.textContaining('is a learning partner'), findsNothing);
+            await tester.pumpWidget(const SizedBox());
+          }
+        },
+      );
+
+      testWidgets('a visitor, or a read that fails, sees Apply as before', (tester) async {
+        await pumpDirectory(tester, standing: () async => throw ApiError('Sign in', statusCode: 401));
+        expect(find.byKey(apply), findsOneWidget);
+        await tester.pumpWidget(const SizedBox());
+        await pumpDirectory(tester);
+        expect(find.byKey(apply), findsOneWidget);
+      });
+    });
+
+    test('the application posts what the website\'s dialog posts: the company and the notes, nothing else', () async {
+      final api = _Api({
+        'POST /learning/partners/applications': (_) => <String, Object?>{'id': 'a1'},
+        'GET /learning/partners/companies': (_) => [
+          {
+            'companyId': 'c1',
+            'name': 'Skystar',
+            'active': true,
+            'provider': null,
+            'application': {'status': 'INFO_REQUESTED', 'reviewNote': 'Send your accreditation.'},
+          },
+        ],
+      });
+      final repo = ApiPartnerApplyRepository(_client(api));
+      final companies = await repo.companies();
+      expect(companies.single.statusLabel, 'More info requested');
+      expect(companies.single.noteToShow, 'Send your accreditation.');
+      expect(companies.single.eligible, isTrue);
+      await repo.apply(companyId: 'c1', proposalNotes: 'HVAC and fire safety');
+      expect(api.bodies.last, {'companyId': 'c1', 'proposalNotes': 'HVAC and fire safety'});
+      await repo.apply(companyId: 'c1', proposalNotes: '   ');
+      expect(api.bodies.last, {'companyId': 'c1'}, reason: 'blank notes are not sent');
+      await repo.apply(companyId: 'c1');
+      expect(api.bodies.last, {'companyId': 'c1'});
+    });
+
     testWidgets('a card opens the institute’s page', (tester) async {
       await pumpDirectory(tester);
       await tester.tap(find.byKey(const ValueKey('institute-p-vin')));
@@ -1246,6 +1437,46 @@ void main() {
       expect(find.text('Vinfraa Institute'), findsOneWidget);
       expect(find.text('2 courses'), findsOneWidget);
       expect(api.calls, contains('GET /learning/providers'));
+    });
+
+    testWidgets("built with no hub, it reads the member's companies from the API and shows a partner's standing", (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(780, 2400);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+      final api = _Api({
+        'GET /learning/providers': (_) => [
+          {'id': 'p1', 'name': 'Vinfraa Institute', 'slug': 'vinfraa', 'courseCount': 2, 'verified': true},
+        ],
+        'GET /learning/courses': (_) => <Object>[],
+        'GET /learning/me/enrollments': (_) => <Object>[],
+        'GET /learning/me/attempts': (_) => <Object>[],
+        'GET /learning/me/certificates': (_) => <Object>[],
+        'GET /notifications/unread-count': (_) => {'unread': 0},
+        'GET /learning/partners/companies': (_) => [
+          {
+            'companyId': 'c1',
+            'name': 'Skystar',
+            'logoUrl': null,
+            'active': true,
+            'provider': {'id': 'p9', 'name': 'Skystar'},
+            'application': null,
+          },
+        ],
+      });
+      await tester.pumpWidget(
+        _app(
+          Provider<ApiClient>.value(
+            value: _client(api),
+            child: Builder(builder: (context) => PartnerCoursesScreen(onBack: () {})),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(api.calls, contains('GET /learning/partners/companies'));
+      expect(find.text('Skystar is a learning partner'), findsOneWidget);
+      expect(find.byKey(const ValueKey('apply-to-partner')), findsNothing);
     });
   });
 
@@ -1341,19 +1572,17 @@ void main() {
       expect(launches.urls, isEmpty);
     });
 
-    testWidgets('Website opens the institute’s site; with none there is no button', (tester) async {
+    testWidgets('there is no Website button, even for an institute that has a site', (tester) async {
       await pumpPartner(tester);
-      await tester.tap(find.byKey(const ValueKey('institute-website')));
-      await tester.pump();
-      expect(launches.urls.last, 'https://vinfraa.test');
+      expect(find.text('Website'), findsNothing);
+      expect(find.byKey(const ValueKey('ask-the-institute')), findsOneWidget);
     });
 
-    testWidgets('an institute with no website has no Website button; with no slug it cannot be asked', (tester) async {
+    testWidgets('an institute with no slug cannot be asked', (tester) async {
       await pumpPartner(
         tester,
         institute: const Institute(id: 'p-icr', name: 'ICR Institute'),
       );
-      expect(find.byKey(const ValueKey('institute-website')), findsNothing);
       expect(find.byKey(const ValueKey('ask-the-institute')), findsNothing);
     });
 

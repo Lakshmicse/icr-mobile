@@ -11,6 +11,8 @@ class SessionUser {
     this.companyId,
     this.mentorStatus,
     this.mentorsSomeone = false,
+    this.learningRoles = const [],
+    this.learningPartner = false,
   });
 
   final String id;
@@ -30,6 +32,14 @@ class SessionUser {
 
   /// Whether anyone is being mentored by them right now, listed or not.
   final bool mentorsSomeone;
+
+  /// The learning roles (Course Admin, Trainer…) the person holds at the company they act for, given only while
+  /// that company runs a partner institute (`UserDto.learningRoles`): the Partner Institute row is theirs.
+  final List<String> learningRoles;
+
+  /// The company the person acts for is a learning partner ICR approved (`UserDto.learningPartner`): its admin may
+  /// give learning roles on the team page.
+  final bool learningPartner;
 
   String get fullName => '$firstName $lastName'.trim();
 
@@ -51,6 +61,8 @@ class SessionUser {
     companyId: json['companyId'] as String?,
     mentorStatus: json['mentorStatus'] as String?,
     mentorsSomeone: json['mentorsSomeone'] == true,
+    learningRoles: [for (final r in (json['learningRoles'] as List? ?? const [])) '$r'],
+    learningPartner: json['learningPartner'] == true,
   );
 }
 

@@ -161,7 +161,7 @@ void main() {
         'Regional Chapters': '/chapters',
         'Working Councils': '/councils',
         'Get Involved & Volunteer': '/get-involved',
-        'Saved Items & Jobs': '/career/saved',
+        'Saved Jobs': '/career/saved',
         // Everything posted on ICR, not only the member's own (owner, 3 Nov 2026).
         'Requirements': '/rfq',
         'Find Work & Bid': '/manage/bids',

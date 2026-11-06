@@ -23,6 +23,9 @@ import 'jobs_fakes.dart';
 /// is answered by Saturday.
 final _now = DateTime(2026, 10, 26, 12);
 
+/// Ten minutes before the demo round (Thu 29 Oct, 11:30, 45 min): its call is open from 11:15.
+final _inCallWindow = DateTime(2026, 10, 29, 11, 20);
+
 class Rig {
   Rig(this.repo, this.links, this.conversations, this.finds);
 
@@ -37,6 +40,7 @@ Future<Rig> pumpTracker(
   SpyCareer? repo,
   ApplicationsTab? tab,
   Size size = const Size(390, 1600),
+  DateTime? at,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -53,7 +57,7 @@ Future<Rig> pumpTracker(
         repository: spy,
         links: links,
         tab: tab,
-        clock: () => _now,
+        clock: () => at ?? _now,
         navigation: JobsNavigation(onOpenConversation: conversations.add, onFindJobs: finds.add),
       ),
     ),
@@ -68,6 +72,7 @@ Future<Rig> pumpDetail(
   SpyCareer? repo,
   JobsNavigation? navigation,
   Size size = const Size(390, 2400),
+  DateTime? at,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -85,7 +90,7 @@ Future<Rig> pumpDetail(
         repository: spy,
         application: seed,
         links: links,
-        clock: () => _now,
+        clock: () => at ?? _now,
         onChanged: (a) => changed.add('${a.id} ${a.stage}'),
         navigation: navigation ?? JobsNavigation(onOpenConversation: conversations.add),
       ),
@@ -191,7 +196,7 @@ void main() {
     });
 
     testWidgets('Up next: Join opens the call, Details the application, Review offer the Offers tab', (tester) async {
-      final rig = await pumpTracker(tester);
+      final rig = await pumpTracker(tester, at: _inCallWindow);
       await tester.tap(find.descendant(of: find.byKey(const ValueKey('up-next-iv-1')), matching: find.text('Join')));
       await tester.pump();
       expect(rig.links.opened.single.toString(), 'https://meet.example.com/icr-demo');
@@ -330,11 +335,12 @@ void main() {
       }
       expect(inRow('app-1', find.byKey(const ValueKey('interview-strip'))), findsOneWidget);
       expect(inRow('app-1', find.textContaining('Round 1', findRichText: true)), findsWidgets);
-      expect(inRow('app-1', find.text('Join call')), findsOneWidget);
+      // Three days ahead the call is drawn greyed with the time it opens.
+      expect(inRow('app-1', find.text('Join call from 11:15 AM')), findsOneWidget);
     });
 
     testWidgets('Join call opens the meeting; an in-person round offers the map instead', (tester) async {
-      final rig = await pumpTracker(tester);
+      final rig = await pumpTracker(tester, at: _inCallWindow);
       await tester.tap(inRow('app-1', find.text('Join call')));
       await tester.pump();
       expect(rig.links.opened.single.toString(), 'https://meet.example.com/icr-demo');
@@ -597,7 +603,8 @@ void main() {
 
     testWidgets('pull to refresh reads the list again', (tester) async {
       final rig = await pumpTracker(tester);
-      await tester.fling(find.byType(ListView).first, const Offset(0, 400), 1000);
+      // The indicator arms at a quarter of the 1600 px viewport (400 px of overscroll), so the pull goes past that.
+      await tester.fling(find.byType(ListView).first, const Offset(0, 600), 1000);
       await tester.pumpAndSettle();
       expect(rig.repo.log.where((l) => l == 'applications').length, greaterThan(1));
     });
@@ -650,9 +657,7 @@ void main() {
       expect(find.text('₹22,00,000 a year'), findsOneWidget);
     });
 
-    testWidgets("the stepper is the website's: the stage reached is filled, the ones before it ticked", (
-      tester,
-    ) async {
+    testWidgets("the stepper is the website's: the stage reached is filled, the ones before it ticked", (tester) async {
       // app-1 is at INTERVIEW: Applied and Screening done, Interview current, Offer and Hired ahead.
       await pumpDetail(tester, 'app-1');
       expect(find.byKey(const ValueKey('stepper-2')), findsOneWidget);
@@ -700,7 +705,7 @@ void main() {
     });
 
     testWidgets('an interview round: when, how, Join call; Confirm sends a message to the hiring team', (tester) async {
-      final rig = await pumpDetail(tester, 'app-1');
+      final rig = await pumpDetail(tester, 'app-1', at: _inCallWindow);
       expect(find.byKey(const ValueKey('round-iv-1')), findsOneWidget);
       expect(find.text('Technical round'), findsOneWidget);
       expect(find.text('Thu 29 Oct, 11:30 AM • Video call • 45 min'), findsOneWidget);
@@ -715,6 +720,13 @@ void main() {
         'Hello, I confirm I will attend Technical round for Senior Facilities Manager for STP Plant on Thu 29 Oct, 11:30 AM.',
       );
       expect(rig.conversations, ['conv-1']);
+    });
+
+    testWidgets('a round whose call has closed offers no Join', (tester) async {
+      // 11:30 for 45 minutes: the room closes at 12:45.
+      await pumpDetail(tester, 'app-1', at: DateTime(2026, 10, 29, 12, 46));
+      expect(find.byKey(const ValueKey('round-iv-1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('join-iv-1')), findsNothing);
     });
 
     testWidgets('Ask for another time needs a proposal, then sends it with the round named', (tester) async {

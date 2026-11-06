@@ -129,36 +129,8 @@ class _MyAttemptsScreenState extends State<MyAttemptsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: StatTile(
-                            value: '${c.all.length}',
-                            label: 'Attempts',
-                            icon: LucideIcons.clipboardCheck,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: StatTile(
-                            value: '${c.passed}',
-                            label: 'Passed',
-                            icon: LucideIcons.badgeCheck,
-                            color: AppColors.tertiary,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: StatTile(
-                            value: c.best == null ? '-' : '${c.best}%',
-                            label: 'Best',
-                            icon: LucideIcons.trophy,
-                            color: AppColors.amber500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
+                    // No totals tiles over the list (owner, 6 Nov 2026: "top 3 tiles not required"): the filters,
+                    // then the attempts across the whole width.
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -211,10 +183,11 @@ class _MyAttemptsScreenState extends State<MyAttemptsScreen> {
             )
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+              padding: const EdgeInsets.only(bottom: 28),
               sliver: SliverList.separated(
                 itemCount: rows.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                // Rows the whole width, a hairline between them, no boxes (owner, 6 Nov 2026).
+                separatorBuilder: (_, _) => const Divider(height: 1, thickness: 1, color: AppColors.outlineVariant),
                 itemBuilder: (context, i) => AttemptCard(attempt: rows[i], onTap: () => _open(rows[i])),
               ),
             ),
@@ -244,7 +217,7 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-/// One sitting in the history.
+/// One sitting in the history: a plain row across the page, no box (owner, 6 Nov 2026).
 class AttemptCard extends StatelessWidget {
   const AttemptCard({super.key, required this.attempt, required this.onTap});
 
@@ -262,45 +235,47 @@ class AttemptCard extends StatelessWidget {
       label:
           '$name, attempt ${a.attempt}, ${a.percentage} percent, ${a.passed ? 'passed' : 'not passed'}. Opens the result.',
       excludeSemantics: true,
-      child: ExamCard(
+      child: InkWell(
         onTap: onTap,
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: ExamText.subheading.copyWith(fontSize: 16),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: ExamText.subheading.copyWith(fontSize: 16),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                a.passed
-                    ? const InfoPill(label: 'Pass', icon: LucideIcons.check, color: AppColors.tertiary)
-                    : InfoPill(
-                        label: mock ? 'Below pass mark' : 'Fail',
-                        icon: LucideIcons.x,
-                        color: mock ? AppColors.amber800 : AppColors.error,
-                      ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text('Attempt #${a.attempt}${when.isEmpty ? '' : ' · $when'}', style: ExamText.small),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _Figure('${a.percentage}%', 'Score', big: true),
-                _Figure('${a.correct} / ${a.totalQuestions}', 'Correct'),
-                _Figure(takenLabel(a.timeTaken), 'Time'),
-                const Icon(LucideIcons.chevronRight, size: 20, color: AppColors.slate400),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 8),
+                  a.passed
+                      ? const InfoPill(label: 'Pass', icon: LucideIcons.check, color: AppColors.tertiary)
+                      : InfoPill(
+                          label: mock ? 'Below pass mark' : 'Fail',
+                          icon: LucideIcons.x,
+                          color: mock ? AppColors.amber800 : AppColors.error,
+                        ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text('Attempt #${a.attempt}${when.isEmpty ? '' : ' · $when'}', style: ExamText.small),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _Figure('${a.percentage}%', 'Score', big: true),
+                  _Figure('${a.correct} / ${a.totalQuestions}', 'Correct'),
+                  _Figure(takenLabel(a.timeTaken), 'Time'),
+                  const Icon(LucideIcons.chevronRight, size: 20, color: AppColors.slate400),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

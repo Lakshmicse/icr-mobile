@@ -5,7 +5,8 @@ import 'core/api/api_client.dart';
 import 'core/auth/auth_controller.dart';
 import 'core/config.dart';
 import 'app_site_pages.dart';
-import 'core/util/links.dart' show SiteRouteOpener;
+import 'core/util/links.dart' show SiteRouteOpener, openSitePage;
+import 'features/directory/companies_directory_screen.dart';
 import 'features/councils/api_councils_repository.dart';
 import 'features/councils/council_screen.dart' show CouncilHandoffs;
 import 'features/councils/councils_controller.dart';
@@ -17,6 +18,7 @@ import 'features/events/events_controller.dart';
 import 'features/events/events_screen.dart';
 import 'features/account/companies/create_company_screen.dart';
 import 'features/account/members/member_profile_screen.dart';
+import 'features/assistant/open_assistant.dart' show openAssistant;
 import 'features/account/profile/my_profile_screen.dart';
 import 'features/account/saved/saved_items_screen.dart';
 import 'features/account/settings/settings_screen.dart';
@@ -42,7 +44,9 @@ import 'features/marketplace/marketplace_navigation.dart';
 import 'features/marketplace/supplier_sheet.dart';
 import 'features/membership/membership_models.dart' show MembershipAudience;
 import 'features/membership/membership_screen.dart';
+import 'features/membership/plan_benefits_screen.dart';
 import 'features/mentorship_my/mentoring_links.dart' show MentorshipLinks;
+import 'features/become_mentor/become_mentor_controller.dart' show FixTarget;
 import 'features/become_mentor/become_mentor_screen.dart' show openBecomeMentor;
 import 'features/contact/contact_screen.dart' show contactRoute;
 import 'features/mentor_profile/mentor_profile_screen.dart' show mentorProfileRoute;
@@ -61,10 +65,22 @@ import 'features/rfq/requirements_board_screen.dart';
 import 'features/rfq/rfq_navigation.dart';
 import 'features/rfq/rfq_scope.dart';
 import 'features/shell/app_shell.dart';
+import 'features/site/credits_screen.dart';
 import 'features/site/legal_page.dart' show legalPages;
 import 'features/site/legal_page_screen.dart' show LegalPageScreen;
+import 'features/site/reviews_screen.dart';
 import 'features/shell/icr_bottom_nav.dart';
+import 'features/support/support_routes.dart' show openSupport;
+import 'features/support/support_screen.dart' show SupportScreen;
+import 'features/team/team_screen.dart' show TeamScreen, TeamTab;
 import 'features/shell/shell_page.dart';
+import 'features/mentorship_my/certificate_check.dart';
+import 'features/mentor_desk/mentor_desk_controller.dart' show DeskTab;
+import 'features/mentor_desk/mentor_desk_screen.dart' show openMentorDesk;
+import 'app_search.dart' show openMentorProfile;
+import 'core/widgets/workspace_embed.dart';
+import 'features/mentorship/find_mentors_screen.dart' show openFindMentors;
+import 'features/mentorship/mentorship_controller.dart';
 
 /// An event's sheet by its slug or id (a chapter's meetup, a notification), over whatever called it. The sheet
 /// shows a blank title until the event has been read.
@@ -159,12 +175,27 @@ Widget getInvolvedScreen(BuildContext ctx, {String? chapter}) => ChangeNotifierP
 /// What the mentoring screens (My mentoring, a pairing, the mentor desk, becoming a mentor) hand back to the app:
 /// every "Message" opens the app's conversation, the bell the app's notifications.
 final appMentorshipLinks = MentorshipLinks(
+  openDirectory: openMentorSearch,
   openConversation: (c, id) => MessagingLauncher.openConversation(c, id),
   openPairingThread: (c, id) => MessagingLauncher.forMentorship(c, id),
   openPurchaseThread: (c, id) => MessagingLauncher.forPurchase(c, id),
   openGroupThread: (c, id) => MessagingLauncher.forGroupSession(c, id),
   openNotifications: (c) => openNotifications(c),
 );
+
+/// "Find a mentor" (and "Find another") on the mentoring screens: the mentor search. Inside a workspace that has a
+/// Find a mentor tab, that tab; elsewhere the search pushed over the screen. A screen opened where the signed-in
+/// controllers do not reach goes back instead, as it always did (it was opened from the search).
+void openMentorSearch(BuildContext context) {
+  if (WorkspaceEmbed.openTabFor(context, '/mentorship/mentors')) return;
+  try {
+    context.read<MentorshipController>();
+  } on ProviderNotFoundException {
+    Navigator.of(context).maybePop();
+    return;
+  }
+  openFindMentors(context, onOpenMentor: (c, id) => openMentorProfile(c, id));
+}
 
 /// A person's public page: what every name or photo in the app opens.
 Future<void> openMemberProfile(BuildContext context, String userId) =>
@@ -187,8 +218,11 @@ Widget myProfileScreen(BuildContext ctx, {ProfileSection? section}) => MyProfile
   onOpenSecurity: () => openSettings(ctx),
 );
 
-Future<void> openSettings(BuildContext context) =>
-    AppShell.push<void>(context, (ctx) => SettingsScreen(onOpenProfile: () => openMyProfile(ctx)));
+Future<void> openSettings(BuildContext context) => AppShell.push<void>(context, settingsScreen);
+
+/// Settings, with "Help & support" opening the member's requests (the website's `/support`).
+Widget settingsScreen(BuildContext ctx) =>
+    SettingsScreen(onOpenProfile: () => openMyProfile(ctx), onSupport: () => openSupport(ctx));
 
 /// The plans (`/pricing/<audience>`, `/career/plans`, `/membership`), over whatever asked for them.
 Future<void> openMembership(BuildContext context, {MembershipAudience? audience}) => AppShell.push<void>(
@@ -225,6 +259,9 @@ SiteRouteOpener? inAppSiteRoute(Uri uri, {required FeedAuthor viewer, BuildConte
   switch (path) {
     case '/notifications':
       return (ctx) => openNotifications(ctx);
+    // The website's assistant page: Saathi, the app's own since 6 Nov 2026.
+    case '/ai':
+      return (ctx) => openAssistant(ctx);
     case '/pricing':
     case '/career/plans':
     case '/membership':
@@ -265,14 +302,36 @@ SiteRouteOpener? _inAppRecord(Uri uri, String path) {
     return (ctx) =>
         conversation == null ? MessagingLauncher.openInbox(ctx) : MessagingLauncher.openConversation(ctx, conversation);
   }
-  if (path == '/become-a-mentor' || path == '/mentorship/become-a-mentor') return (ctx) => openBecomeMentor(ctx);
+  // `?fix=availability` opens that form on arrival: the mentor desk's missing lines.
+  if (path == '/become-a-mentor' || path == '/mentorship/become-a-mentor') {
+    final fix = FixTarget.values.asNameMap()[uri.queryParameters['fix']];
+    return (ctx) => openBecomeMentor(ctx, fix: fix);
+  }
+  // The website's `/profile?tab=<section>` lands on that section (security is its own screen, in the table below).
+  if (path == '/profile') {
+    final section = ProfileSection.values.asNameMap()[uri.queryParameters['tab']];
+    if (section != null) return (ctx) => openMyProfile(ctx, section: section);
+  }
   if (path == '/mentorship/programmes') {
     return (ctx) => openProgrammes(ctx, onBecomeMentor: (c) => openBecomeMentor(c));
   }
+  // The website's mentor dashboard (`?tab=services|work|settings`), which My mentoring's "Open Engagements" and the
+  // website's own links name: the app's mentor desk on the same tab, never the web view.
+  if (path == '/mentorship/mentor') {
+    return (ctx) => openMentorDesk(
+      ctx,
+      tab: switch (uri.queryParameters['tab']) {
+        'services' => DeskTab.offerings,
+        'work' => DeskTab.work,
+        'settings' => DeskTab.settings,
+        _ => DeskTab.overview,
+      },
+    );
+  }
   // The mentoring records the notification router opens (`app_notifications.dart`), so a cohort card's "Know
   // more" or a link in a message reaches the app's screen and not the web view. The public certificate check
-  // (`/mentorship/certificates/<number>`) is not here: the app has no screen for it, and the tab that links it is
-  // the member's own certificates, which would only open again.
+  // (`/mentorship/certificates/<number>`, the certificate sheet's "Verify online") is the app's own sheet since
+  // 4 Nov 2026.
   if (parts.length == 3 && parts[0] == 'mentorship') {
     switch (parts[1]) {
       case 'programmes':
@@ -281,9 +340,11 @@ SiteRouteOpener? _inAppRecord(Uri uri, String path) {
         return (ctx) => openGroupSession(ctx, parts[2]);
       case 'my':
         return (ctx) => openPairing(ctx, parts[2]);
+      case 'certificates':
+        return (ctx) => showMentoringCertificateCheck(ctx, parts[2]);
     }
   }
-  if (path == '/account/companies/new') return (ctx) => AppShell.push<void>(ctx, (c) => CreateCompanyScreen());
+  if (path == '/account/companies/new') return (ctx) => AppShell.push<void>(ctx, (c) => CreateCompanyScreen.routed(c));
   if (path == '/network') {
     return (ctx) => AppShell.push<void>(
       ctx,
@@ -293,7 +354,13 @@ SiteRouteOpener? _inAppRecord(Uri uri, String path) {
   if (path == '/contact') {
     return (ctx) => AppShell.push<void>(
       ctx,
-      (c) => contactRoute(c, subject: uri.queryParameters['subject'], onBell: () => openNotifications(c)),
+      (c) => contactRoute(
+        c,
+        subject: uri.queryParameters['subject'],
+        onBell: () => openNotifications(c),
+        // A signed-in member is pointed to a request, which has a reference and a thread: the app's own desk.
+        onRaiseRequest: () => openSupport(c),
+      ),
     );
   }
   return null;
@@ -310,7 +377,7 @@ RfqHooks appRfqHooks(BuildContext ctx) => rfqHooksFor(
   ctx,
   onOpenConversation: (id) => MessagingLauncher.openConversation(ctx, id),
   onOpenSupplier: (id) => showSupplierSheetById(ctx, id, navigation: appMarketplaceNavigation(ctx)),
-  onCreateCompany: () => AppShell.push<void>(ctx, (c) => CreateCompanyScreen()),
+  onCreateCompany: () => AppShell.push<void>(ctx, (c) => CreateCompanyScreen.routed(c)),
   // "Posting for" and "Switch company" on the requirement form: the account's switch, with its fresh session
   // adopted, as the profile menu's companies switch.
   onSwitchCompany: (companyId) async {
@@ -319,6 +386,25 @@ RfqHooks appRfqHooks(BuildContext ctx) => rfqHooksFor(
     await auth.adoptSession(accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, user: tokens.user);
   },
 );
+
+/// The company's team (the website's `/manage/team`): members, join requests, and people added who have not answered.
+/// `?tab=requests` ("someone asked to join your team") opens on Requests.
+Widget teamScreen(
+  BuildContext ctx, {
+  TeamTab tab = TeamTab.members,
+  String? inviteLearningRole,
+  VoidCallback? onBack,
+}) => TeamScreen(
+  initialTab: tab,
+  inviteLearningRole: inviteLearningRole,
+  onBack: onBack ?? () => Navigator.of(ctx).pop(),
+  onOpenMember: (id) => openMemberProfile(ctx, id),
+  onCreateCompany: () => AppShell.push<void>(ctx, (c) => CreateCompanyScreen.routed(c)),
+);
+
+/// Help & support (the website's `/support`): the member's requests to ICR.
+Widget supportScreen(BuildContext ctx) =>
+    SupportScreen(onBack: () => Navigator.of(ctx).pop(), onOpenContext: (href) => openSitePage(ctx, href));
 
 /// Screens the Discover doors and the profile menu open in the app, keyed by
 /// the website path they replace. A pushed route sits above the tab
@@ -333,16 +419,41 @@ Map<String, WidgetBuilder> inAppScreens({required FeedAuthor viewer, bool? demo}
     // only to someone acting for no company). The Discover sheet's Hire and Sell no longer come here: Hire is Post a
     // job (`openPostJob`, which asks for a company only from someone who has none) and Sell the Supplier Mart, as on
     // the website — mapping them here sent a member with a company to "create a company" (owner, 3 Nov 2026).
-    '/account/companies/new?role=COMPANY_ADMIN': (ctx) => CreateCompanyScreen(),
-    '/account/companies/new?role=VENDOR': (ctx) => CreateCompanyScreen(),
+    '/account/companies/new?role=COMPANY_ADMIN': (ctx) => CreateCompanyScreen.routed(ctx),
+    '/account/companies/new?role=VENDOR': (ctx) => CreateCompanyScreen.routed(ctx),
     '/profile': (ctx) => myProfileScreen(ctx),
-    '/profile?tab=security': (ctx) => SettingsScreen(onOpenProfile: () => openMyProfile(ctx)),
+    // Native since 5 Nov 2026 (they were the website's pages in the web view). A `?tab=` has its own key: a path with a
+    // query is looked up whole before the bare path.
+    '/manage/team': teamScreen,
+    '/manage/team?tab=requests': (ctx) => teamScreen(ctx, tab: TeamTab.requests),
+    '/manage/team?tab=pending': (ctx) => teamScreen(ctx, tab: TeamTab.pending),
+    '/support': supportScreen,
+    '/profile?tab=security': settingsScreen,
     '/career/saved': (ctx) => SavedItemsScreen(
       onBell: () => openNotifications(ctx),
       unread: bellUnread(ctx),
       onOpenSupplier: (id) => showSupplierSheetById(ctx, id, navigation: appMarketplaceNavigation(ctx)),
     ),
     '/learning/certificates': (ctx) => CertificatesScreen(onBack: () => Navigator.of(ctx).pop()),
+    // The four pages of the website's workspace menu the app had no screen for (owner, 4 Nov 2026: "website
+    // redirecting should be avoided"): the companies directory, what the member's plans include, their credits and
+    // redemptions, and the platform's reviews.
+    '/companies': (ctx) => CompaniesDirectoryScreen(
+      onBack: () => Navigator.of(ctx).pop(),
+      onBell: () => openNotifications(ctx),
+      onOpenCompany: (id) => openSitePage(ctx, '/companies/$id'),
+    ),
+    '/membership/benefits': (ctx) => PlanBenefitsScreen(
+      onBack: () => Navigator.of(ctx).pop(),
+      onBell: () => openNotifications(ctx),
+      onSeePlans: () => openMembership(ctx),
+    ),
+    '/refer/credits': (ctx) => CreditsScreen(
+      onBack: () => Navigator.of(ctx).pop(),
+      onBell: () => openNotifications(ctx),
+      onRefer: () => openSitePage(ctx, '/refer'),
+    ),
+    '/reviews': (ctx) => ReviewsScreen(onBack: () => Navigator.of(ctx).pop(), onBell: () => openNotifications(ctx)),
     // Everything posted on ICR, the website's Requirements page: the profile menu's Requirements row, and every
     // `/rfq` link (it opened the Marketplace tab until 3 Nov 2026, which lists no requirements).
     '/rfq': (ctx) {

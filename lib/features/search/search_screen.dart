@@ -17,7 +17,13 @@ typedef FeatureOpener = Future<void> Function(BuildContext context);
 /// the features it opens (`lib/app_search.dart` builds it; `lib/app.dart` sets
 /// [current]).
 class SearchEnvironment {
-  const SearchEnvironment({required this.sources, required this.openers, required this.features, this.recents});
+  const SearchEnvironment({
+    required this.sources,
+    required this.openers,
+    required this.features,
+    this.recents,
+    this.offered,
+  });
 
   /// The sources to ask, built for the context the search was opened from (the
   /// shell's, so the providers the repositories read are in reach).
@@ -29,6 +35,10 @@ class SearchEnvironment {
   /// The features the app can open, by catalogue id. A feature with no entry is
   /// never offered.
   final Map<String, FeatureOpener> features;
+
+  /// Whether a feature the app can open is for the person searching (read when the search opens); every one when
+  /// null.
+  final bool Function(BuildContext context, String id)? offered;
 
   /// Where the recent searches are kept; in memory when null.
   final RecentStore Function(BuildContext context)? recents;
@@ -44,7 +54,10 @@ Future<void> openGlobalSearch(BuildContext context, {String? query}) {
   if (env == null) return Future.value();
   final controller = GlobalSearchController(
     sources: env.sources(context),
-    availableFeatures: env.features.keys.toSet(),
+    availableFeatures: {
+      for (final id in env.features.keys)
+        if (env.offered?.call(context, id) ?? true) id,
+    },
     recents: RecentSearches(env.recents?.call(context) ?? MemoryRecentStore()),
   );
   return Navigator.of(context).push<void>(
@@ -127,7 +140,10 @@ class _SearchScreenState extends State<SearchScreen> {
   void _type(String text) => _c.setQuery(text);
 
   void _useRecent(String q) {
-    _text.value = TextEditingValue(text: q, selection: TextSelection.collapsed(offset: q.length));
+    _text.value = TextEditingValue(
+      text: q,
+      selection: TextSelection.collapsed(offset: q.length),
+    );
     _c.setQuery(q);
     _c.submit();
   }
@@ -178,7 +194,11 @@ class _SearchScreenState extends State<SearchScreen> {
               SizedBox(
                 height: 2,
                 child: _c.anyLoading
-                    ? const LinearProgressIndicator(minHeight: 2, color: SearchLook.blue, backgroundColor: Colors.transparent)
+                    ? const LinearProgressIndicator(
+                        minHeight: 2,
+                        color: SearchLook.blue,
+                        backgroundColor: Colors.transparent,
+                      )
                     : const Divider(height: 1, thickness: 1, color: SearchLook.hairline),
               ),
               Expanded(child: _body()),
@@ -207,7 +227,9 @@ class _SearchScreenState extends State<SearchScreen> {
       final hits = _hitsOf(kind);
       if (hits.isEmpty) continue;
       final shown = hits.take(_c.allLimit).toList();
-      final more = kind == SearchKind.feature ? hits.length > _c.allLimit : (hits.length > _c.allLimit || _c.groupOf(kind).hasMore);
+      final more = kind == SearchKind.feature
+          ? hits.length > _c.allLimit
+          : (hits.length > _c.allLimit || _c.groupOf(kind).hasMore);
       if (children.isNotEmpty) children.add(const GroupRule());
       children.add(GroupHeader(kind));
       for (final h in shown) {
@@ -438,7 +460,9 @@ class _Idle extends StatelessWidget {
                     children: [
                       const Icon(Icons.history, size: 22, color: SearchLook.soft),
                       const SizedBox(width: 16),
-                      Expanded(child: Text(q, maxLines: 1, overflow: TextOverflow.ellipsis, style: SearchStyles.recent)),
+                      Expanded(
+                        child: Text(q, maxLines: 1, overflow: TextOverflow.ellipsis, style: SearchStyles.recent),
+                      ),
                       IconButton(
                         tooltip: 'Remove',
                         onPressed: () => controller.removeRecent(q),
@@ -498,7 +522,9 @@ class _NoResults extends StatelessWidget {
           alignment: WrapAlignment.center,
           spacing: 8,
           runSpacing: 8,
-          children: [for (final f in suggestions) KindChip(label: f.title, selected: false, onTap: () => onFeature(f.id))],
+          children: [
+            for (final f in suggestions) KindChip(label: f.title, selected: false, onTap: () => onFeature(f.id)),
+          ],
         ),
       ],
     );
@@ -521,9 +547,16 @@ class _NoneOfKind extends StatelessWidget {
         children: [
           Icon(kind.icon, size: 40, color: SearchLook.soft),
           const SizedBox(height: 12),
-          Text('No ${kind.plural.toLowerCase()} for “$query”', textAlign: TextAlign.center, style: SearchStyles.emptyTitle),
+          Text(
+            'No ${kind.plural.toLowerCase()} for “$query”',
+            textAlign: TextAlign.center,
+            style: SearchStyles.emptyTitle,
+          ),
           const SizedBox(height: 4),
-          TextButton(onPressed: onAll, child: Text('Search everything', style: SearchStyles.link)),
+          TextButton(
+            onPressed: onAll,
+            child: Text('Search everything', style: SearchStyles.link),
+          ),
         ],
       ),
     ),
@@ -548,7 +581,11 @@ class _Offline extends StatelessWidget {
           const SizedBox(height: 4),
           Text('Check your connection and try again.', textAlign: TextAlign.center, style: SearchStyles.emptyBody),
           const SizedBox(height: 8),
-          TextButton(key: const Key('search.retry'), onPressed: onRetry, child: Text('Try again', style: SearchStyles.link)),
+          TextButton(
+            key: const Key('search.retry'),
+            onPressed: onRetry,
+            child: Text('Try again', style: SearchStyles.link),
+          ),
         ],
       ),
     ),

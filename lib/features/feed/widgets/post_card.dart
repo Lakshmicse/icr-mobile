@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/util/link_spans.dart';
 import '../../../core/util/time_ago.dart';
+import '../../forum/mentions/mention_text.dart';
 import '../../forum/mentions/mention_widgets.dart';
 import '../feed_models.dart';
 import '../feed_styles.dart';
@@ -101,10 +103,18 @@ class PostCard extends StatelessWidget {
                 _Openable(
                   id: post.id,
                   onOpen: onOpen,
-                  child: Text(post.title, style: poll != null ? HomeType.pollQuestion : HomeType.title),
+                  child: MentionText(text: post.title, style: poll != null ? HomeType.pollQuestion : HomeType.title),
                 ),
                 if (poll != null) ...[
-                  if (post.body.isNotEmpty) ...[const SizedBox(height: 2), Text(post.body, style: HomeType.pollHint)],
+                  if (post.body.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    MentionText(
+                      text: post.body,
+                      style: HomeType.pollHint,
+                      mentions: post.mentions,
+                      onOpen: onOpenMention,
+                    ),
+                  ],
                   const SizedBox(height: 10),
                   PollView(
                     poll: poll,
@@ -198,22 +208,70 @@ class _ClampedTextState extends State<_ClampedText> {
   bool _expanded = false;
   late final TapGestureRecognizer _open = TapGestureRecognizer()..onTap = () => setState(() => _expanded = true);
   final _mentions = MentionSpans();
+  final _links = LinkSpans();
 
   @override
   void dispose() {
     _open.dispose();
     _mentions.dispose();
+    _links.dispose();
     super.dispose();
+  }
+
+  /// [text] cut back to before the address its end falls inside, or null when it ends outside any: a cut link
+  /// would open half an address.
+  static String? _beforeCutLink(String text, String head) {
+    var at = 0;
+    for (final part in splitLinks(text)) {
+      final end = at + part.text.length;
+      if (part.link != null && at < head.length && end > head.length) return text.substring(0, at).trimRight();
+      at = end;
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
     _mentions.clear();
+    _links.clear();
     final text = widget.text;
     final style = widget.style;
-    final linked = widget.onOpenMention != null && widget.mentions.isNotEmpty;
-    List<InlineSpan> spansOf(String part) =>
-        linked ? _mentions.build(part, widget.mentions, onOpen: widget.onOpenMention) : [TextSpan(text: part)];
+    final tagged = widget.onOpenMention != null && widget.mentions.isNotEmpty;
+    final linked = tagged || LinkSpans.hasLink(text);
+    // Placed once on the whole text, so a namesake is told apart by order; a cut keeps those inside it.
+    final found = tagged ? mentionSpans(text, widget.mentions) : const <MentionSpan>[];
+
+    // [part] is the text or a start of it: its web addresses open (the ICR ones in the app), its tagged members open
+    // their profile.
+    List<InlineSpan> spansOf(String part) {
+      final inPart = [
+        for (final m in found)
+          if (m.end <= part.length) m,
+      ];
+      List<InlineSpan> plain(String run, List<MentionSpan> mentions) =>
+          tagged ? _mentions.spansFor(run, mentions, onOpen: widget.onOpenMention) : [TextSpan(text: run)];
+      if (!LinkSpans.hasLink(part)) return plain(part, inPart);
+      final starts = <int>[];
+      var at = 0;
+      for (final p in splitLinks(part)) {
+        if (p.link == null) starts.add(at);
+        at += p.text.length;
+      }
+      var run = 0;
+      return _links.build(
+        context,
+        part,
+        plain: (r) {
+          final from = starts[run++];
+          return plain(r, [
+            for (final m in inPart)
+              if (m.start >= from && m.end <= from + r.length)
+                (start: m.start - from, end: m.end - from, mention: m.mention),
+          ]);
+        },
+      );
+    }
+
     if (_expanded) {
       if (!linked) return Text(text, key: const ValueKey('post-body-open'), style: style);
       return Text.rich(
@@ -244,8 +302,13 @@ class _ClampedTextState extends State<_ClampedText> {
         // The character under the point where "…more" has to start on the last line.
         final cut = whole.getPositionForOffset(Offset(width - tail.width - 1, last.baseline - 1)).offset;
         var head = text.substring(0, cut.clamp(0, text.length)).trimRight();
-        final space = head.lastIndexOf(' ');
-        if (space > head.length - 12 && space > 0) head = head.substring(0, space);
+        final beforeLink = _beforeCutLink(text, head);
+        if (beforeLink != null) {
+          head = beforeLink;
+        } else {
+          final space = head.lastIndexOf(' ');
+          if (space > head.length - 12 && space > 0) head = head.substring(0, space);
+        }
         return Text.rich(
           TextSpan(
             children: [
@@ -528,13 +591,14 @@ class _Caption extends StatelessWidget {
 /// "1,284" for a count that reaches a thousand.
 String groupedCount(int n) => n.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},');
 
-/// The glyph of each reaction (`FORUM_REACTION_META`), as the cards' stacks and the picker draw it.
-IconData reactionIcon(ReactionKind kind) => switch (kind) {
-  ReactionKind.like => LucideIcons.thumbsUp,
-  ReactionKind.insightful => LucideIcons.lightbulb,
-  ReactionKind.celebrate => LucideIcons.partyPopper,
-  ReactionKind.support => LucideIcons.handHeart,
-  ReactionKind.sustainable => LucideIcons.leaf,
+/// The glyph of each reaction (`FORUM_REACTION_META`), as the cards' stacks and the picker draw it; [filled] is the
+/// solid glyph a card's own button shows once the reader has reacted, as LinkedIn fills its Like (owner, 6 Nov 2026).
+IconData reactionIcon(ReactionKind kind, {bool filled = false}) => switch (kind) {
+  ReactionKind.like => filled ? Icons.thumb_up : LucideIcons.thumbsUp,
+  ReactionKind.insightful => filled ? Icons.lightbulb : LucideIcons.lightbulb,
+  ReactionKind.celebrate => filled ? Icons.celebration : LucideIcons.partyPopper,
+  ReactionKind.support => filled ? Icons.volunteer_activism : LucideIcons.handHeart,
+  ReactionKind.sustainable => filled ? Icons.eco : LucideIcons.leaf,
 };
 
 /// The overlapping round badges of the kinds a discussion was reacted with, most used first.
@@ -634,7 +698,7 @@ class _Footer extends StatelessWidget {
           children: [
             _Action(
               key: ValueKey('like:${post.id}'),
-              icon: reactionIcon(mine ?? ReactionKind.like),
+              icon: reactionIcon(mine ?? ReactionKind.like, filled: mine != null),
               count: _count(post.reactions),
               label: mine != null ? 'Unlike' : 'Like',
               active: mine != null,

@@ -2076,8 +2076,10 @@ void main() {
     semanticTest('lists the sittings newest first with score, correct, time and a pass or fail mark', (tester) async {
       await pumpAttempts(tester);
       expect(find.text('My attempts'), findsOneWidget);
-      expect(find.text('3'), findsOneWidget, reason: 'attempts');
-      expect(find.text('1'), findsOneWidget, reason: 'passed');
+      // No totals tiles over the list (owner, 6 Nov 2026): the attempts themselves, across the page.
+      expect(find.text('Attempts'), findsNothing);
+      expect(find.text('Passed'), findsNothing);
+      expect(find.text('Best'), findsNothing);
       expect(find.text('90%'), findsWidgets);
       expect(find.text('Capital Planning – Foundation'), findsNWidgets(2));
       expect(find.text('ASHRAE BEMP – Set 1'), findsOneWidget);

@@ -34,7 +34,7 @@ void main() {
     expect(find.text('the events screen'), findsNothing);
     expect(find.text('the feed'), findsOneWidget);
     // The sheet closed when the door was taken.
-    expect(find.text('Regional Chapters'), findsNothing);
+    expect(find.text('Chapters'), findsNothing);
   });
 
   testWidgets('a screen a door opened can open the profile menu, which leaves it first', (tester) async {
@@ -68,18 +68,18 @@ void main() {
 
   testWidgets('Discover opens the sheet over the tab, and Back closes it', (tester) async {
     await tester.pumpWidget(_shell());
-    expect(find.text('Regional Chapters'), findsNothing);
+    expect(find.text('Chapters'), findsNothing);
 
     await tester.tap(find.text('Discover'));
     await tester.pumpAndSettle();
-    expect(find.text('Regional Chapters'), findsOneWidget);
+    expect(find.text('Chapters'), findsOneWidget);
     expect(find.text('Advertise'), findsOneWidget);
     // The tab is still there underneath.
     expect(find.text('the feed'), findsOneWidget);
 
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.text('Regional Chapters'), findsNothing);
+    expect(find.text('Chapters'), findsNothing);
     expect(find.text('the feed'), findsOneWidget);
   });
 
@@ -106,7 +106,7 @@ void main() {
     await tester.pumpAndSettle();
     // That tap landed on the page behind the sheet, which closes it.
     expect(taps, 1);
-    expect(find.text('Regional Chapters'), findsNothing);
+    expect(find.text('Chapters'), findsNothing);
   });
 
   testWidgets('tapping the page behind the sheet closes it', (tester) async {
@@ -116,7 +116,7 @@ void main() {
 
     await tester.tapAt(const Offset(200, 80));
     await tester.pumpAndSettle();
-    expect(find.text('Regional Chapters'), findsNothing);
+    expect(find.text('Chapters'), findsNothing);
   });
 
   testWidgets('the Discover tab toggles the sheet and another tab closes it', (tester) async {
@@ -125,13 +125,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Discover'));
     await tester.pumpAndSettle();
-    expect(find.text('Regional Chapters'), findsNothing);
+    expect(find.text('Chapters'), findsNothing);
 
     await tester.tap(find.text('Discover'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Jobs'));
     await tester.pumpAndSettle();
-    expect(find.text('Regional Chapters'), findsNothing);
+    expect(find.text('Chapters'), findsNothing);
     expect(find.text('Jobs is coming to the app'), findsOneWidget);
   });
 
@@ -148,11 +148,31 @@ void main() {
         ),
       ),
     );
-    for (final label in ['Regional Chapters', 'Events', 'Post requirement', 'Hire']) {
+    for (final label in ['Chapters', 'Events', 'Post requirement', 'Hire']) {
       await tester.tap(find.text(label));
     }
     // Hire opens Post a job (owner, 3 Nov 2026).
     expect(opened, ['/chapters', '/events', '/rfq/new', '/manage/jobs/new']);
+  });
+
+  test("the business doors are the website's Discover actions (DISCOVER_BUSINESS) and gate nothing themselves", () {
+    // Hire = Post a Job, Sell = Sell on Supplier Mart, Post requirement = Post RFQ / Requirement, Advertise =
+    // Advertise Commercial Space: the same four pages the website lists for every visitor. Whether the member may
+    // use one is the page's own answer (the job composer asks for a company, the requirement form for a buyer), as on
+    // the website; the sheet is the same for a member with a company, one without and a visitor.
+    expect(
+      {
+        for (final r in DiscoverSheet.business)
+          for (final d in [r.left, r.right]) d.label: d.sitePath,
+      },
+      {'Hire': '/manage/jobs/new', 'Sell': '/vendors', 'Post requirement': '/rfq/new', 'Advertise': '/advertise'},
+    );
+    // None of them offers a role that only an invite gives.
+    for (final r in DiscoverSheet.business) {
+      for (final d in [r.left, r.right]) {
+        expect(d.sitePath, isNot(contains('role=')), reason: d.label);
+      }
+    }
   });
 
   group('every door', () {
@@ -191,8 +211,8 @@ void main() {
       await pumpShell(tester);
       await openSheet(tester);
       final labels = [
-        'Regional Chapters',
-        'Working Councils',
+        'Chapters',
+        'Councils',
         'Digital Library',
         'Events',
         'For Business',
@@ -224,12 +244,12 @@ void main() {
       tester,
     ) async {
       final launched = await pumpShell(tester);
-      for (final (label, screen) in [('Working Councils', 'the councils screen'), ('Events', 'the events screen')]) {
+      for (final (label, screen) in [('Councils', 'the councils screen'), ('Events', 'the events screen')]) {
         await openSheet(tester);
         await tester.tap(find.text(label));
         await tester.pumpAndSettle();
         expect(find.text(screen), findsOneWidget, reason: label);
-        expect(find.text('Regional Chapters'), findsNothing, reason: 'the sheet closed when the door was taken');
+        expect(find.text('Chapters'), findsNothing, reason: 'the sheet closed when the door was taken');
 
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
@@ -242,7 +262,7 @@ void main() {
     testWidgets('every other door opens its page on the website, query and all, and closes the sheet', (tester) async {
       final launched = await pumpShell(tester);
       const doors = {
-        'Regional Chapters': 'https://icr.org.in/chapters',
+        'Chapters': 'https://icr.org.in/chapters',
         'Digital Library': 'https://icr.org.in/documents',
         'Hire': 'https://icr.org.in/manage/jobs/new',
         'Sell': 'https://icr.org.in/vendors',
@@ -255,7 +275,7 @@ void main() {
         await tester.tap(find.text(entry.key));
         await tester.pumpAndSettle();
         expect(launched.map((u) => u.toString()), [entry.value], reason: entry.key);
-        expect(find.text('Regional Chapters'), findsNothing, reason: '${entry.key} closes the sheet');
+        expect(find.text('Chapters'), findsNothing, reason: '${entry.key} closes the sheet');
         expect(find.text('the feed'), findsOneWidget);
       }
     });
@@ -276,11 +296,11 @@ void main() {
       final handle = tester.getCenter(find.text('For Business')) - const Offset(0, 150);
       await tester.dragFrom(handle, const Offset(0, 40));
       await tester.pumpAndSettle();
-      expect(find.text('Regional Chapters'), findsOneWidget, reason: 'a short pull springs back');
+      expect(find.text('Chapters'), findsOneWidget, reason: 'a short pull springs back');
 
       await tester.dragFrom(handle, const Offset(0, 300));
       await tester.pumpAndSettle();
-      expect(find.text('Regional Chapters'), findsNothing);
+      expect(find.text('Chapters'), findsNothing);
       expect(find.text('the feed'), findsOneWidget);
     });
   });

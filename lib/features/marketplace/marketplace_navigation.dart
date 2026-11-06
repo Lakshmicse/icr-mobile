@@ -159,7 +159,7 @@ class MarketplaceNavigation {
   Future<void> createCompany(BuildContext context) async {
     final open = onCreateCompany;
     if (open != null) return open();
-    await Navigator.of(context).push<void>(MaterialPageRoute<void>(builder: (_) => const CreateCompanyScreen()));
+    await Navigator.of(context).push<void>(MaterialPageRoute<void>(builder: (c) => CreateCompanyScreen.routed(c)));
   }
 
   Future<void> openRfq(BuildContext context, MarketplaceLinks links, String id) async {

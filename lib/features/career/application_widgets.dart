@@ -6,6 +6,7 @@ import '../../core/theme/app_text.dart';
 import '../jobs/job_links.dart';
 import '../jobs/widgets/job_row.dart';
 import 'application_logic.dart';
+import 'career_base.dart' show CareerClock, systemClock;
 import 'career_format.dart';
 import 'career_models.dart';
 import 'career_styles.dart';
@@ -63,6 +64,9 @@ class ApplicationProgress extends StatelessWidget {
       label: 'Progress: ${steps.where((s) => s.state == ProgressState.current).map((s) => s.label).join()}',
       child: Row(
         key: const ValueKey('progress'),
+        // Top-aligned: a step with no date under it (Offer, still to come) is shorter, and a centred column would
+        // drop its dot and line below the others' (owner, 6 Nov 2026: "there is no line alignment").
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final (i, step) in steps.indexed)
             Expanded(
@@ -230,10 +234,11 @@ class OfferStrip extends StatelessWidget {
 
 /// The next round, on its row: when, how, and the way in.
 class InterviewStrip extends StatelessWidget {
-  const InterviewStrip({super.key, required this.interview, required this.links});
+  const InterviewStrip({super.key, required this.interview, required this.links, this.clock = systemClock});
 
   final CareerInterview interview;
   final JobLinks links;
+  final CareerClock clock;
 
   @override
   Widget build(BuildContext context) {
@@ -245,12 +250,7 @@ class InterviewStrip extends StatelessWidget {
       color: AppColors.primary,
       actions: [
         if (join != null)
-          StripButton(
-            label: 'Join call',
-            icon: LucideIcons.video,
-            filled: true,
-            onTap: () => links.openUri(context, join),
-          )
+          JoinStripButton(interview: interview, clock: clock, onJoin: () => links.openUri(context, join))
         else if (map != null)
           StripButton(label: 'Open in Maps', icon: LucideIcons.mapPin, onTap: () => links.openUri(context, map)),
       ],
@@ -281,10 +281,14 @@ class ApplicationRow extends StatelessWidget {
     required this.onRespond,
     this.onFindSimilar,
     this.busy = false,
+    this.clock = systemClock,
   });
 
   final CareerApplication app;
   final DateTime now;
+
+  /// "Now" for a round's Join, which turns on and off while the row is open.
+  final CareerClock clock;
   final JobLinks links;
 
   /// The row, its title or "View application": the application's own page.
@@ -384,7 +388,7 @@ class ApplicationRow extends StatelessWidget {
             const SizedBox(height: 10),
             switch (next) {
               OfferStep(:final offer) => OfferStrip(offer: offer, now: now, onRespond: onRespond, busy: busy),
-              InterviewStep(:final interview) => InterviewStrip(interview: interview, links: links),
+              InterviewStep(:final interview) => InterviewStrip(interview: interview, links: links, clock: clock),
               HiredStep(:final offer) => NoteStrip(
                 key: const ValueKey('hired-strip'),
                 icon: LucideIcons.circleCheck,

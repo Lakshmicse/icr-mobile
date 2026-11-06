@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/util/join_window.dart' show joinShown;
 import '../../core/util/links.dart';
 import '../mentorship_my/mentoring_format.dart';
 import '../mentorship_my/mentoring_links.dart';
@@ -104,15 +105,12 @@ class OverviewTab extends StatelessWidget {
                       QuietButton(label: 'Review my profile', onPressed: () => onBecomeMentor!(context)),
                   ],
                 ),
+              // Six figures, two rows of three, no boxes (owner, 6 Nov 2026).
               StatStrip(
                 tiles: [
                   ('${d.menteesActive}', 'Active mentees'),
                   ('${d.menteesCompleted}', 'Completed'),
                   ('${c.requestCount}', 'To answer'),
-                ],
-              ),
-              StatStrip(
-                tiles: [
                   (
                     profile == null || profile.ratingCount == 0 ? '-' : profile.rating.toStringAsFixed(1),
                     profile == null || profile.ratingCount == 0
@@ -145,13 +143,14 @@ class OverviewTab extends StatelessWidget {
                       ),
                       if (next.agenda != null && next.agenda!.isNotEmpty)
                         MetaLine(icon: LucideIcons.notebookPen, text: next.agenda!),
-                      if (meetingUri(next.meetingLink) != null)
+                      if (meetingUri(next.meetingLink) != null && joinShown(next.scheduledAt, next.durationMin, c.now))
                         ActionWrap(
                           children: [
-                            SolidButton(
-                              label: 'Join',
-                              icon: LucideIcons.video,
-                              onPressed: () => openUrl(context, meetingUri(next.meetingLink)!),
+                            JoinButton(
+                              link: meetingUri(next.meetingLink)!,
+                              startsAt: next.scheduledAt,
+                              durationMin: next.durationMin,
+                              clock: () => c.now,
                             ),
                           ],
                         ),
@@ -262,6 +261,25 @@ class _Visibility extends StatelessWidget {
   }
 }
 
+/// The mentor's profile editor: the website's `/mentorship/become-a-mentor`, which the app opens natively. Every
+/// item the completeness score counts is set there, except education, which is the person's own profile's.
+const mentorProfilePath = '/mentorship/become-a-mentor';
+
+/// Where one of the API's missing items is fixed. The API sends only its sentence (`CHECKS` in the portal's
+/// `mentor-dashboard.service.ts`), so the sentence is the key; one this table does not know opens the editor.
+String fixPathFor(String missing) => switch (missing) {
+  'Add a profile photo' => '$mentorProfilePath?fix=photo',
+  'Add your current role' || 'State your years of experience' => '$mentorProfilePath?fix=intro',
+  'Describe how you mentor' => '$mentorProfilePath?fix=bio',
+  'Add areas of expertise' || 'Add conversation topics' => '$mentorProfilePath?fix=expertise',
+  'List your certifications' => '$mentorProfilePath?fix=certifications',
+  'Say when you are free' => '$mentorProfilePath?fix=availability',
+  'Add the languages you speak' => '$mentorProfilePath?fix=languages',
+  'Add your work history' => '$mentorProfilePath?fix=experience',
+  'Add your education' => '/profile?tab=education',
+  _ => mentorProfilePath,
+};
+
 class _Completeness extends StatelessWidget {
   const _Completeness({required this.dashboard, required this.links});
 
@@ -297,14 +315,32 @@ class _Completeness extends StatelessWidget {
               child: Text('Nothing is missing.', style: MentoringText.body),
             )
           else ...[
-            const SizedBox(height: 8),
-            for (final m in d.missing) MetaLine(icon: LucideIcons.circle, text: m),
+            const SizedBox(height: 4),
+            // Each line opens the form that fixes it; one the app does not know opens the whole profile.
+            for (final m in d.missing)
+              InkWell(
+                key: ValueKey('missing-$m'),
+                onTap: () => links.openSite(context, fixPathFor(m)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Row(
+                    children: [
+                      const Icon(LucideIcons.circle, size: 13, color: AppColors.outline),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(m, style: MentoringText.meta.copyWith(color: AppColors.onSurfaceVariant)),
+                      ),
+                      const Icon(LucideIcons.chevronRight, size: 15, color: AppColors.outline),
+                    ],
+                  ),
+                ),
+              ),
             ActionWrap(
               children: [
                 QuietButton(
                   label: 'Finish my profile',
-                  icon: LucideIcons.externalLink,
-                  onPressed: () => links.openSite(context, '/profile'),
+                  icon: LucideIcons.pencil,
+                  onPressed: () => links.openSite(context, mentorProfilePath),
                 ),
               ],
             ),

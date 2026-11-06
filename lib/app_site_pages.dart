@@ -38,6 +38,8 @@ import 'features/mentorship/find_mentors_screen.dart';
 import 'features/mentorship_my/my_mentoring_controller.dart' show MyTab;
 import 'features/mentorship_my/my_mentoring_screen.dart';
 import 'features/messaging/messaging_launcher.dart';
+import 'features/notifications/notification_seen.dart';
+import 'features/notifications/notification_target.dart' show NotificationKinds;
 import 'features/notifications/notifications_screen.dart' show openNotifications;
 import 'features/shell/app_shell.dart';
 import 'features/shell/icr_bottom_nav.dart' show AppTab;
@@ -47,6 +49,7 @@ import 'features/site/legal_page.dart' show legalPages;
 import 'features/site/legal_page_screen.dart';
 import 'features/site/partner_apply_screen.dart';
 import 'features/site/refer_screen.dart';
+import 'features/support/support_routes.dart' show openSupportTicket;
 import 'features/volunteer/get_involved_screen.dart' show GetInvolvedScreen;
 import 'app_search.dart' show openMentorProfile;
 
@@ -92,17 +95,28 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
       ctx,
       (c) => PartnerApplyScreen(
         onBack: () => Navigator.of(c).pop(),
-        onCreateCompany: () => AppShell.push<void>(c, (r) => CreateCompanyScreen()),
+        onCreateCompany: () => AppShell.push<void>(c, (r) => CreateCompanyScreen.routed(r)),
       ),
     );
   }
+  // `?focus=invitations` ("{company} wants you on its team") brings the places waiting for the person into view.
   if (path == '/account/companies') {
     return (ctx) => AppShell.push<void>(
       ctx,
       (c) => MyCompaniesScreen(
         onBack: () => Navigator.of(c).pop(),
         onOpenCompany: shell == null ? null : (id) => unawaited(openCompanyById(shell, id)),
+        focusInvitations: q['focus'] == 'invitations',
       ),
+    );
+  }
+  // One help request's thread (`/support/<id>`; opening it reads the notifications about it, as the website's page
+  // does). The list (`/support`) and the company's team (`/manage/team`) are `inAppScreens`. Native since 5 Nov 2026.
+  if (parts.length == 2 && parts[0] == 'support') {
+    return (ctx) => openSupportTicket(
+      ctx,
+      parts[1],
+      onOpened: (c) => unawaited(markNotificationsSeen(c, NotificationKinds.supportTicket, parts[1])),
     );
   }
 
@@ -247,6 +261,14 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
     if (parts.length == 3) return (ctx) => hiring().editJob(parts[2]);
     if (parts.length == 4 && parts[3] == 'edit') return (ctx) => hiring().editJob(parts[2]);
     if (parts.length == 4 && parts[3] == 'applicants') return (ctx) => hiring().applicants(parts[2]);
+  }
+  // An interview's page for its panel (`/manage/interviews/<id>`): the app's own since 4 Nov 2026. Opening it reads
+  // what told the person about the round, as the website's page does (`useMarkSeen`).
+  if (shell != null && parts.length == 3 && parts[0] == 'manage' && parts[1] == 'interviews') {
+    return (ctx) => hiringRoutesOf(shell, navigation: appJobsNavigation(shell)).interview(
+      parts[2],
+      onOpened: (c) => unawaited(markNotificationsSeen(c, NotificationKinds.interviewPanel, parts[2])),
+    );
   }
   return null;
 }

@@ -10,8 +10,10 @@ import 'core/config.dart';
 import 'core/theme/app_theme.dart';
 import 'app_notifications.dart';
 import 'app_search.dart' show appSearchEnvironment;
+import 'app_workspaces.dart';
 import 'core/util/app_actions.dart';
 import 'core/util/links.dart' show SiteRoutes, openSitePage;
+import 'core/widgets/tablet_frame.dart';
 import 'features/auth/auth_palette.dart';
 import 'features/auth/sign_in_screen.dart';
 import 'features/feed/api_feed_repository.dart';
@@ -35,6 +37,8 @@ import 'features/marketplace/demo_marketplace_repository.dart';
 import 'features/marketplace/marketplace_controller.dart';
 import 'features/marketplace/marketplace_screen.dart';
 import 'features/account/companies/create_company_screen.dart';
+import 'features/assistant/assistant_controller.dart';
+import 'features/assistant/open_assistant.dart' show assistantControllerFor;
 import 'features/become_mentor/become_mentor_screen.dart';
 import 'features/career/company_insights_screen.dart' show openCompanyInsightsById;
 import 'features/shell/icr_bottom_nav.dart' show AppTab;
@@ -54,6 +58,7 @@ import 'features/profile/profile_drawer.dart';
 import 'features/profile/profile_drawer_data.dart';
 import 'features/search/search_screen.dart' show SearchEnvironment, openGlobalSearch;
 import 'features/shell/app_shell.dart';
+import 'features/workspaces/role_workspaces.dart';
 import 'features/web/open_in_app_web.dart';
 
 class IcrApp extends StatelessWidget {
@@ -70,11 +75,16 @@ class IcrApp extends StatelessWidget {
         ChangeNotifierProvider<AuthController>(
           create: (c) => AuthController(api: c.read<ApiClient>(), tokens: c.read<TokenStore>())..restore(),
         ),
+        // One conversation with Saathi for as long as the app runs, wherever it is opened from.
+        ChangeNotifierProvider<AssistantController>(create: assistantControllerFor),
       ],
       child: MaterialApp(
         title: 'ICR',
         debugShowCheckedModeBanner: false,
         theme: buildAppTheme(),
+        // A wide window (a tablet sideways) gets the website's centred page frame around everything, dialogs and
+        // sheets included, since the frame sits around the navigator.
+        builder: (context, child) => TabletFrame(child: child!),
         home: const _SessionGate(),
       ),
     );
@@ -232,7 +242,16 @@ class _Home extends StatelessWidget {
           child: AppShell(
             drawer: ProfileDrawer(
               screens: screens,
-              // A company in "Your companies" opens its page in the app; `shellContext` is below the providers.
+              // The owner's drawer design (6 Nov 2026): Company, Marketplace, Mentorship, Learning, Jobs, each holding the
+              // pages the role has on the website (owner, 5 Nov 2026) that the app shows itself, then Account.
+              workspaces: user == null ? null : workspacesFor(user!, opens: (path) => workspaceOpens(path, screens)),
+              account: user == null ? const AccountMenu() : accountMenuFor(user!),
+              // The website's "Do more on ICR" for a member acting as themselves: a company to hire, sell or buy
+              // with, and becoming a mentor (owner, 6 Nov 2026).
+              doors: user == null ? const [] : startDoorsFor(user!),
+              mentorStatus: user?.mentorStatus,
+              onOpenSection: (section, i) => openWorkspaceSection(shellContext, section, index: i, viewer: _viewer),
+              // A company in "My companies" opens its page in the app; `shellContext` is below the providers.
               onOpenCompany: (ctx, id) => openCompanyInsightsById(
                 shellContext,
                 companyId: id,
@@ -287,7 +306,7 @@ class _Home extends StatelessWidget {
                     AppShell.goToTab(ctx, AppTab.jobs);
                     if (query != null) ctx.read<JobsController>().setSearch(query);
                   },
-                  onCreateCompany: () => AppShell.push<void>(ctx, (c) => CreateCompanyScreen()),
+                  onCreateCompany: () => AppShell.push<void>(ctx, (c) => CreateCompanyScreen.routed(c)),
                   onDemonstrateSkills: () => AppShell.goToTab(ctx, AppTab.learning),
                 ),
               ),

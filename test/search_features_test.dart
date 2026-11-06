@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:icr_mobile/core/auth/session_user.dart';
 import 'package:icr_mobile/features/search/feature_catalogue.dart';
 
 List<String> ids(String q, {Set<String>? available}) =>
@@ -6,6 +7,25 @@ List<String> ids(String q, {Set<String>? available}) =>
 
 void main() {
   group('the feature catalogue', () {
+    test('"Become a mentor" is offered only to someone who may apply, as the website gates its palette row', () {
+      SessionUser who({String role = 'PROFESSIONAL', String? mentorStatus, bool mentorsSomeone = false}) => SessionUser(
+        id: 'u1',
+        email: 'a@b.c',
+        firstName: 'A',
+        lastName: 'B',
+        role: role,
+        mentorStatus: mentorStatus,
+        mentorsSomeone: mentorsSomeone,
+      );
+      expect(featureOfferedTo('become_mentor', null), isTrue, reason: 'a visitor');
+      expect(featureOfferedTo('become_mentor', who()), isTrue);
+      expect(featureOfferedTo('become_mentor', who(mentorStatus: 'APPROVED')), isFalse);
+      expect(featureOfferedTo('become_mentor', who(mentorStatus: 'PENDING')), isFalse);
+      expect(featureOfferedTo('become_mentor', who(mentorsSomeone: true)), isFalse);
+      expect(featureOfferedTo('become_mentor', who(role: 'SUPER_ADMIN')), isFalse);
+      expect(featureOfferedTo('find_mentors', who(mentorStatus: 'APPROVED')), isTrue, reason: 'everything else');
+    });
+
     test('every entry has a unique id, a title, a subtitle and keywords', () {
       final seen = <String>{};
       for (final f in featureCatalogue) {
@@ -21,8 +41,23 @@ void main() {
       expect(
         all,
         containsAll([
-          'jobs', 'learning', 'mentorship', 'marketplace', 'forums', 'find_mentors', 'mock', 'flash', 'events',
-          'councils', 'chapters', 'library', 'plans', 'settings', 'messages', 'notifications', 'profile',
+          'jobs',
+          'learning',
+          'mentorship',
+          'marketplace',
+          'forums',
+          'find_mentors',
+          'mock',
+          'flash',
+          'events',
+          'councils',
+          'chapters',
+          'library',
+          'plans',
+          'settings',
+          'messages',
+          'notifications',
+          'profile',
           'applications',
         ]),
       );
@@ -80,7 +115,11 @@ void main() {
       final named = m.where((x) => x.feature.title.toLowerCase().contains('mentor')).map((x) => x.score).toList();
       final mentioned = m.where((x) => !x.feature.title.toLowerCase().contains('mentor')).map((x) => x.score).toList();
       expect(named, isNotEmpty);
-      expect(mentioned, isNotEmpty, reason: 'pages that only carry the word as a keyword (Mentoring programmes, Group sessions...)');
+      expect(
+        mentioned,
+        isNotEmpty,
+        reason: 'pages that only carry the word as a keyword (Mentoring programmes, Group sessions...)',
+      );
       expect(named.reduce((a, b) => a < b ? a : b), greaterThan(mentioned.reduce((a, b) => a > b ? a : b)));
     });
 

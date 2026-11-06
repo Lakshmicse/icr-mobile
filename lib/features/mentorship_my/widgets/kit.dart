@@ -5,7 +5,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text.dart';
+import '../../../core/util/join_window.dart';
+import '../../../core/util/links.dart' show openUrl;
 import '../../../core/widgets/title_bar.dart';
+import '../mentoring_clock.dart';
+import '../mentoring_format.dart' show timeLabel, whenLabel;
 import '../mentoring_models.dart';
 
 /// Colours the mentoring screens add to the palette (the Mentor Profile's mint
@@ -241,31 +245,48 @@ class EmptyNote extends StatelessWidget {
   }
 }
 
-/// The white card of these screens: a hairline edge, 10 dp corners.
+/// The row of these screens: no outline (the owner's rule, Nov 2026), set on the page's own margin and
+/// closed by a 1 px hairline, so a run of them reads as rows. Only [padding]'s top and bottom apply.
 class MentoringCard extends StatelessWidget {
-  const MentoringCard({super.key, required this.child, this.onTap, this.padding = const EdgeInsets.all(14)});
+  const MentoringCard({super.key, required this.child, this.onTap, this.padding = const EdgeInsets.all(14), this.tint});
 
   final Widget child;
   final VoidCallback? onTap;
   final EdgeInsets padding;
 
+  /// A pale fill that marks a row asking for attention, in place of an outline. A tinted row is a
+  /// rounded block set in from the page margin, and has no hairline of its own.
+  final Color? tint;
+
   @override
   Widget build(BuildContext context) {
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(10),
-      side: const BorderSide(color: AppColors.cardRule),
-    );
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: Colors.white,
-        shape: shape,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(padding: padding, child: child),
+    if (tint != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Material(
+          color: tint,
+          borderRadius: BorderRadius.circular(10),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(padding: padding, child: child),
+          ),
         ),
-      ),
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Material(
+          color: Colors.white,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(padding: padding.copyWith(left: 0, right: 0), child: child),
+          ),
+        ),
+        const Divider(height: 1, thickness: 1, color: AppColors.cardRule),
+      ],
     );
   }
 }
@@ -514,6 +535,54 @@ class QuietButton extends StatelessWidget {
   }
 }
 
+/// The one Join for a booked call, read through `core/util/join_window.dart`:
+/// pressable from 15 minutes before the start until 30 minutes after the end,
+/// greyed with the time it opens before that, and gone after. A row adds it only
+/// while `joinShown(...)` says so, so a call long over leaves no gap.
+class JoinButton extends StatelessWidget {
+  JoinButton({
+    super.key,
+    required this.link,
+    required DateTime startsAt,
+    required int durationMin,
+    this.label = 'Join',
+    this.clock,
+  }) : windows = [JoinWindow(startsAt, durationMin)];
+
+  /// A multi-day session: open while any of its days is.
+  const JoinButton.days({super.key, required this.link, required this.windows, this.label = 'Join', this.clock});
+
+  final Uri link;
+  final List<JoinWindow> windows;
+  final String label;
+
+  /// "Now"; the mentoring clock tests pin when not given.
+  final DateTime Function()? clock;
+
+  @override
+  Widget build(BuildContext context) {
+    return JoinWindowBuilder(
+      windows: windows,
+      clock: clock ?? () => mentoringNow(),
+      builder: (context, state, window) => switch (state) {
+        JoinState.open => SolidButton(label: label, icon: LucideIcons.video, onPressed: () => openUrl(context, link)),
+        // Takes the tap, so pressing it early does nothing rather than open the card behind it.
+        JoinState.early => GestureDetector(
+          onTap: () {},
+          child: QuietButton(
+            key: const ValueKey('join-later'),
+            // One call's card already says the day; a multi-day one names the day that opens next.
+            label: '$label from ${windows.length > 1 ? whenLabel(window!.opensAt) : timeLabel(window!.opensAt)}',
+            icon: LucideIcons.video,
+            onPressed: null,
+          ),
+        ),
+        JoinState.closed => const SizedBox.shrink(),
+      },
+    );
+  }
+}
+
 /// Buttons in a row that wraps on a narrow phone.
 class ActionWrap extends StatelessWidget {
   const ActionWrap({super.key, required this.children, this.top = 12});
@@ -597,9 +666,10 @@ class _SegmentTabsState extends State<SegmentTabs> {
       key: _key(i),
       button: true,
       selected: on,
+      // A filled pill, never an outline (the owner's rule, Nov 2026): the brand for the tab shown, a quiet grey else.
       child: Material(
-        color: on ? AppColors.primary : Colors.white,
-        shape: StadiumBorder(side: BorderSide(color: on ? AppColors.primary : AppColors.outlineVariant)),
+        color: on ? AppColors.primary : const Color(0xFFEEF1F4),
+        shape: const StadiumBorder(),
         child: InkWell(
           customBorder: const StadiumBorder(),
           onTap: () => widget.onSelect(i),
@@ -637,7 +707,8 @@ class _SegmentTabsState extends State<SegmentTabs> {
   }
 }
 
-/// A number over a caption, for a strip of totals.
+/// A number over a caption, for a strip of totals: plain figures on the page, no box and no fill (owner,
+/// 6 Nov 2026: "these designs should not have the background colour and efficiently use the space").
 class StatTile extends StatelessWidget {
   const StatTile({super.key, required this.value, required this.label});
 
@@ -647,13 +718,8 @@ class StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8F9FA),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.outlineVariant),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

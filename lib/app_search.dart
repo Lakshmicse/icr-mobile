@@ -7,6 +7,8 @@ import 'core/config.dart';
 import 'core/util/links.dart' show showMessage;
 import 'core/widgets/detail_sheet.dart';
 import 'features/account/companies/create_company_screen.dart';
+import 'features/account/widgets/account_session.dart' show maybeAuth;
+import 'features/search/feature_catalogue.dart' show featureOfferedTo;
 import 'features/become_mentor/become_mentor_screen.dart';
 import 'features/career/career_routes.dart';
 import 'features/events/api_events_repository.dart';
@@ -76,14 +78,14 @@ import 'features/shell/icr_bottom_nav.dart' show AppTab;
 /// shell the way it does from Home.
 SearchEnvironment appSearchEnvironment({required FeedAuthor viewer}) => SearchEnvironment(
   sources: _sources,
+  offered: (ctx, id) => featureOfferedTo(id, maybeAuth(ctx)?.user),
   recents: (ctx) => AppConfig.demo ? MemoryRecentStore() : SecureRecentStore(userId: viewer.id),
   openers: {
     SearchKind.person: (ctx, hit) => openMemberProfile(ctx, hit.id),
     SearchKind.job: (ctx, hit) => showJobSheet(ctx, hit.payload as Job),
     SearchKind.mentor: (ctx, hit) => openMentorProfile(ctx, hit.id),
     SearchKind.course: (ctx, hit) => _openCourse(ctx, hit.payload as Course),
-    SearchKind.supplier: (ctx, hit) =>
-        showSupplierSheetById(ctx, hit.id, navigation: appMarketplaceNavigation(ctx)),
+    SearchKind.supplier: (ctx, hit) => showSupplierSheetById(ctx, hit.id, navigation: appMarketplaceNavigation(ctx)),
     SearchKind.event: (ctx, hit) => openEventBySlug(ctx, hit.slug ?? hit.id),
     SearchKind.discussion: (ctx, hit) => _openThread(ctx, hit.payload as FeedPost, viewer),
     SearchKind.document: (ctx, hit) => _openDocument(ctx, hit.payload as LibraryDocument),
@@ -138,7 +140,8 @@ List<SearchSource> _sources(BuildContext ctx) {
   );
 }
 
-LearningRepository _learning(ApiClient api) => AppConfig.demo ? DemoLearningRepository() : ApiLearningRepository(api: api);
+LearningRepository _learning(ApiClient api) =>
+    AppConfig.demo ? DemoLearningRepository() : ApiLearningRepository(api: api);
 EventsRepository _events(ApiClient api) => AppConfig.demo ? DemoEventsRepository() : ApiEventsRepository(api: api);
 LibraryRepository _library(ApiClient api) => AppConfig.demo ? DemoLibraryRepository() : ApiLibraryRepository(api: api);
 
@@ -166,10 +169,7 @@ Future<void> _openThread(BuildContext ctx, FeedPost post, FeedAuthor viewer) asy
     slug: post.slug,
     preview: post,
     unread: feed.unread,
-    callbacks: ForumCallbacks(
-      onBell: () => openNotifications(ctx),
-      onOpenMember: (id) => openMemberProfile(ctx, id),
-    ),
+    callbacks: ForumCallbacks(onBell: () => openNotifications(ctx), onOpenMember: (id) => openMemberProfile(ctx, id)),
   );
 }
 
@@ -216,7 +216,7 @@ Map<String, FeatureOpener> _features(FeedAuthor viewer) {
     'posted_jobs': (ctx) async {
       if (ctx.read<JobsController>().canHire) return hiringRoutesOf(ctx).jobs();
       showMessage(ctx, 'Posting jobs starts with a company. Create one and invite your hiring team.');
-      return AppShell.push<void>(ctx, (c) => CreateCompanyScreen());
+      return AppShell.push<void>(ctx, (c) => CreateCompanyScreen.routed(c));
     },
 
     'find_mentors': (ctx) => openFindMentors(ctx, onOpenMentor: (c, id) => openMentorProfile(c, id)),

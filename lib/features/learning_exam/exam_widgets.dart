@@ -72,14 +72,14 @@ class ExamTitleBar extends StatelessWidget {
   }
 }
 
-/// A white card with the hairline edge the Learning cards wear.
+/// A tinted card: no outline (the owner's rule, Nov 2026). Pass a white [color] for a block whose rows carry
+/// their own hairlines.
 class ExamCard extends StatelessWidget {
   const ExamCard({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16),
-    this.color = Colors.white,
-    this.borderColor = ExamColors.cardBorder,
+    this.color = AppColors.surfaceContainer,
     this.radius = 12,
     this.onTap,
   });
@@ -87,16 +87,12 @@ class ExamCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   final Color color;
-  final Color borderColor;
   final double radius;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(radius),
-      side: BorderSide(color: borderColor),
-    );
+    final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius));
     return Material(
       color: color,
       shape: shape,
@@ -138,10 +134,12 @@ class InfoPill extends StatelessWidget {
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        // A tinted pill with no outline (owner, 3 and 6 Nov 2026: no borders anywhere; a tint sets a pill off),
+        // unless a caller asks for a [border].
         decoration: BoxDecoration(
-          color: fill ?? Colors.white,
+          color: fill ?? color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: border ?? color.withValues(alpha: 0.3)),
+          border: border == null ? null : Border.all(color: border!),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -378,11 +376,7 @@ class StatTile extends StatelessWidget {
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.22)),
-        ),
+        decoration: BoxDecoration(color: color.withValues(alpha: 0.09), borderRadius: BorderRadius.circular(12)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -220,11 +220,7 @@ class ReplyTile extends StatelessWidget {
                     bottomLeft: Radius.circular(HomeReplyDesign.bubbleRadius),
                     bottomRight: Radius.circular(HomeReplyDesign.bubbleRadius),
                   ),
-                  border: focused
-                      ? Border.all(color: AppColors.primary, width: 1.5)
-                      : accepted
-                      ? Border.all(color: ReplyDesign.acceptedBorder)
-                      : null,
+                  border: focused ? Border.all(color: AppColors.primary, width: 1.5) : null,
                 ),
                 padding: const EdgeInsets.fromLTRB(12, 8, 4, 10),
                 child: Column(
@@ -288,7 +284,8 @@ class ReplyTile extends StatelessWidget {
                     children: [
                       ReplyAction(
                         key: ValueKey('reply-like:${reply.id}'),
-                        icon: LucideIcons.thumbsUp,
+                        // Filled once liked, as LinkedIn's (owner, 6 Nov 2026).
+                        icon: reply.liked ? Icons.thumb_up : LucideIcons.thumbsUp,
                         label: reply.likes > 0 ? '${reply.likes}' : 'Like',
                         semantics: reply.liked ? 'Unlike' : 'Like',
                         active: reply.liked,
@@ -343,14 +340,7 @@ class ReplyTile extends StatelessWidget {
             decoration: BoxDecoration(
               color: accepted ? ReplyDesign.acceptedFill : ReplyDesign.bubbleFill,
               borderRadius: BorderRadius.circular(ReplyDesign.bubbleRadius),
-              border: Border.all(
-                color: focused
-                    ? AppColors.primary
-                    : accepted
-                    ? ReplyDesign.acceptedBorder
-                    : ReplyDesign.bubbleBorder,
-                width: focused ? 1.5 : 1,
-              ),
+              border: focused ? Border.all(color: AppColors.primary, width: 1.5) : null,
               boxShadow: const [BoxShadow(color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1))],
             ),
             padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -369,7 +359,12 @@ class ReplyTile extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // The name may take up to three fifths of the row and the role pill two, each
+                            // ellipsised past that: a long role ("Workplace experience and employee wellbeing")
+                            // once ran 16 px past the row's end (owner, 6 Nov 2026). A short one takes only its
+                            // own width, so the usual rows are unchanged.
                             Flexible(
+                              flex: 3,
                               child: Baseline(
                                 baseline: ReplyDesign.nameBaseline,
                                 baselineType: TextBaseline.alphabetic,
@@ -383,7 +378,7 @@ class ReplyTile extends StatelessWidget {
                             ),
                             if (role != null && role.isNotEmpty) ...[
                               const SizedBox(width: 6.25),
-                              Flexible(flex: 0, child: _RolePill(role: role)),
+                              Flexible(flex: 2, child: _RolePill(role: role)),
                             ],
                           ],
                         ),
@@ -434,7 +429,8 @@ class ReplyTile extends StatelessWidget {
                     children: [
                       ReplyAction(
                         key: ValueKey('reply-like:${reply.id}'),
-                        icon: LucideIcons.thumbsUp,
+                        // Filled once liked, as LinkedIn's (owner, 6 Nov 2026).
+                        icon: reply.liked ? Icons.thumb_up : LucideIcons.thumbsUp,
                         label: reply.likes > 0 ? '${reply.likes}' : 'Like',
                         semantics: reply.liked ? 'Unlike' : 'Like',
                         active: reply.liked,

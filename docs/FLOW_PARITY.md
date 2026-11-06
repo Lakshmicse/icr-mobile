@@ -173,7 +173,7 @@ yet built) · `read` — the app shows it, the action itself is the website's (p
 | 1 Complete your company profile `/company` | Create a company page (name, industry, size, type, city) | the page itself works; everything after it is **web** |
 | 2 Get verified | — | **web** |
 | 3 List products & services `/manage/products` | — | **web** |
-| 4 Invite your team `/manage/team` | — | **web** (join requests, invites, inbox topics) |
+| 4 Invite your team `/manage/team` | Team (`TeamScreen`): invite by email, add someone on ICR, approve or decline join requests | works since 5 Nov 2026 (widget tests, `test/live/team_live_test.dart` reads it); the inbox-topic and learning-role editors are **web** |
 | 5 Post a job or requirement | Post a job / Post RFQ | works — `role_company_live` |
 | 6 Pick a membership plan | Membership | **read** |
 
@@ -182,10 +182,10 @@ yet built) · `read` — the app shows it, the action itself is the website's (p
 | Web step | In the app | Status |
 |---|---|---|
 | Post a job for your office; review applicants; schedule interviews | the same hiring screens, scoped to the office (a posting outside it is refused) | works — `role_company_live` |
-| Review your office team `/manage/team` | — | **web** |
+| Review your office team `/manage/team` | Team: the office's members, requests and pending adds (an office admin invites recruiters and hiring managers; edit and remove stay with company admins) | works since 5 Nov 2026 |
 | Source candidates `/talent` | — | **web** |
 | A hiring manager's assigned interviews | Interviews (the panel) | works |
-| Submit interview feedback | — | — (not exercised by a live test) |
+| Submit interview feedback `/manage/interviews/<id>` | the interview's page (`InterviewBriefScreen`): the scorecard opens when the round starts | works — `interview_brief_live_test` reads the seeded rounds as panelist, recruiter and stranger, and proves the body through the API's refusals; an accepted submit is covered only by widget tests (the API cannot delete a scorecard) |
 
 ### GUEST and staff
 
@@ -213,3 +213,21 @@ there) and the team page.
 As the role records say: threads a bid or a message opened outlive the test; uploads stay in `uploads/`; a sitting
 the exam journey starts is reset by `learning-flows.ts`; Bharat's acting company by `account.ts`. Run the seeds
 before a live run.
+
+## Tablets (6 Nov 2026)
+
+The owner asked for the app to be checked on a tablet too ("for Tab view also, create an emulator and show it"), and then for every screen to view correctly on both. A 10-inch AVD (`ICR_Tablet`, 2560×1600 @ 320 dpi = 1280×800 dp, landscape, hand-written under `~/.android/avd/` because the SDK has no `cmdline-tools`) showed every phone layout stretched edge to edge sideways: a feed line 1,250 dp long, a saved job's bookmark 1,000 dp from its title. The fix is one widget, `TabletFrame` (`lib/core/widgets/tablet_frame.dart`), set as `MaterialApp.builder` in `app.dart`: from Material's "expanded" width (840 dp) the whole app — navigator, dialogs and sheets included — sits in a centred 840 dp column, white at the sides with a hairline at each edge, the website's centred page frame; `MediaQuery` inside reports the column's width. A phone, or a tablet held upright (800 dp), is left alone, and the portrait tablet already reads well (two-column grids and rails). `test/tablet_frame_test.dart` pins both. Driving the tablet with `adb input tap` needs fresh coordinates after the drawer header's counts load (the rows move).
+
+## Learning roles on the team page (6 Nov 2026)
+
+The owner asked for the website's "who can be what" to hold in the app ("who can register for a company, who can be a mentor, who can be a Learning Partner — like these roles"). One gap was the team page: on the website a company admin at a company ICR approved as a learning partner (`UserDto.learningPartner`) invites or adds people with **learning roles** (Course Admin, Batch Admin, Enrolment Admin, Trainer, Finance — `LearningStaffRole`) on top of their main role, may invite a **Member** (PROFESSIONAL, "Member (learning roles only)" in the invite select) who joins only for those, and edits a member's learning roles; the API refuses a Member without one and keeps one on a member who joined for them. The app's `TeamViewer` now carries `learningPartner` (`SessionUser.learningPartner`), `givesLearningRoles` gates a `LearningRolesField` (ticks, the website's words) on the invite, add and edit sheets, Member joins the invite/add/edit role lists only there, a Member picks no office, and the repository sends `learningRoles` with an invite, an add and a member edit. The website's add dialog lists Member but sends no learning roles (the API then refuses); the app sends them, so its add works. `test/team_test.dart` › "learning roles" pins it.
+
+## Who can be what — the website's gates in the app (6 Nov 2026, evening)
+
+The owner: "check the web who can register for a company, who can be a mentor, who can be a Learning Partner — like these roles; check the web and do it in the app accordingly, and validations also." Three audits ran against `main`, each a table of web rule → app → fix; the notes sit with each screen's doc (`docs/screens/account.md`, `become_mentor.md`, `learning_hub.md`, `profile_menu.md`). In short:
+- **Company page** (`CreateCompanyScreen`): any signed-in member but ICR staff (who see the website's card instead of the form), several companies per person, the website's `isWebsiteUrl` rule, the optional documents under the organisation type, a head office anywhere in the world (`/locations/search`), the logo and refusal sentences, "Request sent" on a look-alike already asked. `?role=` changes nothing on the web either. Every entry point now pushes `CreateCompanyScreen.routed(ctx)`, so the welcome steps open their pages (`companyNextStepPath`) and a look-alike's "View page" opens the company — nine pushes had passed nothing.
+- **Become a mentor**: `canOfferToMentor` already matched; the page now refuses SUPER_ADMIN with the website's sentence, the conduct declaration is one tick beside Submit sent as `{conductVersion}` (the sheet's "I Agree" ticks it; its words are the website's `ConductDialog`), the session is refreshed after save/submit/withdraw so the drawer follows, and the renewal and certification sentences match. The search catalogue offers "Become a mentor" only to someone who may apply (`featureOfferedTo`), and someone acting for a company gets the row under Mentorship (the undecided member has the door).
+- **Learning partner**: applies as a company from the partner directory — admins' companies only, Partner/With ICR blocked, "Apply to become a learning partner" with one optional notes box (`{companyId, proposalNotes?}`), the sent state, Apply offered in every state of the directory. A partner company's admin now gets the Partner Institute row (`SessionUser.learningPartner`), whose "Add a trainer" / "Add a programme specialist" open the team invite with that learning role ticked (`/manage/team?invite=TRAINER|COURSE_ADMIN`).
+- **Role doors**: `startDoorsFor` matched `isUndecidedPerson`; captions are the website's WelcomeCard words; nothing offers an invite-only role to register for.
+
+Also that evening: ICR's own notifications (no person or company behind them) carry the ICR mark, as LinkedIn's carry its logo; a post's or reply's Like is a filled glyph once reacted; the duplicated career rows the owner saw on `buyer@icr.dev` were data — 16 rows, eight copies of two roles, written in one whole-list `PUT /profile/experience` on 4 Nov 12:07 (the API replaces the list with whatever a client sends; neither the app's `saveRole` nor the website's `mergeItem` doubles it) — deduplicated locally with SQL; production would need the same if it shows there.
