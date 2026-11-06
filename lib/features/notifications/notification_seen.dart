@@ -15,13 +15,13 @@ import 'unread_counts.dart';
 ///
 ///     initState: unawaited(markNotificationsSeen(context, NotificationKinds.rfqSupplier, rfqId));
 ///
-/// A failure is ignored: the bell catches up on its next read.
+/// A failure is ignored, a context with no notifications source too: the bell catches up on its next read.
 Future<void> markNotificationsSeen(BuildContext context, String kind, String id) async {
   final counts = Provider.of<UnreadCounts?>(context, listen: false);
-  final repository =
-      Provider.of<NotificationsRepository?>(context, listen: false) ??
-      ApiNotificationsRepository(api: context.read<ApiClient>());
   try {
+    final repository =
+        Provider.of<NotificationsRepository?>(context, listen: false) ??
+        ApiNotificationsRepository(api: context.read<ApiClient>());
     final read = await repository.markSeen(kind, id);
     if (read > 0 && counts != null) unawaited(counts.refresh());
   } catch (_) {}

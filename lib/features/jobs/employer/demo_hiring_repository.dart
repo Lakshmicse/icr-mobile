@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'applicants_controller.dart' show stageMoves;
 import 'hiring_models.dart';
 import 'hiring_repository.dart';
+import 'interview_brief_models.dart';
 
 /// The employer screens' sample content, bundled for design review and for tests that
 /// must not touch the API. It keeps what a test changes (a job posted, an applicant
@@ -467,6 +470,124 @@ class DemoHiringRepository implements HiringRepository {
       ],
     );
     return out ?? (throw StateError('no interview $interviewId'));
+  }
+
+  /// The viewer's scorecards, by interview.
+  final _scorecards = <String, Scorecard>{};
+
+  /// A round the viewer sits on: its candidate is the first one at the Interview stage, it started an hour
+  /// ago (so the scorecard is open), one other panelist has scored it, and round 1 came before it.
+  @override
+  Future<InterviewBrief> interviewBrief(String interviewId) async {
+    calls.add('interviewBrief $interviewId');
+    final a = _applicants.firstWhere((x) => x.stage == 'INTERVIEW', orElse: () => _applicants.first);
+    final started = now.subtract(const Duration(hours: 1));
+    return InterviewBrief(
+      id: interviewId,
+      round: 2,
+      title: 'Operations panel',
+      scheduledAt: started,
+      durationMins: 45,
+      mode: 'VIDEO',
+      meetingLink: 'https://meet.google.com/abc-defg-hij',
+      status: 'SCHEDULED',
+      notes: 'Probe how they ran the night shift handover at their last site.',
+      panel: const ['You', 'Meera Iyer'],
+      isPanelist: true,
+      myScorecard: _scorecards[interviewId],
+      panelScorecards: [
+        if (_scorecards[interviewId] != null)
+          Scorecard(
+            id: 'sc-meera',
+            interviewer: 'Meera Iyer',
+            rating: 4,
+            recommendation: 'YES',
+            strengths: 'Clear on vendor SLAs and escalation.',
+            submittedAt: started.add(const Duration(minutes: 50)),
+          ),
+      ],
+      panelSubmittedCount: 1,
+      application: BriefApplication(
+        id: a.id,
+        stage: a.stage,
+        appliedAt: a.appliedAt,
+        applicantId: a.userId,
+        applicantName: a.name,
+        photoUrl: a.photoUrl,
+        jobId: a.jobId,
+        jobTitle: 'Facilities Operations Lead',
+        coverNote: a.coverNote,
+        linkedinUrl: a.linkedinUrl,
+        resumeUrl: a.resumeFileUrl,
+        headline: a.headline,
+        skills: a.skills,
+        experienceYears: a.experienceYears,
+        currentLocation: a.location,
+        answers: const [
+          BriefAnswer(
+            prompt: 'How many years have you run site operations?',
+            type: 'YEARS',
+            answer: '9',
+            graded: true,
+            meetsIdeal: true,
+            mustHave: true,
+            ideal: '5',
+          ),
+          BriefAnswer(prompt: 'Can you work rotational shifts?', type: 'YES_NO', answer: 'true', graded: true, meetsIdeal: true, ideal: 'true'),
+        ],
+        qualificationMet: 2,
+        qualificationTotal: 2,
+        matchScore: a.matchScore,
+        aiSummary: 'Runs multi-site facilities with a strong record on vendor management.',
+        screenedAt: a.appliedAt,
+      ),
+      earlierRounds: [
+        BriefRound(
+          id: 'iv-round-1',
+          round: 1,
+          title: 'Screening call',
+          scheduledAt: _ago(4),
+          mode: 'PHONE',
+          status: 'COMPLETED',
+          panel: const ['Rohit Rao'],
+          scorecards: [
+            Scorecard(
+              id: 'sc-rohit',
+              interviewer: 'Rohit Rao',
+              rating: 4,
+              recommendation: 'STRONG_YES',
+              strengths: 'Knows the CAFM tools we run.',
+              submittedAt: _ago(4),
+            ),
+          ],
+        ),
+      ],
+      teamNotes: [
+        BriefNote(id: 'n-1', type: 'NOTE', note: 'Good first call; check notice period.', rating: 4, author: 'Rohit Rao', at: _ago(4)),
+        BriefNote(id: 'n-2', type: 'STAGE_CHANGE', toStage: 'INTERVIEW', author: 'Meera Iyer', at: _ago(3)),
+      ],
+    );
+  }
+
+  @override
+  Future<void> submitScorecard(String interviewId, ScorecardDraft draft) async {
+    calls.add('submitScorecard $interviewId ${draft.rating} ${draft.recommendation}');
+    _scorecards[interviewId] = Scorecard(
+      id: 'sc-me-$interviewId',
+      interviewer: 'You',
+      rating: draft.rating,
+      recommendation: draft.recommendation!,
+      strengths: draft.strengths.trim().isEmpty ? null : draft.strengths.trim(),
+      concerns: draft.concerns.trim().isEmpty ? null : draft.concerns.trim(),
+      submittedAt: now,
+    );
+  }
+
+  /// The demo's résumés are not files: there is nothing to read.
+  @override
+  Future<Uint8List> fileBytes(String url) async {
+    calls.add('fileBytes $url');
+    throw UnsupportedError('The sample résumés are not files.');
   }
 
   @override

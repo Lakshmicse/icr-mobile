@@ -54,6 +54,10 @@ class WebSessionBridge {
   static String script(String accessToken) =>
       "try{localStorage.setItem('icr.accessToken',${jsonEncode(accessToken)});localStorage.removeItem('icr.refreshToken');}catch(e){}";
 
+  /// What opens [page] in place of the page the session was written from, so that page leaves the view's
+  /// history and Back from [page] can never land on it.
+  static String replaceWith(Uri page) => 'location.replace(${jsonEncode(page.toString())});';
+
   /// What clears the session from the page's storage when the screen closes.
   static const clearScript =
       "try{localStorage.removeItem('icr.accessToken');localStorage.removeItem('icr.refreshToken');}catch(e){}";
