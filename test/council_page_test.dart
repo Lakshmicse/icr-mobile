@@ -25,6 +25,7 @@ import 'package:provider/provider.dart';
 
 import 'helpers/community_fakes.dart' show TableApi;
 import 'helpers/fonts.dart';
+import 'helpers/resource_fakes.dart';
 
 // The API's rows, as `GET /councils/:slug`, its members, resources and announcements, and `GET /events` give them.
 
@@ -382,6 +383,9 @@ class _Page {
   final shared = <(String, Uri)>[];
   final changed = <Council>[];
 
+  /// What a resource's Download asked for and saved.
+  final downloader = FakeResourceDownloader();
+
   CouncilHandoffs handoffs({bool ownBell = false, bool people = true}) => CouncilHandoffs(
     onOpenEvent: events.add,
     onBell: ownBell ? () => bells++ : null,
@@ -389,6 +393,7 @@ class _Page {
     onMessage: people ? messages.add : null,
     opener: (context, uri) async => opened.add(uri),
     share: (title, link) async => shared.add((title, link)),
+    downloader: downloader,
   );
 }
 
@@ -1126,12 +1131,27 @@ void main() {
       expect(page.members, ['p1']);
     });
 
-    testWidgets('Knowledge: a file opens where it points; with no files it says so', (tester) async {
+    testWidgets('Knowledge: each file has the website’s Download, which saves it; with no files it says so', (
+      tester,
+    ) async {
       final page = await _pumpPage(tester, 'cxo-workplace-strategy');
       expect(find.text('PDF'), findsOneWidget);
       expect(find.text('Whitepaper · 2 MB'), findsOneWidget);
+      expect(find.text('Download'), findsOneWidget);
+      expect(find.byIcon(LucideIcons.externalLink), findsNothing);
+
       await tester.tap(find.text('Benchmark 2026'));
-      expect(page.opened, [Uri.parse('https://files.test/b.pdf')]);
+      await tester.pump();
+      expect(page.downloader.fetched, isEmpty);
+      expect(page.opened, isEmpty);
+
+      await tester.tap(find.byKey(const ValueKey('resource-download-r1')));
+      await tester.pump();
+      await tester.pump();
+      expect(page.downloader.fetched.single.url, 'https://files.test/b.pdf');
+      expect(page.downloader.saved.single.fileName, 'Benchmark 2026.pdf');
+      expect(find.text('Saved Benchmark 2026.pdf.'), findsOneWidget);
+      expect(page.opened, isEmpty);
 
       final empty = FakeCouncils()..resourcesNow = [];
       await _pumpPage(tester, 'cxo-workplace-strategy', repo: empty);

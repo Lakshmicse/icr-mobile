@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:icr_mobile/core/theme/app_colors.dart';
 import 'package:icr_mobile/features/forum/forum_html.dart';
 import 'package:icr_mobile/features/forum/forum_styles.dart';
 import 'package:icr_mobile/features/forum/rich_document.dart';
@@ -149,6 +150,64 @@ void main() {
       await tester.tapOnText(find.textRange.ofSubstring('notes'));
       expect(opened, 'https://icr.org.in/x');
       expect(find.text('•'), findsOneWidget);
+    });
+
+    testWidgets('a web address typed as plain words is a link; code, and the words around it, are not', (tester) async {
+      final opened = <String>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ForumRichText(
+              html:
+                  '<p>Read <strong>https://icr.org.in/community/top-stats-d6a080</strong>. Then www.example.org/x, '
+                  'or <a href="https://icr.org.in/y">https://icr.org.in/y</a></p>'
+                  '<ul><li>item https://example.com/list</li></ul>'
+                  '<pre>run https://example.com/code</pre>'
+                  '<p>and <code>https://example.com/inline</code></p>',
+              style: ForumDesign.body,
+              onLink: opened.add,
+            ),
+          ),
+        ),
+      );
+      final links = <String, TextSpan>{};
+      void collect(InlineSpan span) {
+        if (span is TextSpan) {
+          if (span.recognizer != null && span.text != null) links[span.text!] = span;
+          span.children?.forEach(collect);
+        }
+      }
+
+      for (final rich in tester.widgetList<RichText>(find.byType(RichText))) {
+        collect(rich.text);
+      }
+      // A bold address stays bold, blue and underlined; the full stop after it is not part of it.
+      final bold = links['https://icr.org.in/community/top-stats-d6a080']!;
+      expect(bold.style!.fontWeight, FontWeight.w700);
+      expect(bold.style!.color, AppColors.primary);
+      expect(bold.style!.decoration, TextDecoration.underline);
+      expect(links.keys, containsAll(['www.example.org/x', 'https://icr.org.in/y', 'https://example.com/list']));
+      expect(links.keys, isNot(contains('https://example.com/code')));
+      expect(links.keys, isNot(contains('https://example.com/inline')));
+      expect(links.keys.where((k) => k.endsWith('.')), isEmpty);
+
+      await tester.tapOnText(find.textRange.ofSubstring('https://icr.org.in/community/top-stats-d6a080'));
+      await tester.tapOnText(find.textRange.ofSubstring('www.example.org/x'));
+      await tester.tapOnText(find.textRange.ofSubstring('https://example.com/list'));
+      // The two addresses the website's own editor made links open once each, not twice.
+      await tester.tapOnText(find.textRange.ofSubstring('https://icr.org.in/y'));
+      expect(opened, [
+        'https://icr.org.in/community/top-stats-d6a080',
+        'https://www.example.org/x',
+        'https://example.com/list',
+        'https://icr.org.in/y',
+      ]);
+      await tester.tapOnText(find.textRange.ofSubstring('Then'));
+      await tester.tapOnText(find.textRange.ofSubstring('https://example.com/code'));
+      expect(opened.length, 4, reason: 'neither plain words nor code open anything');
+
+      // Taken off the screen, the taps are disposed with it (no recogniser left behind).
+      await tester.pumpWidget(const SizedBox());
     });
   });
 

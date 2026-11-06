@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/theme/app_colors.dart';
 import 'certificate_view.dart';
 import 'exam_format.dart';
 import 'exam_models.dart';
@@ -336,11 +337,7 @@ class _Tile extends StatelessWidget {
       child: Container(
         height: 72,
         padding: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: ExamColors.hairline),
-        ),
+        decoration: BoxDecoration(color: AppColors.surfaceContainer, borderRadius: BorderRadius.circular(8)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -371,12 +368,7 @@ class _AttemptCount extends StatelessWidget {
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFF0F1F2)),
-          boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1))],
-        ),
+        decoration: BoxDecoration(color: AppColors.surfaceContainer, borderRadius: BorderRadius.circular(10)),
         child: Row(
           children: [
             const Icon(LucideIcons.history, size: 16, color: ExamColors.action),

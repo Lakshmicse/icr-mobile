@@ -512,27 +512,6 @@ FeedReply? replyTargetFor(List<FeedReply> replies, String viewerId) {
   return best;
 }
 
-/// A paid or house placement drawn between posts.
-class SponsoredCard {
-  const SponsoredCard({
-    required this.label,
-    required this.title,
-    required this.body,
-    required this.cta,
-    required this.link,
-    required this.background,
-  });
-
-  final String label;
-  final String title;
-  final String body;
-  final String cta;
-
-  /// A path on the ICR website.
-  final String link;
-  final String background;
-}
-
 enum FeedFilter { all, trending, following, unanswered, polls }
 
 extension FeedFilterLabel on FeedFilter {

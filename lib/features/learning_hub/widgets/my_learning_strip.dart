@@ -110,11 +110,8 @@ class _StatTile extends StatelessWidget {
       excludeSemantics: true,
       onTap: onTap,
       child: Material(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: const BorderSide(color: HubColors.border),
-        ),
+        color: AppColors.surfaceContainer,
+        borderRadius: BorderRadius.circular(10),
         child: InkWell(
           onTap: onTap,
           customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

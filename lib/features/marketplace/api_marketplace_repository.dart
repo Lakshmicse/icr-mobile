@@ -292,6 +292,17 @@ class ApiMarketplaceRepository implements MarketplaceRepository {
   }
 
   @override
+  Future<Set<String>> myCompanyIds() async {
+    final res = asMap(await _get('/me/companies'));
+    final companies = res['companies'];
+    return {
+      if (companies is List)
+        for (final c in companies)
+          if (c is Map && asText(c['companyId']) != null) asText(c['companyId'])!,
+    };
+  }
+
+  @override
   Future<QuoteSent> requestQuote(QuoteRequest request) async {
     final res = await api.dio.post<dynamic>('/rfq', data: request.toJson());
     final body = asMap(res.data);

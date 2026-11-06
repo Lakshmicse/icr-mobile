@@ -58,6 +58,7 @@ class NotificationTarget {
     NotificationKinds.learningAssessment: 'courseCode',
     NotificationKinds.learningCourse: 'code',
     NotificationKinds.learningWorkspace: 'code',
+    NotificationKinds.learningTeaching: 'batchId',
     NotificationKinds.event: 'eventId',
     NotificationKinds.forumThread: 'slug',
     NotificationKinds.blog: 'slug',
@@ -137,7 +138,7 @@ class NotificationTarget {
       case 'invite':
         if (n == 2) return t(NotificationKinds.teamInvite, {'token': s[1]});
       case 'account':
-        if (n == 2 && s[1] == 'companies') return t(NotificationKinds.accountCompanies);
+        if (n == 2 && s[1] == 'companies') return t(NotificationKinds.accountCompanies, {'focus': q['focus']});
       case 'companies':
         if (n == 2) return t(NotificationKinds.companyPage, {'companyId': s[1], 'tab': q['tab']});
       case 'company':
@@ -189,6 +190,7 @@ class NotificationTarget {
         if (n == 3 && s[1] == 'professional-development') return t(NotificationKinds.learningCourse, {'code': s[2]});
         if (n == 3 && s[1] == 'courses') return t(NotificationKinds.learningWorkspace, {'code': s[2], 'tab': q['tab']});
         if (n == 2 && s[1] == 'partners') return t(NotificationKinds.learningPartners, {'apply': q['apply']});
+        if (n == 2 && s[1] == 'teaching') return t(NotificationKinds.learningTeaching, {'batchId': q['batch']});
       case 'events':
         if (n == 2) return t(NotificationKinds.event, {'eventId': s[1], 'slug': s[1]});
       case 'community':
@@ -307,7 +309,7 @@ abstract final class NotificationKinds {
   /// `/invite/:token` · token
   static const teamInvite = 'team.invite';
 
-  /// `/account/companies`
+  /// `/account/companies?focus=` · focus? (`invitations`: the places waiting for the person)
   static const accountCompanies = 'account.companies';
 
   /// `/companies/:id?tab=` · companyId, tab?
@@ -390,6 +392,9 @@ abstract final class NotificationKinds {
 
   /// `/learning/partners?apply=1` · apply?
   static const learningPartners = 'learning.partners';
+
+  /// `/learning/teaching?batch=` (a trainer's teaching desk, on one batch or its invitation) · batchId?
+  static const learningTeaching = 'learning.teaching';
 
   // Events
   /// `/events/:slugOrId` · eventId and slug (the same segment)
@@ -487,7 +492,8 @@ abstract final class NotificationKinds {
     adminVerificationCompany, adminCompany, rfqOwner, rfqSupplier, rfqPublic, product, mentorshipPairing,
     mentorshipMine, mentorshipGroupSession, mentorshipProgramme, mentorshipCertificate, mentorshipCpd, mentorProfile,
     mentorDirectory, mentorApplication, mentorDesk, mentorPurchase, adminMentorshipConcern, learningAssessment,
-    learningCourse, learningWorkspace, adminLearning, learningPartners, event, forumThread, forum, adminForum, blog,
+    learningCourse, learningWorkspace, adminLearning, learningPartners, learningTeaching, event, forumThread, forum,
+    adminForum, blog,
     articlesMine, adminBlogs, member, documents, adminDocumentReports, conversation, messaging, notifications,
     adminMessageReports, profile, supportTicket, adminSupportTicket, support, membershipPlans, membershipHistory,
     adminSubscriptions, refer, advertise, dashboard, adminMarketing, adminContact, path, none,

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/api/api_error.dart';
 import 'package:icr_mobile/core/config.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
+import 'package:icr_mobile/features/chapters/community_kit.dart' show CommunityButton;
 import 'package:icr_mobile/features/library/demo_library_repository.dart';
 import 'package:icr_mobile/features/library/document_controller.dart';
 import 'package:icr_mobile/features/library/document_screen.dart';
@@ -14,7 +15,6 @@ import 'package:icr_mobile/features/library/library_models.dart';
 import 'package:icr_mobile/features/library/upload_controller.dart';
 import 'package:icr_mobile/features/library/upload_document_screen.dart';
 import 'package:icr_mobile/features/library/preview_runner.dart';
-import 'package:icr_mobile/features/library/screen_security.dart';
 import 'package:icr_mobile/features/library/widgets/document_viewer_screen.dart';
 import 'package:icr_mobile/features/library/widgets/report_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -122,11 +122,10 @@ void main() {
       expect(find.text('About this document'), findsOneWidget);
       expect(find.textContaining('60-point checklist'), findsOneWidget);
       expect(find.text('fm-handover-checklist.pdf'), findsOneWidget);
-      // Preview only: there is no Open and no Download, whatever the format.
+      // Each file: Preview in the app, Download and Share (the website's Download, owner 5 Nov 2026).
       expect(find.text('Preview'), findsOneWidget);
-      expect(find.text('Open'), findsNothing);
-      expect(find.text('Download'), findsNothing);
-      expect(find.byTooltip('Download'), findsNothing);
+      expect(find.text('Download'), findsOneWidget);
+      expect(find.byTooltip('Share fm-handover-checklist.pdf'), findsOneWidget);
       // Somebody else's document: report it, never delete or add to it.
       expect(find.text('Report'), findsOneWidget);
       expect(find.text('Delete'), findsNothing);
@@ -139,9 +138,9 @@ void main() {
       expect(find.text('lease-audit-template.xlsx'), findsOneWidget);
       expect(find.text('lease-audit-worked-example.xlsx'), findsOneWidget);
       expect(find.text('lease-audit-method.pdf'), findsOneWidget);
-      // Every file of the pack, Excel and PDF alike, has its own Preview.
+      // Every file of the pack, Excel and PDF alike, has its own Preview and Download.
       expect(find.text('Preview'), findsNWidgets(3));
-      expect(find.text('Download'), findsNothing);
+      expect(find.text('Download'), findsNWidgets(3));
       expect(find.text('Files'), findsWidgets);
     });
 
@@ -203,7 +202,7 @@ void main() {
     });
   });
 
-  group('reading (view-only: no download, no screenshots)', () {
+  group('reading, downloading and sharing', () {
     testWidgets('Preview reads the file for the viewer (not a download), counts one opening, and opens it in the app', (
       tester,
     ) async {
@@ -212,7 +211,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(page.repo.calls, contains('preview:d1-f0'));
       expect(page.repo.calls, contains('view:d1'));
-      expect(page.repo.calls.where((c) => c.startsWith('download')), isEmpty, reason: 'the app never downloads');
+      expect(page.repo.calls.where((c) => c.startsWith('download')), isEmpty, reason: 'a preview is not a download');
       // The PDF is drawn by the in-app viewer from the bytes the API streamed.
       expect(find.byType(DocumentViewerScreen), findsOneWidget);
       expect(page.pdf.opened, hasLength(1));
@@ -243,20 +242,56 @@ void main() {
       expect(page.pdf.closed, 1);
     });
 
-    testWidgets('nothing on the page can save or hand a file over: no Download, no Open, no share of the file', (
+    testWidgets('Download fetches the file as a counted download, saves it through "Save as", and the counts follow', (
+      tester,
+    ) async {
+      final page = await _pumpDoc(tester, _theirs);
+      await tester.tap(find.text('Download'));
+      await tester.pumpAndSettle();
+      expect(page.repo.calls, contains('download:d1-f0'));
+      expect(page.repo.calls.where((c) => c.startsWith('preview')), isEmpty, reason: 'a download, not the viewer');
+      expect(page.device.saved, ['fm-handover-checklist.pdf']);
+      expect(find.text('Saved fm-handover-checklist.pdf.'), findsOneWidget);
+      // 482 downloads become 483, on the page and in the list behind it.
+      expect(find.text('483'), findsOneWidget);
+      expect(page.changed.last.downloadCount, 483);
+      expect(page.changed.last.files.first.downloadCount, page.changed.last.downloadCount);
+    });
+
+    testWidgets('a cancelled "Save as" says nothing; the download was still counted, as the API counts it', (
+      tester,
+    ) async {
+      final page = await _pumpDoc(tester, _theirs);
+      page.device.saveAnswer = false;
+      await tester.tap(find.text('Download'));
+      await tester.pumpAndSettle();
+      expect(page.device.saved, isEmpty);
+      expect(find.textContaining('Saved '), findsNothing);
+    });
+
+    testWidgets('Share on a file sends the file itself; Share at the top still sends the library’s link', (
       tester,
     ) async {
       final page = await _pumpDoc(tester, 'd5');
-      expect(find.text('Download'), findsNothing);
-      expect(find.byTooltip('Download'), findsNothing);
-      expect(find.text('Open'), findsNothing);
-      expect(find.byIcon(LucideIcons.download), findsNothing);
-      // Share is the library’s link, never a file.
+      await tester.tap(find.byTooltip('Share lease-audit-method.pdf'));
+      await tester.pumpAndSettle();
+      expect(page.device.sharedFiles, ['lease-audit-method.pdf']);
+      expect(page.repo.calls.where((c) => c.startsWith('download:')), hasLength(1));
       await tester.tap(find.text('Share'));
       expect(page.shared.single.$2, Uri.parse('https://icr.test/documents'));
     });
 
-    testWidgets('an image opens in the app (Preview) and the viewer has no Download glyph', (tester) async {
+    testWidgets('a refused download shows the API’s sentence and saves nothing', (tester) async {
+      final repo = FakeLibrary()..failures['download'] = ApiError('The stored file is missing.', statusCode: 404);
+      final page = await _pumpDoc(tester, _theirs, repo: repo);
+      await tester.tap(find.text('Download'));
+      await tester.pumpAndSettle();
+      expect(find.text('The stored file is missing.'), findsOneWidget);
+      expect(page.device.saved, isEmpty);
+      expect(find.text('482'), findsOneWidget);
+    });
+
+    testWidgets('the viewer has Download and Share, and both fetch the file as a download', (tester) async {
       final page = await _pumpDoc(tester, _mine);
       expect(find.text('Preview'), findsOneWidget);
       await tester.tap(find.text('Preview'));
@@ -264,9 +299,17 @@ void main() {
       expect(find.byType(DocumentViewerScreen), findsOneWidget);
       expect(find.byType(Image), findsOneWidget);
       expect(page.repo.calls, contains('preview:d9-f0'));
-      expect(find.byTooltip('Download'), findsNothing);
-      expect(find.byIcon(LucideIcons.download), findsNothing);
       expect(page.pdf.opened, isEmpty);
+
+      await tester.tap(find.byTooltip('Download'));
+      await tester.pumpAndSettle();
+      expect(page.repo.calls, contains('download:d9-f0'));
+      expect(page.device.saved, hasLength(1));
+
+      await tester.tap(find.byTooltip('Share'));
+      await tester.pumpAndSettle();
+      expect(page.device.sharedFiles, hasLength(1));
+      expect(page.repo.calls.where((c) => c.startsWith('download:')), hasLength(2));
     });
 
     testWidgets('a format the viewer reads as text (a sample workbook) opens too, not a hand-over', (tester) async {
@@ -275,33 +318,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(DocumentViewerScreen), findsOneWidget);
       expect(page.repo.calls, contains('preview:d3-f0'));
-    });
-
-    testWidgets('the document page and the viewer keep the window out of screenshots, and let go on leaving', (
-      tester,
-    ) async {
-      final platform = FakeScreenSecurity();
-      ScreenSecurity.platform = platform;
-      addTearDown(() => ScreenSecurity.platform = const MethodChannelScreenSecurity());
-      expect(ScreenSecurity.holds, 0);
-      await _pumpDoc(tester, _theirs);
-      expect(ScreenSecurity.holds, 1);
-      expect(platform.requests, [true]);
-
-      await tester.tap(find.text('Preview'));
-      await tester.pumpAndSettle();
-      // The viewer holds it too; the window stays protected throughout (one request, not a flicker).
-      expect(ScreenSecurity.holds, 2);
-      expect(platform.requests, [true]);
-
-      await tester.pageBack();
-      await tester.pumpAndSettle();
-      expect(ScreenSecurity.holds, 1);
-      expect(platform.requests, [true]);
-
-      await tester.pumpWidget(const SizedBox());
-      expect(ScreenSecurity.holds, 0);
-      expect(platform.requests, [true, false]);
     });
 
     testWidgets('a plan that does not open it: the server’s own sentence in a lock card, and See plans', (
@@ -358,7 +374,7 @@ void main() {
       expect(page.repo.calls.where((c) => c.startsWith('view:')), isEmpty);
     });
 
-    testWidgets('a format with no reader says so instead of offering a button that does nothing', (tester) async {
+    testWidgets('a format with no reader says so and offers Download instead of Preview', (tester) async {
       final repo = FakeLibrary();
       const odd = LibraryDocument(
         id: 'odd',
@@ -368,8 +384,9 @@ void main() {
       );
       await _pumpDoc(tester, 'odd', repo: repo, doc: odd);
       expect(find.text('Preview'), findsNothing);
-      expect(find.text("Other files can't be previewed in the app."), findsOneWidget);
-      expect(find.text('Download'), findsNothing);
+      // The website's words: download it to read it, and the Download is there.
+      expect(find.text("Other files can't be previewed in the app. Download it to read it."), findsOneWidget);
+      expect(find.text('Download'), findsOneWidget);
     });
   });
 
@@ -577,12 +594,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(UploadDocumentScreen), findsOneWidget);
       expect(find.text('Add files'), findsWidgets);
-      expect(find.text('They join “Chiller Plant Room Walk-down”'), findsOneWidget);
+      expect(
+        find.text('They join “Chiller Plant Room Walk-down”, under the same description and category.'),
+        findsOneWidget,
+      );
       // Append mode asks for no title and no category.
       expect(find.text('Title *'), findsNothing);
       await tester.tap(find.text('Choose files'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Add to “Chiller Plant Room Walk-down”'));
+      expect(find.text('Add files'), findsWidgets);
+      await tester.tap(find.text('Add 1 file'));
       await tester.pumpAndSettle();
       expect(find.byType(UploadDocumentScreen), findsNothing);
       expect(page.repo.calls, containsAll(['upload:Plant room extra.pdf', 'addFiles:d9']));
@@ -620,9 +641,61 @@ void main() {
       c.setSubcategory('Fire Detection');
       expect(c.specializationOptions, ['Addressable Panels', otherOption]);
       c.setSubcategory('Sprinklers');
-      expect(c.specializationOptions, isEmpty);
+      expect(c.specializationOptions, [otherOption], reason: 'nothing is listed under it but Other');
+      expect(c.hasSpecializations, isFalse);
       c.setCategory('Technology');
-      expect(c.subcategoryOptions, isEmpty, reason: 'a category with no children is a typed field');
+      expect(c.subcategoryOptions, [otherOption], reason: 'a category with no children offers only Other');
+      expect(c.hasSubcategories, isFalse);
+      c.setCategory(null);
+      expect(c.subcategoryOptions, isEmpty, reason: 'no sub-category without a category');
+    });
+
+    test('the category box searches every level of the tree, categories first, Other last', () {
+      final c = form();
+      // Empty: the categories alone, then Other.
+      expect(c.searchCategories('').map((p) => p.label), [
+        'Fire & Life Safety',
+        'Technology',
+        'Board packs',
+        otherOption,
+      ]);
+      // Typed: each word must be in the path; a deeper hit shows under its category.
+      final hits = c.searchCategories('fire panel');
+      expect(hits.map((p) => p.path), [
+        ['Fire & Life Safety', 'Fire Detection', 'Addressable Panels'],
+        [otherOption],
+      ]);
+      expect(c.searchCategories('sprinkler').map((p) => p.path), [
+        ['Fire & Life Safety', 'Sprinklers'],
+        [otherOption],
+      ]);
+      // A category that matches comes before the deeper ones that match through it.
+      expect(c.searchCategories('fire').map((p) => p.path), [
+        ['Fire & Life Safety'],
+        ['Fire & Life Safety', 'Fire Detection'],
+        ['Fire & Life Safety', 'Fire Detection', 'Addressable Panels'],
+        ['Fire & Life Safety', 'Sprinklers'],
+        [otherOption],
+      ]);
+      expect(c.searchCategories('zzzz').map((p) => p.path), [
+        [otherOption],
+      ], reason: 'writing your own stays one pick away');
+    });
+
+    test('picking a deeper node fills the levels above it; a category alone clears the old levels', () {
+      final c = form();
+      c.chooseCategory(['Fire & Life Safety', 'Fire Detection', 'Addressable Panels']);
+      expect(c.category, 'Fire & Life Safety');
+      expect(c.subcategory, 'Fire Detection');
+      expect(c.specialization, 'Addressable Panels');
+      expect(
+        (c.resolvedCategory, c.resolvedSubcategory, c.resolvedSpecialization),
+        ('Fire & Life Safety', 'Fire Detection', 'Addressable Panels'),
+      );
+      c.chooseCategory(['Technology']);
+      expect(c.subcategory, isNull);
+      expect(c.specialization, isNull);
+      expect(c.resolvedSubcategory, isEmpty);
     });
 
     test(
@@ -644,12 +717,11 @@ void main() {
         c.setCategoryOther(' Board packs ');
         expect(c.resolvedCategory, 'Board packs');
         expect(c.resolvedSubcategory, isEmpty);
+        expect(c.subcategoryOptions, [otherOption], reason: 'nothing is listed under a category of your own');
+        c.setSubcategory(otherOption);
         c.setSubcategoryOther('Quarterly');
-        expect(
-          c.resolvedSubcategory,
-          'Quarterly',
-          reason: 'under the uploader’s own category the sub-category is typed',
-        );
+        expect(c.resolvedSubcategory, 'Quarterly', reason: 'under your own category the sub-category is typed');
+        c.setSpecialization(otherOption);
         c.setSpecializationOther('Q3');
         expect(c.resolvedSpecialization, 'Q3');
       },
@@ -666,7 +738,8 @@ void main() {
           pickedFile('ok.PDF'),
           pickedFile('sheet.xlsx', size: 2048),
         ]);
-        expect(rejected, ['notes.exe is not a format the library takes', 'big.pdf (10 MB) is over the 10 MB limit']);
+        // The website's sentences: "<name> is <size>" for a file over 10 MB.
+        expect(rejected, ['notes.exe is not a format the library takes', 'big.pdf is 10 MB']);
         expect(c.entries.map((e) => e.file.name), ['ok.PDF', 'sheet.xlsx']);
         expect(c.error, startsWith('Not added: '));
         expect(c.title, 'ok', reason: 'the title starts as the first file’s name, extension off');
@@ -681,7 +754,7 @@ void main() {
       final c = form();
       final rejected = c.pick([for (var i = 0; i < 12; i++) pickedFile('f$i.pdf', size: 100 + i)]);
       expect(c.entries, hasLength(10));
-      expect(rejected, ['f10.pdf: a document holds up to 10 files', 'f11.pdf: a document holds up to 10 files']);
+      expect(rejected, ['f10.pdf — the limit is 10 files', 'f11.pdf — the limit is 10 files']);
     });
 
     test('adding to a document with files already leaves room for the rest only', () async {
@@ -690,7 +763,7 @@ void main() {
       expect(c.room, 7);
       final rejected = c.pick([for (var i = 0; i < 9; i++) pickedFile('g$i.pdf', size: 10 + i)]);
       expect(c.entries, hasLength(7));
-      expect(rejected.first, 'g7.pdf: this document has room for 7 more');
+      expect(rejected.first, 'g7.pdf — the limit is 10 files');
       expect(c.title, isEmpty, reason: 'an append has no title');
     });
 
@@ -730,7 +803,9 @@ void main() {
       c.setCategoryOther('y' * 61);
       expect(c.problems['category'], 'A category is at most 60 characters.');
       c.setCategoryOther('Board packs');
+      c.setSubcategory(otherOption);
       c.setSubcategoryOther('z' * 81);
+      c.setSpecialization(otherOption);
       c.setSpecializationOther('w' * 81);
       c.setDescription('d' * 2001);
       expect(c.problems.keys.toSet(), {'title', 'subcategory', 'specialization', 'description'});
@@ -871,15 +946,16 @@ void main() {
       return (fake, device);
     }
 
-    testWidgets('it opens on "Choose files" with the limits, and the picker is the phone’s', (tester) async {
+    testWidgets('it opens on "Choose files" with the website’s words, and the picker is the phone’s', (tester) async {
       final (_, device) = await pumpForm(
         tester,
         picks: [
           [pickedFile('Handover checklist.pdf', size: 2048)],
         ],
       );
-      expect(find.text('Share a document'), findsOneWidget);
-      expect(find.textContaining('up to 10 MB each · up to 10 files'), findsOneWidget);
+      expect(find.text('Upload a document'), findsOneWidget);
+      expect(find.text('PDF, Word, Excel, PowerPoint, CSV, images or a ZIP — up to 10 MB each'), findsOneWidget);
+      expect(find.text('Pick several to file them under one title.'), findsOneWidget);
       await tester.tap(find.text('Choose files'));
       await tester.pumpAndSettle();
       expect(device.pickerOpened, 1);
@@ -888,6 +964,31 @@ void main() {
       expect(find.text('.pdf'), findsOneWidget);
       expect(tester.widget<TextField>(find.byKey(const Key('upload-title'))).controller!.text, 'Handover checklist');
       expect(find.text('Add more'), findsOneWidget);
+      // The name it will be saved under is a field of its own, with the website's helper.
+      expect(find.text('File name'), findsOneWidget);
+      expect(find.text('Rename it if you like — this is the name members see and download.'), findsOneWidget);
+    });
+
+    testWidgets('the fields and their words are the website’s, in its order', (tester) async {
+      await pumpForm(
+        tester,
+        picks: [
+          [pickedFile('Plan.pdf', size: 100), pickedFile('Rota.xlsx', size: 100)],
+        ],
+      );
+      await tester.tap(find.text('Choose files'));
+      await tester.pumpAndSettle();
+      final order = ['Title *', 'Description', 'Category *'].map((t) => tester.getTopLeft(find.text(t)).dy).toList();
+      expect([...order]..sort(), order, reason: 'files, then Title, Description, Category');
+      expect(find.text('One title for the whole set — what someone would search for.'), findsOneWidget);
+      expect(find.text('What it is and when someone would reach for it.'), findsOneWidget);
+      expect(find.text('Type a category, sub-category or specialization'), findsOneWidget);
+      expect(find.text('Groups the document under a filter chip.'), findsOneWidget);
+      // Nothing below a category until one is chosen.
+      expect(find.text('Sub-category (optional)'), findsNothing);
+      expect(find.text('Specialization (optional)'), findsNothing);
+      // The app's old wording is gone.
+      expect(find.text('Share with the library'), findsNothing);
     });
 
     testWidgets('a file’s name is edited in its base, "Add more" opens the picker again, and the x removes a file', (
@@ -911,9 +1012,32 @@ void main() {
       await tester.enterText(find.widgetWithText(TextField, 'Second'), 'Rota 2026');
       await tester.pump();
       expect(find.text('.xlsx'), findsOneWidget);
+      expect(find.text('Will be saved as “Rota 2026.xlsx”'), findsOneWidget);
       await tester.tap(find.byTooltip('Remove First.pdf'));
       await tester.pumpAndSettle();
       expect(find.text('1 file · 200 B'), findsOneWidget);
+    });
+
+    testWidgets('an emptied file name goes back to the original', (tester) async {
+      await pumpForm(
+        tester,
+        picks: [
+          [pickedFile('Night rounds.pdf', size: 100)],
+        ],
+      );
+      await tester.tap(find.text('Choose files'));
+      await tester.pumpAndSettle();
+      // The title box also holds "Night rounds"; the file's name field is the one under "File name".
+      final name = find.descendant(
+        of: find.ancestor(of: find.text('File name'), matching: find.byType(Column)).first,
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(name.first, '   ');
+      await tester.pump();
+      // Leaving the box (focus to the title) puts the original back instead of saving ".pdf".
+      await tester.tap(find.byKey(const Key('upload-title')));
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(name.first).controller!.text, 'Night rounds');
     });
 
     testWidgets('the rejected files are named in a banner and the rest is kept', (tester) async {
@@ -929,18 +1053,42 @@ void main() {
       expect(find.text('1 file · 100 B'), findsOneWidget);
     });
 
-    testWidgets('a send with nothing filled in names each missing piece and sends nothing', (tester) async {
-      final (repo, _) = await pumpForm(tester);
-      await tester.tap(find.text('Share with the library'));
+    testWidgets('Upload waits for a file, a title and a category, as the website’s button does', (tester) async {
+      final (repo, _) = await pumpForm(
+        tester,
+        picks: [
+          [pickedFile('Plan.pdf', size: 100)],
+        ],
+      );
+      bool enabled() =>
+          tester.widget<CommunityButton>(find.widgetWithText(CommunityButton, 'Upload')).onPressed != null;
+      expect(enabled(), isFalse, reason: 'no file yet');
+      await tester.tap(find.text('Choose files'));
       await tester.pumpAndSettle();
-      expect(find.text('Choose at least one file.'), findsOneWidget);
-      expect(find.text('Give the document a title.'), findsOneWidget);
-      expect(find.text('Choose a category.'), findsOneWidget);
+      expect(enabled(), isFalse, reason: 'a file and a title, but no category');
+      await tester.tap(find.text('Type a category, sub-category or specialization'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Technology'));
+      await tester.pumpAndSettle();
+      expect(enabled(), isTrue);
+      await tester.enterText(find.byKey(const Key('upload-title')), '   ');
+      await tester.pump();
+      expect(enabled(), isFalse, reason: 'a blank title is no title');
+      // Choosing Other and typing nothing is no category either.
+      await tester.enterText(find.byKey(const Key('upload-title')), 'Plan');
+      await tester.tap(find.text('Technology'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Other (add your own)'));
+      await tester.pumpAndSettle();
+      expect(enabled(), isFalse);
+      await tester.enterText(find.byKey(const Key('upload-category-other')), 'Board papers');
+      await tester.pump();
+      expect(enabled(), isTrue);
       expect(repo.count('upload'), 0);
     });
 
     testWidgets(
-      'the category pickers: the platform’s tree, Other for your own words, a sub-category only after a category',
+      'the category box searches the whole tree; a deeper pick fills the levels above and Other asks for your own words',
       (tester) async {
         final (repo, _) = await pumpForm(
           tester,
@@ -950,78 +1098,133 @@ void main() {
         );
         await tester.tap(find.text('Choose files'));
         await tester.pumpAndSettle();
-        expect(find.text('Sub-category'), findsNothing);
-        await tester.tap(find.text('Choose a category'));
+        expect(find.text('Sub-category (optional)'), findsNothing);
+        await tester.tap(find.text('Type a category, sub-category or specialization'));
         await tester.pumpAndSettle();
-        for (final label in [
-          'Integrated Facility Management',
-          'Fire & Life Safety',
-          'Board packs',
-          'Other (add your own)',
-        ]) {
+        // Empty: the categories, the library's own after them, and Other at the foot.
+        for (final label in ['Integrated Facility Management', 'Fire & Life Safety', 'Board packs', otherOption]) {
           expect(find.text(label), findsOneWidget);
         }
-        await tester.tap(find.text('Integrated Facility Management'));
+        expect(find.text('Housekeeping'), findsNothing, reason: 'a sub-category is not listed until it is searched');
+
+        // Typed: "housekeeping" finds the sub-category and its specialization under their category.
+        await tester.enterText(find.byKey(const Key('category-search')), 'housekeeping');
         await tester.pumpAndSettle();
-        expect(find.text('Sub-category'), findsOneWidget);
-        await tester.tap(find.text('Optional').first);
-        await tester.pumpAndSettle();
+        expect(find.text('Integrated Facility Management'), findsOneWidget, reason: 'the group heading');
         expect(find.text('Housekeeping'), findsOneWidget);
-        await tester.tap(find.text('Housekeeping'));
+        expect(find.textContaining('Deep cleaning'), findsOneWidget);
+        expect(find.text('Fire & Life Safety'), findsNothing);
+        await tester.tap(find.textContaining('Deep cleaning'));
         await tester.pumpAndSettle();
-        expect(find.text('Specialisation'), findsOneWidget);
+        // All three levels are filled in from the one pick.
+        expect(find.text('Integrated Facility Management'), findsOneWidget);
+        expect(find.text('Housekeeping'), findsOneWidget);
+        expect(find.text('Deep cleaning'), findsOneWidget);
+        expect(find.text('Sub-category (optional)'), findsOneWidget);
+        expect(find.text('Specialization (optional)'), findsOneWidget);
         expect(repo.count('taxonomy'), 1);
+
+        // The sub-category list: its children, then Other; the hint says when there are none.
+        await tester.tap(find.byTooltip('Clear Specialization (optional)'));
+        await tester.pumpAndSettle();
+        expect(find.text('Deep cleaning'), findsNothing);
+        await tester.tap(find.byTooltip('Clear Sub-category (optional)'));
+        await tester.pumpAndSettle();
+        expect(find.text('Narrow it down'), findsOneWidget);
+        await tester.tap(find.text('Narrow it down'));
+        await tester.pumpAndSettle();
+        expect(find.text('Handover & Commissioning'), findsOneWidget);
+        expect(find.text('Other (add your own)'), findsOneWidget);
+        await tester.tap(find.text('Handover & Commissioning'));
+        await tester.pumpAndSettle();
+        expect(find.text('Nothing listed under this sub-category'), findsOneWidget);
 
         // Other: the person types the category, and the levels under the old one are gone.
         await tester.tap(find.text('Integrated Facility Management'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Other (add your own)'));
         await tester.pumpAndSettle();
-        expect(find.text('Your category'), findsOneWidget);
-        expect(find.text('Specialisation'), findsNothing);
+        expect(find.text('Your category *'), findsOneWidget);
+        expect(find.text('e.g. Board papers'), findsOneWidget);
+        expect(find.text('Specialization (optional)'), findsNothing);
         await tester.enterText(find.byKey(const Key('upload-category-other')), 'Board packs & minutes');
         await tester.pump();
-        expect(find.text('Sub-category'), findsOneWidget);
-        expect(find.byKey(const Key('upload-subcategory-text')), findsOneWidget);
+        // Under a category of your own the sub-category list offers only Other, which asks for your words too.
+        expect(find.text('Sub-category (optional)'), findsOneWidget);
+        expect(find.text('Nothing listed under this category'), findsOneWidget);
+        await tester.tap(find.text('Nothing listed under this category'));
+        await tester.pumpAndSettle();
+        // The sheet's Other (the category box behind it shows its own).
+        await tester.tap(find.text('Other (add your own)').last);
+        await tester.pumpAndSettle();
+        expect(find.text('Your sub-category'), findsOneWidget);
+        await tester.enterText(find.byKey(const Key('upload-subcategory-other')), 'Quarterly');
+        await tester.pump();
+        expect(find.text('Specialization (optional)'), findsOneWidget);
       },
     );
 
-    testWidgets('sending shows the progress, closes with the document, and files it under what was typed', (
-      tester,
-    ) async {
-      final repo = FakeLibrary();
-      final gate = Completer<void>();
-      LibraryDocument? popped;
-      await pumpForm(
-        tester,
-        repo: repo,
-        onPopped: (d) => popped = d,
-        picks: [
-          [pickedFile('Plan.pdf', size: 100)],
-        ],
-      );
-      await tester.tap(find.text('Choose files'));
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byKey(const Key('upload-title')), 'Night rounds plan');
-      await tester.enterText(find.byKey(const Key('upload-description')), 'Who walks where');
-      await tester.tap(find.text('Choose a category'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Fire & Life Safety'));
-      await tester.pumpAndSettle();
-      repo.gate = gate.future;
-      await tester.tap(find.text('Share with the library'));
-      await tester.pump();
-      expect(find.byType(LinearProgressIndicator), findsOneWidget);
-      expect(find.text('Uploading 1 of 1…'), findsOneWidget);
-      gate.complete();
-      await tester.pumpAndSettle();
-      expect(find.text('open form'), findsOneWidget);
-      expect(popped!.title, 'Night rounds plan');
-      expect(popped!.category, 'Fire & Life Safety');
-      expect(popped!.description, 'Who walks where');
+    testWidgets(
+      'sending shows the website’s progress words, closes with the document, and files it under what was typed',
+      (tester) async {
+        final repo = FakeLibrary();
+        final gate = Completer<void>();
+        LibraryDocument? popped;
+        await pumpForm(
+          tester,
+          repo: repo,
+          onPopped: (d) => popped = d,
+          picks: [
+            [pickedFile('Plan.pdf', size: 100)],
+          ],
+        );
+        await tester.tap(find.text('Choose files'));
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byKey(const Key('upload-title')), 'Night rounds plan');
+        await tester.enterText(find.byKey(const Key('upload-description')), 'Who walks where');
+        await tester.tap(find.text('Type a category, sub-category or specialization'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Fire & Life Safety'));
+        await tester.pumpAndSettle();
+        repo.gate = gate.future;
+        await tester.tap(find.text('Upload'));
+        await tester.pump();
+        expect(find.byType(LinearProgressIndicator), findsOneWidget);
+        expect(find.text('Starting…'), findsOneWidget);
+        gate.complete();
+        await tester.pumpAndSettle();
+        expect(find.text('open form'), findsOneWidget);
+        expect(popped!.title, 'Night rounds plan');
+        expect(popped!.category, 'Fire & Life Safety');
+        expect(popped!.description, 'Who walks where');
+      },
+    );
+
+    test('the progress names the file and its place in the batch, from "Starting…" to "Saving…"', () async {
+      final c = UploadController(repository: FakeLibrary());
+      c.pick([pickedFile('One.pdf', size: 300), pickedFile('Two.pdf', size: 100)]);
+      c.setCategory(otherOption);
+      c.setCategoryOther('Board papers');
+      final seen = <String>[];
+      c.addListener(() {
+        if (!c.busy) return;
+        seen.add(
+          c.starting
+              ? 'starting'
+              : c.saving
+              ? 'saving'
+              : '${c.uploadingName} ${c.uploadingIndex}',
+        );
+      });
+      expect(await c.submit(), isNotNull, reason: c.error);
+      expect(seen.first, 'starting');
+      expect(seen, contains('One.pdf 1'));
+      expect(seen.last, 'saving', reason: 'every byte is up and the document is being filed');
     });
 
-    testWidgets('a refusal is shown under the form, everything typed stays, and sending again works', (tester) async {
+    testWidgets('a refusal is shown at the top of the form, everything typed stays, and sending again works', (
+      tester,
+    ) async {
       final repo = FakeLibrary()
         ..failures['create'] = ApiError('Upload the file before describing it.', statusCode: 400);
       LibraryDocument? popped;
@@ -1035,23 +1238,29 @@ void main() {
       );
       await tester.tap(find.text('Choose files'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Choose a category'));
+      await tester.tap(find.text('Type a category, sub-category or specialization'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Technology'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Share with the library'));
+      await tester.tap(find.text('Upload'));
       await tester.pumpAndSettle();
-      expect(find.text('Upload the file before describing it.'), findsOneWidget);
+      final refusal = find.text('Upload the file before describing it.');
+      expect(refusal, findsOneWidget);
+      expect(
+        tester.getTopLeft(refusal).dy,
+        lessThan(tester.getTopLeft(find.text('Title *')).dy),
+        reason: 'the website’s alert sits above the files and the fields',
+      );
       expect(find.text('Plan'), findsWidgets);
       expect(popped, isNull);
       repo.failures.clear();
-      await tester.tap(find.text('Share with the library'));
+      await tester.tap(find.text('Upload'));
       await tester.pumpAndSettle();
       expect(popped, isNotNull);
       expect(repo.calls.where((c) => c.startsWith('upload')), hasLength(1));
     });
 
-    testWidgets('Back with something typed asks to discard; Cancel keeps the form, Discard closes it', (tester) async {
+    testWidgets('Back goes back at once, with nothing asked: the website’s form has no discard step', (tester) async {
       await pumpForm(
         tester,
         picks: [
@@ -1062,14 +1271,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Symbols.arrow_back));
       await tester.pumpAndSettle();
-      expect(find.text('Discard this upload?'), findsOneWidget);
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-      expect(find.text('Share a document'), findsOneWidget);
-      await tester.tap(find.byIcon(Symbols.arrow_back));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Discard'));
-      await tester.pumpAndSettle();
+      expect(find.text('Discard this upload?'), findsNothing);
       expect(find.text('open form'), findsOneWidget);
     });
 

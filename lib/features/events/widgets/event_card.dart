@@ -51,12 +51,10 @@ class EventCard extends StatelessWidget {
     final line = lineFor(e);
     final footer = footerFor(e);
     final online = formatOf(e) == EventFormat.online;
+    // A tinted card, never an outlined one (the owner's rule, Nov 2026).
     return Material(
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: const BorderSide(color: EventsColors.border),
-      ),
+      color: EventsColors.panel,
+      borderRadius: BorderRadius.circular(10),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,

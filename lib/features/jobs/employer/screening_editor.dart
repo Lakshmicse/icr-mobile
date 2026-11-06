@@ -55,11 +55,7 @@ class ScreeningEditor extends StatelessWidget {
             key: ValueKey('question-$i'),
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.outlineVariant),
-            ),
+            decoration: BoxDecoration(color: AppColors.surfaceContainerLow, borderRadius: BorderRadius.circular(10)),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

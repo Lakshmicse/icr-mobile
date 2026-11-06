@@ -318,11 +318,7 @@ class _Bar extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
     padding: const EdgeInsets.fromLTRB(10, 6, 2, 6),
-    decoration: BoxDecoration(
-      color: ChatColors.strip,
-      borderRadius: BorderRadius.circular(10),
-      border: const Border(left: BorderSide(color: AppColors.primary, width: 3)),
-    ),
+    decoration: BoxDecoration(color: ChatColors.strip, borderRadius: BorderRadius.circular(10)),
     child: Row(
       children: [
         Icon(icon, size: 15, color: AppColors.primary),

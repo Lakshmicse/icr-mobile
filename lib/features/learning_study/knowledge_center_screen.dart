@@ -340,11 +340,9 @@ class _FormulaRow extends StatelessWidget {
         excludeSemantics: true,
         onTap: onTap,
         child: Material(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: StudyColors.border),
-          ),
+          // A tinted row, never an outlined one (the owner's rule, Nov 2026).
+          color: AppColors.surfaceContainer,
+          borderRadius: BorderRadius.circular(12),
           child: InkWell(
             customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             onTap: onTap,
@@ -396,11 +394,7 @@ class _ShelfError extends StatelessWidget {
       child: Container(
         key: const ValueKey('knowledge-shelf-error'),
         padding: const EdgeInsets.fromLTRB(14, 8, 6, 8),
-        decoration: BoxDecoration(
-          color: AppColors.slate50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.slate200),
-        ),
+        decoration: BoxDecoration(color: AppColors.slate100, borderRadius: BorderRadius.circular(12)),
         child: Row(
           children: [
             Expanded(child: Text("Couldn't load this group. $message", style: StudyText.note)),
@@ -425,11 +419,7 @@ class _RowSkeleton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Container(
         height: 60,
-        decoration: BoxDecoration(
-          color: AppColors.slate100,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.slate200),
-        ),
+        decoration: BoxDecoration(color: AppColors.slate100, borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

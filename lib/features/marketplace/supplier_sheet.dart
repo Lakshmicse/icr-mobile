@@ -14,6 +14,7 @@ import 'marketplace_models.dart';
 import 'marketplace_navigation.dart';
 import 'marketplace_repository.dart';
 import 'marketplace_styles.dart';
+import 'quote_models.dart';
 import 'supplier_controller.dart';
 import 'widgets/supplier_card.dart';
 import 'widgets/supplier_catalog_tab.dart';
@@ -666,51 +667,60 @@ class SupplierSheetBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
+          padding: EdgeInsets.fromLTRB(12, 12, c.onTeam ? 12 : 0, 12),
           child: Row(
             children: [
               Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [BoxShadow(color: Color(0x331D63A3), blurRadius: 8, offset: Offset(0, 3))],
-                  ),
-                  child: Material(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12),
-                    child: InkWell(
-                      key: const ValueKey('request-quote'),
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () => nav.requestQuote(context, links, c.supplier),
-                      child: SizedBox(
-                        height: 41.75,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(LucideIcons.zap, size: 14, color: Colors.white),
-                            const SizedBox(width: 8),
-                            Text('Request for Quote (RFQ)', style: MartText.rfqButton),
-                          ],
+                // The company's own listing: the website swaps the quote form for this note.
+                child: c.ownListing
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Text(ownListingNote, key: const ValueKey('own-listing'), style: MartText.sheetRowMuted),
+                      )
+                    : Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: const [BoxShadow(color: Color(0x331D63A3), blurRadius: 8, offset: Offset(0, 3))],
+                        ),
+                        child: Material(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            key: const ValueKey('request-quote'),
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => nav.requestQuote(context, links, c.supplier),
+                            child: SizedBox(
+                              height: 41.75,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(LucideIcons.zap, size: 14, color: Colors.white),
+                                  const SizedBox(width: 8),
+                                  Text('Request for Quote (RFQ)', style: MartText.rfqButton),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
+              ),
+              // Someone on the listing's own team has no one to message: the API refuses it, and the website offers the
+              // company's inbox instead.
+              if (!c.onTeam)
+                Semantics(
+                  button: true,
+                  label: 'Message ${c.supplier.name}',
+                  child: InkResponse(
+                    key: const ValueKey('message-supplier'),
+                    onTap: () => _message(context, c, nav, links),
+                    radius: 28,
+                    child: const SizedBox(
+                      width: 64,
+                      height: 42,
+                      child: Icon(Icons.message_outlined, size: 24, color: AppColors.tertiary),
                     ),
                   ),
                 ),
-              ),
-              Semantics(
-                button: true,
-                label: 'Message ${c.supplier.name}',
-                child: InkResponse(
-                  key: const ValueKey('message-supplier'),
-                  onTap: () => _message(context, c, nav, links),
-                  radius: 28,
-                  child: const SizedBox(
-                    width: 64,
-                    height: 42,
-                    child: Icon(Icons.message_outlined, size: 24, color: AppColors.tertiary),
-                  ),
-                ),
-              ),
             ],
           ),
         ),

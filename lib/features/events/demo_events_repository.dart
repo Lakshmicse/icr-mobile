@@ -1,6 +1,7 @@
 import '../../core/config.dart';
 import 'event_models.dart';
 import 'events_repository.dart';
+import '../payments/checkout_start.dart';
 
 const _demo = 'assets/images/demo/events';
 
@@ -315,6 +316,13 @@ class DemoEventsRepository implements EventsRepository {
 
   @override
   Future<void> cancel(EventSummary event) async => _rsvps[event.id] = RsvpState.cancelled;
+
+  /// The sample content has no gateway: a ticket is a seat at once.
+  @override
+  Future<CheckoutStart> buyTicket(EventSummary event) async {
+    _rsvps[event.id] = RsvpState.going;
+    return const CheckoutStart(devActivated: true);
+  }
 
   /// The design's pass, for any place the sample member holds.
   @override

@@ -32,8 +32,7 @@ class MentorColors {
 
   /// The dark pill over the offering's photo.
   static const photoPill = Color(0xE6505662);
-  static const tileFill = Color(0xFFFAFAFA);
-  static const tileBorder = Color(0xFFE4E4E4);
+  static const tileFill = Color(0xFFF3F4F6);
   static const timeline = Color(0xFFE1E3E4);
   static const sheetInk = Color(0xFF0F172A);
 }

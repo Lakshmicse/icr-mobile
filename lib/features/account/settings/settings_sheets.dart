@@ -162,7 +162,6 @@ class _ExportSheetState extends State<_ExportSheet> {
             decoration: BoxDecoration(
               color: AppColors.slate50,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.slate200),
             ),
             child: SingleChildScrollView(child: Text(json, style: const TextStyle(fontFamily: 'monospace', fontSize: 13, color: AppColors.slate700))),
           ),

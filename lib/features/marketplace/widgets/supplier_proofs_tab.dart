@@ -66,28 +66,30 @@ class SupplierProofsTab extends StatelessWidget {
             child: Text(
               s.ratingCount > 0
                   ? '${s.reviewsLabel}, none written up yet.'
-                  : 'No ratings yet. Be the first to rate ${s.name}.',
+                  : (c.onTeam ? 'No ratings yet.' : 'No ratings yet. Be the first to rate ${s.name}.'),
               style: MartText.body,
             ),
           )
         else
           for (final r in s.reviews) ProofItem(key: ValueKey('proof-${r.id}'), review: r),
         const SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: OutlinedButton.icon(
-            key: const ValueKey('rate-supplier'),
-            onPressed: () => showRateSheet(context),
-            icon: const Icon(LucideIcons.star, size: 15),
-            label: Text('Rate this supplier', style: MartText.sheetLink),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              minimumSize: const Size.fromHeight(38),
-              side: const BorderSide(color: MartColors.cardBorder, width: 1.5),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        // The company's own team may not rate it (the API refuses), so the button is not offered.
+        if (!c.onTeam)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: OutlinedButton.icon(
+              key: const ValueKey('rate-supplier'),
+              onPressed: () => showRateSheet(context),
+              icon: const Icon(LucideIcons.star, size: 15),
+              label: Text('Rate this supplier', style: MartText.sheetLink),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                minimumSize: const Size.fromHeight(38),
+                side: const BorderSide(color: MartColors.cardBorder, width: 1.5),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
             ),
           ),
-        ),
       ],
     );
   }

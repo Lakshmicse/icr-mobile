@@ -37,7 +37,6 @@ class LookalikesCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF0F7FE),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFB9D8F4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

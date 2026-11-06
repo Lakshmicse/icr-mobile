@@ -27,8 +27,6 @@ void main() {
       for (final element in find.byType(Image).evaluate()) {
         await precacheImage((element.widget as Image).image, element);
       }
-      final context = tester.element(find.byType(Scaffold).first);
-      await precacheImage(const AssetImage('assets/images/demo/sponsored_bg.jpg'), context);
     });
     await tester.pumpAndSettle();
   }

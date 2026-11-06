@@ -34,20 +34,6 @@ class ApiFeedRepository implements FeedRepository {
   @override
   late final ApiForumRepository forum = ApiForumRepository(api: api, viewerId: viewerId);
 
-  /// ICR's own placement between the second and third posts, carrying the design's copy. There is no feed of
-  /// placements to read yet (a paid one is a promotion the website draws elsewhere), so the band is the app's.
-  @override
-  SponsoredCard get sponsored => const SponsoredCard(
-    label: 'SPONSORED PARTNER',
-    title: 'The Future of FM Operations',
-    body:
-        'Automated spatial control, predictive fault detection, and seamless BMS telemetry.\n'
-        'Benchmark leases and cut OPEX by 18%.',
-    cta: 'Learn More',
-    link: '/vendors',
-    background: 'assets/images/demo/sponsored_bg.jpg',
-  );
-
   @override
   Set<String> get initiallyOpen => const {};
 

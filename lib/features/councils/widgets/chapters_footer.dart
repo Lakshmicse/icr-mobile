@@ -117,10 +117,7 @@ class _CityTile extends StatelessWidget {
     final date = chapter.nextEventAt == null ? 'TBA' : monthDay(chapter.nextEventAt!);
     return Material(
       color: CouncilsColors.navyTile,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: CouncilsColors.navyTileBorder),
-      ),
+      borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),

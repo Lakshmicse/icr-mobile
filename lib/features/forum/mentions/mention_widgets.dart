@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text.dart';
+import '../../../core/util/link_spans.dart';
 import '../../feed/feed_models.dart';
 import '../../feed/widgets/feed_avatar.dart';
 import 'mention_controller.dart';
@@ -58,7 +59,6 @@ class MentionSuggestions extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.outlineVariant),
               boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 10, offset: Offset(0, 2))],
             ),
             clipBehavior: Clip.antiAlias,
@@ -174,12 +174,17 @@ class MentionSpans {
   /// [text] as spans: each of [mentions] still in it as a link to [onOpen] (plain, when [onOpen] is null).
   List<InlineSpan> build(String text, List<Mention> mentions, {ValueChanged<String>? onOpen}) {
     final found = onOpen == null ? const <MentionSpan>[] : mentionSpans(text, mentions);
-    if (found.isEmpty) return [TextSpan(text: text)];
+    return spansFor(text, found, onOpen: onOpen);
+  }
+
+  /// [text] as spans, with the already-placed [found] mentions (offsets into [text]) as links to [onOpen].
+  List<InlineSpan> spansFor(String text, List<MentionSpan> found, {ValueChanged<String>? onOpen}) {
+    if (found.isEmpty || onOpen == null) return [TextSpan(text: text)];
     final spans = <InlineSpan>[];
     var at = 0;
     for (final s in found) {
       if (s.start > at) spans.add(TextSpan(text: text.substring(at, s.start)));
-      final tap = TapGestureRecognizer()..onTap = () => onOpen!(s.mention.id);
+      final tap = TapGestureRecognizer()..onTap = () => onOpen(s.mention.id);
       _recognizers.add(tap);
       spans.add(TextSpan(text: text.substring(s.start, s.end), style: mentionLinkStyle, recognizer: tap));
       at = s.end;
@@ -198,8 +203,9 @@ class MentionSpans {
   void dispose() => clear();
 }
 
-/// Words with the members tagged in them as links to their profile ([onOpen] gets the member's id). With no
-/// [mentions], or no [onOpen], it is a plain [Text].
+/// Words with the members tagged in them as links to their profile ([onOpen] gets the member's id), and every web
+/// address typed in them a link that opens (owner, 5 Nov 2026): an ICR address in the app's own screen, any other in
+/// the phone's browser (`openUrl`). With no [mentions] or no [onOpen], and no address, it is a plain [Text].
 class MentionText extends StatefulWidget {
   const MentionText({
     super.key,
@@ -224,24 +230,54 @@ class MentionText extends StatefulWidget {
 
 class _MentionTextState extends State<MentionText> {
   final _spans = MentionSpans();
+  final _links = LinkSpans();
 
   @override
   void dispose() {
     _spans.dispose();
+    _links.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     _spans.clear();
-    if (widget.mentions.isEmpty || widget.onOpen == null) {
-      return Text(widget.text, style: widget.style, maxLines: widget.maxLines, overflow: widget.overflow);
+    _links.clear();
+    final text = widget.text;
+    final tagged = widget.mentions.isNotEmpty && widget.onOpen != null;
+    final linked = LinkSpans.hasLink(text);
+    if (!tagged && !linked) {
+      return Text(text, style: widget.style, maxLines: widget.maxLines, overflow: widget.overflow);
     }
+    // Mentions are placed on the whole text (a namesake is told apart by order), then each plain run between
+    // addresses takes the ones that fall inside it.
+    final found = tagged ? mentionSpans(text, widget.mentions) : const <MentionSpan>[];
+    final children = !linked
+        ? _spans.spansFor(text, found, onOpen: widget.onOpen)
+        : () {
+            final starts = <int>[];
+            var at = 0;
+            for (final part in splitLinks(text)) {
+              if (part.link == null) starts.add(at);
+              at += part.text.length;
+            }
+            var run = 0;
+            return _links.build(
+              context,
+              text,
+              plain: (part) {
+                final from = starts[run++];
+                final inside = [
+                  for (final s in found)
+                    if (s.start >= from && s.end <= from + part.length)
+                      (start: s.start - from, end: s.end - from, mention: s.mention),
+                ];
+                return _spans.spansFor(part, inside, onOpen: widget.onOpen);
+              },
+            );
+          }();
     return Text.rich(
-      TextSpan(
-        style: widget.style,
-        children: _spans.build(widget.text, widget.mentions, onOpen: widget.onOpen),
-      ),
+      TextSpan(style: widget.style, children: children),
       maxLines: widget.maxLines,
       overflow: widget.overflow,
     );

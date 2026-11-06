@@ -258,6 +258,8 @@ void main() {
     testWidgets('the meeting link of a call is set, checked as the API checks it, and Join then opens it', (
       tester,
     ) async {
+      // p-ahead is at 10:00 five days on; ten minutes before it, its room is open.
+      mentoringNow = () => _now.add(const Duration(days: 5, minutes: -10));
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.work);
       final urls = launches(tester);
       expect(find.text('No meeting link yet'), findsOneWidget);

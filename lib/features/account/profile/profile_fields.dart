@@ -141,7 +141,6 @@ class _SuggestFieldState<T> extends State<SuggestField<T>> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.slate200),
               boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, 2))],
             ),
             child: Column(

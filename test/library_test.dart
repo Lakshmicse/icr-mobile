@@ -9,6 +9,8 @@ import 'package:icr_mobile/core/api/api_error.dart';
 import 'package:icr_mobile/core/config.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/core/widgets/chips.dart';
+import 'package:icr_mobile/features/chapters/community_kit.dart'
+    show CommunityButton, CommunitySearchField, CommunitySectionHeading;
 import 'package:icr_mobile/features/library/api_library_repository.dart';
 import 'package:icr_mobile/features/library/demo_library_repository.dart';
 import 'package:icr_mobile/features/library/document_screen.dart';
@@ -150,6 +152,13 @@ Future<_Lib> _pumpLibrary(
   return lib;
 }
 
+/// A library with nothing shared yet.
+class _EmptyLibrary extends FakeLibrary {
+  @override
+  Future<LibraryPage> documents(LibraryQuery q) async =>
+      const LibraryPage(documents: [], total: 0, page: 1, hasNext: false);
+}
+
 LibraryDocument _doc(String id, {int files = 1, String? category, String? sub, String? spec}) => LibraryDocument(
   id: id,
   title: 'Doc $id',
@@ -261,6 +270,8 @@ void main() {
 
     test('the query is filtered by a search, a category, a format or My uploads, not by the sort', () {
       expect(const LibraryQuery().filtered, isFalse);
+      expect(const LibraryQuery().sort, LibrarySort.newest, reason: 'the list opens latest first');
+      expect(LibraryQuery.defaultSort, LibrarySort.newest);
       expect(const LibraryQuery(sort: LibrarySort.az).filtered, isFalse);
       expect(const LibraryQuery(search: ' ').filtered, isFalse);
       expect(const LibraryQuery(search: 'sop').filtered, isTrue);
@@ -335,7 +346,8 @@ void main() {
       expect(page.total, 31);
       expect(page.hasNext, isTrue);
       await repo.documents(const LibraryQuery());
-      expect(table.queryOf('GET /documents'), {'page': 1, 'limit': 24, 'sortBy': 'downloadCount', 'sortDir': 'desc'});
+      // Latest first until the member picks another order (owner, 5 Nov 2026).
+      expect(table.queryOf('GET /documents'), {'page': 1, 'limit': 24, 'sortBy': 'createdAt', 'sortDir': 'desc'});
     });
 
     test('a card carries the files, the counts, who shared it and where it is filed', () async {
@@ -596,8 +608,9 @@ void main() {
       expect(c.myUploads, 3);
       expect(c.viewer!.id, DemoLibraryRepository.meId);
       expect(c.unread, 2);
-      // Most downloaded first, the website's default.
-      expect(c.documents.first.title, 'Vendor SLA Scorecard Template');
+      // Latest first (owner, 5 Nov 2026), where the website opens on most downloaded.
+      expect(c.documents.first.id, 'd9');
+      expect(c.documents.first.title, 'Chiller Plant Room Walk-down');
     });
 
     test('each filter is a query the API runs, and the first page is read again', () async {
@@ -751,7 +764,48 @@ void main() {
       // The pack's card names its files and formats; the member's own cards say so.
       expect(find.text('3 files · XLSX, PDF · 541 KB'), findsOneWidget);
       expect(find.text('YOURS'), findsNWidgets(3));
-      expect(find.text('Share what you know'), findsOneWidget);
+      // The website's toolbar: the search box with Upload beside it; no second Upload further down.
+      expect(find.text('Upload'), findsOneWidget);
+      expect(find.text('Share what you know'), findsNothing);
+    });
+
+    testWidgets('the search box is the first thing under the title bar, above the tiles and the chips', (tester) async {
+      await _pumpLibrary(tester, height: 700);
+      final search = tester.getTopLeft(find.byType(CommunitySearchField)).dy;
+      expect(search, lessThan(100), reason: 'in the first screenful of a phone, not below the figures');
+      expect(search, lessThan(tester.getTopLeft(find.byKey(const ValueKey('stat-documents'))).dy));
+      expect(search, lessThan(tester.getTopLeft(find.text('Browse by kind')).dy));
+      // Upload sits on the same row, to its right.
+      final upload = find.byKey(const ValueKey('library-upload'));
+      expect(tester.getCenter(upload).dy, closeTo(tester.getCenter(find.byType(CommunitySearchField)).dy, 1));
+      expect(tester.getTopLeft(upload).dx, greaterThan(tester.getTopRight(find.byType(CommunitySearchField)).dx));
+      expect(find.text('Search documents'), findsOneWidget);
+    });
+
+    testWidgets('the list opens newest first, and the sliders glyph carries no dot until another order is chosen', (
+      tester,
+    ) async {
+      final lib = await _pumpLibrary(tester);
+      expect(lib.controller.query.sort, LibrarySort.newest);
+      final dates = [for (final d in lib.controller.documents) d.createdAt ?? DateTime(1970)];
+      expect([...dates]..sort((a, b) => b.compareTo(a)), dates, reason: 'latest first');
+      bool dot() => tester.widget<CommunitySearchField>(find.byType(CommunitySearchField)).filtersActive;
+      expect(dot(), isFalse, reason: 'the opening order is not a filter');
+      // Another order lights the dot; going back to newest puts it out.
+      lib.controller.setSort(LibrarySort.downloads);
+      await tester.pumpAndSettle();
+      expect(dot(), isTrue);
+      lib.controller.setSort(LibraryQuery.defaultSort);
+      await tester.pumpAndSettle();
+      expect(dot(), isFalse);
+    });
+
+    testWidgets('a failed read leaves the search box in place, so the search can be tried again', (tester) async {
+      final repo = FakeLibrary()..failures['documents'] = ApiError('Server down', statusCode: 500);
+      await _pumpLibrary(tester, repo: repo);
+      expect(find.text("Couldn't load the library"), findsOneWidget);
+      expect(find.byType(CommunitySearchField), findsOneWidget);
+      expect(find.byKey(const ValueKey('library-upload')), findsOneWidget);
     });
 
     testWidgets('Back and the bell', (tester) async {
@@ -797,6 +851,25 @@ void main() {
       },
     );
 
+    testWidgets('the search asks the API for exactly what was typed, newest first, and its x clears it', (
+      tester,
+    ) async {
+      final lib = await _pumpLibrary(tester);
+      await tester.enterText(find.byType(TextField), '  checklist ');
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpAndSettle();
+      // The query the controller holds is the one the API is sent (trimmed; the order stays newest first).
+      expect(lib.controller.query.search, 'checklist');
+      expect(lib.controller.query.sort, LibrarySort.newest);
+      expect(lib.repo.calls.where((c) => c.startsWith('documents')).length, 2);
+      expect(find.byType(DocumentCard), findsNWidgets(2));
+      await tester.tap(find.byTooltip('Clear search'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, isEmpty);
+      expect(lib.controller.query.search, isEmpty);
+      expect(find.byType(DocumentCard), findsNWidgets(12));
+    });
+
     testWidgets('a kind chip types its word into the box and searches; the same chip takes it out', (tester) async {
       await _pumpLibrary(tester);
       await tester.tap(await _chip(tester, 0, 'Checklists'));
@@ -838,7 +911,7 @@ void main() {
       final lib = await _pumpLibrary(tester);
       await tester.tap(find.bySemanticsLabel('Sort and filter documents'));
       await tester.pumpAndSettle();
-      for (final label in ['Most downloaded', 'Newest', 'Most viewed', 'A to Z', 'Largest']) {
+      for (final label in ['Newest', 'Most downloaded', 'Most viewed', 'A to Z', 'Largest']) {
         expect(find.text(label), findsOneWidget);
       }
       await tester.tap(find.text('A to Z'));
@@ -860,7 +933,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Reset'));
       await tester.pumpAndSettle();
-      expect(lib.controller.query.sort, LibrarySort.downloads);
+      expect(lib.controller.query.sort, LibrarySort.newest, reason: 'Reset goes back to latest first');
       expect(lib.controller.query.mine, isFalse);
       expect(find.byType(DocumentCard), findsNWidgets(12));
     });
@@ -877,6 +950,58 @@ void main() {
       await tester.tap(find.text('Your uploads').first);
       await tester.pumpAndSettle();
       expect(find.byType(DocumentCard), findsNWidgets(12));
+    });
+
+    testWidgets('Categories and Formats list what the library holds; a pick narrows the cards', (tester) async {
+      final lib = await _pumpLibrary(tester);
+      await tester.tap(find.byKey(const ValueKey('stat-categories')));
+      await tester.pumpAndSettle();
+      final sheet = find.byType(BottomSheet);
+      expect(find.descendant(of: sheet, matching: find.text('All categories (5)')), findsOneWidget);
+      await tester.tap(find.descendant(of: sheet, matching: find.text('Technology')));
+      await tester.pumpAndSettle();
+      expect(sheet, findsNothing);
+      expect(lib.controller.query.category, 'Technology');
+      expect(find.byType(DocumentCard), findsNWidgets(2));
+
+      await tester.tap(find.byKey(const ValueKey('stat-formats')));
+      await tester.pumpAndSettle();
+      expect(find.descendant(of: sheet, matching: find.text('All formats')), findsOneWidget);
+      await tester.tap(find.descendant(of: sheet, matching: find.text('PDF (5)')));
+      await tester.pumpAndSettle();
+      expect(lib.controller.query.fileType, LibraryFileType.pdf);
+      expect(find.byType(DocumentCard), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('stat-formats')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.descendant(of: sheet, matching: find.text('All formats')));
+      await tester.pumpAndSettle();
+      expect(lib.controller.query.fileType, isNull);
+      expect(find.byType(DocumentCard), findsNWidgets(2));
+    });
+
+    testWidgets('Documents shows the whole library again, whatever was narrowing it', (tester) async {
+      final lib = await _pumpLibrary(tester);
+      await tester.tap(await _chip(tester, 1, 'Technology'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('stat-mine')));
+      await tester.pumpAndSettle();
+      expect(lib.controller.query.filtered, isTrue);
+      await tester.tap(find.byKey(const ValueKey('stat-documents')));
+      await tester.pumpAndSettle();
+      expect(lib.controller.query.filtered, isFalse);
+      expect(find.byType(DocumentCard), findsNWidgets(12));
+    });
+
+    testWidgets('on a phone, a figure brings the list it changed into view', (tester) async {
+      await _pumpLibrary(tester, height: 700);
+      final heading = find.widgetWithText(CommunitySectionHeading, 'Documents');
+      final before = tester.getTopLeft(heading).dy;
+      await tester.tap(find.byKey(const ValueKey('stat-documents')));
+      await tester.pumpAndSettle();
+      final after = tester.getTopLeft(heading).dy;
+      expect(after, lessThan(before));
+      expect(after, lessThan(120));
     });
 
     testWidgets('Show more documents appends the next page', (tester) async {
@@ -909,11 +1034,11 @@ void main() {
       expect(find.byType(UploadDocumentScreen), findsOneWidget);
       await tester.tap(find.text('Choose files'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Choose a category'));
+      await tester.tap(find.text('Type a category, sub-category or specialization'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Security').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Share with the library'));
+      await tester.tap(find.widgetWithText(CommunityButton, 'Upload'));
       await tester.pumpAndSettle();
       expect(find.byType(UploadDocumentScreen), findsNothing);
       expect(find.text('“Night rounds” is in the library.'), findsOneWidget);
@@ -922,10 +1047,10 @@ void main() {
       expect(find.text('Night rounds'), findsOneWidget);
     });
 
-    testWidgets('the host card is the same Upload', (tester) async {
-      final lib = await _pumpLibrary(tester);
-      await tester.ensureVisible(find.text('Share what you know'));
-      await tester.tap(find.widgetWithText(InkWell, 'Upload').last);
+    testWidgets('the empty library offers the first upload, which opens the same form', (tester) async {
+      final lib = await _pumpLibrary(tester, repo: _EmptyLibrary());
+      expect(find.text('The library is empty'), findsOneWidget);
+      await tester.tap(find.text('Upload the first document'));
       await tester.pumpAndSettle();
       expect(find.byType(UploadDocumentScreen), findsOneWidget);
       expect(lib.backs, 0);

@@ -4,6 +4,7 @@
 library;
 
 import '../feed/feed_models.dart' show FeedPicture;
+import '../payments/checkout_start.dart' show CheckoutStart;
 
 export '../feed/feed_models.dart' show FeedPicture;
 
@@ -563,10 +564,13 @@ enum CheckoutState {
   /// Fulfilled or activated at once (free).
   completed,
 
-  /// Sent to the mentor; they accept, then the member pays (on the website).
+  /// Sent to the mentor; they accept, then the member pays (from My mentoring, under Purchases).
   requested,
 
-  /// Paid checkout runs on the website.
+  /// A real payment: [CheckoutOutcome.payment] is the gateway's form, paid in the app's own payment view.
+  pay,
+
+  /// Continues on another page of ICR ([CheckoutOutcome.sitePath]), opened as the app's own screen.
   website,
 
   /// The API said no (or the profile had not loaded); [CheckoutOutcome.message]
@@ -575,7 +579,10 @@ enum CheckoutState {
 }
 
 class CheckoutOutcome {
-  const CheckoutOutcome(this.state, {this.message, this.sitePath});
+  const CheckoutOutcome(this.state, {this.message, this.sitePath, this.payment});
+
+  /// The gateway's form, for [CheckoutState.pay].
+  final CheckoutStart? payment;
 
   final CheckoutState state;
 

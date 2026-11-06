@@ -5,11 +5,12 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text.dart';
 import '../../chapters/community_kit.dart';
+import '../../chapters/resource_download.dart' show ResourceDownloader;
 import '../../chapters/widgets/chapter_sections.dart'
-    show AboutSection, PersonRow, ResourcesSection, SectionEmpty, SectionFailed, SectionLoading;
+    show AboutSection, PersonRow, SectionEmpty, SectionFailed, SectionLoading;
 import '../../chapters/widgets/meetup_row.dart' show MeetupRow;
+import '../../chapters/widgets/resource_row.dart' show ResourceRow;
 import '../council_controller.dart';
 import '../council_models.dart';
 
@@ -299,11 +300,15 @@ class _CouncilMembersSectionState extends State<CouncilMembersSection> {
   }
 }
 
-/// The knowledge library: benchmarks, whitepapers, templates and recordings, each opening where it points.
+/// The knowledge library: benchmarks, whitepapers, templates and recordings, each row with the website's Download.
 class CouncilKnowledgeSection extends StatelessWidget {
-  const CouncilKnowledgeSection({super.key, required this.onOpen});
+  const CouncilKnowledgeSection({super.key, required this.downloader, required this.opener});
 
-  final ValueChanged<CouncilResource> onOpen;
+  /// Saves a resource's file to the phone. Tests give their own.
+  final ResourceDownloader downloader;
+
+  /// Hands a recording's web page to the browser, as the website's link does.
+  final Future<void> Function(BuildContext context, Uri uri) opener;
 
   @override
   Widget build(BuildContext context) {
@@ -316,41 +321,10 @@ class CouncilKnowledgeSection extends StatelessWidget {
     }
     return Column(
       children: [
-        for (final r in state.items)
-          InkWell(
-            onTap: () => onOpen(r),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: ResourcesSection.tagColor(r.tag),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(r.tag, style: AppText.plexSans(9, FontWeight.w700, Colors.white, lineHeight: 11)),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(r.title, style: CommunityText.personName, maxLines: 2, overflow: TextOverflow.ellipsis),
-                        Text(
-                          [r.kindLabel, if (r.sizeLabel != null) r.sizeLabel!].join(' · '),
-                          style: CommunityText.personLine,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(LucideIcons.externalLink, size: 15, color: AppColors.slate400),
-                ],
-              ),
-            ),
-          ),
+        for (final (i, r) in state.items.indexed) ...[
+          if (i > 0) const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16, color: CommunityColors.tileRule),
+          ResourceRow(resource: r, downloader: downloader, opener: opener),
+        ],
       ],
     );
   }
@@ -375,7 +349,6 @@ class CouncilUpdatesSection extends StatelessWidget {
             child: CommunityCard(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               color: u.pinned ? CommunityColors.blue50 : Colors.white,
-              borderColor: u.pinned ? const Color(0xFFBFDBFE) : CommunityColors.border,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

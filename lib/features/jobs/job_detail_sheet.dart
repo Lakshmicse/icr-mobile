@@ -247,7 +247,9 @@ class JobSheetBody extends StatelessWidget {
             const SizedBox(height: 10),
             const Hairline(color: AppColors.blockRule),
           ],
-          if (job.contact != null)
+          // Someone who posts this company's jobs has no hiring contact to message (the website hides the card, and the
+          // API refuses the message): "Meet the hiring team" is for the people applying.
+          if (job.contact != null && !postsHere)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 19.5, 16, 0),
               child: _HiringTeam(
@@ -471,11 +473,7 @@ class _Toolbar extends StatelessWidget {
                         showMessage(context, refusal);
                         return;
                       }
-                      final messenger = ScaffoldMessenger.of(context);
                       Navigator.maybePop(context);
-                      messenger
-                        ..hideCurrentSnackBar()
-                        ..showSnackBar(const SnackBar(content: Text(hiddenNotice)));
                     },
                   ),
                 ],
@@ -488,9 +486,6 @@ class _Toolbar extends StatelessWidget {
     );
   }
 }
-
-/// What the sheet says once the member hid its job.
-const hiddenNotice = 'Hidden. Bring it back from Hidden jobs in your career hub.';
 
 class _ToolIcon extends StatelessWidget {
   const _ToolIcon({required this.icon, required this.size, required this.label, required this.onTap, this.color});
@@ -985,18 +980,12 @@ class _AboutCompany extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 46 × 48 dp with its hairline drawn over the photo, as the design's tile (the photo
-            // is the whole tile; a border outside it made it 2 dp bigger each way), 0.5 dp
-            // below the top of the name.
+            // 46 × 48 dp, the photo the whole tile with no frame, 0.5 dp below the top of the name.
             Padding(
               padding: const EdgeInsets.only(top: 1),
-              child: Container(
+              child: SizedBox(
                 width: 46,
                 height: 48,
-                foregroundDecoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFE7EEFF)),
-                ),
                 child: CompanyLogoTile(
                   company: company,
                   picture: company.cover,

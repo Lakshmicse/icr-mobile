@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:lucide_icons_flutter/lucide_icons_600.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../feed/feed_models.dart' show FeedPicture;
 import '../../learning/widgets/course_picture.dart';
 import '../hub_styles.dart';
@@ -57,17 +58,12 @@ class LearnCard extends StatelessWidget {
       button: true,
       label: title,
       excludeSemantics: true,
+      // A tinted card, never an outlined one (the owner's rule, Nov 2026).
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(radius),
-          boxShadow: const [BoxShadow(color: HubColors.cardShadow, blurRadius: 6, offset: Offset(0, 2))],
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(radius)),
         child: Material(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radius),
-            side: const BorderSide(color: HubColors.cardEdge),
-          ),
+          color: AppColors.surfaceContainer,
+          borderRadius: BorderRadius.circular(radius),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,

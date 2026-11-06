@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
+import 'package:icr_mobile/core/util/links.dart' show SiteRoutes;
 import 'package:icr_mobile/features/feed/feed_models.dart';
 import 'package:icr_mobile/features/feed/forum_json.dart';
 import 'package:icr_mobile/features/forum/forum_html.dart';
@@ -482,6 +483,73 @@ void main() {
       expect(opened, ['u-priya', 'u-rahul']);
       await tester.tapOnText(find.textRange.ofSubstring('all done'));
       expect(opened.length, 2, reason: 'the rest of the words is not a link');
+    });
+
+    testWidgets('a typed web address opens, beside a tagged name, with or without mentions', (tester) async {
+      final opened = <String>[];
+      final pages = <Uri>[];
+      SiteRoutes.resolver = (uri) =>
+          (context) async => pages.add(uri);
+      addTearDown(() => SiteRoutes.resolver = null);
+      const address = 'https://icr.org.in/community/digital-library-top-stats-d6a080';
+      Future<void> pump(List<Mention> mentions) => tester.pumpWidget(
+        MaterialApp(
+          theme: buildAppTheme(),
+          home: Scaffold(
+            body: MentionText(
+              text: '@Rahul Sharma shared $address, thanks @Priya Nambiar',
+              style: const TextStyle(fontSize: 14),
+              mentions: mentions,
+              onOpen: opened.add,
+            ),
+          ),
+        ),
+      );
+
+      await pump(const [Mention(id: 'u-rahul', name: 'Rahul Sharma'), Mention(id: 'u-priya', name: 'Priya Nambiar')]);
+      await tester.tapOnText(find.textRange.ofSubstring(address));
+      expect(pages.single.toString(), address);
+      await tester.tapOnText(find.textRange.ofSubstring('@Priya Nambiar'));
+      await tester.tapOnText(find.textRange.ofSubstring('@Rahul Sharma'));
+      expect(opened, ['u-priya', 'u-rahul'], reason: 'the names around the address are still tagged');
+      expect(pages.length, 1);
+      await tester.tapOnText(find.textRange.ofSubstring('thanks'));
+      expect(pages.length, 1, reason: 'the words around an address are not a link');
+
+      // Untagged words with an address in them are linked as well; the comma stays text.
+      await pump(const []);
+      await tester.tapOnText(find.textRange.ofSubstring(address));
+      expect(pages.length, 2);
+      await tester.tapOnText(find.textRange.ofSubstring('@Priya Nambiar'));
+      expect(opened.length, 2, reason: 'no mentions, so no tagged name');
+
+      // Replaced by other words, the old taps are disposed with the widget.
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('two namesakes either side of an address are told apart by order', (tester) async {
+      final opened = <String>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildAppTheme(),
+          home: Scaffold(
+            body: MentionText(
+              text: '@Raj Kumar then https://example.com/a and @Raj Kumar',
+              style: const TextStyle(fontSize: 14),
+              mentions: const [
+                Mention(id: 'u-raj-1', name: 'Raj Kumar'),
+                Mention(id: 'u-raj-2', name: 'Raj Kumar'),
+              ],
+              onOpen: opened.add,
+            ),
+          ),
+        ),
+      );
+      final raj = find.textRange.ofSubstring('@Raj Kumar');
+      expect(raj, findsNWidgets(2));
+      await tester.tapOnText(raj.first);
+      await tester.tapOnText(raj.last);
+      expect(opened, ['u-raj-1', 'u-raj-2']);
     });
 
     testWidgets('without an opener, or without mentions, it is plain text', (tester) async {

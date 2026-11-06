@@ -6,6 +6,7 @@ import '../../core/config.dart';
 import 'mentor_profile_format.dart';
 import 'mentor_profile_models.dart';
 import 'mentor_profile_repository.dart';
+import '../payments/checkout_start.dart' show CheckoutStart;
 
 /// The Mentor Profile screens from the API: the public profile
 /// (`GET /mentorship/mentors/:id`), the storefront
@@ -157,35 +158,31 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
     final phoneBody = {if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim()};
     switch (offering.kind) {
       case OfferingKind.resource:
-        if (!offering.free) {
-          // Paid checkout (PayU) runs on the website; `?book=` opens this
-          // service's checkout there.
-          return CheckoutOutcome(
-            CheckoutState.website,
-            sitePath: '/mentorship/mentors/${mentor.id}?book=${offering.id}',
-          );
+        // Free, or paid in the app's own payment view (the gateway's form comes back); never the website.
+        final res = await _send('POST', '/mentor-services/${offering.id}/checkout', const {}) as Map<String, dynamic>?;
+        if (!offering.free && res?['devActivated'] != true) {
+          return CheckoutOutcome(CheckoutState.pay, payment: CheckoutStart.fromJson(res ?? const {}));
         }
-        await _send('POST', '/mentor-services/${offering.id}/checkout', const {});
         return const CheckoutOutcome(
           CheckoutState.completed,
-          message: 'Added to your purchases. Download it from Purchases on the website.',
+          message: 'Added to your purchases. Find it in My mentoring, under Purchases.',
         );
       case OfferingKind.plan:
-        if (!offering.free) {
-          return CheckoutOutcome(CheckoutState.website, sitePath: '/mentorship/mentors/${mentor.id}');
-        }
         final res = await _send('POST', '/mentor-plans/${offering.id}/subscribe', phoneBody) as Map<String, dynamic>?;
+        if (res?['devActivated'] == false) {
+          return CheckoutOutcome(CheckoutState.pay, payment: CheckoutStart.fromJson(res ?? const {}));
+        }
         final mentorshipId = res?['mentorshipId'] as String?;
         return CheckoutOutcome(
           CheckoutState.completed,
-          message: 'You are on ${offering.title}. Schedule your first session on the website.',
+          message: 'You are on ${offering.title}. Schedule your first session from My mentoring.',
           sitePath: mentorshipId == null ? '/mentorship/my' : '/mentorship/my/$mentorshipId',
         );
       case OfferingKind.program:
         await _send('POST', '/mentor-plans/${offering.id}/request', phoneBody);
         return CheckoutOutcome(
           CheckoutState.requested,
-          message: 'Request sent. Once ${mentor.firstName} accepts, you pay on the website.',
+          message: 'Request sent. Once ${mentor.firstName} accepts, you pay from My mentoring, under Purchases.',
           sitePath: '/mentorship/my?tab=purchases',
         );
       case OfferingKind.groupSession:

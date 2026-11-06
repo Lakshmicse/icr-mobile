@@ -658,7 +658,6 @@ class _GapRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.slate50,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.slate200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

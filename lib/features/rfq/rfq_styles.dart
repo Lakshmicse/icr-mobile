@@ -38,15 +38,12 @@ class RfqText {
   static final sheetTitle = AppText.workSans(16, FontWeight.w700, AppColors.slate900, lineHeight: 22);
 }
 
-/// The cards' frame: white, a slate-200 hairline, 12 radius.
-const rfqCardDecoration = BoxDecoration(
-  color: Colors.white,
-  borderRadius: BorderRadius.all(Radius.circular(12)),
-  border: Border.fromBorderSide(BorderSide(color: AppColors.slate200)),
-);
+/// The cards' look: a pale slate tint, 12 radius, no frame.
+const rfqCardDecoration = BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.all(Radius.circular(12)));
 
-/// The light panel behind a band of figures (the Overview's "PAN-INDIA" strip).
-const rfqPanelColor = AppColors.slate50;
+/// The light panel behind a band of figures (the Overview's "PAN-INDIA" strip); a shade darker than the
+/// card it often sits in.
+const rfqPanelColor = AppColors.slate100;
 
 /// A colour pair for a status pill.
 class Tone {

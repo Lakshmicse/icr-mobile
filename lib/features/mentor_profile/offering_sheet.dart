@@ -303,11 +303,7 @@ class _DetailTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(7.8, 7.1, 7, 0),
-      decoration: BoxDecoration(
-        color: MentorColors.tileFill,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: MentorColors.tileBorder),
-      ),
+      decoration: BoxDecoration(color: MentorColors.tileFill, borderRadius: BorderRadius.circular(10)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

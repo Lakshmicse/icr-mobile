@@ -841,7 +841,7 @@ void main() {
     });
   });
 
-  group('refreshing, paging, the sponsored card and the states', () {
+  group('refreshing, paging and the states', () {
     testWidgets('pulling down reads the forum, the bell and the discussions again', (tester) async {
       // A short screen: the indicator arms after a quarter of the screen's height.
       await pumpHome(tester, height: 2400);
@@ -880,23 +880,10 @@ void main() {
       expect(find.text("You're all caught up"), findsOneWidget);
     });
 
-    testWidgets("the sponsored card opens its page, and its i says what it is", (tester) async {
+    testWidgets('no sponsored placement sits between the posts (owner, 6 Nov 2026)', (tester) async {
       await pumpHome(tester);
-      expect(find.text('SPONSORED PARTNER'), findsOneWidget);
-      expect(find.text('The Future of FM Operations'), findsOneWidget);
-      expect(find.text('Learn More'), findsOneWidget);
-      await tapKey(tester, 'sponsored-cta');
-      expect(launched.single.path, '/vendors');
-      await tapKey(tester, 'sponsored-info');
-      expect(find.text('A placement shown to members of the ICR community.'), findsOneWidget);
-    });
-
-    testWidgets('the sponsored card sits after the second post', (tester) async {
-      await pumpHome(tester);
-      final second = tester.getTopLeft(find.byKey(const ValueKey('like:photo'))).dy;
-      final sponsored = tester.getTopLeft(find.text('SPONSORED PARTNER')).dy;
-      final third = tester.getTopLeft(find.byKey(const ValueKey('like:poll'))).dy;
-      expect(second < sponsored && sponsored < third, isTrue);
+      expect(find.text('SPONSORED PARTNER'), findsNothing);
+      expect(find.text('Learn More'), findsNothing);
     });
 
     testWidgets('a failed read says so, and Try again reads again', (tester) async {

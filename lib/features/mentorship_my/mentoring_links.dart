@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/api/api_error.dart';
-import '../../core/config.dart';
 import '../../core/util/links.dart';
 import '../mentor_profile/mentor_profile_screen.dart';
 import '../messaging/messaging_launcher.dart';
@@ -103,8 +102,7 @@ class MentorshipLinks {
 
   static void _openBell(BuildContext context) => notifications_screen.openNotifications(context);
 
-  static Future<void> _openPaymentPage(BuildContext context, String path) =>
-      openExternal(context, AppConfig.sitePage(path));
+  static Future<void> _openPaymentPage(BuildContext context, String path) => openSitePage(context, path);
 
   static Future<void> _openThread(BuildContext context, String conversationId) =>
       MessagingLauncher.openConversation(context, conversationId);

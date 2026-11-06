@@ -38,10 +38,7 @@ class SupplierCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = scale;
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12 * k),
-      side: BorderSide(color: MartColors.cardBorder, width: 1.5 * k),
-    );
+    final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(12 * k));
     final name = supplier.name;
     final heading = supplier.headline ?? title ?? '';
     final body = supplier.blurb ?? '';
@@ -54,7 +51,7 @@ class SupplierCard extends StatelessWidget {
         child: MediaQuery.withClampedTextScaling(
           maxScaleFactor: 1.2,
           child: Material(
-            color: Colors.white,
+            color: MartColors.cardFill,
             shape: shape,
             child: InkWell(
               customBorder: shape,
@@ -229,11 +226,7 @@ class SupplierCardSkeleton extends StatelessWidget {
     final k = scale;
     return Container(
       height: supplierCardBaseHeight * k,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12 * k),
-        border: Border.all(color: MartColors.cardBorder, width: 1.5 * k),
-      ),
+      decoration: BoxDecoration(color: MartColors.cardFill, borderRadius: BorderRadius.circular(12 * k)),
       padding: EdgeInsets.fromLTRB(13.5 * k, 14 * k, 13.5 * k, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

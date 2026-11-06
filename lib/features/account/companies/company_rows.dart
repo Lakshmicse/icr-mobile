@@ -81,7 +81,12 @@ class CompanyWorkspaceRow extends StatelessWidget {
                     Row(
                       children: [
                         Flexible(
-                          child: Text(c.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: AccountText.itemTitle),
+                          child: Text(
+                            c.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AccountText.itemTitle,
+                          ),
                         ),
                         if (c.verified) ...[
                           const SizedBox(width: 4),
@@ -97,13 +102,24 @@ class CompanyWorkspaceRow extends StatelessWidget {
                     if (where.isNotEmpty)
                       Text(where, maxLines: 2, overflow: TextOverflow.ellipsis, style: AccountText.meta),
                     if (c.industry != null)
-                      Text(industryLabel(c.industry) ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: AccountText.meta),
+                      Text(
+                        industryLabel(c.industry) ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AccountText.meta,
+                      ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
                       children: [
-                        if (c.active) const AccountChip(label: CompanyWords.active, color: AppColors.chipEmphasis, ink: AppColors.primary, icon: Icons.check_rounded),
+                        if (c.active)
+                          const AccountChip(
+                            label: CompanyWords.active,
+                            color: AppColors.chipEmphasis,
+                            ink: AppColors.primary,
+                            icon: Icons.check_rounded,
+                          ),
                         if (c.hasSupplierListing) const AccountChip(label: 'Supplier'),
                         AccountChip(label: CompanyWords.members(c.memberCount)),
                         if ((c.pendingJoinRequests ?? 0) > 0)
@@ -161,11 +177,7 @@ class CompanyWorkspaceRow extends StatelessWidget {
                   onPressed: disabled ? null : onLeave,
                 ),
               if (onOpen != null)
-                TextButton(
-                  key: Key('company.open.${c.companyId}'),
-                  onPressed: onOpen,
-                  child: const Text('View page'),
-                ),
+                TextButton(key: Key('company.open.${c.companyId}'), onPressed: onOpen, child: const Text('View page')),
             ],
           ),
         ],
@@ -300,7 +312,12 @@ class JoinRequestRow extends StatelessWidget {
                     const Icon(Symbols.hourglass_empty, size: 13, color: AppColors.slate500),
                     const SizedBox(width: 4),
                     Expanded(
-                      child: Text(CompanyWords.requested(r, now: now), maxLines: 2, overflow: TextOverflow.ellipsis, style: AccountText.meta),
+                      child: Text(
+                        CompanyWords.requested(r, now: now),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AccountText.meta,
+                      ),
                     ),
                   ],
                 ),
@@ -326,6 +343,96 @@ class JoinRequestRow extends StatelessWidget {
             expand: false,
             height: 36,
             onPressed: disabled ? null : onWithdraw,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A place an admin added the person to: they join only when they accept, and may decline. Both buttons wait while
+/// either is being answered ([answering] names the one that is).
+class InvitationRow extends StatelessWidget {
+  const InvitationRow({
+    super.key,
+    required this.invitation,
+    required this.answering,
+    required this.disabled,
+    required this.onAccept,
+    required this.onDecline,
+    this.first = false,
+    this.now,
+  });
+
+  final CompanyInvitation invitation;
+
+  /// `accept` or `decline` while this invitation is being answered, else null.
+  final String? answering;
+  final bool disabled;
+  final VoidCallback onAccept;
+  final VoidCallback onDecline;
+  final bool first;
+  final DateTime? now;
+
+  @override
+  Widget build(BuildContext context) {
+    final i = invitation;
+    return Container(
+      key: Key('invitation.row.${i.companyId}'),
+      decoration: BoxDecoration(
+        border: Border(top: first ? BorderSide.none : const BorderSide(color: AppColors.slate200)),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CompanyLogo(url: i.logoUrl, name: i.name, size: 40),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(i.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: AccountText.itemTitle),
+                    const SizedBox(height: 2),
+                    Text(
+                      CompanyWords.invited(i, now: now),
+                      key: Key('invitation.added.${i.companyId}'),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: AccountText.meta,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: AccountButton(
+                  key: Key('invitation.decline.${i.companyId}'),
+                  label: answering == 'decline' ? CompanyWords.declining : CompanyWords.decline,
+                  busy: answering == 'decline',
+                  outlined: true,
+                  height: 38,
+                  onPressed: disabled ? null : onDecline,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: AccountButton(
+                  key: Key('invitation.accept.${i.companyId}'),
+                  label: answering == 'accept' ? CompanyWords.accepting : CompanyWords.accept,
+                  busy: answering == 'accept',
+                  height: 38,
+                  onPressed: disabled ? null : onAccept,
+                ),
+              ),
+            ],
           ),
         ],
       ),

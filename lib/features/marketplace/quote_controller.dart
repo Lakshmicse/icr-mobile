@@ -47,6 +47,10 @@ class QuoteController extends ChangeNotifier {
   QuoteSent? _sent;
   bool _disposed = false;
 
+  /// The listing is the one of the company the person acts for: a company does not ask itself for a quote, so the
+  /// sheet says so in place of the form (the website's profile does the same).
+  bool get ownListing => _myCompanyId != null && _myCompanyId == supplier.companyId;
+
   /// The service the request names (null: a general enquiry to the supplier).
   CatalogService? get service => _service;
 

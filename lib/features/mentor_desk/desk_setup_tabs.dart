@@ -192,38 +192,39 @@ class _DayRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    // A day is a row closed by a hairline, never an outlined box (the owner's rule, Nov 2026).
+    return Column(
       key: ValueKey('day-$day'),
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.cardRule),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(width: 96, child: Text(weekdayNames[day], style: MentoringText.bodyStrong)),
-          Expanded(
-            child: blocks.isEmpty
-                ? Text('Not available', style: MentoringText.meta)
-                : Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      for (final b in blocks)
-                        InputChip(
-                          key: ValueKey('window-$day-${b.startMin}-${b.endMin}'),
-                          label: Text(b.span),
-                          onDeleted: () => onRemove(b),
-                          deleteButtonTooltipMessage: 'Remove ${weekdayNames[day]} ${b.span}',
-                        ),
-                    ],
-                  ),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: 96, child: Text(weekdayNames[day], style: MentoringText.bodyStrong)),
+              Expanded(
+                child: blocks.isEmpty
+                    ? Text('Not available', style: MentoringText.meta)
+                    : Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          for (final b in blocks)
+                            InputChip(
+                              key: ValueKey('window-$day-${b.startMin}-${b.endMin}'),
+                              label: Text(b.span),
+                              onDeleted: () => onRemove(b),
+                              deleteButtonTooltipMessage: 'Remove ${weekdayNames[day]} ${b.span}',
+                            ),
+                        ],
+                      ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        const Divider(height: 1, thickness: 1, color: AppColors.cardRule),
+      ],
     );
   }
 }

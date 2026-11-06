@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../feed_models.dart';
 import '../feed_styles.dart';
 
-/// A poll's options as LinkedIn draws them: outlined blue pills, each filled to its share, the reader's vote
+/// A poll's options as tinted pills with no outline, each filled to its share, the reader's vote
 /// ticked and set in ink.
 class PollView extends StatelessWidget {
   const PollView({
@@ -106,11 +107,10 @@ class _OptionBar extends StatelessWidget {
       selected: mine,
       label: '${option.label}${percent == null ? '' : ', $percent percent'}${mine ? ', your vote' : ''}',
       excludeSemantics: true,
+      // A tinted pill, no outline: the check and "(Your vote)" mark the member's own.
       child: Material(
-        color: HomeLook.card,
-        shape: StadiumBorder(
-          side: BorderSide(color: ink, width: mine ? 1.5 : 1),
-        ),
+        color: AppColors.surfaceContainer,
+        shape: const StadiumBorder(),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
@@ -122,7 +122,7 @@ class _OptionBar extends StatelessWidget {
                   FractionallySizedBox(
                     widthFactor: percent! / 100,
                     heightFactor: 1,
-                    child: ColoredBox(color: mine ? HomeLook.searchFill : const Color(0xFFE8F3FB)),
+                    child: ColoredBox(color: mine ? const Color(0xFFCFE0F2) : const Color(0xFFDCEAF6)),
                   ),
                 Positioned.fill(
                   child: Padding(

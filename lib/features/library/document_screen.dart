@@ -11,7 +11,6 @@ import 'library_format.dart';
 import 'library_handoffs.dart';
 import 'library_models.dart';
 import 'library_repository.dart';
-import 'screen_security.dart';
 import 'upload_document_screen.dart';
 import 'widgets/document_card.dart';
 import 'widgets/document_viewer_screen.dart';
@@ -74,10 +73,11 @@ Future<void> openDocumentPage(
   );
 }
 
-/// One document: who shared it and when, the numbers, its description, and each of its files with a
-/// Preview that opens it in the app. **There is no Download**: the library is view-only on a phone (owner's
-/// call, 28 Oct 2026), and the screen keeps the window out of screenshots and recordings while it is up. The
-/// member who shared it (or a SUPER_ADMIN) may add files, drop one and delete it; anyone else may report it.
+/// One document: who shared it and when, the numbers, its description, and each of its files with Preview
+/// (opens it in the app), Download (the phone's "Save as", counted as the website counts a download) and Share
+/// (the file to another app). Screenshots are allowed (owner, 5 Nov 2026: the view-only library of 28 Oct was
+/// taken off). The member who shared it (or a SUPER_ADMIN) may add files, drop one and delete it; anyone else may
+/// report it.
 /// A refusal that says the plan does not open it is the lock card, in the server's own words.
 ///
 /// Reads a [DocumentController] from Provider and starts it on first build.
@@ -113,8 +113,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
 
   LibraryHandoffs get _h => widget.handoffs;
 
-  /// Reads one file and shows it in the app's own viewer. The bytes go to the viewer and nowhere else: they
-  /// are never saved, shared or handed to another app.
+  /// Reads one file and shows it in the app's own viewer, whose Download and Share fetch it as a download.
   Future<void> _preview(DocumentController c, LibraryFile file) async {
     final kind = file.previewKind;
     if (kind == PreviewKind.none) return;
@@ -127,9 +126,44 @@ class _DocumentScreenState extends State<DocumentScreen> {
     }
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => DocumentViewerScreen(file: bytes, kind: kind, pdf: _h.pdf, runner: _h.runner),
+        builder: (_) => DocumentViewerScreen(
+          file: bytes,
+          kind: kind,
+          pdf: _h.pdf,
+          runner: _h.runner,
+          device: _h.device,
+          onDownload: () => _download(c, file),
+          onShare: () => _shareFile(c, file),
+        ),
       ),
     );
+  }
+
+  /// The file as a download (counted), or null after saying why not (a plan's refusal shows as the lock card).
+  Future<DocumentBytes?> _fetch(DocumentController c, LibraryFile file) async {
+    final out = await c.download(file);
+    if (!mounted) return null;
+    if (out.file == null && !out.locked) showMessage(context, out.error ?? 'Could not download that file.');
+    return out.file;
+  }
+
+  /// Download: the file saved where the person chooses.
+  Future<void> _download(DocumentController c, LibraryFile file) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final bytes = await _fetch(c, file);
+    if (bytes == null) return;
+    final saved = await _h.device.save(bytes);
+    if (saved) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('Saved ${file.fileName}.')));
+    }
+  }
+
+  /// Share: the file itself to the phone's share sheet.
+  Future<void> _shareFile(DocumentController c, LibraryFile file) async {
+    final bytes = await _fetch(c, file);
+    if (bytes != null) await _h.device.shareFile(bytes);
   }
 
   Future<void> _report(DocumentController c) async {
@@ -188,14 +222,12 @@ class _DocumentScreenState extends State<DocumentScreen> {
   @override
   Widget build(BuildContext context) {
     final c = context.watch<DocumentController>();
-    return ScreenGuard(
-      child: CommunityPage(
-        title: 'Document',
-        onBack: widget.onBack,
-        onBell: _bell,
-        onRefresh: c.refresh,
-        children: _body(c),
-      ),
+    return CommunityPage(
+      title: 'Document',
+      onBack: widget.onBack,
+      onBell: _bell,
+      onRefresh: c.refresh,
+      children: _body(c),
     );
   }
 
@@ -282,14 +314,20 @@ class _DocumentScreenState extends State<DocumentScreen> {
       const SizedBox(height: 14),
       CommunitySectionHeading(title: d.isPack ? 'Files' : 'File', pill: d.isPack ? '${d.fileCount}' : null),
       const SizedBox(height: 8),
-      for (final f in d.files)
+      for (final (i, f) in d.files.indexed) ...[
+        // No outline round a file: a hairline between one and the next.
+        if (i > 0) const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16, color: CommunityColors.tileRule),
         _FileRow(
           file: f,
           busy: c.isBusy(f.id),
+          downloading: c.isDownloading(f.id),
           canRemove: c.mayChange && d.fileCount > 1,
           onPreview: () => _preview(c, f),
+          onDownload: () => _download(c, f),
+          onShare: () => _shareFile(c, f),
           onRemove: () => _removeFile(c, f),
         ),
+      ],
       if (c.mayChange && room > 0)
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
@@ -417,11 +455,7 @@ class _LockCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: CommunityColors.amber50,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFFCD9A0)),
-      ),
+      decoration: BoxDecoration(color: CommunityColors.amber50, borderRadius: BorderRadius.circular(10)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -454,76 +488,110 @@ class _FileRow extends StatelessWidget {
   const _FileRow({
     required this.file,
     required this.busy,
+    required this.downloading,
     required this.canRemove,
     required this.onPreview,
+    required this.onDownload,
+    required this.onShare,
     required this.onRemove,
   });
 
   final LibraryFile file;
   final bool busy;
+  final bool downloading;
   final bool canRemove;
   final VoidCallback onPreview;
+  final VoidCallback onDownload;
+  final VoidCallback onShare;
   final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
     final f = file;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      child: CommunityCard(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              FilePlate(glyph: f.glyph, size: 40),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(f.fileName, style: CommunityText.personName, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    Text(
+                      '${f.fileType.label} · ${fileSizeLabel(f.sizeBytes)} · ${f.downloadCount == 1 ? '1 download' : '${groupThousands(f.downloadCount)} downloads'}',
+                      style: CommunityText.personLine,
+                    ),
+                  ],
+                ),
+              ),
+              if (canRemove)
+                IconButton(
+                  tooltip: 'Remove ${f.fileName}',
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(LucideIcons.trash2, size: 16, color: AppColors.slate500),
+                  onPressed: busy ? null : onRemove,
+                ),
+            ],
+          ),
+          if (!f.canPreview) ...[
+            const SizedBox(height: 8),
+            // The website's words for a file it has no viewer for: download it to read it.
             Row(
               children: [
-                FilePlate(glyph: f.glyph, size: 40),
-                const SizedBox(width: 12),
+                const Icon(LucideIcons.eyeOff, size: 15, color: AppColors.slate500),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(f.fileName, style: CommunityText.personName, maxLines: 2, overflow: TextOverflow.ellipsis),
-                      Text(
-                        '${f.fileType.label} · ${fileSizeLabel(f.sizeBytes)} · ${f.downloadCount == 1 ? '1 download' : '${groupThousands(f.downloadCount)} downloads'}',
-                        style: CommunityText.personLine,
-                      ),
-                    ],
+                  child: Text(
+                    "${f.fileType.label} files can't be previewed in the app. Download it to read it.",
+                    style: CommunityText.small,
                   ),
                 ),
-                if (canRemove)
-                  IconButton(
-                    tooltip: 'Remove ${f.fileName}',
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(LucideIcons.trash2, size: 16, color: AppColors.slate500),
-                    onPressed: busy ? null : onRemove,
-                  ),
               ],
             ),
-            const SizedBox(height: 10),
-            if (f.canPreview)
-              CommunityButton(
-                label: 'Preview',
-                icon: LucideIcons.eye,
-                expand: true,
-                height: 34,
-                busy: busy,
-                onPressed: onPreview,
-              )
-            else
-              // Word, Excel, PowerPoint and archives have no viewer in the app, and nothing can be saved, so
-              // there is nothing to offer: say so rather than draw a button that does nothing.
-              Row(
-                children: [
-                  const Icon(LucideIcons.eyeOff, size: 15, color: AppColors.slate500),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text("${f.fileType.label} files can't be previewed in the app.", style: CommunityText.small),
-                  ),
-                ],
-              ),
           ],
-        ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              if (f.canPreview) ...[
+                Expanded(
+                  child: CommunityButton(
+                    label: 'Preview',
+                    icon: LucideIcons.eye,
+                    expand: true,
+                    height: 34,
+                    busy: busy,
+                    onPressed: onPreview,
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: CommunityButton(
+                  key: ValueKey('download-${f.id}'),
+                  label: 'Download',
+                  icon: LucideIcons.download,
+                  expand: true,
+                  height: 34,
+                  busy: downloading,
+                  onPressed: onDownload,
+                ),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                key: ValueKey('share-${f.id}'),
+                tooltip: 'Share ${f.fileName}',
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(LucideIcons.share2, size: 18, color: AppColors.primary),
+                onPressed: downloading ? null : onShare,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

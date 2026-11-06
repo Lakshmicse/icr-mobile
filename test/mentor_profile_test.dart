@@ -23,6 +23,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 
 import 'helpers/fonts.dart';
+import 'package:icr_mobile/features/payments/payment_screen.dart';
 
 class _NoTokens extends TokenStore {
   @override
@@ -549,9 +550,15 @@ void main() {
       });
     });
 
-    test("buying: free things complete, programmes are requested, paid checkout is the website's", () async {
+    test("buying: free things complete, programmes are requested, paid checkout is the gateway's form", () async {
+      const form = {
+        'devActivated': false,
+        'action': 'https://test.payu.in/_payment',
+        'fields': {'txnid': 't1'},
+      };
       final routes = _routes()
-        ..['POST /mentor-services/s2/checkout'] = ((_) => {'devActivated': true, 'purchaseId': 'p'})
+        ..['POST /mentor-services/s2/checkout'] = ((_) => form)
+        ..['POST /mentor-plans/pl1/subscribe'] = ((_) => {...form, 'subscriptionId': 'sub1'})
         ..['POST /mentor-plans/pl2/request'] = ((_) => {
           'ok': true,
           'subscriptionId': 'sub',
@@ -566,13 +573,14 @@ void main() {
       expect(program.state, CheckoutState.requested);
       expect(api.bodies['POST /mentor-plans/pl2/request'], {'phone': '+919811111111'});
 
+      // A paid plan and a paid guide come back as the gateway's form, paid in the app (never the website).
       final paidPlan = await repo.buy(profile, offerings['pl1']!);
-      expect(paidPlan.state, CheckoutState.website);
-      expect(api.calls.where((c) => c.contains('/pl1/')), isEmpty);
+      expect(paidPlan.state, CheckoutState.pay);
+      expect(paidPlan.payment?.action, 'https://test.payu.in/_payment');
 
       final paidGuide = await repo.buy(profile, offerings['s2']!);
-      expect(paidGuide.state, CheckoutState.website);
-      expect(paidGuide.sitePath, '/mentorship/mentors/m1?book=s2');
+      expect(paidGuide.state, CheckoutState.pay);
+      expect(paidGuide.payment?.fields['txnid'], 't1');
 
       final seat = await repo.buy(profile, offerings['group-g1']!);
       expect(seat.sitePath, '/mentorship/groups/g1');
@@ -1241,7 +1249,18 @@ void main() {
             {'id': 'paid1', 'type': 'RESOURCE', 'title': 'Handbook', 'pricePaisa': 900, 'fileName': 'handbook.pdf'},
           ],
         })
-        ..['POST /mentor-services/free1/checkout'] = ((_) => {'devActivated': true, 'purchaseId': 'p1'});
+        ..['POST /mentor-services/free1/checkout'] = ((_) => {'devActivated': true, 'purchaseId': 'p1'})
+        ..['POST /mentor-services/paid1/checkout'] = ((_) => {
+          'devActivated': false,
+          'action': 'https://test.payu.in/_payment',
+          'fields': {'txnid': 't2'},
+        });
+      final posted = <String>[];
+      PaymentServices.pay = (context, {required action, required fields, String title = ''}) async {
+        posted.add(action);
+        return PaymentOutcome.success;
+      };
+      addTearDown(PaymentServices.reset);
       final urls = _launches(tester);
       final api = _Api(routes);
       await pumpApi(tester, routes, tab: ProfileTab.offerings, api: api);
@@ -1251,11 +1270,12 @@ void main() {
       expect(find.textContaining('Added to your purchases'), findsOneWidget);
       expect(urls, isEmpty);
 
-      // A paid guide never touches the checkout API: it opens that service's checkout on the website.
+      // A paid guide is bought through the checkout API and paid in the app's own payment view, never the website.
       await tester.tap(find.text('Purchase Guide'));
       await tester.pumpAndSettle();
-      expect(api.calls, isNot(contains('POST /mentor-services/paid1/checkout')));
-      expect(urls, ['https://icr.org.in/mentorship/mentors/m1?book=paid1']);
+      expect(api.calls, contains('POST /mentor-services/paid1/checkout'));
+      expect(posted, ['https://test.payu.in/_payment']);
+      expect(urls, isEmpty);
 
       // A refusal: the API's sentence, and nothing claims success.
       final refusing = _routes(profile: _plainProfile())

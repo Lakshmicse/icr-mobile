@@ -27,11 +27,8 @@ class InstituteCard extends StatelessWidget {
       excludeSemantics: true,
       onTap: onTap,
       child: Material(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: const BorderSide(color: HubColors.border),
-        ),
+        color: AppColors.surfaceContainer,
+        borderRadius: BorderRadius.circular(10),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           key: ValueKey('institute-${institute.id}'),

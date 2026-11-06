@@ -44,12 +44,8 @@ class MonthGrid extends StatelessWidget {
     final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
     final lead = month.weekday - 1; // blank cells before the 1st
     final cells = ((lead + daysInMonth + 6) ~/ 7) * 7;
-    return Container(
+    return Padding(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.cardRule),
-      ),
       child: Column(
         children: [
           Row(

@@ -63,3 +63,42 @@ class MyLearning {
   /// Certificates earned (`GET /learning/me/certificates`).
   final int? certificates;
 }
+
+/// Where one company the member runs stands as a learning partner (`GET /learning/partners/companies`, the
+/// website's `PartnerCompanyStatus`): an institute ICR approved, an application with ICR, a note to answer, or none.
+class PartnerStanding {
+  const PartnerStanding({
+    required this.companyId,
+    required this.name,
+    this.isPartner = false,
+    this.applicationStatus,
+    this.active = false,
+  });
+
+  final String companyId;
+  final String name;
+
+  /// ICR approved the company: its institute exists (`provider` is set).
+  final bool isPartner;
+
+  /// The application's `LearningPartnerApplicationStatus` (PENDING, UNDER_REVIEW, INFO_REQUESTED, REJECTED).
+  final String? applicationStatus;
+
+  /// The member is acting for this company now, so the partner console runs as it.
+  final bool active;
+
+  /// With ICR, being reviewed (the website's `WAITING`: PENDING and UNDER_REVIEW).
+  bool get waiting => !isPartner && (applicationStatus == 'PENDING' || applicationStatus == 'UNDER_REVIEW');
+
+  /// The website's `blockOf`: a partner or a company with ICR cannot apply again; a declined one or one ICR asked
+  /// more of can.
+  bool get canApply => !isPartner && !waiting;
+
+  factory PartnerStanding.fromJson(Map<String, dynamic> json) => PartnerStanding(
+    companyId: json['companyId'] as String? ?? '',
+    name: (json['name'] as String? ?? '').trim(),
+    isPartner: json['provider'] != null,
+    applicationStatus: (json['application'] as Map?)?['status'] as String?,
+    active: json['active'] == true,
+  );
+}

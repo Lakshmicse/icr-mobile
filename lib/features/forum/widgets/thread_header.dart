@@ -10,6 +10,7 @@ import '../../feed/widgets/poll_view.dart';
 import '../../feed/widgets/post_card.dart';
 import '../forum_models.dart';
 import '../forum_styles.dart';
+import '../mentions/mention_widgets.dart';
 import '../thread_controller.dart';
 import 'forum_bits.dart';
 import 'forum_rich_text.dart';
@@ -188,7 +189,8 @@ class ThreadHeader extends StatelessWidget {
 
   /// The words: the whole body once the page is read, the list's excerpt until then.
   Widget? _body(FeedPost post, ForumThread? thread) {
-    if (thread == null) return post.body.isEmpty ? null : Text(post.body, style: ForumDesign.body);
+    // Until the page is read the body is plain words, any web address in them a link.
+    if (thread == null) return post.body.isEmpty ? null : MentionText(text: post.body, style: ForumDesign.body);
     if (thread.bodyHtml.trim().isEmpty) return null;
     return ForumRichText(html: thread.bodyHtml, style: ForumDesign.body, onLink: actions.onLink);
   }

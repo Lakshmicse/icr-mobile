@@ -7,10 +7,11 @@ import '../../../core/config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text.dart';
 import '../../../core/widgets/detail_sheet.dart';
+import '../../../core/widgets/workspace_embed.dart';
 
 /// The account screens' parts, in the app's light language (the profile
 /// menu's slate palette, Work Sans headings, IBM Plex Sans text, 12 dp cards
-/// with a hairline border, the primary blue).
+/// as white tints with no frame, the primary blue).
 
 class AccountText {
   AccountText._();
@@ -44,6 +45,8 @@ class AccountBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Inside a workspace's tab the workspace has the back arrow; the title stays as the page's heading.
+    final embedded = WorkspaceEmbed.of(context);
     return Container(
       height: 56 + MediaQuery.paddingOf(context).top,
       padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
@@ -54,12 +57,16 @@ class AccountBar extends StatelessWidget implements PreferredSizeWidget {
       child: Row(
         children: [
           const SizedBox(width: 6),
-          IconButton(
-            tooltip: 'Back',
-            onPressed: onBack ?? () => Navigator.maybePop(context),
-            icon: const Icon(Symbols.arrow_back, size: 24, color: AppColors.onSurfaceVariant),
-          ),
-          const SizedBox(width: 6),
+          if (embedded)
+            const SizedBox(width: 10)
+          else ...[
+            IconButton(
+              tooltip: 'Back',
+              onPressed: onBack ?? () => Navigator.maybePop(context),
+              icon: const Icon(Symbols.arrow_back, size: 24, color: AppColors.onSurfaceVariant),
+            ),
+            const SizedBox(width: 6),
+          ],
           Expanded(
             child: Text(title, style: AccountText.title, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
@@ -93,7 +100,6 @@ class AccountCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.slate200),
       ),
       padding: padding,
       child: Column(
@@ -207,13 +213,9 @@ class CompanyLogo extends StatelessWidget {
         style: AppText.workSans(size * 0.42, FontWeight.w700, AppColors.slate500),
       ),
     );
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(size * 0.22),
-        border: Border.all(color: AppColors.slate200),
-      ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(size * 0.22),
         child: AccountImage(source: url, fallback: fallback, fit: BoxFit.contain),
@@ -985,7 +987,6 @@ class EditSheet extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFF1F2),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFFECDD3)),
                     ),
                     child: Text(error!, style: AccountText.error.copyWith(fontSize: 14)),
                   ),

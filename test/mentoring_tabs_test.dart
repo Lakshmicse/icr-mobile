@@ -201,6 +201,9 @@ void main() {
     });
 
     testWidgets('an entry opens in full, with Join and the way to its mentorship', (tester) async {
+      // Ten minutes before the session at noon on the 15th: its room is open.
+      mentoringNow = () => DateTime(2026, 11, 15, 11, 50);
+      addTearDown(() => mentoringNow = DateTime.now);
       await pumpMyMentoring(tester, calendarRoutes(midMonth()));
       final urls = launches(tester);
       await openTab(tester, 'Calendar');

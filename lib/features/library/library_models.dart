@@ -99,8 +99,7 @@ enum LibraryFileType {
   };
 }
 
-/// How a file is shown in the app. The library is view-only on a phone: a file is read and drawn in the
-/// app, never saved or handed to another app.
+/// How a file is shown in the app's own viewer (each file can also be downloaded and shared).
 enum PreviewKind {
   /// Pages drawn by the phone's PDF renderer.
   pdf,
@@ -131,8 +130,8 @@ enum PreviewKind {
 }
 
 /// How a file is shown, from its MIME type or, failing that, its name. The formats are the ones the library
-/// accepts (`LibraryLimits.extensions`); the app reads each in its own viewer because a document cannot be
-/// saved or handed to another app.
+/// accepts (`LibraryLimits.extensions`); the app reads each in its own viewer, so none
+/// needs another app to open.
 PreviewKind previewKindFor(String mimeType, String fileName) {
   final mime = mimeType.toLowerCase();
   if (mime == 'image/svg+xml') return PreviewKind.none;
@@ -364,10 +363,11 @@ class FileTypeFacet {
 // Browsing
 // ---------------------------------------------------------------------------
 
-/// The sorts the library offers (the server's sortable columns).
+/// The sorts the library offers (the server's sortable columns). The list opens on [newest] (owner,
+/// 5 Nov 2026); the website opens on downloads.
 enum LibrarySort {
-  downloads('Most downloaded', 'downloadCount', 'desc'),
   newest('Newest', 'createdAt', 'desc'),
+  downloads('Most downloaded', 'downloadCount', 'desc'),
   views('Most viewed', 'viewCount', 'desc'),
   az('A to Z', 'title', 'asc'),
   largest('Largest', 'sizeBytes', 'desc');
@@ -385,12 +385,15 @@ class LibraryQuery {
     this.category,
     this.fileType,
     this.mine = false,
-    this.sort = LibrarySort.downloads,
+    this.sort = defaultSort,
     this.page = 1,
     this.limit = pageSize,
   });
 
   static const pageSize = 24;
+
+  /// What the list is ordered by until the member picks another: latest first.
+  static const defaultSort = LibrarySort.newest;
 
   final String search;
   final String? category;

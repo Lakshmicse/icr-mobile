@@ -398,10 +398,7 @@ class ItemFacts extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       padding: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        border: Border.all(color: MartColors.cardBorder, width: 1.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: MartColors.cardFill, borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: [
           for (final (i, row) in rows.indexed) ...[
@@ -500,11 +497,8 @@ class SoldBy extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
       child: Material(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: MartColors.cardBorder, width: 1.5),
-        ),
+        color: MartColors.cardFill,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: InkWell(
           key: const ValueKey('sold-by'),
           customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

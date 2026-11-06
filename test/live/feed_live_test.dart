@@ -663,8 +663,6 @@ void main() {
         for (final element in find.byType(Image).evaluate()) {
           await precacheImage((element.widget as Image).image, element);
         }
-        final context = tester.element(find.byType(Scaffold).first);
-        await precacheImage(const AssetImage('assets/images/demo/sponsored_bg.jpg'), context);
       });
       await tester.pumpAndSettle();
       final boundary = tester.renderObject<RenderRepaintBoundary>(
@@ -714,8 +712,6 @@ void main() {
       );
       expect(find.text('Archibus (Your vote)'), findsOneWidget);
       expect(find.textContaining(RegExp(r'^\d+ votes • Open$')), findsOneWidget);
-      expect(find.text('SPONSORED PARTNER'), findsOneWidget);
-      expect(find.text('The Future of FM Operations'), findsOneWidget);
 
       // The first post's comments, open, as the design draws them.
       expect(find.text('Arvind Swamy'), findsNWidgets(2));

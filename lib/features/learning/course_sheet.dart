@@ -27,6 +27,7 @@ import 'widgets/course_sections.dart';
 import 'widgets/enquiry_sheet.dart';
 import 'widgets/place_status.dart';
 import 'widgets/run_tile.dart';
+import 'course_checkout.dart';
 
 /// Opens a course over the list, as the Course page design.
 Future<void> showCourseSheet(BuildContext context, Course course) async {
@@ -207,8 +208,8 @@ class CourseSheetBody extends StatelessWidget {
     _ => 'Place requested. ICR will confirm it by email.',
   };
 
-  /// "Add to cart": a free place (or a waitlist place) is taken here; a paid
-  /// one is bought on the website's enrolment panel; a place already held says so.
+  /// "Add to cart": a free place (or a waitlist place) is taken here; a paid one is bought and paid for in the app's
+  /// own payment view (`buyCoursePlace`); a place already held says so.
   static Future<void> addToCart(BuildContext context, CourseSheetController controller) async {
     if (controller.course.enrolled) {
       showMessage(context, placeMessage(controller.course));
@@ -216,7 +217,10 @@ class CourseSheetBody extends StatelessWidget {
     }
     if (!controller.canAct) return;
     if (controller.paidPlace) {
-      await openExternal(context, controller.repository.checkoutLink(controller.course, controller.selectedRun));
+      final message = await buyCoursePlace(context, controller.course, run: controller.selectedRun);
+      if (!context.mounted) return;
+      await controller.load();
+      if (context.mounted && message.isNotEmpty) showMessage(context, message);
       return;
     }
     final message = await controller.enrol();
@@ -265,8 +269,6 @@ class CourseSheetBody extends StatelessWidget {
           kind: PreviewKind.pdf,
           pdf: brochurePdf(),
           runner: brochureRunner,
-          // A brochure is made to be passed around: no screenshot lock, unlike a library document.
-          secure: false,
         ),
       ),
     );

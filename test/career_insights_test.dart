@@ -432,18 +432,12 @@ void main() {
       expect(links.paths, ['/members/priya']);
     });
 
-    testWidgets('"See the company page" opens it: the app\'s page when wired, else the website\'s', (tester) async {
+    testWidgets('it is the company page, so it has no "See the company page" link back to itself', (tester) async {
       final opened = <String>[];
-      await pumpInsights(tester, ScriptedCareer(), navigation: JobsNavigation(onOpenCompany: opened.add));
-      await tester.tap(find.byKey(const ValueKey('company-page')));
-      expect(opened, ['c1']);
-    });
-
-    testWidgets('the website\'s company page opens when the app has none wired', (tester) async {
-      final links = await pumpInsights(tester, ScriptedCareer());
-      await tester.tap(find.byKey(const ValueKey('company-page')));
-      await tester.pump();
-      expect(links.paths, ['/companies/c1']);
+      final links = await pumpInsights(tester, ScriptedCareer(), navigation: JobsNavigation(onOpenCompany: opened.add));
+      expect(find.text('See the company page'), findsNothing);
+      expect(opened, isEmpty);
+      expect(links.paths, isEmpty);
     });
 
     testWidgets('Jobs: a row opens the job sheet, and its bookmark saves', (tester) async {

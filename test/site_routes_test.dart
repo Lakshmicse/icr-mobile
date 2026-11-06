@@ -13,6 +13,10 @@ void main() {
       '/mentorship/programmes/leadership-cohort',
       '/mentorship/groups/g-paid',
       '/mentorship/my/pair-1',
+      // The public certificate check, a "Verify online" on the member's own certificate: the app's own sheet.
+      '/mentorship/certificates/ICR-MC-2026-AB12',
+      // The website's mentor dashboard, which My mentoring's "Open Engagements" names: the app's mentor desk.
+      '/mentorship/mentor?tab=work',
     ]) {
       test(path, () => expect(inAppSiteRoute(site(path), viewer: viewer), isNotNull));
     }
@@ -24,8 +28,29 @@ void main() {
 
     test('a page the app has no screen for is left to the web view', () {
       expect(inAppSiteRoute(site('/manage/articles'), viewer: viewer), isNull);
-      // The public certificate check: the only link to it is the member's own certificates tab.
-      expect(inAppSiteRoute(site('/mentorship/certificates/ICR-MC-2026-AB12'), viewer: viewer), isNull);
+      expect(inAppSiteRoute(site('/invite/some-token'), viewer: viewer), isNull);
+    });
+  });
+
+  group("the company's team, help and invitations are the app's own (5 Nov 2026)", () {
+    for (final path in [
+      '/manage/team',
+      '/manage/team?tab=requests',
+      '/manage/team?tab=pending',
+      '/support',
+      '/support/ticket-1',
+      '/account/companies',
+      '/account/companies?focus=invitations',
+    ]) {
+      test(path, () => expect(inAppSiteRoute(site(path), viewer: viewer), isNotNull));
+    }
+
+    test('the screens map holds a key for each team tab, so a ?tab= is not lost to the bare path', () {
+      final screens = inAppScreens(viewer: viewer);
+      expect(
+        screens.keys,
+        containsAll(['/manage/team', '/manage/team?tab=requests', '/manage/team?tab=pending', '/support']),
+      );
     });
   });
 

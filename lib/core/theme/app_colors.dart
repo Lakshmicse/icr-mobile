@@ -15,7 +15,6 @@ class AppColors {
   static const surface = Colors.white;
   static const surfaceContainer = Color(0xFFF2F4F6);
   static const surfaceContainerLow = Color(0xFFFAFAFA);
-  static const sponsoredSurface = Color(0xFFF1F4F6);
 
   static const tertiary = Color(0xFF006C49);
   static const tertiaryContainer = Color(0xFF91EABE);

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../core/config.dart';
 import '../../core/util/links.dart';
 import 'mentor_profile_controller.dart';
 import 'mentor_profile_format.dart';
 import 'mentor_profile_models.dart';
 import 'request_sheets.dart';
 import 'widgets/profile_hero.dart';
+import '../payments/checkout_start.dart';
+import '../payments/payment_screen.dart' show PaymentOutcome;
 
 /// What an offering's button does: ask for a session, or buy/request/open it
 /// on the website where the app does not take payment yet. Resolves true when
@@ -45,9 +46,16 @@ Future<bool> runOfferingAction(BuildContext context, MentorProfileController c, 
       }
       if (!context.mounted) return false;
       if (outcome.message != null) showMessage(context, outcome.message!);
+      if (outcome.state == CheckoutState.pay && outcome.payment != null) {
+        // A real payment, in the app's own payment view (it was the website's until 4 Nov 2026).
+        final paid = await runCheckout(context, outcome.payment!, title: 'Pay for ${o.title}');
+        if (!context.mounted) return false;
+        showMessage(context, paymentMessage(paid, what: o.title));
+        return paid == PaymentOutcome.success;
+      }
       if (outcome.state == CheckoutState.website && outcome.sitePath != null) {
-        // The checkout runs on the website (PayU); the app's own screen for that address is this profile.
-        await openExternal(context, AppConfig.sitePage(outcome.sitePath!));
+        // Another page of ICR (a group session's), as the app's own screen.
+        await openSitePage(context, outcome.sitePath!);
         return false;
       }
       return outcome.state == CheckoutState.completed || outcome.state == CheckoutState.requested;

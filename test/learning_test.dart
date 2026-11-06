@@ -38,6 +38,9 @@ import 'package:provider/provider.dart';
 
 import 'helpers/community_fakes.dart';
 import 'helpers/fonts.dart';
+import 'package:icr_mobile/features/payments/payment_screen.dart';
+import 'package:icr_mobile/features/payments/checkout_start.dart';
+import 'package:icr_mobile/features/learning/course_checkout.dart';
 
 class _NoTokens extends TokenStore {
   @override
@@ -999,7 +1002,11 @@ void main() {
       await tester.pump();
       expect(find.byType(CourseCard), findsOneWidget);
       expect(find.text('Colloboration'), findsOneWidget);
-      expect(find.text('Related courses from our partners'), findsNothing, reason: 'a heading with no row under it goes');
+      expect(
+        find.text('Related courses from our partners'),
+        findsNothing,
+        reason: 'a heading with no row under it goes',
+      );
       await tester.enterText(find.byType(TextField), 'zzzz');
       await tester.pump();
       expect(find.text('No courses match'), findsOneWidget);
@@ -1207,10 +1214,7 @@ void main() {
       expect(icr.top, lessThan(tester.getRect(card('Colloboration')).top));
       expect(partners.top, greaterThan(tester.getRect(card('Colloboration')).bottom));
       expect(partners.top, lessThan(tester.getRect(card('Rich course AAA')).top));
-      expect(
-        find.descendant(of: find.byType(CourseCard), matching: find.text('ICR certified programs')),
-        findsNothing,
-      );
+      expect(find.descendant(of: find.byType(CourseCard), matching: find.text('ICR certified programs')), findsNothing);
     });
 
     testWidgets('a card carries what the row did: cover pill, title, awarding body, meta, price, place', (
@@ -1668,14 +1672,26 @@ void main() {
       expect(launches.urls, isEmpty);
     });
 
-    testWidgets('ADD TO CART on a paid course goes to the website enrolment panel and takes nothing here', (
-      tester,
-    ) async {
+    testWidgets('ADD TO CART on a paid course pays for the place in the app, never on the website', (tester) async {
+      final bought = <String>[];
+      CourseCheckout.start = (context, course, run) async {
+        bought.add(course.code);
+        return const CheckoutStart(action: 'https://test.payu.in/_payment', fields: {'txnid': 't1'});
+      };
+      final posted = <String>[];
+      PaymentServices.pay = (context, {required action, required fields, String title = ''}) async {
+        posted.add(action);
+        return PaymentOutcome.success;
+      };
+      addTearDown(CourseCheckout.reset);
+      addTearDown(PaymentServices.reset);
       final (fake, _) = await pumpSheet(tester, _Fake(catalogue: [_rich(code: 'PAID', price: 1180000)]));
       await tester.tap(find.text('ADD TO CART'));
-      await tester.pump();
-      expect(launches.urls, ['https://icr.org.in/learning/professional-development/PAID#enrol']);
-      expect(fake.enrols, isEmpty);
+      await tester.pumpAndSettle();
+      expect(bought, ['PAID']);
+      expect(posted, ['https://test.payu.in/_payment'], reason: "the gateway's form, in the app's payment view");
+      expect(launches.urls, isEmpty);
+      expect(fake.enrols, isEmpty, reason: 'a paid place is bought, not asked for');
     });
 
     testWidgets("a refused place is put back and the API's sentence shown", (tester) async {
@@ -1805,11 +1821,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(fake.brochureLeads.single.$3, BrochureIntent.view);
       expect(find.byType(DocumentViewerScreen), findsOneWidget);
-      expect(
-        tester.widget<DocumentViewerScreen>(find.byType(DocumentViewerScreen)).secure,
-        isFalse,
-        reason: 'a brochure is not screenshot-locked like a library document',
-      );
+      // Download and Share in the viewer's bar, as for every file (no screenshot lock anywhere since 5 Nov 2026).
+      expect(find.byTooltip('Download'), findsOneWidget);
+      expect(find.byTooltip('Share'), findsOneWidget);
       expect(pdf.opened, hasLength(1), reason: 'the brochure bytes went to the viewer');
       expect(launches.urls, isEmpty);
 

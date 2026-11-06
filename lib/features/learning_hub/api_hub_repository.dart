@@ -71,6 +71,16 @@ class ApiLearningHubRepository implements LearningHubRepository {
     }
   }
 
+  /// Where each company the member administers stands as a learning partner (`GET /learning/partners/companies`).
+  /// Partner Courses reads it, through the hub controller's `standingReader`, to offer "Apply" only to someone it is for.
+  Future<List<PartnerStanding>> partnerStanding() async {
+    final rows = await _list('/learning/partners/companies');
+    return [
+      for (final r in rows)
+        if ((r['companyId'] as String? ?? '').isNotEmpty) PartnerStanding.fromJson(r),
+    ];
+  }
+
   static String? _text(Object? v) {
     if (v is! String) return null;
     final t = v.trim();

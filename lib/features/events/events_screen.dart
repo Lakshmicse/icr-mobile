@@ -13,6 +13,7 @@ import '../feed/feed_models.dart';
 import 'event_format.dart';
 import 'event_models.dart';
 import 'event_sheet.dart';
+import 'event_tickets.dart';
 import 'events_controller.dart';
 import 'events_styles.dart';
 import 'widgets/event_card.dart';
@@ -263,15 +264,13 @@ class _EventsScreenState extends State<EventsScreen> {
     SharePlus.instance.share(ShareParams(text: '${e.title}\n$link', subject: e.title));
   }
 
-  /// A card's button: a free seat is taken here, tickets are bought on the
-  /// event's page on the website (the app has no checkout) — opened with the
-  /// phone, since the app's own screen for that address is the sheet — and an
-  /// invitation or anything already held opens the sheet.
+  /// A card's button: a free seat is taken here, a ticket is bought and paid for in the app's own payment view
+  /// (`buyEventTicket`), and an invitation or anything already held opens the sheet.
   void _act(EventSummary e) {
     final events = context.read<EventsController>();
     final open = !e.past && !e.rsvp.holds && !e.inviteOnly;
     if (open && e.priced) {
-      openExternal(context, events.repository.link(e));
+      _run(buyEventTicket(context, events.repository, e, onPaid: events.refresh));
       return;
     }
     if (open) {
@@ -535,24 +534,21 @@ class _Tile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 8.5),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: EventsColors.border),
-      ),
+      // A tinted tile, never an outlined one (the owner's rule, Nov 2026).
+      decoration: BoxDecoration(color: EventsColors.panel, borderRadius: BorderRadius.circular(10)),
       child: child,
     );
   }
 }
 
-/// "Explore by Category": a sideways row of outlined tiles.
+/// "Explore by Category": a sideways row of tinted tiles.
 class _TrackRow extends StatelessWidget {
   const _TrackRow({required this.tracks, required this.onSelect, this.selectedKey});
 
   final List<EventTrack> tracks;
   final ValueChanged<EventTrack> onSelect;
 
-  /// The tile the agenda is narrowed to: it wears the primary border.
+  /// The tile the agenda is narrowed to: it wears the brand's pale tint.
   final String? selectedKey;
 
   @override
@@ -568,12 +564,10 @@ class _TrackRow extends StatelessWidget {
           final t = tracks[i];
           final (icon, color) = _trackGlyph(t.icon);
           final selected = t.key == selectedKey;
+          // A tinted tile; the one the agenda is narrowed to takes the brand's pale tint instead of a border.
           return Material(
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-              side: BorderSide(color: selected ? AppColors.primary : EventsColors.border),
-            ),
+            color: selected ? AppColors.chipEmphasis : EventsColors.panel,
+            borderRadius: BorderRadius.circular(10),
             child: InkWell(
               onTap: () => onSelect(t),
               borderRadius: BorderRadius.circular(10),
@@ -587,7 +581,7 @@ class _TrackRow extends StatelessWidget {
                       child: Container(
                         width: 24,
                         height: 24,
-                        decoration: BoxDecoration(color: EventsColors.panel, borderRadius: BorderRadius.circular(6)),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
                         child: Icon(icon, size: 13, color: color),
                       ),
                     ),

@@ -87,6 +87,7 @@ Future<({SpyCareer repo, RecordingLinks links, List<String> conversations})> pum
   WidgetTester tester, {
   SpyCareer? repo,
   Size size = const Size(390, 1600),
+  DateTime? at,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -101,7 +102,7 @@ Future<({SpyCareer repo, RecordingLinks links, List<String> conversations})> pum
         key: UniqueKey(),
         repository: spy,
         links: links,
-        clock: () => _now,
+        clock: () => at ?? _now,
         navigation: JobsNavigation(onOpenConversation: conversations.add),
       ),
     ),
@@ -155,16 +156,28 @@ void main() {
       expect(find.text('Tech Park, Pune 411057'), findsOneWidget);
     });
 
-    testWidgets('Join call opens the meeting; an in-person round opens the map', (tester) async {
+    testWidgets('Join call is greyed until its room opens; an in-person round opens the map', (tester) async {
       final rig = await pumpInterviews(tester);
+      // Four days ahead: drawn, not pressable, with the time it opens (3 PM less 15 minutes).
+      expect(
+        find.descendant(of: find.byKey(const ValueKey('join-r2')), matching: find.text('Join call from 2:45 PM')),
+        findsOneWidget,
+      );
       await tester.tap(find.byKey(const ValueKey('join-r2')));
       await tester.pump();
-      expect(rig.links.opened.single.toString(), 'https://meet.example.com/a1');
+      expect(rig.links.opened, isEmpty);
       expect(find.byKey(const ValueKey('join-r3')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('map-r3')));
       await tester.pump();
       expect(rig.links.opened.last.host, 'www.google.com');
       expect(rig.links.opened.last.queryParameters['query'], 'Tech Park, Pune 411057');
+    });
+
+    testWidgets('Join call opens the meeting inside its window', (tester) async {
+      final rig = await pumpInterviews(tester, at: DateTime(2026, 10, 30, 14, 50));
+      await tester.tap(find.byKey(const ValueKey('join-r2')));
+      await tester.pump();
+      expect(rig.links.opened.single.toString(), 'https://meet.example.com/a1');
     });
 
     testWidgets('Confirm tells the hiring team the member will attend, and opens the thread', (tester) async {

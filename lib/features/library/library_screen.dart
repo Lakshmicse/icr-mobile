@@ -14,18 +14,18 @@ import 'library_device.dart';
 import 'library_format.dart';
 import 'library_handoffs.dart';
 import 'library_models.dart';
-import 'screen_security.dart';
 import 'upload_document_screen.dart';
 import 'widgets/document_card.dart';
 
 /// The Digital Library: every document members shared, searchable and filterable, with a page for each
-/// and a form to share your own. A document is previewed in the app and cannot be downloaded or screenshotted.
+/// and a form to share your own. A document is previewed in the app, and each file can be downloaded and shared.
 ///
-/// Top to bottom: four tiles (Documents, Categories, Formats, Your uploads), "Browse by kind" quick
-/// searches, the search box (its sliders glyph opens Sort and "Only my uploads"), the category chips,
-/// the format chips, the result count with Clear filters, a card per document (24 a page, "Show more
-/// documents"), and a "Share what you know" card. Reads a [LibraryController] from Provider and starts it
-/// on first build. Everything that leaves goes through [LibraryHandoffs].
+/// Top to bottom: the search box with the Upload button beside it, as the website's toolbar has them (the
+/// sliders glyph opens Sort and "Only my uploads"; the list opens newest first), four tiles (Documents,
+/// Categories, Formats, Your uploads), "Browse by kind" quick searches, the category chips, the format chips,
+/// the result count with Clear filters, and a row per document (24 a page, "Show more documents"). Reads a
+/// [LibraryController] from Provider and starts it on first build. Everything that leaves goes through
+/// [LibraryHandoffs].
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({
     super.key,
@@ -35,7 +35,7 @@ class LibraryScreen extends StatefulWidget {
     this.onOpenPlans,
     this.device,
     this.share = shareLibraryLink,
-    this.searchDelay = const Duration(milliseconds: 350),
+    this.searchDelay = const Duration(milliseconds: 300),
   });
 
   /// The arrow at the top left.
@@ -65,6 +65,9 @@ class LibraryScreen extends StatefulWidget {
 
 class _LibraryScreenState extends State<LibraryScreen> {
   final _search = TextEditingController();
+
+  /// The list's heading, which the figures above scroll to.
+  final _listKey = GlobalKey();
   Timer? _debounce;
   late final LibraryController _lc;
   String _seenQuery = '';
@@ -148,16 +151,42 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final c = context.watch<LibraryController>();
-    // View-only: no screenshots or recordings while the library is on screen (and, with it, every document
-    // page and viewer opened from it, which hold the same guard).
-    return ScreenGuard(
-      child: CommunityPage(
-        title: 'Digital Library',
-        onBack: widget.onBack,
-        onBell: _bell,
-        unread: c.unread,
-        onRefresh: c.refresh,
-        children: _body(c),
+    return CommunityPage(
+      title: 'Digital Library',
+      onBack: widget.onBack,
+      onBell: _bell,
+      unread: c.unread,
+      onRefresh: c.refresh,
+      children: _body(c),
+    );
+  }
+
+  /// The search box and Upload, first under the title bar where the website's toolbar has them: a search
+  /// must never sit below the tiles and chips, and must stay when a read fails so it can be tried again.
+  Widget _searchRow(LibraryController c) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: CommunitySearchField(
+              controller: _search,
+              hint: 'Search documents',
+              onChanged: _typed,
+              onFilters: () => _filters(c),
+              filtersLabel: 'Sort and filter documents',
+              filtersActive: c.query.mine || c.query.sort != LibraryQuery.defaultSort,
+            ),
+          ),
+          const SizedBox(width: 8),
+          CommunityButton(
+            key: const ValueKey('library-upload'),
+            label: 'Upload',
+            icon: LucideIcons.upload,
+            height: CommunitySearchField.height,
+            onPressed: () => _upload(c),
+          ),
+        ],
       ),
     );
   }
@@ -165,6 +194,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
   List<Widget> _body(LibraryController c) {
     if (c.documents.isEmpty && c.error != null && !c.loading) {
       return [
+        const SizedBox(height: 10),
+        _searchRow(c),
         CommunityNotice(
           icon: LucideIcons.cloudOff,
           title: "Couldn't load the library",
@@ -177,17 +208,43 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final q = c.query;
     final mineIds = c.viewer?.id;
     return [
-      const SizedBox(height: 6),
+      const SizedBox(height: 10),
+      _searchRow(c),
+      const SizedBox(height: 12),
       CommunityStatGrid(
         tiles: [
-          CommunityStatTile(label: 'Documents', value: c.libraryTotal == null ? '–' : groupThousands(c.libraryTotal!)),
-          CommunityStatTile(label: 'Categories', value: groupThousands(c.categories.length)),
-          CommunityStatTile(label: 'Formats', value: groupThousands(c.fileTypes.length)),
+          // Every figure opens what it counts (owner, 4 Nov 2026), and the page then shows the list.
           CommunityStatTile(
+            key: const ValueKey('stat-documents'),
+            label: 'Documents',
+            value: c.libraryTotal == null ? '–' : groupThousands(c.libraryTotal!),
+            onTap: () {
+              _search.clear();
+              c.clearFilters();
+              _showList();
+            },
+          ),
+          CommunityStatTile(
+            key: const ValueKey('stat-categories'),
+            label: 'Categories',
+            value: groupThousands(c.categories.length),
+            onTap: c.categories.isEmpty ? null : () => _pickCategory(c),
+          ),
+          CommunityStatTile(
+            key: const ValueKey('stat-formats'),
+            label: 'Formats',
+            value: groupThousands(c.fileTypes.length),
+            onTap: c.fileTypes.isEmpty ? null : () => _pickFormat(c),
+          ),
+          CommunityStatTile(
+            key: const ValueKey('stat-mine'),
             label: 'Your uploads',
             value: groupThousands(c.myUploads),
             blue: true,
-            onTap: () => c.setMine(!q.mine),
+            onTap: () {
+              c.setMine(!q.mine);
+              _showList();
+            },
           ),
         ],
       ),
@@ -215,18 +272,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ],
       ),
       const SizedBox(height: 14),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: CommunitySearchField(
-          controller: _search,
-          hint: 'Search titles, descriptions or file names…',
-          onChanged: _typed,
-          onFilters: () => _filters(c),
-          filtersLabel: 'Sort and filter documents',
-          filtersActive: q.mine || q.sort != LibrarySort.downloads,
-        ),
-      ),
-      const SizedBox(height: 10),
       ChipRow(
         height: 31,
         gap: 6,
@@ -278,10 +323,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ),
       const SizedBox(height: 12),
       CommunitySectionHeading(
+        key: _listKey,
         title: q.mine ? 'Your uploads' : 'Documents',
         pill: c.loading && c.documents.isEmpty ? null : documentsLabel(c.total),
-        action: 'Upload',
-        onAction: () => _upload(c),
       ),
       if (q.filtered)
         Padding(
@@ -308,7 +352,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           body: q.mine
               ? "You haven't shared a document yet. Share a checklist, a template or a case study."
               : (q.filtered ? 'Try another word, or clear a filter.' : 'Be the first to share one.'),
-          action: q.filtered ? 'Clear filters' : 'Share a document',
+          action: q.filtered ? 'Clear filters' : 'Upload the first document',
           onAction: q.filtered
               ? () {
                   _search.clear();
@@ -318,15 +362,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
           padding: const EdgeInsets.fromLTRB(32, 24, 32, 24),
         )
       else ...[
-        for (final d in c.documents)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-            child: DocumentCard(
-              document: d,
-              mine: mineIds != null && d.uploaderId == mineIds,
-              onOpen: () => _open(c, d),
-            ),
-          ),
+        for (final (i, d) in c.documents.indexed) ...[
+          // No outline round a document: a hairline between one and the next.
+          if (i > 0) const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16, color: CommunityColors.tileRule),
+          DocumentCard(document: d, mine: mineIds != null && d.uploaderId == mineIds, onOpen: () => _open(c, d)),
+        ],
+        const SizedBox(height: 10),
         if (c.moreError != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -345,18 +386,59 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
           ),
       ],
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-        child: CommunityHostCard(
-          icon: LucideIcons.fileUp,
-          title: 'Share what you know',
-          body: 'Checklists, templates, SOPs and case studies help other members.',
-          action: 'Upload',
-          onAction: () => _upload(c),
-        ),
-      ),
       const SizedBox(height: 28),
     ];
+  }
+
+  /// Brings the list's heading to the top once a figure above has changed what it holds.
+  void _showList() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final at = _listKey.currentContext;
+      if (at == null || !at.mounted) return;
+      Scrollable.ensureVisible(at, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+    });
+  }
+
+  /// "Categories": every category the library holds, to narrow the list to one.
+  Future<void> _pickCategory(LibraryController c) async {
+    await showCommunitySheet<void>(
+      context,
+      title: 'Categories',
+      body: (sheet, _) => CommunityChoiceWrap<String?>(
+        title: 'Show documents in',
+        options: [null, ...c.categories],
+        selected: c.query.category,
+        label: (cat) => cat ?? 'All categories (${c.categories.length})',
+        onSelected: (cat) {
+          c.setCategory(cat);
+          Navigator.pop(sheet);
+          _showList();
+        },
+      ),
+    );
+  }
+
+  /// "Formats": every file type in the library with how many documents have it.
+  Future<void> _pickFormat(LibraryController c) async {
+    await showCommunitySheet<void>(
+      context,
+      title: 'Formats',
+      body: (sheet, _) => CommunityChoiceWrap<LibraryFileType?>(
+        title: 'Show documents in',
+        options: [null, for (final f in c.fileTypes) f.type],
+        selected: c.query.fileType,
+        label: (type) {
+          if (type == null) return 'All formats';
+          final f = c.fileTypes.firstWhere((f) => f.type == type);
+          return '${f.label} (${f.count})';
+        },
+        onSelected: (type) {
+          c.setFileType(type);
+          Navigator.pop(sheet);
+          _showList();
+        },
+      ),
+    );
   }
 
   Future<void> _filters(LibraryController c) async {
@@ -394,7 +476,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 height: 38,
                 expand: true,
                 onPressed: () {
-                  c.setSort(LibrarySort.downloads);
+                  c.setSort(LibraryQuery.defaultSort);
                   c.setMine(false);
                   Navigator.pop(sheet);
                 },

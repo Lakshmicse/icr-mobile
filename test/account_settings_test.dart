@@ -85,7 +85,7 @@ void main() {
       for (final t in ['ACCOUNT', 'PREFERENCES', 'PRIVACY & DATA']) {
         expect(find.text(t), findsOneWidget);
       }
-      for (final t in ['Sign-in & security', 'Your companies', 'Saved items', 'Language', 'Notifications', 'Download my data']) {
+      for (final t in ['Sign-in & security', 'My companies', 'Saved items', 'Language', 'Notifications', 'Download my data']) {
         expect(find.text(t), findsOneWidget);
       }
       expect(find.text('Acting as yourself'), findsOneWidget);
@@ -102,7 +102,7 @@ void main() {
       expect(find.text('Acting for TechCorp'), findsOneWidget);
     });
 
-    testWidgets('View profile, Your companies, Saved items and Contact us call out to the app', (tester) async {
+    testWidgets('View profile, My companies, Saved items and Contact us call out to the app', (tester) async {
       final log = <String>[];
       await pumpSettings(tester, DemoAccountRepository(), log: log);
       await tester.tap(find.byKey(const Key('settings.profile')));

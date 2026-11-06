@@ -32,8 +32,11 @@ class CityOption {
   /// "Pune, Maharashtra", as the website's pickers write a place.
   String get label => state == null ? name : '$name, $state';
 
-  factory CityOption.fromJson(Map<String, dynamic> json) =>
-      CityOption(id: json['id'] as String, name: json['name'] as String? ?? '', state: _str(_map(json['state'])['name']));
+  factory CityOption.fromJson(Map<String, dynamic> json) => CityOption(
+    id: json['id'] as String,
+    name: json['name'] as String? ?? '',
+    state: _str(_map(json['state'])['name']),
+  );
 
   @override
   bool operator ==(Object other) => other is CityOption && other.id == id;
@@ -925,6 +928,46 @@ class JoinRequest {
   );
 }
 
+/// A place an admin added the person to, waiting for their answer (`MyInvitationDto`): nothing about their access
+/// changes until they accept.
+class CompanyInvitation {
+  const CompanyInvitation({
+    required this.companyId,
+    required this.name,
+    required this.role,
+    this.logoUrl,
+    this.branchName,
+    this.invitedBy,
+    this.invitedAt,
+    this.learningRoles = const [],
+  });
+
+  final String companyId;
+  final String name;
+  final String role;
+  final String? logoUrl;
+  final String? branchName;
+
+  /// The admin who added the person, "First Last", when still on ICR.
+  final String? invitedBy;
+  final String? invitedAt;
+  final List<String> learningRoles;
+
+  factory CompanyInvitation.fromJson(Map<String, dynamic> json) => CompanyInvitation(
+    companyId: json['companyId'] as String,
+    name: json['name'] as String? ?? '',
+    role: json['role'] as String? ?? 'PROFESSIONAL',
+    logoUrl: _str(json['logoUrl']),
+    branchName: _str(json['branchName']),
+    invitedBy: _str(json['invitedBy']),
+    invitedAt: _str(json['invitedAt']),
+    learningRoles: [
+      for (final r in (json['learningRoles'] as List? ?? const []))
+        if (r is String) r,
+    ],
+  );
+}
+
 /// `GET /me/companies`.
 class MyCompanies {
   const MyCompanies({
@@ -932,6 +975,7 @@ class MyCompanies {
     this.canJoinCompanies = true,
     this.companies = const [],
     this.requests = const [],
+    this.invitations = const [],
   });
 
   final String personalRole;
@@ -940,6 +984,9 @@ class MyCompanies {
   final bool canJoinCompanies;
   final List<MyCompany> companies;
   final List<JoinRequest> requests;
+
+  /// Companies whose admin added the person, newest first, waiting for them to accept or decline.
+  final List<CompanyInvitation> invitations;
 
   /// The company being acted for, or null for the personal account.
   MyCompany? get active {
@@ -960,13 +1007,22 @@ class MyCompanies {
       for (final r in (json['requests'] as List? ?? const []))
         if (r is Map) JoinRequest.fromJson(r.cast<String, dynamic>()),
     ],
+    invitations: [
+      for (final r in (json['invitations'] as List? ?? const []))
+        if (r is Map) CompanyInvitation.fromJson(r.cast<String, dynamic>()),
+    ],
   );
 
-  MyCompanies copyWith({List<MyCompany>? companies, List<JoinRequest>? requests}) => MyCompanies(
+  MyCompanies copyWith({
+    List<MyCompany>? companies,
+    List<JoinRequest>? requests,
+    List<CompanyInvitation>? invitations,
+  }) => MyCompanies(
     personalRole: personalRole,
     canJoinCompanies: canJoinCompanies,
     companies: companies ?? this.companies,
     requests: requests ?? this.requests,
+    invitations: invitations ?? this.invitations,
   );
 }
 
@@ -1089,6 +1145,10 @@ class NotificationPreference {
     locked: json['locked'] == true,
   );
 
-  NotificationPreference copyWith({bool? inApp, bool? email}) =>
-      NotificationPreference(category: category, inApp: inApp ?? this.inApp, email: email ?? this.email, locked: locked);
+  NotificationPreference copyWith({bool? inApp, bool? email}) => NotificationPreference(
+    category: category,
+    inApp: inApp ?? this.inApp,
+    email: email ?? this.email,
+    locked: locked,
+  );
 }

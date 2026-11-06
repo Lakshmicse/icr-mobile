@@ -10,6 +10,7 @@ import 'event_detail_controller.dart';
 import 'event_format.dart';
 import 'event_models.dart';
 import 'event_pass.dart';
+import 'event_tickets.dart';
 import 'events_controller.dart';
 import 'events_styles.dart';
 import 'widgets/pills.dart';
@@ -203,11 +204,13 @@ class EventSheetBar extends StatelessWidget {
             )
           : null;
     } else if (e.priced && detail.sellsTickets) {
-      // Tickets are bought on the website (the app has no checkout): the phone opens it, never this sheet again.
+      // Bought and paid for in the app's own payment view, then the sheet reads the event again.
       primary = _BarButton.primary(
         label: 'Get Tickets',
         icon: LucideIcons.ticket,
-        onTap: () => openExternal(context, link),
+        onTap: controller.busy
+            ? null
+            : () => _run(context, buyEventTicket(context, controller.repository, e, onPaid: controller.load)),
       );
     } else {
       primary = _BarButton.primary(
@@ -779,12 +782,7 @@ class _AttendeesStrip extends StatelessWidget {
     return Container(
       height: 55.5,
       padding: const EdgeInsets.only(left: 11.5, right: 7),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EventsColors.borderSoft),
-        boxShadow: const [BoxShadow(color: Color(0x0A0F2A4A), blurRadius: 6, offset: Offset(0, 2))],
-      ),
+      decoration: BoxDecoration(color: EventsColors.panel, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           AvatarStack(avatars: _people(e), size: 29.5, step: 20, style: EventsText.sheetAvatar),
@@ -835,11 +833,7 @@ class _HighlightCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 11, 12, 8.5),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: EventsColors.borderSoft),
-      ),
+      decoration: BoxDecoration(color: AppColors.surfaceContainerLow, borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -925,12 +919,7 @@ class _SessionCard extends StatelessWidget {
     final s = session;
     return Container(
       padding: const EdgeInsets.fromLTRB(10.5, 8, 11, 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: EventsColors.borderSoft),
-        boxShadow: const [BoxShadow(color: Color(0x0A0F2A4A), blurRadius: 6, offset: Offset(0, 2))],
-      ),
+      decoration: BoxDecoration(color: EventsColors.panel, borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

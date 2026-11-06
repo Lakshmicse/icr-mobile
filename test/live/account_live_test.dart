@@ -211,6 +211,26 @@ void main() {
       expect(tc.verified, isTrue);
       expect(tc.memberCount, greaterThanOrEqualTo(2));
       expect(mine.active, isNull);
+      // The places an admin added the person to are read too (none for Bharat); accepting and declining need an admin to add
+      // someone first, which a read-only check leaves alone.
+      expect(mine.invitations, isEmpty);
+    });
+
+    liveTest('an invitation that is not there is refused with the API sentence, and nothing changes', () async {
+      final repo = await repoOf(bharat);
+      await expectLater(
+        repo.declineInvitation(techcorpId),
+        throwsA(
+          isA<ApiError>()
+              .having((e) => e.statusCode, 'status', 404)
+              .having((e) => e.message, 'message', contains('no longer waiting')),
+        ),
+      );
+      await expectLater(
+        repo.acceptInvitation(techcorpId),
+        throwsA(isA<ApiError>().having((e) => e.statusCode, 'status', 404)),
+      );
+      expect((await repo.myCompanies()).companies.map((c) => c.companyId), contains(techcorpId));
     });
   });
 

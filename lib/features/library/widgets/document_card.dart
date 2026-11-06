@@ -45,10 +45,11 @@ class FilePlate extends StatelessWidget {
                 height: 19,
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 alignment: Alignment.center,
+                // Lifted off the plate by a soft shadow, not outlined.
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(9),
-                  border: Border.all(color: CommunityColors.border),
+                  boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 3, offset: Offset(0, 1))],
                 ),
                 child: Text(
                   '$count',
@@ -63,7 +64,8 @@ class FilePlate extends StatelessWidget {
 }
 
 /// A document in the list: its format plate, title, where it is filed, what it holds, the first lines of
-/// its description, who shared it and how often it was read and taken.
+/// its description, who shared it and how often it was read and taken. Flat, with no outline: the list
+/// puts a hairline between one document and the next.
 class DocumentCard extends StatelessWidget {
   const DocumentCard({super.key, required this.document, required this.onOpen, this.mine = false});
 
@@ -78,93 +80,92 @@ class DocumentCard extends StatelessWidget {
     final d = document;
     final first = d.first;
     final glyph = first?.glyph ?? FileGlyph.fallback;
-    return CommunityCard(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-      onTap: onOpen,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FilePlate(glyph: glyph, count: d.fileCount),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(d.title, style: CommunityText.cardTitle, maxLines: 2, overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 3),
-                    Text(
-                      contentsLine(d),
-                      style: CommunityText.personLine,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              if (mine) ...[
-                const SizedBox(width: 6),
-                CommunityPill(
-                  label: 'YOURS',
-                  fill: CommunityColors.blue50,
-                  style: CommunityText.pill.copyWith(color: CommunityColors.blue700),
-                  height: 17,
-                ),
-              ],
-            ],
-          ),
-          if (d.description != null) ...[
-            const SizedBox(height: 8),
-            Text(d.description!, style: CommunityText.body, maxLines: 2, overflow: TextOverflow.ellipsis),
-          ],
-          if (d.category != null) ...[
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: CommunityPill(
-                label: d.category!,
-                fill: CommunityColors.tagFill,
-                style: CommunityText.tag,
-                height: 20,
-                padding: const EdgeInsets.symmetric(horizontal: 9),
+    return Material(
+      color: Colors.white,
+      child: InkWell(
+        onTap: onOpen,
+        child: Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 12), child: _content(d, first, glyph)),
+      ),
+    );
+  }
+
+  Widget _content(LibraryDocument d, LibraryFile? first, FileGlyph glyph) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            FilePlate(glyph: glyph, count: d.fileCount),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(d.title, style: CommunityText.cardTitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 3),
+                  Text(contentsLine(d), style: CommunityText.personLine, maxLines: 1, overflow: TextOverflow.ellipsis),
+                ],
               ),
             ),
-          ],
-          const SizedBox(height: 10),
-          const Divider(height: 1, thickness: 1, color: CommunityColors.tileRule),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              if (d.uploader != null) ...[
-                PersonAvatar(initials: d.uploader!.initials, photo: d.uploader!.photo, size: 20),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    d.uploader!.name,
-                    style: CommunityText.meta.copyWith(fontWeight: FontWeight.w600, color: AppColors.slate700),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-              const Spacer(),
-              const Icon(LucideIcons.eye, size: 11, color: AppColors.slate400),
-              const SizedBox(width: 3),
-              Text(compactCount(d.viewCount), style: CommunityText.meta),
-              const SizedBox(width: 10),
-              const Icon(LucideIcons.download, size: 11, color: AppColors.slate400),
-              const SizedBox(width: 3),
-              Text(compactCount(d.downloadCount), style: CommunityText.meta),
-              if (d.createdAt != null) ...[
-                const SizedBox(width: 10),
-                Text(shortDate(d.createdAt!), style: CommunityText.meta),
-              ],
+            if (mine) ...[
+              const SizedBox(width: 6),
+              CommunityPill(
+                label: 'YOURS',
+                fill: CommunityColors.blue50,
+                style: CommunityText.pill.copyWith(color: CommunityColors.blue700),
+                height: 17,
+              ),
             ],
+          ],
+        ),
+        if (d.description != null) ...[
+          const SizedBox(height: 8),
+          Text(d.description!, style: CommunityText.body, maxLines: 2, overflow: TextOverflow.ellipsis),
+        ],
+        if (d.category != null) ...[
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: CommunityPill(
+              label: d.category!,
+              fill: CommunityColors.tagFill,
+              style: CommunityText.tag,
+              height: 20,
+              padding: const EdgeInsets.symmetric(horizontal: 9),
+            ),
           ),
         ],
-      ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            if (d.uploader != null) ...[
+              PersonAvatar(initials: d.uploader!.initials, photo: d.uploader!.photo, size: 20),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  d.uploader!.name,
+                  style: CommunityText.meta.copyWith(fontWeight: FontWeight.w600, color: AppColors.slate700),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+            const Spacer(),
+            const Icon(LucideIcons.eye, size: 11, color: AppColors.slate400),
+            const SizedBox(width: 3),
+            Text(compactCount(d.viewCount), style: CommunityText.meta),
+            const SizedBox(width: 10),
+            const Icon(LucideIcons.download, size: 11, color: AppColors.slate400),
+            const SizedBox(width: 3),
+            Text(compactCount(d.downloadCount), style: CommunityText.meta),
+            if (d.createdAt != null) ...[
+              const SizedBox(width: 10),
+              Text(shortDate(d.createdAt!), style: CommunityText.meta),
+            ],
+          ],
+        ),
+      ],
     );
   }
 }

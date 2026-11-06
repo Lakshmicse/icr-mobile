@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-/// What the Digital Library shows for a Word, Excel, PowerPoint or ZIP file. The app has no office viewer
-/// and nothing may be saved or handed to another app, so each file is read here and drawn as plain data:
+/// What the Digital Library shows for a Word, Excel, PowerPoint or ZIP file. The app has no office viewer, so
+/// each file is read here and drawn as plain data (Download hands the file itself to the phone):
 /// the text, tables and slide text it holds. Layout, pictures and formulas are not reproduced.
 ///
 /// Everything in this file is plain data (strings, numbers, lists), so a result can be built in a background

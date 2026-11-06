@@ -394,7 +394,7 @@ class DemoMentorProfileRepository implements MentorProfileRepository {
         ),
         OfferingKind.program => CheckoutOutcome(
           CheckoutState.requested,
-          message: 'Request sent. Once ${mentor.firstName} accepts, you pay on the website.',
+          message: 'Request sent. Once ${mentor.firstName} accepts, you pay from My mentoring, under Purchases.',
         ),
         OfferingKind.plan when offering.free => CheckoutOutcome(
           CheckoutState.completed,

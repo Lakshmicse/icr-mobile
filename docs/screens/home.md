@@ -15,7 +15,7 @@ The Home feed (`docs/designs/home.png`): the header (photo, search, bell), "Post
   ```
 
   `onAccount` opens the profile menu (`AppShell.openDrawer`); the constructors did not change.
-- `FeedRepository` (abstract) → `ApiFeedRepository({required ApiClient api, required String? viewerId})` on the forum, and `DemoFeedRepository()` holding the design's sample content. Models in `feed_models.dart`, the controller in `feed_controller.dart`, the cards in `widgets/` (`post_card.dart`, `poll_view.dart`, `reply_thread.dart`, `sponsored_card.dart`, `home_header.dart`, `composer_and_filters.dart`, `feed_avatar.dart`).
+- `FeedRepository` (abstract) → `ApiFeedRepository({required ApiClient api, required String? viewerId})` on the forum, and `DemoFeedRepository()` holding the design's sample content. Models in `feed_models.dart`, the controller in `feed_controller.dart`, the cards in `widgets/` (`post_card.dart`, `poll_view.dart`, `reply_thread.dart`, `home_header.dart`, `composer_and_filters.dart`, `feed_avatar.dart`).
 - Goldens: `test/golden/screens_golden_test.dart`, "home (demo content)" at 390 × 1996 dp (`Size(780, 3992)` at 2x) → `build/screens/home_demo.png`, matched against `test/golden/goldens/home_demo.png`. The screen drawn from the live API is `build/screens/home_live.png` (written by `test/live/feed_live_test.dart`).
 - Tests: `test/feed_test.dart` (the mapping, the controller, the replies' rules), `test/feed_screen_test.dart` (every control, on the real screen over the real repository, with the forum faked by `test/helpers/feed_fixtures.dart` and the browser, share sheet and clipboard channels listened to), `test/live/feed_live_test.dart` (the local API: `flutter test test/live/feed_live_test.dart`). `test/helpers/offline_feed.dart` swaps a source's network pictures for bundled ones, because a widget test has no network to fetch photos from.
 
@@ -59,7 +59,7 @@ Pages the screen hands to the browser (`SITE_URL`): `/notifications` (the bell, 
 | "+8 replies in this thread" | the replies of the first reply's thread that the preview (that reply and its first answer) leaves out; when that thread has none, every reply still out of sight, so the pill is always there to open the rest. It opens the whole discussion |
 | the line under a reply's name ("42m ago • Brookfield Properties") | the time, then the organisation of the author's headline (the part after "at", "@" or "·"; a headline with none is shown whole) |
 | the first post's comments open | the live feed opens the first post's comments by itself, once, on the first All Feed load (when it has replies and is not a poll); a person closes them like any other |
-| "SPONSORED PARTNER / The Future of FM Operations / Learn More" | the app's own placement carrying the design's copy; **there is no feed of placements to read**, so the band is a constant in `ApiFeedRepository.sponsored` (button to `/vendors`). Swap it for a real placement when one exists |
+| "SPONSORED PARTNER / The Future of FM Operations / Learn More" | **not drawn** (owner, 6 Nov 2026: "Remove this"): the placement, its model and its background picture were removed; cards follow each other 8 dp apart |
 | the title's line break after "HVAC" | the title wraps by width ("...HVAC efficiency: Best / practices?"): the break is typed into the design's export and cannot come from a title |
 | "Follow" on the first two posts only | `showFollow` is true for every author who is not the reader and not followed; the live data has the reader follow Marcus and Elena, so only Sarah and David wear it |
 | the repost glyph | the forum has no repost, so it says so in a snackbar ("Reposting isn't available in the app yet.") |
@@ -102,7 +102,7 @@ Pages the screen hands to the browser (`SITE_URL`): `/notifications` (the bell, 
 | "+N replies in this thread" | opens the rest of the discussion | W '"+8 replies in this thread" opens the rest of the discussion'; test/feed_test.dart "the replies of a thread" (the count's rule) |
 | pull to refresh | reads the list, the bell and the discussions again; open threads keep their replies meanwhile | W "pulling down reads the forum, the bell and the discussions again"; L "pulling down reads what the server holds now" |
 | load more | reads page 2 at the end; "You're all caught up" | W "scrolling to the end reads the next page, and the end says you're all caught up" (the local forum has fewer than 20 discussions, so there is no second page to read live) |
-| the placement's button and i | opens `/vendors`; the i explains | W "the sponsored card opens its page, and its i says what it is"; "the sponsored card sits after the second post" |
+| no placement between posts | nothing is drawn after the second post | W "no sponsored placement sits between the posts (owner, 6 Nov 2026)" |
 | a failed read | "Couldn't load the feed" + Try again | W "a failed read says so, and Try again reads again" |
 
 Content from the API, drawn as the design words it: L "the feed is the API's, with the designed posts first and in the design's order, worded as the design words them" (titles, authors, headlines, topics and tints, tags, reaction kinds, the Follow links, the poll's split and the reader's vote, the photos and caption, the whole text); L "the top of the feed reads as the design, with the local database's content" (the screen, drawn).

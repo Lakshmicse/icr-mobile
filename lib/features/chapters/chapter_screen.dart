@@ -12,6 +12,7 @@ import 'chapter_format.dart';
 import 'chapter_models.dart';
 import 'chapters_repository.dart';
 import 'community_kit.dart';
+import 'resource_download.dart';
 import 'widgets/chapter_cover.dart';
 import 'widgets/chapter_sections.dart';
 
@@ -33,6 +34,7 @@ class ChapterHandoffs {
     this.onMessage,
     this.opener = openUrl,
     this.share = shareChapterLink,
+    this.downloader = const SystemResourceDownloader(),
   });
 
   /// A meetup was tapped, or its ticket asked for: the Events sheet, by the event's slug (else its id).
@@ -56,6 +58,9 @@ class ChapterHandoffs {
 
   /// Opens the phone's share sheet. Tests give their own.
   final ShareChapterLink share;
+
+  /// Saves a resource's file to the phone (the Resources section's Download). Tests give their own.
+  final ResourceDownloader downloader;
 }
 
 /// A chapter's page with its own [ChapterController] on [repository]: what the shell pushes for a chapter
@@ -81,6 +86,7 @@ Widget chapterPage({
         onMessage: handoffs.onMessage,
         opener: handoffs.opener,
         share: handoffs.share,
+        downloader: handoffs.downloader,
       ),
     ),
   );
@@ -125,6 +131,7 @@ class ChapterScreen extends StatefulWidget {
     this.onMessage,
     this.opener = openUrl,
     this.share = shareChapterLink,
+    this.downloader = const SystemResourceDownloader(),
   });
 
   final VoidCallback onBack;
@@ -146,6 +153,9 @@ class ChapterScreen extends StatefulWidget {
   final Future<void> Function(BuildContext context, Uri uri) opener;
   final ShareChapterLink share;
 
+  /// Saves a resource's file to the phone.
+  final ResourceDownloader downloader;
+
   ChapterHandoffs get _handoffs => ChapterHandoffs(
     onOpenEvent: onOpenEvent,
     onOpenVolunteer: onOpenVolunteer,
@@ -154,6 +164,7 @@ class ChapterScreen extends StatefulWidget {
     onMessage: onMessage,
     opener: opener,
     share: share,
+    downloader: downloader,
   );
 
   @override
@@ -353,7 +364,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
             sectionKey: _keys['resources'],
             title: 'Resources',
             count: page.resources.items.length,
-            child: ResourcesSection(onOpen: (r) => widget.opener(context, Uri.parse(r.url))),
+            child: ResourcesSection(downloader: widget.downloader, opener: widget.opener),
           ),
           ChapterSectionFrame(
             sectionKey: _keys['members'],
@@ -364,10 +375,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
           if (detail.sponsors.isNotEmpty)
             ChapterSectionFrame(
               title: 'Sponsors',
-              child: SponsorsSection(
-                sponsors: detail.sponsors,
-                onOpen: (url) => widget.opener(context, Uri.parse(url)),
-              ),
+              child: SponsorsSection(sponsors: detail.sponsors, onOpen: (link) => widget.opener(context, link)),
             ),
           if (page.nearby.isNotEmpty)
             ChapterSectionFrame(

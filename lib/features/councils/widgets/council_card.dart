@@ -33,90 +33,89 @@ class CouncilCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = council;
     final copy = c.description ?? c.focus;
+    // No outline or shadow (the owner's rule, Nov 2026): the card is closed by a 1 px hairline.
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.outlineVariant, width: 0.75),
-        boxShadow: const [BoxShadow(color: Color(0x0D000000), blurRadius: 3, offset: Offset(0, 1))],
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: CouncilsColors.tileRule)),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Stack(
-            children: [
-              CouncilCover(council: c),
-              Positioned(
-                left: 13,
-                top: 11,
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(color: CouncilsColors.coverTile, borderRadius: BorderRadius.circular(7)),
-                  child: Center(child: IndustryGlyph(c.industry)),
-                ),
-              ),
-              Positioned(right: 10, top: 13, child: _CoverPills(council: c)),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Container(
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Stack(
               children: [
-                Text(c.name, style: CouncilsText.cardTitle, maxLines: 2, overflow: TextOverflow.ellipsis),
-                if (c.chair != null) ...[
-                  const SizedBox(height: 4),
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        const TextSpan(text: 'Chair: '),
-                        TextSpan(text: c.chair!.name, style: CouncilsText.chairName),
-                        if (c.chair!.title != null) TextSpan(text: ', ${c.chair!.title}'),
-                      ],
-                    ),
-                    style: CouncilsText.chair,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                CouncilCover(council: c),
+                Positioned(
+                  left: 13,
+                  top: 11,
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(color: CouncilsColors.coverTile, borderRadius: BorderRadius.circular(7)),
+                    child: Center(child: IndustryGlyph(c.industry)),
                   ),
-                ],
-                if (copy != null) ...[
-                  const SizedBox(height: 8.5),
-                  Text(copy, style: CouncilsText.cardCopy, maxLines: 2, overflow: TextOverflow.ellipsis),
-                ],
-                if (c.tags.isNotEmpty) ...[
-                  const SizedBox(height: 11),
-                  // The design wraps its hashtags inside about 243 dp, well
-                  // short of the card's text width.
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 243),
-                    child: Wrap(
-                      spacing: 6,
-                      runSpacing: 3,
-                      children: [
-                        for (final tag in c.tags)
-                          StatusPill(
-                            label: tag,
-                            fill: CouncilsColors.tagFill,
-                            style: CouncilsText.tag,
-                            height: 15,
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-                SizedBox(height: c.tags.isEmpty ? 14.7 : 15.7),
-                _MetaRow(council: c),
-                const SizedBox(height: 7.5),
+                ),
+                Positioned(right: 10, top: 13, child: _CoverPills(council: c)),
               ],
             ),
-          ),
-          // The footer is a box of its own in the design: its top edge runs out into a small curve at both ends.
-          CustomPaint(
-            painter: const _FooterEdge(color: AppColors.outlineVariant),
-            child: Padding(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(c.name, style: CouncilsText.cardTitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  if (c.chair != null) ...[
+                    const SizedBox(height: 4),
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          const TextSpan(text: 'Chair: '),
+                          TextSpan(text: c.chair!.name, style: CouncilsText.chairName),
+                          if (c.chair!.title != null) TextSpan(text: ', ${c.chair!.title}'),
+                        ],
+                      ),
+                      style: CouncilsText.chair,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  if (copy != null) ...[
+                    const SizedBox(height: 8.5),
+                    Text(copy, style: CouncilsText.cardCopy, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  ],
+                  if (c.tags.isNotEmpty) ...[
+                    const SizedBox(height: 11),
+                    // The design wraps its hashtags inside about 243 dp, well
+                    // short of the card's text width.
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 243),
+                      child: Wrap(
+                        spacing: 6,
+                        runSpacing: 3,
+                        children: [
+                          for (final tag in c.tags)
+                            StatusPill(
+                              label: tag,
+                              fill: CouncilsColors.tagFill,
+                              style: CouncilsText.tag,
+                              height: 15,
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  SizedBox(height: c.tags.isEmpty ? 14.7 : 15.7),
+                  _MetaRow(council: c),
+                  const SizedBox(height: 7.5),
+                ],
+              ),
+            ),
+            // The footer is set off by a hairline, where the design curved its top edge into the card's outline.
+            const Divider(height: 1, thickness: 1, color: CouncilsColors.tileRule),
+            Padding(
               padding: const EdgeInsets.fromLTRB(10.5, 5, 19.25, 5),
               child: Row(
                 children: [
@@ -135,39 +134,11 @@ class CouncilCard extends StatelessWidget {
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
-}
-
-/// The footer's top edge: a thin line whose ends turn down into the card's side edge in a 5 dp curve.
-class _FooterEdge extends CustomPainter {
-  const _FooterEdge({required this.color});
-
-  final Color color;
-
-  static const _radius = 5.0;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path()
-      ..moveTo(0, _radius)
-      ..arcToPoint(const Offset(_radius, 0.4), radius: const Radius.circular(_radius))
-      ..lineTo(size.width - _radius, 0.4)
-      ..arcToPoint(Offset(size.width, _radius), radius: const Radius.circular(_radius));
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.75,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_FooterEdge old) => old.color != color;
 }
 
 /// "OFFICIAL COUNCIL · Est. 2023", "CHARTERED 2024", or "✓ JOINED · Executive".

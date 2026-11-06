@@ -44,7 +44,6 @@ class StudyCardFace extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: StudyColors.cardEdge),
         boxShadow: const [BoxShadow(color: StudyColors.shadow, blurRadius: 14, offset: Offset(0, 3))],
       ),
       child: ClipRRect(
@@ -179,11 +178,7 @@ class _Answer extends StatelessWidget {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: StudyColors.formulaPlate,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: StudyColors.formulaPlateBorder),
-                    ),
+                    decoration: BoxDecoration(color: StudyColors.formulaPlate, borderRadius: BorderRadius.circular(10)),
                     child: ExcludeSemantics(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

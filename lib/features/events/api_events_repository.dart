@@ -5,6 +5,7 @@ import '../../core/api/api_error.dart';
 import '../../core/config.dart';
 import 'event_format.dart';
 import 'event_models.dart';
+import '../payments/checkout_start.dart';
 import 'events_repository.dart';
 
 /// The Events screens from the API: the board (`GET /events`), the member's
@@ -193,6 +194,15 @@ class ApiEventsRepository implements EventsRepository {
     final state = RsvpState.fromApi((res as Map<String, dynamic>?)?['status'] as String?);
     (_rsvps ??= {})[event.id] = _Rsvp(event.id, state, event.startsAt, event);
     return state == RsvpState.none ? RsvpState.going : state;
+  }
+
+  @override
+  Future<CheckoutStart> buyTicket(EventSummary event) async {
+    final res = await _send('POST', '/events/${event.id}/ticket');
+    final start = CheckoutStart.fromJson((res as Map?)?.cast<String, dynamic>() ?? const {});
+    // Paid at once (test mode, a ₹0 member price): the seat is the member's now.
+    if (start.devActivated) (_rsvps ??= {})[event.id] = _Rsvp(event.id, RsvpState.going, event.startsAt, event);
+    return start;
   }
 
   @override

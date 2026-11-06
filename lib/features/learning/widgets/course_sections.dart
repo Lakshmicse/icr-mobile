@@ -249,11 +249,8 @@ class _CourseOutlineState extends State<CourseOutline> {
             ),
           ),
           const SizedBox(height: 16.4),
+          // The modules are told apart by the hairlines between them; no outline round the panel.
           Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: LearningColors.panelBorder),
-              borderRadius: BorderRadius.circular(10),
-            ),
             padding: const EdgeInsets.only(top: 16.5, bottom: 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

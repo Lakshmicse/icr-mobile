@@ -128,7 +128,7 @@ class _ServiceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.read<SupplierController>();
+    final c = context.watch<SupplierController>();
     final nav = MarketplaceScope.navigationOf(context);
     final links = MarketplaceScope.linksOf(context);
     return CatalogRow(
@@ -138,7 +138,8 @@ class _ServiceRow extends StatelessWidget {
       meta: service.turnaround ?? service.rateLabel,
       action: service.action,
       onOpen: () => nav.openService(context, links, service.id, seed: service),
-      onAction: () => nav.requestQuote(context, links, c.supplier, service: service),
+      // Nobody asks their own company for a quote.
+      onAction: c.ownListing ? null : () => nav.requestQuote(context, links, c.supplier, service: service),
     );
   }
 }
@@ -150,7 +151,7 @@ class _ProductRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.read<SupplierController>();
+    final c = context.watch<SupplierController>();
     final nav = MarketplaceScope.navigationOf(context);
     final links = MarketplaceScope.linksOf(context);
     return CatalogRow(
@@ -160,7 +161,7 @@ class _ProductRow extends StatelessWidget {
       meta: [?product.priceLabel, ?product.stock?.label].join(' • '),
       action: 'Get Quote',
       onOpen: () => nav.openProduct(context, links, product.id, seed: product),
-      onAction: () => nav.requestQuote(context, links, c.supplier, product: product),
+      onAction: c.ownListing ? null : () => nav.requestQuote(context, links, c.supplier, product: product),
     );
   }
 }
@@ -173,8 +174,8 @@ class CatalogRow extends StatelessWidget {
     required this.image,
     required this.title,
     required this.onOpen,
-    required this.onAction,
     required this.action,
+    this.onAction,
     this.body,
     this.meta,
   });
@@ -185,7 +186,9 @@ class CatalogRow extends StatelessWidget {
   final String? meta;
   final String action;
   final VoidCallback onOpen;
-  final VoidCallback onAction;
+
+  /// The button's tap; null draws no button (the company's own listing).
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -241,8 +244,7 @@ class CatalogRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    _PillButton(label: action, onTap: onAction),
+                    if (onAction != null) ...[const SizedBox(width: 8), _PillButton(label: action, onTap: onAction!)],
                   ],
                 ),
               ),

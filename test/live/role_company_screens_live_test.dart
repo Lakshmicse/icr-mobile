@@ -848,7 +848,7 @@ void main() {
     });
   });
 
-  group('Your companies', () {
+  group('My companies', () {
     testWidgets(
       'the list names the role and the office; only the sole admin is told she cannot leave; a hiring manager can leave',
       tags: const ['live'],

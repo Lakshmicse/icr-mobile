@@ -3,7 +3,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
+import '../../core/util/join_window.dart';
 import '../../core/widgets/title_bar.dart';
+import 'career_base.dart' show CareerClock, systemClock;
+import 'career_format.dart' show formatTime;
+import 'career_models.dart' show CareerInterview;
 import 'career_styles.dart';
 
 /// The frame every career screen shares: the title bar over a body that scrolls
@@ -202,11 +206,7 @@ class NoteStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.28)),
-      ),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.09), borderRadius: BorderRadius.circular(10)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -222,19 +222,30 @@ class NoteStrip extends StatelessWidget {
 
 /// The small pill button on a strip ("Join call", "Accept").
 class StripButton extends StatelessWidget {
-  const StripButton({super.key, required this.label, required this.onTap, this.filled = false, this.icon});
+  const StripButton({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.filled = false,
+    this.icon,
+    this.muted = false,
+  });
 
   final String label;
   final VoidCallback? onTap;
   final bool filled;
   final IconData? icon;
 
+  /// Drawn grey: a button that is not yet usable ("Join call from 9:45 AM").
+  final bool muted;
+
   @override
   Widget build(BuildContext context) {
-    final fg = filled ? Colors.white : AppColors.primary;
+    final fg = muted ? AppColors.outline : (filled ? Colors.white : AppColors.primary);
+    final solid = filled && !muted;
     return Material(
-      color: filled ? AppColors.primary : Colors.white,
-      shape: StadiumBorder(side: BorderSide(color: filled ? AppColors.primary : AppColors.outlineVariant)),
+      color: solid ? AppColors.primary : Colors.white,
+      shape: StadiumBorder(side: BorderSide(color: solid ? AppColors.primary : AppColors.outlineVariant)),
       child: InkWell(
         customBorder: const StadiumBorder(),
         onTap: onTap,
@@ -249,6 +260,47 @@ class StripButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// An interview's Join, read through `core/util/join_window.dart` as every Join
+/// in the app is: pressable from 15 minutes before the round until 30 minutes
+/// after it was due to end, grey with the time it opens before that, and gone
+/// after. A row adds it only while `joinShown(...)` says so.
+class JoinStripButton extends StatelessWidget {
+  const JoinStripButton({
+    super.key,
+    required this.interview,
+    required this.onJoin,
+    this.label = 'Join call',
+    this.clock = systemClock,
+  });
+
+  final CareerInterview interview;
+  final VoidCallback onJoin;
+  final String label;
+  final CareerClock clock;
+
+  @override
+  Widget build(BuildContext context) {
+    return JoinWindowBuilder(
+      windows: [JoinWindow(interview.scheduledAt, interview.durationMins)],
+      clock: clock,
+      builder: (context, state, window) => switch (state) {
+        JoinState.open => StripButton(label: label, icon: LucideIcons.video, filled: true, onTap: onJoin),
+        // Takes the tap, so pressing it early does nothing rather than open the card behind it.
+        JoinState.early => GestureDetector(
+          onTap: () {},
+          child: StripButton(
+            label: '$label from ${formatTime(window!.opensAt)}',
+            icon: LucideIcons.video,
+            muted: true,
+            onTap: null,
+          ),
+        ),
+        JoinState.closed => const SizedBox.shrink(),
+      },
     );
   }
 }
@@ -335,7 +387,7 @@ class CountTabs<T extends Enum> extends StatelessWidget {
   }
 }
 
-/// A tappable white card with a hairline border.
+/// A tappable pale card with no frame.
 class TapCard extends StatelessWidget {
   const TapCard({super.key, required this.child, this.onTap, this.padding = const EdgeInsets.all(12)});
 
@@ -346,11 +398,8 @@ class TapCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.outlineVariant),
-      ),
+      color: AppColors.slate50,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,

@@ -40,6 +40,11 @@ class NotificationRouter {
   /// session): the app can reload what it holds for the old one.
   void Function(BuildContext context, String companyId)? onCompanySwitched;
 
+  /// A context of the signed-in app itself, set by [InboxHost]: below the app's providers and above its shell.
+  /// A record opens over it when the person's company changed on the way (the notifications list is still on
+  /// screen, but its context belongs to the app that was built for the previous company: its shell is gone).
+  BuildContext? home;
+
   /// The kinds this feature opens itself.
   static const builtInKinds = {
     NotificationKinds.conversation,

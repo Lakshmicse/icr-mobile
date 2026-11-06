@@ -4,8 +4,6 @@ import '../forum/forum_repository.dart';
 import 'feed_models.dart';
 import 'feed_repository.dart';
 
-const _demo = 'assets/images/demo';
-
 /// The Home design's sample content, word for word, for reviewing the screen
 /// without a seeded database (`--dart-define=FEED_SOURCE=demo`). Actions
 /// succeed locally and are not sent anywhere.
@@ -19,18 +17,6 @@ class DemoFeedRepository implements FeedRepository {
   /// The same sample content for a discussion's page, the composer and the Forums tab.
   @override
   late final ForumRepository forum = DemoForumRepository(now: _now);
-
-  @override
-  SponsoredCard get sponsored => const SponsoredCard(
-    label: 'SPONSORED PARTNER',
-    title: 'The Future of FM Operations',
-    body:
-        'Automated spatial control, predictive fault detection, and seamless BMS telemetry.\n'
-        'Benchmark leases and cut OPEX by 18%.',
-    cta: 'Learn More',
-    link: '/vendors',
-    background: '$_demo/sponsored_bg.jpg',
-  );
 
   @override
   Set<String> get initiallyOpen => const {'iot-hvac'};

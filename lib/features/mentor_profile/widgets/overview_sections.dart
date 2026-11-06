@@ -114,11 +114,7 @@ class _Cell extends StatelessWidget {
     return Container(
       clipBehavior: Clip.hardEdge,
       padding: EdgeInsets.fromLTRB(left, top, 6, 6),
-      decoration: BoxDecoration(
-        color: _cellFill,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFF3F4F5)),
-      ),
+      decoration: BoxDecoration(color: _cellFill, borderRadius: BorderRadius.circular(8)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
     );
   }
@@ -546,11 +542,7 @@ class SkillsSection extends StatelessWidget {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(11.8, 4.2, 11.4, 11.4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFF1F2F3)),
-            ),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -674,15 +666,10 @@ class _ReviewCard extends StatelessWidget {
     final r = review;
     final subline = [?r.subline, ?(r.agoLabel ?? (r.createdAt == null ? null : reviewAgo(r.createdAt!)))].join(' • ');
     final stars = r.rating ?? 0;
-    return Padding(
-      padding: EdgeInsets.only(bottom: gap),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border.all(color: const Color(0xFFF1F2F3)),
-            borderRadius: BorderRadius.circular(8),
-          ),
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
           child: Column(
             children: [
               Container(
@@ -746,7 +733,13 @@ class _ReviewCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
+        // Reviews are told apart by a hairline, never an outline.
+        if (gap > 0)
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: gap / 2),
+            child: const Divider(height: 1, thickness: 1, color: AppColors.cardRule),
+          ),
+      ],
     );
   }
 }

@@ -93,7 +93,6 @@ class ForumNotice extends StatelessWidget {
       decoration: BoxDecoration(
         color: warn ? ForumDesign.noticeWarnFill : ForumDesign.noticeInfoFill,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: warn ? ForumDesign.noticeWarnBorder : AppColors.outlineVariant),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

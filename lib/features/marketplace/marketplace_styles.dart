@@ -7,8 +7,11 @@ import '../../core/theme/app_text.dart';
 class MartColors {
   MartColors._();
 
-  /// The card's border: slate-200.
+  /// The card's border: slate-200. Only pills and rules use it now; a card is a tint ([cardFill]), never framed.
   static const cardBorder = AppColors.slate200;
+
+  /// A card's pale fill: the tint that sets a block off the white page now that nothing is outlined.
+  static const cardFill = AppColors.slate50;
 
   /// The rule under a card's logo, and the hairlines inside the profile.
   static const rule = AppColors.outlineVariant;

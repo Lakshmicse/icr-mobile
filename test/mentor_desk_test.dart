@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/widgets/title_bar.dart';
+import 'package:icr_mobile/features/mentor_desk/desk_overview_tab.dart' show fixPathFor;
 import 'package:icr_mobile/features/mentor_desk/mentor_desk_controller.dart';
 import 'package:icr_mobile/features/mentor_desk/offerings/offerings_panel.dart';
 import 'package:icr_mobile/features/mentorship_my/mentoring_clock.dart';
@@ -201,16 +202,40 @@ void main() {
       expect(find.text('Listed'), findsOneWidget);
     });
 
-    testWidgets('the profile\'s completeness lists what is missing, and finishing it is the website\'s', (
+    testWidgets('the completeness lists what is missing; each line opens its form, the button the editor', (
       tester,
     ) async {
       final (_, rec) = await pumpDesk(tester, DeskWorld());
       expect(find.byKey(const ValueKey('completeness')), findsOneWidget);
       expect(find.text('73%'), findsOneWidget);
-      expect(find.text('List your certifications'), findsOneWidget);
-      expect(find.text('Add your work history'), findsOneWidget);
+      await tapText(tester, 'List your certifications');
+      await tapText(tester, 'Add your work history');
+      // The mentor profile editor, which the app opens itself; never the person's /profile, which has no mentor fields.
       await tapText(tester, 'Finish my profile');
-      expect(rec.sites, ['/profile']);
+      expect(rec.sites, [
+        '/mentorship/become-a-mentor?fix=certifications',
+        '/mentorship/become-a-mentor?fix=experience',
+        '/mentorship/become-a-mentor',
+      ]);
+    });
+
+    test('every item the API counts opens where it is set', () {
+      expect(fixPathFor('Say when you are free'), '/mentorship/become-a-mentor?fix=availability');
+      expect(fixPathFor('Add conversation topics'), '/mentorship/become-a-mentor?fix=expertise');
+      expect(fixPathFor('State your years of experience'), '/mentorship/become-a-mentor?fix=intro');
+      expect(fixPathFor('Add your education'), '/profile?tab=education');
+      expect(fixPathFor('Something new the API added'), '/mentorship/become-a-mentor');
+      for (final m in [
+        'Add a profile photo',
+        'Add your current role',
+        'Describe how you mentor',
+        'Add areas of expertise',
+        'List your certifications',
+        'Add the languages you speak',
+        'Add your work history',
+      ]) {
+        expect(fixPathFor(m), startsWith('/mentorship/become-a-mentor?fix='), reason: m);
+      }
     });
 
     testWidgets('a paused profile says so, switches the directory control off, and leads back to the application', (

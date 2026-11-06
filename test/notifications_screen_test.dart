@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:icr_mobile/core/api/api_client.dart';
 import 'package:icr_mobile/core/api/api_error.dart';
+import 'package:icr_mobile/core/auth/auth_controller.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/core/widgets/title_bar.dart';
 import 'package:icr_mobile/features/messaging/messaging_models.dart';
@@ -16,6 +18,7 @@ import 'package:icr_mobile/features/notifications/unread_counts.dart';
 import 'package:icr_mobile/features/notifications/widgets/notification_row.dart';
 import 'package:provider/provider.dart';
 
+import 'helpers/account_harness.dart' show MemoryTokenStore;
 import 'helpers/fonts.dart';
 import 'messaging_fakes.dart';
 import 'notifications_fakes.dart';
@@ -86,6 +89,7 @@ void main() {
     NotificationsTab tab = NotificationsTab.all,
     NotificationTargetOpener? onOpenTarget,
     Size size = const Size(390, 900),
+    AuthController? auth,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -115,6 +119,7 @@ void main() {
         providers: [
           ChangeNotifierProvider<UnreadCounts>.value(value: counts),
           Provider<NotificationRouter>.value(value: router),
+          if (auth != null) ChangeNotifierProvider<AuthController>.value(value: auth),
         ],
         child: MaterialApp(
           theme: buildAppTheme(),
@@ -193,6 +198,24 @@ void main() {
       await tester.tap(find.text('Retry'));
       await tester.pumpAndSettle();
       expect(find.byType(NotificationRow), findsNWidgets(5));
+    });
+
+    testWidgets('the bell count moving without this list (another record read its rows) reads the list again', (
+      tester,
+    ) async {
+      await pump(tester);
+      expect(dotIn('msg'), findsOneWidget);
+      expect(find.text('Unread (3)'), findsOneWidget);
+
+      // A record page opened elsewhere read this row (`PATCH /notifications/seen`), and the bell was told.
+      repo.items = [for (final n in repo.items) n.id == 'msg' ? n.read(now) : n];
+      final before = repo.calls.where((c) => c.startsWith('list')).length;
+      counts.setNotifications(2);
+      await tester.pumpAndSettle();
+
+      expect(repo.calls.where((c) => c.startsWith('list')).length, before + 1);
+      expect(dotIn('msg'), findsNothing);
+      expect(find.text('Unread (2)'), findsOneWidget);
     });
 
     testWidgets('pull to refresh reads the list and the count again', (tester) async {
@@ -514,6 +537,45 @@ void main() {
       expect(opened.last, 'application.candidate {applicationId: app-9}');
     });
 
+    testWidgets('after a switch the app reads who the person is and the record opens in the rebuilt app', (
+      tester,
+    ) async {
+      const mine = ChatCompany(id: 'co-1', name: 'BrightCore');
+      const other = ChatCompany(id: 'co-2', name: 'Acme');
+      final repository = FakeNotificationsRepository(
+        items: [note('other', title: 'Acme got a bid', link: '/career/applications/app-9', company: other)],
+      )..viewerAnswer = const NotificationViewer(id: 'me', activeCompanyId: 'co-1', companyCount: 2);
+      expect(mine.id, isNot(other.id));
+      final fresh = <String>[];
+      late BuildContext appContext;
+      BuildContext? openedOver;
+      final auth = _SwitchedAuth(
+        onRefresh: () {
+          // The signed-in app, built again for the company: its router, and a context of its own.
+          appContext = tester.element(find.byType(MaterialApp));
+          NotificationRouter.current = NotificationRouter(
+            openers: {
+              NotificationKinds.applicationCandidate: (context, t) {
+                fresh.add('${t.kind} ${t.params}');
+                openedOver = context;
+                return true;
+              },
+            },
+          )..home = appContext;
+        },
+      );
+      addTearDown(() => NotificationRouter.current = null);
+      await pump(tester, repository: repository, auth: auth);
+
+      await tester.tap(row('other'));
+      await tester.pumpAndSettle();
+      expect(repository.calls, contains('switchCompany co-2'));
+      expect(auth.refreshes, 1, reason: 'the role rides in the token: the app reads the person again');
+      expect(fresh, ['application.candidate {applicationId: app-9}'], reason: 'the rebuilt app opens it');
+      expect(openedOver, same(appContext), reason: 'over the rebuilt app, whose shell is the live one');
+      expect(opened, isEmpty, reason: 'the old router is not used after the switch');
+    });
+
     testWidgets('a company the person has left cannot be opened: the reason is shown and nothing opens', (
       tester,
     ) async {
@@ -739,8 +801,11 @@ void main() {
       expect(adapter.calls, containsAll(['GET /notifications/unread-count', 'GET /messaging/unread-count']));
       // The router the host was given is the one every screen below finds.
       expect(routers.last, isNotNull);
+      // It knows the signed-in app's own context, for a record that opens after the company changed.
+      expect(NotificationRouter.current!.home, isNotNull);
       // Leaving the app stops the timer (a test would otherwise end with one pending).
       await tester.pumpWidget(const SizedBox());
+      expect(NotificationRouter.current, isNull);
     });
 
     testWidgets('a screen with no host above it gets no counts and the website router, never an error', (tester) async {
@@ -816,6 +881,23 @@ void main() {
       await tester.runAsync(() => markNotificationsSeen(captured, NotificationKinds.job, 'J1'));
     });
   });
+}
+
+/// An [AuthController] that only counts how often the person was read again (a company switch), and lets the test
+/// stand in for the signed-in app being built again.
+class _SwitchedAuth extends AuthController {
+  _SwitchedAuth({required this.onRefresh}) : super(api: _client(), tokens: MemoryTokenStore());
+
+  final VoidCallback onRefresh;
+  int refreshes = 0;
+
+  static ApiClient _client() => ApiClient(tokens: MemoryTokenStore(), baseUrl: 'http://api.test/api/v1');
+
+  @override
+  Future<void> refreshUser() async {
+    refreshes++;
+    onRefresh();
+  }
 }
 
 class _NoSource implements UnreadSource {

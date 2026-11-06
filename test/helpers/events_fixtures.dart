@@ -278,6 +278,11 @@ class EventsWorld {
         'mine': {'invited': e['inviteOnly'] == true && !notInvited.contains(e['id'])},
       },
       'GET /events/${e['id']}/ticket/quote': (_) => {'payable': true, 'soldOut': false},
+      'POST /events/${e['id']}/ticket': (_) => {
+        'devActivated': false,
+        'action': 'https://test.payu.in/_payment',
+        'fields': {'key': 'KEY', 'txnid': 'txn-${e['id']}', 'amount': '15000.00'},
+      },
       'POST /events/${e['id']}/rsvp': (_) {
         if (refuseRsvp != null) return (400, jsonEncode({'statusCode': 400, 'message': refuseRsvp}));
         final status = waitlisted.contains(e['id']) ? 'WAITLISTED' : 'GOING';

@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import '../feed/feed_models.dart' show FeedPicture;
 import 'mentoring_clock.dart';
+import '../payments/checkout_start.dart' show CheckoutStart;
 
 export '../feed/feed_models.dart' show FeedPicture;
 
@@ -1052,7 +1053,11 @@ class Slot {
 
 /// What a checkout or a payment answered: done here, or continued on the website.
 class PaymentOutcome {
-  const PaymentOutcome({required this.completed, this.sitePath, this.message, this.mentorshipId});
+  const PaymentOutcome({required this.completed, this.sitePath, this.message, this.mentorshipId, this.gateway});
+
+  /// The gateway's form for a real payment, paid in the app's own payment view (since 4 Nov 2026; it continued on
+  /// the website before).
+  final CheckoutStart? gateway;
 
   /// The pairing a paid programme started, when the API says.
   final String? mentorshipId;

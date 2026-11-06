@@ -228,7 +228,7 @@ void main() {
       expect(find.text('Get Involved & Volunteer'), findsOneWidget);
       expect(find.text('+12 CPD'), findsOneWidget);
       expect(find.text('MY ACTIVITY'), findsOneWidget);
-      expect(find.text('Saved Items & Jobs'), findsOneWidget);
+      expect(find.text('Saved Jobs'), findsOneWidget);
       // Everything posted on ICR, with the member's own list on it (3 Nov 2026), then the supplier's board.
       expect(find.text('Requirements'), findsOneWidget);
       expect(find.text('Find Work & Bid'), findsOneWidget);

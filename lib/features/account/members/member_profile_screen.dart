@@ -458,7 +458,6 @@ class _PublicCredential extends StatelessWidget {
           decoration: BoxDecoration(
             color: c.verified ? AppColors.emerald50 : AppColors.slate50,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: c.verified ? AppColors.emerald200 : AppColors.slate200),
           ),
           child: Icon(Symbols.workspace_premium, size: 23, color: c.verified ? AppColors.emerald700 : AppColors.slate500),
         ),
@@ -497,7 +496,6 @@ class _ErrorBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF1F2),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFFECDD3)),
       ),
       child: Row(
         children: [

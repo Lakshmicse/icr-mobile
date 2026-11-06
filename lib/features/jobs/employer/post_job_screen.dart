@@ -753,10 +753,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
       Container(
         key: const ValueKey('title-suggestions'),
         margin: const EdgeInsets.only(top: 2),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.outlineVariant),
-          borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(8)),
         child: Column(
           children: [
             for (final (i, t) in hints.indexed) ...[
@@ -918,7 +915,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: cardDecoration(color: blockers.isEmpty ? AppColors.emerald50 : Colors.white),
+        decoration: cardDecoration(color: blockers.isEmpty ? AppColors.emerald50 : AppColors.slate50),
         child: Column(
           key: const ValueKey('checklist'),
           crossAxisAlignment: CrossAxisAlignment.start,

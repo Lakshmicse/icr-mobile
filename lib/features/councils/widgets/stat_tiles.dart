@@ -6,9 +6,8 @@ import '../council_models.dart';
 import '../councils_styles.dart';
 import 'pills.dart';
 
-/// The 2 × 2 grid of grey tiles under the title bar: 176 × 55.5 each (a 1 dp
-/// #F1F5F9 border inside that), 7 dp apart across and 3 dp down, with the
-/// screen's 16 dp margin.
+/// The 2 × 2 grid of grey tiles under the title bar: 176 × 55.5 each (no outline), 7 dp apart across and 3 dp
+/// down, with the screen's 16 dp margin.
 class StatTiles extends StatelessWidget {
   const StatTiles({super.key, required this.stats});
 
@@ -92,11 +91,7 @@ class StatTile extends StatelessWidget {
     return Container(
       width: StatTiles.tileWidth,
       height: StatTiles.tileHeight,
-      decoration: BoxDecoration(
-        color: CouncilsColors.tile,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.slate100),
-      ),
+      decoration: BoxDecoration(color: CouncilsColors.tile, borderRadius: BorderRadius.circular(8)),
       child: Stack(
         children: [
           Positioned(

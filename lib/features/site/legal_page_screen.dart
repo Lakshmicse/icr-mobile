@@ -134,7 +134,11 @@ class _Table extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         child: Table(
           defaultColumnWidth: const FixedColumnWidth(210),
-          border: TableBorder.all(color: SiteColors.hairline),
+          border: const TableBorder(
+            top: BorderSide(color: SiteColors.hairline),
+            bottom: BorderSide(color: SiteColors.hairline),
+            horizontalInside: BorderSide(color: SiteColors.hairline),
+          ),
           children: [
             TableRow(
               decoration: const BoxDecoration(color: SiteColors.blueTint),

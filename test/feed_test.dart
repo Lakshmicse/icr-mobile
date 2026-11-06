@@ -587,16 +587,6 @@ void main() {
   });
 
   group('ApiFeedRepository: the rest of the mapping', () {
-    test('the sponsored placement carries the design\'s copy and points at the Supplier Mart', () {
-      final s = repositoryOn(FakeForum({})).sponsored;
-      expect(s.label, 'SPONSORED PARTNER');
-      expect(s.title, 'The Future of FM Operations');
-      expect(s.body, startsWith('Automated spatial control, predictive fault detection, and seamless BMS telemetry.'));
-      expect(s.body, endsWith('Benchmark leases and cut OPEX by 18%.'));
-      expect(s.cta, 'Learn More');
-      expect(s.link, '/vendors');
-    });
-
     test('a headline gives its organisation for a reply\'s line: after "at", "@" or the dot, else the whole', () {
       expect(ApiFeedRepository.organisationOf('General Counsel at Brookfield Properties'), 'Brookfield Properties');
       expect(ApiFeedRepository.organisationOf('Director · Brookfield'), 'Brookfield');

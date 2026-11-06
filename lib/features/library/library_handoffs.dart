@@ -5,7 +5,7 @@ import 'library_device.dart';
 import 'pdf_engine.dart';
 import 'preview_runner.dart';
 
-/// Opens the phone's share sheet with a page link (never with a file: the library is view-only).
+/// Opens the phone's share sheet with a page link (a file itself is sent with `LibraryDevice.shareFile`).
 typedef ShareLibraryLink = Future<void> Function(String title, Uri link);
 
 Future<void> shareLibraryLink(String title, Uri link) =>

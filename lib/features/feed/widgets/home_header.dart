@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/util/app_actions.dart';
+import '../../../core/widgets/workspace_embed.dart';
 import '../../notifications/notifications_bell.dart';
 import '../feed_models.dart';
 import '../feed_styles.dart';
@@ -52,6 +53,17 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Inside a workspace's tab the workspace's bar has the back arrow and the bell: the search stays, in the same
+    // height the screens leave for this bar.
+    if (WorkspaceEmbed.of(context)) {
+      return Container(
+        height: height,
+        color: HomeLook.card,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        alignment: Alignment.center,
+        child: _SearchPill(onTap: onSearchTap ?? () => AppActions.openSearch?.call(context)),
+      );
+    }
     return Container(
       height: height,
       decoration: const BoxDecoration(

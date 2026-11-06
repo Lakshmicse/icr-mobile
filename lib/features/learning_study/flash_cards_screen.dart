@@ -257,11 +257,7 @@ class _PlanNote extends StatelessWidget {
       child: Container(
         key: const ValueKey('study-plan-note'),
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 2),
-        decoration: BoxDecoration(
-          color: AppColors.slate50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.slate200),
-        ),
+        decoration: BoxDecoration(color: AppColors.slate100, borderRadius: BorderRadius.circular(12)),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -302,11 +298,7 @@ class _DeckSkeleton extends StatelessWidget {
     return AspectRatio(
       aspectRatio: 0.78,
       child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.slate100,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.slate200),
-        ),
+        decoration: BoxDecoration(color: AppColors.slate100, borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

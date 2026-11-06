@@ -6,12 +6,18 @@ import 'package:icr_mobile/features/feed/demo_feed_repository.dart';
 import 'package:icr_mobile/features/feed/feed_controller.dart';
 import 'package:icr_mobile/features/forum/thread_screen.dart';
 import 'package:icr_mobile/features/jobs/demo_jobs_repository.dart';
+import 'package:icr_mobile/features/jobs/employer/applicant_detail_screen.dart';
+import 'package:icr_mobile/features/jobs/employer/applicants_screen.dart';
+import 'package:icr_mobile/features/jobs/employer/interview_brief_screen.dart';
 import 'package:icr_mobile/features/jobs/job_models.dart';
 import 'package:icr_mobile/features/jobs/jobs_controller.dart';
+import 'package:icr_mobile/features/career/company_insights_controller.dart' show InsightsTab;
+import 'package:icr_mobile/features/mentor_desk/mentor_desk_controller.dart' show DeskTab;
 import 'package:icr_mobile/features/notifications/notification_router.dart';
 import 'package:icr_mobile/features/notifications/notification_target.dart';
 import 'package:icr_mobile/features/notifications/notifications_screen.dart';
 import 'package:icr_mobile/features/notifications/unread_counts.dart';
+import 'package:icr_mobile/features/web/in_app_web_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'helpers/fonts.dart';
@@ -37,7 +43,7 @@ void main() {
     NotificationKinds.adminJobReview: '/admin/jobs/review?job=j1',
     NotificationKinds.team: '/manage/team?tab=requests',
     NotificationKinds.teamInvite: '/invite/tok',
-    NotificationKinds.accountCompanies: '/account/companies',
+    NotificationKinds.accountCompanies: '/account/companies?focus=invitations',
     NotificationKinds.companyPage: '/companies/c1',
     NotificationKinds.companyWorkspace: '/company?tab=verification',
     NotificationKinds.adminVerificationSupplier: '/admin/verification?vendor=v1',
@@ -64,6 +70,7 @@ void main() {
     NotificationKinds.learningWorkspace: '/learning/courses/ABC',
     NotificationKinds.adminLearning: '/admin/learning/courses',
     NotificationKinds.learningPartners: '/learning/partners',
+    NotificationKinds.learningTeaching: '/learning/teaching?batch=b1',
     NotificationKinds.event: '/events/summit',
     NotificationKinds.forumThread: '/community/t1#reply-r1',
     NotificationKinds.forum: '/community',
@@ -144,9 +151,9 @@ void main() {
       await pumpShell(tester, (_) => const SizedBox());
       final inApp = {...openers.keys, ...NotificationRouter.builtInKinds};
       expect(openers.keys.toSet(), appNotificationKinds, reason: 'the constant and the map say the same');
-      expect(inApp.length, 42, reason: '39 registered openers + the 3 the router has built in');
+      expect(inApp.length, 46, reason: '43 registered openers + the 3 the router has built in');
       expect(NotificationRouter.staffKinds.length, 14);
-      expect(webViewKinds.length - 1, 8, reason: 'without the catch-all `path`');
+      expect(webViewKinds.length - 1, 5, reason: 'without the catch-all `path`');
     });
   });
 
@@ -223,6 +230,29 @@ void main() {
     });
   });
 
+  group('the tab a link names', () {
+    test('the mentor desk opens on the tab a link names', () {
+      expect(deskTabOf('work'), DeskTab.work);
+      expect(deskTabOf('sales'), DeskTab.earnings);
+      for (final tab in ['services', 'plans', 'cohorts']) {
+        expect(deskTabOf(tab), DeskTab.offerings, reason: tab);
+      }
+      expect(deskTabOf('mentoring'), DeskTab.mentees);
+      expect(deskTabOf('settings'), DeskTab.settings);
+      expect(deskTabOf(null), DeskTab.overview);
+      expect(deskTabOf('overview'), DeskTab.overview);
+    });
+
+    test('a company page opens on its tab, Overview and anything else on the first', () {
+      expect(insightsTabOf('reviews'), InsightsTab.reviews);
+      expect(insightsTabOf('interviews'), InsightsTab.interviews);
+      expect(insightsTabOf('people'), InsightsTab.people);
+      expect(insightsTabOf('jobs'), InsightsTab.jobs);
+      expect(insightsTabOf('overview'), InsightsTab.jobs);
+      expect(insightsTabOf(null), InsightsTab.jobs);
+    });
+  });
+
   group('opening a record by its id', () {
     Future<void> tapThrough(WidgetTester tester, String href) async {
       late NotificationRouter router;
@@ -263,6 +293,36 @@ void main() {
       final title = DemoJobsRepository().detailJob.title;
       expect(find.textContaining(title), findsWidgets);
       expect(find.text('This is no longer available.'), findsNothing);
+    });
+
+    testWidgets('an interview panel notification opens the app\'s interview page, not the website in a web view', (
+      tester,
+    ) async {
+      await tapThrough(tester, '/manage/interviews/iv-7');
+      expect(find.byType(InterviewBriefScreen), findsOneWidget);
+      expect(find.byType(InAppWebScreen), findsNothing);
+      expect(find.text('This interview'), findsOneWidget);
+    });
+
+    testWidgets('an applicant notification opens that applicant page over the job applicants', (tester) async {
+      await tapThrough(tester, '/manage/jobs/job-open/pipeline?applicant=app-aarav');
+      expect(find.byType(ApplicantDetailScreen), findsOneWidget);
+      expect(find.byType(ApplicantsScreen, skipOffstage: false), findsOneWidget, reason: 'Back lands on the pipeline');
+      expect(find.byType(InAppWebScreen), findsNothing);
+      expect(find.text('This is no longer available.'), findsNothing);
+    });
+
+    testWidgets('a pipeline link that names no applicant opens the applicants alone', (tester) async {
+      await tapThrough(tester, '/manage/jobs/job-open/pipeline');
+      expect(find.byType(ApplicantsScreen), findsOneWidget);
+      expect(find.byType(ApplicantDetailScreen), findsNothing);
+    });
+
+    testWidgets('an applicant that cannot be read says so and leaves the applicants showing', (tester) async {
+      await tapThrough(tester, '/manage/jobs/job-open/pipeline?applicant=gone');
+      expect(find.text('This is no longer available.'), findsOneWidget);
+      expect(find.byType(ApplicantsScreen), findsOneWidget);
+      expect(find.byType(ApplicantDetailScreen), findsNothing);
     });
 
     testWidgets('a job that cannot be read says so calmly and opens nothing', (tester) async {

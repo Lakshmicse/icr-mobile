@@ -36,8 +36,10 @@ LearningHubController createHubController(BuildContext context) {
   final api = context.read<ApiClient>();
   final assess = ApiAssessRepository(api: api);
   final study = ApiStudyRepository(api: api);
+  final hub = ApiLearningHubRepository(api: api);
   return LearningHubController(
-    repository: ApiLearningHubRepository(api: api),
+    repository: hub,
+    standingReader: hub.partnerStanding,
     // The course grid's My courses reads the same assessments, mock exams and decks for its shelves of opened
     // learning.
     learning: LearningController(

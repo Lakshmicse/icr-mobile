@@ -6,23 +6,23 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../csv_rows.dart';
+import '../library_device.dart';
 import '../library_models.dart';
 import '../office/office_models.dart';
 import '../pdf_engine.dart';
 import '../preview_runner.dart';
-import '../screen_security.dart';
 import 'data_grid.dart';
 import 'office_views.dart';
 
-/// A library file read in the app: a PDF's pages, a zoomable picture, plain text, a CSV or Excel sheet as a
-/// grid, a Word document's text and tables, a presentation's slide text, or the files inside a ZIP (each
-/// opens in this viewer in turn).
+/// A file read in the app: a PDF's pages, a zoomable picture, plain text, a CSV or Excel sheet as a grid, a Word
+/// document's text and tables, a presentation's slide text, or the files inside a ZIP (each opens in this viewer
+/// in turn). Used for library documents, applicants' résumés and course brochures.
 ///
-/// This is the whole of what the app does with a document. The bytes come from the API for the viewer
-/// (`?preview=true`), are drawn here, and go when the screen does: there is no save, no share of the file,
-/// no copy of its text and no hand-over to another app (owner's call, 28 Oct 2026: the Digital Library on a
-/// phone is view-only). The window is also kept out of screenshots and screen recordings while this is open
-/// ([ScreenGuard]).
+/// Its bar has **Download** (the phone's "Save as") and **Share** (the file to another app), as the website's
+/// viewer lets a file be downloaded; screenshots and screen recording are allowed (owner, 5 Nov 2026: the
+/// view-only library of 28 Oct, with its screenshot lock, was taken off). A library document passes
+/// [onDownload] and [onShare] so the file is fetched as a download the API counts; anything else saves and sends
+/// the bytes it shows.
 class DocumentViewerScreen extends StatelessWidget {
   const DocumentViewerScreen({
     super.key,
@@ -30,14 +30,12 @@ class DocumentViewerScreen extends StatelessWidget {
     required this.kind,
     this.pdf = const PlatformPdfEngine(),
     this.runner = runInBackground,
-    this.secure = true,
+    this.device = const SystemLibraryDevice(),
+    this.onDownload,
+    this.onShare,
   });
 
   final DocumentBytes file;
-
-  /// Whether the window refuses screenshots while this is open ([ScreenGuard]): the library's documents are
-  /// members' private files and do; a course brochure, made to be passed around, does not.
-  final bool secure;
 
   /// How to draw [file] (`LibraryFile.previewKind`).
   final PreviewKind kind;
@@ -48,13 +46,36 @@ class DocumentViewerScreen extends StatelessWidget {
   /// Runs the reading of an Office or ZIP file off the screen's thread.
   final PreviewRunner runner;
 
+  /// Saves and shares the file shown when [onDownload] or [onShare] is not given. Tests give their own.
+  final LibraryDevice device;
+
+  /// Download in place of saving the bytes shown (a library document: the API counts it).
+  final Future<void> Function()? onDownload;
+
+  /// Share in place of sending the bytes shown.
+  final Future<void> Function()? onShare;
+
   static const _pdfBackdrop = Color(0xFF3B3E42);
 
   bool get _dark => kind == PreviewKind.pdf || kind == PreviewKind.image || kind == PreviewKind.none;
 
+  Future<void> _download(BuildContext context) async {
+    final go = onDownload;
+    if (go != null) return go();
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final saved = await device.save(file);
+    if (saved) {
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('Saved ${file.fileName}.')));
+    }
+  }
+
+  Future<void> _share() => onShare?.call() ?? device.shareFile(file);
+
   @override
   Widget build(BuildContext context) {
-    final page = Scaffold(
+    return Scaffold(
       backgroundColor: _dark ? (kind == PreviewKind.pdf ? _pdfBackdrop : Colors.black) : Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -65,10 +86,14 @@ class DocumentViewerScreen extends StatelessWidget {
           style: const TextStyle(fontSize: 14, color: Colors.white),
           overflow: TextOverflow.ellipsis,
         ),
+        actions: [
+          ViewerAction(tooltip: 'Download', icon: LucideIcons.download, onPressed: () => _download(context)),
+          ViewerAction(tooltip: 'Share', icon: LucideIcons.share2, onPressed: _share),
+          const SizedBox(width: 4),
+        ],
       ),
       body: SafeArea(child: _body(context)),
     );
-    return secure ? ScreenGuard(child: page) : page;
   }
 
   Widget _body(BuildContext context) {
@@ -94,6 +119,7 @@ class DocumentViewerScreen extends StatelessWidget {
                 kind: previewKindFor('', name),
                 pdf: pdf,
                 runner: runner,
+                device: device,
               ),
             ),
           ),
@@ -101,11 +127,51 @@ class DocumentViewerScreen extends StatelessWidget {
       case PreviewKind.none:
         return const ViewerMessage(
           icon: LucideIcons.eyeOff,
-          text: "This kind of file can't be previewed in the app.",
+          text: "This kind of file can't be previewed in the app. Download it to open it.",
           dark: true,
         );
     }
   }
+}
+
+/// A button of the viewer's bar that shows a spinner while what it started runs (a download can take a moment).
+class ViewerAction extends StatefulWidget {
+  const ViewerAction({super.key, required this.tooltip, required this.icon, required this.onPressed});
+
+  final String tooltip;
+  final IconData icon;
+  final Future<void> Function() onPressed;
+
+  @override
+  State<ViewerAction> createState() => _ViewerActionState();
+}
+
+class _ViewerActionState extends State<ViewerAction> {
+  bool _busy = false;
+
+  Future<void> _run() async {
+    setState(() => _busy = true);
+    try {
+      await widget.onPressed();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.maybeOf(context)
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(const SnackBar(content: Text("That didn't work. Try again.")));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: widget.tooltip,
+    onPressed: _busy ? null : _run,
+    icon: _busy
+        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+        : Icon(widget.icon, size: 20, color: Colors.white),
+  );
 }
 
 // ---------------------------------------------------------------------------

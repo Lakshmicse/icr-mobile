@@ -51,7 +51,30 @@ class RequestQuoteSheet extends StatelessWidget {
       initialChildSize: q.sent == null ? 0.92 : 0.5,
       minChildSize: 0.4,
       maxChildSize: 0.95,
-      builder: (context, scroll) => q.sent == null ? _Form(scroll: scroll) : _Sent(sent: q.sent!),
+      builder: (context, scroll) =>
+          q.sent != null ? _Sent(sent: q.sent!) : (q.ownListing ? _OwnListing(scroll: scroll) : _Form(scroll: scroll)),
+    );
+  }
+}
+
+/// The company's own listing: the note the website's quote card shows its team in place of the form.
+class _OwnListing extends StatelessWidget {
+  const _OwnListing({required this.scroll});
+
+  final ScrollController scroll;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      controller: scroll,
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      children: [
+        Text('Request a quote', style: MartText.sheetTitle),
+        const SizedBox(height: 10),
+        Text(ownListingNote, key: const ValueKey('quote-own-listing'), style: MartText.sheetRow),
+        const SizedBox(height: 16),
+        OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+      ],
     );
   }
 }
@@ -360,10 +383,7 @@ class _ProductSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: MartColors.cardBorder, width: 1.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: MartColors.cardFill, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           Expanded(

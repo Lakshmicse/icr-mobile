@@ -898,11 +898,7 @@ class _Strip extends StatelessWidget {
               Container(
                 width: 28,
                 height: 28,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: AppColors.slate200),
-                ),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
                 child: Icon(kind == null ? LucideIcons.fileText : kindIcon(kind), size: 15, color: AppColors.primary),
               ),
               const SizedBox(width: 10),
