@@ -577,17 +577,26 @@ class _ConductSheetState extends State<ConductSheet> with SheetState<ConductShee
   @override
   Widget build(BuildContext context) {
     final c = widget.conduct;
+    // The website's `ConductDialog`, word for word: the title with the version, the commitment and its intro, the
+    // clauses, then the declaration "I Agree" confirms.
     return frame(
-      title: 'Mentor code of conduct — version ${c.version}',
-      subtitle:
-          'You will be mentoring someone early in their career under ICR\'s name. These are the ${c.clauses.length} things we ask of every mentor.',
-      submitLabel: widget.accepted ? 'Done' : 'I agree',
+      title: 'ICR Mentor Code of Conduct · version ${c.version}',
+      subtitle: 'Your Commitment as an ICR Mentor',
+      submitLabel: widget.accepted ? 'Done' : 'I Agree',
       onSubmit: busy
           ? null
           : widget.accepted
           ? () => Navigator.pop(context, false)
           : () => send(() => null, widget.onAgree),
       children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            'As an ICR Mentor, you commit to upholding professional integrity, trust, and ethical mentoring '
+            'standards. We ask every mentor to agree to these principles:',
+            style: MentoringText.body,
+          ),
+        ),
         for (final (i, clause) in c.clauses.indexed)
           Padding(
             key: ValueKey('clause-${clause.key}'),
@@ -601,6 +610,22 @@ class _ConductSheetState extends State<ConductSheet> with SheetState<ConductShee
               ],
             ),
           ),
+        Padding(
+          key: const ValueKey('conduct-declaration'),
+          padding: const EdgeInsets.only(top: 4, bottom: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Mentor Declaration', style: MentoringText.bodyStrong),
+              const SizedBox(height: 2),
+              Text(
+                'By selecting “I Agree,” I confirm that I have read and accepted the ICR Mentor Code of '
+                'Conduct and agree to comply with applicable ICR mentoring policies.',
+                style: MentoringText.body,
+              ),
+            ],
+          ),
+        ),
         if (widget.accepted)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),

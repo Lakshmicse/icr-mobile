@@ -41,7 +41,10 @@ class Step {
 /// training, evidence), and every write on them. An action answers the API's refusal as a sentence, or null when
 /// it went through, and reads again what it changed.
 class BecomeMentorController extends ChangeNotifier {
-  BecomeMentorController(this.repository) {
+  /// [onSessionChanged] is told after a write that can move the member's mentor status (the first save creates the
+  /// DRAFT, a submit makes it PENDING, a withdrawal takes it away), so the session (`/auth/me`: `mentorStatus`,
+  /// which the drawer's doors and `canOfferToMentor` read) catches up, as the website's save and submit hooks do.
+  BecomeMentorController(this.repository, {this.onSessionChanged}) {
     profile = Loader(repository.mine, _notify);
     readiness = Loader(repository.readiness, _notify);
     person = Loader(repository.person, _notify);
@@ -53,13 +56,14 @@ class BecomeMentorController extends ChangeNotifier {
   }
 
   final BecomeMentorRepository repository;
+  final VoidCallback? onSessionChanged;
 
   /// The mentor profile; `data` is null both before it loads and when the member has none: read [loaded].
   late final Loader<MyMentorProfile?> profile;
   late final Loader<MentorReadiness> readiness;
   late final Loader<PersonProfile> person;
   late final Loader<List<ExperienceRow>> experience;
-  late final Loader<List<HeldCredential>> credentials;
+  late final Loader<HeldCredentials> credentials;
   late final Loader<CodeOfConduct> conduct;
   late final Loader<List<MentorDocument>> documents;
   late final Loader<List<String>> jobTitles;
@@ -67,8 +71,20 @@ class BecomeMentorController extends ChangeNotifier {
   bool _disposed = false;
   bool _started = false;
   bool _busy = false;
+  bool _declared = false;
 
   bool get started => _started;
+
+  /// The one tick beside Submit (the website's `declared`): the details are true, and the code of conduct is
+  /// accepted. Held here, not written: Submit sends it with the application, so the acceptance and the submission are
+  /// one write. It is cleared once the application is sent.
+  bool get declared => _declared;
+
+  void setDeclared(bool on) {
+    if (_declared == on) return;
+    _declared = on;
+    _notify();
+  }
 
   /// A write is in flight.
   bool get busy => _busy;
@@ -114,7 +130,7 @@ class BecomeMentorController extends ChangeNotifier {
   /// The credentials on the card that the member no longer holds.
   List<String> get staleCertifications {
     if (!credentials.loaded) return const [];
-    final held = {for (final c in credentials.data ?? const <HeldCredential>[]) c.code};
+    final held = {for (final c in credentials.data?.held ?? const <HeldCredential>[]) c.code};
     return [
       for (final c in mentor?.certifications ?? const <String>[])
         if (!held.contains(c.toUpperCase())) c,
@@ -176,12 +192,12 @@ class BecomeMentorController extends ChangeNotifier {
       ),
   ];
 
-  /// Ready to submit: nothing needed, and the code of conduct agreed.
-  bool get ready => needed.isEmpty && conductAccepted;
+  /// Ready to submit: nothing needed, and the declaration ticked (the website's `needed.length === 0 && declared`).
+  bool get ready => needed.isEmpty && _declared;
 
   List<Step> get steps => [
     Step('Your profile', hasProfile && profileNeeds.isEmpty),
-    Step('Code of conduct', conductAccepted),
+    Step('Code of conduct', conductAccepted || (status.canSubmit && _declared)),
     if (trainingRequired) Step('Mentor training', readiness.data?.trainingComplete ?? false),
     Step(
       status.listed
@@ -197,10 +213,12 @@ class BecomeMentorController extends ChangeNotifier {
 
   /// Saves the mentoring half (a partial patch; the first save creates the DRAFT).
   Future<String?> saveProfile(Map<String, dynamic> patch) => _act(() async {
+    final created = !hasProfile;
     profile.data = await repository.save(patch);
     profile.loaded = true;
     _notify();
     await readiness.load();
+    if (created) onSessionChanged?.call();
   });
 
   /// Records the agreement to the code of conduct, creating the (empty) draft first when there is none.
@@ -210,28 +228,37 @@ class BecomeMentorController extends ChangeNotifier {
     if (version == null || version.isEmpty) {
       throw ApiError('The code of conduct has not loaded yet — try again in a moment.');
     }
-    if (!hasProfile) {
+    final created = !hasProfile;
+    if (created) {
       profile.data = await repository.save(const {});
       profile.loaded = true;
     }
     await repository.acceptConduct(version);
+    // A recorded agreement is the declaration, given.
+    _declared = true;
     await Future.wait([readiness.load(), profile.load()]);
+    if (created) onSessionChanged?.call();
   });
 
-  /// Sends the profile for review.
+  /// Sends the profile for review. With the declaration ticked the code of conduct's current version goes with it
+  /// (`SubmitMentorProfileDto.conductVersion`); without, the profile must already hold it and the API says so.
   Future<String?> submit() => _act(() async {
-    profile.data = await repository.submit();
+    profile.data = await repository.submit(conductVersion: _declared ? conduct.data?.version : null);
+    _declared = false;
     _notify();
     await readiness.load();
+    onSessionChanged?.call();
   });
 
   /// Takes the profile off the directory (the API refuses while mentorships are under way).
   Future<String?> withdraw() => _act(() async {
     await repository.withdraw();
     profile.data = null;
+    _declared = false;
     documents.reset();
     _notify();
     await readiness.load();
+    onSessionChanged?.call();
   });
 
   Future<String?> setVisibility(bool on) => _act(() async {

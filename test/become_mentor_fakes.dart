@@ -4,11 +4,16 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:icr_mobile/core/api/api_client.dart';
+import 'package:icr_mobile/core/auth/auth_controller.dart';
+import 'package:icr_mobile/features/become_mentor/become_mentor_controller.dart' show FixTarget;
 import 'package:icr_mobile/features/become_mentor/become_mentor_person_forms.dart';
 import 'package:icr_mobile/features/become_mentor/become_mentor_repository.dart';
 import 'package:icr_mobile/features/become_mentor/become_mentor_rules.dart';
 import 'package:icr_mobile/features/become_mentor/become_mentor_screen.dart';
+import 'package:provider/provider.dart';
 
+import 'helpers/account_harness.dart' show MemoryTokenStore, NoSocial;
 import 'mentoring_fakes.dart';
 
 class MentorWorld {
@@ -20,6 +25,7 @@ class MentorWorld {
     this.years,
     this.languages = const [],
     this.requiredCourses = const [],
+    this.role = 'PROFESSIONAL',
     List<Map<String, Object?>>? experience,
   }) {
     this.experience = experience ?? [];
@@ -27,6 +33,9 @@ class MentorWorld {
   }
 
   final bool withProfile;
+
+  /// The signed-in person's role, as `GET /auth/me` says it.
+  final String role;
   String status;
   String? avatar;
   String? designation;
@@ -157,14 +166,35 @@ class MentorWorld {
       }
       return profile!;
     }),
-    'POST /mentorship/mentors/me/submit': _once('submit', (_) {
+    'GET /auth/me': (_) => {
+      'id': 'u-kiran',
+      'email': 'kiran@design.icr.test',
+      'firstName': 'Kiran',
+      'lastName': 'Shah',
+      'role': role,
+      'avatarUrl': avatar,
+      'emailVerified': true,
+      'mentorStatus': profile?['status'],
+      'mentorsSomeone': false,
+    },
+    // `submitMine`: the person's and the profile's problems, then the declaration's version, then the training.
+    'POST /mentorship/mentors/me/submit': _once('submit', (o) {
       if (profile == null) return refuse('Create your mentor profile before submitting it.', status: 404);
       final all = problems;
       if (all.isNotEmpty) return refuse(all.join(' '));
-      if (!conductAccepted) {
+      final sent = o.data is Map ? (o.data as Map)['conductVersion'] as String? : null;
+      if (sent != null && sent != '2026.1') {
+        return refuse('That is not the current code of conduct (2026.1). Reload and read it again.');
+      }
+      if ((sent ?? conductVersion) != '2026.1') {
         return refuse('Read and accept the mentor code of conduct before submitting — mentoring carries ICR’s name.');
       }
       if (!trainingComplete) return refuse('Finish mentor training first.');
+      // The declaration is stamped in the same write as the submission.
+      if (sent != null) {
+        conductAccepted = true;
+        conductVersion = sent;
+      }
       status = 'PENDING';
       profile!['status'] = 'PENDING';
       profile!['reviewNote'] = null;
@@ -308,6 +338,18 @@ MentorWorld completeWorld({String status = 'DRAFT'}) =>
         'targetAudiences': ['WORKING_PROFESSIONAL'],
       });
 
+/// The session over [api] (a signed-in person whose `GET /auth/me` the world answers), as the app mounts it.
+Future<AuthController> signedInOver(WidgetTester tester, FakeApi api) async {
+  final tokens = MemoryTokenStore()
+    ..access = 'a1'
+    ..refresh = 'r1';
+  final client = ApiClient(tokens: tokens, baseUrl: 'http://api.test/api/v1');
+  client.dio.httpClientAdapter = api;
+  final auth = AuthController(api: client, tokens: tokens, social: NoSocial(), retryDelay: Duration.zero);
+  await tester.runAsync(auth.restore);
+  return auth;
+}
+
 /// Pumps the screen over the world's fake API.
 Future<(FakeApi, LinkRecorder)> pumpBecomeMentor(
   WidgetTester tester,
@@ -317,18 +359,23 @@ Future<(FakeApi, LinkRecorder)> pumpBecomeMentor(
   FilePick? pickDocument,
   double height = 9000,
   FakeApi? api,
+  FixTarget? fix,
+  AuthController? auth,
 }) async {
   phone(tester, height: height);
   final fake = api ?? world.api(extra: extra);
   final rec = LinkRecorder();
+  final screen = BecomeMentorScreen(
+    fix: fix,
+    repository: BecomeMentorRepository(api: fake.client()),
+    links: rec.links,
+    pickPhoto: pickPhoto ?? () async => null,
+    pickDocument: pickDocument ?? () async => null,
+  );
+  // With a session the screen reads the person's role and keeps the session's mentor status in step.
   await pumpApp(
     tester,
-    BecomeMentorScreen(
-      repository: BecomeMentorRepository(api: fake.client()),
-      links: rec.links,
-      pickPhoto: pickPhoto ?? () async => null,
-      pickDocument: pickDocument ?? () async => null,
-    ),
+    auth == null ? screen : ChangeNotifierProvider<AuthController>.value(value: auth, child: screen),
   );
   return (fake, rec);
 }

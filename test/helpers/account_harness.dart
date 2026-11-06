@@ -146,6 +146,7 @@ Map<String, dynamic> userJson({
   String role = 'PROFESSIONAL',
   bool emailVerified = true,
   String? companyId,
+  bool learningPartner = false,
 }) => {
   'id': id,
   'email': email,
@@ -155,6 +156,7 @@ Map<String, dynamic> userJson({
   'avatarUrl': null,
   'companyId': companyId,
   'emailVerified': emailVerified,
+  if (learningPartner) 'learningPartner': true,
 };
 
 Map<String, dynamic> sessionJson({Map<String, dynamic>? user}) => {

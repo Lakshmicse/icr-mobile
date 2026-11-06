@@ -529,6 +529,17 @@ class HeldCredential {
   final bool verified;
 }
 
+/// What `GET /credentials/me` gave: the credentials a card may show, and how many the member has recorded at all.
+class HeldCredentials {
+  const HeldCredentials({this.held = const [], this.recordedCount = 0});
+
+  final List<HeldCredential> held;
+
+  /// Every credential recorded, with a short code or not (`counts.total`): it tells "none has a short code yet" from
+  /// "none recorded yet".
+  final int recordedCount;
+}
+
 /// A picture or scan chosen on the phone (a seam, so a test can hand one in).
 class PickedFile {
   const PickedFile({required this.bytes, required this.name, this.mimeType});

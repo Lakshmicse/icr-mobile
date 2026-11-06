@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/api/api_client.dart';
 import 'package:icr_mobile/core/api/api_error.dart';
+import 'package:icr_mobile/core/auth/session_user.dart';
 import 'package:icr_mobile/core/auth/token_store.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/core/widgets/search_field.dart';
@@ -243,7 +244,12 @@ void _tall(WidgetTester tester, {double height = 5700}) {
 }
 
 /// The landing, started, on a window tall enough to show all of it.
-Future<MentorshipController> _pumpLanding(WidgetTester tester, _Repo repo, _Calls calls) async {
+Future<MentorshipController> _pumpLanding(
+  WidgetTester tester,
+  _Repo repo,
+  _Calls calls, {
+  bool offerMentoring = true,
+}) async {
   _tall(tester);
   final mentorship = MentorshipController(repo);
   await tester.runAsync(mentorship.start);
@@ -259,6 +265,7 @@ Future<MentorshipController> _pumpLanding(WidgetTester tester, _Repo repo, _Call
           viewer: DemoFeedRepository.me,
           onAccount: () {},
           openSite: calls.openSite,
+          offerMentoring: offerMentoring,
         ),
       ),
     ),
@@ -319,8 +326,48 @@ Future<void> _pullToRefresh(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// A directory with no one in it: the landing's empty state.
+MentorshipOverview _emptyDirectory(MentorshipOverview _) => const MentorshipOverview(categories: [], domainsBadge: '');
+
+/// A signed-in member as `GET /auth/me` describes them, for the website's mentor-state gates.
+SessionUser _member({String role = 'PROFESSIONAL', String? mentorStatus, bool mentorsSomeone = false}) => SessionUser(
+  id: 'u1',
+  email: 'kiran@design.icr.test',
+  firstName: 'Kiran',
+  lastName: 'Shah',
+  role: role,
+  mentorStatus: mentorStatus,
+  mentorsSomeone: mentorsSomeone,
+);
+
 void main() {
   setUpAll(loadAppFonts);
+
+  group('who is offered the application (the website\'s canOfferToMentor)', () {
+    test('a signed-out visitor is: the pitch is for them', () {
+      expect(canOfferToMentor(null), isTrue);
+    });
+
+    test('a member who never applied is, whatever their role but the operator\'s', () {
+      for (final role in ['PROFESSIONAL', 'BUYER', 'VENDOR', 'COMPANY_ADMIN', 'LEARNING_ADMIN', 'PARTNER_ADMIN']) {
+        expect(canOfferToMentor(_member(role: role)), isTrue, reason: role);
+      }
+    });
+
+    test('ICR\'s operator is not', () {
+      expect(canOfferToMentor(_member(role: 'SUPER_ADMIN')), isFalse);
+    });
+
+    test('a member with a profile in any state is not: draft, awaiting review, not approved, listed or paused', () {
+      for (final status in ['DRAFT', 'PENDING', 'REJECTED', 'APPROVED', 'PAUSED']) {
+        expect(canOfferToMentor(_member(mentorStatus: status)), isFalse, reason: status);
+      }
+    });
+
+    test('a member mentoring someone is not, even with no profile on file (a withdrawn one with pairings running)', () {
+      expect(canOfferToMentor(_member(mentorsSomeone: true)), isFalse);
+    });
+  });
 
   group('the models', () {
     test('a service pill reads as the design writes it', () {
@@ -1097,6 +1144,26 @@ void main() {
       await _pumpLanding(tester, _Repo(), calls);
       await tester.tap(find.text('Apply as Mentor'));
       expect(calls.sites, ['/become-a-mentor']);
+    });
+
+    testWidgets('the recruiting band is only for someone who could still apply (canOfferToMentor)', (tester) async {
+      await _pumpLanding(tester, _Repo(), _Calls(), offerMentoring: false);
+      expect(find.text('Become an ICR Mentor & Shape the Next Generation'), findsNothing);
+      expect(find.text('Apply as Mentor'), findsNothing);
+      // The rest of the landing is unchanged.
+      expect(find.text('Featured Advisory Sessions'), findsOneWidget);
+    });
+
+    testWidgets('an empty directory offers "Apply as Mentor" to someone who could still apply', (tester) async {
+      await _pumpLanding(tester, _Repo(transform: _emptyDirectory), _Calls());
+      expect(find.text('No mentors are listed yet'), findsOneWidget);
+      expect(find.text('Apply as Mentor'), findsOneWidget);
+    });
+
+    testWidgets('an empty directory offers no application to a mentor, an applicant or ICR staff', (tester) async {
+      await _pumpLanding(tester, _Repo(transform: _emptyDirectory), _Calls(), offerMentoring: false);
+      expect(find.text('No mentors are listed yet'), findsOneWidget);
+      expect(find.text('Apply as Mentor'), findsNothing);
     });
 
     testWidgets('the cohort card\'s button opens its programme', (tester) async {

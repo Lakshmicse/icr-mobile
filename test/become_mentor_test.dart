@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/widgets/title_bar.dart';
+import 'package:icr_mobile/features/become_mentor/become_mentor_controller.dart' show FixTarget;
 import 'package:icr_mobile/features/become_mentor/become_mentor_models.dart';
 import 'package:icr_mobile/features/mentorship_my/mentoring_clock.dart';
 import 'package:icr_mobile/features/mentorship_my/widgets/kit.dart';
@@ -60,12 +61,120 @@ void main() {
   setUp(() => mentoringNow = () => DateTime(2026, 10, 26, 10));
   tearDown(() => mentoringNow = DateTime.now);
 
+  group('who it is for, and the session', () {
+    testWidgets('ICR\'s own operator is told why it is not theirs, and nothing is read', (tester) async {
+      final w = MentorWorld(role: 'SUPER_ADMIN');
+      final api = w.api();
+      final auth = await signedInOver(tester, api);
+      await pumpBecomeMentor(tester, w, api: api, auth: auth);
+      expect(find.text('Access denied'), findsOneWidget);
+      expect(
+        find.text(
+          'Platform administrators run the mentorship programme rather than take part in it. The review queue is under Admin → Trust & review.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('application')), findsNothing);
+      expect(api.count('GET /mentorship/mentors/me'), 0);
+      expect(api.count('GET /mentorship/mentors/me/readiness'), 0);
+    });
+
+    for (final role in ['PROFESSIONAL', 'BUYER', 'VENDOR', 'COMPANY_ADMIN', 'LEARNING_ADMIN', 'PARTNER_ADMIN']) {
+      testWidgets('every role but the operator may open it ($role)', (tester) async {
+        final w = MentorWorld(role: role);
+        final api = w.api();
+        final auth = await signedInOver(tester, api);
+        await pumpBecomeMentor(tester, w, api: api, auth: auth);
+        expect(find.text('Access denied'), findsNothing);
+        expect(find.byKey(const ValueKey('application')), findsOneWidget);
+        expect(api.count('GET /mentorship/mentors/me'), 1);
+      });
+    }
+
+    testWidgets('the first save creates the draft, and the session\'s mentor status catches up with it', (
+      tester,
+    ) async {
+      final w = MentorWorld(role: 'BUYER');
+      final api = w.api();
+      final auth = await signedInOver(tester, api);
+      expect(auth.user!.mentorStatus, isNull, reason: 'never applied: the drawer offers the application');
+      await pumpBecomeMentor(tester, w, api: api, auth: auth);
+      expect(api.count('GET /auth/me'), 1, reason: 'the session already agrees with "no profile"');
+      await openCard(tester, 'bio', 'Add');
+      await enter(tester, 'bio-text', 'I help facilities leads move from running a site to owning a portfolio.');
+      await tapSheetButton(tester, 'Save');
+      expect(api.count('GET /auth/me'), 2);
+      expect(auth.user!.mentorStatus, 'DRAFT', reason: 'the drawer now leads to "My mentor profile"');
+    });
+
+    testWidgets('a second save does not ask the session again', (tester) async {
+      final w = completeWorld();
+      final api = w.api();
+      final auth = await signedInOver(tester, api);
+      await pumpBecomeMentor(tester, w, api: api, auth: auth);
+      await openCard(tester, 'bio', 'Edit');
+      await enter(
+        tester,
+        'bio-text',
+        'I help facilities leads move from running a site to owning a portfolio, always.',
+      );
+      await tapSheetButton(tester, 'Save');
+      expect(api.count('PUT /mentorship/mentors/me'), 1);
+      expect(api.count('GET /auth/me'), 1);
+    });
+
+    testWidgets('submitting moves the session to awaiting review', (tester) async {
+      final w = completeWorld();
+      final api = w.api();
+      final auth = await signedInOver(tester, api);
+      expect(auth.user!.mentorStatus, 'DRAFT');
+      await pumpBecomeMentor(tester, w, api: api, auth: auth);
+      await tapKey(tester, 'conduct-check');
+      await tapKey(tester, 'submit');
+      expect(auth.user!.mentorStatus, 'PENDING');
+    });
+
+    testWidgets('withdrawing takes the session\'s status away, so the application is offered again', (tester) async {
+      final w = completeWorld();
+      final api = w.api();
+      final auth = await signedInOver(tester, api);
+      await pumpBecomeMentor(tester, w, api: api, auth: auth);
+      await tapText(tester, 'Withdraw my profile');
+      await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text('Withdraw')));
+      await settle(tester);
+      expect(api.count('DELETE /mentorship/mentors/me'), 1);
+      expect(auth.user!.mentorStatus, isNull);
+    });
+
+    testWidgets('a status a reviewer changed elsewhere is picked up on opening, once', (tester) async {
+      final w = completeWorld(status: 'APPROVED')
+        ..conductAccepted = true
+        ..conductVersion = '2026.1';
+      var asked = 0;
+      final base = w.routes()['GET /auth/me']!;
+      final api = w.api(
+        extra: {
+          // The first answer is the session as it was before the approval.
+          'GET /auth/me': (o) => {
+            ...base(o) as Map<String, Object?>,
+            'mentorStatus': ++asked == 1 ? 'PENDING' : 'APPROVED',
+          },
+        },
+      );
+      final auth = await signedInOver(tester, api);
+      expect(auth.user!.mentorStatus, 'PENDING');
+      await pumpBecomeMentor(tester, w, api: api, auth: auth);
+      expect(asked, 2);
+      expect(auth.user!.mentorStatus, 'APPROVED');
+    });
+  });
+
   group('a member with no mentor profile yet', () {
     testWidgets('sees where to start: the draft banner, three steps, and every line still needed', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld());
       expect(find.text('Become a mentor'), findsOneWidget);
       expect(find.byKey(const ValueKey('banner-DRAFT')), findsOneWidget);
-      expect(find.textContaining('Draft — not yet visible'), findsOneWidget);
+      expect(find.textContaining('Draft · not yet visible'), findsOneWidget);
       expect(find.text('Not started'), findsOneWidget);
       expect(find.text('0 of 3 steps done'), findsOneWidget);
       for (final line in [
@@ -319,6 +428,16 @@ void main() {
   });
 
   group('Availability', () {
+    testWidgets('opened to fix "Say when you are free", the page lands on the availability form', (tester) async {
+      final (api, _) = await pumpBecomeMentor(tester, MentorWorld(withProfile: true), fix: FixTarget.availability);
+      expect(find.byKey(const ValueKey('availability-note')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('cadence-WEEKLY')));
+      await enter(tester, 'availability-note', 'Weekday evenings after 7pm IST');
+      await tapSheetButton(tester, 'Save');
+      final body = api.bodyOf('PUT /mentorship/mentors/me') as Map;
+      expect(body['cadence'], 'WEEKLY');
+      expect(body['availabilityNote'], 'Weekday evenings after 7pm IST');
+    });
     testWidgets('how you meet, how often and when you are free are saved as the API takes them (no mentee count: '
         'the portal keeps no limit)', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld(withProfile: true));
@@ -840,36 +959,84 @@ void main() {
   });
 
   group('The code of conduct', () {
-    testWidgets('ticking the box agrees to the current version, creating the draft first when there is none', (
+    const declaration =
+        'I confirm these details are true, and I have read and accepted the ICR Mentor Code of Conduct (version 2026.1) and agree to comply with applicable ICR mentoring policies.';
+    const agreement =
+        'I have read and accepted the ICR Mentor Code of Conduct (version 2026.1) and agree to comply with applicable ICR mentoring policies.';
+    CheckboxListTile box(WidgetTester tester) =>
+        tester.widget<CheckboxListTile>(find.byKey(const ValueKey('conduct-check')));
+
+    testWidgets(
+      'while the application can be sent it is one declaration beside Submit, and it waits until nothing is needed',
+      (tester) async {
+        final (api, _) = await pumpBecomeMentor(tester, MentorWorld());
+        expect(find.text(declaration), findsOneWidget);
+        expect(box(tester).onChanged, isNull, reason: 'a role, a bio and more are still needed');
+        expect(find.text('Finish the items above to submit.'), findsOneWidget);
+        await tapKey(tester, 'conduct-check');
+        expect(box(tester).value, isFalse);
+        expect(api.count('POST /mentorship/mentors/me/code-of-conduct'), 0);
+        expect(find.text('Tick this to send your profile for review.'), findsNothing);
+      },
+    );
+
+    testWidgets('once nothing is needed the tick is given with no write: it is recorded when Submit sends it', (
       tester,
     ) async {
-      final (api, _) = await pumpBecomeMentor(tester, MentorWorld());
-      expect(find.text('I have read and agree to the ICR Mentor Code of Conduct (version 2026.1).'), findsOneWidget);
-      expect(find.text('Tick this to send your profile for review.'), findsOneWidget);
+      final (api, _) = await pumpBecomeMentor(tester, completeWorld());
+      expect(box(tester).onChanged, isNotNull);
+      expect(box(tester).value, isFalse);
+      expect(find.text('Tick the declaration to submit.'), findsOneWidget);
       await tapKey(tester, 'conduct-check');
-      expect(api.bodyOf('POST /mentorship/mentors/me/code-of-conduct'), {'version': '2026.1'});
-      final calls = api.calls;
-      expect(
-        calls.indexOf('PUT /mentorship/mentors/me'),
-        lessThan(calls.indexOf('POST /mentorship/mentors/me/code-of-conduct')),
-      );
-      expect(find.text('Agreed. Thank you.'), findsOneWidget);
-      expect(find.text('Accepted — 2026.1'), findsOneWidget);
-      expect(
-        tester.widget<CheckboxListTile>(find.byKey(const ValueKey('conduct-check'))).onChanged,
-        isNull,
-        reason: 'it is agreed once',
-      );
-      expect(find.text('My mentor profile'), findsOneWidget);
+      expect(box(tester).value, isTrue);
+      expect(find.text('Your tick is recorded when you submit.'), findsOneWidget);
+      expect(api.count('POST /mentorship/mentors/me/code-of-conduct'), 0, reason: 'nothing is written until Submit');
+      expect(api.count('PUT /mentorship/mentors/me'), 0);
+      await tapKey(tester, 'conduct-check');
+      expect(box(tester).value, isFalse, reason: 'it can be taken back before sending');
+      expect(find.text('Tick the declaration to submit.'), findsOneWidget);
     });
 
-    testWidgets('the whole code can be read, and "I agree" records the same agreement', (tester) async {
+    testWidgets('the whole code can be read, and "I agree" ticks the same declaration (nothing is written)', (
+      tester,
+    ) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld(withProfile: true));
       await tapKey(tester, 'read-conduct');
-      expect(find.text('Mentor code of conduct — version 2026.1'), findsOneWidget);
+      expect(find.text('ICR Mentor Code of Conduct · version 2026.1'), findsOneWidget);
       expect(find.text('1. I am volunteering'), findsOneWidget);
       expect(find.text('3. I will keep it confidential'), findsOneWidget);
-      await tapSheetButton(tester, 'I agree');
+      await tapSheetButton(tester, 'I Agree');
+      expect(api.count('POST /mentorship/mentors/me/code-of-conduct'), 0);
+      expect(box(tester).value, isTrue);
+      expect(
+        find.text('1 of 3 steps done'),
+        findsOneWidget,
+        reason: 'the declaration is given; the profile is not done',
+      );
+      expect(
+        tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed,
+        isNull,
+        reason: 'what is still needed holds Submit back, as the website does',
+      );
+    });
+
+    testWidgets('a listed mentor behind on the current code accepts it here, and it is recorded at once', (
+      tester,
+    ) async {
+      final (api, _) = await pumpBecomeMentor(tester, completeWorld(status: 'APPROVED'));
+      expect(find.text(agreement), findsOneWidget);
+      expect(find.byKey(const ValueKey('submit')), findsNothing);
+      await tapKey(tester, 'conduct-check');
+      expect(api.bodyOf('POST /mentorship/mentors/me/code-of-conduct'), {'version': '2026.1'});
+      expect(find.text('Agreed. Thank you.'), findsOneWidget);
+      expect(find.text('Accepted · 2026.1'), findsOneWidget);
+      expect(find.byKey(const ValueKey('conduct-check')), findsNothing, reason: 'it is agreed once');
+    });
+
+    testWidgets('the same agreement from the sheet, and a sheet for one who has agreed only closes', (tester) async {
+      final (api, _) = await pumpBecomeMentor(tester, completeWorld(status: 'PAUSED'));
+      await tapKey(tester, 'read-conduct');
+      await tapSheetButton(tester, 'I Agree');
       expect(api.count('POST /mentorship/mentors/me/code-of-conduct'), 1);
       expect(find.text('Agreed. Thank you.'), findsOneWidget);
       await tapKey(tester, 'read-conduct');
@@ -878,43 +1045,54 @@ void main() {
     });
 
     testWidgets('a version that is no longer current is refused, in the API\'s words', (tester) async {
-      final w = MentorWorld(withProfile: true)
+      final w = completeWorld(status: 'APPROVED')
         ..refusals['conduct'] = refuse('That is not the current code of conduct (2026.2). Reload and read it again.');
       await pumpBecomeMentor(tester, w);
       await tapKey(tester, 'conduct-check');
       expect(find.text('That is not the current code of conduct (2026.2). Reload and read it again.'), findsOneWidget);
-      expect(tester.widget<CheckboxListTile>(find.byKey(const ValueKey('conduct-check'))).value, isFalse);
+      expect(box(tester).value, isFalse);
     });
 
-    testWidgets('the checkbox waits until the code has loaded', (tester) async {
+    testWidgets('the box waits until the code has loaded', (tester) async {
       await pumpBecomeMentor(
         tester,
-        MentorWorld(withProfile: true),
+        completeWorld(),
         extra: {'GET /mentorship/code-of-conduct': (_) => refuse('Unavailable.', status: 503)},
       );
-      expect(find.text('I have read and agree to the ICR Mentor Code of Conduct.'), findsOneWidget);
-      expect(tester.widget<CheckboxListTile>(find.byKey(const ValueKey('conduct-check'))).onChanged, isNull);
+      expect(
+        find.text(
+          'I confirm these details are true, and I have read and accepted the ICR Mentor Code of Conduct and agree to comply with applicable ICR mentoring policies.',
+        ),
+        findsOneWidget,
+      );
+      expect(box(tester).onChanged, isNull);
       await tapKey(tester, 'read-conduct');
       expect(find.text('Unavailable.'), findsOneWidget);
     });
   });
 
   group('Submitting', () {
-    testWidgets('a complete application is held back only by the agreement, then goes to review', (tester) async {
+    testWidgets('a complete application is held back only by the declaration, then goes to review carrying it', (
+      tester,
+    ) async {
       final (api, _) = await pumpBecomeMentor(tester, completeWorld());
       expect(find.text('Still needed to submit'), findsNothing);
       expect(
         find.text('1 of 3 steps done'),
         findsOneWidget,
-        reason: 'the profile is done; the agreement and the review are not',
+        reason: 'the profile is done; the declaration and the review are not',
       );
-      expect(find.text('Agree to the code of conduct to submit.'), findsOneWidget);
+      expect(find.text('Tick the declaration to submit.'), findsOneWidget);
       expect(tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed, isNull);
       await tapKey(tester, 'conduct-check');
       expect(find.text('2 of 3 steps done'), findsOneWidget);
       expect(tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed, isNotNull);
       await tapKey(tester, 'submit');
       expect(api.count('POST /mentorship/mentors/me/submit'), 1);
+      expect(api.bodyOf('POST /mentorship/mentors/me/submit'), {
+        'conductVersion': '2026.1',
+      }, reason: 'the declaration travels with the application');
+      expect(api.count('POST /mentorship/mentors/me/code-of-conduct'), 0, reason: 'the acceptance is the same write');
       expect(
         find.text('Sent to the ICR review team — we will let you know when your profile is live.'),
         findsOneWidget,
@@ -924,6 +1102,7 @@ void main() {
       expect(find.byKey(const ValueKey('submit')), findsNothing, reason: 'it is with the review team');
       expect(find.text('Awaiting review'), findsOneWidget);
       expect(find.text('ICR review — in progress'), findsOneWidget);
+      expect(find.text('Accepted · 2026.1'), findsOneWidget, reason: 'the submission recorded the acceptance');
     });
 
     testWidgets('the API\'s refusal at submit is shown as it words it, and the application stays a draft', (
@@ -937,11 +1116,28 @@ void main() {
       expect(find.text('Add your current role. Say a little more about how you mentor.'), findsOneWidget);
       expect(find.byKey(const ValueKey('banner-DRAFT')), findsOneWidget);
       expect(tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed, isNotNull);
+      expect(
+        tester.widget<CheckboxListTile>(find.byKey(const ValueKey('conduct-check'))).value,
+        isTrue,
+        reason: 'the tick stays until the application has gone',
+      );
       await tapKey(tester, 'submit');
       expect(api.count('POST /mentorship/mentors/me/submit'), 2);
     });
 
-    testWidgets('saving what the checklist names makes the line go away and the application ready', (tester) async {
+    testWidgets('a code of conduct that moved on is refused at submit, in the API\'s words', (tester) async {
+      final w = completeWorld()
+        ..refusals['submit'] = refuse('That is not the current code of conduct (2026.2). Reload and read it again.');
+      await pumpBecomeMentor(tester, w);
+      await tapKey(tester, 'conduct-check');
+      await tapKey(tester, 'submit');
+      expect(find.text('That is not the current code of conduct (2026.2). Reload and read it again.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('banner-DRAFT')), findsOneWidget);
+    });
+
+    testWidgets('saving what the checklist names makes the line go away and the application ready to tick', (
+      tester,
+    ) async {
       final w = completeWorld()
         ..conductAccepted = true
         ..conductVersion = '2026.1'
@@ -949,12 +1145,32 @@ void main() {
       await pumpBecomeMentor(tester, w);
       expect(find.text('Choose who you want to mentor.'), findsOneWidget);
       expect(tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed, isNull);
+      expect(
+        tester.widget<CheckboxListTile>(find.byKey(const ValueKey('conduct-check'))).onChanged,
+        isNull,
+        reason: 'the declaration waits for the profile',
+      );
       await tapText(tester, 'Choose who you want to mentor.');
       await tester.tap(find.byKey(const ValueKey('audience-WORKING_PROFESSIONAL')));
       await tester.pump();
       await tapSheetButton(tester, 'Save');
       expect(find.text('Choose who you want to mentor.'), findsNothing);
+      expect(tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed, isNull, reason: 'untick');
+      await tapKey(tester, 'conduct-check');
       expect(tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed, isNotNull);
+    });
+
+    testWidgets('a sent-back application is declared again, even with the code already on record', (tester) async {
+      final w = completeWorld(status: 'REJECTED')
+        ..conductAccepted = true
+        ..conductVersion = '2026.1';
+      final (api, _) = await pumpBecomeMentor(tester, w);
+      expect(find.text('Resubmit for review'), findsOneWidget);
+      expect(tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed, isNull);
+      await tapKey(tester, 'conduct-check');
+      await tapKey(tester, 'submit');
+      expect(api.bodyOf('POST /mentorship/mentors/me/submit'), {'conductVersion': '2026.1'});
+      expect(find.byKey(const ValueKey('banner-PENDING')), findsOneWidget);
     });
   });
 
@@ -1013,8 +1229,34 @@ void main() {
         ..renewalDue = true;
       await pumpBecomeMentor(tester, w);
       expect(find.byKey(const ValueKey('renewal')), findsOneWidget);
-      expect(find.textContaining('Your listing is due for renewal.'), findsOneWidget);
-      expect(find.textContaining('It expires on 10 Nov.'), findsOneWidget);
+      expect(find.textContaining('Your listing is due for renewal'), findsOneWidget);
+      expect(
+        find.textContaining(
+          'Mentor approval runs for two years. Tick the code of conduct agreement in Your application to stay listed in the directory. It expires on 10 Nov 2026.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a renewal with no date says only to stay on the directory', (tester) async {
+      final w = completeWorld(status: 'APPROVED')
+        ..conductAccepted = true
+        ..conductVersion = '2026.1'
+        ..renewalDue = true;
+      await pumpBecomeMentor(
+        tester,
+        w,
+        extra: {
+          'GET /mentorship/mentors/me/readiness': (_) => {...w.readiness, 'approvalExpiresAt': null},
+        },
+      );
+      expect(
+        find.textContaining(
+          'Mentor approval runs for two years. Tick the code of conduct agreement in Your application to stay on the directory.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('It expires on'), findsNothing);
     });
   });
 
@@ -1079,9 +1321,17 @@ void main() {
       },
     );
 
-    testWidgets('unfinished training blocks the submit even with the agreement', (tester) async {
+    testWidgets('unfinished training blocks the submit even with the declaration', (tester) async {
       await pumpBecomeMentor(tester, completeWorld()..requiredCourses = courses());
-      await tapKey(tester, 'conduct-check');
+      expect(
+        tester.widget<CheckboxListTile>(find.byKey(const ValueKey('conduct-check'))).onChanged,
+        isNull,
+        reason: 'the training is still needed',
+      );
+      // The sheet's "I agree" ticks it all the same, as the website's does.
+      await tapKey(tester, 'read-conduct');
+      await tapSheetButton(tester, 'I Agree');
+      expect(tester.widget<CheckboxListTile>(find.byKey(const ValueKey('conduct-check'))).value, isTrue);
       expect(tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed, isNull);
       expect(find.text('Finish the items above to submit.'), findsOneWidget);
     });
