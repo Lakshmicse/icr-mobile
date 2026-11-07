@@ -26,12 +26,12 @@ in a real person's list.
 
 | Where a tap goes | Kinds |
 |---|---|
-| The app's own screen | **46** (43 registered openers + 3 built into the router) |
-| Nothing (staff consoles) | **14** |
+| The app's own screen | **47** (44 registered openers + 3 built into the router) |
+| Nothing (staff consoles) | **13** |
 | The website's page in the app's web view | **5**, plus the catch-all `path` |
 | No page | `none`: only read |
 
-## Opens in the app (46)
+## Opens in the app (47)
 
 | Kind | The page it stands for | What opens in the app |
 |---|---|---|
@@ -60,6 +60,7 @@ in a real person's list.
 | `learning.course` | `/learning/professional-development/:code` | The course's sheet, found by its code |
 | `learning.workspace` | `/learning/courses/:code` | The same sheet (the learner's workspace is a website page) |
 | `learning.partners` | `/learning/partners?apply=` | The Learning tab; `apply` opens the institute application form |
+| `admin.learning` | `/admin/learning/enquiries?lead=` | The partner institute's Enquiries (`PartnerEnquiriesScreen`, the app's own since 7 Nov 2026: the owner's tap on "New enquiry about CSF from Bindhya S" was told "staff tools"), opened on the enquiry the row names and tinted. Every other section of the learning console (`/admin/learning/courses`, `batches`, `icr-courses`, `partner-applications`, `enrolments`) is a staff page the app does not draw: the opener says so (`NotificationRouter.staffOnly`) |
 | `event` | `/events/:slug` | The event's sheet |
 | `forum.thread` | `/community/:slug#reply-:id` | The discussion's page, scrolled to the reply. One target for every discussion notification: a comment (`forum.replied`), a reaction to a post or a comment (`forum.reacted`, `forum.reactedToReply`), a repost (`forum.reposted`) and a tag in a post or a comment (`forum.mentioned`, `forum.mentionedInReply`). The row wears the actor's photo, sits under Community and articles (a `forum_` type, or any type that links to `/community/...`), and `#reply-:id` brings the comment into view |
 | `forum` | `/community` | The Forums tab |
@@ -98,14 +99,16 @@ closes.
 | `articles.mine` | `/manage/articles` | A member's own articles |
 | `path` | any other page | An older row, an onboarding step; `SiteRoutes.inApp` still maps what the app has a screen for |
 
-## Nothing opens (staff only, 14)
+## Nothing opens (staff only, 13)
 
 `admin.jobReview`, `admin.verification.supplier`, `admin.verification.company`, `admin.company`,
-`admin.mentorship.concern`, `admin.learning`, `admin.forum`, `admin.blogs`, `admin.documentReports`,
+`admin.mentorship.concern`, `admin.forum`, `admin.blogs`, `admin.documentReports`,
 `admin.messageReports`, `admin.supportTicket`, `admin.subscriptions`, `admin.marketing`, `admin.contact`.
 
 These are the consoles ICR's staff work in on the website. The app has no console, so a tap reads the row and says
-"That one is for ICR's staff tools, which aren't in the app."
+"That one is for ICR's staff tools, which aren't in the app." (`NotificationRouter.staffOnlyMessage`). `admin.learning` left this list on
+7 Nov 2026: its enquiries section is a partner institute's, not staff's, and opens in the app (above); its opener gives the other sections this
+same answer.
 
 ## Checked against real rows (5 Nov 2026)
 

@@ -295,6 +295,7 @@ void main() {
       WidgetTester tester, {
       AssistantContext context = const AssistantContext(path: '/jobs', signedIn: true, hasCompany: true),
       SessionUser? user = pooja,
+      bool Function(String href)? opens,
     }) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
@@ -307,7 +308,13 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: buildAppTheme(),
-          home: AssistantScreen(controller: c, context: context, user: user, onOpenPage: (_, href) => opened.add(href)),
+          home: AssistantScreen(
+            controller: c,
+            context: context,
+            user: user,
+            onOpenPage: (_, href) => opened.add(href),
+            opens: opens,
+          ),
         ),
       );
       await tester.pump();
@@ -339,6 +346,24 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('action-/mentorship/mentors')));
       expect(opened, ['/mentorship/mentors']);
       expect(tester.widget<TextField>(find.byKey(const ValueKey('assistant-input'))).controller!.text, isEmpty);
+    });
+
+    testWidgets('a page the app has no screen for is never offered: not as a chip, not under a reply (7 Nov 2026)', (
+      tester,
+    ) async {
+      final (c, opened) = await pump(tester, opens: (href) => href == '/jobs');
+      expect(find.byKey(const ValueKey('suggestion-Browse jobs')), findsOneWidget);
+      expect(find.byKey(const ValueKey('suggestion-Post a job')), findsOneWidget, reason: 'a question, not a page');
+      expect(find.byKey(const ValueKey('suggestion-Job alerts')), findsNothing);
+      await tester.enterText(find.byKey(const ValueKey('assistant-input')), 'How do I find a mentor?');
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('assistant-send')));
+      await tester.pumpAndSettle();
+      expect(c.messages, hasLength(3));
+      expect(find.textContaining('Find Mentors lists'), findsOneWidget, reason: 'the answer stays');
+      expect(find.byKey(const ValueKey('action-/mentorship/mentors')), findsNothing);
+      expect(find.byKey(const ValueKey('action-/mentorship/groups')), findsNothing);
+      expect(opened, isEmpty);
     });
 
     testWidgets('a page chip opens the page; a question chip asks on the person\'s behalf', (tester) async {

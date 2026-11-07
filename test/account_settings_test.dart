@@ -16,8 +16,9 @@ import 'helpers/fonts.dart';
 /// Settings and what hangs off it: language, notification preferences, Sign-in &
 /// security (email, mobile number and its code, contact info, password), the
 /// data export, deleting the account and signing out.
-FilledButton _saveButton(WidgetTester tester) =>
-    tester.widget<FilledButton>(find.descendant(of: find.byKey(const Key('sheet.save')), matching: find.byType(FilledButton)));
+FilledButton _saveButton(WidgetTester tester) => tester.widget<FilledButton>(
+  find.descendant(of: find.byKey(const Key('sheet.save')), matching: find.byType(FilledButton)),
+);
 
 void main() {
   setUpAll(() async {
@@ -36,7 +37,11 @@ void main() {
     List<Uri>? opened,
     List<String>? shared,
   }) async {
-    h = AccountHarness(routes: {'POST /auth/logout': (_) => {'success': true}});
+    h = AccountHarness(
+      routes: {
+        'POST /auth/logout': (_) => {'success': true},
+      },
+    );
     await h.signIn(tester, user ?? userJson(first: 'Nikhil', last: 'Majjagi', email: 'nikhil@techcorp.example'));
     usePhone(tester);
     await tester.pumpWidget(
@@ -85,7 +90,14 @@ void main() {
       for (final t in ['ACCOUNT', 'PREFERENCES', 'PRIVACY & DATA']) {
         expect(find.text(t), findsOneWidget);
       }
-      for (final t in ['Sign-in & security', 'My companies', 'Saved items', 'Language', 'Notifications', 'Download my data']) {
+      for (final t in [
+        'Sign-in & security',
+        'My companies',
+        'Saved items',
+        'Language',
+        'Notifications',
+        'Download my data',
+      ]) {
         expect(find.text(t), findsOneWidget);
       }
       expect(find.text('Acting as yourself'), findsOneWidget);
@@ -108,23 +120,51 @@ void main() {
       await tester.tap(find.byKey(const Key('settings.profile')));
       await tester.tap(find.byKey(const Key('settings.companies')));
       await tester.tap(find.byKey(const Key('settings.saved')));
-      await tester.scrollUntilVisible(find.byKey(const Key('settings.contact')), 200, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings.contact')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(find.byKey(const Key('settings.contact')));
+      await tester.pump();
       await tester.tap(find.byKey(const Key('settings.contact')));
       expect(log, ['profile', 'companies', 'saved', 'contact']);
     });
 
-    testWidgets('Terms and Privacy are the only rows that open the website', (tester) async {
+    testWidgets('About ICR, Terms and Privacy go through the opener (the app\'s own screens, by their pages)', (
+      tester,
+    ) async {
       final opened = <Uri>[];
       await pumpSettings(tester, DemoAccountRepository(), opened: opened);
-      await tester.scrollUntilVisible(find.byKey(const Key('settings.terms')), 200, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings.about')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(find.byKey(const Key('settings.about')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('settings.about')));
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings.terms')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.ensureVisible(find.byKey(const Key('settings.terms')));
       await tester.pump();
       await tester.tap(find.byKey(const Key('settings.terms')));
-      await tester.scrollUntilVisible(find.byKey(const Key('settings.privacy')), 200, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings.privacy')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.ensureVisible(find.byKey(const Key('settings.privacy')));
       await tester.pump();
       await tester.tap(find.byKey(const Key('settings.privacy')));
-      expect(opened.map((u) => u.toString()), ['https://icr.org.in/terms', 'https://icr.org.in/privacy']);
+      expect(opened.map((u) => u.toString()), [
+        'https://icr.org.in/about',
+        'https://icr.org.in/terms',
+        'https://icr.org.in/privacy',
+      ]);
     });
 
     testWidgets('Sign-in & security and Notifications open their screens', (tester) async {
@@ -137,12 +177,19 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('settings.notifications')));
       await tester.pumpAndSettle();
-      expect(find.text('Choose how ICR tells you about each kind of update: in the app, and by email.'), findsOneWidget);
+      expect(
+        find.text('Choose how ICR tells you about each kind of update: in the app, and by email.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Sign out asks first, then ends the session on this phone and at the API', (tester) async {
       await pumpSettings(tester, DemoAccountRepository());
-      await tester.scrollUntilVisible(find.byKey(const Key('settings.signOut')), 200, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings.signOut')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.ensureVisible(find.byKey(const Key('settings.signOut')));
       await tester.pump();
       await tester.tap(find.byKey(const Key('settings.signOut')));
@@ -162,11 +209,18 @@ void main() {
   });
 
   group('language', () {
-    testWidgets('the row opens the languages; Hindi saves as the account\'s locale and the row says so', (tester) async {
+    testWidgets('the row opens the languages; Hindi saves as the account\'s locale and the row says so', (
+      tester,
+    ) async {
       final repo = DemoAccountRepository();
       await pumpSettings(tester, repo);
       await tapKey(tester, 'settings.language');
-      expect(find.text('The language of ICR’s emails, notifications and replies. The app’s screens stay in English for now.'), findsOneWidget);
+      expect(
+        find.text(
+          'The language of ICR’s emails, notifications and replies. The app’s screens stay in English for now.',
+        ),
+        findsOneWidget,
+      );
       await tester.tap(find.byKey(const Key('language.hi')));
       await tester.pump();
       await save(tester);
@@ -187,7 +241,9 @@ void main() {
       expect(find.text('English'), findsOneWidget);
     });
 
-    testWidgets('Save with the same language closes without a call; a refusal stays open with its sentence', (tester) async {
+    testWidgets('Save with the same language closes without a call; a refusal stays open with its sentence', (
+      tester,
+    ) async {
       final repo = DemoAccountRepository();
       await pumpSettings(tester, repo);
       await tapKey(tester, 'settings.language');
@@ -215,7 +271,11 @@ void main() {
       final repo = DemoAccountRepository();
       final shared = <String>[];
       await pumpSettings(tester, repo, shared: shared);
-      await tester.scrollUntilVisible(find.byKey(const Key('settings.export')), 200, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings.export')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tapKey(tester, 'settings.export');
       expect(find.byKey(const Key('export.preview')), findsNothing);
       await tapKey(tester, 'export.read');
@@ -234,18 +294,29 @@ void main() {
     });
 
     testWidgets('a refused export says why', (tester) async {
-      final repo = DemoAccountRepository()..failures['exportData'] = ApiError('Try again in a minute.', statusCode: 429);
+      final repo = DemoAccountRepository()
+        ..failures['exportData'] = ApiError('Try again in a minute.', statusCode: 429);
       await pumpSettings(tester, repo);
-      await tester.scrollUntilVisible(find.byKey(const Key('settings.export')), 200, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings.export')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tapKey(tester, 'settings.export');
       await tapKey(tester, 'export.read');
       expect(find.text('Try again in a minute.'), findsOneWidget);
     });
 
-    testWidgets('Delete my account needs the word DELETE, then closes the account and signs this phone out', (tester) async {
+    testWidgets('Delete my account needs the word DELETE, then closes the account and signs this phone out', (
+      tester,
+    ) async {
       final repo = DemoAccountRepository();
       await pumpSettings(tester, repo);
-      await tester.scrollUntilVisible(find.byKey(const Key('settings.delete')), 200, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings.delete')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tapKey(tester, 'settings.delete');
       expect(find.textContaining('It cannot be undone.'), findsOneWidget);
       // Disabled until the word is typed.
@@ -261,9 +332,14 @@ void main() {
     });
 
     testWidgets('a refused deletion keeps the sheet and the session', (tester) async {
-      final repo = DemoAccountRepository()..failures['deleteAccount'] = ApiError('Close your company first.', statusCode: 400);
+      final repo = DemoAccountRepository()
+        ..failures['deleteAccount'] = ApiError('Close your company first.', statusCode: 400);
       await pumpSettings(tester, repo);
-      await tester.scrollUntilVisible(find.byKey(const Key('settings.delete')), 200, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings.delete')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tapKey(tester, 'settings.delete');
       await type(tester, 'delete.word', 'DELETE');
       await save(tester);
@@ -289,7 +365,9 @@ void main() {
       expect(tester.widget<Switch>(find.byKey(const Key('pref.jobs.email'))).value, isTrue);
     });
 
-    testWidgets('a switch saves at once with only its own row, and the screen shows what the API answered', (tester) async {
+    testWidgets('a switch saves at once with only its own row, and the screen shows what the API answered', (
+      tester,
+    ) async {
       final repo = await pumpPrefs(tester);
       await tester.tap(find.byKey(const Key('pref.jobs.email')));
       await tester.pumpAndSettle();
@@ -300,16 +378,23 @@ void main() {
       expect(tester.widget<Switch>(find.byKey(const Key('pref.jobs.inApp'))).value, isTrue);
     });
 
-    testWidgets('receipts, support and security notices are always sent: their switches cannot be changed', (tester) async {
+    testWidgets('receipts, support and security notices are always sent: their switches cannot be changed', (
+      tester,
+    ) async {
       await pumpPrefs(tester);
-      await tester.scrollUntilVisible(find.byKey(const Key('pref.security.email')), 300, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('pref.security.email')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(tester.widget<Switch>(find.byKey(const Key('pref.security.email'))).onChanged, isNull);
       expect(tester.widget<Switch>(find.byKey(const Key('pref.payments.inApp'))).value, isTrue);
       expect(find.text('Always sent'), findsWidgets);
     });
 
     testWidgets('a refused change goes back and says why', (tester) async {
-      final repo = DemoAccountRepository()..failures['saveNotificationPreferences'] = ApiError('Could not save.', statusCode: 500);
+      final repo = DemoAccountRepository()
+        ..failures['saveNotificationPreferences'] = ApiError('Could not save.', statusCode: 500);
       await pumpPrefs(tester, repo: repo);
       await tester.tap(find.byKey(const Key('pref.messages.inApp')));
       await tester.pumpAndSettle();
@@ -321,7 +406,8 @@ void main() {
     });
 
     testWidgets('a failed read shows its sentence with Try again; pull to refresh reads again', (tester) async {
-      final repo = DemoAccountRepository()..failures['notificationPreferences'] = ApiError('The server is busy.', statusCode: 503);
+      final repo = DemoAccountRepository()
+        ..failures['notificationPreferences'] = ApiError('The server is busy.', statusCode: 503);
       await pumpPrefs(tester, repo: repo);
       expect(find.text('The server is busy.'), findsOneWidget);
       repo.failures.clear();
@@ -377,25 +463,44 @@ void main() {
       expect(find.text('nikhil@techcorp.example'), findsWidgets);
     });
 
-    testWidgets('a number with no code to confirm it is not marked "Not verified"; an Indian one that is, offers Verify', (tester) async {
-      final repo = DemoAccountRepository(
-        profile: MyProfile.fromJson({
-          'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'A', 'lastName': 'B', 'role': 'PROFESSIONAL', 'phone': '+447700900123', 'phoneVerified': false},
-        }),
-      );
-      await pumpSecurity(tester, repo: repo);
-      expect(find.text('+44 7700900123'), findsOneWidget);
-      expect(find.text('Not verified'), findsNothing);
-      expect(find.text('Edit'), findsOneWidget);
+    testWidgets(
+      'a number with no code to confirm it is not marked "Not verified"; an Indian one that is, offers Verify',
+      (tester) async {
+        final repo = DemoAccountRepository(
+          profile: MyProfile.fromJson({
+            'user': {
+              'id': 'me',
+              'email': 'a@b.co',
+              'firstName': 'A',
+              'lastName': 'B',
+              'role': 'PROFESSIONAL',
+              'phone': '+447700900123',
+              'phoneVerified': false,
+            },
+          }),
+        );
+        await pumpSecurity(tester, repo: repo);
+        expect(find.text('+44 7700900123'), findsOneWidget);
+        expect(find.text('Not verified'), findsNothing);
+        expect(find.text('Edit'), findsOneWidget);
 
-      repo.profileNow = MyProfile.fromJson({
-        'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'A', 'lastName': 'B', 'role': 'PROFESSIONAL', 'phone': '+919812340000', 'phoneVerified': false},
-      });
-      await tester.fling(find.byType(ListView).first, const Offset(0, 400), 1000);
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      expect(find.text('Not verified'), findsOneWidget);
-      expect(find.text('Verify'), findsOneWidget);
-    });
+        repo.profileNow = MyProfile.fromJson({
+          'user': {
+            'id': 'me',
+            'email': 'a@b.co',
+            'firstName': 'A',
+            'lastName': 'B',
+            'role': 'PROFESSIONAL',
+            'phone': '+919812340000',
+            'phoneVerified': false,
+          },
+        });
+        await tester.fling(find.byType(ListView).first, const Offset(0, 400), 1000);
+        await tester.pumpAndSettle(const Duration(seconds: 1));
+        expect(find.text('Not verified'), findsOneWidget);
+        expect(find.text('Verify'), findsOneWidget);
+      },
+    );
 
     testWidgets('a read that fails shows its sentence with Try again', (tester) async {
       final repo = DemoAccountRepository()..failures['myProfile'] = ApiError('The server is busy.', statusCode: 503);
@@ -414,7 +519,9 @@ void main() {
         }),
       );
 
-      testWidgets('Add: an Indian number is confirmed with a code; the test code is shown and Use code fills it', (tester) async {
+      testWidgets('Add: an Indian number is confirmed with a code; the test code is shown and Use code fills it', (
+        tester,
+      ) async {
         final repo = await pumpSecurity(tester, repo: noPhone());
         expect(find.text('Not added'), findsOneWidget);
         await tapKey(tester, 'security.phone');
@@ -502,7 +609,9 @@ void main() {
         expect(find.text('Not added'), findsOneWidget);
       });
 
-      testWidgets('a verified number shows as verified in its sheet and cannot be re-verified until it changes', (tester) async {
+      testWidgets('a verified number shows as verified in its sheet and cannot be re-verified until it changes', (
+        tester,
+      ) async {
         await pumpSecurity(tester);
         await tapKey(tester, 'security.phone');
         expect(find.text('This number is verified.'), findsOneWidget);
@@ -535,7 +644,15 @@ void main() {
       testWidgets('a blank field clears it; Save with nothing changed closes without a call', (tester) async {
         final repo = DemoAccountRepository(
           profile: MyProfile.fromJson({
-            'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'A', 'lastName': 'B', 'role': 'PROFESSIONAL', 'workEmail': 'old@work.example.com', 'altPhone': '+919800000000'},
+            'user': {
+              'id': 'me',
+              'email': 'a@b.co',
+              'firstName': 'A',
+              'lastName': 'B',
+              'role': 'PROFESSIONAL',
+              'workEmail': 'old@work.example.com',
+              'altPhone': '+919800000000',
+            },
           }),
         );
         await pumpSecurity(tester, repo: repo);
@@ -561,7 +678,10 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Enter a valid email address, like name@company.com.'), findsOneWidget);
         expect(find.text('Enter a full web address, like https://yourname.com'), findsOneWidget);
-        expect(find.text('Enter your LinkedIn profile address, like https://linkedin.com/in/your-name'), findsOneWidget);
+        expect(
+          find.text('Enter your LinkedIn profile address, like https://linkedin.com/in/your-name'),
+          findsOneWidget,
+        );
         expect(repo.count('saveLinks'), 0);
         expect(repo.count('updateMe'), 0);
       });
@@ -573,7 +693,10 @@ void main() {
         await type(tester, 'contact.githubUrl', 'https://github.com/nikhil');
         await save(tester);
         expect(find.text('That address is not reachable.'), findsOneWidget);
-        expect(tester.widget<TextField>(find.byKey(const Key('contact.githubUrl'))).controller!.text, 'https://github.com/nikhil');
+        expect(
+          tester.widget<TextField>(find.byKey(const Key('contact.githubUrl'))).controller!.text,
+          'https://github.com/nikhil',
+        );
         expect(repo.count('updateMe'), 0, reason: 'the links go first; a refusal there writes nothing else');
       });
     });

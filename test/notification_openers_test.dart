@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/app_notifications.dart';
+import 'package:icr_mobile/core/api/api_client.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/feed/demo_feed_repository.dart';
 import 'package:icr_mobile/features/feed/feed_controller.dart';
@@ -17,10 +18,13 @@ import 'package:icr_mobile/features/notifications/notification_router.dart';
 import 'package:icr_mobile/features/notifications/notification_target.dart';
 import 'package:icr_mobile/features/notifications/notifications_screen.dart';
 import 'package:icr_mobile/features/notifications/unread_counts.dart';
+import 'package:icr_mobile/features/partner_enquiries/enquiries_screen.dart';
 import 'package:icr_mobile/features/web/in_app_web_screen.dart';
 import 'package:provider/provider.dart';
 
+import 'helpers/account_harness.dart' show FakeApi;
 import 'helpers/fonts.dart';
+import 'live/live.dart' show MemoryTokens;
 import 'notifications_fakes.dart';
 
 /// Every kind of notification, and where a tap on it goes: the app's own screen (an opener registered by
@@ -151,8 +155,8 @@ void main() {
       await pumpShell(tester, (_) => const SizedBox());
       final inApp = {...openers.keys, ...NotificationRouter.builtInKinds};
       expect(openers.keys.toSet(), appNotificationKinds, reason: 'the constant and the map say the same');
-      expect(inApp.length, 46, reason: '43 registered openers + the 3 the router has built in');
-      expect(NotificationRouter.staffKinds.length, 14);
+      expect(inApp.length, 47, reason: '44 registered openers + the 3 the router has built in');
+      expect(NotificationRouter.staffKinds.length, 13);
       expect(webViewKinds.length - 1, 5, reason: 'without the catch-all `path`');
     });
   });
@@ -216,6 +220,55 @@ void main() {
         await router.open(context, NotificationTarget.parse(hrefs[kind]));
       }
       expect(sites, [for (final kind in webViewKinds) hrefs[kind]]);
+    });
+
+    testWidgets("the partner institute's enquiries open in the app, on the one the row names; the console's other "
+        'sections still say staff tools', (tester) async {
+      // The enquiries screen reads the API from the tree (no repository is handed through a notification).
+      final api = ApiClient(tokens: MemoryTokens(), baseUrl: 'http://api.test/api/v1')
+        ..dio.httpClientAdapter = FakeApi({
+          'GET /learning/admin/leads': (_) => {
+            'data': <Object>[],
+            'meta': {'page': 1, 'totalPages': 1},
+          },
+        });
+      late Map<String, NotificationOpener> own;
+      // The providers sit above the app, as they do for real: a pushed route is the Navigator's child, not home's.
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ApiClient>.value(value: api),
+            ChangeNotifierProvider<JobsController>(create: (_) => JobsController(DemoJobsRepository())),
+            ChangeNotifierProvider<FeedController>(create: (_) => FeedController(DemoFeedRepository())),
+          ],
+          child: MaterialApp(
+            theme: buildAppTheme(),
+            home: Builder(
+              builder: (shell) {
+                own = appNotificationOpeners(shell: shell, viewer: DemoFeedRepository.me);
+                return const Scaffold(body: SizedBox(key: ValueKey('ctx')));
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final context = tester.element(find.byKey(const ValueKey('ctx')));
+      final opener = own[NotificationKinds.adminLearning]!;
+      expect(opener(context, NotificationTarget.parse('/admin/learning/courses?course=c1')), isTrue);
+      await tester.pump();
+      expect(find.textContaining('staff tools'), findsOneWidget);
+      expect(find.byType(PartnerEnquiriesScreen), findsNothing);
+
+      expect(opener(context, NotificationTarget.parse('/admin/learning/enquiries?lead=l1')), isTrue);
+      await tester.pump();
+      await tester.pump();
+      final screen = tester.widget<PartnerEnquiriesScreen>(find.byType(PartnerEnquiriesScreen));
+      expect(screen.focusId, 'l1');
+      // The route's transition, the list's read and the "staff tools" message's timer, all run out.
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
     });
 
     testWidgets('a staff-only kind opens nothing and says so; it is not sent to the web view', (tester) async {

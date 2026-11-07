@@ -9,7 +9,7 @@ import '../../core/auth/session_user.dart';
 import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
-import '../../core/util/links.dart' show openSitePage;
+import '../../core/util/links.dart' show SiteRoutes, openSitePage;
 import '../../core/widgets/section_heading.dart' show Hairline;
 import '../career/career_format.dart' show formatTime;
 import 'assistant_controller.dart';
@@ -27,6 +27,7 @@ class AssistantScreen extends StatefulWidget {
     required this.context,
     this.user,
     this.onOpenPage,
+    this.opens,
     this.onBack,
   });
 
@@ -40,7 +41,15 @@ class AssistantScreen extends StatefulWidget {
 
   /// Opens a page a reply or a chip points to; the app's own screen for it by default.
   final void Function(BuildContext context, String href)? onOpenPage;
+
+  /// Whether the app draws the page a reply or a chip points to. A page it does not is not offered at all (owner,
+  /// 7 Nov 2026: Saathi's "About ICR" opened the website in the web view, and Back from it showed `/robots.txt` —
+  /// "should not redirect to the website in any condition"). By default what the app's own routes say
+  /// ([SiteRoutes.hasScreen]); everything while none are set (a test).
+  final bool Function(String href)? opens;
   final VoidCallback? onBack;
+
+  static bool _appDraws(String href) => SiteRoutes.hasScreen(AppConfig.sitePage(href)) ?? true;
 
   @override
   State<AssistantScreen> createState() => _AssistantScreenState();
@@ -95,7 +104,10 @@ class _AssistantScreenState extends State<AssistantScreen> {
     await widget.controller.send(text, widget.context);
   }
 
+  bool _opens(String href) => (widget.opens ?? AssistantScreen._appDraws)(href);
+
   void _open(String href) {
+    if (!_opens(href)) return;
     final open = widget.onOpenPage;
     if (open != null) return open(context, href);
     unawaited(openSitePage(context, href));
@@ -111,7 +123,10 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final suggestions = suggestionsFor(widget.context);
+    final suggestions = [
+      for (final s in suggestionsFor(widget.context))
+        if (!s.isPage || _opens(s.href!)) s,
+    ];
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -146,6 +161,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
                         user: widget.user,
                         typing: typing,
                         onOpen: _open,
+                        opens: _opens,
                       );
                     },
                   );
@@ -213,7 +229,10 @@ class _Header extends StatelessWidget {
                     decoration: const BoxDecoration(color: AppColors.online, shape: BoxShape.circle),
                   ),
                   const SizedBox(width: 5),
-                  Text(AssistantCopy.online, style: AppText.plexSans(11, FontWeight.w500, AppColors.outline, lineHeight: 14)),
+                  Text(
+                    AssistantCopy.online,
+                    style: AppText.plexSans(11, FontWeight.w500, AppColors.outline, lineHeight: 14),
+                  ),
                 ],
               ),
             ],
@@ -254,12 +273,22 @@ class SaathiMark extends StatelessWidget {
 
 /// One turn, as LinkedIn draws a message: the avatar, the name and the time, the words; a reply's pages under it.
 class _Turn extends StatelessWidget {
-  const _Turn({super.key, required this.message, required this.user, required this.typing, required this.onOpen});
+  const _Turn({
+    super.key,
+    required this.message,
+    required this.user,
+    required this.typing,
+    required this.onOpen,
+    required this.opens,
+  });
 
   final AssistantMessage message;
   final SessionUser? user;
   final bool typing;
   final ValueChanged<String> onOpen;
+
+  /// Which of the reply's pages the app draws: only those get a pill.
+  final bool Function(String href) opens;
 
   @override
   Widget build(BuildContext context) {
@@ -296,19 +325,20 @@ class _Turn extends StatelessWidget {
                     message.content,
                     style: AppText.plexSans(14, FontWeight.w400, AppColors.onSurfaceVariant, lineHeight: 20),
                   ),
-                if (message.actions.isNotEmpty) ...[
+                if (message.actions.any((a) => opens(a.href))) ...[
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
                       for (final a in message.actions)
-                        _Pill(
-                          key: ValueKey('action-${a.href}'),
-                          label: a.label,
-                          icon: LucideIcons.arrowUpRight,
-                          onTap: () => onOpen(a.href),
-                        ),
+                        if (opens(a.href))
+                          _Pill(
+                            key: ValueKey('action-${a.href}'),
+                            label: a.label,
+                            icon: LucideIcons.arrowUpRight,
+                            onTap: () => onOpen(a.href),
+                          ),
                     ],
                   ),
                 ],
@@ -511,7 +541,12 @@ class _Composer extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                 child: Text(
                   'Send',
-                  style: AppText.plexSans(13, FontWeight.w600, canSend ? Colors.white : AppColors.outline, lineHeight: 18),
+                  style: AppText.plexSans(
+                    13,
+                    FontWeight.w600,
+                    canSend ? Colors.white : AppColors.outline,
+                    lineHeight: 18,
+                  ),
                 ),
               ),
             ),

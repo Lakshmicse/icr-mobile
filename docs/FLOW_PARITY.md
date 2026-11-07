@@ -231,3 +231,35 @@ The owner: "check the web who can register for a company, who can be a mentor, w
 - **Role doors**: `startDoorsFor` matched `isUndecidedPerson`; captions are the website's WelcomeCard words; nothing offers an invite-only role to register for.
 
 Also that evening: ICR's own notifications (no person or company behind them) carry the ICR mark, as LinkedIn's carry its logo; a post's or reply's Like is a filled glyph once reacted; the duplicated career rows the owner saw on `buyer@icr.dev` were data — 16 rows, eight copies of two roles, written in one whole-list `PUT /profile/experience` on 4 Nov 12:07 (the API replaces the list with whatever a client sends; neither the app's `saveRole` nor the website's `mergeItem` doubles it) — deduplicated locally with SQL; production would need the same if it shows there.
+
+## Saathi stays in the app; a view is a reader (7 Nov 2026)
+
+- **Saathi never hands anyone to the website.** The owner tapped "About ICR" under a Saathi reply, got the website's page in the app's
+  web view, and Back from it showed `/robots.txt` under the page's title ("should not redirect to the website in any condition").
+  `AssistantScreen` now draws a pill or a page chip only for a page the app has a screen of its own for (`opens`, by default
+  `SiteRoutes.hasScreen`, which asks the app's resolver; everything in a test where none is set), so a reply's words stay and the
+  pages it cannot open are simply not offered. For that to cover what Saathi names, three things changed in the resolver
+  (`inAppSiteRoute`): the website's About page is native (`AboutScreen`, `/about`, in the website's words: who ICR is, why it matters,
+  ICR's role, the nine modules each opening its page, the way in; also a row in Settings → About ICR); `/`, `/dashboard` open the Home
+  tab, `/learning/partners` the partner institutes, `/learning/courses` My courses, `/manage/jobs/new` the job composer (or what a
+  non-hirer is told), `/community/new` the forum composer; and a link to one of the drawer's own pages (`/manage/jobs`,
+  `/learning/flash-cards`, `/mentorship/groups`, `/company`…) opens that workspace section on that page (`workspaceRouteFor`), as the
+  row would, instead of the web view it went to before. Still no screen, so Saathi no longer offers them: `/resources`, `/talent`,
+  `/hiring`, `/manage/campaigns`, `/manage/articles`, `/manage/projects`, `/get-started?plan=1`.
+- **Saathi's pills did nothing for the mentoring pages** (owner, 7 Nov 2026: "Find a Mentor button not working in the
+  Saathi"): Saathi is pushed on the root Navigator, above the signed-in controllers `_Home` provides, and a page it opened was
+  opened with its own context — `openFindMentors` read `MentorshipController` from it, threw `ProviderNotFoundException`, and
+  the tap died silently. `openAssistant` now hands `AssistantScreen` an `onOpenPage` that opens every page with the context
+  Saathi was opened from (the shell's), so a page opens over the conversation and a tab leaves it as the shell's own switch
+  does (`test/open_assistant_test.dart`).
+- **The web view's `/robots.txt` hole.** The 4 Nov fix closed the screen when the priming page came back as a URL change; this device
+  sent only "page started" and "page finished" for the Back, and the finish handler had been returning early for the priming page.
+  `_leaveIfPrimingPageReturned` now runs on all three signals (`web_test.dart`).
+- **A partner institute's enquiries are native** (`PartnerEnquiriesScreen`, `docs/screens/partner_enquiries.md`): the "New enquiry
+  about CSF from Bindhya S" notification opened a "staff tools" toast on production; it now opens the institute's enquiries on that
+  one. Its drawer row (Partner Institute → Enquiries) and the `admin.learning` opener are in `NOTIFICATION_TARGETS.md`.
+- **A discussion's views are its readers (portal, `fix` pending a PR).** The thread page said "9 views" over a "Who viewed" list of two:
+  `POST /forum/threads/:id/view` added one on every opening, signed in or not, the author's own included, while the list names each
+  signed-in reader once. `recordView` now counts a signed-in reader once (the `ForumThreadView` row's first write, in one transaction
+  with the increment), never the author, and an anonymous read not at all; the `forum_views_per_reader` migration recounted every
+  thread from those rows. The app changes nothing: it already counted once per opening and shows the API's number.

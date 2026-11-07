@@ -256,6 +256,7 @@ void main() {
       expect(pages(w, 'Partner Institute'), [
         '/admin/learning/courses',
         '/admin/learning/batches',
+        '/admin/learning/enquiries',
         '/manage/team',
         '/manage/team?invite=TRAINER',
         '/manage/team?invite=COURSE_ADMIN',

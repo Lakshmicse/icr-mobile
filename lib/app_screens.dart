@@ -6,6 +6,7 @@ import 'core/auth/auth_controller.dart';
 import 'core/config.dart';
 import 'app_site_pages.dart';
 import 'core/util/links.dart' show SiteRouteOpener, openSitePage;
+import 'app_workspaces.dart' show workspaceRouteFor;
 import 'features/directory/companies_directory_screen.dart';
 import 'features/councils/api_councils_repository.dart';
 import 'features/councils/council_screen.dart' show CouncilHandoffs;
@@ -57,6 +58,7 @@ import 'features/messaging/messaging_launcher.dart';
 import 'features/network/network_screen.dart' show networkRoute;
 import 'features/notifications/notifications_bell.dart';
 import 'features/notifications/notifications_screen.dart' show openNotifications;
+import 'features/partner_enquiries/enquiries_screen.dart';
 import 'features/rfq/my_bids_screen.dart';
 import 'features/rfq/my_rfqs_screen.dart';
 import 'features/rfq/open_requirements_screen.dart';
@@ -280,9 +282,19 @@ SiteRouteOpener? inAppSiteRoute(Uri uri, {required FeedAuthor viewer, BuildConte
   final screen = path == '/quote'
       ? screens['/rfq/new']
       : screens[uri.hasQuery ? '$path?${uri.query}' : path] ?? screens[path];
-  if (screen == null) return appSitePage(uri, path, viewer: viewer, shell: shell);
+  if (screen == null) {
+    final page = appSitePage(uri, path, viewer: viewer, shell: shell);
+    if (page != null || shell == null) return page;
+    // A page of the drawer's own rows (Post a job, Flash cards, My company...) reached by a link - Saathi's pill, a
+    // notification - opens as the row would, never in the web view (owner, 7 Nov 2026).
+    return workspaceRouteFor(uri, viewer: viewer, shell: shell);
+  }
   return (ctx) => AppShell.push<void>(ctx, screen);
 }
+
+/// The partner institute's enquiries (`/admin/learning/enquiries`), on [focusId] when a notification names one.
+Future<void> openPartnerEnquiries(BuildContext ctx, {String? focusId}) =>
+    AppShell.push<void>(ctx, (c) => PartnerEnquiriesScreen(onBack: () => Navigator.of(c).pop(), focusId: focusId));
 
 /// The website's pages for one record (`/events/<slug>`, `/mentorship/mentors/<id>`, `/members/<id>`, `/vendors/<id>`,
 /// `/messaging?c=<id>`) and the section pages that are not doors (`/network`, `/contact`, the mentoring ones), as the

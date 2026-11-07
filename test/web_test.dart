@@ -527,6 +527,29 @@ void main() {
       expect(find.byType(InAppWebScreen), findsNothing);
     });
 
+    testWidgets('the static page finishing again after the page has shown (a Back the view reports no URL change for) '
+        'closes the screen too', (tester) async {
+      await pump(tester, accessToken: () async => 'tok.en.value', uri: Uri.parse('https://icr.org.in/about'));
+      web.delegate.onPageFinished!('https://icr.org.in/robots.txt');
+      await tester.pump();
+      web.delegate.onUrlChange!(UrlChange(url: 'https://icr.org.in/about'));
+      web.delegate.onPageFinished!('https://icr.org.in/about');
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(InAppWebScreen), findsOneWidget);
+
+      // 7 Nov 2026: the owner saw /robots.txt under the About page's title, opened from Saathi; the view had sent
+      // "started" and "finished" for it, and no URL change — with history behind the page, so a `maybePop` would
+      // have been turned into another step back by the screen's own PopScope.
+      web.canGoBackNow = true;
+      web.delegate.onPageStarted!('https://icr.org.in/robots.txt');
+      web.delegate.onPageFinished!('https://icr.org.in/robots.txt');
+      web.delegate.onUrlChange!(UrlChange(url: 'https://icr.org.in/robots.txt'));
+      await tester.pumpAndSettle();
+      expect(find.byType(InAppWebScreen), findsNothing);
+      expect(find.text('open'), findsOneWidget, reason: 'left once: the screen under it is showing, not gone too');
+    });
+
     testWidgets('a page of another site never gets the session', (tester) async {
       var asked = false;
       await pump(

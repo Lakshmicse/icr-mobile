@@ -44,12 +44,15 @@ import 'features/mentorship_my/programmes_screen.dart';
 import 'features/messaging/inbox_screen.dart';
 import 'features/notifications/notification_scope.dart';
 import 'features/notifications/notifications_screen.dart' show openNotifications;
+import 'features/partner_enquiries/enquiries_screen.dart';
+import 'features/account/widgets/account_session.dart' show maybeAuth;
 import 'features/profile/profile_drawer_data.dart';
 import 'features/shell/app_shell.dart';
 import 'features/site/refer_screen.dart';
 import 'features/workspaces/workspace_screen.dart';
 import 'features/workspaces/workspaces.dart';
-import 'core/util/links.dart' show openSitePage;
+import 'core/util/links.dart' show SiteRouteOpener, openSitePage;
+import 'features/workspaces/role_workspaces.dart' show workspacesFor;
 import 'features/contact/contact_screen.dart' show contactRoute;
 import 'features/jobs/employer/employer_jobs_screen.dart';
 import 'features/marketplace/catalog_board_controller.dart' show CatalogKind;
@@ -92,9 +95,32 @@ Future<void> openWorkspaceSection(
   return AppShell.push<void>(shell, (_) => scope.wrap(carried));
 }
 
+/// The app's own screen for a workspace page reached by a link (Saathi's pill, a notification, a "See ..." button):
+/// the section of the person's own menu that lists [uri]'s path, opened on that page, as the drawer's row would.
+/// Null when the menu has no such row - the page is not theirs (a job seeker's `/manage/jobs`) or the app has no
+/// screen for it - so the caller offers nothing rather than the website (owner, 7 Nov 2026).
+SiteRouteOpener? workspaceRouteFor(Uri uri, {required FeedAuthor viewer, required BuildContext shell}) {
+  final user = maybeAuth(shell)?.user;
+  if (user == null) return null;
+  final screens = inAppScreens(viewer: viewer);
+  bool opens(String p) => workspaceOpens(p, screens);
+  final exact = uri.hasQuery ? '${uri.path}?${uri.query}' : uri.path;
+  for (final workspace in workspacesFor(user, opens: opens)) {
+    for (final section in workspace.sections) {
+      var index = section.items.indexWhere((i) => i.path == exact);
+      if (index < 0) index = section.items.indexWhere((i) => Uri.parse(i.path).path == uri.path);
+      if (index < 0) continue;
+      if (!opens(section.items[index].path)) return null;
+      return (ctx) => openWorkspaceSection(shell, section, index: index, viewer: viewer);
+    }
+  }
+  return null;
+}
+
 /// The pages [workspacePage] builds itself, by path: with the app's screens map ([inAppScreens]), what a workspace's
 /// menu may list. Kept beside the switch below; `workspaces_test.dart` builds each.
 const workspaceBuiltPaths = {
+  '/admin/learning/enquiries',
   '/membership',
   '/career/plans',
   '/membership/history',
@@ -247,6 +273,9 @@ Widget? workspacePage(
       return myProfileScreen(context);
     case '/jobs':
       return JobsScreen(onBack: back, navigation: appJobsNavigation(shell));
+    // The partner institute's enquiries (the Partner Institute row), the app's own since 7 Nov 2026.
+    case '/admin/learning/enquiries':
+      return PartnerEnquiriesScreen(onBack: back);
     case '/learning':
       // `?mine=1` (the Learning row's "My courses"): the My courses page alone — what the member holds, not the
       // hub (owner, 6 Nov 2026).

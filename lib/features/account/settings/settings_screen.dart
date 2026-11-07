@@ -276,6 +276,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Group(
             title: 'About ICR',
             rows: [
+              // The website's About page, drawn by the app (`AboutScreen`); the opener finds its screen.
+              _Row(
+                key: const Key('settings.about'),
+                icon: Symbols.info,
+                title: 'About ICR',
+                onTap: () => widget.opener(context, AppConfig.sitePage('/about')),
+              ),
               if (widget.onSupport != null)
                 _Row(
                   key: const Key('settings.support'),

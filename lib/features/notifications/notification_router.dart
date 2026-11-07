@@ -60,7 +60,8 @@ class NotificationRouter {
     NotificationKinds.adminVerificationCompany,
     NotificationKinds.adminCompany,
     NotificationKinds.adminMentorshipConcern,
-    NotificationKinds.adminLearning,
+    // `admin.learning` is not here: its enquiries section is the app's own since 7 Nov 2026, and the opener
+    // registered for it answers the other sections with [staffOnly].
     NotificationKinds.adminForum,
     NotificationKinds.adminBlogs,
     NotificationKinds.adminDocumentReports,
@@ -73,6 +74,15 @@ class NotificationRouter {
 
   /// What a person is told when a record cannot be opened (deleted, no longer theirs, offline).
   static const unavailable = 'This is no longer available.';
+
+  /// What a person is told when a row is for a page only ICR's staff have, on the website.
+  static const staffOnlyMessage = "That one is for ICR's staff tools, which aren't in the app.";
+
+  /// Says so, and takes the tap: an opener for a kind with staff-only sections returns this for them.
+  static bool staffOnly(BuildContext context) {
+    showMessage(context, staffOnlyMessage);
+    return true;
+  }
 
   void register(String kind, NotificationOpener opener) => _openers[kind] = opener;
 
@@ -94,7 +104,7 @@ class NotificationRouter {
       if (opener != null && opener(context, target)) return;
       if (_builtIn(context, target)) return;
       if (staffKinds.contains(target.kind)) {
-        showMessage(context, "That one is for ICR's staff tools, which aren't in the app.");
+        staffOnly(context);
         return;
       }
       if (target.kind == NotificationKinds.none || target.href.isEmpty) return;

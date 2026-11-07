@@ -75,6 +75,7 @@ const appNotificationKinds = <String>{
   NotificationKinds.learningCourse,
   NotificationKinds.learningWorkspace,
   NotificationKinds.learningPartners,
+  NotificationKinds.adminLearning,
   NotificationKinds.event,
   NotificationKinds.forumThread,
   NotificationKinds.forum,
@@ -228,6 +229,16 @@ Map<String, NotificationOpener> appNotificationOpeners({required BuildContext sh
       'productId',
       (ctx, id, t) => unawaited(quietly(ctx, () => showProductPage(shell, id))),
     ),
+
+    // --- The partner institute's console ------------------------------------------------------------------
+    // Its enquiries (`/admin/learning/enquiries?lead=`) are the app's own list since 7 Nov 2026, opened on the one
+    // the row is about (the owner's tap on "New enquiry about CSF" was told "staff tools"). The console's other
+    // sections are still the website's staff pages, which the app does not draw.
+    NotificationKinds.adminLearning: (ctx, t) {
+      if (t['section'] != 'enquiries') return NotificationRouter.staffOnly(ctx);
+      unawaited(openPartnerEnquiries(ctx, focusId: t['leadId']));
+      return true;
+    },
 
     // --- Mentorship ----------------------------------------------------------------------------------------
     NotificationKinds.mentorshipPairing: withId('mentorshipId', (ctx, id, t) {

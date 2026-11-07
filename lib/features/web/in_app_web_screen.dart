@@ -81,7 +81,7 @@ class _InAppWebScreenState extends State<InAppWebScreen> {
         NavigationDelegate(
           onNavigationRequest: _onNavigationRequest,
           onProgress: (p) => _set(() => _progress = p),
-          onPageStarted: (_) => _set(() => _error = null),
+          onPageStarted: _onPageStarted,
           onPageFinished: _onPageFinished,
           onWebResourceError: (e) {
             if (e.isForMainFrame ?? true) _set(() => _error = e);
@@ -123,6 +123,31 @@ class _InAppWebScreenState extends State<InAppWebScreen> {
   /// This view carries the person's session through `/robots.txt` first.
   bool _carriesSession = false;
 
+  void _onPageStarted(String url) {
+    _set(() => _error = null);
+    _leaveIfPrimingPageReturned(url);
+  }
+
+  /// The static page coming back once the page has shown can only be history going back past the page: there is
+  /// nothing of the person's before it, so the screen closes rather than show `/robots.txt`. Asked on every signal
+  /// the view gives (a URL change, a page starting, a page finishing) because a device does not send all of them
+  /// for a Back inside the view (7 Nov 2026: the owner saw `/robots.txt` under the About page's title from Saathi,
+  /// after the 4 Nov fix had watched only the URL change).
+  bool _leaveIfPrimingPageReturned(String url) {
+    if (!_shown || !_isPrimingPage(url)) return false;
+    // `pop`, not `maybePop`: with history behind the page the screen's `PopScope` turns a maybePop into another
+    // step back inside the view (which is how the 4 Nov fix could still show the page), and only once, since the
+    // view sends two or three signals for the one Back.
+    if (!_left && mounted) {
+      _left = true;
+      Navigator.of(context).pop();
+    }
+    return true;
+  }
+
+  /// Whether this screen has already left over the priming page's return.
+  bool _left = false;
+
   Future<void> _onPageFinished(String url) async {
     final token = _pendingToken;
     if (!_primed && token != null) {
@@ -135,6 +160,7 @@ class _InAppWebScreenState extends State<InAppWebScreen> {
       if (mounted) await _web.runJavaScript(WebSessionBridge.replaceWith(widget.uri));
       return;
     }
+    if (_leaveIfPrimingPageReturned(url)) return;
     // The Android WebView says "finished" for the priming page again once the real page has been requested from
     // inside its own finish handler (27 Oct 2026: the owner saw `robots.txt` in a dark page): it is still not the
     // page the person asked for, so the white cover stays.
@@ -147,13 +173,8 @@ class _InAppWebScreenState extends State<InAppWebScreen> {
     await _refreshHistory();
   }
 
-  /// The static page coming back once the page has shown can only be history going back past the page: there is
-  /// nothing of the person's before it, so the screen closes rather than show `/robots.txt`.
   void _onUrlChange(UrlChange change) {
-    if (_shown && _isPrimingPage(change.url ?? '')) {
-      if (mounted) Navigator.of(context).maybePop();
-      return;
-    }
+    if (_leaveIfPrimingPageReturned(change.url ?? '')) return;
     unawaited(_refreshHistory());
   }
 

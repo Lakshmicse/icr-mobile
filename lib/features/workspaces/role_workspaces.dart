@@ -135,6 +135,8 @@ List<Workspace> workspacesFor(SessionUser user, {required bool Function(String p
         const [
           WorkspaceItem('Publish a course', Icons.menu_book_outlined, '/admin/learning/courses'),
           WorkspaceItem('Publish a batch', Icons.event_outlined, '/admin/learning/batches'),
+          // The enquiries from its course pages and its own page (the website's Enquiries console), native.
+          WorkspaceItem('Enquiries', Icons.mark_email_unread_outlined, '/admin/learning/enquiries'),
           WorkspaceItem('Add a team member', Icons.group_add_outlined, '/manage/team'),
           // The team page's invite, opened with the learning role ticked (a trainer; a programme specialist is a
           // Course Admin on the website's list of learning roles).
