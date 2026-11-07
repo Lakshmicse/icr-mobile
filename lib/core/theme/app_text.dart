@@ -83,11 +83,6 @@ class AppText {
   static final replyHint = plexSans(10, FontWeight.w600, AppColors.outline, spacing: 0.24);
   static final replyInput = plexSans(10, FontWeight.w500, AppColors.onSurface, spacing: 0.24);
 
-  // Sponsored (.sp)
-  static final sponsoredLabel = plexSans(8, FontWeight.w700, AppColors.primary, lineHeight: 24, spacing: 0.55);
-  static final sponsoredTitle = workSans(14, FontWeight.w700, AppColors.onSurface, lineHeight: 22.5);
-  static final sponsoredBody = plexSans(8, FontWeight.w600, AppColors.onSurfaceVariant, lineHeight: 15);
-  static final sponsoredCta = plexSans(10, FontWeight.w600, AppColors.primary, lineHeight: 16, spacing: 0.24);
 
   // Poll (.opt, the footer)
   static final pollQuestion = workSans(12, FontWeight.w700, AppColors.onSurface, lineHeight: 18);

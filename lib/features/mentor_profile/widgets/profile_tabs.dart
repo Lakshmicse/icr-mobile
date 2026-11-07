@@ -4,7 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../mentor_profile_controller.dart';
 import '../mentor_profile_styles.dart';
 
-/// Overview | Offerings | Recommendations: a bordered strip with the open
+/// Overview | Offerings | Recommendations: a tinted strip with the open
 /// tab on a blue pill. 39.8 dp tall, the pill 31.8 inside it.
 class ProfileTabs extends StatelessWidget {
   const ProfileTabs({super.key, required this.selected, required this.onSelect});
@@ -25,11 +25,7 @@ class ProfileTabs extends StatelessWidget {
       child: Container(
         height: 39.8,
         padding: const EdgeInsets.only(left: 5.1),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8F9FA),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.outlineVariant),
-        ),
+        decoration: BoxDecoration(color: const Color(0xFFF1F3F5), borderRadius: BorderRadius.circular(12)),
         child: Row(
           children: [
             for (final (i, tab) in ProfileTab.values.indexed) ...[

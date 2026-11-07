@@ -20,15 +20,12 @@ class PlaceStatus extends StatelessWidget {
   Widget build(BuildContext context) {
     final course = controller.course;
     final status = course.enrolment?.status ?? EnrolmentStatus.pending;
-    final (fill, edge, icon, ink) = switch (status) {
-      EnrolmentStatus.confirmed || EnrolmentStatus.completed => (
-        AppColors.emerald50,
-        AppColors.emerald200,
-        LucideIcons.circleCheck,
-        AppColors.emerald700,
-      ),
-      EnrolmentStatus.waitlisted => (AppColors.amber50, AppColors.amber100, LucideIcons.clock, AppColors.amber800),
-      _ => (const Color(0xFFEFF5FC), const Color(0xFFCFE0F2), LucideIcons.info, AppColors.primary),
+    // Tinted callouts; no edge (the owner's rule, Nov 2026).
+    final (fill, icon, ink) = switch (status) {
+      EnrolmentStatus.confirmed ||
+      EnrolmentStatus.completed => (AppColors.emerald50, LucideIcons.circleCheck, AppColors.emerald700),
+      EnrolmentStatus.waitlisted => (AppColors.amber50, LucideIcons.clock, AppColors.amber800),
+      _ => (const Color(0xFFEFF5FC), LucideIcons.info, AppColors.primary),
     };
     final refusal = controller.withdrawError;
     return Column(
@@ -37,11 +34,7 @@ class PlaceStatus extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
-          decoration: BoxDecoration(
-            color: fill,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: edge),
-          ),
+          decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(8)),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -59,11 +52,7 @@ class PlaceStatus extends StatelessWidget {
           Container(
             key: const ValueKey('withdraw-refused'),
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEFF5FC),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFCFE0F2)),
-            ),
+            decoration: BoxDecoration(color: const Color(0xFFEFF5FC), borderRadius: BorderRadius.circular(8)),
             child: Text(refusal, style: LearningText.placeNote),
           ),
         ],

@@ -240,6 +240,7 @@ void main() {
         'https://icr.org.in/messaging?c=C1',
         'https://icr.org.in/become-a-mentor',
         'https://icr.org.in/mentorship/become-a-mentor',
+        'https://icr.org.in/mentorship/become-a-mentor?fix=availability',
         'https://icr.org.in/mentorship/programmes',
         'https://icr.org.in/account/companies/new',
         'https://icr.org.in/quote',
@@ -253,6 +254,7 @@ void main() {
         'https://icr.org.in/rfq/new',
         'https://icr.org.in/profile',
         'https://icr.org.in/profile?tab=security',
+        'https://icr.org.in/profile?tab=education',
         'https://icr.org.in/account/companies/new?role=VENDOR',
       ]) {
         expect(takes(url), isTrue, reason: url);
@@ -270,6 +272,14 @@ void main() {
         'https://icr.org.in/learning/partners/apply',
         'https://icr.org.in/learning/partners?apply=1',
         'https://icr.org.in/account/companies',
+        'https://icr.org.in/account/companies?focus=invitations',
+        // The company's team, with and without a tab, and the help desk with a request's thread: the app's own
+        // since 5 Nov 2026 (they were left to the web view until then).
+        'https://icr.org.in/manage/team',
+        'https://icr.org.in/manage/team?tab=requests',
+        'https://icr.org.in/manage/team?tab=pending',
+        'https://icr.org.in/support',
+        'https://icr.org.in/support/T1',
         'https://icr.org.in/jobs',
         'https://icr.org.in/jobs?q=hvac',
         'https://icr.org.in/learning',
@@ -352,14 +362,13 @@ void main() {
 
     test('what is left for the web view is what the app has no screen for, each on purpose', () {
       for (final url in [
-        // The company workspace: the KYC dossier with its document uploads, and the team and office admin.
+        // The company workspace: the KYC dossier with its document uploads, and the office admin.
         'https://icr.org.in/company',
         'https://icr.org.in/company?tab=verification',
-        'https://icr.org.in/manage/team',
         'https://icr.org.in/manage/articles',
-        'https://icr.org.in/support',
-        'https://icr.org.in/support/T1',
         'https://icr.org.in/talent',
+        // An emailed team invitation is accepted by its token on the website.
+        'https://icr.org.in/invite/some-token',
         'https://icr.org.in/events/rsm-summit-2026/extra',
         'https://icr.org.in/community/category/hvac',
       ]) {
@@ -488,8 +497,57 @@ void main() {
 
       web.delegate.onPageFinished!('https://icr.org.in/robots.txt');
       await tester.pump();
-      expect(web.scripts.single, contains('"tok.en.value"'));
-      expect(web.loaded, ['https://icr.org.in/robots.txt', 'https://icr.org.in/dashboard']);
+      expect(web.scripts.first, contains('"tok.en.value"'));
+      expect(
+        web.scripts.last,
+        'location.replace("https://icr.org.in/dashboard");',
+        reason: 'the page takes the static page\'s place in the history, never follows it',
+      );
+      expect(web.loaded, ['https://icr.org.in/robots.txt']);
+    });
+
+    testWidgets('Back can never show the static page the session went through: the screen closes instead', (
+      tester,
+    ) async {
+      await pump(tester, accessToken: () async => 'tok.en.value', uri: Uri.parse('https://icr.org.in/dashboard'));
+      web.delegate.onUrlChange!(UrlChange(url: 'https://icr.org.in/robots.txt'));
+      web.delegate.onPageFinished!('https://icr.org.in/robots.txt');
+      await tester.pump();
+      expect(find.byType(InAppWebScreen), findsOneWidget, reason: 'going to the static page first is the start');
+
+      web.delegate.onUrlChange!(UrlChange(url: 'https://icr.org.in/dashboard'));
+      web.delegate.onPageFinished!('https://icr.org.in/dashboard');
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(InAppWebScreen), findsOneWidget);
+
+      // 4 Nov 2026: Back from an interview's page landed on /robots.txt, drawn black.
+      web.delegate.onUrlChange!(UrlChange(url: 'https://icr.org.in/robots.txt'));
+      await tester.pumpAndSettle();
+      expect(find.byType(InAppWebScreen), findsNothing);
+    });
+
+    testWidgets('the static page finishing again after the page has shown (a Back the view reports no URL change for) '
+        'closes the screen too', (tester) async {
+      await pump(tester, accessToken: () async => 'tok.en.value', uri: Uri.parse('https://icr.org.in/about'));
+      web.delegate.onPageFinished!('https://icr.org.in/robots.txt');
+      await tester.pump();
+      web.delegate.onUrlChange!(UrlChange(url: 'https://icr.org.in/about'));
+      web.delegate.onPageFinished!('https://icr.org.in/about');
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(InAppWebScreen), findsOneWidget);
+
+      // 7 Nov 2026: the owner saw /robots.txt under the About page's title, opened from Saathi; the view had sent
+      // "started" and "finished" for it, and no URL change — with history behind the page, so a `maybePop` would
+      // have been turned into another step back by the screen's own PopScope.
+      web.canGoBackNow = true;
+      web.delegate.onPageStarted!('https://icr.org.in/robots.txt');
+      web.delegate.onPageFinished!('https://icr.org.in/robots.txt');
+      web.delegate.onUrlChange!(UrlChange(url: 'https://icr.org.in/robots.txt'));
+      await tester.pumpAndSettle();
+      expect(find.byType(InAppWebScreen), findsNothing);
+      expect(find.text('open'), findsOneWidget, reason: 'left once: the screen under it is showing, not gone too');
     });
 
     testWidgets('a page of another site never gets the session', (tester) async {

@@ -24,6 +24,9 @@ class ProfileDrawerData {
     this.councilNames = const [],
     this.cpdHours,
     this.profilePath = '/profile',
+    this.liveRfqs,
+    this.openJobs,
+    this.savedItems,
   });
 
   final String name;
@@ -52,6 +55,15 @@ class ProfileDrawerData {
 
   /// The member's page on the website.
   final String profilePath;
+
+  /// Requirements open for quotes on the board (`GET /rfq`): the Marketplace row's "LIVE RFQS" while there are any.
+  final int? liveRfqs;
+
+  /// Live jobs on the board (`GET /jobs`): the Jobs row's count.
+  final int? openJobs;
+
+  /// Everything the member has bookmarked — jobs, mentors, suppliers, councils and discussions: the Saved Items count.
+  final int? savedItems;
 
   String get initials {
     final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
@@ -117,6 +129,9 @@ class ProfileDrawerData {
     List<String>? councilNames,
     double? cpdHours,
     String? profilePath,
+    int? liveRfqs,
+    int? openJobs,
+    int? savedItems,
   }) => ProfileDrawerData(
     name: name,
     headline: headline ?? this.headline,
@@ -134,6 +149,9 @@ class ProfileDrawerData {
     councilNames: councilNames ?? this.councilNames,
     cpdHours: cpdHours ?? this.cpdHours,
     profilePath: profilePath ?? this.profilePath,
+    liveRfqs: liveRfqs ?? this.liveRfqs,
+    openJobs: openJobs ?? this.openJobs,
+    savedItems: savedItems ?? this.savedItems,
   );
 
   /// The design's sample member.
@@ -152,6 +170,9 @@ class ProfileDrawerData {
     councilNames: ['Sustainability, ESG & Smart PropTech Council'],
     cpdHours: 12,
     profilePath: '/members/nikhil-majjagi',
+    liveRfqs: 8,
+    openJobs: 124,
+    savedItems: 14,
   );
 }
 
@@ -236,7 +257,7 @@ class ProfileDrawerController extends ChangeNotifier {
   ProfileDrawerData get data => _data;
   bool get loaded => _loaded;
 
-  /// "Your companies" as the menu last read it. The menu's body is built afresh each time it opens, so this is
+  /// "My companies" as the menu last read it. The menu's body is built afresh each time it opens, so this is
   /// what it shows at once, while it reads the list again.
   MyCompanies? cachedCompanies;
 
@@ -249,7 +270,16 @@ class ProfileDrawerController extends ChangeNotifier {
     if (_demo || api == null) return;
     _loading = true;
     try {
-      await Future.wait([_profile(), _member(), _performance(), _impressions(), _cpd()]);
+      await Future.wait([
+        _profile(),
+        _member(),
+        _performance(),
+        _impressions(),
+        _cpd(),
+        _liveRfqs(),
+        _openJobs(),
+        _saved(),
+      ]);
       _loaded = true;
     } finally {
       _loading = false;
@@ -258,12 +288,29 @@ class ProfileDrawerController extends ChangeNotifier {
   }
 
   Future<Map<String, dynamic>?> _get(String path, [Map<String, dynamic>? query]) async {
+    final data = await _read(path, query);
+    return data is Map<String, dynamic> ? data : null;
+  }
+
+  Future<Object?> _read(String path, [Map<String, dynamic>? query]) async {
     try {
-      final res = await api!.dio.get<Map<String, dynamic>>(path, queryParameters: query);
+      final res = await api!.dio.get<Object?>(path, queryParameters: query);
       return res.data;
     } catch (_) {
       return null;
     }
+  }
+
+  /// A list's `meta.total`, or the rows of an answer that is a bare list; null when it could not be read.
+  Future<int?> _total(String path, [Map<String, dynamic>? query]) async {
+    final data = await _read(path, query);
+    if (data is List) return data.length;
+    if (data is! Map) return null;
+    final meta = data['meta'];
+    final total = meta is Map ? meta['total'] : null;
+    if (total is num) return total.toInt();
+    final rows = data['data'];
+    return rows is List ? rows.length : null;
   }
 
   /// `GET /users/me/profile`: the headline on file, the cover, the company.
@@ -339,6 +386,39 @@ class ProfileDrawerController extends ChangeNotifier {
     final hours = (json?['totalHours'] as num?)?.toDouble();
     if (hours == null) return;
     _data = _data.copyWith(cpdHours: hours);
+    notifyListeners();
+  }
+
+  /// `GET /rfq`: how many requirements the board holds open (its total; the board lists only live ones).
+  Future<void> _liveRfqs() async {
+    final n = await _total('/rfq', {'limit': 1});
+    if (n == null) return;
+    _data = _data.copyWith(liveRfqs: n);
+    notifyListeners();
+  }
+
+  /// `GET /jobs`: how many live jobs the board holds. Asked for a page past the end, so the answer carries the total
+  /// and no rows: the board counts an impression for every promoted job it serves, and a count is not one.
+  Future<void> _openJobs() async {
+    final n = await _total('/jobs', {'limit': 1, 'page': 100000});
+    if (n == null) return;
+    _data = _data.copyWith(openJobs: n);
+    notifyListeners();
+  }
+
+  /// What the member has bookmarked, every kind added up (the Saved Items screen's chips). A kind the account may not
+  /// hold (a 403) counts nothing; nothing read at all leaves the count out.
+  Future<void> _saved() async {
+    final counts = await Future.wait([
+      _total('/jobs/saved', {'limit': 1}),
+      _total('/mentorship/mentors/saved', {'limit': 1}),
+      _total('/vendors/saved', {'limit': 1}),
+      _total('/councils/saves/mine'),
+      _total('/forum/saves/mine', {'limit': 1}),
+    ]);
+    final read = counts.whereType<int>();
+    if (read.isEmpty) return;
+    _data = _data.copyWith(savedItems: read.fold<int>(0, (a, b) => a + b));
     notifyListeners();
   }
 }

@@ -1,10 +1,10 @@
 # Digital Library
 
-The Document Hub of the website (`/documents`): `LibraryScreen` (browse, search, filter, sort, My uploads), `DocumentScreen` (one document: who shared it, its files, Preview, report, delete, add files) and `UploadDocumentScreen` (share a document, or add files to your own).
+The Document Hub of the website (`/documents`): `LibraryScreen` (browse, search, filter, sort, My uploads), `DocumentScreen` (one document: who shared it, its files, Preview, Download, Share, report, delete, add files) and `UploadDocumentScreen` (share a document, or add files to your own).
 
-**View-only on a phone (owner's call, 28 Oct 2026).** A document can be previewed in the app and nothing else: **no download, no Open in another app, no share of the file, and no screenshots or screen recording** while any library screen is up. The website keeps its Download. Every format the library accepts has a viewer in the app (see "The viewer"). There is **no design**: it is built in the language of the Councils and Events designs (stat tiles, pill chips, 10 dp bordered cards, Work Sans headings, IBM Plex Sans Medium body) from the website's `frontend/src/components/documents/**` and the portal's `documents` module.
+**Download, Share and screenshots, as on the website (owner, 5 Nov 2026).** Each file can be previewed in the app, **downloaded** (the phone's "Save as", counted by the API as the website's Download is) and **shared** (the file itself to the share sheet). Screenshots and screen recording are allowed everywhere. This undoes the owner's call of 28 Oct 2026, when the library was view-only on a phone and the window was kept out of screenshots (`FLAG_SECURE`); that guard and its channel are gone. Every format the library accepts has a viewer in the app (see "The viewer"). There is **no design**: it is built in the language of the Councils and Events designs (stat tiles, pill chips, 10 dp bordered cards, Work Sans headings, IBM Plex Sans Medium body) from the website's `frontend/src/components/documents/**` and the portal's `documents` module.
 
-Status (28 Oct 2026): **built and proved**: `test/library_test.dart`, `test/library_document_test.dart` (the page, the upload form, view-only), `test/library_viewer_test.dart` (the viewer, the screenshot guard, the channel), `test/library_office_test.dart` (the Word, Excel, PowerPoint, ZIP and old-format readers, damaged files), `test/live/library_live_test.dart` (live tests against the seeded API). Goldens are postponed (owner's call).
+Status (28 Oct 2026): **built and proved**: `test/library_test.dart`, `test/library_document_test.dart` (the page, the upload form, Download and Share), `test/library_viewer_test.dart` (the viewer and its Download and Share), `test/library_office_test.dart` (the Word, Excel, PowerPoint, ZIP and old-format readers, damaged files), `test/live/library_live_test.dart` (live tests against the seeded API). Goldens are postponed (owner's call).
 
 ## Entry points (for the lead to wire)
 
@@ -32,7 +32,7 @@ Navigator.of(ctx).push(MaterialPageRoute(builder: (_) => documentPage(
 // or openDocumentPage(context, repository:, documentId:, initial: doc, handoffs:, onChanged:, onRemoved:)
 ```
 
-`LibraryHandoffs` also carries `device` (`LibraryDevice`: choosing files to share and opening a page; `SystemLibraryDevice` by default; **it has no way to take a document out of the app**), `share` (the library's link only), `pdf` (the PDF renderer, `PlatformPdfEngine` by default) and `runner` (reads Office and ZIP files in a background isolate, `runInBackground`; tests use `runHere`). `UploadDocumentScreen(repository:, target:, handoffs:, usedCategories:)` pops with the `LibraryDocument` the API answered with; `LibraryScreen` and `DocumentScreen` open it themselves.
+`LibraryHandoffs` also carries `device` (`LibraryDevice`: choosing files to share, opening a page, `save` (the "Save as" sheet) and `shareFile` (a file to the share sheet); `SystemLibraryDevice` by default), `share` (the library's link, the page's top Share), `pdf` (the PDF renderer, `PlatformPdfEngine` by default) and `runner` (reads Office and ZIP files in a background isolate, `runInBackground`; tests use `runHere`). `UploadDocumentScreen(repository:, target:, handoffs:, usedCategories:)` pops with the `LibraryDocument` the API answered with; `LibraryScreen` and `DocumentScreen` open it themselves.
 
 ## Endpoints
 
@@ -42,7 +42,8 @@ Navigator.of(ctx).push(MaterialPageRoute(builder: (_) => documentPage(
 | `GET /documents/categories`, `GET /documents/file-types` | the category and format chips (a format's count is *documents*, not files) |
 | `GET /documents?mine=true&limit=1` | the "Your uploads" tile (0 signed out) |
 | `GET /documents` (pages of 100, up to 800 documents) | a document opened by id alone: the API has no `GET /documents/:id` |
-| `GET /documents/:id/download?fileId=&preview=true` | Preview: the bytes for the in-app viewer, not counted as a download. **The only way the app reads a file**: `LibraryRepository.previewFile` always sends `preview=true`, and no repository method asks for a download. |
+| `GET /documents/:id/download?fileId=&preview=true` | Preview: the bytes for the in-app viewer, not counted as a download (`LibraryRepository.previewFile`). |
+| `GET /documents/:id/download?fileId=` | Download and Share: the file, counted on the file and the document (`LibraryRepository.downloadFile`); the page's counts follow at once. |
 | `POST /documents/:id/view` | one opening of the document, counted the first time a file of a page is opened |
 | `POST /uploads?purpose=document-hub` (multipart `file`) | one file's bytes, sequentially, with progress |
 | `POST /documents` `{title, description?, category?, subcategory?, specialization?, files[]}` | files the entry |
@@ -56,9 +57,9 @@ Navigator.of(ctx).push(MaterialPageRoute(builder: (_) => documentPage(
 
 ## What the audit found
 
-1. **The download needs the bearer token, so `url_launcher` cannot open it, and the app does not want it to.** `GET /documents/:id/download` is authenticated and the stored file is private (`/uploads/<name>` refuses anyone but its uploader). The app fetches the bytes with its own session (`?preview=true`) and draws them itself in `DocumentViewerScreen`. Until 28 Oct 2026 a non-image was handed to the share sheet (`LibraryDevice.handOver`, Save to Files, Open in…); that path is **gone**, and so is the signed-link request (`GET /documents/:id/link`), which was only there to open a file in another app. `url_launcher` is still used for the pages the app hands to the website (the bell's fallback).
+1. **The download needs the bearer token, so `url_launcher` cannot open it, and the app does not want it to.** `GET /documents/:id/download` is authenticated and the stored file is private (`/uploads/<name>` refuses anyone but its uploader). The app fetches the bytes with its own session and draws them itself in `DocumentViewerScreen` (`?preview=true`), or saves or shares them (a counted download). The signed-link request (`GET /documents/:id/link`) is not used. `url_launcher` is still used for the pages the app hands to the website (the bell's fallback).
 2. **There is no plan-level lock in this tree.** `SharedDocument.planLevel` exists in the schema, but the documents service neither selects nor enforces it (the content levels left the plans in `06f57b1c`), and the list carries no `locked` field. There is therefore no "content level" filter and no lock on a card. The screen handles the day it returns the way the API would say it: a **403 on a preview** is drawn as a lock card, "Not included in your plan", with the **server's own sentence** and a "See plans" button when the shell wired `onOpenPlans`. A 401 is only a message. Proved with a refused read in `library_document_test.dart` ("a plan that does not open it…"); the live test checks the 401 reading (a lock card is only a 403).
-3. **There is no save (bookmark) on a document**: neither the website (`LibraryCard.tsx` says the comp's bookmark "does not exist") nor the API has one. The app does not draw one. The app draws no save (the file itself cannot be kept: there is no download). (Backend request below.)
+3. **There is no save (bookmark) on a document**: neither the website (`LibraryCard.tsx` says the comp's bookmark "does not exist") nor the API has one. The app does not draw one. The app draws no bookmark; the file itself is kept with Download. (Backend request below.)
 4. **A report cannot be undone by its sender.** Only a SUPER_ADMIN resolves it (`PATCH /documents/admin/reports/:id`); the live test resolves its report as APPROVED (the document stands). A second report while the first is open is a 409, which the page reads as "Reported". You cannot report your own document (the API says so; the page shows no Report button on it).
 5. The two counters are one-way: a download and a first view each add one and nothing subtracts. The live tests use small seeded documents and say so; re-running `tool/seed/library.ts` restores the designed numbers.
 6. An **upload leaves its bytes behind** when the document is deleted: there is no route that removes a stored upload.
@@ -74,13 +75,13 @@ Empty ("The library is empty" / "No documents match" + Clear filters / My upload
 
 ## The document page
 
-The plate, title and where it is filed (category › sub-category › specialisation), "Shared by <name>" with their title and the date (tap = `onOpenMember`), four tiles (Views, Downloads, Size, Files), the lock card when the server refused (see 2), "About this document", and a card per file: its name, format, size and downloads, and **Preview** (opens the viewer). A file with no viewer (a format the library does not take) shows a line saying so instead of a button. There is **no Download and no Open**. Anyone may **Share** (the phone's share sheet with the library's link) and **Report**; the member who shared it (or a SUPER_ADMIN) also gets **Add files** (while there is room under 10), a remove glyph on each file of a pack (after asking), and **Delete** (after asking). After a read, a file added or dropped, the list behind the page follows (`onChanged`, `onRemoved`).
+The plate, title and where it is filed (category › sub-category › specialisation), "Shared by <name>" with their title and the date (tap = `onOpenMember`), four tiles (Views, Downloads, Size, Files), the lock card when the server refused (see 2), "About this document", and a card per file: its name, format, size and downloads, **Preview** (opens the viewer), **Download** (saved through "Save as"; "Saved <name>." when it is) and a **Share** glyph (the file itself). A file with no viewer says "… can't be previewed in the app. Download it to read it." (the website's words) and keeps Download and Share. Anyone may **Share** the page (the phone's share sheet with the library's link) and **Report**; the member who shared it (or a SUPER_ADMIN) also gets **Add files** (while there is room under 10), a remove glyph on each file of a pack (after asking), and **Delete** (after asking). After a read, a file added or dropped, the list behind the page follows (`onChanged`, `onRemoved`).
 
 **Report**: a sheet with the six reasons (Copyright or confidential material, Inappropriate or offensive, Misleading or out of date, Spam or advertising, File is broken or will not open, Something else) and a note of at most 1,000 characters, **required for "Something else"**. Send is off until a reason is chosen. The API's refusal is shown in the sheet with what was typed kept; on success "Report sent" and the page reads "Reported".
 
-## The viewer (view-only)
+## The viewer
 
-Preview opens `DocumentViewerScreen` (black bar with the file name and Back, nothing else). The bytes are read for the viewer, drawn, and dropped with the screen; nothing writes them to the phone, shares them or hands them to another app, and no text can be selected or copied. Every format the library accepts for upload has a viewer, chosen by the file's MIME type and, failing that, its name (`previewKindFor`):
+Preview opens `DocumentViewerScreen` (black bar with the file name, Back, **Download** and **Share**; from a document's page both fetch the file as a counted download, elsewhere — a résumé, a course brochure, a file inside a ZIP — they save and send the bytes shown). Every format the library accepts for upload has a viewer, chosen by the file's MIME type and, failing that, its name (`previewKindFor`):
 
 | Format | How it is shown | Built on |
 |---|---|---|
@@ -102,9 +103,9 @@ Preview opens `DocumentViewerScreen` (black bar with the file name and Back, not
 
 **Verified against real files.** The readers were run on the library's own seeded Word, Excel, PowerPoint and ZIP files and on about 540 Word, Excel and PowerPoint files from Apache POI's test collection (old and new formats, password-protected, deliberately corrupted): no crash, nothing slower than 2 s, and every refusal was a real one (encrypted, picture-only, damaged). Those collections are not committed; the committed tests use the library's seed files and byte-built fixtures (`test/helpers/office_fixtures.dart`).
 
-## No screenshots
+## Screenshots
 
-`ScreenGuard` (`screen_security.dart`) wraps `LibraryScreen`, `DocumentScreen` and `DocumentViewerScreen`. While any of them is on screen the window carries Android's **`FLAG_SECURE`** (set from `MainActivity.kt` over the `org.icr.icr_mobile/secure_screen` channel): the system refuses screenshots and screen recording, shows a blank card in the recent-apps list, and keeps the content off non-secure displays. The guard is **counted** (`ScreenSecurity.hold/release`), so the list, a document and the viewer stacking up ask the window once and release it only when the last one leaves. Other platforms are left alone. **It cannot stop a second device photographing the screen.**
+Allowed. Until 5 Nov 2026 a `ScreenGuard` (`screen_security.dart`) kept the window out of screenshots and screen recording (Android's `FLAG_SECURE`, over the `org.icr.icr_mobile/secure_screen` channel) while a library screen was up; the owner had it taken off with the view-only rule, and the guard, the channel and `MainActivity.kt`'s handler are gone.
 
 ## The upload form
 
@@ -132,9 +133,9 @@ The website's dialog as a screen: choose files first (the picker is the phone's;
 | document page from the document in hand or by id; 404 + Try again | D "draws who shared it…", "opened by id alone…"; L "a document is found by id…" |
 | uploader → profile; Share; pull to refresh | D the three tests |
 | Preview (the viewer's read, not a download, one view counted once) | D "Preview reads the file for the viewer…"; L "the viewer reads the real bytes…", "every format of a pack opens…" |
-| no Download, no Open, no file share anywhere | D "nothing on the page can save or hand a file over…"; V "it has no download, share or save control for any kind of file" |
-| image Preview in the app, no Download glyph | D "an image opens in the app…" |
-| screenshots blocked while a library screen is up (counted) | D "the document page and the viewer keep the window out of screenshots…"; V "screen protection is counted…", "asks the phone for the flag on Android…" |
+| Download (counted, Save as, counts follow), a cancelled save, a refused download | D "Download fetches the file as a counted download…", "a cancelled \"Save as\"…", "a refused download…" |
+| Share a file vs Share the page's link | D "Share on a file sends the file itself…" |
+| the viewer's Download and Share (counted from a document; the bytes shown elsewhere) | D "the viewer has Download and Share…"; V the "Download and Share" group |
 | PDF pages, zoom, page counter, password / damaged | V the "PDF" group (including the channel protocol) |
 | image, text, CSV, Word, Excel, PowerPoint, ZIP viewers | V "images, text and CSV", "Word, Excel, PowerPoint and ZIP" |
 | every reader, old and new formats, damaged input | O `library_office_test.dart` |

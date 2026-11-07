@@ -1,5 +1,7 @@
 import 'event_models.dart';
 
+import '../payments/checkout_start.dart';
+
 /// Where the Events screens get their events: the API, or the designs' sample
 /// content.
 abstract class EventsRepository {
@@ -17,6 +19,10 @@ abstract class EventsRepository {
   Future<RsvpState> rsvp(EventSummary event);
 
   Future<void> cancel(EventSummary event);
+
+  /// Buys a ticket to a priced [event] (`POST /events/:id/ticket`): confirmed at once in test mode or at a ₹0 member
+  /// price, else the gateway's form, paid in the app's own payment view.
+  Future<CheckoutStart> buyTicket(EventSummary event);
 
   /// The pass card for a place the member holds at [event] (null when they
   /// hold none): who they are and, for a confirmed place, the pass reference.

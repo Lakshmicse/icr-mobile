@@ -104,11 +104,11 @@ void main() {
     expect(find.text('Your Joined Councils'), findsOneWidget);
   });
 
-  testWidgets('Working Councils opens from the Discover sheet without a framework error', (tester) async {
+  testWidgets('Councils opens from the Discover sheet without a framework error', (tester) async {
     await _pumpShell(tester);
     await tester.tap(find.text('Discover'));
     await _frames(tester);
-    await tester.tap(find.text('Working Councils'));
+    await tester.tap(find.text('Councils'));
     await _frames(tester);
 
     expect(tester.takeException(), isNull);

@@ -86,6 +86,16 @@ class SpyMarketplaceRepository extends DemoMarketplaceRepository {
   /// What `hasPhone` answers (the member's profile has a number).
   bool phoneOnFile = true;
 
+  /// The company the member acts for, and every company they belong to (`/auth/me`, `/me/companies`).
+  String? actingCompany;
+  Set<String> memberCompanies = const {};
+
+  @override
+  Future<String?> myCompanyId() async => actingCompany;
+
+  @override
+  Future<Set<String>> myCompanyIds() async => memberCompanies;
+
   /// While set, sending a quote waits for it.
   Completer<void>? quoteGate;
 

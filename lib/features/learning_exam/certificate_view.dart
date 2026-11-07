@@ -84,18 +84,17 @@ class CertificateDetail extends StatelessWidget {
         const SizedBox(height: 12),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
-          child: DecoratedBox(
-            decoration: BoxDecoration(border: Border.all(color: ExamColors.cardBorder)),
-            child: InteractiveViewer(
-              minScale: 1,
-              maxScale: 5,
-              child: CertificateSheetView(certificate: c, holder: holder),
-            ),
+          child: InteractiveViewer(
+            minScale: 1,
+            maxScale: 5,
+            child: CertificateSheetView(certificate: c, holder: holder),
           ),
         ),
         const SizedBox(height: 16),
+        // White with no edge: the facts are told apart by the hairlines between them.
         ExamCard(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: Column(
             children: [
               _Fact('Credential', c.title),

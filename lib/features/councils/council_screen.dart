@@ -7,6 +7,7 @@ import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
 import '../chapters/community_kit.dart';
+import '../chapters/resource_download.dart';
 import '../chapters/widgets/chapter_sections.dart' show ChapterSectionFrame, GallerySection;
 import 'council_controller.dart';
 import 'council_models.dart';
@@ -31,6 +32,7 @@ class CouncilHandoffs {
     this.onMessage,
     this.opener = openUrl,
     this.share = shareCouncilLink,
+    this.downloader = const SystemResourceDownloader(),
   });
 
   /// A session was tapped: the Events sheet, by the event's slug (else its id).
@@ -51,6 +53,9 @@ class CouncilHandoffs {
   /// Opens the phone's share sheet. Tests give their own.
   final ShareCouncilLink share;
 
+  /// Saves a resource's file to the phone (the Knowledge library's Download). Tests give their own.
+  final ResourceDownloader downloader;
+
   CouncilHandoffs withOpener(Future<void> Function(BuildContext context, Uri uri) opener) => CouncilHandoffs(
     onOpenEvent: onOpenEvent,
     onBell: onBell,
@@ -58,6 +63,7 @@ class CouncilHandoffs {
     onMessage: onMessage,
     opener: opener,
     share: share,
+    downloader: downloader,
   );
 }
 
@@ -310,7 +316,7 @@ class _CouncilScreenState extends State<CouncilScreen> {
             sectionKey: _keys[CouncilSection.knowledge],
             title: 'Knowledge library',
             count: page.resources.items.length,
-            child: CouncilKnowledgeSection(onOpen: (r) => _h.opener(context, Uri.parse(r.url))),
+            child: CouncilKnowledgeSection(downloader: _h.downloader, opener: _h.opener),
           ),
           ChapterSectionFrame(
             sectionKey: _keys[CouncilSection.updates],

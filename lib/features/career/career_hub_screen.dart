@@ -238,71 +238,46 @@ class _Snapshot extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = controller;
     final next = c.interviews.isEmpty ? null : c.interviews.first.interview.scheduledAt;
-    Widget tile(String key, String label, int n, String hint, VoidCallback onTap) => InkWell(
-      key: ValueKey(key),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label.toUpperCase(), style: CareerText.label),
-            const SizedBox(height: 2),
-            Text('$n', style: CareerText.bigNumber),
-            const SizedBox(height: 2),
-            Text(hint, style: CareerText.meta, maxLines: 2),
-          ],
+    // Four figures on one line, each its own tap, with what they mean in one line under them — no tiles and no box
+    // (owner, 6 Nov 2026: "a lot of white space wasted"; white, line breaks, the whole width).
+    Widget figure(String key, String label, int n, VoidCallback onTap) => Expanded(
+      child: InkWell(
+        key: ValueKey(key),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label.toUpperCase(), style: CareerText.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 1),
+              Text('$n', style: CareerText.bigNumber.copyWith(fontSize: 22, height: 26 / 22)),
+            ],
+          ),
         ),
       ),
     );
-    return DecoratedBox(
+    final notes = [
+      c.viewed == 0 ? 'None opened yet' : '${c.viewed} viewed by employers',
+      next == null ? 'None scheduled' : 'Next: ${formatWeekday(next)}',
+      if (c.openInvites.isNotEmpty) 'Roles recruiters invited you to',
+    ];
+    return Column(
       key: const ValueKey('snapshot'),
-      decoration: cardDecoration(),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: tile(
-                  'hub-active',
-                  'Active',
-                  c.active,
-                  c.viewed == 0 ? 'None opened yet' : '${c.viewed} viewed by employers',
-                  () => onGo((r) => r.applications(tab: ApplicationsTab.active)),
-                ),
-              ),
-              const SizedBox(height: 86, child: VerticalDivider(width: 1, color: AppColors.cardRule)),
-              Expanded(
-                child: tile(
-                  'hub-interviews',
-                  'Interviews',
-                  c.interviews.length,
-                  next == null ? 'None scheduled' : 'Next: ${formatWeekday(next)}',
-                  () => onGo((r) => r.interviews()),
-                ),
-              ),
-            ],
-          ),
-          const Divider(height: 1, color: AppColors.cardRule),
-          Row(
-            children: [
-              Expanded(
-                child: tile('hub-saved', 'Saved', c.saved, 'Jobs you bookmarked', () => onGo((r) => r.savedJobs())),
-              ),
-              const SizedBox(height: 86, child: VerticalDivider(width: 1, color: AppColors.cardRule)),
-              Expanded(
-                child: tile(
-                  'hub-invitations',
-                  'Invitations',
-                  c.openInvites.length,
-                  'Roles recruiters invited you to',
-                  () => onGo((r) => r.invitations()),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            figure('hub-active', 'Active', c.active, () => onGo((r) => r.applications(tab: ApplicationsTab.active))),
+            figure('hub-interviews', 'Interviews', c.interviews.length, () => onGo((r) => r.interviews())),
+            figure('hub-saved', 'Saved', c.saved, () => onGo((r) => r.savedJobs())),
+            figure('hub-invitations', 'Invitations', c.openInvites.length, () => onGo((r) => r.invitations())),
+          ],
+        ),
+        Text(notes.join(' · '), style: CareerText.meta, maxLines: 2, overflow: TextOverflow.ellipsis),
+        const SizedBox(height: 10),
+        const Divider(height: 1, thickness: 1, color: AppColors.outlineVariant),
+      ],
     );
   }
 }

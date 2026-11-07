@@ -30,11 +30,16 @@ class LearningHubController extends ChangeNotifier {
     this.assess,
     this.study,
     this.ownsLearning = false,
+    this.standingReader,
   }) {
     learning.addListener(_relay);
   }
 
   final LearningHubRepository repository;
+
+  /// Reads where the member's companies stand as learning partners; null in a hub built without one (a visitor's
+  /// preview, an older test), which then offers "Apply" to everyone as before.
+  final Future<List<PartnerStanding>> Function()? standingReader;
   final LearningController learning;
   final AssessRepository? assess;
   final StudyRepository? study;
@@ -244,6 +249,32 @@ class LearningHubController extends ChangeNotifier {
   ]);
 
   Future<void> reloadInstitutes() => _loadInstitutes();
+
+  // --- partner standing ------------------------------------------------------
+
+  List<PartnerStanding> _standing = const [];
+
+  /// The companies the member administers, each with where it stands as a learning partner. Empty for a visitor,
+  /// for a member who runs no company, and while it has not been read (or could not be).
+  List<PartnerStanding> get partnerStanding => _standing;
+
+  /// Whether the partner application is for this member. The website offers "Apply" to everyone and its dialog then
+  /// disables a company that is already a partner or is with ICR; here that reads as: shown unless the member runs
+  /// companies and every one of them is a partner or is with ICR.
+  bool get offerPartnerApplication => _standing.isEmpty || _standing.any((c) => c.canApply);
+
+  /// Reads the standing again. A refusal (signed out) or a failure leaves it empty.
+  Future<void> loadPartnerStanding() async {
+    final read = standingReader;
+    if (read == null) return;
+    try {
+      _standing = await read();
+    } catch (_) {
+      _standing = const [];
+    }
+    _notify();
+  }
+
   Future<void> reloadAssess() => _loadAssess();
   Future<void> reloadMocks() => _loadMocks();
   Future<void> reloadDecks() => _loadDecks();

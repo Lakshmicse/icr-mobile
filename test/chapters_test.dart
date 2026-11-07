@@ -14,6 +14,7 @@ import 'package:icr_mobile/features/chapters/chapters_controller.dart';
 import 'package:icr_mobile/features/chapters/chapters_screen.dart';
 import 'package:icr_mobile/features/chapters/community_kit.dart';
 import 'package:icr_mobile/features/chapters/demo_chapters_repository.dart';
+import 'package:icr_mobile/features/chapters/resource_download.dart';
 import 'package:icr_mobile/features/chapters/widgets/chapter_card.dart';
 import 'package:icr_mobile/features/chapters/widgets/chapter_preview_sheet.dart';
 import 'package:icr_mobile/features/chapters/widgets/chapter_sections.dart';
@@ -24,6 +25,7 @@ import 'package:provider/provider.dart';
 
 import 'helpers/community_fakes.dart';
 import 'helpers/fonts.dart';
+import 'helpers/resource_fakes.dart';
 
 // The API's rows, as `GET /chapters`, `/chapters/:slug` and `/events` give them.
 
@@ -163,6 +165,9 @@ class _Board {
   final opened = <Uri>[];
   final shared = <(String, Uri)>[];
 
+  /// What a resource's Download asked for and saved.
+  final downloader = FakeResourceDownloader();
+
   Future<void> open(BuildContext context, Uri uri) async => opened.add(uri);
 
   Future<void> share(String title, Uri link) async => shared.add((title, link));
@@ -233,6 +238,7 @@ Future<_Board> _pumpPage(
           onMessage: board.messages.add,
           opener: board.open,
           share: board.share,
+          downloader: board.downloader,
         ),
       ),
     ),
@@ -972,16 +978,67 @@ void main() {
       expect(find.bySemanticsLabel('Email the chapter'), findsNothing);
     });
 
-    testWidgets('the committee’s link, a resource and a sponsor open where they point', (tester) async {
+    testWidgets('the committee’s link and a sponsor open where they point', (tester) async {
       final board = await _pumpPage(tester, 'bengaluru');
       await tester.tap(find.byTooltip('LinkedIn profile of Vikram Malhotra'));
-      await tester.tap(find.text('Benchmark 2026'));
       await tester.tap(find.text('CBRE'));
-      expect(board.opened, [
-        Uri.parse('https://www.linkedin.com/in/vm'),
-        Uri.parse('https://files.test/b.pdf'),
-        Uri.parse('https://cbre.test'),
-      ]);
+      expect(board.opened, [Uri.parse('https://www.linkedin.com/in/vm'), Uri.parse('https://cbre.test')]);
+    });
+
+    testWidgets('Resources: each row has the website’s Download, which saves the file; the row itself opens nothing', (
+      tester,
+    ) async {
+      final board = await _pumpPage(tester, 'bengaluru');
+      expect(find.text('Download'), findsOneWidget);
+      expect(find.byIcon(LucideIcons.download), findsOneWidget);
+      expect(find.byIcon(LucideIcons.externalLink), findsNothing);
+
+      await tester.tap(find.text('Benchmark 2026'));
+      await tester.pump();
+      expect(board.downloader.fetched, isEmpty);
+      expect(board.opened, isEmpty);
+
+      await tester.tap(find.byKey(const ValueKey('resource-download-r1')));
+      await tester.pump();
+      await tester.pump();
+      expect(board.downloader.fetched.single.url, 'https://files.test/b.pdf');
+      expect(board.downloader.saved.single.fileName, 'Benchmark 2026.pdf');
+      expect(find.text('Saved Benchmark 2026.pdf.'), findsOneWidget);
+      expect(board.opened, isEmpty);
+    });
+
+    testWidgets('Resources: a download that fails says why on the page, and a recording is a Download too', (
+      tester,
+    ) async {
+      final repo = FakeChapters()
+        ..resourcesNow = const [
+          ChapterResource(id: 'r1', title: 'Deck', kind: 'PRESENTATION', url: 'https://example.com/deck.pdf'),
+          ChapterResource(
+            id: 'r2',
+            title: 'Forum',
+            kind: 'RECORDING',
+            url: 'https://videos.test/watch/9',
+            sizeLabel: '58 min',
+          ),
+        ];
+      final board = await _pumpPage(tester, 'bengaluru', repo: repo);
+      expect(find.text('Download'), findsNWidgets(2));
+      expect(find.text('MP4'), findsOneWidget);
+      board.downloader.answers['r1'] = const ResourceDownloadException(
+        '"Deck" has no real file yet: its address is only a placeholder.',
+      );
+      await tester.tap(find.byKey(const ValueKey('resource-download-r1')));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('"Deck" has no real file yet: its address is only a placeholder.'), findsOneWidget);
+      expect(board.downloader.saved, isEmpty);
+      expect(board.opened, isEmpty);
+
+      board.downloader.answers['r2'] = ResourcePageOutcome(Uri.parse('https://videos.test/watch/9'));
+      await tester.tap(find.byKey(const ValueKey('resource-download-r2')));
+      await tester.pump();
+      await tester.pump();
+      expect(board.opened, [Uri.parse('https://videos.test/watch/9')]);
     });
 
     testWidgets('Volunteer with this chapter is the shell’s callback and is left out without one', (tester) async {

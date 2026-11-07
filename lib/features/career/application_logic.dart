@@ -5,6 +5,7 @@
 /// both screens read them alike.
 library;
 
+import '../../core/util/join_window.dart' show joinShown;
 import 'career_models.dart';
 
 /// Where an application stands, as the candidate reads it. Not the stage
@@ -56,8 +57,10 @@ enum ApplicationsTab {
 }
 
 /// Rounds still to happen, soonest first.
+/// Rounds still on, soonest first: a round stays here until its call's room
+/// closes, 30 minutes after it was due to end, so one under way keeps its Join.
 List<CareerInterview> upcomingInterviews(CareerApplication app, DateTime now) =>
-    app.interviews.where((iv) => iv.live && !iv.scheduledAt.isBefore(now)).toList()
+    app.interviews.where((iv) => iv.live && joinShown(iv.scheduledAt, iv.durationMins, now)).toList()
       ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
 
 bool inTab(CareerApplication app, ApplicationsTab tab, DateTime now) {

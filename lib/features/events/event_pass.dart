@@ -86,11 +86,7 @@ class EventPassDialog extends StatelessWidget {
             Center(
               child: Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: EventsColors.border),
-                ),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
                 child: code == null
                     ? const SizedBox(
                         width: 180,

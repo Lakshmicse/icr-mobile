@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/util/join_window.dart' show joinShown;
 import '../../core/util/links.dart';
 import 'mentoring_format.dart';
 import 'mentoring_links.dart';
@@ -421,8 +422,8 @@ class CalendarItemSheet extends StatelessWidget {
             ActionWrap(
               top: 14,
               children: [
-                if (link != null && i.open)
-                  SolidButton(label: 'Join', icon: LucideIcons.video, onPressed: () => openUrl(context, link)),
+                if (link != null && i.open && joinShown(i.at, i.durationMin, mentoringNow()))
+                  JoinButton(link: link, startsAt: i.at, durationMin: i.durationMin),
                 if (onOpenPairing != null) QuietButton(label: 'Open mentorship', onPressed: onOpenPairing),
                 if (onOpenPurchase != null) QuietButton(label: 'Open booking', onPressed: onOpenPurchase),
                 if (onOpenGroup != null) QuietButton(label: 'Open session', onPressed: onOpenGroup),

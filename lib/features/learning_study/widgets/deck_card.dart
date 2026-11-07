@@ -38,11 +38,9 @@ class DeckCard extends StatelessWidget {
       excludeSemantics: true,
       onTap: onTap,
       child: Material(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: StudyColors.border),
-        ),
+        // A tinted card, never an outlined one (the owner's rule, Nov 2026).
+        color: AppColors.surfaceContainer,
+        borderRadius: BorderRadius.circular(12),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,

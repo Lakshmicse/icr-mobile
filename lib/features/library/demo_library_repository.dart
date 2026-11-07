@@ -363,11 +363,27 @@ class DemoLibraryRepository implements LibraryRepository {
     } else if (file.previewKind == PreviewKind.pdf) {
       bytes = _samplePdf(document.title);
     } else {
-      bytes = Uint8List.fromList(
-        utf8.encode('Sample of ${file.fileName}\nThe library shows this file; it cannot be saved.'),
-      );
+      bytes = Uint8List.fromList(utf8.encode('Sample of ${file.fileName}\nA sample document from the library.'));
     }
     return DocumentBytes(bytes: bytes, fileName: file.fileName, mimeType: file.mimeType);
+  }
+
+  /// The sample's bytes, counted as a download on the file and the document, as the API counts one.
+  @override
+  Future<DocumentBytes> downloadFile(LibraryDocument document, LibraryFile file) async {
+    final bytes = await previewFile(document, file);
+    calls
+      ..removeLast()
+      ..add('download:${document.id}:${file.id}');
+    final i = _docs.indexWhere((d) => d.id == document.id);
+    if (i >= 0) {
+      final d = _docs[i];
+      _docs[i] = d.copyWith(
+        downloadCount: d.downloadCount + 1,
+        files: [for (final f in d.files) f.id == file.id ? f.copyWith(downloadCount: f.downloadCount + 1) : f],
+      );
+    }
+    return bytes;
   }
 
   /// A real one-page PDF (so the phone's renderer has something to draw) carrying [title].

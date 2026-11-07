@@ -33,35 +33,38 @@ class SavedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final key = '${item.kind.name}.${item.id}';
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.slate200),
-      ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          key: ValueKey('saved.row.$key'),
-          borderRadius: BorderRadius.circular(12),
-          onTap: onOpen,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (lead != null) ...[lead!, const SizedBox(width: 12)],
-                Expanded(child: child),
-                _BookmarkButton(
-                  key: ValueKey('saved.unsave.$key'),
-                  label: 'Remove ${item.title} from saved',
-                  onPressed: busy ? null : onUnsave,
+    // Rows on the white page, one thin rule between them: no frame round a card.
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              key: ValueKey('saved.row.$key'),
+              borderRadius: BorderRadius.circular(12),
+              onTap: onOpen,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 12, 4, 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (lead != null) ...[lead!, const SizedBox(width: 12)],
+                    Expanded(child: child),
+                    _BookmarkButton(
+                      key: ValueKey('saved.unsave.$key'),
+                      label: 'Remove ${item.title} from saved',
+                      onPressed: busy ? null : onUnsave,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+          const Divider(height: 1, thickness: 1, color: AppColors.slate100),
+        ],
       ),
     );
   }

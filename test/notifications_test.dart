@@ -6,6 +6,7 @@ import 'package:icr_mobile/features/notifications/notification_models.dart';
 import 'package:icr_mobile/features/notifications/notification_target.dart';
 import 'package:icr_mobile/features/notifications/notifications_controller.dart';
 import 'package:icr_mobile/features/notifications/unread_counts.dart';
+import 'package:icr_mobile/features/notifications/viewer_time_zone.dart';
 
 import 'messaging_fakes.dart';
 import 'notifications_fakes.dart';
@@ -70,10 +71,14 @@ void main() {
   group('the API mapping (real response shapes)', () {
     test('a page: rows, the company a row names, the grouped count, the page meta', () async {
       final api = TableAdapter({'GET /notifications': (_) => _listJson});
-      final repo = ApiNotificationsRepository(api: clientFor(api));
+      final repo = ApiNotificationsRepository(api: clientFor(api), timeZone: 'Asia/Dubai');
       final page = await repo.list(page: 2, unreadOnly: true);
 
-      expect(api.queryOf('GET /notifications'), {'page': 2, 'limit': 20, 'unread': true});
+      expect(
+        api.queryOf('GET /notifications'),
+        {'page': 2, 'limit': 20, 'unread': true, 'tz': 'Asia/Dubai'},
+        reason: "the phone's zone rides along, as the website sends the browser's, so a time in a sentence reads on it",
+      );
       expect(page.total, 41);
       expect(page.hasMore, isTrue);
       expect(page.items.map((n) => n.id), ['n1', 'n2', 'n3']);
@@ -105,8 +110,8 @@ void main() {
           'meta': {'total': 0, 'hasNext': false},
         },
       });
-      final page = await ApiNotificationsRepository(api: clientFor(api)).list();
-      expect(api.queryOf('GET /notifications'), {'page': 1, 'limit': 20});
+      final page = await ApiNotificationsRepository(api: clientFor(api), timeZone: 'Asia/Kolkata').list();
+      expect(api.queryOf('GET /notifications'), {'page': 1, 'limit': 20, 'tz': 'Asia/Kolkata'});
       expect(page.items, isEmpty);
       expect(page.hasMore, isFalse);
     });
@@ -268,6 +273,7 @@ void main() {
       '/manage/team?tab=requests': ('team', {'tab': 'requests'}),
       '/invite/TOK': ('team.invite', {'token': 'TOK'}),
       '/account/companies': ('account.companies', {}),
+      '/account/companies?focus=invitations': ('account.companies', {'focus': 'invitations'}),
       '/companies/C1?tab=reviews': ('company.page', {'companyId': 'C1', 'tab': 'reviews'}),
       '/company?tab=verification': ('company.workspace', {'tab': 'verification'}),
       '/admin/verification?vendor=V1': ('admin.verification.supplier', {'vendorId': 'V1'}),
@@ -305,6 +311,7 @@ void main() {
       '/learning/courses/CALS?tab=syllabus': ('learning.workspace', {'code': 'CALS', 'tab': 'syllabus'}),
       '/admin/learning/batches?course=C1': ('admin.learning', {'section': 'batches', 'courseId': 'C1'}),
       '/learning/partners?apply=1': ('learning.partners', {'apply': '1'}),
+      '/learning/teaching?batch=B1': ('learning.teaching', {'batchId': 'B1'}),
       '/events/future-of-ai-design': ('event', {'eventId': 'future-of-ai-design'}),
       '/community/thread-slug#reply-R9': ('forum.thread', {'slug': 'thread-slug', 'replyId': 'R9'}),
       '/community/thread-slug': ('forum.thread', {'slug': 'thread-slug'}),
@@ -393,6 +400,7 @@ void main() {
         'learning.workspace',
         'admin.learning',
         'learning.partners',
+        'learning.teaching',
         'event',
         'forum.thread',
         'forum',
@@ -670,6 +678,36 @@ void main() {
       counts.stop();
       expect(counts.running, isFalse);
       counts.dispose();
+    });
+  });
+
+  group("the zone a time in a sentence reads on (the website sends the browser's)", () {
+    test('a market ICR serves gets its own zone, any other whole-hour offset an Etc/GMT one', () {
+      expect(viewerTimeZone(const Duration(hours: 5, minutes: 30)), 'Asia/Kolkata');
+      expect(viewerTimeZone(const Duration(hours: 4)), 'Asia/Dubai');
+      expect(viewerTimeZone(const Duration(hours: 8)), 'Asia/Singapore');
+      expect(viewerTimeZone(Duration.zero), 'UTC');
+      // POSIX sign: Etc/GMT-2 is two hours AHEAD of UTC.
+      expect(viewerTimeZone(const Duration(hours: 2)), 'Etc/GMT-2');
+      expect(viewerTimeZone(const Duration(hours: -5)), 'Etc/GMT+5');
+    });
+
+    test('an offset no zone name fits sends none: the API reads the Indian clock, as it did before', () {
+      expect(viewerTimeZone(const Duration(hours: 9, minutes: 30)), isNull);
+      expect(viewerTimeZone(const Duration(hours: 15)), isNull);
+      expect(viewerTimeZone(const Duration(hours: -13)), isNull);
+    });
+
+    test('with no zone named the list asks for the phone zone', () async {
+      final api = TableAdapter({
+        'GET /notifications': (_) => {
+          'data': [],
+          'meta': {'total': 0, 'hasNext': false},
+        },
+      });
+      await ApiNotificationsRepository(api: clientFor(api)).list();
+      final zone = viewerTimeZone();
+      expect(api.queryOf('GET /notifications'), {'page': 1, 'limit': 20, 'tz': ?zone});
     });
   });
 }

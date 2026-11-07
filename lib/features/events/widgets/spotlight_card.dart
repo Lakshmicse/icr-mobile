@@ -37,12 +37,10 @@ class SpotlightCard extends StatelessWidget {
     // The API names no attendee, so the circles carry the host's initials.
     final people = e.attendeePreview.isNotEmpty ? e.attendeePreview : hostAvatars(e.host);
     final (label, enabled) = _action(e);
+    // A tinted card, never an outlined one (the owner's rule, Nov 2026).
     return Material(
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: EventsColors.border),
-      ),
+      color: EventsColors.panel,
+      borderRadius: BorderRadius.circular(12),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,

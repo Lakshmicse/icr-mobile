@@ -61,10 +61,7 @@ class _HubCard extends StatelessWidget {
       key: ValueKey('hub-${hub.id}'),
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.fromLTRB(14, 12, 10, 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: MartColors.cardBorder, width: 1.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: MartColors.cardFill, borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

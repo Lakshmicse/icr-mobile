@@ -492,11 +492,9 @@ class _Modes extends StatelessWidget {
           button: true,
           selected: on,
           child: Material(
-            color: on ? AppColors.chipEmphasis : Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: on ? AppColors.primary : AppColors.outlineVariant, width: on ? 1.5 : 1),
-            ),
+            // The chosen mode takes the brand's pale tint; the others are the neutral tint. No outline.
+            color: on ? AppColors.chipEmphasis : AppColors.surfaceContainer,
+            borderRadius: BorderRadius.circular(12),
             child: InkWell(
               key: ValueKey('mode:${mode.name}'),
               borderRadius: BorderRadius.circular(12),

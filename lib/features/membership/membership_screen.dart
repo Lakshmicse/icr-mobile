@@ -253,11 +253,7 @@ class _Notice extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
-      decoration: BoxDecoration(
-        color: MembershipColors.noticeFill,
-        border: Border.all(color: MembershipColors.noticeBorder),
-        borderRadius: BorderRadius.circular(10),
-      ),
+      decoration: BoxDecoration(color: MembershipColors.noticeFill, borderRadius: BorderRadius.circular(10)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -293,11 +289,7 @@ class _YourPlanCard extends StatelessWidget {
       key: const ValueKey('membership-your-plan'),
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: MembershipColors.cardBorder),
-      ),
+      decoration: BoxDecoration(color: AppColors.surfaceContainerLow, borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -390,12 +382,9 @@ class _PlanCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        // The plan held is a blue tint (and says "Current"); the others a pale one. No frames.
+        color: current ? AppColors.chipEmphasis : AppColors.slate50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: current ? MembershipColors.currentRing : MembershipColors.cardBorder,
-          width: current ? 2 : 1,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

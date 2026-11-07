@@ -98,6 +98,10 @@ abstract class MarketplaceRepository {
   /// then worded to fit both).
   Future<String?> myCompanyId() async => null;
 
+  /// Every company the signed-in person is an active member of (`GET /me/companies`), not only the one they act
+  /// for: the API refuses a message to, or a rating of, a listing of any of them. Empty when signed out or unknown.
+  Future<Set<String>> myCompanyIds() async => const {};
+
   /// Sends the supplier a private quote request: a targeted enquiry that goes out now
   /// (`POST /rfq`). Throws what the API refuses (a member who may not post requirements,
   /// a missing phone, the supplier's own listing).

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/workspace_embed.dart';
 import '../../feed/feed_models.dart';
 import '../../feed/widgets/feed_avatar.dart';
 import '../events_styles.dart';
@@ -32,6 +33,8 @@ class EventsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Inside a workspace's tab the workspace's bar is the header.
+    if (WorkspaceEmbed.of(context)) return const SizedBox.shrink();
     return Container(
       height: height,
       decoration: const BoxDecoration(

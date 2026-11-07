@@ -330,10 +330,9 @@ class MessageBubble extends StatelessWidget {
             constraints: BoxConstraints(maxWidth: maxWidth),
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
             decoration: BoxDecoration(
-              color: solid ? ChatColors.myBubble : Colors.white,
+              // A received bubble is the neutral tint, never an outlined white one (the owner's rule, Nov 2026).
+              color: solid ? ChatColors.myBubble : AppColors.surfaceContainer,
               borderRadius: _corners(mine: mine, tail: !continued, round: mine ? 16 : 10),
-              border: solid ? null : Border.all(color: ThreadColors.edge),
-              boxShadow: solid ? null : ThreadColors.lift,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -490,9 +489,9 @@ class _Quote extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 6),
         padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
         decoration: BoxDecoration(
-          color: mine ? Colors.white.withValues(alpha: 0.16) : ChatColors.composerChip,
-          border: Border(left: BorderSide(color: mine ? Colors.white70 : ChatColors.quoteBar, width: 3)),
-          borderRadius: const BorderRadius.horizontal(right: Radius.circular(6)),
+          // A tinted box inside the bubble; no accent bar down its side.
+          color: mine ? Colors.white.withValues(alpha: 0.16) : Colors.white,
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -549,11 +548,7 @@ class AttachmentView extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onOpen,
         child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: ThreadColors.edge),
-            boxShadow: ThreadColors.lift,
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
           clipBehavior: Clip.antiAlias,
           child: FutureBuilder<Uint8List>(
             future: controller.attachmentBytes(m.attachmentUrl!),
@@ -590,12 +585,7 @@ class AttachmentView extends StatelessWidget {
     return SizedBox(
       width: width,
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: radius,
-          border: Border.all(color: ThreadColors.edge),
-          boxShadow: ThreadColors.lift,
-        ),
+        decoration: BoxDecoration(color: AppColors.surfaceContainer, borderRadius: radius),
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(
@@ -861,12 +851,7 @@ class MeetingCard extends StatelessWidget {
           key: const ValueKey('meeting-card'),
           width: math.min(273, width - 72.5),
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: ThreadColors.edge),
-            boxShadow: ThreadColors.lift,
-          ),
+          decoration: BoxDecoration(color: AppColors.surfaceContainer, borderRadius: BorderRadius.circular(10)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -876,7 +861,7 @@ class MeetingCard extends StatelessWidget {
                   Container(
                     width: 36,
                     height: 36,
-                    decoration: BoxDecoration(color: ChatColors.composerChip, borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
                     child: const Icon(LucideIcons.video, size: 20, color: ThreadColors.deepBlue),
                   ),
                   const SizedBox(width: 10),

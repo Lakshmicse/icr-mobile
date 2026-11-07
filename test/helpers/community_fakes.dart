@@ -13,7 +13,6 @@ import 'package:icr_mobile/features/library/library_device.dart';
 import 'package:icr_mobile/features/library/library_models.dart';
 import 'package:icr_mobile/features/library/library_repository.dart';
 import 'package:icr_mobile/features/library/pdf_engine.dart';
-import 'package:icr_mobile/features/library/screen_security.dart';
 import 'package:icr_mobile/features/contact/contact_models.dart' show ContactSender;
 import 'package:icr_mobile/features/volunteer/demo_volunteer_repository.dart';
 import 'package:icr_mobile/features/volunteer/volunteer_models.dart';
@@ -393,6 +392,10 @@ class FakeLibrary implements LibraryRepository {
       _call('preview', () => inner.previewFile(document, file), file.id);
 
   @override
+  Future<DocumentBytes> downloadFile(LibraryDocument document, LibraryFile file) =>
+      _call('download', () => inner.downloadFile(document, file), file.id);
+
+  @override
   Future<int> recordView(String id) => _call('view', () => inner.recordView(id), id);
 
   @override
@@ -447,6 +450,22 @@ class FakeLibraryDevice extends LibraryDevice {
     opened.add(uri);
     return true;
   }
+
+  /// Files saved through "Save as", and files handed to the share sheet, by name.
+  final saved = <String>[];
+  final sharedFiles = <String>[];
+
+  /// What the "Save as" sheet answers: false is the person cancelling.
+  bool saveAnswer = true;
+
+  @override
+  Future<bool> save(DocumentBytes file) async {
+    if (saveAnswer) saved.add(file.fileName);
+    return saveAnswer;
+  }
+
+  @override
+  Future<void> shareFile(DocumentBytes file) async => sharedFiles.add(file.fileName);
 }
 
 /// A 1 x 1 PNG: what the fake PDF engine "draws" for every page.
@@ -489,14 +508,6 @@ class _FakePdf extends PdfDocumentHandle {
 
   @override
   Future<void> close() async => _engine.closed++;
-}
-
-/// The window's screenshot protection, for tests: every request the Library made, in order.
-class FakeScreenSecurity implements ScreenSecurityPlatform {
-  final requests = <bool>[];
-
-  @override
-  Future<void> setSecure(bool on) async => requests.add(on);
 }
 
 /// A file the picker hands over: [size] bytes of zeros.

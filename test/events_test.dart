@@ -9,6 +9,7 @@ import 'package:icr_mobile/features/events/events_controller.dart';
 import 'package:icr_mobile/features/events/events_repository.dart';
 
 import 'helpers/events_fixtures.dart';
+import 'package:icr_mobile/features/payments/checkout_start.dart';
 
 const _webinar = {
   'id': 'e1',
@@ -979,6 +980,8 @@ class _Refusing implements EventsRepository {
   Future<RsvpState> rsvp(EventSummary event) async => throw ApiError('The API said no.');
   @override
   Future<void> cancel(EventSummary event) async => throw ApiError('The API said no.');
+  @override
+  Future<CheckoutStart> buyTicket(EventSummary event) async => throw ApiError('The API said no.');
 
   @override
   Future<EventsOverview> overview() => inner.overview();

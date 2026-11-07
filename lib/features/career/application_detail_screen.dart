@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/util/join_window.dart' show joinShown;
 import '../../core/util/links.dart' show showMessage;
 import '../jobs/job_detail_sheet.dart';
 import '../jobs/job_links.dart';
@@ -213,7 +214,13 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> with 
           _Match(app: app, onPlans: () => widget.links.openSite(context, '/career/plans')),
           if (app.interviews.isNotEmpty) ...[
             const SizedBox(height: 10),
-            _Interviews(app: app, links: widget.links, onConfirm: _confirmRound, onReschedule: _rescheduleRound),
+            _Interviews(
+              app: app,
+              links: widget.links,
+              clock: _c.clock,
+              onConfirm: _confirmRound,
+              onReschedule: _rescheduleRound,
+            ),
           ],
           if (app.answers.isNotEmpty) ...[
             const SizedBox(height: 10),
@@ -468,10 +475,17 @@ class _Match extends StatelessWidget {
 }
 
 class _Interviews extends StatelessWidget {
-  const _Interviews({required this.app, required this.links, required this.onConfirm, required this.onReschedule});
+  const _Interviews({
+    required this.app,
+    required this.links,
+    required this.clock,
+    required this.onConfirm,
+    required this.onReschedule,
+  });
 
   final CareerApplication app;
   final JobLinks links;
+  final CareerClock clock;
   final void Function(CareerInterview) onConfirm;
   final void Function(CareerInterview) onReschedule;
 
@@ -485,7 +499,7 @@ class _Interviews extends StatelessWidget {
         children: [
           for (final (i, iv) in rounds.indexed) ...[
             if (i > 0) const Divider(height: 22, color: AppColors.cardRule),
-            _Round(interview: iv, links: links, onConfirm: onConfirm, onReschedule: onReschedule),
+            _Round(interview: iv, links: links, clock: clock, onConfirm: onConfirm, onReschedule: onReschedule),
           ],
         ],
       ),
@@ -494,10 +508,17 @@ class _Interviews extends StatelessWidget {
 }
 
 class _Round extends StatelessWidget {
-  const _Round({required this.interview, required this.links, required this.onConfirm, required this.onReschedule});
+  const _Round({
+    required this.interview,
+    required this.links,
+    required this.clock,
+    required this.onConfirm,
+    required this.onReschedule,
+  });
 
   final CareerInterview interview;
   final JobLinks links;
+  final CareerClock clock;
   final void Function(CareerInterview) onConfirm;
   final void Function(CareerInterview) onReschedule;
 
@@ -535,13 +556,12 @@ class _Round extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: [
-              if (join != null)
-                StripButton(
+              if (join != null && joinShown(iv.scheduledAt, iv.durationMins, clock()))
+                JoinStripButton(
                   key: ValueKey('join-${iv.id}'),
-                  label: 'Join call',
-                  icon: LucideIcons.video,
-                  filled: true,
-                  onTap: () => links.openUri(context, join),
+                  interview: iv,
+                  clock: clock,
+                  onJoin: () => links.openUri(context, join),
                 ),
               if (map != null)
                 StripButton(
@@ -741,7 +761,10 @@ class _Step extends StatelessWidget {
           alignment: Alignment.center,
           child: done
               ? const Icon(Icons.check, size: 16, color: Colors.white)
-              : Text('$index', style: CareerText.meta.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+              : Text(
+                  '$index',
+                  style: CareerText.meta.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+                ),
         ),
         const SizedBox(height: 6),
         Text(

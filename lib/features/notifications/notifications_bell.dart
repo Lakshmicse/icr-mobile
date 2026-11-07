@@ -67,12 +67,14 @@ class _InboxHostState extends State<InboxHost> {
     _counts = widget.counts ?? UnreadCounts.api(widget.api);
     _router = widget.router ?? NotificationRouter();
     NotificationRouter.current = _router;
+    _router.home = context;
     if (_owns) _counts.start();
   }
 
   @override
   void dispose() {
     if (identical(NotificationRouter.current, _router)) NotificationRouter.current = null;
+    if (identical(_router.home, context)) _router.home = null;
     if (_owns) _counts.dispose();
     super.dispose();
   }

@@ -20,9 +20,8 @@ class ApiAccountRepository implements AccountRepository {
     }
   }
 
-  Future<Map<String, dynamic>> _getMap(String path, [Map<String, dynamic>? query]) => _call(
-    (dio) async => (await dio.get<Map<String, dynamic>>(path, queryParameters: query)).data ?? const {},
-  );
+  Future<Map<String, dynamic>> _getMap(String path, [Map<String, dynamic>? query]) =>
+      _call((dio) async => (await dio.get<Map<String, dynamic>>(path, queryParameters: query)).data ?? const {});
 
   Future<List<Map<String, dynamic>>> _getList(String path, [Map<String, dynamic>? query]) => _call((dio) async {
     final data = (await dio.get<dynamic>(path, queryParameters: query)).data;
@@ -77,9 +76,8 @@ class ApiAccountRepository implements AccountRepository {
   }
 
   @override
-  Future<MyProfile> updateMe(Map<String, Object?> patch) => _call(
-    (dio) async => MyProfile.fromJson((await dio.patch<Map<String, dynamic>>('/users/me', data: patch)).data!),
-  );
+  Future<MyProfile> updateMe(Map<String, Object?> patch) =>
+      _call((dio) async => MyProfile.fromJson((await dio.patch<Map<String, dynamic>>('/users/me', data: patch)).data!));
 
   @override
   Future<MyProfile> updateResume(Map<String, Object?> patch) => _call(
@@ -107,9 +105,8 @@ class ApiAccountRepository implements AccountRepository {
   ])).map(Education.fromJson).toList();
 
   @override
-  Future<List<CareerBreak>> saveCareerBreaks(List<CareerBreak> rows) async => (await _put('/profile/career-breaks', [
-    for (final r in rows) r.toRow(),
-  ])).map(CareerBreak.fromJson).toList();
+  Future<List<CareerBreak>> saveCareerBreaks(List<CareerBreak> rows) async =>
+      (await _put('/profile/career-breaks', [for (final r in rows) r.toRow()])).map(CareerBreak.fromJson).toList();
 
   @override
   Future<ProfileLinks> saveLinks(Map<String, String> links) => _call(
@@ -119,13 +116,13 @@ class ApiAccountRepository implements AccountRepository {
   @override
   Future<UploadedFile> upload(PickedPhoto file, {String? purpose}) => _call((dio) async {
     final form = FormData.fromMap({
-      'file': MultipartFile.fromBytes(file.bytes, filename: file.name, contentType: DioMediaType.parse(file.contentType)),
+      'file': MultipartFile.fromBytes(
+        file.bytes,
+        filename: file.name,
+        contentType: DioMediaType.parse(file.contentType),
+      ),
     });
-    final res = await dio.post<Map<String, dynamic>>(
-      '/uploads',
-      data: form,
-      queryParameters: {'purpose': ?purpose},
-    );
+    final res = await dio.post<Map<String, dynamic>>('/uploads', data: form, queryParameters: {'purpose': ?purpose});
     final data = res.data!;
     return UploadedFile(url: data['url'] as String, name: data['name'] as String? ?? file.name);
   });
@@ -210,6 +207,17 @@ class ApiAccountRepository implements AccountRepository {
   Future<MyCompanies> withdrawRequest(String companyId) => _call(
     (dio) async =>
         MyCompanies.fromJson((await dio.delete<Map<String, dynamic>>('/me/companies/requests/$companyId')).data!),
+  );
+
+  @override
+  Future<SessionTokens> acceptInvitation(String companyId) =>
+      _tokens((dio) => dio.post<Map<String, dynamic>>('/me/companies/invitations/$companyId/accept'));
+
+  @override
+  Future<MyCompanies> declineInvitation(String companyId) => _call(
+    (dio) async => MyCompanies.fromJson(
+      (await dio.post<Map<String, dynamic>>('/me/companies/invitations/$companyId/decline')).data!,
+    ),
   );
 
   @override

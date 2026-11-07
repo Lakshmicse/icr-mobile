@@ -48,18 +48,12 @@ class RecordCard extends StatelessWidget {
         final facts = snap.data;
         final failed = snap.hasError;
         final blocked = failed && ApiError.from(snap.error!).statusCode != null;
-        // The thread's white hairline card, as the file card beside it (docs/designs/messaging-thread.png).
+        // The thread's tinted card, as the file card beside it; no outline (the owner's rule, Nov 2026).
         return DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 2, offset: Offset(0, 1))],
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
           child: Material(
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-              side: const BorderSide(color: AppColors.outlineVariant),
-            ),
+            color: AppColors.surfaceContainer,
+            borderRadius: BorderRadius.circular(10),
             child: InkWell(
               key: ValueKey('record-${ref.type.name}-${ref.id}'),
               customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -76,10 +70,7 @@ class RecordCard extends StatelessWidget {
                       Container(
                         width: 36,
                         height: 36,
-                        decoration: BoxDecoration(
-                          color: ChatColors.composerChip,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
                         child: Icon(recordIcon(ref.type), size: 18, color: AppColors.primary),
                       ),
                     const SizedBox(width: 10),

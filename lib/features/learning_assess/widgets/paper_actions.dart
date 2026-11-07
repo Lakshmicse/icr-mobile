@@ -9,6 +9,7 @@ class PaperActions {
     required this.onBuy,
     required this.onSeePlans,
     this.onShare,
+    this.onViewCertificate,
   });
 
   /// Open the exam (the brief, the questions, the result).
@@ -28,4 +29,8 @@ class PaperActions {
 
   /// The phone's share sheet with this paper's page; a set card draws its share glyph only when this is given.
   final VoidCallback? onShare;
+
+  /// The certificate the member holds for this paper, drawn in the app with its PDF; a row offers "Certificate"
+  /// only when this is given.
+  final VoidCallback? onViewCertificate;
 }

@@ -8,6 +8,7 @@ import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
 import '../../core/widgets/section_heading.dart' show Hairline;
+import '../learning_exam/certificate_view.dart' show showCertificateSheet;
 import '../learning_exam/open_paper.dart';
 import 'assess_format.dart';
 import 'assess_models.dart';
@@ -455,6 +456,8 @@ class _GroupViewState extends State<_GroupView> with WidgetsBindingObserver {
     onSeePlans: () => _site(g.repository.plansLink()),
     // A set is shared on its own (its row carries the glyph); a level is shared with its programme.
     onShare: g.kind == PaperKind.mock ? () => _shareSet(e.paper) : null,
+    // The certificate in the app, as My certificates draws it: pinch to read, Download PDF, Share, LinkedIn.
+    onViewCertificate: e.certificate == null ? null : () => showCertificateSheet(context, e.certificate!),
   );
 
   /// The levels or sets as list rows, a thin line between them inset to the text (no card around any).
@@ -493,10 +496,7 @@ class _ProgrammeHeader extends StatelessWidget {
         ? group.title
         : '${group.title} Assessment';
     final names = [for (final p in group.levelCards) p.levelName ?? p.title];
-    return _Header(
-      title: title,
-      line: names.isEmpty ? null : '${plural(names.length, 'level')}: ${names.join(', ')}',
-    );
+    return _Header(title: title, line: names.isEmpty ? null : '${plural(names.length, 'level')}: ${names.join(', ')}');
   }
 }
 
@@ -631,11 +631,7 @@ class _RefreshFailed extends StatelessWidget {
     return Container(
       key: const ValueKey('refresh-failed'),
       padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
-      decoration: BoxDecoration(
-        color: AppColors.amber50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.amber100),
-      ),
+      decoration: BoxDecoration(color: AppColors.amber50, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           const Icon(LucideIcons.circleAlert, size: 18, color: AppColors.amber800),

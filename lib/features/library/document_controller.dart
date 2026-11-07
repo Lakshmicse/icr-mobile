@@ -111,9 +111,6 @@ class DocumentController extends ChangeNotifier {
 
   /// Reads one file for the viewer (`?preview=true`, not a download). The first read of a page counts one
   /// opening of the document (`POST /documents/:id/view`, best effort).
-  ///
-  /// This is the only way the app reads a file. There is deliberately no download here (owner's call,
-  /// 28 Oct 2026: the library is view-only on a phone), so the bytes go to the viewer and nowhere else.
   Future<FileOutcome> preview(LibraryFile file) async {
     final d = _doc;
     if (d == null || _busy.contains(file.id)) return const FileOutcome.failed('Please wait.');
@@ -134,6 +131,42 @@ class DocumentController extends ChangeNotifier {
       _notify();
     }
   }
+
+  /// Downloads one file (the website's Download, counted by the API on the file and the document): the bytes for
+  /// the phone to save or send on. The page's counts follow at once, as the website's do after a download. While
+  /// it runs, [isDownloading] is true for the file.
+  Future<FileOutcome> download(LibraryFile file) async {
+    final d = _doc;
+    final key = 'download:${file.id}';
+    if (d == null || _busy.contains(key)) return const FileOutcome.failed('Please wait.');
+    _busy.add(key);
+    _lock = null;
+    _notify();
+    try {
+      final bytes = await repository.downloadFile(d, file);
+      final cur = _doc;
+      if (cur != null) {
+        _set(
+          cur.copyWith(
+            downloadCount: cur.downloadCount + 1,
+            files: [for (final f in cur.files) f.id == file.id ? f.copyWith(downloadCount: f.downloadCount + 1) : f],
+          ),
+        );
+      }
+      return FileOutcome.ok(bytes);
+    } catch (e) {
+      final err = ApiError.from(e);
+      final locked = err.statusCode == 403;
+      if (locked) _lock = err.message;
+      return FileOutcome.failed(err.message, locked: locked);
+    } finally {
+      _busy.remove(key);
+      _notify();
+    }
+  }
+
+  /// A download of [file] is under way.
+  bool isDownloading(String fileId) => _busy.contains('download:$fileId');
 
   /// One opening of the document, counted once per page however many files are read.
   Future<void> _countView() async {

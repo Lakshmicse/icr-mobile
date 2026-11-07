@@ -48,12 +48,7 @@ class JoinedCouncilCard extends StatelessWidget {
       child: Container(
         width: width,
         height: height,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: CouncilsColors.cardBorder),
-          boxShadow: const [BoxShadow(color: Color(0x0D000000), blurRadius: 3, offset: Offset(0, 1))],
-        ),
+        decoration: BoxDecoration(color: CouncilsColors.tile, borderRadius: BorderRadius.circular(10)),
         padding: const EdgeInsets.fromLTRB(13, 14, 13, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -247,6 +247,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> with Widget
           ApplicationRow(
             app: app,
             now: _c.now,
+            clock: _c.clock,
             links: widget.links,
             busy: _busyId == app.id,
             onOpen: () => _openApplication(app),
@@ -406,93 +407,105 @@ class _Summary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = controller.summary;
-    Widget tile(String key, String label, Widget figure, String hint, VoidCallback onTap, {Color? hintColor}) =>
-        InkWell(
-          key: ValueKey(key),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label.toUpperCase(), style: CareerText.label),
-                const SizedBox(height: 2),
-                figure,
-                const SizedBox(height: 2),
-                Text(hint, style: CareerText.meta.copyWith(color: hintColor), maxLines: 2),
-              ],
-            ),
+    // Four figures on one line, each its own tap, with what they mean in one line under them — no tiles and no box
+    // (owner, 6 Nov 2026: "these designs should not have the background colour and efficiently use the space"), as
+    // the Career Hub's snapshot. The locked Viewed figure keeps its lock and opens the plans.
+    final number = CareerText.bigNumber.copyWith(fontSize: 22, height: 26 / 22);
+    Widget figure(String key, String label, Widget value, VoidCallback onTap) => Expanded(
+      child: InkWell(
+        key: ValueKey(key),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label.toUpperCase(), style: CareerText.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 1),
+              value,
+            ],
           ),
-        );
-    final viewed = s.viewed;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: DecoratedBox(
-        decoration: cardDecoration(),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: tile(
-                    'summary-active',
-                    'Active',
-                    Text('${s.active}', style: CareerText.bigNumber),
-                    s.sentThisWeek == 0 ? 'None sent this week' : '${s.sentThisWeek} sent this week',
-                    () => controller.selectTab(ApplicationsTab.active),
-                  ),
-                ),
-                const SizedBox(height: 86, child: VerticalDivider(width: 1, color: AppColors.cardRule)),
-                Expanded(
-                  child: viewed == null
-                      ? tile(
-                          'summary-viewed-locked',
-                          'Viewed by recruiters',
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 6),
-                            child: Icon(LucideIcons.lock, size: 20, color: AppColors.outline),
-                          ),
-                          'See plans to know when they open yours',
-                          () => links.openSite(context, '/career/plans'),
-                          hintColor: AppColors.primary,
-                        )
-                      : tile(
-                          'summary-viewed',
-                          'Viewed by recruiters',
-                          Text('$viewed', style: CareerText.bigNumber),
-                          viewed == 0 ? 'Not opened yet' : 'Opened by a recruiter',
-                          () {},
-                        ),
-                ),
-              ],
-            ),
-            const Divider(height: 1, color: AppColors.cardRule),
-            Row(
-              children: [
-                Expanded(
-                  child: tile(
-                    'summary-interviews',
-                    'Interviews',
-                    Text('${s.interviews}', style: CareerText.bigNumber),
-                    s.nextInterviewAt == null ? 'None scheduled' : 'Next: ${formatWeekday(s.nextInterviewAt!)}',
-                    () => controller.selectTab(ApplicationsTab.interviews),
-                  ),
-                ),
-                const SizedBox(height: 86, child: VerticalDivider(width: 1, color: AppColors.cardRule)),
-                Expanded(
-                  child: tile(
-                    'summary-offers',
-                    'Offers',
-                    Text('${s.offers}', style: CareerText.bigNumber),
-                    s.awaitingReply == 0 ? 'Nothing waiting' : '${s.awaitingReply} awaiting your reply',
-                    () => controller.selectTab(ApplicationsTab.offers),
-                    hintColor: s.awaitingReply == 0 ? null : AppColors.amber800,
-                  ),
-                ),
-              ],
-            ),
-          ],
         ),
+      ),
+    );
+    final viewed = s.viewed;
+    final notes = <Widget>[
+      Text(s.sentThisWeek == 0 ? 'None sent this week' : '${s.sentThisWeek} sent this week', style: CareerText.meta),
+      if (viewed == null)
+        Text('See plans to know when recruiters open yours', style: CareerText.meta.copyWith(color: AppColors.primary))
+      else
+        Text(viewed == 0 ? 'Not opened yet' : 'Opened by a recruiter', style: CareerText.meta),
+      Text(
+        s.nextInterviewAt == null ? 'None scheduled' : 'Next: ${formatWeekday(s.nextInterviewAt!)}',
+        style: CareerText.meta,
+      ),
+      if (s.awaitingReply > 0)
+        Text(
+          '${s.awaitingReply} awaiting your reply',
+          style: CareerText.meta.copyWith(color: AppColors.amber800, fontWeight: FontWeight.w600),
+        ),
+    ];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        key: const ValueKey('summary'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              figure(
+                'summary-active',
+                'Active',
+                Text('${s.active}', style: number),
+                () => controller.selectTab(ApplicationsTab.active),
+              ),
+              viewed == null
+                  ? figure(
+                      'summary-viewed-locked',
+                      'Viewed',
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 3),
+                        child: Icon(LucideIcons.lock, size: 20, color: AppColors.outline),
+                      ),
+                      () => links.openSite(context, '/career/plans'),
+                    )
+                  : figure('summary-viewed', 'Viewed', Text('$viewed', style: number), () {}),
+              figure(
+                'summary-interviews',
+                'Interviews',
+                Text('${s.interviews}', style: number),
+                () => controller.selectTab(ApplicationsTab.interviews),
+              ),
+              figure(
+                'summary-offers',
+                'Offers',
+                Text('${s.offers}', style: number),
+                () => controller.selectTab(ApplicationsTab.offers),
+              ),
+            ],
+          ),
+          Wrap(
+            spacing: 6,
+            runSpacing: 2,
+            children: [
+              for (final (i, n) in notes.indexed)
+                if (i == 0)
+                  n
+                else
+                  // The dot travels with its note, so a wrap never leaves one dangling at a line's end.
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('·', style: CareerText.meta),
+                      const SizedBox(width: 6),
+                      n,
+                    ],
+                  ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Divider(height: 1, thickness: 1, color: AppColors.outlineVariant),
+        ],
       ),
     );
   }
@@ -534,7 +547,7 @@ class _UpNext extends StatelessWidget {
             for (final item in items) ...[
               const Divider(height: 1, color: AppColors.cardRule),
               item.interview != null
-                  ? _UpNextInterview(item: item, links: links, onOpen: onOpen)
+                  ? _UpNextInterview(item: item, links: links, onOpen: onOpen, clock: controller.clock)
                   : _UpNextOffer(item: item, now: now, onReview: onOffers),
             ],
           ],
@@ -545,11 +558,12 @@ class _UpNext extends StatelessWidget {
 }
 
 class _UpNextInterview extends StatelessWidget {
-  const _UpNextInterview({required this.item, required this.links, required this.onOpen});
+  const _UpNextInterview({required this.item, required this.links, required this.onOpen, required this.clock});
 
   final UpNextItem item;
   final JobLinks links;
   final void Function(CareerApplication app) onOpen;
+  final CareerClock clock;
 
   @override
   Widget build(BuildContext context) {
@@ -581,12 +595,7 @@ class _UpNextInterview extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               if (join != null)
-                StripButton(
-                  label: 'Join',
-                  icon: LucideIcons.video,
-                  filled: true,
-                  onTap: () => links.openUri(context, join),
-                )
+                JoinStripButton(interview: iv, label: 'Join', clock: clock, onJoin: () => links.openUri(context, join))
               else if (map != null)
                 StripButton(label: 'Maps', icon: LucideIcons.mapPin, onTap: () => links.openUri(context, map)),
               const SizedBox(height: 4),

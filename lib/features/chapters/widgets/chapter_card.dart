@@ -198,6 +198,7 @@ class JoinedChapterCard extends StatelessWidget {
       height: height,
       child: CommunityCard(
         padding: EdgeInsets.zero,
+        color: CommunityColors.tile,
         onTap: onOpen,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

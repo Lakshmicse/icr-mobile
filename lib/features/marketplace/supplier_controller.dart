@@ -59,6 +59,10 @@ class SupplierController extends ChangeNotifier {
   SupplierTab _tab;
   bool _disposed = false;
 
+  /// The company the person acts for, and every company they belong to; read once, apart from the listing.
+  String? _actingCompanyId;
+  Set<String> _memberOf = const {};
+
   /// The listing's own read: offices, registration, ratings.
   final detail = Loadable<Supplier>();
   final compliances = Loadable<List<Compliance>>();
@@ -71,6 +75,17 @@ class SupplierController extends ChangeNotifier {
 
   /// Whether the full listing has been read (the offices, the ratings).
   bool get hasDetail => _supplier.detailed;
+
+  /// The listing is the one of the company the person is acting for: they sell here, and nobody asks themselves
+  /// for a quote (the website swaps the quote form for a note and the listing's actions for "Edit listing").
+  bool get ownListing {
+    final acting = _actingCompanyId;
+    return acting != null && _supplier.companyId.isNotEmpty && acting == _supplier.companyId;
+  }
+
+  /// The person works at the listing's company, whichever company they act for now: the API refuses their
+  /// message to it and their rating of it, and the website offers the company's inbox in place of Message.
+  bool get onTeam => ownListing || (_supplier.companyId.isNotEmpty && _memberOf.contains(_supplier.companyId));
 
   @override
   void dispose() {
@@ -88,12 +103,26 @@ class SupplierController extends ChangeNotifier {
   /// the listing's id has no company to read the tab with yet, so the listing
   /// is read first.
   Future<void> load() async {
+    unawaited(_loadStanding());
     if (_supplier.companyId.isEmpty) {
       await _loadDetail();
       await _loadTab(_tab);
       return;
     }
     await Future.wait([_loadDetail(), _loadTab(_tab)]);
+  }
+
+  /// Which companies are the person's. A source that cannot tell (signed out, offline) leaves every action on
+  /// offer, and the API refuses the one it should.
+  Future<void> _loadStanding() async {
+    try {
+      final results = await Future.wait([repository.myCompanyId(), repository.myCompanyIds()]);
+      _actingCompanyId = results[0] as String?;
+      _memberOf = results[1] as Set<String>;
+    } catch (_) {
+      return;
+    }
+    _notify();
   }
 
   Future<void> retry() => load();

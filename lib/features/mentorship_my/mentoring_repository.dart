@@ -8,6 +8,7 @@ import '../../core/api/api_error.dart';
 import '../../core/config.dart';
 import 'mentoring_models.dart';
 import 'mentoring_clock.dart';
+import '../payments/checkout_start.dart' show CheckoutStart;
 
 /// Everything after a member finds a mentor, from the API: pairings and what
 /// happens inside one (sessions, goals, tasks, feedback, concerns), requests,
@@ -15,7 +16,7 @@ import 'mentoring_clock.dart';
 ///
 /// Money: a payment the API completes itself (₹0, a session credit that
 /// covers it, or a gateway in simulated mode) is completed here; a real PayU
-/// payment continues on the website, which runs the gateway's return leg.
+/// payment comes back as the gateway's form, paid in the app's own payment view.
 class MentoringRepository {
   MentoringRepository({required this.api});
 
@@ -244,12 +245,9 @@ class MentoringRepository {
   });
 
   /// Pays for a programme the mentor accepted. A term the API completes itself (nothing to pay, or a gateway in
-  /// simulated mode) is completed here; a real PayU payment continues on the website, which runs the gateway's
-  /// return leg: the screen has shown the API's quote (price, member discount, tax, total) before this is called.
+  /// simulated mode) is completed here; a real PayU payment comes back as the gateway's form, paid in the app's own
+  /// payment view: the screen has shown the API's quote (price, member discount, tax, total) before this is called.
   Future<PaymentOutcome> payPlanTerm(PlanTerm term) async {
-    if (term.totalPaisa > 0 && await paymentsLive()) {
-      return const PaymentOutcome(completed: false, sitePath: '/mentorship/my?tab=purchases');
-    }
     final res = await _send('POST', '/mentor-plans/subscriptions/${term.id}/pay') as Map<String, dynamic>?;
     if (res?['devActivated'] == true) {
       return PaymentOutcome(
@@ -258,7 +256,7 @@ class MentoringRepository {
         mentorshipId: res?['mentorshipId'] as String?,
       );
     }
-    return const PaymentOutcome(completed: false, sitePath: '/mentorship/my?tab=purchases');
+    return PaymentOutcome(completed: false, gateway: CheckoutStart.fromJson(res ?? const {}));
   }
 
   /// The member's mentoring intent; null until they have written one.
@@ -300,14 +298,10 @@ class MentoringRepository {
   Future<void> declineTime(String id, String note) =>
       _send('POST', '/mentor-services/purchases/$id/decline-time', {'note': note.trim()});
 
-  /// Pays for an accepted session, as the screen's [quote] worked it out: in the app when nothing is left to pay
-  /// (a free session, or a session credit that covers it) or the gateway is simulated; on the website otherwise,
-  /// which runs PayU's return leg.
+  /// Pays for an accepted session, as the screen's [quote] worked it out: booked at once when nothing is left to pay
+  /// (a free session, or a session credit that covers it) or the gateway is simulated; else the gateway's form, paid
+  /// in the app's own payment view.
   Future<PaymentOutcome> pay(ServicePurchase p, {required PriceQuote quote}) async {
-    final site = '/mentorship/my?tab=purchases&purchase=${p.id}';
-    if (quote.chargedPaisa > 0 && await paymentsLive()) {
-      return PaymentOutcome(completed: false, sitePath: site);
-    }
     final res =
         await _send('POST', '/mentor-services/purchases/${p.id}/pay', {'useCredit': quote.creditPaisa > 0})
             as Map<String, dynamic>?;
@@ -319,7 +313,7 @@ class MentoringRepository {
             : 'The session is booked.',
       );
     }
-    return PaymentOutcome(completed: false, sitePath: site);
+    return PaymentOutcome(completed: false, gateway: CheckoutStart.fromJson(res ?? const {}));
   }
 
   Future<void> cancelBooking(String id, String reason) =>
@@ -747,18 +741,16 @@ class MentoringRepository {
     );
   }
 
-  /// Buys a seat at a paid session: in the app when the API completes it (nothing to pay after the member
-  /// discount, or a simulated gateway), on the website when real money moves.
+  /// Buys a seat at a paid session: booked at once when the API completes it (nothing to pay after the member
+  /// discount, or a simulated gateway), else the gateway's form, paid in the app's own payment view.
   Future<PaymentOutcome> buyGroupSeat(GroupSession s, {String? question, required PriceQuote quote}) async {
-    final site = '/mentorship/groups/${s.id}';
-    if (quote.chargedPaisa > 0 && await paymentsLive()) return PaymentOutcome(completed: false, sitePath: site);
     final res =
         await _send('POST', '/mentorship/group-sessions/${s.id}/seat/checkout', {
               if (question != null && question.trim().isNotEmpty) 'question': question.trim(),
             })
             as Map<String, dynamic>?;
     if (res?['devActivated'] == true) return const PaymentOutcome(completed: true, message: 'Your seat is booked.');
-    return PaymentOutcome(completed: false, sitePath: site);
+    return PaymentOutcome(completed: false, gateway: CheckoutStart.fromJson(res ?? const {}));
   }
 
   /// The caller's own rating of a finished session; null when they left none.

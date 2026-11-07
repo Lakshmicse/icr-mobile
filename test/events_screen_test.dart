@@ -15,11 +15,23 @@ import 'package:provider/provider.dart';
 
 import 'helpers/events_fixtures.dart';
 import 'helpers/fonts.dart';
+import 'package:icr_mobile/features/payments/payment_screen.dart';
 
 /// Every control of the Events board and of an event's sheet, pressed on the real screens over the real
 /// repository, with only the API faked (`helpers/events_fixtures.dart`) and the two platform channels it
 /// ends in (the browser, the share sheet) listened to. What the API itself does in answer is proved by
 /// `test/live/events_live_test.dart`.
+/// Stands in for the app's payment view: records the gateway address each payment is posted to and pays at once.
+List<String> payInTest() {
+  final posted = <String>[];
+  PaymentServices.pay = (context, {required action, required fields, String title = ''}) async {
+    posted.add(action);
+    return PaymentOutcome.success;
+  };
+  addTearDown(PaymentServices.reset);
+  return posted;
+}
+
 void main() {
   setUpAll(loadAppFonts);
 
@@ -455,12 +467,16 @@ void main() {
       expect(inCard('full', find.text('On the waitlist')), findsOneWidget);
     });
 
-    testWidgets('Get Tickets opens the event\'s page on the website; nothing is registered', (tester) async {
+    testWidgets('Get Tickets buys the ticket and pays in the app; the website is never opened', (tester) async {
+      final paid = payInTest();
       await pumpBoard(tester);
       expect(inCard('summit', find.text('₹15,000 per pass')), findsOneWidget);
       await tapLeftEnd(tester, inCard('summit', find.text('Get Tickets')));
-      expect(launched.single.toString(), 'https://icr.org.in/events/slug-summit');
-      expect(api.calls.where((c) => c.startsWith('POST')), isEmpty);
+      await settle(tester);
+      expect(api.calls, contains('POST /events/summit/ticket'));
+      expect(paid.single, 'https://test.payu.in/_payment', reason: "the gateway's form, in the app's payment view");
+      expect(launched, isEmpty);
+      expect(find.text('Payment received. Your seat is confirmed.'), findsOneWidget);
     });
 
     testWidgets('Details opens the sheet, for a priced event too', (tester) async {
@@ -707,15 +723,17 @@ void main() {
       expect(find.text('Pass #ICR-EVT-BMS'), findsOneWidget);
     });
 
-    testWidgets('a priced event: Get Tickets opens the website, the price is in the bar', (tester) async {
+    testWidgets('a priced event: Get Tickets pays in the app, the price is in the bar', (tester) async {
+      final paid = payInTest();
       await pumpBoard(tester);
       await openSheet(tester, 'summit');
       expect(find.text('₹15,000 per pass'), findsWidgets);
       expect(find.text('₹15,000 PER PASS'), findsOneWidget);
       await tester.tap(find.descendant(of: find.byType(EventSheetBar), matching: find.text('Get Tickets')));
-      await tester.pump();
-      expect(launched.single.toString(), 'https://icr.org.in/events/slug-summit');
-      expect(api.calls.where((c) => c.startsWith('POST')), isEmpty);
+      await settle(tester);
+      expect(api.calls, contains('POST /events/summit/ticket'));
+      expect(paid.single, 'https://test.payu.in/_payment');
+      expect(launched, isEmpty);
     });
 
     testWidgets('an invite-only event the member was not asked to: By invitation, and no button', (tester) async {

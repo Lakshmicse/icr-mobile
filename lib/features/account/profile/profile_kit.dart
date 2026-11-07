@@ -77,7 +77,6 @@ class ProfileHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.slate200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,7 +572,7 @@ class CareerBreakTile extends StatelessWidget {
         Container(
           width: 44,
           height: 44,
-          decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.slate200)),
+          decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10)),
           child: const Icon(Symbols.more_time, size: 22, color: AppColors.slate500),
         ),
         const SizedBox(width: 12),
@@ -613,7 +612,7 @@ class EducationTile extends StatelessWidget {
         Container(
           width: 44,
           height: 44,
-          decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.slate200)),
+          decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10)),
           child: const Icon(Symbols.school, size: 22, color: AppColors.slate500),
         ),
         const SizedBox(width: 12),
@@ -668,7 +667,6 @@ class CredentialTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: c.editable ? AppColors.slate50 : AppColors.emerald50,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: c.editable ? AppColors.slate200 : AppColors.emerald200),
           ),
           child: Icon(Symbols.workspace_premium, size: 23, color: c.editable ? AppColors.slate500 : AppColors.emerald700),
         ),

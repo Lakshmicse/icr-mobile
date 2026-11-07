@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/util/join_window.dart' show joinShown;
 import '../../core/util/links.dart';
 import 'mentoring_clock.dart';
 import 'mentoring_format.dart';
@@ -93,7 +94,11 @@ class _SessionsSectionState extends State<SessionsSection> {
   }
 
   String _featuredHeading(PairingSession s) {
-    if (c.overdue(s)) return 'Needs you: a session to close';
+    if (c.running(s)) return 'Happening now';
+    // Only the mentor can mark an hour held; the mentee waits on them for it.
+    if (c.overdue(s)) {
+      return c.isMentor ? 'Needs you: a session to close' : 'Waiting on ${c.pairing!.mentor.firstName} to confirm';
+    }
     if (s.status == SessionStatus.requested) {
       return c.isMentor ? 'Needs you: a time to answer' : 'Waiting on ${c.pairing!.mentor.firstName}';
     }
@@ -140,19 +145,15 @@ class SessionCard extends StatelessWidget {
     final p = c.pairing!;
     final now = mentoringNow();
     final overdue = c.overdue(s, now);
+    final running = c.running(s, now);
     final requested = s.status == SessionStatus.requested;
     final scheduled = s.status == SessionStatus.scheduled;
     final held = s.status == SessionStatus.completed;
     final link = meetingUri(s.meetingLink);
-    return Container(
+    // An overdue session shows its amber "Overdue" pill over a pale amber tint, never an outline.
+    return MentoringCard(
       key: ValueKey('session-${s.id}'),
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: overdue ? AppColors.amber500 : AppColors.cardRule),
-      ),
-      padding: const EdgeInsets.all(14),
+      tint: overdue ? AppColors.amber50 : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -160,7 +161,11 @@ class SessionCard extends StatelessWidget {
             children: [
               Expanded(child: Text(whenLabel(s.scheduledAt), style: MentoringText.cardTitle)),
               StatusPill(
-                overdue ? 'Overdue' : _statusWord(c, s),
+                overdue
+                    ? 'Overdue'
+                    : running
+                    ? 'In progress'
+                    : _statusWord(c, s),
                 tone: overdue
                     ? PillTone.amber
                     : switch (s.status) {
@@ -180,6 +185,12 @@ class SessionCard extends StatelessWidget {
                 '${held ? ' · counted' : ''}',
           ),
           if (s.agenda != null && s.agenda!.isNotEmpty) MetaLine(icon: LucideIcons.notebookPen, text: s.agenda!),
+          if (overdue && !c.isMentor)
+            MetaLine(
+              icon: LucideIcons.info,
+              text:
+                  '${p.mentor.firstName} confirms a session once it has happened. If it did not, move it to a new time.',
+            ),
           if (s.cancelReason != null && s.status == SessionStatus.cancelled)
             MetaLine(icon: LucideIcons.info, text: s.cancelReason!, color: AppColors.amber800),
           if (s.summary != null && s.summary!.isNotEmpty) MetaLine(icon: LucideIcons.sparkles, text: s.summary!),
@@ -206,8 +217,8 @@ class SessionCard extends StatelessWidget {
             MetaLine(icon: LucideIcons.link, text: 'No meeting link yet', color: AppColors.outline),
           ActionWrap(
             children: [
-              if (scheduled && link != null)
-                SolidButton(label: 'Join', icon: LucideIcons.video, onPressed: () => openUrl(context, link)),
+              if (scheduled && link != null && joinShown(s.scheduledAt, s.durationMin, now))
+                JoinButton(link: link, startsAt: s.scheduledAt, durationMin: s.durationMin),
               if (c.isMentor && requested) ...[
                 SolidButton(
                   label: 'Approve',

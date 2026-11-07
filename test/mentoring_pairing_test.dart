@@ -59,7 +59,13 @@ void main() {
       expect(find.text('Your mentor'), findsOneWidget);
       expect(find.text('Anand Iyer'), findsWidgets);
       expect(find.textContaining('Mentor since'), findsOneWidget);
-      expect(find.text('Needs you: a session to close'), findsOneWidget);
+      // Only the mentor can mark an hour held, so a mentee is told who closes it, not asked to.
+      expect(find.text('Waiting on Anand to confirm'), findsOneWidget);
+      expect(find.text('Needs you: a session to close'), findsNothing);
+      expect(
+        find.text('Anand confirms a session once it has happened. If it did not, move it to a new time.'),
+        findsOneWidget,
+      );
       expect(find.text('Overdue'), findsOneWidget);
       expect(find.text('Sessions'), findsOneWidget);
       expect(find.text('Ask for a time'), findsOneWidget);
@@ -344,13 +350,55 @@ void main() {
       expect(find.text('No meeting link yet'), findsNothing);
     });
 
-    testWidgets('Join opens the session\'s meeting link', (tester) async {
+    testWidgets('a session whose hour went by offers no call; one days ahead is greyed until it opens', (tester) async {
       await pump(tester);
+      Finder joinIn(String id) =>
+          find.descendant(of: find.byKey(ValueKey('session-$id')), matching: find.textContaining('Join'));
+      expect(joinIn('s-overdue'), findsNothing, reason: 'a day late: its room closed 30 minutes after it ended');
+      expect(inCard('s-next', 'Join from 9:45 AM'), findsOneWidget);
+      expect(inCard('s-next', 'Join'), findsNothing);
+      final urls = launches(tester);
+      await tester.ensureVisible(inCard('s-next', 'Join from 9:45 AM'));
+      await tester.tap(inCard('s-next', 'Join from 9:45 AM'));
+      await tester.pump();
+      expect(urls, isEmpty);
+    });
+
+    testWidgets('Join opens the meeting link from 15 minutes before, stays through an overrun, and goes after', (
+      tester,
+    ) async {
+      // s-next is at 10:00 on 29 Oct for 45 minutes: its room is open 9:45 to 11:15.
+      var now = DateTime(2026, 10, 29, 9, 40);
+      mentoringNow = () => now;
+      await pump(tester);
+      expect(inCard('s-next', 'Join from 9:45 AM'), findsOneWidget);
+
+      // The screen stays open: the button turns pressable on its own when the room opens.
+      now = DateTime(2026, 10, 29, 9, 46);
+      await tester.pump(const Duration(seconds: 30));
+      expect(inCard('s-next', 'Join'), findsOneWidget);
       final urls = launches(tester);
       await tester.ensureVisible(inCard('s-next', 'Join'));
       await tester.tap(inCard('s-next', 'Join'));
       await tester.pump();
       expect(urls, ['https://meet.google.com/icr-demo']);
+
+      now = DateTime(2026, 10, 29, 10, 50);
+      await tester.pump(const Duration(seconds: 30));
+      expect(inCard('s-next', 'Join'), findsOneWidget, reason: 'a call that overruns keeps its Join');
+
+      now = DateTime(2026, 10, 29, 11, 16);
+      await tester.pump(const Duration(seconds: 30));
+      expect(inCard('s-next', 'Join'), findsNothing);
+    });
+
+    testWidgets('a call under way reads In progress, not Overdue', (tester) async {
+      mentoringNow = () => DateTime(2026, 10, 29, 10, 10);
+      await pump(tester);
+      expect(inCard('s-next', 'In progress'), findsOneWidget);
+      expect(inCard('s-next', 'Overdue'), findsNothing);
+      expect(inCard('s-next', 'Join'), findsOneWidget);
+      expect(inCard('s-overdue', 'Overdue'), findsOneWidget);
     });
 
     testWidgets('a paused pairing offers no booking until it is resumed', (tester) async {

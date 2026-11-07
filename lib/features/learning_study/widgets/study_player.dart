@@ -46,11 +46,8 @@ class StudyPlayer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: height,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: StudyColors.rule),
-      ),
+      // A tinted bar, never an outlined one (the owner's rule, Nov 2026).
+      decoration: BoxDecoration(color: AppColors.surfaceContainer, borderRadius: BorderRadius.circular(16)),
       child: LayoutBuilder(
         builder: (context, box) {
           final slot = box.maxWidth >= 340
@@ -341,11 +338,9 @@ class _VerdictButton extends StatelessWidget {
       excludeSemantics: true,
       onTap: onPressed,
       child: Material(
-        color: selected ? fill : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: selected ? ink : StudyColors.border, width: selected ? 1.5 : 1),
-        ),
+        // The mark chosen shows by its tint fill and ink; the other is the neutral tint. No outline either way.
+        color: selected ? fill : AppColors.surfaceContainer,
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
           customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           onTap: onPressed,

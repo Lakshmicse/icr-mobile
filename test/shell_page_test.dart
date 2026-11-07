@@ -120,7 +120,7 @@ void main() {
     await tester.tap(find.text('Discover').hitTestable());
     await tester.pumpAndSettle();
     expect(find.text('the events screen'), findsNothing);
-    expect(find.text('Regional Chapters'), findsOneWidget);
+    expect(find.text('Chapters'), findsOneWidget);
   });
 
   group('Back with the profile menu open', () {

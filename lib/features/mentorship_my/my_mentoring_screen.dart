@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/api_client.dart';
-import '../../core/util/links.dart';
-import 'mentoring_format.dart';
+import '../../core/widgets/workspace_embed.dart';
+import '../workspaces/page_kit.dart' show WsColors;
 import 'mentoring_links.dart';
-import 'mentoring_models.dart';
+import 'mentoring_overview.dart';
 import 'mentoring_repository.dart';
 import 'my_mentoring_controller.dart';
 import 'group_sessions_screen.dart';
@@ -14,9 +13,7 @@ import 'pairing_screen.dart';
 import 'programmes_screen.dart';
 import 'my_mentoring_tabs.dart';
 import 'purchases_tab.dart';
-import 'widgets/blocks.dart';
 import 'widgets/kit.dart';
-import 'mentoring_clock.dart';
 
 /// Pushes "My mentoring" (the website's `/mentorship/my`), optionally on one tab.
 Future<void> openMyMentoring(
@@ -135,14 +132,12 @@ class _MyMentoringScreenState extends State<MyMentoringScreen> {
               _ => 0,
             },
         ];
-        return MentoringPage(
-          title: 'My Mentoring',
-          onBack: widget.onBack,
-          onBell: () => _links.notifications(context),
-          body: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+        final body = Column(
+          children: [
+            ColoredBox(
+              color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
                 child: SegmentTabs(
                   labels: [for (final t in tabs) t.label],
                   selected: tabs.indexOf(_tab).clamp(0, tabs.length - 1),
@@ -150,9 +145,18 @@ class _MyMentoringScreenState extends State<MyMentoringScreen> {
                   badges: badges,
                 ),
               ),
-              Expanded(child: _body()),
-            ],
-          ),
+            ),
+            const Divider(height: 1, thickness: 1, color: WsColors.hairline),
+            Expanded(child: _body()),
+          ],
+        );
+        // In a workspace's tab the workspace's bar and tab name the page: no heading of its own.
+        if (WorkspaceEmbed.of(context)) return Material(color: Colors.white, child: body);
+        return MentoringPage(
+          title: 'My Mentoring',
+          onBack: widget.onBack,
+          onBell: () => _links.notifications(context),
+          body: body,
         );
       },
     );
@@ -174,7 +178,7 @@ class _MyMentoringScreenState extends State<MyMentoringScreen> {
     Future<void> refresh() => _c.refreshTab(_tab);
     switch (_tab) {
       case MyTab.mentoring:
-        return _MentoringTab(controller: _c, links: _links, onOpenPairing: _openPairingId, onSelectTab: _select);
+        return MentoringOverview(controller: _c, links: _links, onOpenPairing: _openPairingId, onSelectTab: _select);
       case MyTab.requests:
         return RequestsTab(controller: _c, links: _links);
       case MyTab.calendar:
@@ -224,156 +228,5 @@ class _MyMentoringScreenState extends State<MyMentoringScreen> {
       ),
     );
     if (mounted) _c.refresh();
-  }
-}
-
-/// The first tab: what needs the member, what is next, and their pairings.
-class _MentoringTab extends StatelessWidget {
-  const _MentoringTab({
-    required this.controller,
-    required this.links,
-    required this.onOpenPairing,
-    required this.onSelectTab,
-  });
-
-  final MyMentoringController controller;
-  final MentorshipLinks links;
-  final ValueChanged<String> onOpenPairing;
-  final ValueChanged<MyTab> onSelectTab;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = controller;
-    final loading = !c.pairings.loaded && c.pairings.loading;
-    final live = c.livePairings;
-    final finished = c.finishedPairings;
-    final asMentor = live.where((p) => p.viewerIsMentor).toList();
-    final asMentee = live.where((p) => !p.viewerIsMentor).toList();
-    final summary = c.summary.data;
-    final nextUp = [
-      for (final s in c.upcoming.data ?? const <PairingSession>[])
-        if (s.upcoming(mentoringNow())) s,
-    ];
-    nextUp.sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
-
-    final needs = <NeedItem>[
-      if (c.pendingReceived.isNotEmpty)
-        NeedItem(
-          icon: LucideIcons.inbox,
-          text: '${countLabel(c.pendingReceived.length, 'mentoring request')} to answer',
-          onTap: () => onSelectTab(MyTab.requests),
-        ),
-      if (c.pendingSent.isNotEmpty)
-        NeedItem(
-          icon: LucideIcons.hourglass,
-          text: '${countLabel(c.pendingSent.length, 'request')} waiting for a mentor to reply',
-          onTap: () => onSelectTab(MyTab.requests),
-          tone: PillTone.grey,
-        ),
-      for (final s in nextUp.where((s) => s.scheduledAt.difference(mentoringNow()).inHours < 24).take(2))
-        NeedItem(
-          icon: LucideIcons.calendarClock,
-          text:
-              'Session ${daysFromNow(s.scheduledAt)} at ${timeLabel(s.scheduledAt)}'
-              '${s.counterpart == null ? '' : ' with ${s.counterpart!.firstName}'}',
-          onTap: () => onSelectTab(MyTab.calendar),
-        ),
-    ];
-
-    final children = <Widget>[
-      if (summary != null)
-        StatStrip(
-          tiles: [
-            ('${summary.activeAsMentee + summary.activeAsMentor}', 'Live pairings'),
-            ('${summary.pendingIncoming + summary.pendingOutgoing}', 'Open requests'),
-            ('${nextUp.length}', 'Sessions ahead'),
-          ],
-        ),
-      NeedsYouCard(items: needs, clear: 'Nothing is waiting on you.'),
-      if (nextUp.isNotEmpty) ...[
-        const SectionTitle(title: 'Up next', top: 6),
-        _UpNext(session: nextUp.first, links: links, onOpen: () => onOpenPairing(nextUp.first.mentorshipId)),
-      ],
-      if (asMentee.isNotEmpty) ...[
-        SectionTitle(title: asMentor.isEmpty ? 'Your mentors' : 'Mentors you learn from', top: 14),
-        for (final p in asMentee) _card(context, p),
-      ],
-      if (asMentor.isNotEmpty) ...[
-        SectionTitle(title: 'Your mentees', top: 14),
-        for (final p in asMentor) _card(context, p),
-      ],
-      if (live.isEmpty && c.pairings.loaded)
-        EmptyNote(
-          icon: LucideIcons.handshake,
-          compact: true,
-          title: 'No mentor yet',
-          body: 'Ask a mentor to guide you. Most replies come within a few days.',
-        ),
-      if (finished.isNotEmpty) ...[
-        const SectionTitle(title: 'Finished', top: 14),
-        for (final p in finished) _card(context, p),
-      ],
-      BlueBand(
-        kicker: 'Mentoring',
-        title: live.isEmpty ? 'Find your first mentor' : 'Find another mentor',
-        body: 'Browse people who have done the job you want, by domain, company or years of experience.',
-        buttonLabel: 'Find a mentor',
-        icon: LucideIcons.search,
-        onPressed: () => links.directory(context),
-      ),
-    ];
-
-    return LoadedList(
-      loading: loading,
-      error: c.pairings.error,
-      errorTitle: "Couldn't load your mentoring",
-      onRefresh: c.refresh,
-      children: loading || (c.pairings.error != null && !c.pairings.loaded) ? const [] : children,
-    );
-  }
-
-  Widget _card(BuildContext context, Pairing p) => PairingCard(
-    pairing: p,
-    next: controller.nextSessionOf(p.id),
-    onOpen: () => onOpenPairing(p.id),
-    onMessage: () => links.messagePairing(context, controller.repository, p.id),
-  );
-}
-
-class _UpNext extends StatelessWidget {
-  const _UpNext({required this.session, required this.links, required this.onOpen});
-
-  final PairingSession session;
-  final MentorshipLinks links;
-  final VoidCallback onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = session;
-    final link = meetingUri(s.meetingLink);
-    return MentoringCard(
-      onTap: onOpen,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(child: Text(whenLabel(s.scheduledAt), style: MentoringText.cardTitle)),
-              StatusPill(daysFromNow(s.scheduledAt), tone: PillTone.mint),
-            ],
-          ),
-          MetaLine(
-            icon: LucideIcons.user,
-            text:
-                '${s.counterpart?.name ?? 'Your mentoring session'} · ${minutesLabel(s.durationMin)} · ${modeLabel(s.mode)}',
-          ),
-          if (s.agenda != null && s.agenda!.isNotEmpty) MetaLine(icon: LucideIcons.notebookPen, text: s.agenda!),
-          if (link != null)
-            ActionWrap(
-              children: [SolidButton(label: 'Join', icon: LucideIcons.video, onPressed: () => openUrl(context, link))],
-            ),
-        ],
-      ),
-    );
   }
 }

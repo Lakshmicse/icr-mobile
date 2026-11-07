@@ -23,7 +23,8 @@ class CompanyWords {
       'request to join.';
 
   static const workspaces = 'All workspaces';
-  static const workspacesLead = 'Switch between the companies you belong to. Your personal account is always available.';
+  static const workspacesLead =
+      'Switch between the companies you belong to. Your personal account is always available.';
   static const personalAccount = 'Personal account';
   static const actingAsYourself = 'Acting as yourself';
   static const active = 'Active';
@@ -37,6 +38,16 @@ class CompanyWords {
   static const askToJoinLead =
       'Find your organisation on ICR. An admin there decides; until then nothing changes for you, and they choose '
       'the role you join with.';
+
+  static const invitationsTitle = 'Waiting for you';
+  static const invitationsExplain =
+      'An admin added you to their team. You join only when you accept, and you can decline.';
+  static const accept = 'Accept';
+  static const accepting = 'Joining…';
+  static const decline = 'Decline';
+  static const declining = 'Declining…';
+  static const couldNotAccept = 'Could not accept that invitation.';
+  static const couldNotDecline = 'Could not decline that invitation.';
 
   static const principles = <(String, String)>[
     ('One company at a time', 'Switching reloads your dashboard, team, jobs and requirements for that company.'),
@@ -69,6 +80,16 @@ class CompanyWords {
     final at = r.requestedAt == null ? null : DateTime.tryParse(r.requestedAt!);
     final role = roleLabel(r.role);
     return at == null ? 'Requested as $role' : 'Requested as $role · ${timeAgo(at, now: now)}';
+  }
+
+  /// "Added as Recruiter by Chetan CompanyAdmin · 3d ago", with the office after it when the place is in one.
+  static String invited(CompanyInvitation i, {DateTime? now}) {
+    final at = i.invitedAt == null ? null : DateTime.tryParse(i.invitedAt!);
+    final role = roleLabel(i.role);
+    final by = i.invitedBy == null ? '' : ' by ${i.invitedBy}';
+    final ago = at == null ? '' : ' · ${timeAgo(at, now: now)}';
+    final office = i.branchName == null ? '' : ' · ${i.branchName}';
+    return 'Added as $role$by$ago$office';
   }
 
   static List<String> leavePoints(MyCompany c) => [

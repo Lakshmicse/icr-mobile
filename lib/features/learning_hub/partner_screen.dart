@@ -4,7 +4,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/util/links.dart';
 import '../../core/widgets/buttons.dart';
 import '../../core/widgets/search_field.dart';
 import '../../core/widgets/title_bar.dart';
@@ -209,8 +208,7 @@ class _PartnerScreenState extends State<PartnerScreen> {
 }
 
 /// The institute's identity: its mark, name, whether ICR has verified it, how
-/// many courses it has, what it says about itself, and the two things a member
-/// can do: ask it a question, or visit its website.
+/// many courses it has, what it says about itself, and "Ask the institute".
 class _Header extends StatelessWidget {
   const _Header({required this.institute, required this.onAsk});
 
@@ -219,7 +217,6 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final website = institute.website;
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 14, 10, 6),
       child: Column(
@@ -266,31 +263,16 @@ class _Header extends StatelessWidget {
             const SizedBox(height: 10),
             Text(institute.summary!, style: HubText.instituteBody),
           ],
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              if (institute.canEnquire)
-                Expanded(
-                  child: PrimaryButton(
-                    key: const ValueKey('ask-the-institute'),
-                    label: 'Ask the institute',
-                    icon: LucideIcons.messageSquare,
-                    height: 44,
-                    onPressed: onAsk,
-                  ),
-                ),
-              if (institute.canEnquire && website != null) const SizedBox(width: 10),
-              if (website != null)
-                OutlinePillButton(
-                  key: const ValueKey('institute-website'),
-                  label: 'Website',
-                  height: 44,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  textStyle: HubText.instituteLink.copyWith(color: AppColors.onSurface),
-                  onPressed: () => openUrl(context, Uri.parse(website)),
-                ),
-            ],
-          ),
+          if (institute.canEnquire) ...[
+            const SizedBox(height: 12),
+            PrimaryButton(
+              key: const ValueKey('ask-the-institute'),
+              label: 'Ask the institute',
+              icon: LucideIcons.messageSquare,
+              height: 44,
+              onPressed: onAsk,
+            ),
+          ],
         ],
       ),
     );

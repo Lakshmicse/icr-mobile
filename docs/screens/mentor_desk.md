@@ -76,3 +76,5 @@ W = widget test, L = live test. Every tab has loading, error with "Try again", e
 * The bio editor is plain text (the website's is rich text); an unedited rich bio is never rewritten.
 * Withdrawing a held time cancels the request; the API has no "give the time back and keep the request" call.
 * Late answers to written consultations are not handled: the API retired that service type.
+
+**6 Nov 2026 (owner).** The Overview's six figures are one `StatStrip` of plain figures in two rows of three with a hairline under — no grey tiles (`StatTile`/`StatStrip` in `mentorship_my/widgets`, shared with the People tabs' strips): "these designs should not have the background colour and efficiently use the space".

@@ -104,6 +104,13 @@ abstract class AccountRepository {
   /// `DELETE /me/companies/requests/:id`; the list as it now stands.
   Future<MyCompanies> withdrawRequest(String companyId);
 
+  /// `POST /me/companies/invitations/:id/accept`: joins the company an admin added the person to. Joining may
+  /// make it the company they act for, and the role rides in the token, so a fresh token pair comes back.
+  Future<SessionTokens> acceptInvitation(String companyId);
+
+  /// `POST /me/companies/invitations/:id/decline`; the list as it now stands.
+  Future<MyCompanies> declineInvitation(String companyId);
+
   /// `POST /me/companies`: the founder becomes its admin and acts for it. A fresh token pair.
   Future<SessionTokens> createCompany(CompanyDraft draft);
 

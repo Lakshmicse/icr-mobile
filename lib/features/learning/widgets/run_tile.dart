@@ -41,20 +41,13 @@ class RunTile extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
+      // A tinted tile; the one picked takes the brand's pale tint instead of a heavier outline (the owner's rule,
+      // Nov 2026).
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(7.5),
-          boxShadow: selected ? const [BoxShadow(color: Color(0x14000000), blurRadius: 3, offset: Offset(0, 1))] : null,
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(7.5)),
         child: Material(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(7.5),
-            side: BorderSide(
-              color: selected ? LearningColors.tileSelectedBorder : LearningColors.tileBorder,
-              width: selected ? 2 : 1,
-            ),
-          ),
+          color: selected ? AppColors.chipEmphasis : AppColors.surfaceContainer,
+          borderRadius: BorderRadius.circular(7.5),
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(7.5),
@@ -113,11 +106,8 @@ class SuggestDateTile extends StatelessWidget {
     return Semantics(
       button: true,
       child: Material(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(7.5),
-          side: const BorderSide(color: LearningColors.tileBorder),
-        ),
+        color: AppColors.surfaceContainer,
+        borderRadius: BorderRadius.circular(7.5),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(7.5),

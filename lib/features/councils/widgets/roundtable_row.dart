@@ -42,7 +42,6 @@ class RoundtableRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: green ? CouncilsColors.green50 : CouncilsColors.greyPill,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: green ? CouncilsColors.green200 : CouncilsColors.rowRule),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

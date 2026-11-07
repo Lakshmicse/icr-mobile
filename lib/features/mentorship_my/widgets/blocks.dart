@@ -114,11 +114,7 @@ class NeedsYouCard extends StatelessWidget {
     }
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: AppColors.amber50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.amber100),
-      ),
+      decoration: BoxDecoration(color: AppColors.amber50, borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -306,22 +302,39 @@ class FactLine extends StatelessWidget {
 String ratingLine(double rating, int count) =>
     count == 0 ? 'No reviews yet' : '${rating.toStringAsFixed(1)} · ${countLabel(count, 'review')}';
 
-/// A bordered number tile row ("2 Active", "1 Pending").
+/// A tinted number tile row ("2 Active", "1 Pending").
+/// A strip of totals: [perRow] figures to a row (three), each a number over its caption, across the whole width
+/// with no boxes, and one hairline under the strip (owner, 6 Nov 2026: no background colour, use the space). A
+/// short last row keeps its figures the width of the others.
 class StatStrip extends StatelessWidget {
-  const StatStrip({super.key, required this.tiles});
+  const StatStrip({super.key, required this.tiles, this.perRow = 3});
 
   final List<(String value, String label)> tiles;
+  final int perRow;
 
   @override
   Widget build(BuildContext context) {
+    final rows = [
+      for (var i = 0; i < tiles.length; i += perRow) tiles.sublist(i, (i + perRow).clamp(0, tiles.length)),
+    ];
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
+      child: Column(
         children: [
-          for (final (i, t) in tiles.indexed) ...[
-            if (i > 0) const SizedBox(width: 8),
-            StatTile(value: t.$1, label: t.$2),
-          ],
+          for (final row in rows)
+            Row(
+              children: [
+                for (final (i, t) in row.indexed) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  StatTile(value: t.$1, label: t.$2),
+                ],
+                for (var i = row.length; i < perRow; i++) ...[
+                  const SizedBox(width: 8),
+                  const Expanded(child: SizedBox()),
+                ],
+              ],
+            ),
+          const Divider(height: 1, thickness: 1, color: AppColors.outlineVariant),
         ],
       ),
     );

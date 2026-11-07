@@ -24,7 +24,7 @@ import 'settings_sheets.dart';
 /// "Settings" row opens it.
 ///
 /// * **Account**: Sign-in & security (email, mobile number, password, links),
-///   Your companies (which one the person acts for, switching, leaving, creating),
+///   My companies (which one the person acts for, switching, leaving, creating),
 ///   Saved items;
 /// * **Preferences**: Language (of ICR's emails, notifications and replies),
 ///   Notifications (per kind of update, in the app and by email);
@@ -44,6 +44,7 @@ class SettingsScreen extends StatefulWidget {
     this.onOpenCompanies,
     this.onOpenSaved,
     this.onContact,
+    this.onSupport,
     this.onSessionChanged,
     this.opener = openUrl,
     this.share = shareWithPhone,
@@ -55,12 +56,15 @@ class SettingsScreen extends StatefulWidget {
   /// The person's own profile (`MyProfileScreen`).
   final VoidCallback? onOpenProfile;
 
-  /// "Your companies": the app's own screen when left out.
+  /// "My companies": the app's own screen when left out.
   final VoidCallback? onOpenCompanies;
   final VoidCallback? onOpenSaved;
 
   /// "Contact us".
   final VoidCallback? onContact;
+
+  /// "Help & support": the member's requests to ICR (the website's `/support`). The row shows only when given.
+  final VoidCallback? onSupport;
 
   /// The company being acted for changed (see `MyCompaniesScreen.onSessionChanged`).
   final VoidCallback? onSessionChanged;
@@ -80,7 +84,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _repository =
-        widget.repository ?? (AppConfig.demo ? DemoAccountRepository() : ApiAccountRepository(api: context.read<ApiClient>()));
+        widget.repository ??
+        (AppConfig.demo ? DemoAccountRepository() : ApiAccountRepository(api: context.read<ApiClient>()));
     _read();
   }
 
@@ -193,11 +198,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(name, style: AccountText.cardTitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      if (session != null) Text(session.email, style: AccountText.meta, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      if (session != null)
+                        Text(session.email, style: AccountText.meta, maxLines: 1, overflow: TextOverflow.ellipsis),
                       TextButton(
                         key: const Key('settings.profile'),
                         onPressed: _openProfile,
-                        style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 32), alignment: Alignment.centerLeft),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 32),
+                          alignment: Alignment.centerLeft,
+                        ),
                         child: Text('View profile', style: AccountText.link),
                       ),
                     ],
@@ -219,7 +229,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _Row(
                 key: const Key('settings.companies'),
                 icon: Symbols.apartment,
-                title: 'Your companies',
+                title: 'My companies',
                 subtitle: active == null ? 'Acting as yourself' : 'Acting for ${active.name}',
                 onTap: _openCompanies,
               ),
@@ -266,6 +276,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Group(
             title: 'About ICR',
             rows: [
+              // The website's About page, drawn by the app (`AboutScreen`); the opener finds its screen.
+              _Row(
+                key: const Key('settings.about'),
+                icon: Symbols.info,
+                title: 'About ICR',
+                onTap: () => widget.opener(context, AppConfig.sitePage('/about')),
+              ),
+              if (widget.onSupport != null)
+                _Row(
+                  key: const Key('settings.support'),
+                  icon: Symbols.support_agent,
+                  title: 'Help & support',
+                  onTap: widget.onSupport!,
+                ),
               _Row(key: const Key('settings.contact'), icon: Symbols.mail, title: 'Contact us', onTap: _contact),
               _Row(
                 key: const Key('settings.terms'),
@@ -296,7 +320,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
 }
 
 class _Group extends StatelessWidget {
@@ -312,15 +335,14 @@ class _Group extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 6, 20, 8),
-          child: Text(title.toUpperCase(), style: AccountText.meta.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.6, fontSize: 13)),
+          child: Text(
+            title.toUpperCase(),
+            style: AccountText.meta.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.6, fontSize: 13),
+          ),
         ),
         Container(
           margin: const EdgeInsets.fromLTRB(12, 0, 12, 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.slate200),
-          ),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
           child: Column(
             children: [
               for (final (i, r) in rows.indexed) ...[
@@ -336,7 +358,14 @@ class _Group extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row({super.key, required this.icon, required this.title, required this.onTap, this.subtitle, this.danger = false});
+  const _Row({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.subtitle,
+    this.danger = false,
+  });
 
   final IconData icon;
   final String title;

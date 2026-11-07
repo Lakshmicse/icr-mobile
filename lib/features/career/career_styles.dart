@@ -24,12 +24,9 @@ class CareerText {
   static final tabLabel = AppText.plexSans(11, FontWeight.w600, AppColors.onSurface, lineHeight: 15);
 }
 
-/// A white card with a hairline border, as the Jobs sheet's blocks.
-BoxDecoration cardDecoration({Color color = Colors.white}) => BoxDecoration(
-  color: color,
-  borderRadius: BorderRadius.circular(12),
-  border: Border.all(color: AppColors.outlineVariant),
-);
+/// A pale tinted block with no frame, as the Jobs sheet's blocks; hairlines inside it divide its rows.
+BoxDecoration cardDecoration({Color color = AppColors.slate50}) =>
+    BoxDecoration(color: color, borderRadius: BorderRadius.circular(12));
 
 /// Stars filled to [value] (halves drawn), 1 to 5.
 class StarRow extends StatelessWidget {

@@ -627,11 +627,7 @@ class AuthSuggestions<T> extends StatelessWidget {
     final shown = items.take(max).toList();
     return Container(
       margin: const EdgeInsets.only(top: 6),
-      decoration: BoxDecoration(
-        color: p.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: p.fieldBorder.withValues(alpha: 0.8)),
-      ),
+      decoration: BoxDecoration(color: p.fieldFill, borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: [
           for (final (i, item) in shown.indexed) ...[
@@ -677,16 +673,12 @@ class AuthNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = AuthPalette.of(context);
-    final (fill, border) = warning
-        ? (p.isDark ? const Color(0x33F59E0B) : const Color(0xFFFFF7E6), const Color(0xFFF59E0B))
-        : (p.isDark ? const Color(0x2610B981) : const Color(0xFFECFDF5), const Color(0xFF34D399));
+    final fill = warning
+        ? (p.isDark ? const Color(0x33F59E0B) : const Color(0xFFFFF7E6))
+        : (p.isDark ? const Color(0x2610B981) : const Color(0xFFECFDF5));
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      decoration: BoxDecoration(
-        color: fill,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: border.withValues(alpha: 0.7)),
-      ),
+      decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(10)),
       child: DefaultTextStyle.merge(
         style: AuthType.small(p).copyWith(color: p.text, fontSize: 14),
         child: child,

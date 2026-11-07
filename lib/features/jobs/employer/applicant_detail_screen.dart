@@ -13,6 +13,7 @@ import 'applicants_screen.dart' show ApplicantAvatar, stageTone;
 import 'hiring_models.dart';
 import 'hiring_repository.dart';
 import 'hiring_sheets.dart';
+import 'resume_viewer.dart';
 
 /// One application read whole by the hiring team: who applied, their answers marked against your bar,
 /// the rounds and the offer, your notes and rating, and everything done to it so far. From here the
@@ -359,7 +360,13 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
                   key: const ValueKey('detail-resume'),
                   icon: LucideIcons.fileText,
                   label: a.resumeTitle == null || a.resumeTitle!.isEmpty ? 'Résumé' : a.resumeTitle!,
-                  onTap: () => _open(a.resumeFileUrl),
+                  // A private upload: read with the session and shown in the app, never handed to the browser.
+                  onTap: () => openApplicantResume(
+                    context,
+                    repository: widget.repository,
+                    url: a.resumeFileUrl!,
+                    links: widget.links,
+                  ),
                 ),
               if (a.linkedinUrl != null && a.linkedinUrl!.isNotEmpty)
                 _LinkChip(
@@ -529,11 +536,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
       key: ValueKey('interview-${iv.id}'),
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.outlineVariant),
-      ),
+      decoration: BoxDecoration(color: AppColors.surfaceContainerLow, borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -614,11 +617,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
       key: ValueKey('offer-${o.id}'),
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.outlineVariant),
-      ),
+      decoration: BoxDecoration(color: AppColors.surfaceContainerLow, borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

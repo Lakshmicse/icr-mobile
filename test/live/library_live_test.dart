@@ -78,13 +78,10 @@ void main() {
       expect(c.libraryTotal, total);
       expect(c.documents.length, LibraryQuery.pageSize.clamp(0, total));
       expect(c.hasNext, total > LibraryQuery.pageSize);
-      // The default sort is the website's: most downloaded first.
+      // The default sort is newest first (owner, 5 Nov 2026: "sorted like latest first").
       for (var i = 1; i < c.documents.length; i++) {
-        expect(
-          c.documents[i - 1].downloadCount >= c.documents[i].downloadCount,
-          isTrue,
-          reason: 'most downloaded first',
-        );
+        final (a, b) = (c.documents[i - 1].createdAt, c.documents[i].createdAt);
+        if (a != null && b != null) expect(!a.isBefore(b), isTrue, reason: 'newest first');
       }
       // Every card carries what the screen draws.
       final rows = (raw['data'] as List).cast<Map<String, dynamic>>();

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
@@ -36,6 +38,7 @@ class MyCompaniesScreen extends StatefulWidget {
     this.pickPhoto,
     this.onNextStep,
     this.searchDelay,
+    this.focusInvitations = false,
   });
 
   /// Where the calls go; the API (or the sample member in demo mode) when null.
@@ -64,6 +67,10 @@ class MyCompaniesScreen extends StatefulWidget {
   /// How long typing settles before a company search or lookalike check runs.
   final Duration? searchDelay;
 
+  /// Opened from "{company} wants you on its team" (`/account/companies?focus=invitations`): the invitations card
+  /// scrolls into view and is washed in blue for a moment, as the website's page does.
+  final bool focusInvitations;
+
   @override
   State<MyCompaniesScreen> createState() => _MyCompaniesScreenState();
 }
@@ -77,6 +84,11 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
 
   late final AccountRepository _repository;
 
+  final _invitationsKey = GlobalKey();
+  bool _focusPending = false;
+  bool _highlight = false;
+  Timer? _highlightTimer;
+
   @override
   void initState() {
     super.initState();
@@ -86,11 +98,34 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
       repository: _repository,
       adopt: (t) => auth.adoptSession(accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user),
       onSessionChanged: widget.onSessionChanged,
-    )..load();
+    );
+    _focusPending = widget.focusInvitations;
+    _controller.load().then((_) => _focusInvitations());
+  }
+
+  /// Once the list has been read, brings the invitations card into view (nothing to show: nothing to scroll to).
+  void _focusInvitations() {
+    if (!_focusPending || !mounted) return;
+    final data = _controller.data;
+    if (data == null) return;
+    _focusPending = false;
+    if (data.invitations.isEmpty) return;
+    setState(() => _highlight = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = _invitationsKey.currentContext;
+      if (target != null && mounted) {
+        Scrollable.ensureVisible(target, alignment: 0.05, duration: const Duration(milliseconds: 280));
+      }
+    });
+    _highlightTimer?.cancel();
+    _highlightTimer = Timer(const Duration(milliseconds: 2800), () {
+      if (mounted) setState(() => _highlight = false);
+    });
   }
 
   @override
   void dispose() {
+    _highlightTimer?.cancel();
     _controller.dispose();
     _search.dispose();
     super.dispose();
@@ -115,6 +150,16 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
   Future<void> _withdraw(JoinRequest request) async {
     final ok = await _controller.withdraw(request.companyId);
     if (ok && mounted) _say('Request to join ${request.name} withdrawn.');
+  }
+
+  Future<void> _accept(CompanyInvitation invitation) async {
+    final ok = await _controller.acceptInvitation(invitation.companyId);
+    if (ok && mounted) _say('You joined ${invitation.name}.');
+  }
+
+  Future<void> _decline(CompanyInvitation invitation) async {
+    final ok = await _controller.declineInvitation(invitation.companyId);
+    if (ok && mounted) _say('You declined the invitation from ${invitation.name}.');
   }
 
   Future<void> _askToJoin() async {
@@ -172,10 +217,7 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
               title: CompanyWords.couldNotLoad,
             );
           }
-          return RefreshIndicator(
-            onRefresh: () => c.load(refresh: true),
-            child: _list(context, c, data),
-          );
+          return RefreshIndicator(onRefresh: () => c.load(refresh: true), child: _list(context, c, data));
         },
       ),
     );
@@ -209,7 +251,12 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
         ? data.companies
         : [
             for (final co in data.companies)
-              if ([co.name, co.city, co.state, roleLabel(co.role)].any((v) => v?.toLowerCase().contains(query) ?? false))
+              if ([
+                co.name,
+                co.city,
+                co.state,
+                roleLabel(co.role),
+              ].any((v) => v?.toLowerCase().contains(query) ?? false))
                 co,
           ];
     final personalActive = !data.companies.any((co) => co.active);
@@ -244,6 +291,7 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
             ],
           ),
         ),
+        if (data.invitations.isNotEmpty) _invitations(c, data),
         if (data.requests.isNotEmpty) _requests(c, data),
         _workspaces(c, data, shown, personalActive),
         const PrinciplesCard(),
@@ -251,15 +299,58 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
     );
   }
 
+  /// "Waiting for you": the places admins added the person to, each to accept or decline.
+  Widget _invitations(CompaniesController c, MyCompanies data) {
+    return AnimatedContainer(
+      key: _invitationsKey,
+      duration: const Duration(milliseconds: 400),
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      decoration: BoxDecoration(
+        color: _highlight ? const Color(0xFFE3EEFB) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ClipRRect(
+        key: const Key('companies.invitations'),
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(CompanyWords.invitationsTitle, style: AccountText.cardTitle),
+                  const SizedBox(width: 6),
+                  Text('(${data.invitations.length})', style: AccountText.meta),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: Text(CompanyWords.invitationsExplain, style: AccountText.meta),
+            ),
+            for (final (i, inv) in data.invitations.indexed)
+              InvitationRow(
+                invitation: inv,
+                first: i == 0,
+                answering: c.answering == inv.companyId ? c.answeringAction : null,
+                disabled: c.busy,
+                onAccept: () => _accept(inv),
+                onDecline: () => _decline(inv),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _requests(CompaniesController c, MyCompanies data) {
     return Container(
       key: const Key('companies.requests'),
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.slate200),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Column(
@@ -300,11 +391,7 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
     return Container(
       key: const Key('companies.workspaces'),
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.slate200),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Column(
@@ -355,7 +442,11 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
             else if (shown.isEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                child: Text('No companies match “${_search.text.trim()}”.', key: const Key('companies.noMatch'), style: AccountText.meta),
+                child: Text(
+                  'No companies match “${_search.text.trim()}”.',
+                  key: const Key('companies.noMatch'),
+                  style: AccountText.meta,
+                ),
               ),
             for (final co in shown)
               CompanyWorkspaceRow(
@@ -404,11 +495,7 @@ class _ErrorBanner extends StatelessWidget {
       key: const Key('companies.error'),
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF1F2),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFFECDD3)),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFFFFF1F2), borderRadius: BorderRadius.circular(10)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -446,7 +533,9 @@ class _Empty extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       key: const Key('companies.empty'),
-      decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.slate200))),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.slate200)),
+      ),
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
       child: Column(
         children: [

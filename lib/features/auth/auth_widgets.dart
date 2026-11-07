@@ -54,11 +54,7 @@ class AuthScaffold extends StatelessWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 440),
                     child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: p.card,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: p.cardBorder),
-                      ),
+                      decoration: BoxDecoration(color: p.card, borderRadius: BorderRadius.circular(18)),
                       child: Padding(padding: const EdgeInsets.fromLTRB(25, 30, 25, 24), child: child),
                     ),
                   ),

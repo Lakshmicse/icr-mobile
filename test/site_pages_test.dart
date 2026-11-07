@@ -257,57 +257,317 @@ void main() {
   });
 
   group('Become a partner (/learning/partners/apply)', () {
-    testWidgets('a company administrator sends the areas, proposal and accreditation, and is told it was sent', (
+    /// Scrolls to a control the form draws below the fold and taps it.
+    Future<void> tapKey(WidgetTester tester, Key key) async {
+      await tester.ensureVisible(find.byKey(key));
+      await tester.pump();
+      await tester.tap(find.byKey(key));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a company administrator says what courses they would offer, and is told the application is with ICR', (
       tester,
     ) async {
       final repo = _Partner([const PartnerCompany(id: 'c1', name: 'Northwind Facilities')]);
       await pump(tester, PartnerApplyScreen(repository: repo));
       await tester.pumpAndSettle();
+      // The website's dialog: its title and introduction, the company to apply as, and one optional box.
+      expect(find.text('Apply to become a learning partner'), findsOneWidget);
+      expect(find.textContaining('Partners apply as a company.'), findsOneWidget);
+      expect(find.text('Apply as'), findsOneWidget);
       expect(find.text('Northwind Facilities'), findsOneWidget);
-      await tester.enterText(find.byType(TextField).at(0), 'HVAC, Fire safety, Energy audits');
-      await tester.enterText(find.byType(TextField).at(1), 'Weekend batches for site engineers');
-      await tester.enterText(find.byType(TextField).at(2), 'NSDC affiliated');
-      await tester.tap(find.byKey(const Key('partner.send')));
-      await tester.pumpAndSettle();
-      expect(repo.sent.single['companyId'], 'c1');
-      expect(repo.sent.single['courseAreas'], ['HVAC', 'Fire safety', 'Energy audits']);
-      expect(repo.sent.single['proposalNotes'], 'Weekend batches for site engineers');
-      expect(repo.sent.single['accreditation'], 'NSDC affiliated');
-      expect(find.textContaining('Application sent'), findsWidgets);
+      expect(find.text('Only companies you are an admin of are listed.'), findsOneWidget);
+      expect(find.text('What courses would you like to offer? (optional)'), findsOneWidget);
+      expect(find.text('Subjects, accreditations, the courses you run today…'), findsOneWidget);
+      expect(
+        find.byType(TextField),
+        findsOneWidget,
+        reason: 'the website asks the notes alone, no areas or accreditation',
+      );
+      await tester.enterText(find.byType(TextField), '  Weekend batches for site engineers  ');
+      await tapKey(tester, const Key('partner.send'));
+      expect(repo.sent.single, {'companyId': 'c1', 'proposalNotes': 'Weekend batches for site engineers'});
+      // The sent state, in the website's words.
+      expect(find.text('Application sent'), findsOneWidget);
+      expect(find.text("Northwind Facilities's application is with ICR."), findsOneWidget);
+      expect(find.textContaining('Our team reviews every application by hand.'), findsOneWidget);
+      expect(find.text('Go to dashboard'), findsOneWidget);
+      expect(find.text('Close'), findsOneWidget);
       expect(find.byKey(const Key('partner.send')), findsNothing, reason: 'it cannot be sent twice');
     });
 
-    testWidgets('the API\'s refusal is shown in the form and nothing is lost', (tester) async {
-      final repo = _Partner([const PartnerCompany(id: 'c1', name: 'Northwind')])
-        ..refusal = 'Only a company administrator may apply.';
+    testWidgets('the notes are optional: nothing written, only the company is sent', (tester) async {
+      final repo = _Partner([const PartnerCompany(id: 'c1', name: 'Northwind')]);
       await pump(tester, PartnerApplyScreen(repository: repo));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField).at(0), 'HVAC');
-      await tester.tap(find.byKey(const Key('partner.send')));
-      await tester.pumpAndSettle();
-      expect(find.text('Only a company administrator may apply.'), findsOneWidget);
-      expect(find.byKey(const Key('partner.send')), findsOneWidget);
+      await tapKey(tester, const Key('partner.send'));
+      expect(repo.sent.single['companyId'], 'c1');
+      expect(repo.sent.single['proposalNotes'], isNull);
     });
 
-    testWidgets('a member with no company is asked to create one', (tester) async {
-      var created = 0;
-      await pump(tester, PartnerApplyScreen(repository: _Partner(const []), onCreateCompany: () => created++));
-      await tester.pumpAndSettle();
-      expect(find.text('A partner is a company'), findsOneWidget);
-      await tester.tap(find.text('Create a company'));
-      expect(created, 1);
-    });
-
-    testWidgets('a company that is already a partner, or has an application under review, says so', (tester) async {
+    testWidgets('the notes take no more than the API keeps (4,000 characters), as the website cuts them', (
+      tester,
+    ) async {
       await pump(
         tester,
         PartnerApplyScreen(
-          repository: _Partner([const PartnerCompany(id: 'c1', name: 'Northwind', applicationStatus: 'PENDING')]),
+          repository: _Partner([const PartnerCompany(id: 'c1', name: 'Northwind')]),
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.textContaining('being reviewed'), findsOneWidget);
-      expect(find.byKey(const Key('partner.send')), findsNothing);
+      await tester.enterText(find.byType(TextField), 'a' * 4100);
+      expect(tester.widget<TextField>(find.byType(TextField)).controller!.text.length, 4000);
+    });
+
+    testWidgets("the API's refusal is shown under the form and nothing is lost", (tester) async {
+      final repo = _Partner([const PartnerCompany(id: 'c1', name: 'Northwind')])
+        ..refusal = 'Northwind already has an application with our team.';
+      await pump(tester, PartnerApplyScreen(repository: repo));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'HVAC');
+      await tapKey(tester, const Key('partner.send'));
+      expect(find.text('Northwind already has an application with our team.'), findsOneWidget);
+      expect(find.byKey(const Key('partner.send')), findsOneWidget);
+      expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, 'HVAC');
+    });
+
+    testWidgets('a failure the API gave no sentence for reads "Could not send the application."', (tester) async {
+      final repo = _Partner([const PartnerCompany(id: 'c1', name: 'Northwind')])..crash = true;
+      await pump(tester, PartnerApplyScreen(repository: repo));
+      await tester.pumpAndSettle();
+      await tapKey(tester, const Key('partner.send'));
+      expect(find.text('Could not send the application.'), findsOneWidget);
+    });
+
+    testWidgets("a failed read of the companies says so in the website's sentence, and Try again reads them again", (
+      tester,
+    ) async {
+      final repo = _Partner([const PartnerCompany(id: 'c1', name: 'Northwind')])..readFails = true;
+      await pump(tester, PartnerApplyScreen(repository: repo));
+      await tester.pumpAndSettle();
+      expect(find.text('Could not load your companies. Try again in a moment.'), findsOneWidget);
+      repo.readFails = false;
+      await tester.tap(find.text('Try again'));
+      await tester.pumpAndSettle();
+      expect(find.text('Northwind'), findsOneWidget);
+    });
+
+    testWidgets("a member with no company is told so, in the website's words, and asked to register one", (
+      tester,
+    ) async {
+      var created = 0;
+      await pump(tester, PartnerApplyScreen(repository: _Partner(const []), onCreateCompany: () => created++));
+      await tester.pumpAndSettle();
+      expect(find.text('Apply to become a learning partner'), findsOneWidget);
+      expect(
+        find.text('You are not an admin of any company on ICR yet. Register your company to apply.'),
+        findsOneWidget,
+        reason: "the website's note",
+      );
+      expect(find.byType(TextField), findsNothing, reason: 'the website shows no box until a company is listed');
+      await tester.tap(find.text('Register a new company'));
+      await tester.pumpAndSettle();
+      expect(created, 1);
+    });
+
+    testWidgets('registering a company reads the list again, so the new company is there to apply as', (tester) async {
+      final repo = _Partner(const []);
+      await pump(
+        tester,
+        PartnerApplyScreen(
+          repository: repo,
+          onCreateCompany: () async =>
+              repo.companiesList = [const PartnerCompany(id: 'new', name: 'Fresh Co', active: true)],
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('partner.register')));
+      await tester.pumpAndSettle();
+      expect(find.text('Fresh Co'), findsOneWidget);
+      await tapKey(tester, const Key('partner.send'));
+      expect(repo.sent.single['companyId'], 'new');
+    });
+
+    testWidgets('opens on the first company that can apply, not on a partner (no "already a learning partner" wall)', (
+      tester,
+    ) async {
+      final repo = _Partner([
+        const PartnerCompany(id: 'c1', name: 'Skystar', providerName: 'Skystar'),
+        const PartnerCompany(id: 'c2', name: 'Northwind'),
+      ]);
+      await pump(tester, PartnerApplyScreen(repository: repo));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('already a learning partner'), findsNothing);
+      expect(find.byKey(const Key('partner.send')), findsOneWidget);
+      await tapKey(tester, const Key('partner.send'));
+      expect(repo.sent.single['companyId'], 'c2');
+    });
+
+    testWidgets('prefers the company being acted for, and any eligible one can be picked', (tester) async {
+      final repo = _Partner([
+        const PartnerCompany(id: 'c1', name: 'First Co'),
+        const PartnerCompany(id: 'c2', name: 'Acting Co', active: true),
+        const PartnerCompany(id: 'c3', name: 'Third Co'),
+      ]);
+      await pump(tester, PartnerApplyScreen(repository: repo));
+      await tester.pumpAndSettle();
+      await tapKey(tester, const Key('partner.send'));
+      expect(repo.sent.single['companyId'], 'c2');
+
+      final other = _Partner([
+        const PartnerCompany(id: 'c1', name: 'First Co'),
+        const PartnerCompany(id: 'c3', name: 'Third Co'),
+      ]);
+      await tester.pumpWidget(const SizedBox());
+      await pump(tester, PartnerApplyScreen(repository: other));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('partner.company.c3')));
+      await tester.pumpAndSettle();
+      await tapKey(tester, const Key('partner.send'));
+      expect(other.sent.single['companyId'], 'c3');
+    });
+
+    testWidgets('the acting company is skipped when it cannot apply', (tester) async {
+      final repo = _Partner([
+        const PartnerCompany(id: 'c1', name: 'First Co'),
+        const PartnerCompany(id: 'c2', name: 'Acting Co', active: true, providerName: 'Acting Academy'),
+      ]);
+      await pump(tester, PartnerApplyScreen(repository: repo));
+      await tester.pumpAndSettle();
+      await tapKey(tester, const Key('partner.send'));
+      expect(repo.sent.single['companyId'], 'c1');
+    });
+
+    testWidgets('a partner and a company with its application at ICR are listed, marked, and cannot be picked', (
+      tester,
+    ) async {
+      final repo = _Partner([
+        const PartnerCompany(id: 'c1', name: 'Skystar', providerName: 'Skystar'),
+        const PartnerCompany(id: 'c2', name: 'Northwind', applicationStatus: 'PENDING'),
+        const PartnerCompany(id: 'c3', name: 'Reviewing Co', applicationStatus: 'UNDER_REVIEW'),
+        const PartnerCompany(id: 'c4', name: 'Open Co', applicationStatus: 'REJECTED', reviewNote: 'Add detail.'),
+      ]);
+      await pump(tester, PartnerApplyScreen(repository: repo));
+      await tester.pumpAndSettle();
+      expect(find.text('Partner'), findsOneWidget);
+      expect(find.text('With ICR'), findsNWidgets(2), reason: "PENDING and UNDER_REVIEW are the API's waiting states");
+      expect(find.text('Declined'), findsOneWidget);
+      // The form is for Open Co, the one that can apply (its last application was declined), with ICR's note.
+      expect(find.text('Add detail.'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('partner.company.c1')));
+      await tester.tap(find.byKey(const Key('partner.company.c2')));
+      await tester.tap(find.byKey(const Key('partner.company.c3')));
+      await tapKey(tester, const Key('partner.send'));
+      expect(repo.sent.single['companyId'], 'c4');
+    });
+
+    testWidgets("a company ICR asked for more of can apply again, and ICR's note is shown", (tester) async {
+      final repo = _Partner([
+        const PartnerCompany(
+          id: 'c1',
+          name: 'Asked Co',
+          applicationStatus: 'INFO_REQUESTED',
+          reviewNote: 'Send your accreditation.',
+        ),
+      ]);
+      await pump(tester, PartnerApplyScreen(repository: repo));
+      await tester.pumpAndSettle();
+      expect(find.text('More info requested'), findsOneWidget);
+      expect(find.text('Send your accreditation.'), findsOneWidget);
+      await tapKey(tester, const Key('partner.send'));
+      expect(repo.sent.single['companyId'], 'c1');
+    });
+
+    testWidgets('with every company a partner or at ICR the list says so and Submit stays off, as in the website', (
+      tester,
+    ) async {
+      final repo = _Partner([
+        const PartnerCompany(id: 'c1', name: 'Skystar', providerName: 'Skystar'),
+        const PartnerCompany(id: 'c2', name: 'Northwind', applicationStatus: 'UNDER_REVIEW'),
+      ]);
+      await pump(tester, PartnerApplyScreen(repository: repo));
+      await tester.pumpAndSettle();
+      expect(find.text('Skystar'), findsOneWidget);
+      expect(find.text('Northwind'), findsOneWidget);
+      expect(find.textContaining('already a learning partner'), findsNothing);
+      expect(find.byType(TextField), findsOneWidget, reason: 'the website still draws its notes box');
+      await tester.ensureVisible(find.byKey(const Key('partner.send')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('partner.send')), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(repo.sent, isEmpty);
+    });
+
+    testWidgets('Close leaves the page', (tester) async {
+      var backs = 0;
+      await pump(
+        tester,
+        PartnerApplyScreen(
+          repository: _Partner([const PartnerCompany(id: 'c1', name: 'Northwind')]),
+          onBack: () => backs++,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tapKey(tester, const Key('partner.send'));
+      await tapKey(tester, const Key('partner.close'));
+      expect(backs, 1);
+    });
+
+    test("waiting is the API's PENDING and UNDER_REVIEW, and other states are not", () {
+      for (final status in ['PENDING', 'UNDER_REVIEW']) {
+        expect(
+          PartnerCompany(id: 'c', name: 'C', applicationStatus: status).pending,
+          isTrue,
+          reason: status,
+        );
+      }
+      for (final status in ['SUBMITTED', 'IN_REVIEW', 'INFO_REQUESTED', 'REJECTED', 'APPROVED', null]) {
+        expect(
+          PartnerCompany(id: 'c', name: 'C', applicationStatus: status).pending,
+          isFalse,
+          reason: '$status',
+        );
+      }
+      final json = PartnerCompany.fromJson({'companyId': 'c9', 'name': 'Nine', 'active': true});
+      expect(json.active, isTrue);
+      expect(defaultPartnerCompany([json])?.id, 'c9');
+      expect(defaultPartnerCompany([PartnerCompany(id: 'c', name: 'C', providerName: 'C')]), isNull);
+    });
+
+    test("the chip words are the website's", () {
+      String? chip(Map<String, dynamic> json) =>
+          PartnerCompany.fromJson({'companyId': 'c', 'name': 'C', ...json}).statusLabel;
+      expect(
+        chip({
+          'provider': {'name': 'C'},
+        }),
+        'Partner',
+      );
+      expect(
+        chip({
+          'application': {'status': 'PENDING'},
+        }),
+        'With ICR',
+      );
+      expect(
+        chip({
+          'application': {'status': 'UNDER_REVIEW'},
+        }),
+        'With ICR',
+      );
+      expect(
+        chip({
+          'application': {'status': 'INFO_REQUESTED'},
+        }),
+        'More info requested',
+      );
+      expect(
+        chip({
+          'application': {'status': 'REJECTED'},
+        }),
+        'Declined',
+      );
+      expect(chip({}), isNull);
     });
   });
 }
@@ -364,28 +624,28 @@ class _Advertise implements AdvertiseRepository {
 }
 
 class _Partner implements PartnerApplyRepository {
-  _Partner(this._companies);
+  _Partner(this.companiesList);
 
-  final List<PartnerCompany> _companies;
+  List<PartnerCompany> companiesList;
   final sent = <Map<String, Object?>>[];
   String? refusal;
 
-  @override
-  Future<List<PartnerCompany>> companies() async => _companies;
+  /// An error that is no `ApiError` (nothing the app could word).
+  bool crash = false;
+
+  /// The read of the companies fails with an `ApiError`.
+  bool readFails = false;
 
   @override
-  Future<void> apply({
-    required String companyId,
-    required List<String> courseAreas,
-    String? proposalNotes,
-    String? accreditation,
-  }) async {
+  Future<List<PartnerCompany>> companies() async {
+    if (readFails) throw ApiError('The companies are down.');
+    return companiesList;
+  }
+
+  @override
+  Future<void> apply({required String companyId, String? proposalNotes}) async {
     if (refusal != null) throw ApiError(refusal!);
-    sent.add({
-      'companyId': companyId,
-      'courseAreas': courseAreas,
-      'proposalNotes': proposalNotes,
-      'accreditation': accreditation,
-    });
+    if (crash) throw StateError('boom');
+    sent.add({'companyId': companyId, 'proposalNotes': proposalNotes});
   }
 }

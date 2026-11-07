@@ -2,7 +2,7 @@ name: icr_mobile
 description: "ICR — Institute for Corporate Real Estate mobile app"
 publish_to: 'none'
 
-version: 1.0.0+10
+version: 1.0.0+13
 
 environment:
   sdk: ^3.11.1
@@ -26,8 +26,8 @@ dependencies:
   # The Knowledge Center draws a formula's LaTeX as math (learning_study).
   flutter_math_fork: ^0.7.4
   file_picker: ^13.2.0
-  # The Digital Library reads Word, Excel, PowerPoint and ZIP files in the app (office/), since nothing
-  # may be saved or handed to another app.
+  # The Digital Library reads Word, Excel, PowerPoint and ZIP files in the app (office/), so they open
+  # without another app (Download still hands the file to the phone).
   archive: ^4.5.2
   xml: ^7.0.1
   webview_flutter: ^4.14.1

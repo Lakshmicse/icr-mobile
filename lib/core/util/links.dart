@@ -40,6 +40,14 @@ class SiteRoutes {
     if (web == null || SitePolicy.staysExternal(uri)) return null;
     return (context) => web(context, uri);
   }
+
+  /// Whether the app has a screen of its own for [uri] — never the web view. Null while no [resolver] is set (a
+  /// test, the app before it is put together): nothing to judge by.
+  static bool? hasScreen(Uri uri) {
+    final resolve = resolver;
+    if (resolve == null) return null;
+    return SitePolicy.isSite(uri) && resolve(uri) != null;
+  }
 }
 
 /// Opens a page of the ICR website: the app's own screen when it has one, else

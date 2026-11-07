@@ -4,11 +4,12 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
+import 'workspace_embed.dart';
 
 /// The bar at the top of a section screen, as the Jobs design: a back arrow
 /// (or whatever `leading` is), the title, something in the middle if given
 /// (Find Mentors puts the search there), and the bell. 56 dp, with the same
-/// shadow as the Home header.
+/// shadow as the Home header. In a workspace's tab ([WorkspaceEmbed]) it is the page's heading: title and middle.
 class TitleBar extends StatelessWidget {
   const TitleBar({
     super.key,
@@ -33,6 +34,22 @@ class TitleBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Inside a workspace's tab the workspace's bar has the back arrow and the bell; this row keeps the page's title
+    // as its heading and a search in the middle, in the same 56 dp the screens leave for it.
+    if (WorkspaceEmbed.of(context)) {
+      return Container(
+        height: height,
+        color: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            if (title != null) Text(title!, style: AppText.barTitle),
+            if (title != null && middle != null) const SizedBox(width: 12),
+            if (middle != null) Expanded(child: middle!),
+          ],
+        ),
+      );
+    }
     return Container(
       height: height,
       decoration: const BoxDecoration(

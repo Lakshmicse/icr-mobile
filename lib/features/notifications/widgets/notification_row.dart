@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/util/time_ago.dart';
 import '../../messaging/widgets/chat_avatar.dart';
 import '../notification_models.dart';
@@ -61,11 +62,18 @@ class NotificationRow extends StatelessWidget {
                         category: category,
                         child: ChatAvatar(picture: n.actor!.photo, name: name, size: avatarSize),
                       )
-                    : Container(
-                        width: avatarSize,
-                        height: avatarSize,
-                        decoration: BoxDecoration(color: category.tint, shape: BoxShape.circle),
-                        child: Icon(category.icon, size: 22, color: category.ink),
+                    // From ICR itself (no person or company behind it): the ICR mark, as LinkedIn's own notices
+                    // carry its logo (owner, 6 Nov 2026), with the category on the badge.
+                    : _WithBadge(
+                        category: category,
+                        child: Container(
+                          key: const ValueKey('notification-icr-mark'),
+                          width: avatarSize,
+                          height: avatarSize,
+                          padding: const EdgeInsets.all(9),
+                          decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                          child: Image.asset('assets/images/brand/icr-mark-white.png', fit: BoxFit.contain),
+                        ),
                       ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -191,15 +199,16 @@ class _WithBadge extends StatelessWidget {
         Positioned(
           right: 0,
           bottom: 0,
+          // A white disc under the tinted one so the glyph stands off the photo (no outline drawn).
           child: Container(
             width: 20,
             height: 20,
-            decoration: BoxDecoration(
-              color: category.tint,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 1.5),
+            padding: const EdgeInsets.all(1.5),
+            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            child: DecoratedBox(
+              decoration: BoxDecoration(color: category.tint, shape: BoxShape.circle),
+              child: Center(child: Icon(category.icon, size: 11, color: category.ink)),
             ),
-            child: Icon(category.icon, size: 11, color: category.ink),
           ),
         ),
       ],

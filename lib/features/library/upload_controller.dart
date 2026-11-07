@@ -9,6 +9,22 @@ import 'library_repository.dart';
 /// stored: what is saved is whatever is typed in its place.
 const otherOption = 'Other (add your own)';
 
+/// A node of the category tree as the search offers it: its name and the path down to it (a category is a
+/// path of one, a sub-category of two, a specialization of three).
+class CategoryPath {
+  CategoryPath(this.path) : haystack = path.join(' ').toLowerCase();
+
+  /// Names from the category down to this node.
+  final List<String> path;
+
+  /// The path lower-cased once, for matching.
+  final String haystack;
+
+  String get label => path.last;
+  bool get isCategory => path.length == 1;
+  bool get isOther => isCategory && label == otherOption;
+}
+
 /// A file chosen and the name it will be saved under. Only the part before the extension is editable: the
 /// extension is what the library classifies the file by and what a download opens with.
 class UploadEntry {
@@ -40,14 +56,16 @@ class UploadEntry {
   static String baseOf(String fileName) => _splitBase(fileName);
 }
 
-/// Share a document with the library, or add files to one that is the member's own.
+/// Upload a document to the library, or add files to one that is the member's own.
 ///
-/// The rules are the API's and the website's: a title (200 characters) and a category (60) to file it
-/// under, then an optional sub-category and specialisation (80 each, each only under the one above), a
-/// description (2,000), and one to ten files of at most 10 MB in the formats the library takes. The bytes
-/// go up first, one file at a time (`POST /uploads?purpose=document-hub`), then the entry is filed
-/// (`POST /documents`, or `POST /documents/:id/files` in append mode). A failed send keeps everything
-/// typed, and a file that already went up is not sent again on the retry.
+/// The rules are the API's and the website's `UploadDocumentDialog`: a title (200 characters) and a category
+/// (60) to file it under, then an optional sub-category and specialization (80 each, each only under the one
+/// above, each from the platform's tree with "Other" at the foot), a description (2,000), and one to ten
+/// files of at most 10 MB in the formats the library takes. The category is found by typing any level of the
+/// tree ([searchCategories]); picking a deeper node fills the levels above it. The bytes go up first, one file
+/// at a time (`POST /uploads?purpose=document-hub`), then the entry is filed (`POST /documents`, or
+/// `POST /documents/:id/files` in append mode). A failed send keeps everything typed, and a file that already
+/// went up is not sent again on the retry.
 class UploadController extends ChangeNotifier {
   UploadController({
     required this.repository,
@@ -82,6 +100,8 @@ class UploadController extends ChangeNotifier {
   String? _error;
   double _progress = 0;
   int _uploadingIndex = 0;
+  String _uploadingName = '';
+  bool _reported = false;
   LibraryDocument? _result;
   final Map<int, StoredFile> _stored = {};
 
@@ -109,6 +129,15 @@ class UploadController extends ChangeNotifier {
 
   /// 1-based position of the file going up now (0 when none).
   int get uploadingIndex => _uploadingIndex;
+
+  /// The name the file going up now is saved under.
+  String get uploadingName => _uploadingName;
+
+  /// Sending, but no byte has gone up yet (the website says "Starting…").
+  bool get starting => _busy && !_reported;
+
+  /// Every file is up and the document is being filed (the website says "Saving…").
+  bool get saving => _busy && _reported && (_progress * 100).round() >= 100;
 
   /// The document that was filed or added to (set by a successful [submit]).
   LibraryDocument? get result => _result;
@@ -151,18 +180,66 @@ class UploadController extends ChangeNotifier {
     return null;
   }
 
-  /// The sub-category choices: the chosen category's children, then "Other". Empty (the field is a plain
-  /// text box) when the category is the uploader's own or has no children.
+  /// The sub-category choices: the chosen category's children, then "Other" (alone under a category of the
+  /// uploader's own words, or one the tree has nothing under). Empty until there is a category.
   List<String> get subcategoryOptions {
-    final node = _categoryNode;
-    if (node == null || node.children.isEmpty) return const [];
-    return [for (final c in node.children) c.label, otherOption];
+    if (resolvedCategory.isEmpty) return const [];
+    return [for (final c in _categoryNode?.children ?? const <TaxonomyNode>[]) c.label, otherOption];
   }
 
+  /// The tree has sub-categories under the chosen category (the field's hint says so when it has none).
+  bool get hasSubcategories => (_categoryNode?.children ?? const <TaxonomyNode>[]).isNotEmpty;
+
   List<String> get specializationOptions {
-    final node = _subNode;
-    if (node == null || node.children.isEmpty) return const [];
-    return [for (final c in node.children) c.label, otherOption];
+    if (resolvedSubcategory.isEmpty) return const [];
+    return [for (final c in _subNode?.children ?? const <TaxonomyNode>[]) c.label, otherOption];
+  }
+
+  bool get hasSpecializations => (_subNode?.children ?? const <TaxonomyNode>[]).isNotEmpty;
+
+  /// Every node of the tree as the category search lists it: the categories first (the platform's, what the
+  /// library uses beyond them, "Other"), then every sub-category and specialization, parent before child.
+  List<CategoryPath> get categoryPaths => [
+    for (final label in categoryOptions) CategoryPath([label]),
+    for (final top in _taxonomy) ..._below(top, [top.label]),
+  ];
+
+  static Iterable<CategoryPath> _below(TaxonomyNode node, List<String> path) sync* {
+    for (final child in node.children) {
+      final next = [...path, child.label];
+      yield CategoryPath(next);
+      yield* _below(child, next);
+    }
+  }
+
+  /// What the category box offers for [input], as the website's does. Empty: the categories alone (and
+  /// "Other"). Typed: every node whose path holds each word, the categories first and the deeper ones after
+  /// them in tree order, with "Other" kept last so writing your own stays one pick away.
+  List<CategoryPath> searchCategories(String input) {
+    final all = categoryPaths;
+    final top = [
+      for (final p in all)
+        if (p.isCategory) p,
+    ];
+    final words = input.toLowerCase().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    if (words.isEmpty) return top;
+    final hits = [
+      for (final p in all)
+        if (!p.isOther && words.every(p.haystack.contains)) p,
+    ];
+    return [...hits.where((p) => p.isCategory), ...hits.where((p) => !p.isCategory), ...top.where((p) => p.isOther)];
+  }
+
+  /// A pick from the category search: a deeper node fills every level above it, a category alone clears the
+  /// levels that described the old one.
+  void chooseCategory(List<String> path) {
+    _category = path.isEmpty ? null : path[0];
+    _categoryOther = '';
+    _sub = path.length > 1 ? path[1] : null;
+    _subOther = '';
+    _spec = path.length > 2 ? path[2] : null;
+    _specOther = '';
+    _notify();
   }
 
   // --- what gets sent -----------------------------------------------------------
@@ -171,13 +248,11 @@ class UploadController extends ChangeNotifier {
 
   String get resolvedSubcategory {
     if (resolvedCategory.isEmpty) return '';
-    if (subcategoryOptions.isEmpty) return _subOther.trim();
     return (_sub == otherOption ? _subOther : (_sub ?? '')).trim();
   }
 
   String get resolvedSpecialization {
     if (resolvedSubcategory.isEmpty) return '';
-    if (specializationOptions.isEmpty) return _specOther.trim();
     return (_spec == otherOption ? _specOther : (_spec ?? '')).trim();
   }
 
@@ -234,7 +309,9 @@ class UploadController extends ChangeNotifier {
   }
 
   /// Takes what the picker handed over, minus what cannot go. Returns the sentences for what it left
-  /// (too large, over the limit, a format the library does not take); the rest is kept, never cleared.
+  /// (the website's: "big.pdf is 12 MB", "x.pdf — the limit is 10 files", and for a format the library does
+  /// not take, which a phone's picker cannot always filter out, "x.exe is not a format the library takes");
+  /// the rest is kept, never cleared.
   List<String> pick(List<PickedFile> chosen) {
     final rejected = <String>[];
     for (final f in chosen) {
@@ -243,15 +320,13 @@ class UploadController extends ChangeNotifier {
         continue;
       }
       if (f.size > LibraryLimits.maxBytes) {
-        rejected.add('${f.name} (${fileSizeLabel(f.size)}) is over the 10 MB limit');
+        rejected.add('${f.name} is ${fileSizeLabel(f.size)}');
         continue;
       }
       // The same name and size twice is the picker opened twice on the same file, not two files.
       if (_entries.any((e) => e.file.name == f.name && e.file.size == f.size)) continue;
       if (_entries.length >= room) {
-        rejected.add(
-          '${f.name}: ${appending ? 'this document has room for $room more' : 'a document holds up to ${LibraryLimits.maxFiles} files'}',
-        );
+        rejected.add('${f.name} — the limit is ${LibraryLimits.maxFiles} files');
         continue;
       }
       _entries.add(UploadEntry(id: _nextId++, file: f, name: UploadEntry.baseOf(f.name)));
@@ -310,7 +385,7 @@ class UploadController extends ChangeNotifier {
         p['subcategory'] = 'A sub-category is at most ${LibraryLimits.subcategory} characters.';
       }
       if (resolvedSpecialization.length > LibraryLimits.specialization) {
-        p['specialization'] = 'A specialisation is at most ${LibraryLimits.specialization} characters.';
+        p['specialization'] = 'A specialization is at most ${LibraryLimits.specialization} characters.';
       }
       if (_description.trim().length > LibraryLimits.description) {
         p['description'] = 'A description is at most ${LibraryLimits.description} characters.';
@@ -340,6 +415,8 @@ class UploadController extends ChangeNotifier {
     _error = null;
     _progress = 0;
     _uploadingIndex = 0;
+    _uploadingName = '';
+    _reported = false;
     _notify();
     try {
       final total = totalBytes == 0 ? 1 : totalBytes;
@@ -347,10 +424,12 @@ class UploadController extends ChangeNotifier {
       final stored = <StoredFile>[];
       for (final (i, e) in _entries.indexed) {
         _uploadingIndex = i + 1;
+        _uploadingName = e.fileName;
         final known = _stored[e.id];
         if (known != null) {
           stored.add(known);
           done += e.file.size;
+          _reported = true;
           _progress = (done / total).clamp(0, 1).toDouble();
           _notify();
           continue;
@@ -359,6 +438,7 @@ class UploadController extends ChangeNotifier {
         final file = await repository.upload(
           named,
           onProgress: (p) {
+            _reported = true;
             _progress = ((done + e.file.size * p) / total).clamp(0, 1).toDouble();
             _notify();
           },
@@ -388,6 +468,7 @@ class UploadController extends ChangeNotifier {
     } finally {
       _busy = false;
       _uploadingIndex = 0;
+      _uploadingName = '';
       _notify();
     }
   }

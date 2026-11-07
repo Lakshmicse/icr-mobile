@@ -89,8 +89,19 @@ class PairingController extends ChangeNotifier {
     return null;
   }
 
-  /// A booked hour that has gone by and nobody closed.
-  bool overdue(PairingSession s, [DateTime? now]) => _rank(s, now ?? mentoringNow()) == 0;
+  /// A booked hour that has gone by and nobody closed: past its planned end and
+  /// still SCHEDULED (the website's `isOverdue` less `isRunning`).
+  bool overdue(PairingSession s, [DateTime? now]) {
+    final at = now ?? mentoringNow();
+    return _rank(s, at) == 0 && !running(s, at);
+  }
+
+  /// Under way by the clock: begun and not yet due to end. It leads the page as
+  /// an overdue one does, but is never called overdue to the two people on it.
+  bool running(PairingSession s, [DateTime? now]) {
+    final at = now ?? mentoringNow();
+    return _rank(s, at) == 0 && at.isBefore(s.scheduledAt.add(Duration(minutes: s.durationMin)));
+  }
 
   /// Live sessions: overdue first, then asks, then upcoming by date.
   List<PairingSession> upcoming([DateTime? now]) {

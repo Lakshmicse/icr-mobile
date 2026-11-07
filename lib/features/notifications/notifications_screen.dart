@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/api_client.dart';
+import '../../core/auth/auth_controller.dart';
 import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
@@ -85,6 +86,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   late final bool _owns;
   final _scroll = ScrollController();
   bool _opening = false;
+  UnreadCounts? _counts;
 
   static DemoNotificationsRepository? _demo;
 
@@ -92,15 +94,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void initState() {
     super.initState();
     _owns = widget.controller == null;
-    final unread = Provider.of<UnreadCounts?>(context, listen: false);
+    _counts = Provider.of<UnreadCounts?>(context, listen: false);
     _c =
         widget.controller ??
-        NotificationsController(_repository(), clock: widget.clock, onUnreadChanged: unread?.setNotifications);
+        NotificationsController(_repository(), clock: widget.clock, onUnreadChanged: _counts?.setNotifications);
     _scroll.addListener(_maybeLoadMore);
+    // The bell's count moved without this list (a record that was opened read the other rows about it, a new one
+    // arrived): the list reads again, as the website's invalidates every notification query.
+    _counts?.addListener(_onCounts);
     if (_owns) {
       unawaited(_c.start());
       if (widget.initialTab != NotificationsTab.all) unawaited(_c.setTab(widget.initialTab));
     }
+  }
+
+  void _onCounts() {
+    final counts = _counts;
+    if (counts == null || !mounted || _c.loading || _c.tab == NotificationsTab.preferences) return;
+    if (counts.notifications != _c.unread) unawaited(_c.refresh());
   }
 
   NotificationsRepository _repository() {
@@ -112,6 +123,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   void dispose() {
+    _counts?.removeListener(_onCounts);
     _scroll.dispose();
     if (_owns) _c.dispose();
     super.dispose();
@@ -134,7 +146,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       );
       final target = NotificationTarget.parse(n.link);
       if (target.kind == NotificationKinds.none) return;
-      final router = NotificationRouter.of(context);
+      var router = NotificationRouter.of(context);
+      // After a company switch the record opens over the rebuilt app's own context, not this list's.
+      BuildContext? home;
       final open = widget.onOpenTarget;
       if (_c.needsSwitch(n)) {
         final refusal = await _c.switchTo(n.company!);
@@ -145,11 +159,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         }
         showMessage(context, 'Now working as ${n.company!.name}');
         router.onCompanySwitched?.call(context, n.company!.id);
+        // The role rides in the token, so the app reads who the person is now: that builds the signed-in app again
+        // for the company (its tabs, menu and controllers belong to the one they were acting for), and its router
+        // is the one that opens the record with the new company's controllers.
+        final auth = Provider.of<AuthController?>(context, listen: false);
+        if (auth != null) {
+          await auth.refreshUser();
+          await WidgetsBinding.instance.endOfFrame;
+          if (!mounted) return;
+          router = NotificationRouter.current ?? router;
+          final rebuilt = router.home;
+          if (rebuilt != null && rebuilt.mounted) home = rebuilt;
+        }
       }
+      if (!context.mounted) return;
+      final host = home ?? context;
       if (open != null) {
-        await open(context, target);
+        await open(host, target);
       } else {
-        await router.open(context, target);
+        await router.open(host, target);
       }
     } finally {
       _opening = false;
@@ -435,39 +463,44 @@ class _Header extends StatelessWidget {
       ),
     );
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: NoteLook.rule)),
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            chip(
-              const ValueKey('tab-all'),
-              'All',
-              !onPrefs && c.tab == NotificationsTab.all && c.categoryId == null,
-              () => c.setTab(NotificationsTab.all),
-            ),
-            chip(
-              const ValueKey('tab-unread'),
-              c.unread > 0 ? 'Unread (${c.unread})' : 'Unread',
-              !onPrefs && c.tab == NotificationsTab.unread,
-              () => c.setTab(NotificationsTab.unread),
-            ),
-            if (!onPrefs)
-              for (final category in c.categoriesPresent)
+    // The chips on white, a hairline under them (a line break, not a box around the list).
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
                 chip(
-                  ValueKey('chip-${category.id}'),
-                  chipLabelOf(category.id),
-                  !onPrefs && c.categoryId == category.id,
-                  () => c.selectCategory(category.id),
+                  const ValueKey('tab-all'),
+                  'All',
+                  !onPrefs && c.tab == NotificationsTab.all && c.categoryId == null,
+                  () => c.setTab(NotificationsTab.all),
                 ),
-          ],
+                chip(
+                  const ValueKey('tab-unread'),
+                  c.unread > 0 ? 'Unread (${c.unread})' : 'Unread',
+                  !onPrefs && c.tab == NotificationsTab.unread,
+                  () => c.setTab(NotificationsTab.unread),
+                ),
+                if (!onPrefs)
+                  for (final category in c.categoriesPresent)
+                    chip(
+                      ValueKey('chip-${category.id}'),
+                      chipLabelOf(category.id),
+                      !onPrefs && c.categoryId == category.id,
+                      () => c.selectCategory(category.id),
+                    ),
+              ],
+            ),
+          ),
         ),
-      ),
+        const Divider(height: 1, thickness: 1, color: NoteLook.rule),
+      ],
     );
   }
 }

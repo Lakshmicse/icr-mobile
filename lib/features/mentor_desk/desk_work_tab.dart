@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/util/join_window.dart' show joinShown;
 import '../../core/util/links.dart';
 import '../mentorship_my/mentoring_format.dart';
 import '../mentorship_my/mentoring_links.dart';
@@ -297,8 +298,13 @@ class _CallCard extends StatelessWidget {
             const MetaLine(icon: LucideIcons.link, text: 'No meeting link yet', color: AppColors.outline),
           ActionWrap(
             children: [
-              if (link != null)
-                SolidButton(label: 'Join', icon: LucideIcons.video, onPressed: () => openUrl(context, link)),
+              if (link != null && joinShown(b.scheduledAt, b.durationMin, controller.now))
+                JoinButton(
+                  link: link,
+                  startsAt: b.scheduledAt,
+                  durationMin: b.durationMin,
+                  clock: () => controller.now,
+                ),
               QuietButton(
                 label: 'Meeting link',
                 icon: LucideIcons.link,

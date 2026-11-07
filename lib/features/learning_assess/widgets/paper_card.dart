@@ -147,37 +147,65 @@ class PaperCard extends StatelessWidget {
     PaperAccess.closed => const StatusPill(label: 'Locked', icon: LucideIcons.lock),
   };
 
-  /// What to do next, in one strip under the row: a button, or the price beside the ways to pay it.
+  /// What to do next, in one strip under the row: a button, or the price beside the ways to pay it. Once the
+  /// member holds the paper's certificate, **Certificate** leads the strip (it opens the certificate in the app, with
+  /// its PDF) and the retake beside it shortens to **Retake**.
   Widget _actionStrip() {
     final paper = entry.paper;
     final share = actions.onShare == null ? null : _ShareGlyph(onTap: actions.onShare!, label: 'Share ${paper.title}');
     Widget withShare(Widget child) =>
         share == null ? child : Row(children: [Expanded(child: child), const SizedBox(width: 4), share]);
+    final certificate = entry.certificate == null || actions.onViewCertificate == null
+        ? null
+        : RowButton(
+            key: ValueKey('certificate-${paper.id}'),
+            label: 'Certificate',
+            color: _color,
+            icon: LucideIcons.award,
+            onPressed: actions.onViewCertificate,
+          );
 
     switch (entry.access) {
       case PaperAccess.open:
-        if (entry.attemptsUsedUp) {
-          return withShare(RowButton(label: 'No attempts left', color: _color, onPressed: null));
-        }
         final again = entry.progress.started;
+        final next = entry.attemptsUsedUp
+            ? RowButton(label: 'No attempts left', color: _color, onPressed: null)
+            : RowButton(
+                label: certificate != null
+                    ? 'Retake'
+                    : _isMock
+                    ? (again ? 'Retake Test' : 'Start Test')
+                    : (again ? 'Retake assessment' : 'Start Assessment'),
+                color: _color,
+                tonal: again,
+                icon: again ? LucideIcons.refreshCw : null,
+                trailingIcon: again ? null : LucideIcons.arrowRight,
+                onPressed: actions.onStart,
+              );
+        if (certificate == null) return withShare(next);
         return withShare(
-          RowButton(
-            label: _isMock ? (again ? 'Retake Test' : 'Start Test') : (again ? 'Retake assessment' : 'Start Assessment'),
-            color: _color,
-            tonal: again,
-            icon: again ? LucideIcons.refreshCw : null,
-            trailingIcon: again ? null : LucideIcons.arrowRight,
-            onPressed: actions.onStart,
-          ),
+          Row(children: [Expanded(child: certificate), const SizedBox(width: 8), Expanded(child: next)]),
         );
       case PaperAccess.planPlace:
-        return withShare(
-          RowButton(label: 'Open with my plan', color: _color, icon: LucideIcons.lockOpen, onPressed: actions.onOpenWithPlan),
+        return _withCertificate(
+          certificate,
+          withShare(
+            RowButton(label: 'Open with my plan', color: _color, icon: LucideIcons.lockOpen, onPressed: actions.onOpenWithPlan),
+          ),
         );
       case PaperAccess.closed:
-        return _closedStrip(share);
+        return _withCertificate(certificate, _closedStrip(share));
     }
   }
+
+  /// A certificate earned on a paper that has since closed (a plan place that lapsed) stays the member's: its button
+  /// sits above the ways to open the paper again.
+  static Widget _withCertificate(Widget? certificate, Widget strip) => certificate == null
+      ? strip
+      : Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [certificate, const SizedBox(height: 8), strip],
+        );
 
   /// A closed paper: what opening it costs on the left, the buttons on the right — under it, side by side, on a
   /// phone too narrow for both on one line.

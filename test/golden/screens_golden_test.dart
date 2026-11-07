@@ -10,6 +10,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/api/api_client.dart';
 import 'package:icr_mobile/core/auth/auth_controller.dart';
+import 'package:icr_mobile/core/auth/session_user.dart';
 import 'package:icr_mobile/core/auth/token_store.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/auth/sign_in_screen.dart';
@@ -22,6 +23,7 @@ import 'package:icr_mobile/features/profile/profile_drawer.dart';
 import 'package:icr_mobile/features/profile/profile_drawer_data.dart';
 import 'package:icr_mobile/features/shell/app_shell.dart';
 import 'package:icr_mobile/features/shell/icr_bottom_nav.dart';
+import 'package:icr_mobile/features/workspaces/role_workspaces.dart';
 import 'package:provider/provider.dart';
 
 import '../helpers/fonts.dart';
@@ -37,8 +39,6 @@ void main() {
       for (final element in find.byType(Image).evaluate()) {
         await precacheImage((element.widget as Image).image, element);
       }
-      final context = tester.element(find.byType(Scaffold).first);
-      await precacheImage(const AssetImage('assets/images/demo/sponsored_bg.jpg'), context);
     });
     await tester.pumpAndSettle();
   }
@@ -194,7 +194,53 @@ void main() {
     await expectLater(find.byType(ProfileDrawer), matchesGoldenFile('goldens/profile_drawer.png'));
   });
 
-  testWidgets('profile drawer with Your companies (3 of 4, one active) on a 360 dp phone', (tester) async {
+  // The owner's drawer design (6 Nov 2026), as it draws it: the sample member, a listed mentor, on the Learning tab.
+  testWidgets('profile menu (owner\'s drawer design) at 307 × 874', (tester) async {
+    tester.view.physicalSize = const Size(614, 1748);
+    tester.view.devicePixelRatio = 2;
+    addTearDown(tester.view.reset);
+
+    final tokens = _NoTokens();
+    final auth = AuthController(
+      api: ApiClient(tokens: tokens),
+      tokens: tokens,
+    );
+    const member = SessionUser(
+      id: 'u1',
+      email: 'nikhil@icr.test',
+      firstName: 'Nikhil',
+      lastName: 'Majjagi',
+      role: 'PROFESSIONAL',
+      mentorStatus: 'APPROVED',
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(),
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: auth),
+            ChangeNotifierProvider(create: (_) => ProfileDrawerController.demo()),
+          ],
+          child: Scaffold(
+            backgroundColor: Colors.white,
+            body: ProfileDrawer(
+              workspaces: workspacesFor(member, opens: (_) => true),
+              account: accountMenuFor(member),
+              mentorStatus: member.mentorStatus,
+              currentWorkspace: 'learning',
+              onOpenSection: (_, _) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await precacheAll(tester);
+    await export(tester, find.byType(ProfileDrawer), 'profile_menu');
+    await expectLater(find.byType(ProfileDrawer), matchesGoldenFile('goldens/profile_menu.png'));
+  });
+
+  testWidgets('profile drawer with My companies (3 of 4, one active) on a 360 dp phone', (tester) async {
     tester.view.physicalSize = const Size(720, 1520);
     tester.view.devicePixelRatio = 2;
     addTearDown(tester.view.reset);

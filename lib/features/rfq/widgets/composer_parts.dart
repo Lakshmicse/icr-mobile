@@ -94,12 +94,8 @@ class KindPicker extends StatelessWidget {
         inMutuallyExclusiveGroup: true,
         label: kind.label,
         child: Material(
-          color: on ? AppColors.chipEmphasis.withValues(alpha: 0.5) : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            // The same width chosen or not, so choosing never shifts the line.
-            side: BorderSide(color: on ? AppColors.primary : AppColors.slate200, width: 1.5),
-          ),
+          color: on ? AppColors.chipEmphasis : AppColors.slate50,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: InkWell(
             key: ValueKey('kind-${kind.wire.toLowerCase()}'),
             borderRadius: BorderRadius.circular(12),
@@ -165,11 +161,7 @@ class DescriptionChecklist extends StatelessWidget {
     final covered = items.where((i) => i.done).length;
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 8, 6),
-      decoration: BoxDecoration(
-        color: rfqPanelColor,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.slate200),
-      ),
+      decoration: BoxDecoration(color: rfqPanelColor, borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -642,10 +634,7 @@ class ItemsList extends StatelessWidget {
             key: ValueKey('item-row-$i'),
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.slate200),
-              borderRadius: BorderRadius.circular(10),
-            ),
+            decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10)),
             child: Row(
               children: [
                 Expanded(
@@ -756,10 +745,7 @@ class AttachmentsPanel extends StatelessWidget {
             key: ValueKey('file-row-$i'),
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.fromLTRB(10, 10, 4, 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.slate200),
-              borderRadius: BorderRadius.circular(10),
-            ),
+            decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10)),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -807,8 +793,7 @@ class AttachmentsPanel extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.fromLTRB(10, 10, 4, 10),
             decoration: BoxDecoration(
-              color: u.error == null ? Colors.white : AppColors.errorContainer.withValues(alpha: 0.4),
-              border: Border.all(color: u.error == null ? AppColors.slate200 : AppColors.errorContainer),
+              color: u.error == null ? AppColors.slate50 : AppColors.errorContainer.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -1228,7 +1213,6 @@ class ProblemsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.errorContainer.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.errorContainer),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

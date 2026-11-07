@@ -29,9 +29,12 @@ class BecomeMentorRepository {
   Future<MyMentorProfile> save(Map<String, dynamic> patch) async =>
       MyMentorProfile.fromJson((await _send('PUT', '/mentorship/mentors/me', patch)) as Map<String, dynamic>);
 
-  /// Sends the profile to ICR's review team.
-  Future<MyMentorProfile> submit() async =>
-      MyMentorProfile.fromJson((await _send('POST', '/mentorship/mentors/me/submit')) as Map<String, dynamic>);
+  /// Sends the profile to ICR's review team. [conductVersion] is the mentor's one declaration beside Submit
+  /// (`SubmitMentorProfileDto`): the API stamps the code of conduct's acceptance in the same write as the
+  /// submission, and refuses a version that is not the current one. Left out, the profile must already hold it.
+  Future<MyMentorProfile> submit({String? conductVersion}) async => MyMentorProfile.fromJson(
+    (await _send('POST', '/mentorship/mentors/me/submit', {'conductVersion': ?conductVersion})) as Map<String, dynamic>,
+  );
 
   /// Hides the profile from the directory and keeps the history. The API refuses while mentorships are under way.
   Future<void> withdraw() => _send('DELETE', '/mentorship/mentors/me');
@@ -138,7 +141,7 @@ class BecomeMentorRepository {
   });
 
   /// The credentials the member holds with a short code a mentor card can show: never a rejected one.
-  Future<List<HeldCredential>> credentials() async {
+  Future<HeldCredentials> credentials() async {
     final res = await _get('/credentials/me');
     final byCode = <String, HeldCredential>{};
     for (final c in (res['credentials'] as List? ?? const []).whereType<Map<String, dynamic>>()) {
@@ -150,7 +153,11 @@ class BecomeMentorRepository {
         byCode[code] = HeldCredential(code: code, label: c['name'] as String? ?? code, verified: verified);
       }
     }
-    return byCode.values.toList();
+    final counts = res['counts'];
+    return HeldCredentials(
+      held: byCode.values.toList(),
+      recordedCount: counts is Map ? (counts['total'] as num?)?.toInt() ?? 0 : 0,
+    );
   }
 
   /// ICR's list of job titles, for a role to be picked from (any other text is accepted too).

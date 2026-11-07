@@ -5,8 +5,10 @@ import 'package:provider/provider.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/util/join_window.dart';
 import '../../core/util/links.dart';
 import 'group_session_controller.dart';
+import 'mentoring_clock.dart';
 import 'mentoring_format.dart';
 import 'mentoring_links.dart';
 import 'mentoring_models.dart';
@@ -525,6 +527,14 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
     ];
   }
 
+  /// When the room opens: each day still on for a multi-day session, else its one hour.
+  static List<JoinWindow> _joinWindows(GroupSession s) => s.occurrences.isEmpty
+      ? [JoinWindow(s.scheduledAt, s.durationMin)]
+      : [
+          for (final o in s.occurrences)
+            if (o.status == 'SCHEDULED') JoinWindow(o.scheduledAt, o.durationMin),
+        ];
+
   List<Widget> _seatPanel(BuildContext context, GroupSession s, Uri? link) {
     if (s.isHost) {
       return [
@@ -540,8 +550,8 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
           tone: PillTone.mint,
           text: s.myStatus == 'ATTENDED' ? 'You attended this session.' : 'You have a seat.',
           actions: [
-            if (link != null && s.upcoming)
-              SolidButton(label: 'Join the session', icon: LucideIcons.video, onPressed: () => openUrl(context, link)),
+            if (link != null && s.upcoming && joinStateOf(_joinWindows(s), mentoringNow()).state != JoinState.closed)
+              JoinButton.days(link: link, windows: _joinWindows(s), label: 'Join the session'),
             QuietButton(
               label: 'Room chat',
               icon: LucideIcons.messageSquare,
@@ -724,7 +734,7 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
 }
 
 /// A paid seat: the quote, a question for the host, and the button that takes the payment (in the app when
-/// nothing is left to pay, on the website's payment page for real money).
+/// nothing is left to pay, on ICR's PayU page in the app's own payment view for real money).
 class _SeatForm extends StatefulWidget {
   const _SeatForm({required this.controller, required this.links});
 
@@ -782,9 +792,7 @@ class _SeatFormState extends State<_SeatForm> {
     return MentoringForm(
       title: 'Reserve your seat',
       subtitle: s.title,
-      submitLabel: q.chargedPaisa == 0
-          ? 'Reserve a seat'
-          : (onSite ? 'Pay ${inr(q.chargedPaisa)} on the website' : 'Pay ${inr(q.chargedPaisa)}'),
+      submitLabel: q.chargedPaisa == 0 ? 'Reserve a seat' : 'Pay ${inr(q.chargedPaisa)}',
       busy: _busy,
       problem: _problem,
       onSubmit: _buy,
@@ -807,7 +815,7 @@ class _SeatFormState extends State<_SeatForm> {
         ),
         if (onSite)
           Text(
-            'The payment itself is made on ICR\'s secure PayU page on the website: the button opens it.',
+            'You pay on ICR\'s secure PayU page, here in the app.',
             key: const ValueKey('pay-handoff'),
             style: MentoringText.meta,
           ),

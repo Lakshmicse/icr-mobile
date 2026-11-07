@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/auth/session_user.dart';
+
 /// One place a person can go in the app, as the search names it. The catalogue
 /// lists what exists; whether the running app can open it is the wiring's call
 /// (`lib/app_search.dart` gives each id its opener, and a feature with none is
@@ -9,15 +11,7 @@ import 'package:flutter/material.dart';
 /// (`packages/shared/src/assistant.ts`): the words a visitor uses for the
 /// thing, not only its name.
 class AppFeature {
-  const AppFeature(
-    this.id,
-    this.title,
-    this.subtitle,
-    this.icon,
-    this.keywords, {
-    this.group,
-    this.suggested = false,
-  });
+  const AppFeature(this.id, this.title, this.subtitle, this.icon, this.keywords, {this.group, this.suggested = false});
 
   final String id;
   final String title;
@@ -450,5 +444,11 @@ int _scoreWord(String title, Set<String> keywords, String subtitle, String w) {
   return 0;
 }
 
-String _norm(String s) =>
-    s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9 ]'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+String _norm(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9 ]'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+
+/// Whether a feature is for [user] at all (the website's palette gates its rows the same way): "Become a mentor"
+/// only for someone who may apply (`canOfferToMentor`), everything else for everyone.
+bool featureOfferedTo(String id, SessionUser? user) => switch (id) {
+  'become_mentor' => canOfferToMentor(user),
+  _ => true,
+};

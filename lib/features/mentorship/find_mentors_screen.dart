@@ -172,7 +172,14 @@ class _FindMentorsScreenState extends State<FindMentorsScreen> {
                     // The design leaves 12 dp between the box and the bell.
                     middle: Padding(
                       padding: const EdgeInsets.only(right: 12),
-                      child: IcrSearchField(controller: _search, height: 40, onSubmitted: _c.setSearch),
+                      // It searches mentors (the website's "Search mentors": name, company, city, domain or
+                      // topic), so it says so rather than the app-wide search's "jobs, courses, partners".
+                      child: IcrSearchField(
+                        controller: _search,
+                        height: 40,
+                        hint: 'Search mentors by name, company or topic',
+                        onSubmitted: _c.setSearch,
+                      ),
                     ),
                     unread: _c.unread,
                     onBell: () => widget.openSite(context, '/notifications'),

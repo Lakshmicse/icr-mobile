@@ -100,8 +100,6 @@ class OfflineFeed implements FeedRepository {
   Future<List<FeedReply>> replies(FeedPost post) async => (await inner.replies(post)).map(_reply).toList();
 
   @override
-  SponsoredCard get sponsored => inner.sponsored;
-  @override
   ForumRepository get forum => inner.forum;
   @override
   Set<String> get initiallyOpen => inner.initiallyOpen;

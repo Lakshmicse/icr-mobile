@@ -25,6 +25,8 @@ import 'package:icr_mobile/features/learning_assess/widgets/knowledge_areas.dart
     show KnowledgeAreas, TopicChip, defaultAreasBlurb;
 import 'package:icr_mobile/features/learning_assess/widgets/paper_card.dart';
 import 'package:icr_mobile/features/learning_assess/widgets/states.dart';
+import 'package:icr_mobile/features/learning_exam/certificate_marks.dart';
+import 'package:icr_mobile/features/learning_exam/certificate_pdf.dart' show CertificateMarks;
 import 'package:icr_mobile/features/notifications/demo_notifications_repository.dart';
 import 'package:icr_mobile/features/notifications/notifications_repository.dart';
 import 'package:icr_mobile/features/notifications/notifications_screen.dart';
@@ -131,6 +133,19 @@ Finder _button(String paperId, String label) =>
     find.descendant(of: _card(paperId), matching: find.widgetWithText(RowButton, label));
 
 Finder _in(String paperId, Finder what) => find.descendant(of: _card(paperId), matching: what);
+
+/// The certificate the API returns for a paper the member passed.
+ExamCertificate _certificate(String paperId) => ExamCertificate(
+  id: 'cert-$paperId',
+  certificateId: 'ICR-CP-2026-TEST0001',
+  title: 'Capital Planning',
+  paperId: paperId,
+  level: 'FOUNDATION',
+  issuedAt: DateTime(2026, 11, 3),
+  clearedAt: DateTime(2026, 11, 3),
+  percentage: 100,
+  passPercentage: 70,
+);
 
 RowButton _btn(WidgetTester tester, Finder finder) => tester.widget<RowButton>(finder);
 
@@ -562,7 +577,9 @@ void main() {
           },
         ],
         'GET /learning/me/certificates': (_) => [
-          {'paperId': 'p1', 'certificateId': 'ICR-1'},
+          // Newest first: a paper holds the certificate it was issued once, the first record for it.
+          {'paperId': 'p1', 'certificateId': 'ICR-1', 'title': 'Capital Planning', 'level': 'FOUNDATION'},
+          {'paperId': 'p1', 'certificateId': 'ICR-OLD'},
         ],
       });
       final m = await _repo(api).member(PaperKind.assessment);
@@ -580,6 +597,9 @@ void main() {
       expect(a.upgradePlan, 'Pro Plus');
       expect(a.mockUpgradePlan, isNull);
       expect(m.certified, {'p1'});
+      expect(m.certificates.keys, ['p1'], reason: 'the record a certified level opens');
+      expect(m.certificates['p1']!.certificateId, 'ICR-1');
+      expect(m.certificates['p1']!.levelLabel, 'Foundation');
       final p1 = m.progressOf('p1');
       expect(p1.attempts, 2);
       expect(p1.bestPercent, 80);
@@ -1342,6 +1362,8 @@ void main() {
             redeemed: {},
             progress: {'cp-foundation': const PaperProgress(attempts: 2, bestPercent: 40, bestScore: 4, maxScore: 10)},
             certified: {'cp-foundation'},
+            // The certificate and the retake share one line, on the narrowest phone too.
+            certificates: {'cp-foundation': _certificate('cp-foundation')},
           ),
         );
         fake.quotes = {
@@ -1381,6 +1403,10 @@ void main() {
         // One row per level, one under another (owner, 3 Nov 2026: list rows, not a grid of cards).
         expect(tester.getTopLeft(_card('cp-advanced')).dy, greaterThan(tester.getTopLeft(_card('cp-foundation')).dy));
         expect(find.textContaining('₹9,25,925.25'), findsOneWidget);
+        expect(
+          tester.getCenter(_button('cp-foundation', 'Certificate')).dy,
+          tester.getCenter(_button('cp-foundation', 'Retake')).dy,
+        );
       });
 
       testWidgets('${width.round()} dp: sets open, closed, priced and sat, with no clipped text', (tester) async {
@@ -1555,6 +1581,95 @@ void main() {
       expect(fake.count('member'), greaterThan(membersBefore), reason: 'the best score and attempts are read again');
       expect(_in('cp-foundation', find.textContaining('Best score 80% (8/10) · Passed · Certified')), findsOneWidget);
       expect(_button('cp-foundation', 'Retake assessment'), findsOneWidget);
+    });
+
+    testWidgets('a certified level opens its certificate in the app, with Download PDF; Retake still starts again', (
+      tester,
+    ) async {
+      final fake = FakeAssess(
+        member: assessMember(
+          open: {'cp-foundation', 'cp-advanced'},
+          progress: {
+            'cp-foundation': const PaperProgress(
+              attempts: 1,
+              bestPercent: 100,
+              bestScore: 50,
+              maxScore: 50,
+              passed: true,
+            ),
+            'cp-advanced': const PaperProgress(attempts: 2, bestPercent: 4, bestScore: 2, maxScore: 50),
+          },
+          certificates: {'cp-foundation': _certificate('cp-foundation')},
+        ),
+      );
+      final opener = RecordingOpener();
+      await _group(tester, 'Capital Planning', fake: fake, opener: opener);
+      expect(_in('cp-foundation', find.textContaining('Passed · Certified')), findsOneWidget);
+      expect(_button('cp-foundation', 'Certificate'), findsOneWidget);
+      expect(_button('cp-foundation', 'Retake'), findsOneWidget);
+      // Side by side: the certificate first, the retake beside it.
+      expect(
+        tester.getCenter(_button('cp-foundation', 'Certificate')).dx,
+        lessThan(tester.getCenter(_button('cp-foundation', 'Retake')).dx),
+      );
+      expect(
+        tester.getCenter(_button('cp-foundation', 'Certificate')).dy,
+        tester.getCenter(_button('cp-foundation', 'Retake')).dy,
+      );
+      // A level sat but not passed has no certificate to show.
+      expect(_button('cp-advanced', 'Certificate'), findsNothing);
+      expect(_button('cp-advanced', 'Retake assessment'), findsOneWidget);
+
+      await tester.tap(_button('cp-foundation', 'Certificate'));
+      await tester.pumpAndSettle();
+      expect(find.text('Certificate of Knowledge Assessment'), findsOneWidget);
+      expect(find.text('ICR-CP-2026-TEST0001'), findsWidgets);
+      expect(opener.opened, isEmpty, reason: 'the certificate is not a retake');
+
+      // Download PDF builds it in the app and hands it to the phone's save sheet.
+      final saved = <String>[];
+      CertificatePdfServices.marks = (c, holder) async => const CertificateMarks();
+      CertificatePdfServices.save = (name, bytes) async {
+        saved.add(name);
+        return Uri.file('/storage/emulated/0/Download/$name');
+      };
+      addTearDown(CertificatePdfServices.reset);
+      await tester.ensureVisible(find.text('Download PDF'));
+      await tester.pump();
+      await tester.tap(find.text('Download PDF'));
+      for (var i = 0; i < 400 && saved.isEmpty; i++) {
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 10)));
+        await tester.pump();
+      }
+      await tester.pumpAndSettle();
+      expect(saved, ['ICR-CP-2026-TEST0001.pdf']);
+      expect(find.text('Saved ICR-CP-2026-TEST0001.pdf'), findsOneWidget);
+
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      await tester.tap(_button('cp-foundation', 'Retake'));
+      await tester.pumpAndSettle();
+      expect(opener.opened.single.slug, 'capital-planning-foundation');
+    });
+
+    testWidgets('a certificate earned on a level that has since closed is still there, above the ways to open it', (
+      tester,
+    ) async {
+      final fake = FakeAssess(
+        member: assessMember(
+          open: {},
+          redeemed: {},
+          progress: {'cp-advanced': const PaperProgress(attempts: 1, bestPercent: 90, passed: true)},
+          certificates: {'cp-advanced': _certificate('cp-advanced')},
+        ),
+      );
+      await _group(tester, 'Capital Planning', fake: fake);
+      final certificate = _button('cp-advanced', 'Certificate');
+      expect(certificate, findsOneWidget);
+      expect(_btn(tester, certificate).onPressed, isNotNull);
+      await tester.tap(certificate);
+      await tester.pumpAndSettle();
+      expect(find.text('Certificate of Knowledge Assessment'), findsOneWidget);
     });
 
     testWidgets('a level sat but not passed shows its best score against the pass mark; Retake starts again', (

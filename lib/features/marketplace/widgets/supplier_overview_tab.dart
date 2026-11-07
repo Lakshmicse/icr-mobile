@@ -124,11 +124,7 @@ class _Tile extends StatelessWidget {
       TrackTone.ink => AppColors.onSurface,
     };
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: MartColors.cardBorder, width: 1.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: MartColors.cardFill, borderRadius: BorderRadius.circular(12)),
       padding: const EdgeInsets.fromLTRB(7.5, 7.5, 7.5, 7.5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

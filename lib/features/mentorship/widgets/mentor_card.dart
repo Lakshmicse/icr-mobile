@@ -33,7 +33,6 @@ class MentorCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: MentorshipColors.cardBorder, width: 0.5),
           boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 3, offset: Offset(0, 1))],
         ),
         child: Material(

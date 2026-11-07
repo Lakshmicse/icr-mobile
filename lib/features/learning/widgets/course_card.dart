@@ -50,12 +50,10 @@ class CourseCard extends StatelessWidget {
     return Semantics(
       button: true,
       label: '${course.title}, $providerName',
+      // A tinted card, never an outlined one (the owner's rule, Nov 2026).
       child: Material(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: const BorderSide(color: LearningColors.cardBorder),
-        ),
+        color: AppColors.surfaceContainer,
+        borderRadius: BorderRadius.circular(10),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,

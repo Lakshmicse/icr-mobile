@@ -7,6 +7,7 @@ import 'package:icr_mobile/features/mentorship_my/purchases_tab.dart';
 import 'helpers/fonts.dart';
 import 'mentoring_fakes.dart';
 import 'mentoring_purchases_world.dart';
+import 'package:icr_mobile/features/payments/payment_screen.dart' show PaymentOutcome, PaymentServices;
 
 final _now = DateTime(2026, 10, 26, 10);
 
@@ -73,6 +74,24 @@ Future<void> openPast(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// Stands in for the app's payment view: records the gateway address a payment is posted to and pays at once.
+List<String> payInTest() {
+  final posted = <String>[];
+  PaymentServices.pay = (context, {required action, required fields, String title = ''}) async {
+    posted.add(action);
+    return PaymentOutcome.success;
+  };
+  addTearDown(PaymentServices.reset);
+  return posted;
+}
+
+/// The gateway's form, as the live API answers a payment.
+Map<String, dynamic> gatewayForm(String txn) => {
+  'devActivated': false,
+  'action': 'https://test.payu.in/_payment',
+  'fields': {'txnid': txn},
+};
+
 void main() {
   setUpAll(loadAppFonts);
   setUp(() => mentoringNow = () => _now);
@@ -88,7 +107,8 @@ void main() {
       expect(inCard('term-t-pay', 'Pay ₹5,382'), findsOneWidget);
       // Active: the ask waiting for a reply, the booked call, a programme waiting on the mentor, the plan, a seat, a cohort place.
       expect(inCard('purchase-p-req', 'Withdraw'), findsOneWidget);
-      expect(inCard('purchase-p-booked', 'Join'), findsOneWidget);
+      // Booked two days ahead: Join is drawn, greyed with the time its room opens.
+      expect(inCard('purchase-p-booked', 'Join from 9:45 AM'), findsOneWidget);
       expect(find.byKey(const ValueKey('term-t-prog')), findsOneWidget);
       expect(find.byKey(const ValueKey('term-left-t-coach')), findsOneWidget);
       expect(find.byKey(const ValueKey('seat-g-clinic')), findsOneWidget);
@@ -245,23 +265,22 @@ void main() {
       expect(rec.sites, isEmpty);
     });
 
-    testWidgets('real money moves on the website: the quote is shown here, the payment page opens from the button', (
-      tester,
-    ) async {
-      final (api, rec, _) = await pump(tester, world: confirmedWorld());
+    testWidgets('real money is paid in the app: the quote is shown here, then the payment view', (tester) async {
+      final posted = payInTest();
+      final (api, rec, _) = await pump(
+        tester,
+        world: confirmedWorld(),
+        extra: {'POST /mentor-services/purchases/p-acc/pay': (_) => gatewayForm('p-acc')},
+      );
       await tapIn(tester, 'purchase-p-acc', 'Pay ₹799');
       await tester.tap(find.byKey(const ValueKey('quote-credit')));
       await tester.pumpAndSettle();
-      expect(find.text('Pay ₹799 on the website'), findsOneWidget);
       expect(find.byKey(const ValueKey('pay-handoff')), findsOneWidget);
-      await tester.tap(find.text('Pay ₹799 on the website'));
+      await tester.tap(find.text('Pay ₹799').last);
       await settle(tester);
-      expect(
-        api.count('POST /mentor-services/purchases/p-acc/pay'),
-        0,
-        reason: 'the website begins the gateway payment',
-      );
-      expect(rec.sites, ['/mentorship/my?tab=purchases&purchase=p-acc']);
+      expect(api.count('POST /mentor-services/purchases/p-acc/pay'), 1);
+      expect(posted, ['https://test.payu.in/_payment']);
+      expect(rec.sites, isEmpty, reason: 'nothing goes to the website');
     });
 
     testWidgets('with a simulated gateway the payment completes in the app', (tester) async {
@@ -298,10 +317,12 @@ void main() {
       expect(find.text('Pay for your session'), findsOneWidget);
     });
 
-    testWidgets('a programme shows the API\'s quote, then starts in the app or continues on the website', (
-      tester,
-    ) async {
-      final (api, rec, _) = await pump(tester);
+    testWidgets('a programme shows the API\'s quote, then is paid in the app', (tester) async {
+      final posted = payInTest();
+      final (api, rec, _) = await pump(
+        tester,
+        extra: {'POST /mentor-plans/subscriptions/t-pay/pay': (_) => gatewayForm('t-pay')},
+      );
       await tapIn(tester, 'term-t-pay', 'Pay ₹5,382');
       expect(find.text('Pay for your programme'), findsOneWidget);
       expect(find.byKey(const ValueKey('term-price')), findsOneWidget);
@@ -310,10 +331,11 @@ void main() {
       expect(at('term-discount'), '−₹1,000');
       expect(at('term-tax'), '₹383');
       expect(at('term-total'), '₹5,382');
-      await tester.tap(find.text('Pay ₹5,382 on the website'));
+      await tester.tap(find.text('Pay ₹5,382').last);
       await settle(tester);
-      expect(api.count('POST /mentor-plans/subscriptions/t-pay/pay'), 0);
-      expect(rec.sites, ['/mentorship/my?tab=purchases']);
+      expect(api.count('POST /mentor-plans/subscriptions/t-pay/pay'), 1);
+      expect(posted, ['https://test.payu.in/_payment']);
+      expect(rec.sites, isEmpty, reason: 'nothing goes to the website');
     });
 
     testWidgets('a programme with nothing to pay, or a simulated gateway, starts in the app', (tester) async {
@@ -328,11 +350,22 @@ void main() {
   });
 
   group('a booked call', () {
-    testWidgets('Join opens the meeting link', (tester) async {
+    testWidgets('Join opens the meeting link inside its window, and is gone once it closes', (tester) async {
+      // Booked for 10:00 two days on: the room is open from 9:45.
+      mentoringNow = () => _now.add(const Duration(days: 2, minutes: -10));
       await pump(tester);
       final urls = launches(tester);
       await tapIn(tester, 'purchase-p-booked', 'Join');
       expect(urls, ['https://meet.google.com/icr-demo']);
+    });
+
+    testWidgets('a call whose time went by offers no Join', (tester) async {
+      mentoringNow = () => _now.add(const Duration(days: 3));
+      await pump(tester);
+      expect(
+        find.descendant(of: find.byKey(const ValueKey('purchase-p-booked')), matching: find.textContaining('Join')),
+        findsNothing,
+      );
     });
 
     testWidgets(

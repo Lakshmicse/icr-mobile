@@ -1,14 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/util/links.dart' show openSitePage;
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/detail_sheet.dart';
 import '../account_labels.dart';
 import '../account_models.dart';
 import '../account_repository.dart';
 import '../widgets/account_kit.dart';
 import '../widgets/account_session.dart';
+import '../widgets/photo_picker.dart';
 import 'ask_to_join_sheet.dart';
 import 'company_lookups.dart';
 import 'create_company_controller.dart';
@@ -18,13 +23,26 @@ import 'lookalikes_card.dart';
 /// already does it: the team, the company check, a supplier listing, the details.
 enum CompanyNextStep { team, verify, sell, details }
 
+/// Where each welcome step goes on the website (`NewCompanyWelcome`): the team page, the company check, Start selling
+/// (`/vendors/new`, the website's redirect to it) and the company's details. The app opens each natively where it
+/// has the screen and on the website otherwise.
+String companyNextStepPath(CompanyNextStep step) => switch (step) {
+  CompanyNextStep.team => '/manage/team',
+  CompanyNextStep.verify => '/company?tab=verification',
+  CompanyNextStep.sell => '/vendors/new',
+  CompanyNextStep.details => '/company',
+};
+
 /// The website's `/account/companies/new`: one screen, like a LinkedIn page.
 /// Asks who the company is (name, industry, head-office city, size and
 /// organisation type) and for a tick that the person may act for it; website,
-/// logo, tagline and a different registered legal name are optional. Any member
-/// may; they become its admin and act for it. Tax IDs, documents, address and
-/// contact are not asked here: the company check asks them the first time an
-/// action needs trust.
+/// logo, tagline, a different registered legal name and the documents the
+/// organisation type files are optional. Any member may (ICR staff accounts are
+/// personal and are told so instead of the form); they become its admin and act
+/// for it, and someone already acting for another company may found one more.
+/// Tax IDs, address and contact are not asked here, and no document is
+/// demanded: the company check asks them the first time an action needs trust.
+/// A `?role=` on the website's link changes nothing on the page, so none is read.
 ///
 /// While the form is filled in, companies already on ICR that look alike are
 /// offered ("Ask to join"): a suggestion, never a block. Create hands back a
@@ -39,6 +57,8 @@ class CreateCompanyScreen extends StatefulWidget {
     this.onSessionChanged,
     this.onCreated,
     this.pickPhoto,
+    this.pickDocument,
+    this.placeSearch,
     this.onNextStep,
     this.onViewCompany,
     this.searchDelay,
@@ -56,8 +76,14 @@ class CreateCompanyScreen extends StatefulWidget {
   /// The company exists (after [onSessionChanged]).
   final void Function(MyCompany company)? onCreated;
 
-  /// Chooses a logo image on the phone; the logo row is hidden without it.
+  /// Chooses a logo image on the phone; the phone's own picture chooser when null.
   final Future<PickedPhoto?> Function()? pickPhoto;
+
+  /// Chooses a PDF or a picture of a document on the phone; the phone's own file chooser when null.
+  final Future<PickedPhoto?> Function()? pickDocument;
+
+  /// Finds places anywhere in the world for the head-office search; the API's `/locations/search` when null.
+  final Future<List<CityOption>> Function(String query)? placeSearch;
 
   /// A welcome-state step was tapped. The steps are plain notes without it.
   final void Function(CompanyNextStep step, MyCompany company)? onNextStep;
@@ -67,6 +93,15 @@ class CreateCompanyScreen extends StatefulWidget {
 
   /// How long typing settles before companies that look alike are asked for.
   final Duration? searchDelay;
+
+  /// The screen as every entry point pushes it: a welcome step opens its page (`companyNextStepPath`) and a
+  /// look-alike suggestion's "View page" opens the company — so no entry is left with plain-note steps and no
+  /// "View page" (6 Nov 2026: nine pushes passed nothing). [context] is the pusher's, below the new route.
+  static Widget routed(BuildContext context, {VoidCallback? onBack}) => CreateCompanyScreen(
+    onBack: onBack,
+    onNextStep: (step, _) => unawaited(openSitePage(context, companyNextStepPath(step))),
+    onViewCompany: (id) => unawaited(openSitePage(context, '/companies/$id')),
+  );
 
   @override
   State<CreateCompanyScreen> createState() => _CreateCompanyScreenState();
@@ -192,32 +227,35 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
 
   Future<void> _pickCity() async {
     await _c.loadCities();
-    if (!mounted || _c.cities.isEmpty) return;
-    final picked = await showAccountPicker<CityOption>(
-      context,
-      title: 'Where is the head office?',
-      items: _c.cities,
-      labelOf: (o) => o.label,
-      searchable: true,
-      selected: _c.city,
+    if (!mounted) return;
+    final picked = await showModalBottomSheet<CityOption>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (_) => _HeadOfficeSheet(
+        cities: _c.cities,
+        selected: _c.city,
+        search: widget.placeSearch ?? _c.searchPlaces,
+        delay: widget.searchDelay ?? const Duration(milliseconds: 350),
+      ),
     );
     if (picked != null) _c.setCity(picked);
   }
 
   Future<void> _pickLogo() async {
-    final pick = widget.pickPhoto;
-    if (pick == null) return;
-    final photo = await pick();
+    final photo = await (widget.pickPhoto ?? pickImageFromDevice)();
     if (photo != null) await _c.setLogo(photo);
   }
 
+  Future<void> _pickDocument(CompanyDocument kind) async {
+    final file = await (widget.pickDocument ?? pickEvidenceFromDevice)();
+    if (file != null) await _c.setDocument(kind, file);
+  }
+
   Future<void> _askToJoin(CompanyLookalike company) async {
-    await showAskToJoinSheet(
-      context,
-      search: _repository.searchCompanies,
-      send: _c.askToJoin,
-      initial: hitOf(company),
-    );
+    await showAskToJoinSheet(context, search: _repository.searchCompanies, send: _c.askToJoin, initial: hitOf(company));
   }
 
   // --- build ---------------------------------------------------------------------------------------------------
@@ -234,9 +272,14 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
             if (!didPop) _back();
           },
           child: Scaffold(
-            backgroundColor: AppColors.surfaceContainer,
+            // White, the blocks parted by hairlines, no boxes (owner, 6 Nov 2026).
+            backgroundColor: Colors.white,
             appBar: AccountBar(title: 'Create a company page', onBack: _back),
-            body: created != null ? _Welcome(company: created, onNextStep: widget.onNextStep, onDone: _leave) : _form(),
+            body: created != null
+                ? _Welcome(company: created, onNextStep: widget.onNextStep, onDone: _leave)
+                : _c.canJoinCompanies == false
+                ? const _StaffAccount()
+                : _form(),
           ),
         );
       },
@@ -265,14 +308,11 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: AccountChip(
-                label: 'About a minute · ${c.requiredCount} required details',
-                icon: Symbols.schedule,
-              ),
+              child: AccountChip(label: 'About a minute · ${c.requiredCount} required details', icon: Symbols.schedule),
             ),
           ),
           if (c.errors.isNotEmpty) _summary(),
-          AccountCard(
+          _Block(
             title: 'Company identity',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -323,7 +363,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                   SizedBox(key: _anchors[CompanyField.legalName]),
                 LookalikesCard(
                   companies: c.lookalikes,
-                  asked: c.askedToJoin,
+                  asked: {...c.askedToJoin, ...c.requestedBefore},
                   onAsk: _askToJoin,
                   onView: widget.onViewCompany,
                 ),
@@ -345,7 +385,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
               ],
             ),
           ),
-          AccountCard(
+          _Block(
             title: 'Company details',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -390,10 +430,11 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                     onTap: _pickStructure,
                   ),
                 ),
+                if (c.legalStructure != null) _documents(c.legalStructure!),
               ],
             ),
           ),
-          AccountCard(
+          _Block(
             title: 'Logo and tagline',
             trailing: const AccountChip(label: 'Optional'),
             child: Column(
@@ -404,7 +445,8 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                   style: AccountText.meta,
                 ),
                 const SizedBox(height: 12),
-                if (widget.pickPhoto != null) ...[_logo(), const SizedBox(height: 14)],
+                _logo(),
+                const SizedBox(height: 14),
                 AccountField(
                   label: 'Tagline',
                   controller: _description,
@@ -420,7 +462,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
               ],
             ),
           ),
-          AccountCard(
+          _Block(
             child: Container(
               key: _anchors[CompanyField.authorised],
               child: Column(
@@ -449,11 +491,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
               key: const Key('create.error'),
               margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF1F2),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFFECDD3)),
-              ),
+              decoration: BoxDecoration(color: const Color(0xFFFFF1F2), borderRadius: BorderRadius.circular(10)),
               child: Text(c.submitError!, style: AccountText.error.copyWith(fontSize: 14)),
             ),
           Padding(
@@ -511,11 +549,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
       key: const Key('create.summary'),
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF1F2),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFFECDD3)),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFFFFF1F2), borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -539,6 +573,163 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                 ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  /// The documents the organisation type files, opened under it once a type is picked. All optional: each is a private
+  /// upload the company check later finds on file. A type with no registration certificate says so instead of asking.
+  Widget _documents(String structure) {
+    final c = _c;
+    final slots = documentsFor(structure);
+    final added = slots.where(c.documents.containsKey).length;
+    final note = noCertificateNote(structure);
+    return Container(
+      key: const Key('create.docs'),
+      padding: const EdgeInsets.only(top: 12),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.slate200)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: Text(documentsHeading(structure), style: AccountText.itemTitle)),
+              const SizedBox(width: 8),
+              added > 0
+                  ? AccountChip(
+                      label: '$added of ${slots.length} added',
+                      color: AppColors.emerald50,
+                      ink: AppColors.emerald700,
+                    )
+                  : const AccountChip(label: 'Optional'),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(documentsOptionalNow, style: AccountText.meta),
+          for (final doc in slots) _documentRow(doc, structure),
+          if (note != null)
+            Container(
+              key: const Key('create.docs.none'),
+              margin: const EdgeInsets.only(top: 2),
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: AppColors.slate100)),
+              ),
+              child: Text(note, style: AccountText.meta),
+            ),
+          Container(
+            padding: const EdgeInsets.only(top: 10, bottom: 12),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: AppColors.slate100)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 1),
+                  child: Icon(Icons.lock_outline_rounded, size: 15, color: AppColors.slate500),
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Text(documentsPrivate, style: AccountText.meta)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _documentRow(CompanyDocument doc, String structure) {
+    final c = _c;
+    final file = c.documents[doc];
+    final busy = c.documentsBusy.contains(doc);
+    final error = c.documentErrors[doc];
+    final label = documentLabel(doc, structure);
+    return Container(
+      key: Key('create.doc.${doc.name}'),
+      margin: const EdgeInsets.only(top: 2),
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.slate100)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text.rich(
+                      TextSpan(
+                        style: AccountText.itemTitle,
+                        children: [
+                          TextSpan(text: label),
+                          TextSpan(
+                            text: '  ${documentNeed(doc)}',
+                            style: AccountText.meta.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(documentWhy(doc, structure), style: AccountText.meta),
+                    if (file != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_rounded, size: 16, color: AppColors.emerald700),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                file.name,
+                                key: Key('create.doc.${doc.name}.file'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AccountText.meta.copyWith(
+                                  color: AppColors.emerald700,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (file != null)
+                TextButton(
+                  key: Key('create.doc.${doc.name}.remove'),
+                  onPressed: () => c.removeDocument(doc),
+                  child: Text('Remove', semanticsLabel: 'Remove $label'),
+                )
+              else
+                AccountButton(
+                  key: Key('create.doc.${doc.name}.upload'),
+                  label: busy ? 'Uploading…' : 'Upload',
+                  icon: Icons.upload_file_outlined,
+                  outlined: true,
+                  expand: false,
+                  height: 36,
+                  busy: busy,
+                  onPressed: busy ? null : () => _pickDocument(doc),
+                ),
+            ],
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(error, key: Key('create.doc.${doc.name}.error'), style: AccountText.error),
+            ),
         ],
       ),
     );
@@ -581,16 +772,16 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                       alignment: Alignment.center,
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
-                        color: c.size == key ? AppColors.chipEmphasis : Colors.white,
+                        color: c.size == key
+                            ? AppColors.chipEmphasis
+                            : (error != null ? const Color(0xFFFFF1F2) : AppColors.slate100),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: c.size == key ? AppColors.primary : (error != null ? AppColors.error : AppColors.slate300),
-                          width: c.size == key ? 1.5 : 1,
-                        ),
                       ),
                       child: Text(
                         label,
-                        style: AccountText.label.copyWith(color: c.size == key ? AppColors.primary : AppColors.slate700),
+                        style: AccountText.label.copyWith(
+                          color: c.size == key ? AppColors.primary : AppColors.slate700,
+                        ),
                       ),
                     ),
                   ),
@@ -598,7 +789,10 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
             ],
           ),
           if (error != null)
-            Padding(padding: const EdgeInsets.only(top: 5), child: Text(error, style: AccountText.error)),
+            Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Text(error, style: AccountText.error),
+            ),
         ],
       ),
     );
@@ -618,10 +812,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
               Container(
                 width: 56,
                 height: 56,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.slate200),
-                ),
+                decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(8)),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: c.logoPreview == null
@@ -678,6 +869,168 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
   }
 }
 
+/// What an ICR staff account sees in place of the form: staff accounts are personal and neither create nor join
+/// companies (the website's `canJoinCompanies` check on the same page).
+class _StaffAccount extends StatelessWidget {
+  const _StaffAccount();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      key: const Key('create.staff'),
+      padding: const EdgeInsets.only(top: 12, bottom: 28),
+      child: _Block(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: Icon(Symbols.shield, size: 28, color: AppColors.primary),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Staff accounts don’t create companies', style: AccountText.cardTitle),
+                  const SizedBox(height: 4),
+                  Text(
+                    'ICR staff accounts are personal: they do not create or join companies.',
+                    style: AccountText.body,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Where is the head office?": ICR's own cities, narrowed as the person types, and — from two letters — any place
+/// in the world beyond them (the website's "Elsewhere" search), so a head office abroad can be named. A place ICR does
+/// not list has no city row; its name goes to the API as picked.
+class _HeadOfficeSheet extends StatefulWidget {
+  const _HeadOfficeSheet({required this.cities, required this.search, required this.delay, this.selected});
+
+  final List<CityOption> cities;
+  final CityOption? selected;
+  final Future<List<CityOption>> Function(String query) search;
+  final Duration delay;
+
+  @override
+  State<_HeadOfficeSheet> createState() => _HeadOfficeSheetState();
+}
+
+class _HeadOfficeSheetState extends State<_HeadOfficeSheet> {
+  String _q = '';
+  List<CityOption> _places = const [];
+  bool _searching = false;
+  Timer? _timer;
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _typed(String value) {
+    _timer?.cancel();
+    final q = value.trim();
+    setState(() {
+      _q = value;
+      _places = const [];
+      _searching = q.length >= 2;
+    });
+    if (q.length < 2) return;
+    _timer = Timer(widget.delay, () async {
+      final found = await widget.search(q);
+      // A slower answer to an older query must not overwrite the one for what is typed now.
+      if (!mounted || _q.trim() != q) return;
+      setState(() {
+        _places = found;
+        _searching = false;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final q = _q.trim().toLowerCase();
+    final cities = q.isEmpty ? widget.cities : widget.cities.where((c) => c.label.toLowerCase().contains(q)).toList();
+    final shown = [...cities, ..._places];
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.75,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SheetHandle(rule: false, height: 24, top: 10),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
+              child: Text('Where is the head office?', style: AccountText.cardTitle),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: TextField(
+                key: const Key('accountPicker.search'),
+                onChanged: _typed,
+                style: AccountText.input,
+                decoration: InputDecoration(
+                  hintText: 'Search for your city',
+                  hintStyle: AccountText.hint,
+                  isDense: true,
+                  prefixIcon: const Icon(Icons.search_rounded, color: AppColors.slate400),
+                  suffixIcon: _searching
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                        )
+                      : null,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.slate300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: shown.isEmpty
+                  ? Center(
+                      child: Text(
+                        _searching || q.isEmpty ? '' : 'No city by that name yet',
+                        key: const Key('create.city.none'),
+                        style: AccountText.meta,
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: shown.length,
+                      itemBuilder: (context, i) {
+                        final item = shown[i];
+                        return ListTile(
+                          key: Key('create.city.${item.id}'),
+                          title: Text(item.label, style: AccountText.input),
+                          trailing: item == widget.selected
+                              ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                              : null,
+                          onTap: () => Navigator.of(context).pop(item),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// The first view of a page its founder just created, like the website's
 /// `NewCompanyWelcome`: the form asked only who the company is, so this is
 /// where the rest is offered, each on the screen that already does it.
@@ -728,7 +1081,7 @@ class _Welcome extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AccountCard(
+          _Block(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -756,7 +1109,7 @@ class _Welcome extends StatelessWidget {
             ),
           ),
           for (final (step, icon, title, body, cta) in _steps)
-            AccountCard(
+            _Block(
               child: Column(
                 key: Key('welcome.${step.name}'),
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -790,6 +1143,45 @@ class _Welcome extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// One block of the page: a heading, its fields, and a hairline under it — the `AccountCard` of the other account
+/// screens without its box, on the white page (owner, 6 Nov 2026: white, line breakers, no boxes).
+class _Block extends StatelessWidget {
+  const _Block({this.title, this.trailing, required this.child});
+
+  final String? title;
+  final Widget? trailing;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (title != null) ...[
+                Row(
+                  children: [
+                    Expanded(child: Text(title!, style: AccountText.cardTitle)),
+                    ?trailing,
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              child,
+            ],
+          ),
+        ),
+        const Divider(height: 1, thickness: 1, color: AppColors.outlineVariant),
+        const SizedBox(height: 4),
+      ],
     );
   }
 }

@@ -19,7 +19,6 @@ import 'widgets/composer_and_filters.dart';
 import 'widgets/home_header.dart';
 import 'widgets/post_card.dart';
 import 'widgets/reply_thread.dart';
-import 'widgets/sponsored_card.dart';
 
 /// The Home feed.
 class HomeScreen extends StatefulWidget {
@@ -444,18 +443,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       );
-      // Cards sit 8 dp apart on the canvas; the placement takes the second gap.
+      // Cards sit 8 dp apart on the canvas. (The sponsored placement that took the second gap was removed on the
+      // owner's call, 6 Nov 2026.)
       children.add(const SizedBox(height: HomeLook.gap));
-      if (i == 1 || (posts.length == 1 && i == 0)) {
-        children.add(
-          SponsoredCardView(
-            card: feed.sponsored,
-            onOpen: () => openSitePage(context, feed.sponsored.link),
-            onInfo: () => showMessage(context, 'A placement shown to members of the ICR community.'),
-          ),
-        );
-        children.add(const SizedBox(height: HomeLook.gap));
-      }
     }
     children.add(
       Padding(

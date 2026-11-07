@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
+import 'package:icr_mobile/core/util/links.dart' show SiteRoutes;
 import 'package:icr_mobile/features/feed/feed_models.dart';
 import 'package:icr_mobile/features/feed/widgets/reply_widgets.dart';
 import 'package:icr_mobile/features/forum/forum_callbacks.dart';
@@ -343,9 +344,59 @@ void main() {
       expect(launched.single.toString(), 'https://example.com/spec');
       expect(spans.firstWhere((s) => s.text == 'this').recognizer, isNull);
     });
+
+    testWidgets('a web address typed as plain words in a repost body is a link: an ICR one opens the app\'s screen', (
+      tester,
+    ) async {
+      final opened = <Uri>[];
+      SiteRoutes.resolver = (uri) =>
+          (context) async => opened.add(uri);
+      addTearDown(() => SiteRoutes.resolver = null);
+      final w = ForumWorld(
+        bodyHtml:
+            '<p>Reposting this.</p>'
+            '<p>https://icr.org.in/community/digital-library-top-stats-d6a080</p>'
+            '<p>Also www.example.com/spec, thanks.</p>',
+      );
+      await pumpThread(tester, custom: w);
+      await tester.tapOnText(
+        find.textRange.ofSubstring('https://icr.org.in/community/digital-library-top-stats-d6a080'),
+      );
+      await settle(tester);
+      expect(opened.single.toString(), 'https://icr.org.in/community/digital-library-top-stats-d6a080');
+      expect(launched, isEmpty, reason: 'an ICR address goes to the app, not the browser');
+
+      // Another site goes to the phone's browser; the comma after it stays text.
+      await tester.tapOnText(find.textRange.ofSubstring('www.example.com/spec'));
+      await settle(tester);
+      expect(launched.single.toString(), 'https://www.example.com/spec');
+      await tester.tapOnText(find.textRange.ofSubstring('Reposting this.'));
+      expect(opened.length, 1);
+      expect(launched.length, 1, reason: 'the words around an address are not a link');
+    });
   });
 
   group('the replies', () {
+    testWidgets('a web address typed in a reply opens too, and the tagged name beside it still opens the member', (
+      tester,
+    ) async {
+      final w = ForumWorld();
+      w.page1 = [
+        replyJson(
+          'r1',
+          body: 'Spec at https://example.com/spec (see <a href="/members/u-priya">@Priya Nambiar</a>) ok',
+        ),
+      ];
+      await pumpThread(tester, custom: w);
+      await tester.tapOnText(find.textRange.ofSubstring('https://example.com/spec'));
+      await settle(tester);
+      expect(launched.single.toString(), 'https://example.com/spec');
+      await tester.tapOnText(find.textRange.ofSubstring('@Priya Nambiar'));
+      await settle(tester);
+      expect(members, ['u-priya']);
+      expect(launched.length, 1);
+    });
+
     testWidgets('they hang off one line, an answer stepped in under the reply it answers, with the author\'s role', (
       tester,
     ) async {

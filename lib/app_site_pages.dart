@@ -38,6 +38,8 @@ import 'features/mentorship/find_mentors_screen.dart';
 import 'features/mentorship_my/my_mentoring_controller.dart' show MyTab;
 import 'features/mentorship_my/my_mentoring_screen.dart';
 import 'features/messaging/messaging_launcher.dart';
+import 'features/notifications/notification_seen.dart';
+import 'features/notifications/notification_target.dart' show NotificationKinds;
 import 'features/notifications/notifications_screen.dart' show openNotifications;
 import 'features/shell/app_shell.dart';
 import 'features/shell/icr_bottom_nav.dart' show AppTab;
@@ -47,8 +49,15 @@ import 'features/site/legal_page.dart' show legalPages;
 import 'features/site/legal_page_screen.dart';
 import 'features/site/partner_apply_screen.dart';
 import 'features/site/refer_screen.dart';
+import 'features/support/support_routes.dart' show openSupportTicket;
 import 'features/volunteer/get_involved_screen.dart' show GetInvolvedScreen;
 import 'app_search.dart' show openMentorProfile;
+import 'features/account/widgets/account_session.dart' show maybeAuth;
+import 'features/forum/forums_controller.dart';
+import 'features/forum/new_thread_screen.dart' show openComposer;
+import 'features/learning_hub/my_courses_screen.dart';
+import 'features/learning_hub/partner_courses_screen.dart';
+import 'features/site/about_screen.dart';
 
 /// The pages of the ICR website that the app draws itself, beyond the doors and records `inAppSiteRoute` knows:
 /// the tabs, a record named by its id (a job, a discussion, a company, a product, a course, a chapter, a
@@ -71,6 +80,33 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
   if (legal != null) {
     return (ctx) => AppShell.push<void>(ctx, (c) => LegalPageScreen(page: legal, onBack: () => Navigator.of(c).pop()));
   }
+  // The website's About page (Saathi's "About ICR"; Settings' row), the app's own since 7 Nov 2026.
+  if (path == '/about') {
+    return (ctx) => AppShell.push<void>(
+      ctx,
+      (c) => AboutScreen(onBack: () => Navigator.of(c).pop(), signedIn: maybeAuth(c)?.user != null),
+    );
+  }
+  // The partner institute's enquiries (`?lead=` opens on one), the app's own since 7 Nov 2026.
+  if (path == '/admin/learning/enquiries') return (ctx) => openPartnerEnquiries(ctx, focusId: q['lead']);
+  // The partner institutes (the Learning hub's door) and the learner's own courses (`/learning/courses` is the
+  // website's My courses), so a link to either stays in the app.
+  if (path == '/learning/partners' && q['apply'] != '1') {
+    return (ctx) => AppShell.push<void>(ctx, (c) => PartnerCoursesScreen(onBack: () => Navigator.of(c).pop()));
+  }
+  if (path == '/learning/courses') {
+    return (ctx) => AppShell.push<void>(ctx, (c) => MyCoursesScreen(onBack: () => Navigator.of(c).pop()));
+  }
+  if (shell != null) {
+    // "Post a job" (`/manage/jobs/new`): the composer, or what a member who cannot post is told.
+    if (path == '/manage/jobs/new') return (ctx) => openPostJob(shell, navigation: appJobsNavigation(shell));
+    // "Start a discussion" (`/community/new`): the forum's composer.
+    if (path == '/community/new') {
+      return (ctx) async {
+        await openComposer(ctx, repository: shell.read<ForumsController>().repository);
+      };
+    }
+  }
   if (path == '/blogs') return (ctx) => openBlogs(ctx);
   if (parts.length == 2 && parts[0] == 'blogs') return (ctx) => openBlogPost(ctx, parts[1]);
   if (path == '/refer' || path == '/refer/credits') return (ctx) => openRefer(ctx);
@@ -92,22 +128,36 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
       ctx,
       (c) => PartnerApplyScreen(
         onBack: () => Navigator.of(c).pop(),
-        onCreateCompany: () => AppShell.push<void>(c, (r) => CreateCompanyScreen()),
+        onCreateCompany: () => AppShell.push<void>(c, (r) => CreateCompanyScreen.routed(r)),
       ),
     );
   }
+  // `?focus=invitations` ("{company} wants you on its team") brings the places waiting for the person into view.
   if (path == '/account/companies') {
     return (ctx) => AppShell.push<void>(
       ctx,
       (c) => MyCompaniesScreen(
         onBack: () => Navigator.of(c).pop(),
         onOpenCompany: shell == null ? null : (id) => unawaited(openCompanyById(shell, id)),
+        focusInvitations: q['focus'] == 'invitations',
       ),
+    );
+  }
+  // One help request's thread (`/support/<id>`; opening it reads the notifications about it, as the website's page
+  // does). The list (`/support`) and the company's team (`/manage/team`) are `inAppScreens`. Native since 5 Nov 2026.
+  if (parts.length == 2 && parts[0] == 'support') {
+    return (ctx) => openSupportTicket(
+      ctx,
+      parts[1],
+      onOpened: (c) => unawaited(markNotificationsSeen(c, NotificationKinds.supportTicket, parts[1])),
     );
   }
 
   // --- The tabs ---------------------------------------------------------------------------------------------
   switch (path) {
+    case '/':
+    case '/dashboard':
+      return tab(AppTab.home);
     case '/jobs':
       return (ctx) async {
         AppShell.goToTab(ctx, AppTab.jobs);
@@ -247,6 +297,14 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
     if (parts.length == 3) return (ctx) => hiring().editJob(parts[2]);
     if (parts.length == 4 && parts[3] == 'edit') return (ctx) => hiring().editJob(parts[2]);
     if (parts.length == 4 && parts[3] == 'applicants') return (ctx) => hiring().applicants(parts[2]);
+  }
+  // An interview's page for its panel (`/manage/interviews/<id>`): the app's own since 4 Nov 2026. Opening it reads
+  // what told the person about the round, as the website's page does (`useMarkSeen`).
+  if (shell != null && parts.length == 3 && parts[0] == 'manage' && parts[1] == 'interviews') {
+    return (ctx) => hiringRoutesOf(shell, navigation: appJobsNavigation(shell)).interview(
+      parts[2],
+      onOpened: (c) => unawaited(markNotificationsSeen(c, NotificationKinds.interviewPanel, parts[2])),
+    );
   }
   return null;
 }

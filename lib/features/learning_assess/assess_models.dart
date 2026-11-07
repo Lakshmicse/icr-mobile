@@ -6,8 +6,10 @@
 library;
 
 import '../feed/feed_models.dart' show FeedPicture;
+import '../learning_exam/exam_models.dart' show ExamCertificate;
 
 export '../feed/feed_models.dart' show FeedPicture;
+export '../learning_exam/exam_models.dart' show ExamCertificate;
 
 /// `LearningPaperKind`: a certification level, or a set of a mock exam.
 enum PaperKind {
@@ -350,7 +352,12 @@ class MemberAccess {
 
 /// What the screens know about the member: what they hold, how each paper went.
 class MemberLearning {
-  const MemberLearning({this.access, this.progress = const {}, this.certified = const {}});
+  const MemberLearning({
+    this.access,
+    this.progress = const {},
+    this.certified = const {},
+    this.certificates = const {},
+  });
 
   /// Nothing known (not signed in, or the reads failed): every paper reads as open and `openPaper` decides.
   static const none = MemberLearning();
@@ -363,12 +370,19 @@ class MemberLearning {
   /// Paper ids a certificate was issued for.
   final Set<String> certified;
 
+  /// The certificates themselves, keyed by paper id: what a certified level's "Certificate" opens.
+  final Map<String, ExamCertificate> certificates;
+
   PaperProgress progressOf(String paperId) => progress[paperId] ?? PaperProgress.none;
 
   PaperAccess accessOf(AssessPaper paper) => access?.accessOf(paper) ?? PaperAccess.open;
 
-  MemberLearning copyWith({MemberAccess? access}) =>
-      MemberLearning(access: access ?? this.access, progress: progress, certified: certified);
+  MemberLearning copyWith({MemberAccess? access}) => MemberLearning(
+    access: access ?? this.access,
+    progress: progress,
+    certified: certified,
+    certificates: certificates,
+  );
 }
 
 /// `PaperQuoteDto`: what a level or set would cost this member, in money and in ICR credits. Takes nothing.

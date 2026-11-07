@@ -158,11 +158,8 @@ class _Verified extends StatelessWidget {
     ];
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.success, width: 1.5),
-      ),
+      // A verified certificate reads green by its tint, not an outline (the owner's rule, Nov 2026).
+      decoration: BoxDecoration(color: AppColors.emerald50, borderRadius: BorderRadius.circular(14)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

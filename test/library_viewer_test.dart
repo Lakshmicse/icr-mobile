@@ -8,7 +8,6 @@ import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/library/library_models.dart';
 import 'package:icr_mobile/features/library/pdf_engine.dart';
 import 'package:icr_mobile/features/library/preview_runner.dart';
-import 'package:icr_mobile/features/library/screen_security.dart';
 import 'package:icr_mobile/features/library/widgets/data_grid.dart';
 import 'package:icr_mobile/features/library/widgets/document_viewer_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -26,6 +25,7 @@ Future<void> _pump(
   PreviewKind kind, {
   PdfEngine? pdf,
   Size size = const Size(400, 800),
+  FakeLibraryDevice? device,
 }) async {
   tester.view.physicalSize = size * 2;
   tester.view.devicePixelRatio = 2;
@@ -40,6 +40,7 @@ Future<void> _pump(
         kind: kind,
         pdf: pdf ?? FakePdfEngine(),
         runner: runHere,
+        device: device ?? FakeLibraryDevice(),
       ),
     ),
   );
@@ -47,8 +48,8 @@ Future<void> _pump(
 }
 
 void main() {
-  group('the viewer takes nothing out of the app', () {
-    testWidgets('it has no download, share or save control for any kind of file', (tester) async {
+  group('Download and Share (owner, 5 Nov 2026: the library is no longer view-only)', () {
+    testWidgets('every kind of file has Download and Share in the bar', (tester) async {
       final cases = <(Uint8List, String, PreviewKind)>[
         (seed('fm-handover-checklist.pdf'), 'a.pdf', PreviewKind.pdf),
         (seed('energy-dashboard.png'), 'a.png', PreviewKind.image),
@@ -62,47 +63,30 @@ void main() {
       for (final (bytes, name, kind) in cases) {
         await _pump(tester, bytes, name, kind);
         expect(find.byType(DocumentViewerScreen), findsOneWidget, reason: name);
-        for (final icon in [LucideIcons.download, LucideIcons.share2, LucideIcons.externalLink, LucideIcons.save]) {
-          expect(find.byIcon(icon), findsNothing, reason: '$name has no ${icon.codePoint}');
-        }
-        for (final tip in ['Download', 'Share', 'Save', 'Open in']) {
-          expect(find.byTooltip(tip), findsNothing, reason: '$name: $tip');
-        }
-        // There is nothing in the bar but the title (and Back, once there is a screen to go back to).
-        expect(tester.widget<AppBar>(find.byType(AppBar)).actions, anyOf(isNull, isEmpty), reason: name);
+        expect(find.byTooltip('Download'), findsOneWidget, reason: name);
+        expect(find.byTooltip('Share'), findsOneWidget, reason: name);
       }
     });
 
-    testWidgets('it keeps the window out of screenshots while it is open and lets go when it closes', (tester) async {
-      final platform = FakeScreenSecurity();
-      ScreenSecurity.platform = platform;
-      addTearDown(() => ScreenSecurity.platform = const MethodChannelScreenSecurity());
-      await _pump(tester, seed('visitor-management-policy.txt'), 'a.txt', PreviewKind.text);
-      expect(ScreenSecurity.holds, 1);
-      expect(platform.requests, [true]);
-      await tester.pumpWidget(const SizedBox());
-      expect(ScreenSecurity.holds, 0);
-      expect(platform.requests, [true, false]);
+    testWidgets('with nothing given, Download saves the bytes shown and Share sends them', (tester) async {
+      final device = FakeLibraryDevice();
+      await _pump(tester, seed('visitor-management-policy.txt'), 'policy.txt', PreviewKind.text, device: device);
+      await tester.tap(find.byTooltip('Download'));
+      await tester.pumpAndSettle();
+      expect(device.saved, ['policy.txt']);
+      expect(find.text('Saved policy.txt.'), findsOneWidget);
+      await tester.tap(find.byTooltip('Share'));
+      await tester.pumpAndSettle();
+      expect(device.sharedFiles, ['policy.txt']);
     });
-  });
 
-  group('screen protection', () {
-    test('is counted: on with the first screen, off only when the last one leaves', () {
-      final platform = FakeScreenSecurity();
-      ScreenSecurity.platform = platform;
-      addTearDown(() => ScreenSecurity.platform = const MethodChannelScreenSecurity());
-      ScreenSecurity.hold();
-      ScreenSecurity.hold();
-      ScreenSecurity.hold();
-      expect(platform.requests, [true]);
-      ScreenSecurity.release();
-      ScreenSecurity.release();
-      expect(platform.requests, [true]);
-      ScreenSecurity.release();
-      expect(platform.requests, [true, false]);
-      ScreenSecurity.release(); // an extra release changes nothing
-      expect(ScreenSecurity.holds, 0);
-      expect(platform.requests, [true, false]);
+    testWidgets('a cancelled "Save as" says nothing', (tester) async {
+      final device = FakeLibraryDevice()..saveAnswer = false;
+      await _pump(tester, seed('visitor-management-policy.txt'), 'policy.txt', PreviewKind.text, device: device);
+      await tester.tap(find.byTooltip('Download'));
+      await tester.pumpAndSettle();
+      expect(device.saved, isEmpty);
+      expect(find.textContaining('Saved '), findsNothing);
     });
   });
 
@@ -291,48 +275,6 @@ void main() {
         }
       });
     });
-
-    group('screen protection on the phone’s side of the channel', () {
-      const channel = MethodChannel('org.icr.icr_mobile/secure_screen');
-
-      void mock(Future<Object?> Function(MethodCall call) handler) {
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, handler);
-        addTearDown(
-          () =>
-              TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null),
-        );
-      }
-
-      test('asks the phone for the flag on Android, and never on other platforms', () async {
-        final calls = <MethodCall>[];
-        mock((call) async {
-          calls.add(call);
-          return null;
-        });
-        debugDefaultTargetPlatformOverride = TargetPlatform.android;
-        try {
-          await const MethodChannelScreenSecurity().setSecure(true);
-          await const MethodChannelScreenSecurity().setSecure(false);
-          expect(calls.map((c) => (c.method, (c.arguments as Map)['on'])), [('setSecure', true), ('setSecure', false)]);
-          calls.clear();
-          debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-          await const MethodChannelScreenSecurity().setSecure(true);
-          expect(calls, isEmpty);
-        } finally {
-          debugDefaultTargetPlatformOverride = null;
-        }
-      });
-
-      test('a refusal from the window is swallowed', () async {
-        mock((call) async => throw PlatformException(code: 'no'));
-        debugDefaultTargetPlatformOverride = TargetPlatform.android;
-        try {
-          await const MethodChannelScreenSecurity().setSecure(true);
-        } finally {
-          debugDefaultTargetPlatformOverride = null;
-        }
-      });
-    });
   });
 
   group('images, text and CSV', () {
@@ -475,7 +417,6 @@ void main() {
         findsNWidgets(2),
         reason: 'the list stays underneath',
       );
-      expect(ScreenSecurity.holds, 2, reason: 'and so does the screenshot protection');
       await tester.pageBack();
       await tester.pumpAndSettle();
       expect(find.byType(DocumentViewerScreen), findsOneWidget);
@@ -522,7 +463,7 @@ void main() {
 
     testWidgets('a file with no reader says so', (tester) async {
       await _pump(tester, Uint8List(4), 'plan.dwg', PreviewKind.none);
-      expect(find.text("This kind of file can't be previewed in the app."), findsOneWidget);
+      expect(find.text("This kind of file can't be previewed in the app. Download it to open it."), findsOneWidget);
     });
   });
 }

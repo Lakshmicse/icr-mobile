@@ -1,9 +1,14 @@
-import 'package:dio/dio.dart' show Options;
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart' show DioException, Options, Response, ResponseType;
 
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_error.dart';
+import '../../../core/config.dart';
 import 'hiring_models.dart';
 import 'hiring_repository.dart';
+import 'interview_brief_models.dart';
 
 /// The employer screens from the API, signed in as a member of the hiring team.
 class ApiHiringRepository implements HiringRepository {
@@ -239,6 +244,53 @@ class ApiHiringRepository implements HiringRepository {
   @override
   Future<TeamInterview> updateInterview(String interviewId, {InterviewDraft? draft, String? status}) async =>
       TeamInterview.fromJson(await _map('PATCH', '/interviews/$interviewId', {...?draft?.toJson(), 'status': ?status}));
+
+  @override
+  Future<InterviewBrief> interviewBrief(String interviewId) async =>
+      InterviewBrief.fromJson(await _map('GET', '/interviews/$interviewId'), apiBase: api.dio.options.baseUrl);
+
+  @override
+  Future<void> submitScorecard(String interviewId, ScorecardDraft draft) async {
+    await _send('POST', '/interviews/$interviewId/feedback', draft.toJson());
+  }
+
+  @override
+  Future<Uint8List> fileBytes(String url) async {
+    try {
+      final res = await api.dio.get<List<int>>(
+        AppConfig.absoluteUrl(url, apiBase: api.dio.options.baseUrl)!,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      return Uint8List.fromList(res.data ?? const []);
+    } on DioException catch (e) {
+      throw _errorOfBytes(e);
+    } catch (e) {
+      throw ApiError.from(e);
+    }
+  }
+
+  /// A refusal to a bytes download arrives as bytes: the API's JSON sentence is read out of them.
+  ApiError _errorOfBytes(DioException e) {
+    final data = e.response?.data;
+    if (data is List<int>) {
+      try {
+        return ApiError.from(
+          DioException(
+            requestOptions: e.requestOptions,
+            type: e.type,
+            response: Response<dynamic>(
+              requestOptions: e.requestOptions,
+              statusCode: e.response?.statusCode,
+              data: jsonDecode(utf8.decode(data)),
+            ),
+          ),
+        );
+      } catch (_) {
+        // Not JSON: the generic sentence will do.
+      }
+    }
+    return ApiError.from(e);
+  }
 
   @override
   Future<TeamOffer> makeOffer(String applicationId, OfferDraft draft, {bool send = true}) async {

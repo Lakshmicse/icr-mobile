@@ -385,7 +385,8 @@ class _CoverSheetState extends State<CoverSheet> {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: selected ? AppColors.primary : AppColors.slate200, width: selected ? 2 : 1),
+            // The ring marks the chosen cover; the others carry no frame.
+            border: selected ? Border.all(color: AppColors.primary, width: 2) : null,
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),

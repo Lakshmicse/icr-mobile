@@ -87,12 +87,10 @@ class _BidResponseCardState extends State<BidResponseCard> {
       child: Container(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         decoration: BoxDecoration(
-          color: awarded ? AppColors.emerald50 : Colors.white,
+          color: awarded ? AppColors.emerald50 : AppColors.slate50,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: widget.focused ? AppColors.primary : (awarded ? AppColors.emerald200 : AppColors.slate200),
-            width: widget.focused ? 2 : 1,
-          ),
+          // Only the bid a notification opened is ringed, to find it.
+          border: widget.focused ? Border.all(color: AppColors.primary, width: 2) : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,7 +187,7 @@ class _BidResponseCardState extends State<BidResponseCard> {
                         constraints: const BoxConstraints(maxWidth: 230),
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.slate200),
+                          color: AppColors.slate100,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(

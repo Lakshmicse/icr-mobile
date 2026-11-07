@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/api/api_error.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/util/join_window.dart' show joinShown;
 import '../../core/util/links.dart' show showMessage;
 import '../jobs/job_links.dart';
 import '../jobs/jobs_navigation.dart';
@@ -71,7 +72,7 @@ class InterviewsController extends CareerController {
     final rows = <InterviewEntry>[
       for (final app in _detail.values)
         for (final iv in app.interviews)
-          if (!(iv.live && !iv.scheduledAt.isBefore(now))) (app: app, interview: iv),
+          if (!(iv.live && joinShown(iv.scheduledAt, iv.durationMins, now))) (app: app, interview: iv),
     ];
     return rows..sort((a, b) => b.interview.scheduledAt.compareTo(a.interview.scheduledAt));
   }
@@ -304,6 +305,7 @@ class _InterviewsScreenState extends State<InterviewsScreen> {
             entry: e,
             upcoming: upcoming,
             links: widget.links,
+            clock: _c.clock,
             onOpen: () => _openApplication(e.app),
             onConfirm: () => _message(e.app, confirmRoundMessage(e.app, e.interview)),
             onReschedule: () => _reschedule(e),
@@ -323,11 +325,15 @@ class InterviewCard extends StatelessWidget {
     required this.onOpen,
     required this.onConfirm,
     required this.onReschedule,
+    this.clock = systemClock,
   });
 
   final InterviewEntry entry;
   final bool upcoming;
   final JobLinks links;
+
+  /// "Now" for the Join's window; the screen's clock, which a test pins.
+  final CareerClock clock;
   final VoidCallback onOpen;
   final VoidCallback onConfirm;
   final VoidCallback onReschedule;
@@ -405,13 +411,12 @@ class InterviewCard extends StatelessWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                if (join != null)
-                  StripButton(
+                if (join != null && joinShown(iv.scheduledAt, iv.durationMins, clock()))
+                  JoinStripButton(
                     key: ValueKey('join-${iv.id}'),
-                    label: 'Join call',
-                    icon: LucideIcons.video,
-                    filled: true,
-                    onTap: () => links.openUri(context, join),
+                    interview: iv,
+                    clock: clock,
+                    onJoin: () => links.openUri(context, join),
                   ),
                 if (map != null)
                   StripButton(

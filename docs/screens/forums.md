@@ -236,7 +236,7 @@ that picks "a discussion of Bharat's" now picks one from `home.ts`; a pending on
   within 1 px of its row): left to tune are the bubble's bottom padding (the tile is 0.5 dp taller than the design's
   102 dp), the elbow radius (8 dp now; the design's fillet reads slightly larger), the send arrow's glyph (the design's is
   wider and slate), the vertical dots' spacing, and the soft shadow (a golden draws it without blur). The card below the
-  thread (David's) and the sponsored card sit 1 to 2.5 dp off the design as before this work.
+  thread (David's) sits 1 to 2.5 dp off the design as before this work (the sponsored card was removed on 6 Nov 2026).
 * **Section look vs `forum-replies.png`**: name, chip, meta and body rows within 0.25 dp; the design's last body line
   ("assets.") is 1 dp lower than a uniform 20 dp pitch gives (cannot be matched with one line height).
 * **No design exists** for the Forums tab, the discussion's page, the composer or the sheets: they should be reviewed by
@@ -248,3 +248,5 @@ that picks "a discussion of Bharat's" now picks one from `home.ts`; a pending on
 * The reply composer sends text only (a reply can carry a file on the website; the app shows one but does not attach).
 * Following and Polls are not paged until the portal gains the filters (request 1).
 * Tablet layout: the tab and the page are one column at any width.
+
+**6 Nov 2026 (owner's phone).** A reply's role pill (the section look, `ReplyTile._section`) overflowed the row by 16 px with a long role ("Workplace experience and employee wellbeing" — a headline split at "at"): the name may now take up to three fifths of the row and the pill two, each ellipsised past that; short ones take only their own width.

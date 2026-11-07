@@ -164,7 +164,7 @@ class _CompanyInsightsScreenState extends State<CompanyInsightsScreen> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.only(bottom: 32),
                   children: [
-                    _Header(controller: c, links: widget.links, navigation: widget.navigation),
+                    _Header(controller: c),
                     const SizedBox(height: 12),
                     ChipRow(
                       height: 30,
@@ -219,13 +219,12 @@ class _CompanyInsightsScreenState extends State<CompanyInsightsScreen> {
   };
 }
 
-/// The company, its rating and the ways onward.
+/// The company and its rating. This screen is the app's company page, so it
+/// has no "See the company page" link: every company opener lands here.
 class _Header extends StatelessWidget {
-  const _Header({required this.controller, required this.links, required this.navigation});
+  const _Header({required this.controller});
 
   final CompanyInsightsController controller;
-  final JobLinks links;
-  final JobsNavigation navigation;
 
   @override
   Widget build(BuildContext context) {
@@ -267,15 +266,6 @@ class _Header extends StatelessWidget {
                   )
                 else if (summary != null)
                   Text('No reviews yet', style: CareerText.meta),
-                const SizedBox(height: 8),
-                InkWell(
-                  key: const ValueKey('company-page'),
-                  onTap: () => navigation.openCompany(context, links, company.id),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Text('See the company page', style: CareerText.link),
-                  ),
-                ),
               ],
             ),
           ),

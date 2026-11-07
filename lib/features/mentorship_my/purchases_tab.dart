@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/util/join_window.dart' show joinShown;
 import '../../core/util/links.dart';
 import 'mentoring_format.dart';
+import 'mentoring_clock.dart';
 import 'mentoring_links.dart';
 import 'mentoring_models.dart';
 import 'my_mentoring_controller.dart';
@@ -192,15 +194,9 @@ class PurchaseCard extends StatelessWidget {
     final confirmed = p.status == PurchaseStatus.confirmed;
     final paid = p.status == PurchaseStatus.paid || p.status == PurchaseStatus.fulfilled;
     final due = p.duePaisa;
-    return Container(
+    return MentoringCard(
       key: ValueKey('purchase-${p.id}'),
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: bucketOf(p) == PurchaseBucket.needs ? AppColors.amber500 : AppColors.cardRule),
-      ),
-      padding: const EdgeInsets.all(14),
+      tint: bucketOf(p) == PurchaseBucket.needs ? AppColors.amber50 : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -342,8 +338,12 @@ class PurchaseCard extends StatelessWidget {
         ),
       if (p.status == PurchaseStatus.confirmed || (b != null && b.scheduled && p.status == PurchaseStatus.paid))
         QuietButton(label: 'Cancel', danger: true, onPressed: () => showCancelBookingSheet(context, book, p)),
-      if (b != null && b.scheduled && p.status == PurchaseStatus.paid && link != null)
-        SolidButton(label: 'Join', icon: LucideIcons.video, onPressed: () => openUrl(context, link)),
+      if (b != null &&
+          b.scheduled &&
+          p.status == PurchaseStatus.paid &&
+          link != null &&
+          joinShown(b.scheduledAt, b.durationMin, mentoringNow()))
+        JoinButton(link: link, startsAt: b.scheduledAt, durationMin: b.durationMin),
       if (b != null && b.scheduled && p.status == PurchaseStatus.paid && b.proposedAt == null)
         QuietButton(label: 'Ask to move', onPressed: () => showProposeMoveSheet(context, book, p)),
       if (p.type == ServiceType.resource && held && p.downloadUrl != null)
@@ -416,15 +416,9 @@ class _TermCard extends StatelessWidget {
     final active = t.status == 'ACTIVE';
     final left = t.sessionsLeft;
     final next = active ? t.steps.where((s) => s.isNext).firstOrNull : null;
-    return Container(
+    return MentoringCard(
       key: ValueKey('term-${t.id}'),
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: termBucket(t) == PurchaseBucket.needs ? AppColors.amber500 : AppColors.cardRule),
-      ),
-      padding: const EdgeInsets.all(14),
+      tint: termBucket(t) == PurchaseBucket.needs ? AppColors.amber50 : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -8,9 +8,6 @@ abstract class FeedRepository {
   /// [tag] narrows to one forum tag (a topic chip), on top of [filter].
   Future<FeedPage> load(FeedFilter filter, {int page = 1, String? search, String? tag});
 
-  /// The placement drawn after the second post.
-  SponsoredCard get sponsored;
-
   /// The same forum, for a discussion's page, the composer and the Forums tab (as the same reader).
   ForumRepository get forum;
 

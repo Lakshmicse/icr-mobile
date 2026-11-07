@@ -135,3 +135,6 @@ String? mobileIssue(String raw) {
   if (digits.length < 8) return 'Enter a valid mobile number, with its country code if it is not Indian.';
   return null;
 }
+
+/// What the quote form says to a listing's own team, as the website's profile does (`vendors.ownerNote`).
+const ownListingNote = 'This is your listing. Quote requests from buyers reach you in your console.';

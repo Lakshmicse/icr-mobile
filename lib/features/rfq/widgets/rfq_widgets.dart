@@ -7,7 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../rfq_models.dart';
 import '../rfq_styles.dart';
 
-/// A white card with the slate hairline.
+/// A pale tinted card, no frame.
 class RfqCard extends StatelessWidget {
   const RfqCard({super.key, required this.child, this.padding = const EdgeInsets.all(14), this.onTap});
 

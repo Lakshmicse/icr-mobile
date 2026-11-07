@@ -142,13 +142,16 @@ class ApiAssessRepository implements AssessRepository {
         at: DateTime.tryParse(a['submittedAt'] as String? ?? ''),
       );
     }
+    // Newest first, and a paper is certified once: the first record for a paper is the one it holds.
+    final issued = <String, ExamCertificate>{};
+    for (final c in certificates) {
+      if (c['paperId'] is String) issued.putIfAbsent(c['paperId'] as String, () => ExamCertificate.fromJson(c));
+    }
     return MemberLearning(
       access: unlocks == null ? null : _access(unlocks),
       progress: progress,
-      certified: {
-        for (final c in certificates)
-          if (c['paperId'] is String) c['paperId'] as String,
-      },
+      certified: issued.keys.toSet(),
+      certificates: issued,
     );
   }
 

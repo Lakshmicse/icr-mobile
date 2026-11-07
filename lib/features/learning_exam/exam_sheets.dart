@@ -9,17 +9,14 @@ import 'exam_format.dart';
 import 'exam_styles.dart';
 import 'exam_widgets.dart';
 
-/// How a palette mark is drawn: fill, edge and the number's ink.
-({Color fill, Color edge, Color ink}) markStyle(QuestionMark mark) => switch (mark) {
-  QuestionMark.notVisited => (fill: Colors.white, edge: AppColors.slate300, ink: AppColors.slate600),
-  QuestionMark.notAnswered => (fill: ExamColors.notAnswered, edge: ExamColors.notAnswered, ink: Colors.white),
-  QuestionMark.answered => (fill: ExamColors.answered, edge: ExamColors.answered, ink: Colors.white),
-  QuestionMark.flagged => (fill: ExamColors.flagged, edge: ExamColors.flagged, ink: Colors.white),
-  QuestionMark.answeredFlagged => (
-    fill: ExamColors.answeredFlagged,
-    edge: ExamColors.answeredFlagged,
-    ink: ExamColors.answeredFlaggedInk,
-  ),
+/// How a palette mark is drawn: a tint fill and the number's ink. A cell not yet visited is the neutral grey tint;
+/// no cell wears an outline (the owner's rule, Nov 2026).
+({Color fill, Color ink}) markStyle(QuestionMark mark) => switch (mark) {
+  QuestionMark.notVisited => (fill: AppColors.surfaceContainer, ink: AppColors.slate600),
+  QuestionMark.notAnswered => (fill: ExamColors.notAnswered, ink: Colors.white),
+  QuestionMark.answered => (fill: ExamColors.answered, ink: Colors.white),
+  QuestionMark.flagged => (fill: ExamColors.flagged, ink: Colors.white),
+  QuestionMark.answeredFlagged => (fill: ExamColors.answeredFlagged, ink: ExamColors.answeredFlaggedInk),
 };
 
 String markWords(QuestionMark mark) => switch (mark) {
@@ -131,7 +128,6 @@ class PaletteCell extends StatelessWidget {
           decoration: BoxDecoration(
             color: s.fill,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: s.edge, width: 1.5),
             boxShadow: current ? const [BoxShadow(color: AppColors.primary, spreadRadius: 2)] : null,
           ),
           alignment: Alignment.center,
@@ -156,11 +152,7 @@ class _LegendRow extends StatelessWidget {
         Container(
           width: 18,
           height: 18,
-          decoration: BoxDecoration(
-            color: s.fill,
-            borderRadius: BorderRadius.circular(5),
-            border: Border.all(color: s.edge, width: 1.5),
-          ),
+          decoration: BoxDecoration(color: s.fill, borderRadius: BorderRadius.circular(5)),
         ),
         const SizedBox(width: 10),
         Expanded(child: Text(markWords(mark), style: ExamText.body)),

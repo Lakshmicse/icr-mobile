@@ -15,12 +15,16 @@ class PaperEntry {
     required this.redeemed,
     required this.busy,
     this.quote,
+    this.certificate,
   });
 
   final AssessPaper paper;
   final PaperAccess access;
   final PaperProgress progress;
   final bool certified;
+
+  /// The certificate issued for it, when the member holds one: the row's "Certificate" opens it.
+  final ExamCertificate? certificate;
 
   /// The member opened it with ICR credits.
   final bool redeemed;
@@ -97,6 +101,7 @@ class GroupController extends ChangeNotifier {
       access: access,
       progress: member.progressOf(paper.id),
       certified: member.certified.contains(paper.id),
+      certificate: member.certificates[paper.id],
       redeemed: member.access?.redeemedWithCredits(paper) ?? false,
       busy: _busy.contains(paper.id),
       quote: access == PaperAccess.closed ? _quotes[paper.id] : null,

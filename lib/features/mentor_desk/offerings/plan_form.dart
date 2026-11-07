@@ -381,56 +381,58 @@ class _PlanFormState extends State<PlanForm> {
   }
 
   Widget _moduleCard(int i) {
-    return Container(
+    // A row closed by a hairline, never an outlined box (the owner's rule, Nov 2026).
+    return Column(
       key: ValueKey('module-$i'),
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.cardRule),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: Text('Session ${i + 1}', style: MentoringText.cardTitle)),
-              if (_modTitles.length > minPlanModules)
-                IconButton(
-                  key: ValueKey('module-remove-$i'),
-                  tooltip: 'Remove session ${i + 1}',
-                  onPressed: () => _removeModule(i),
-                  icon: const Icon(LucideIcons.trash2, size: 16, color: AppColors.outline),
-                ),
+              Row(
+                children: [
+                  Expanded(child: Text('Session ${i + 1}', style: MentoringText.cardTitle)),
+                  if (_modTitles.length > minPlanModules)
+                    IconButton(
+                      key: ValueKey('module-remove-$i'),
+                      tooltip: 'Remove session ${i + 1}',
+                      onPressed: () => _removeModule(i),
+                      icon: const Icon(LucideIcons.trash2, size: 16, color: AppColors.outline),
+                    ),
+                ],
+              ),
+              TextField(
+                key: ValueKey('module-title-$i'),
+                controller: _modTitles[i],
+                maxLength: maxModuleTitle,
+                style: MentoringText.formInput,
+                decoration: fieldDecoration('Title'),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                key: ValueKey('module-outline-$i'),
+                controller: _modOutlines[i],
+                minLines: 2,
+                maxLines: 4,
+                maxLength: maxModuleOutline,
+                style: MentoringText.formInput,
+                decoration: fieldDecoration('What it covers (optional)'),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                key: ValueKey('module-minutes-$i'),
+                controller: _modMinutes[i],
+                keyboardType: TextInputType.number,
+                style: MentoringText.formInput,
+                decoration: fieldDecoration('Minutes (optional, $minSessionMinutes to $maxSessionMinutes)'),
+              ),
             ],
           ),
-          TextField(
-            key: ValueKey('module-title-$i'),
-            controller: _modTitles[i],
-            maxLength: maxModuleTitle,
-            style: MentoringText.formInput,
-            decoration: fieldDecoration('Title'),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            key: ValueKey('module-outline-$i'),
-            controller: _modOutlines[i],
-            minLines: 2,
-            maxLines: 4,
-            maxLength: maxModuleOutline,
-            style: MentoringText.formInput,
-            decoration: fieldDecoration('What it covers (optional)'),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            key: ValueKey('module-minutes-$i'),
-            controller: _modMinutes[i],
-            keyboardType: TextInputType.number,
-            style: MentoringText.formInput,
-            decoration: fieldDecoration('Minutes (optional, $minSessionMinutes to $maxSessionMinutes)'),
-          ),
-        ],
-      ),
+        ),
+        const Divider(height: 1, thickness: 1, color: AppColors.cardRule),
+      ],
     );
   }
 }

@@ -50,9 +50,13 @@ class CompaniesController extends ChangeNotifier {
   /// The request being withdrawn.
   String? withdrawing;
 
+  /// The invitation being answered, and how (`accept` or `decline`).
+  String? answering;
+  String? answeringAction;
+
   bool _disposed = false;
 
-  bool get busy => switching != null || leaving != null || withdrawing != null;
+  bool get busy => switching != null || leaving != null || withdrawing != null || answering != null;
 
   @override
   void dispose() {
@@ -144,6 +148,44 @@ class CompaniesController extends ChangeNotifier {
     }
   }
 
+  /// Accepts the place an admin added the person to: they join, and the API hands back a fresh session (joining may
+  /// make it the company they act for, and the role rides in the token), which is adopted like a switch.
+  Future<bool> acceptInvitation(String companyId) async {
+    if (busy) return false;
+    return _session(
+      start: () {
+        answering = companyId;
+        answeringAction = 'accept';
+      },
+      end: () {
+        answering = null;
+        answeringAction = null;
+      },
+      call: () => repository.acceptInvitation(companyId),
+      droppedInvitation: companyId,
+    );
+  }
+
+  /// Turns the invitation down; the list as it now stands.
+  Future<bool> declineInvitation(String companyId) async {
+    if (busy) return false;
+    answering = companyId;
+    answeringAction = 'decline';
+    actionError = null;
+    _notify();
+    try {
+      data = await repository.declineInvitation(companyId);
+      return true;
+    } catch (e) {
+      actionError = ApiError.from(e).message;
+      return false;
+    } finally {
+      answering = null;
+      answeringAction = null;
+      _notify();
+    }
+  }
+
   /// Asks the company's admins to add the person. Null when sent, else the API's sentence.
   Future<String?> requestToJoin(String companyId, String? note) async {
     try {
@@ -163,6 +205,7 @@ class CompaniesController extends ChangeNotifier {
     required Future<SessionTokens> Function() call,
     void Function(String message)? onFailure,
     String? removed,
+    String? droppedInvitation,
     bool quiet = false,
   }) async {
     start();
@@ -175,12 +218,22 @@ class CompaniesController extends ChangeNotifier {
       // Until the list is read again, show what the new session says.
       final data = this.data;
       if (data != null) {
-        final kept = removed == null
+        var kept = removed == null
             ? data
-            : data.copyWith(companies: [
-                for (final c in data.companies)
-                  if (c.companyId != removed) c,
-              ]);
+            : data.copyWith(
+                companies: [
+                  for (final c in data.companies)
+                    if (c.companyId != removed) c,
+                ],
+              );
+        if (droppedInvitation != null) {
+          kept = kept.copyWith(
+            invitations: [
+              for (final i in kept.invitations)
+                if (i.companyId != droppedInvitation) i,
+            ],
+          );
+        }
         this.data = tokens.user == null ? kept : _withActive(kept, tokens.user!['companyId'] as String?);
       }
       end();
@@ -203,6 +256,7 @@ class CompaniesController extends ChangeNotifier {
     personalRole: data.personalRole,
     canJoinCompanies: data.canJoinCompanies,
     requests: data.requests,
+    invitations: data.invitations,
     companies: [
       for (final c in data.companies)
         MyCompany(

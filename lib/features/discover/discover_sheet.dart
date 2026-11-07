@@ -53,20 +53,9 @@ class DiscoverSheet extends StatelessWidget {
   static const community = [
     DiscoverRow(
       42,
-      DiscoverDoor(
-        'Regional Chapters',
-        icon: 'discover_chapters.png',
-        iconLeft: 9,
-        textLeft: 43.5,
-        sitePath: '/chapters',
-      ),
-      DiscoverDoor(
-        'Working Councils',
-        icon: 'discover_councils.png',
-        iconLeft: 8.5,
-        textLeft: 44,
-        sitePath: '/councils',
-      ),
+      // Short names on the doors (owner, 5 Nov 2026); the screens keep "Regional Chapters" and "Working Councils".
+      DiscoverDoor('Chapters', icon: 'discover_chapters.png', iconLeft: 9, textLeft: 43.5, sitePath: '/chapters'),
+      DiscoverDoor('Councils', icon: 'discover_councils.png', iconLeft: 8.5, textLeft: 44, sitePath: '/councils'),
     ),
     DiscoverRow(
       46,
@@ -196,11 +185,8 @@ class _Door extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        side: const BorderSide(color: AppColors.outlineVariant),
-        borderRadius: BorderRadius.circular(8),
-      ),
+      color: AppColors.slate50,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => onOpen(door),

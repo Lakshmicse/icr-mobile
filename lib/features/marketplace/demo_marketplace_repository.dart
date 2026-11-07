@@ -234,6 +234,9 @@ class DemoMarketplaceRepository implements MarketplaceRepository {
   Future<String?> myCompanyId() async => null;
 
   @override
+  Future<Set<String>> myCompanyIds() async => const {};
+
+  @override
   Future<QuoteSent> requestQuote(QuoteRequest request) async => QuoteSent(id: 'demo-rfq', title: request.title);
 
   @override

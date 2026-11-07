@@ -6,13 +6,16 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text.dart';
+import '../../../core/util/links.dart' show showMessage;
 import '../chapter_controller.dart';
 import '../chapter_format.dart';
+import '../chapter_links.dart';
 import '../chapter_models.dart';
 import '../community_kit.dart';
+import '../resource_download.dart';
 import 'chapter_cover.dart';
 import 'meetup_row.dart';
+import 'resource_row.dart';
 
 /// One titled section of a chapter's page, with the keys the section chips
 /// scroll to. [count] is the pill after the title.
@@ -540,7 +543,6 @@ class UpdatesSection extends StatelessWidget {
             child: CommunityCard(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               color: u.pinned ? CommunityColors.blue50 : Colors.white,
-              borderColor: u.pinned ? const Color(0xFFBFDBFE) : CommunityColors.border,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -568,18 +570,17 @@ class UpdatesSection extends StatelessWidget {
   }
 }
 
+/// The chapter's decks, whitepapers, templates and recordings, each row with the website's outlined Download.
 class ResourcesSection extends StatelessWidget {
-  const ResourcesSection({super.key, required this.onOpen});
+  const ResourcesSection({super.key, required this.downloader, required this.opener});
 
-  final ValueChanged<ChapterResource> onOpen;
+  /// Saves a resource's file to the phone. Tests give their own.
+  final ResourceDownloader downloader;
 
-  static Color tagColor(String tag) => switch (tag) {
-    'PPTX' => const Color(0xFFB7472A),
-    'PDF' => const Color(0xFFC0392B),
-    'XLSX' => const Color(0xFF1D6F42),
-    'MP4' => const Color(0xFF6B4EA8),
-    _ => const Color(0xFF32629E),
-  };
+  /// Hands a recording's web page to the browser, as the website's link does.
+  final Future<void> Function(BuildContext context, Uri uri) opener;
+
+  static Color tagColor(String tag) => resourceTagColor(tag);
 
   @override
   Widget build(BuildContext context) {
@@ -590,38 +591,10 @@ class ResourcesSection extends StatelessWidget {
     if (state.items.isEmpty) return const SectionEmpty('No decks, templates or recordings have been shared yet.');
     return Column(
       children: [
-        for (final r in state.items)
-          InkWell(
-            onTap: () => onOpen(r),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(color: tagColor(r.tag), borderRadius: BorderRadius.circular(8)),
-                    child: Text(r.tag, style: AppText.plexSans(9, FontWeight.w700, Colors.white, lineHeight: 11)),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(r.title, style: CommunityText.personName, maxLines: 2, overflow: TextOverflow.ellipsis),
-                        Text(
-                          [r.kindLabel, if (r.sizeLabel != null) r.sizeLabel!].join(' · '),
-                          style: CommunityText.personLine,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(LucideIcons.externalLink, size: 15, color: AppColors.slate400),
-                ],
-              ),
-            ),
-          ),
+        for (final (i, r) in state.items.indexed) ...[
+          if (i > 0) const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16, color: CommunityColors.tileRule),
+          ResourceRow(resource: r, downloader: downloader, opener: opener),
+        ],
       ],
     );
   }
@@ -631,11 +604,19 @@ class ResourcesSection extends StatelessWidget {
 // Sponsors, nearby chapters
 // ---------------------------------------------------------------------------
 
+/// The sponsors, as the website's Chapter Partners tiles: the logo or the name and the tier. A sponsor with a
+/// website is a link that opens it, as on the website; one without is a plain tile. A sponsor whose "website" is a
+/// placeholder (the demo data's example.com) is not opened: the tap says it has none yet.
 class SponsorsSection extends StatelessWidget {
   const SponsorsSection({super.key, required this.sponsors, required this.onOpen});
 
   final List<ChapterSponsor> sponsors;
-  final ValueChanged<String> onOpen;
+  final ValueChanged<Uri> onOpen;
+
+  void _tap(BuildContext context, ChapterSponsor s, Uri link) {
+    if (isPlaceholderLink(link)) return showMessage(context, '${s.name} has not shared its website yet.');
+    onOpen(link);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -647,15 +628,14 @@ class SponsorsSection extends StatelessWidget {
         children: [
           for (final s in sponsors)
             GestureDetector(
-              onTap: s.url == null ? null : () => onOpen(s.url!),
+              onTap: switch (webLink(s.url)) {
+                final link? => () => _tap(context, s, link),
+                null => null,
+              },
               child: Container(
                 constraints: const BoxConstraints(minWidth: 104),
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: CommunityColors.border),
-                ),
+                decoration: BoxDecoration(color: CommunityColors.tile, borderRadius: BorderRadius.circular(8)),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -701,6 +681,7 @@ class NearbySection extends StatelessWidget {
             width: 170,
             child: CommunityCard(
               padding: EdgeInsets.zero,
+              color: CommunityColors.tile,
               onTap: () => onOpen(c),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -99,7 +99,6 @@ class FeedController extends ChangeNotifier {
   bool get hasMore => _hasMore;
   String? get error => _error;
   int get unread => _unread;
-  SponsoredCard get sponsored => repository.sponsored;
 
   bool isOpen(FeedPost post) => _open.contains(post.id);
   bool isLoadingReplies(FeedPost post) => _loadingReplies.contains(post.id);

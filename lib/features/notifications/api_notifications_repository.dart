@@ -3,23 +3,29 @@ import '../../core/config.dart';
 import '../messaging/messaging_models.dart';
 import 'notification_models.dart';
 import 'notifications_repository.dart';
+import 'viewer_time_zone.dart';
 
 /// Notifications from the API: `GET /notifications` (paged, `?unread=true`),
 /// `GET /notifications/unread-count`, `PATCH /notifications/:id/read`,
 /// `PATCH /notifications/read-all`, `PATCH /notifications/seen`, `GET|PUT /notifications/preferences`, and
 /// the person's companies for a row about another company (`POST /me/companies/switch`).
 class ApiNotificationsRepository implements NotificationsRepository {
-  ApiNotificationsRepository({required this.api});
+  ApiNotificationsRepository({required this.api, this.timeZone});
 
   final ApiClient api;
+
+  /// The zone a time in a sentence reads on (`?tz=`, as the website sends the browser's). The phone's by default
+  /// (`viewerTimeZone`); a test names one.
+  final String? timeZone;
 
   static const pageSize = 20;
 
   @override
   Future<NotificationPage> list({int page = 1, bool unreadOnly = false}) async {
+    final zone = timeZone ?? viewerTimeZone();
     final res = await api.dio.get<Map<String, dynamic>>(
       '/notifications',
-      queryParameters: {'page': page, 'limit': pageSize, if (unreadOnly) 'unread': true},
+      queryParameters: {'page': page, 'limit': pageSize, if (unreadOnly) 'unread': true, 'tz': ?zone},
     );
     final data = res.data ?? const {};
     final rows = (data['data'] as List? ?? const []).cast<Map<String, dynamic>>();

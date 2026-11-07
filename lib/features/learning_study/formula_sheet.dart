@@ -96,11 +96,7 @@ class FormulaDetail extends StatelessWidget {
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
-            decoration: BoxDecoration(
-              color: StudyColors.formulaPlate,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: StudyColors.formulaPlateBorder),
-            ),
+            decoration: BoxDecoration(color: StudyColors.formulaPlate, borderRadius: BorderRadius.circular(12)),
             child: FormulaMath(expression: expression, fontSize: 22),
           ),
         ),
@@ -131,11 +127,7 @@ class FormulaDetail extends StatelessWidget {
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.slate50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: StudyColors.border),
-              ),
+              decoration: BoxDecoration(color: AppColors.slate100, borderRadius: BorderRadius.circular(12)),
               child: Text(examples.text[i], style: StudyText.body),
             ),
           ),
@@ -244,18 +236,16 @@ class _ExampleCard extends StatelessWidget {
     final working = example.working;
     final result = example.result;
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: StudyColors.border),
-      ),
+      // No outline round the example (the owner's rule, Nov 2026): the Given block is tinted and a hairline sets
+      // off the analysis.
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (given.isNotEmpty)
             Container(
-              color: AppColors.slate50,
+              color: AppColors.slate100,
               padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -300,7 +290,6 @@ class _ExampleCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: StudyColors.formulaPlate,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: StudyColors.formulaPlateBorder),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,9 +325,8 @@ class _ExampleCard extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: StudyColors.greenFill.withValues(alpha: 0.55),
+                        color: StudyColors.greenFill.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: StudyColors.greenInk.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,

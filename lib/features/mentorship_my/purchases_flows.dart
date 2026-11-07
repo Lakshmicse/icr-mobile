@@ -3,7 +3,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/api/api_error.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/util/links.dart';
 import 'mentoring_clock.dart';
 import 'mentoring_format.dart';
 import 'mentoring_links.dart';
@@ -11,6 +10,8 @@ import 'mentoring_models.dart';
 import 'purchases_controller.dart';
 import 'widgets/forms.dart';
 import 'widgets/kit.dart';
+import '../payments/checkout_start.dart' as checkout;
+import '../payments/payment_screen.dart' as checkout show PaymentOutcome;
 
 /// The API's limits on what a buyer writes about a purchase.
 const minCancelReason = 5;
@@ -109,13 +110,30 @@ String _pct(int bps) {
   return '${v == v.roundToDouble() ? v.round() : v}%';
 }
 
-/// Says where a payment went: done in the app, or continuing on the website's payment page.
+/// Finishes a payment: done at once, or the gateway's form paid in the app's own payment view (never the website,
+/// since 4 Nov 2026). Called as the sheet that asked closes, so the payment view is opened before anything waits and
+/// what happened is said through the app's message bar, which outlives the sheet.
 Future<void> finishPayment(BuildContext context, MentorshipLinks links, PaymentOutcome outcome) async {
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  void say(String text) => messenger
+    ?..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(text)));
   if (outcome.completed) {
-    showMessage(context, outcome.message ?? 'Done.');
+    say(outcome.message ?? 'Done.');
     return;
   }
-  if (outcome.sitePath != null) await links.openPayment(context, outcome.sitePath!);
+  final gateway = outcome.gateway;
+  if (gateway != null) {
+    final paid = await checkout.runCheckout(context, gateway, title: 'Payment');
+    say(switch (paid) {
+      checkout.PaymentOutcome.success => 'Payment received. You will find it under My mentoring.',
+      checkout.PaymentOutcome.failure => "The payment didn't go through. Nothing was charged.",
+      checkout.PaymentOutcome.cancelled =>
+        "The payment wasn't completed. If you did pay, it shows under My mentoring within a minute.",
+    });
+    return;
+  }
+  if (outcome.sitePath != null) await links.openSite(context, outcome.sitePath!);
 }
 
 // ---------------------------------------------------------------------------
@@ -181,9 +199,7 @@ class _AcceptTimeFormState extends State<_AcceptTimeForm> {
       children: [
         Container(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-          decoration: const BoxDecoration(
-            border: Border(left: BorderSide(color: AppColors.primary, width: 4)),
-          ),
+          decoration: BoxDecoration(color: const Color(0xFFF0F5FC), borderRadius: BorderRadius.circular(8)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -222,7 +238,7 @@ class _AcceptTimeFormState extends State<_AcceptTimeForm> {
 // ---------------------------------------------------------------------------
 
 /// Pays for an accepted session. The quote shown is the one checkout charges (member discount, or a session
-/// credit that replaces it); a real PayU payment continues on the website's payment page.
+/// credit that replaces it); a real PayU payment is made in the app's own payment view.
 Future<bool> showPaySessionSheet(
   BuildContext context,
   PurchasesBook book,
@@ -293,7 +309,7 @@ class _PayFormState extends State<_PayForm> {
       subtitle: p.mentor == null ? null : 'With ${p.mentor!.name}',
       submitLabel: quote.chargedPaisa == 0
           ? (confirmed ? 'Pay with a session credit' : 'Book with a session credit')
-          : (onSite ? 'Pay ${inr(quote.chargedPaisa)} on the website' : 'Pay ${inr(quote.chargedPaisa)}'),
+          : 'Pay ${inr(quote.chargedPaisa)}',
       busy: _busy,
       problem: _problem,
       onSubmit: () => _pay(quote),
@@ -314,7 +330,7 @@ class _PayFormState extends State<_PayForm> {
           const Padding(
             padding: EdgeInsets.only(top: 10),
             child: Text(
-              'The payment itself is made on ICR\'s secure PayU page on the website: the button opens it.',
+              'You pay on ICR\'s secure PayU page, here in the app.',
               key: ValueKey('pay-handoff'),
               style: _meta,
             ),
@@ -391,9 +407,7 @@ class _PayTermFormState extends State<_PayTermForm> {
     return MentoringForm(
       title: t.programme ? 'Pay for your programme' : 'Pay for your plan',
       subtitle: '${t.title}${t.counterpart == null ? '' : ' with ${t.counterpart!.name}'}',
-      submitLabel: t.totalPaisa == 0
-          ? 'Start it'
-          : (onSite ? 'Pay ${inr(t.totalPaisa)} on the website' : 'Pay ${inr(t.totalPaisa)}'),
+      submitLabel: t.totalPaisa == 0 ? 'Start it' : 'Pay ${inr(t.totalPaisa)}',
       busy: _busy,
       problem: _problem,
       onSubmit: _pay,
@@ -410,7 +424,7 @@ class _PayTermFormState extends State<_PayTermForm> {
           const Padding(
             padding: EdgeInsets.only(top: 10),
             child: Text(
-              'The payment itself is made on ICR\'s secure PayU page on the website: the button opens it.',
+              'You pay on ICR\'s secure PayU page, here in the app.',
               key: ValueKey('pay-handoff'),
               style: TextStyle(fontFamily: 'Roboto', fontSize: 12, color: AppColors.outline, height: 1.4),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../assess_format.dart';
 import '../assess_models.dart';
 import '../assess_styles.dart';
@@ -34,12 +35,8 @@ class GroupCard extends StatelessWidget {
       button: true,
       label: '${group.title}, $meta',
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AssessColors.cardBorder),
-          boxShadow: const [BoxShadow(color: Color(0x0F0F172A), blurRadius: 8, offset: Offset(0, 2))],
-        ),
+        // A tinted card, never an outlined one (the owner's rule, Nov 2026).
+        decoration: BoxDecoration(color: AppColors.surfaceContainer, borderRadius: BorderRadius.circular(12)),
         child: Material(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(12),

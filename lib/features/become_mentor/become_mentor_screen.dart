@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/api_client.dart';
+import '../../core/auth/auth_controller.dart';
 import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
@@ -27,9 +30,11 @@ Future<void> openBecomeMentor(
   void Function(BuildContext context, String mentorProfileId)? onOpenMentor,
   void Function(BuildContext context)? onBell,
   OpenSitePath? onOpenWebsite,
+  FixTarget? fix,
 }) => Navigator.of(context).push(
   MaterialPageRoute<void>(
     builder: (_) => BecomeMentorScreen(
+      fix: fix,
       onBack: onBack,
       links: MentorshipLinks.resolve(
         context,
@@ -67,6 +72,7 @@ class BecomeMentorScreen extends StatefulWidget {
     this.onOpenWebsite,
     this.pickPhoto = pickPhotoFromDevice,
     this.pickDocument = pickEvidenceFromDevice,
+    this.fix,
   });
 
   final VoidCallback? onBack;
@@ -83,13 +89,33 @@ class BecomeMentorScreen extends StatefulWidget {
   final FilePick pickPhoto;
   final FilePick pickDocument;
 
+  /// The form to open once the page has loaded (`?fix=availability`): the mentor desk's "Say when you are free"
+  /// lands on the sheet that says it, not on a page to search.
+  final FixTarget? fix;
+
   @override
   State<BecomeMentorScreen> createState() => _BecomeMentorScreenState();
+}
+
+/// ICR's own operator (`OPERATOR_ROLES`): it runs the mentorship programme and takes no part in it.
+const _operatorRoles = ['SUPER_ADMIN'];
+
+/// The app's session, or null where none is provided (a screen shown on its own, a test).
+AuthController? _sessionOf(BuildContext context) {
+  try {
+    return Provider.of<AuthController>(context, listen: false);
+  } on ProviderNotFoundException {
+    return null;
+  }
 }
 
 class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
   late final BecomeMentorController _c;
   late final MentorshipLinks _links;
+  late final AuthController? _auth = _sessionOf(context);
+
+  /// The website's `RequireMember`: a platform operator is shown why this is not theirs, and nothing is read.
+  late final bool _operator = _operatorRoles.contains(_auth?.user?.role);
 
   @override
   void initState() {
@@ -103,7 +129,26 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
       onBell: widget.onBell,
       onOpenWebsite: widget.onOpenWebsite,
     );
-    _c = BecomeMentorController(repo)..start();
+    final auth = _auth;
+    _c = BecomeMentorController(repo, onSessionChanged: auth == null ? null : () => unawaited(auth.refreshUser()));
+    if (_operator) return;
+    _c.start().then((_) {
+      if (!mounted) return;
+      _syncSession();
+      final fix = widget.fix;
+      if (fix == null || _c.error != null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _fix(context, fix);
+      });
+    });
+  }
+
+  /// Reconciles the session's `mentorStatus` with the profile just read (a reviewer moves it in another session, so
+  /// the member's own `/auth/me` is stale until the next read): the website's `useSyncMentorStatus`, at most once.
+  void _syncSession() {
+    final auth = _auth;
+    if (auth?.user == null || _c.error != null || !_c.profile.loaded) return;
+    if (auth!.user!.mentorStatus != _c.mentor?.status.api) unawaited(auth.refreshUser());
   }
 
   @override
@@ -114,6 +159,20 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_operator) {
+      return MentoringPage(
+        title: 'Become a mentor',
+        onBack: widget.onBack,
+        onBell: () => _links.notifications(context),
+        body: const EmptyNote(
+          icon: LucideIcons.lock,
+          title: 'Access denied',
+          body:
+              'Platform administrators run the mentorship programme rather than take part in it. The review queue is '
+              'under Admin → Trust & review.',
+        ),
+      );
+    }
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) {
@@ -150,9 +209,9 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
           key: const ValueKey('renewal'),
           tone: PillTone.amber,
           text:
-              'Your listing is due for renewal. Mentor approval runs for two years. Tick the code of conduct agreement in '
-              'Your application to stay listed in the directory.'
-              '${ready?.approvalExpiresAt == null ? '' : ' It expires on ${dayLabel(ready!.approvalExpiresAt!)}.'}',
+              'Your listing is due for renewal\n'
+              'Mentor approval runs for two years. Tick the code of conduct agreement in Your application to stay '
+              '${ready?.approvalExpiresAt == null ? 'on the directory.' : 'listed in the directory. It expires on ${_dayYear(ready!.approvalExpiresAt!)}.'}',
         ),
       const SizedBox(height: 10),
       _ApplicationCard(
@@ -480,17 +539,36 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
   Widget _certificationsCard(BuildContext context) {
     final certs = _c.mentor?.certifications ?? const <String>[];
     final stale = _c.staleCertifications;
+    final held = _c.credentials.data;
+    // Nothing to pick from (the website's `nothingToPick`): the way on is the credentials page, not a picker.
+    final nothingToPick = certs.isEmpty && _c.credentials.loaded && (held?.held.isEmpty ?? true);
     return SectionCard(
       cardKey: const ValueKey('card-certifications'),
       title: 'Certifications on your card',
       subtitle: 'Mentees filter the directory on these.',
       editLabel: certs.isEmpty ? 'Choose' : 'Edit',
-      onEdit: () => _certifications(context),
-      child: certs.isEmpty
+      onEdit: nothingToPick ? null : () => _certifications(context),
+      child: nothingToPick
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  (held?.recordedCount ?? 0) > 0
+                      ? 'None of your credentials has a short code yet. Add one under your credentials and it appears here.'
+                      : 'Record a certification under your credentials and you can show it here.',
+                  key: const ValueKey('certs-line'),
+                  style: MentoringText.body,
+                ),
+                const SizedBox(height: 8),
+                QuietButton(
+                  label: 'Manage my credentials',
+                  onPressed: () => _links.openSite(context, '/profile?tab=credentials&code=1'),
+                ),
+              ],
+            )
+          : certs.isEmpty
           ? Text(
-              (_c.credentials.data ?? const []).isEmpty
-                  ? 'Optional. Record a certification under your credentials and you can show it here.'
-                  : 'Optional. Show the certifications you hold — mentees working toward the same one look for them.',
+              'Optional. Show the certifications you hold — mentees working toward the same one look for them.',
               key: const ValueKey('certs-line'),
               style: MentoringText.body,
             )
@@ -525,7 +603,7 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
       context,
       (_) => CertificationsForm(
         codes: _c.mentor?.certifications ?? const [],
-        held: _c.credentials.data ?? const [],
+        held: _c.credentials.data?.held ?? const [],
         onSave: _c.saveProfile,
         onManage: () => _links.openSite(context, '/profile?tab=credentials&code=1'),
       ),
@@ -731,11 +809,23 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
       showMessage(context, _c.conduct.error ?? 'The code of conduct has not loaded yet — try again in a moment.');
       return;
     }
+    // While the application can be sent, "I agree" ticks the one declaration beside Submit, which records it with the
+    // submission; otherwise (a listed mentor behind on the current code) it records the agreement now.
+    final declare = _c.status.canSubmit;
     final agreed = await showFormSheet(
       context,
-      (_) => ConductSheet(conduct: conduct, accepted: _c.conductAccepted, onAgree: _c.agreeToConduct),
+      (_) => ConductSheet(
+        conduct: conduct,
+        accepted: _c.conductAccepted && !declare,
+        onAgree: declare
+            ? () async {
+                _c.setDeclared(true);
+                return null;
+              }
+            : _c.agreeToConduct,
+      ),
     );
-    if (agreed && context.mounted) showMessage(context, 'Agreed. Thank you.');
+    if (agreed && !declare && context.mounted) showMessage(context, 'Agreed. Thank you.');
   }
 
   Widget _documentsCard(BuildContext context) {
@@ -890,6 +980,13 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
 // Pieces
 // ---------------------------------------------------------------------------
 
+/// "10 Nov 2026" (the website's `{ day: 'numeric', month: 'short', year: 'numeric' }`).
+String _dayYear(DateTime at) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  final local = at.toLocal();
+  return '${local.day} ${months[local.month - 1]} ${local.year}';
+}
+
 class _GroupHeading extends StatelessWidget {
   const _GroupHeading(this.title, this.subtitle);
 
@@ -940,7 +1037,7 @@ class _StatusBanner extends StatelessWidget {
       ),
       MentorStatus.draft => (
         PillTone.blue,
-        'Draft — not yet visible',
+        'Draft · not yet visible',
         'Fill in each section, agree to the code of conduct and send your profile to the ICR team. Review usually takes a couple of days.',
       ),
     };
@@ -1042,27 +1139,46 @@ class _ApplicationCard extends StatelessWidget {
               ),
           ],
           const Divider(height: 22),
-          Row(
-            children: [
-              Expanded(child: Text('Code of conduct', style: MentoringText.bodyStrong)),
-              if (c.conductAccepted)
-                StatusPill('Accepted — ${c.readiness.data?.conductVersion ?? ''}', tone: PillTone.mint),
-            ],
-          ),
-          CheckboxListTile(
-            key: const ValueKey('conduct-check'),
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-            dense: true,
-            value: c.conductAccepted,
-            onChanged: c.conductAccepted || c.busy || version == null ? null : (on) => on == true ? onAgree() : null,
-            title: Text(
-              version == null
-                  ? 'I have read and agree to the ICR Mentor Code of Conduct.'
-                  : 'I have read and agree to the ICR Mentor Code of Conduct (version $version).',
-              style: MentoringText.body,
+          if (canSubmit)
+            // The one declaration: the details are true, and the code of conduct is accepted. It waits until nothing is
+            // needed, and is sent with Submit (the acceptance and the submission are one write).
+            CheckboxListTile(
+              key: const ValueKey('conduct-check'),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              dense: true,
+              value: c.declared,
+              onChanged: c.busy || version == null || needed.isNotEmpty ? null : (on) => c.setDeclared(on == true),
+              title: Text(
+                version == null
+                    ? 'I confirm these details are true, and I have read and accepted the ICR Mentor Code of Conduct and agree to comply with applicable ICR mentoring policies.'
+                    : 'I confirm these details are true, and I have read and accepted the ICR Mentor Code of Conduct (version $version) and agree to comply with applicable ICR mentoring policies.',
+                style: MentoringText.body,
+              ),
+            )
+          else if (c.conductAccepted)
+            Row(
+              children: [
+                Expanded(child: Text('Code of conduct', style: MentoringText.bodyStrong)),
+                StatusPill('Accepted · ${c.readiness.data?.conductVersion ?? ''}', tone: PillTone.mint),
+              ],
+            )
+          else
+            // A listed mentor behind on the current code accepts it here, as before.
+            CheckboxListTile(
+              key: const ValueKey('conduct-check'),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              dense: true,
+              value: false,
+              onChanged: c.busy || version == null ? null : (on) => on == true ? onAgree() : null,
+              title: Text(
+                version == null
+                    ? 'I have read and accepted the ICR Mentor Code of Conduct and agree to comply with applicable ICR mentoring policies.'
+                    : 'I have read and accepted the ICR Mentor Code of Conduct (version $version) and agree to comply with applicable ICR mentoring policies.',
+                style: MentoringText.body,
+              ),
             ),
-          ),
           InkWell(
             key: const ValueKey('read-conduct'),
             onTap: onReadConduct,
@@ -1071,11 +1187,6 @@ class _ApplicationCard extends StatelessWidget {
               child: Text('Read the code of conduct', style: MentoringText.buttonQuiet),
             ),
           ),
-          if (canSubmit && !c.conductAccepted)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text('Tick this to send your profile for review.', style: MentoringText.meta),
-            ),
           if (canSubmit) ...[
             const SizedBox(height: 12),
             SizedBox(
@@ -1091,15 +1202,17 @@ class _ApplicationCard extends StatelessWidget {
                 onPressed: c.busy || !c.ready ? null : onSubmit,
               ),
             ),
-            if (!c.ready)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  needed.isNotEmpty ? 'Finish the items above to submit.' : 'Agree to the code of conduct to submit.',
-                  key: const ValueKey('submit-hint'),
-                  style: MentoringText.meta,
-                ),
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                !c.ready
+                    ? (needed.isNotEmpty ? 'Finish the items above to submit.' : 'Tick the declaration to submit.')
+                    : 'Your tick is recorded when you submit.',
+                key: const ValueKey('submit-hint'),
+                textAlign: TextAlign.center,
+                style: MentoringText.meta,
               ),
+            ),
           ],
         ],
       ),

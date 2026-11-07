@@ -151,7 +151,6 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFF1F2),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFFECDD3)),
                     ),
                     child: Row(
                       children: [

@@ -421,7 +421,9 @@ class CommunityNotice extends StatelessWidget {
   }
 }
 
-/// A white card with the Councils design's 1 dp border and 10 dp corners.
+/// A block of content with 10 dp corners and no outline (the owner's rule, Nov 2026: content has no borders,
+/// only a line breaker). A white one is closed by a 1 px hairline, so a run of them reads as rows; one given a
+/// [color] is a tinted block, which is its own edge and has no hairline.
 class CommunityCard extends StatelessWidget {
   const CommunityCard({
     super.key,
@@ -437,23 +439,28 @@ class CommunityCard extends StatelessWidget {
   final EdgeInsets padding;
   final VoidCallback? onTap;
   final Color color;
+
+  /// Not drawn any more; kept so the screens that pass one need no change.
   final Color borderColor;
   final double radius;
 
   @override
   Widget build(BuildContext context) {
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(radius),
-      side: BorderSide(color: borderColor),
-    );
-    return Material(
+    final block = Material(
       color: color,
-      shape: shape,
+      borderRadius: BorderRadius.circular(radius),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(padding: padding, child: child),
       ),
+    );
+    if (color != Colors.white) return block;
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: CommunityColors.tileRule)),
+      ),
+      child: block,
     );
   }
 }

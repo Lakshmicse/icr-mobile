@@ -3,6 +3,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
+import '../assistant/open_assistant.dart';
 import '../discover/discover_sheet.dart';
 import 'icr_bottom_nav.dart';
 import 'nav_icons.dart';
@@ -87,6 +88,9 @@ class AppShell extends StatefulWidget {
     _backToShell(context);
     shell._select(tab);
   }
+
+  /// The tab on screen (the profile menu marks its row); null outside a shell.
+  static AppTab? currentTab(BuildContext context) => _of(context)?._tab;
 
   /// Goes back to the Home tab from anywhere inside the shell.
   static void selectHome(BuildContext context) {
@@ -191,6 +195,21 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     });
   }
 
+  /// The website page a tab stands for, so Saathi's chips and answers lean to it (`moduleForPath`).
+  static String sitePathOf(AppTab tab) => switch (tab) {
+    AppTab.home || AppTab.discover => '/',
+    AppTab.learning => '/learning',
+    AppTab.mentorship => '/mentorship',
+    AppTab.forums => '/community',
+    AppTab.marketplace => '/vendors',
+    AppTab.jobs => '/jobs',
+  };
+
+  void _openAssistant() {
+    _discover.reverse();
+    openAssistant(context, path: sitePathOf(_tab));
+  }
+
   void _openDoor(DiscoverDoor door) {
     _discover.reverse();
     final screen = widget.doors[door.sitePath];
@@ -236,6 +255,13 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
               DiscoverLayer(controller: _discover, onClose: _discover.reverse, onOpen: _openDoor),
             ],
           ),
+        ),
+        // Saathi's launcher, bottom-right over every tab (the website's floating one); it steps aside while the
+        // Discover sheet or the drawer is up.
+        floatingActionButton: AnimatedScale(
+          scale: _discoverOpen || _drawerOpen ? 0 : 1,
+          duration: const Duration(milliseconds: 160),
+          child: SaathiLauncher(onTap: _openAssistant),
         ),
         bottomNavigationBar: HidingBar(
           controller: _bar,

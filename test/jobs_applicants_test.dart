@@ -463,6 +463,9 @@ void main() {
         'https://files.example.test/rhea.pdf',
         'https://www.linkedin.com/in/rhea',
       ]);
+      // The résumé is a private upload: it is read with the session first, and only the sample content (no file
+      // behind the link) hands the link on.
+      expect(repo.calls, contains('fileBytes https://files.example.test/rhea.pdf'));
       expect(find.text('Rhea CV'), findsOneWidget);
       await tester.tap(find.byKey(_k('detail-profile')));
       await tester.pump();

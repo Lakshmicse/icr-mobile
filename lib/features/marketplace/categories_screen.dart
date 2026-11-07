@@ -162,12 +162,9 @@ class _QuickCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-      side: const BorderSide(color: MartColors.cardBorder, width: 1.5),
-    );
+    final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(12));
     return Material(
-      color: Colors.white,
+      color: MartColors.cardFill,
       shape: shape,
       child: InkWell(
         key: ValueKey('quick-$label'),
@@ -197,15 +194,12 @@ class _TopCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-      side: const BorderSide(color: MartColors.cardBorder, width: 1.5),
-    );
+    final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(12));
     final suppliers = node.count ?? 0;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
-        color: Colors.white,
+        color: MartColors.cardFill,
         shape: shape,
         child: InkWell(
           key: ValueKey('category-card-${node.key}'),

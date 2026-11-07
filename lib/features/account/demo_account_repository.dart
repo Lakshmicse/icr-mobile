@@ -220,9 +220,7 @@ class DemoAccountRepository implements AccountRepository {
   @override
   Future<ProfileLinks> saveLinks(Map<String, String> links) => _run('saveLinks', () {
     sent['saveLinks'] = links;
-    return linksNow = ProfileLinks.fromJson({
-      for (final e in links.entries) e.key: e.value.isEmpty ? null : e.value,
-    });
+    return linksNow = ProfileLinks.fromJson({for (final e in links.entries) e.key: e.value.isEmpty ? null : e.value});
   });
 
   @override
@@ -297,10 +295,7 @@ class DemoAccountRepository implements AccountRepository {
     if (m == null) throw ApiError('Member not found', statusCode: 404);
     if (m.isOwner) throw ApiError('You cannot follow yourself.', statusCode: 400);
     final was = m.follow.viewerFollows;
-    final next = m.follow.copyWith(
-      viewerFollows: on,
-      followers: m.follow.followers + (on == was ? 0 : (on ? 1 : -1)),
-    );
+    final next = m.follow.copyWith(viewerFollows: on, followers: m.follow.followers + (on == was ? 0 : (on ? 1 : -1)));
     members[id] = m.withFollow(next);
     return next;
   }
@@ -353,6 +348,54 @@ class DemoAccountRepository implements AccountRepository {
     }
     return companiesNow = companiesNow.copyWith(
       requests: companiesNow.requests.where((r) => r.companyId != companyId).toList(),
+    );
+  }, companyId);
+
+  @override
+  Future<SessionTokens> acceptInvitation(String companyId) => _run('acceptInvitation', () {
+    final invitation = companiesNow.invitations.where((i) => i.companyId == companyId).firstOrNull;
+    if (invitation == null) throw ApiError('That invitation is no longer waiting.', statusCode: 404);
+    // Joining makes it the company they act for when they had none, as the API's `activate: 'ifNone'` does.
+    final actingFor = companiesNow.companies.any((c) => c.active);
+    companiesNow = companiesNow.copyWith(
+      companies: [
+        ...companiesNow.companies,
+        MyCompany(
+          companyId: invitation.companyId,
+          name: invitation.name,
+          role: invitation.role,
+          logoUrl: invitation.logoUrl,
+          branchName: invitation.branchName,
+          active: !actingFor,
+          joinedAt: DateTime.now().toUtc().toIso8601String(),
+          memberCount: 2,
+        ),
+      ],
+      invitations: companiesNow.invitations.where((i) => i.companyId != companyId).toList(),
+    );
+    return SessionTokens(
+      accessToken: _id('access'),
+      refreshToken: _id('refresh'),
+      user: actingFor
+          ? null
+          : {
+              'id': 'demo-user',
+              'email': 'demo@icr.test',
+              'firstName': 'Demo',
+              'lastName': 'Member',
+              'role': invitation.role,
+              'companyId': invitation.companyId,
+            },
+    );
+  }, companyId);
+
+  @override
+  Future<MyCompanies> declineInvitation(String companyId) => _run('declineInvitation', () {
+    if (!companiesNow.invitations.any((i) => i.companyId == companyId)) {
+      throw ApiError('That invitation is no longer waiting.', statusCode: 404);
+    }
+    return companiesNow = companiesNow.copyWith(
+      invitations: companiesNow.invitations.where((i) => i.companyId != companyId).toList(),
     );
   }, companyId);
 
@@ -621,7 +664,9 @@ const demoMembers = [
         isCurrent: true,
       ),
     ],
-    education: [Education(id: 'm-edu-1', institution: 'CEPT University', degree: 'M.Plan', startYear: 2002, endYear: 2004)],
+    education: [
+      Education(id: 'm-edu-1', institution: 'CEPT University', degree: 'M.Plan', startYear: 2002, endYear: 2004),
+    ],
     reputation: 320,
     threads: 4,
     replies: 18,
