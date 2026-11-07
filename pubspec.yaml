@@ -2,7 +2,7 @@ name: icr_mobile
 description: "ICR — Institute for Corporate Real Estate mobile app"
 publish_to: 'none'
 
-version: 1.0.0+12
+version: 1.0.0+13
 
 environment:
   sdk: ^3.11.1
