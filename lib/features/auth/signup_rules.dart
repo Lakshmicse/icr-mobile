@@ -4,6 +4,8 @@
 /// the last word; these only save a round trip.
 library;
 
+import '../account/account_rules.dart';
+
 /// Characters an email never holds, which a paste drags along: spaces, tabs,
 /// line breaks, NBSP, and the invisible zero-width ones.
 final _notInAnEmail = RegExp('[\\s​-‍⁠﻿]');
@@ -52,17 +54,32 @@ String? emailProblem(String email) {
   return (email: emailIssue, password: passwordIssue);
 }
 
-/// Screen 2's problems (`aboutErrors`); the code only when one is asked for.
-({String? firstName, String? lastName, String? code}) aboutProblems({
+/// Screen 2's problems (`aboutErrors`); the email code only when one is asked
+/// for. The mobile number is required (the API refuses a sign-up without one
+/// since 29 Oct 2026): readable by its country's rules, and a +91 one confirmed
+/// with the texted code ([phoneVerified]).
+({String? firstName, String? lastName, String? phone, String? code}) aboutProblems({
   required String firstName,
   required String lastName,
+  required String phone,
+  required bool phoneVerified,
   required String code,
   required bool needsCode,
 }) => (
   firstName: firstName.trim().isEmpty ? 'Enter your first name' : null,
   lastName: lastName.trim().isEmpty ? 'Enter your last name' : null,
+  phone: phoneProblem(phone, verified: phoneVerified),
   code: needsCode && !RegExp(r'^\d{6}$').hasMatch(code) ? 'Enter the 6-digit code from the email' : null,
 );
+
+/// What stops a sign-up's mobile number, or null when it may go on.
+String? phoneProblem(String phone, {required bool verified}) {
+  if (phone.trim().isEmpty) return 'Enter your mobile number';
+  final unreadable = phoneError(phone);
+  if (unreadable != null) return unreadable;
+  if (canTextPhone(phone) && !verified) return 'Confirm your number with the code we text you';
+  return null;
+}
 
 /// One line of the password meter (`PASSWORD_RULES`).
 class PasswordRule {

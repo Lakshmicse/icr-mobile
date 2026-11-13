@@ -184,12 +184,35 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  /// Texts the 6-digit code that confirms a mobile number before any account
+  /// exists (`POST /auth/phone/send-otp`; only a +91 number can be texted). Off
+  /// production the API hands the code back instead, to show on screen.
+  Future<String?> sendPhoneCode(String phone) async {
+    try {
+      final res = await api.dio.post<Map<String, dynamic>>('/auth/phone/send-otp', data: {'phone': phone});
+      return res.data?['code'] as String?;
+    } catch (e) {
+      throw ApiError.from(e);
+    }
+  }
+
+  /// `POST /auth/phone/verify-otp`: the proof `POST /auth/register` then spends.
+  Future<void> verifyPhoneCode(String phone, String code) async {
+    try {
+      await api.dio.post<void>('/auth/phone/verify-otp', data: {'phone': phone, 'code': code});
+    } catch (e) {
+      throw ApiError.from(e);
+    }
+  }
+
   /// `POST /auth/register` with the provider's token (and the app's secret
-  /// that unlocks it): the account is made and signed in.
+  /// that unlocks it): the account is made and signed in. [phone] is required
+  /// by the API as on an email sign-up.
   Future<void> completeSocialSignup({
     required SocialSignup signup,
     required String firstName,
     required String lastName,
+    required String phone,
   }) async {
     try {
       final res = await api.dio.post<Map<String, dynamic>>(
@@ -199,6 +222,7 @@ class AuthController extends ChangeNotifier {
           if (signup.verifier.isNotEmpty) 'socialVerifier': signup.verifier,
           'firstName': firstName.trim(),
           'lastName': lastName.trim(),
+          'phone': phone.trim(),
           'acceptTerms': true,
           'termsVersion': termsVersion,
         },
@@ -215,11 +239,16 @@ class AuthController extends ChangeNotifier {
   /// `POST /auth/register` with an email and password, after the 6-digit code
   /// has been checked (`verifyEmailCode`): the account is made and signed in,
   /// as the website's "About you" screen does. A taken address is a 409.
+  ///
+  /// The API asks for a mobile number ([phone]) since 29 Oct 2026: a +91 one
+  /// must have been confirmed first ([sendPhoneCode], [verifyPhoneCode]); any
+  /// other country's is kept as given after its format check.
   Future<void> register({
     required String email,
     required String password,
     required String firstName,
     required String lastName,
+    required String phone,
   }) async {
     try {
       final res = await api.dio.post<Map<String, dynamic>>(
@@ -227,6 +256,7 @@ class AuthController extends ChangeNotifier {
         data: {
           'firstName': firstName.trim(),
           'lastName': lastName.trim(),
+          'phone': phone.trim(),
           'email': email.trim().toLowerCase(),
           'password': password,
           'acceptTerms': true,

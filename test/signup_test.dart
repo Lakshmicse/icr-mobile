@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/api/api_error.dart';
 import 'package:icr_mobile/core/auth/auth_controller.dart';
 import 'package:icr_mobile/features/account/account_models.dart';
+import 'package:icr_mobile/core/auth/social_sign_in.dart';
 import 'package:icr_mobile/features/account/demo_account_repository.dart';
 import 'package:icr_mobile/features/auth/sign_up_screen.dart';
 import 'package:icr_mobile/features/auth/signup_rules.dart';
@@ -20,6 +21,8 @@ void main() {
     routes: {
       'POST /auth/email/send-code': (_) => {'sent': true, 'code': '123456'},
       'POST /auth/email/verify-code': (_) => {'success': true},
+      'POST /auth/phone/send-otp': (_) => {'sent': true, 'code': '482913'},
+      'POST /auth/phone/verify-otp': (_) => {'success': true},
       'POST /auth/register': (_) => sessionJson(),
       ...routes,
     },
@@ -74,9 +77,18 @@ void main() {
     await settle(tester);
   }
 
-  Future<void> aboutYou(WidgetTester tester, {String first = 'Sam', String last = 'Rao', String? code}) async {
+  /// A number from outside India is the default: it needs no texted code, so
+  /// the tests about names and the emailed code stay about those.
+  Future<void> aboutYou(
+    WidgetTester tester, {
+    String first = 'Sam',
+    String last = 'Rao',
+    String? phone = '+971501234567',
+    String? code,
+  }) async {
     await type(tester, 'signup.firstName', first);
     await type(tester, 'signup.lastName', last);
+    if (phone != null) await type(tester, 'signup.phone', phone);
     if (code != null) await type(tester, 'signup.code', code);
   }
 
@@ -259,7 +271,7 @@ void main() {
       return h;
     }
 
-    testWidgets('asks for both names and a 6-digit code before it calls the API', (tester) async {
+    testWidgets('asks for both names, a mobile number and a 6-digit code before it calls the API', (tester) async {
       final h = await atAbout(tester);
 
       await tapKey(tester, 'signup.continue');
@@ -267,6 +279,7 @@ void main() {
 
       expect(find.text('Enter your first name'), findsOneWidget);
       expect(find.text('Enter your last name'), findsOneWidget);
+      expect(find.text('Enter your mobile number'), findsOneWidget);
       expect(find.text('Enter the 6-digit code from the email'), findsOneWidget);
       expect(h.api.count('POST /auth/email/verify-code'), 0);
 
@@ -292,7 +305,7 @@ void main() {
       expect(find.text('We sent a code to sam@acme.com. It expires in 10 minutes.'), findsOneWidget);
     });
 
-    testWidgets('Continue checks the code, then makes the account with no phone and no role', (tester) async {
+    testWidgets('Continue checks the code, then makes the account with the number and no role', (tester) async {
       final h = await atAbout(tester);
 
       await aboutYou(tester, first: ' Sam ', last: 'Rao', code: '123456');
@@ -304,12 +317,15 @@ void main() {
       expect(body, {
         'firstName': 'Sam',
         'lastName': 'Rao',
+        'phone': '+971501234567',
         'email': 'sam@acme.com',
         'password': 'Tr0ub4dor&3x',
         'acceptTerms': true,
         'termsVersion': AuthController.termsVersion,
       });
-      expect(body.containsKey('phone'), isFalse, reason: 'the number is asked the first time an action needs it');
+      // Another country's number needs no texted code: nothing was sent to it.
+      expect(h.api.count('POST /auth/phone/send-otp'), 0);
+      expect(h.api.count('POST /auth/phone/verify-otp'), 0);
       expect(body.containsKey('role'), isFalse, reason: 'every self-serve sign-up is a person');
       // verify before register, and signed in afterwards.
       final order = [for (final c in h.api.calls) c.key];
@@ -449,6 +465,255 @@ void main() {
       await tapKey(tester, 'signup.join');
       await settle(tester);
       expect(h.api.last('POST /auth/email/send-code').json, {'email': 'sam.rao@acme.com'});
+    });
+  });
+
+  group('screen 2, the mobile number', () {
+    Future<AccountHarness> atAbout(WidgetTester tester, {Map<String, ApiHandler> routes = const {}}) async {
+      final h = harness(routes: routes);
+      await pump(tester, h);
+      await join(tester, email: 'sam@acme.com');
+      return h;
+    }
+
+    testWidgets('a +91 number is confirmed with the texted code, then sent with the account', (tester) async {
+      final h = await atAbout(tester);
+      await aboutYou(tester, phone: '98765 43210', code: '123456');
+
+      // Send code is offered only once a whole Indian number is typed.
+      await tapKey(tester, 'signup.phoneSend');
+      await settle(tester);
+      expect(h.api.last('POST /auth/phone/send-otp').json, {'phone': '+919876543210'});
+      expect(find.text('We texted a code to +91 9876543210.'), findsOneWidget);
+
+      // The test-mode code, shown as the emailed one is; Use code fills the field.
+      expect(find.byKey(const Key('signup.phoneDevCode')), findsOneWidget);
+      expect(find.textContaining('482913'), findsOneWidget);
+      await tapKey(tester, 'signup.phoneUseCode');
+      await tapKey(tester, 'signup.phoneVerify');
+      await settle(tester);
+
+      expect(h.api.last('POST /auth/phone/verify-otp').json, {'phone': '+919876543210', 'code': '482913'});
+      expect(find.byKey(const Key('signup.phoneVerified')), findsOneWidget);
+      expect(find.text('This number is verified.'), findsOneWidget);
+      expect(find.byKey(const Key('signup.phoneCode')), findsNothing);
+      expect(h.api.count('POST /auth/register'), 0);
+
+      await tapKey(tester, 'signup.continue');
+      await settle(tester);
+
+      expect(h.api.last('POST /auth/register').json['phone'], '+919876543210');
+      final order = [for (final c in h.api.calls) c.key];
+      expect(order.indexOf('POST /auth/phone/verify-otp'), lessThan(order.indexOf('POST /auth/register')));
+      expect(h.auth.status, SessionStatus.signedIn);
+      expect(find.text('STEP 3 OF 3'), findsOneWidget);
+    });
+
+    testWidgets('Continue with a +91 number nobody confirmed asks for the code and makes no account', (tester) async {
+      final h = await atAbout(tester);
+      await aboutYou(tester, phone: '9876543210', code: '123456');
+
+      await tapKey(tester, 'signup.continue');
+      await settle(tester);
+
+      expect(find.text('Confirm your number with the code we text you'), findsOneWidget);
+      expect(h.api.count('POST /auth/email/verify-code'), 0);
+      expect(h.api.count('POST /auth/register'), 0);
+      expect(find.text('STEP 2 OF 3'), findsOneWidget);
+    });
+
+    testWidgets('Continue checks a texted code that is typed but not yet verified', (tester) async {
+      final h = await atAbout(tester);
+      await aboutYou(tester, phone: '9876543210', code: '123456');
+      await tapKey(tester, 'signup.phoneSend');
+      await settle(tester);
+      await type(tester, 'signup.phoneCode', '482913');
+
+      await tapKey(tester, 'signup.continue');
+      await settle(tester);
+
+      final order = [for (final c in h.api.calls) c.key];
+      expect(order.indexOf('POST /auth/phone/verify-otp'), lessThan(order.indexOf('POST /auth/email/verify-code')));
+      expect(h.api.last('POST /auth/register').json['phone'], '+919876543210');
+      expect(find.text('STEP 3 OF 3'), findsOneWidget);
+    });
+
+    testWidgets("a wrong texted code shows the API's sentence under it and makes no account", (tester) async {
+      final h = await atAbout(
+        tester,
+        routes: {'POST /auth/phone/verify-otp': (_) => ApiReply.refusal(400, 'Incorrect code. 4 attempts left.')},
+      );
+      await aboutYou(tester, phone: '9876543210', code: '123456');
+      await tapKey(tester, 'signup.phoneSend');
+      await settle(tester);
+      await type(tester, 'signup.phoneCode', '000000');
+
+      await tapKey(tester, 'signup.phoneVerify');
+      await settle(tester);
+      expect(find.text('Incorrect code. 4 attempts left.'), findsOneWidget);
+      expect(find.byKey(const Key('signup.phoneVerified')), findsNothing);
+
+      // Continue tries the typed code again and stops at the same refusal.
+      await tapKey(tester, 'signup.continue');
+      await settle(tester);
+      expect(h.api.count('POST /auth/phone/verify-otp'), 2);
+      expect(h.api.count('POST /auth/email/verify-code'), 0);
+      expect(h.api.count('POST /auth/register'), 0);
+      expect(find.text('Sam'), findsOneWidget);
+    });
+
+    testWidgets('fewer than six digits is refused before any call', (tester) async {
+      final h = await atAbout(tester);
+      await aboutYou(tester, phone: '9876543210');
+      await tapKey(tester, 'signup.phoneSend');
+      await settle(tester);
+      await type(tester, 'signup.phoneCode', '6543');
+
+      await tapKey(tester, 'signup.phoneVerify');
+      await settle(tester);
+
+      expect(find.text('Enter the 6-digit code from the text'), findsOneWidget);
+      expect(h.api.count('POST /auth/phone/verify-otp'), 0);
+    });
+
+    testWidgets("a refused send shows the API's sentence under the number", (tester) async {
+      final h = await atAbout(
+        tester,
+        routes: {
+          'POST /auth/phone/send-otp': (_) => ApiReply.refusal(400, 'Please wait 52 seconds before another code.'),
+        },
+      );
+      await aboutYou(tester, phone: '9876543210');
+
+      await tapKey(tester, 'signup.phoneSend');
+      await settle(tester);
+
+      expect(find.text('Please wait 52 seconds before another code.'), findsOneWidget);
+      expect(find.byKey(const Key('signup.phoneCode')), findsNothing);
+      expect(h.api.count('POST /auth/phone/send-otp'), 1);
+    });
+
+    testWidgets('"send a new one" texts another code to the same number', (tester) async {
+      final h = await atAbout(tester);
+      await aboutYou(tester, phone: '9876543210');
+      await tapKey(tester, 'signup.phoneSend');
+      await settle(tester);
+
+      await tapKey(tester, 'signup.phoneResend');
+      await settle(tester);
+
+      expect(h.api.count('POST /auth/phone/send-otp'), 2);
+      expect(h.api.last('POST /auth/phone/send-otp').json, {'phone': '+919876543210'});
+      expect(find.byKey(const Key('signup.phoneCode')), findsOneWidget);
+    });
+
+    testWidgets('editing a confirmed number drops it back to unconfirmed', (tester) async {
+      final h = await atAbout(tester);
+      await aboutYou(tester, phone: '9876543210', code: '123456');
+      await tapKey(tester, 'signup.phoneSend');
+      await settle(tester);
+      await tapKey(tester, 'signup.phoneUseCode');
+      await tapKey(tester, 'signup.phoneVerify');
+      await settle(tester);
+      expect(find.byKey(const Key('signup.phoneVerified')), findsOneWidget);
+
+      await type(tester, 'signup.phone', '9876543211');
+
+      expect(find.byKey(const Key('signup.phoneVerified')), findsNothing);
+      expect(find.byKey(const Key('signup.phoneSend')), findsOneWidget);
+      await tapKey(tester, 'signup.continue');
+      await settle(tester);
+      expect(find.text('Confirm your number with the code we text you'), findsOneWidget);
+      expect(h.api.count('POST /auth/register'), 0);
+    });
+
+    testWidgets('a half-typed number says what is wrong and offers no code', (tester) async {
+      final h = await atAbout(tester);
+      await aboutYou(tester, phone: '98765', code: '123456');
+
+      expect(find.text('Enter a 10-digit Indian mobile number.'), findsOneWidget);
+      expect(find.byKey(const Key('signup.phoneSend')), findsNothing);
+
+      await tapKey(tester, 'signup.continue');
+      await settle(tester);
+      expect(h.api.count('POST /auth/register'), 0);
+    });
+
+    testWidgets('the country picker sets the code; another country needs no texted code', (tester) async {
+      final h = await atAbout(tester);
+      await aboutYou(tester, phone: null, code: '123456');
+
+      await tapKey(tester, 'signup.phoneCountry');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('United Arab Emirates  +971'));
+      await tester.pumpAndSettle();
+      await type(tester, 'signup.phone', '50 123 4567');
+
+      expect(find.byKey(const Key('signup.phoneSend')), findsNothing);
+      await tapKey(tester, 'signup.continue');
+      await settle(tester);
+
+      expect(h.api.count('POST /auth/phone/send-otp'), 0);
+      expect(h.api.last('POST /auth/register').json['phone'], '+971501234567');
+      expect(find.text('STEP 3 OF 3'), findsOneWidget);
+    });
+
+    testWidgets("the API's refusal of a number it cannot read is shown and the form kept", (tester) async {
+      await atAbout(
+        tester,
+        routes: {'POST /auth/register': (_) => ApiReply.refusal(400, 'Enter a mobile number with its country code.')},
+      );
+      await aboutYou(tester, phone: '+3545551234', code: '123456');
+
+      await tapKey(tester, 'signup.continue');
+      await settle(tester);
+
+      expect(find.text('Enter a mobile number with its country code.'), findsOneWidget);
+      expect(find.text('Sam'), findsOneWidget);
+      expect(find.text('STEP 2 OF 3'), findsOneWidget);
+    });
+
+    testWidgets('someone back from Google is asked for the number too, and it rides with the token', (tester) async {
+      final h = harness(
+        routes: {
+          'POST /auth/social/pending': (_) => {
+            'provider': 'GOOGLE',
+            'email': 'sam@acme.com',
+            'firstName': 'Sam',
+            'lastName': 'Rao',
+            'emailVerified': true,
+          },
+        },
+      );
+      usePhone(tester);
+      await tester.pumpWidget(
+        h.app(
+          SignUpScreen(
+            social: const SocialSignup('pending-1', 'secret-2'),
+            provider: SocialProvider.google,
+            account: DemoAccountRepository(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('STEP 2 OF 3'), findsOneWidget);
+      expect(find.byKey(const Key('signup.code')), findsNothing, reason: 'the provider vouched for the address');
+
+      await tapKey(tester, 'signup.continue');
+      await settle(tester);
+      expect(find.text('Enter your mobile number'), findsOneWidget);
+      expect(h.api.count('POST /auth/register'), 0);
+
+      await type(tester, 'signup.phone', '+971501234567');
+      await tapKey(tester, 'signup.continue');
+      await settle(tester);
+
+      final body = h.api.last('POST /auth/register').json;
+      expect(body['socialToken'], 'pending-1');
+      expect(body['socialVerifier'], 'secret-2');
+      expect(body['phone'], '+971501234567');
+      expect(body.containsKey('password'), isFalse);
+      expect(h.auth.status, SessionStatus.signedIn);
     });
   });
 
@@ -642,7 +907,15 @@ void main() {
       await pump(tester, h, width: 320, height: 568);
       await join(tester, email: 'sam@acme.com');
       expect(tester.takeException(), isNull);
-      await aboutYou(tester, code: '123456');
+      // The tallest About you: a +91 number with its texted code being asked for.
+      await aboutYou(tester, phone: '9876543210', code: '123456');
+      await tapKey(tester, 'signup.phoneSend');
+      await settle(tester);
+      expect(tester.takeException(), isNull);
+      await tapKey(tester, 'signup.phoneUseCode');
+      await tapKey(tester, 'signup.phoneVerify');
+      await settle(tester);
+      expect(tester.takeException(), isNull);
       await tapKey(tester, 'signup.continue');
       await settle(tester);
       expect(find.text('STEP 3 OF 3'), findsOneWidget);

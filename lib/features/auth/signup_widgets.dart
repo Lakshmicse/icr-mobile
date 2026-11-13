@@ -76,11 +76,19 @@ class AuthHelperLine extends StatelessWidget {
 /// The code a non-production API handed back instead of sending it, shown
 /// where it is typed, as the website's `DevCodeNote`: "Test mode: your code is
 /// 123456." and "Use code", which fills the field. Draws nothing without a code.
+///
+/// [name] tells two notes on one screen apart: the emailed code's is
+/// `signup.devCode` / `signup.useCode`, the texted one's `signup.phoneDevCode`
+/// / `signup.phoneUseCode`.
 class DevCodeNote extends StatelessWidget {
-  const DevCodeNote({super.key, required this.code, required this.onUse});
+  const DevCodeNote({super.key, required this.code, required this.onUse, this.name = ''});
 
   final String? code;
   final ValueChanged<String> onUse;
+  final String name;
+
+  String _key(String part) =>
+      name.isEmpty ? 'signup.$part' : 'signup.$name${part[0].toUpperCase()}${part.substring(1)}';
 
   static const _warning = Color(0xFFB45309);
   static const _warningDark = Color(0xFFFBBF24);
@@ -93,7 +101,7 @@ class DevCodeNote extends StatelessWidget {
     final ink = p.isDark ? _warningDark : _warning;
     final style = AuthType.small(p).copyWith(color: ink);
     return Padding(
-      key: const Key('signup.devCode'),
+      key: Key(_key('devCode')),
       padding: const EdgeInsets.only(top: 4),
       child: Row(
         children: [
@@ -114,7 +122,7 @@ class DevCodeNote extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           AuthLink(
-            key: const Key('signup.useCode'),
+            key: Key(_key('useCode')),
             label: 'Use code',
             style: AuthType.link(p).copyWith(fontSize: 14),
             onTap: () => onUse(value),
