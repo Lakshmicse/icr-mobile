@@ -1,0 +1,37 @@
+{
+  "who": "Mentors, and members applying to be one",
+  "overview": [
+    "Being a mentor on ICR starts with an application that ICR reviews. Once approved, the **Mentor desk** is your workspace: requests, mentees, your calendar, what you offer, your hours and your earnings."
+  ],
+  "flows": {
+    "requests": {
+      "rules": [
+        "A request lapses if nobody answers it in time; the app shows how many days are left.",
+        "Declining needs a short reason, which the person sees."
+      ]
+    },
+    "offerings": {
+      "rules": [
+        "A paid listing needs your seller terms accepted and paid selling switched on; the **Storefront** card at the top shows both.",
+        "Your plan decides how many listings you can have.",
+        "**Pause** hides a listing without deleting it."
+      ]
+    },
+    "earnings": {
+      "rules": [
+        "ICR keeps a fee from each paid sale and pays the rest to your bank account. The fee is lower on higher Mentor plans."
+      ]
+    }
+  },
+  "website": [
+    "Your bank details for payouts.",
+    "A mentee's payment for a paid offering, which is made in their browser."
+  ],
+  "menu": [
+    {
+      "row": "**Mentorship**",
+      "pages": "My sessions · Search mentors · Mentor dashboard · Mentor offerings"
+    }
+  ],
+  "menuTitle": "What a mentor's menu adds"
+}

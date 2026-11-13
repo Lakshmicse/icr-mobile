@@ -1,0 +1,44 @@
+{
+  "who": "Recruiters, office admins and company admins",
+  "overview": [
+    "A **recruiter** posts jobs and works the applicants for the company. An **office admin** does the same for their own office and the offices under it, and can invite recruiters and hiring managers. The company must be verified before a job can be published; drafts need nothing."
+  ],
+  "can": [
+    "See every job you may manage, with its applicants.",
+    "Post a job, save it as a draft, edit it, pause, resume and close it.",
+    "Read each applicant's résumé and answers, rate them, write notes for your team, and message them.",
+    "Move an applicant through the stages or reject them.",
+    "Schedule, move and cancel interviews, and choose the panel.",
+    "Make an offer and follow its answer."
+  ],
+  "flows": {
+    "post": {
+      "rules": [
+        "To go live a job needs a title, a description of a few lines, at least one skill, a country, and between 1 and 999 openings. Pay is optional.",
+        "If your company is not verified yet, **Publish** explains what is missing and opens the verification.",
+        "Your plan decides how many jobs can be live at once."
+      ]
+    },
+    "applicants": {
+      "rules": [
+        "An applicant who was rejected, has withdrawn or was hired cannot be given an interview or an offer; move them back first.",
+        "Rejecting someone cancels their coming interviews and withdraws any offer not yet answered."
+      ]
+    }
+  },
+  "website": [
+    "Talent search and inviting candidates to apply.",
+    "Rejecting or moving many applicants at once, and the review mode for a job with hundreds of applicants.",
+    "**Promote**, which pays for a boost; projects; hiring reports."
+  ],
+  "menu": [
+    {
+      "row": "**Jobs**",
+      "pages": "Post & manage jobs · Assign team & add members · My applications · My saved jobs · Search jobs"
+    },
+    {
+      "row": "**Company**",
+      "pages": "Add members"
+    }
+  ]
+}

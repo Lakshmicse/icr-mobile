@@ -1,0 +1,442 @@
+{
+  "title": "ICR Mobile App",
+  "subtitle": "How to use the app, step by step, for every kind of account",
+  "edition": "For members, mentors, companies, partner institutes and ICR staff · app version 1.0.0",
+  "about": [
+    "This manual shows how to use the ICR app on a phone. Every step was carried out in the app and photographed as it was done, so each picture shows exactly what you will see.",
+    "The app is the same for everyone at the bottom of the screen: six tabs, the same for every account. What differs from one account to another is your **profile menu**, which lists the pages that belong to you, and a few things only some accounts may do, such as posting a job or replying to a requirement. **Part 1** and **Part 2** are for everyone. **Part 3** has one chapter for each kind of account.",
+    "The pictures are from an iPhone. The app on Android has the same screens and the same words.",
+    "Some work is still done on the website, **icr.org.in**, in a browser. Each chapter ends by saying what that is."
+  ],
+  "roles": [
+    {
+      "who": "New to the app",
+      "read": "Part 1, from the first chapter"
+    },
+    {
+      "who": "A member looking for a job, a course, a mentor or a supplier",
+      "read": "Part 2"
+    },
+    {
+      "who": "A mentor, or applying to be one",
+      "read": "Part 3: Mentors"
+    },
+    {
+      "who": "The admin of a company page",
+      "read": "Part 3: Company admins"
+    },
+    {
+      "who": "A recruiter or an office admin",
+      "read": "Part 3: Recruiters and office admins"
+    },
+    {
+      "who": "A hiring manager on an interview panel",
+      "read": "Part 3: Hiring managers"
+    },
+    {
+      "who": "A seller at a supplier company",
+      "read": "Part 3: Sellers"
+    },
+    {
+      "who": "A buyer at a company",
+      "read": "Part 3: Buyers"
+    },
+    {
+      "who": "Staff of a partner institute",
+      "read": "Part 3: Partner institutes"
+    },
+    {
+      "who": "ICR staff",
+      "read": "Part 3: ICR staff"
+    }
+  ],
+  "conventions": [
+    "Words in **bold** are the words on the screen: a button, a tab, a row of a menu.",
+    "A red ring in a picture marks what the step asks you to select.",
+    "\"Select\" means tap once with a finger. \"Press and hold\" means keep your finger on it for a moment.",
+    "The people, companies and jobs in the pictures are examples."
+  ],
+  "parts": [
+    {
+      "kicker": "PART 1",
+      "title": "Getting started",
+      "intro": [
+        "Signing in, finding your way around, messages and settings. The same for every account."
+      ],
+      "chapters": [
+        "01-getting-started",
+        "02-finding-your-way",
+        "03-messages",
+        "04-settings"
+      ]
+    },
+    {
+      "kicker": "PART 2",
+      "title": "For every member",
+      "intro": [
+        "What any member can do in the app: the feed, jobs, learning, mentorship, the marketplace, the community, your profile and your membership."
+      ],
+      "chapters": [
+        "05-home-and-forums",
+        "06-jobs",
+        "07-learning",
+        "08-mentorship",
+        "09-marketplace",
+        "10-community",
+        "11-profile",
+        "12-membership",
+        "13-support",
+        "14-companies"
+      ]
+    },
+    {
+      "kicker": "PART 3",
+      "title": "By kind of account",
+      "intro": [
+        "One chapter for each kind of account. Each opens with what your profile menu shows, and ends with what is done on the website instead."
+      ],
+      "chapters": [
+        "15-mentors",
+        "16-company-admins",
+        "17-hiring",
+        "18-hiring-managers",
+        "19-sellers",
+        "20-buyers",
+        "21-partner-institutes",
+        "22-icr-staff"
+      ]
+    }
+  ],
+  "appendices": [
+    {
+      "title": "Appendix A. Who can do what",
+      "blocks": [
+        {
+          "paragraphs": [
+            "A tick means the app offers it to that kind of account. The first eight rows are open to every member, whatever else they are. The rows below them depend on your role at the company you are acting for; switch company in **My companies** to change it.",
+            "**Admin** is a company admin, **Recruiter** a recruiter or office admin, **Hiring mgr** a hiring manager, and **Institute** the staff of a partner institute.",
+            "ICR staff accounts are not in this table: see the chapter on ICR staff."
+          ]
+        },
+        {
+          "table": {
+            "head": [
+              "What you can do in the app",
+              "Member",
+              "Mentor",
+              "Admin",
+              "Recruiter",
+              "Hiring mgr",
+              "Seller",
+              "Buyer",
+              "Institute"
+            ],
+            "rows": [
+              [
+                "Read and post in the feed and forums",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓"
+              ],
+              [
+                "Search jobs, apply, follow applications",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓"
+              ],
+              [
+                "Courses, papers, certificates, flash cards",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓"
+              ],
+              [
+                "Find a mentor, ask for sessions, My mentoring",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓"
+              ],
+              [
+                "Chapters, councils, events, Digital Library",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓"
+              ],
+              [
+                "Messages, notifications, search, Saathi",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓"
+              ],
+              [
+                "Membership, credits, referrals, support",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓"
+              ],
+              [
+                "Create a company, ask to join one, switch",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓"
+              ],
+              [
+                "Apply to be a mentor",
+                "✓",
+                "–",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓",
+                "✓"
+              ],
+              [
+                "Mentor desk: requests, mentees, offerings, earnings",
+                "",
+                "✓",
+                "",
+                "",
+                "",
+                "",
+                "",
+                ""
+              ],
+              [
+                "See the team; approve, add, invite and remove",
+                "",
+                "",
+                "✓",
+                "Office admin: invite recruiters and hiring managers",
+                "",
+                "Seller members only",
+                "",
+                "Admin only"
+              ],
+              [
+                "Post and manage jobs; applicants; interviews; offers",
+                "",
+                "",
+                "✓",
+                "✓",
+                "",
+                "",
+                "",
+                ""
+              ],
+              [
+                "Interview page and scorecard, when on the panel",
+                "",
+                "",
+                "✓",
+                "✓",
+                "✓",
+                "",
+                "",
+                ""
+              ],
+              [
+                "Post a requirement; compare and choose replies",
+                "",
+                "",
+                "✓",
+                "",
+                "",
+                "✓",
+                "✓",
+                ""
+              ],
+              [
+                "Find work; reply to enquiries; bid on RFQs",
+                "",
+                "",
+                "✓",
+                "",
+                "",
+                "✓",
+                "",
+                ""
+              ],
+              [
+                "Read and answer the company’s inbox",
+                "",
+                "",
+                "✓",
+                "Careers",
+                "",
+                "Sales",
+                "Buying",
+                ""
+              ],
+              [
+                "Institute enquiries; add trainers",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "✓"
+              ]
+            ],
+            "widths": [
+              4.2,
+              1.4,
+              1.3,
+              1.5,
+              2.4,
+              1.7,
+              1.5,
+              1.4,
+              1.6
+            ],
+            "size": 9
+          }
+        }
+      ]
+    },
+    {
+      "title": "Appendix B. What is done on the website",
+      "blocks": [
+        {
+          "paragraphs": [
+            "The app opens three kinds of page outside its own screens."
+          ]
+        },
+        {
+          "heading": "Pages of the website, opened inside the app",
+          "bullets": [
+            "The company’s details, documents and verification.",
+            "A partner institute’s console (**Open console**).",
+            "Any page the app has no screen for yet, such as a link in a notification to a page only the website has."
+          ]
+        },
+        {
+          "heading": "Payments, in your phone’s browser",
+          "bullets": [
+            "A place on a paid course.",
+            "A ticket for a paid event.",
+            "A mentor’s paid session, plan or resource.",
+            "**Promote** for a job.",
+            "Membership plans and paper levels are the exception: these are paid inside the app."
+          ]
+        },
+        {
+          "heading": "Done only at icr.org.in",
+          "bullets": [
+            "A company’s products, services, certifications, offices and reports.",
+            "Talent search, inviting candidates, and working many applicants at once.",
+            "Publishing courses and batches for a partner institute.",
+            "Every admin console for ICR staff."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Appendix C. If something goes wrong",
+      "blocks": [
+        {
+          "table": {
+            "head": [
+              "What you see",
+              "What to do"
+            ],
+            "rows": [
+              [
+                "Sign-up stops with **Enter your mobile number** and there is no box for one",
+                "Your app is older than build 14. Update it from the App Store or Google Play, or join at icr.org.in and sign in."
+              ],
+              [
+                "**Invalid email or password**",
+                "Check the email for typing mistakes. Use **Forgot password?** to set a new password. After several wrong tries the account is locked for a few minutes."
+              ],
+              [
+                "No code by text",
+                "Codes are texted to Indian (+91) mobiles only. Check the number, wait a minute, then select **send a new one**."
+              ],
+              [
+                "No code or link by email",
+                "Check your spam folder, then ask for a new one. The link in a reset email works once and lasts an hour."
+              ],
+              [
+                "A row is missing from your profile menu",
+                "You may be acting as yourself. Open **My companies** and switch to the company. Rows also depend on your role there."
+              ],
+              [
+                "**This page didn’t load**",
+                "The app was opening a page of the website. Check your connection and select **Try again**."
+              ],
+              [
+                "A job cannot be published",
+                "The company is not verified yet, or the checklist on the form has items left. The app says which."
+              ],
+              [
+                "A course under **My courses** on the Learning tab does not open",
+                "Open it from your profile menu: **Learning → My courses**."
+              ],
+              [
+                "The clock at the top of the screen disappears on some pages",
+                "It is there, drawn white on white. It comes back on the next screen."
+              ],
+              [
+                "You expected an alert on your lock screen",
+                "The app does not send them yet. Open the app and select the bell, or check your email."
+              ]
+            ],
+            "widths": [
+              6.5,
+              10.5
+            ],
+            "size": 10
+          }
+        },
+        {
+          "paragraphs": [
+            "For anything else, open **Settings → Help & support** and raise a request."
+          ]
+        }
+      ]
+    }
+  ]
+}

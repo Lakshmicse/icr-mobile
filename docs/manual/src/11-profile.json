@@ -1,0 +1,14 @@
+{
+  "who": "Every member",
+  "overview": [
+    "Your profile is the person, not the company: your name and photo, career history, education, skills and credentials. It is what a recruiter reads when you apply and what a mentee sees before asking you."
+  ],
+  "flows": {
+    "profile": {
+      "rules": [
+        "The more complete your profile, the better the app matches you to jobs and mentors.",
+        "Each section says whether it shows on your public profile."
+      ]
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "who": "Every member",
+  "overview": [
+    "The app covers a job search from end to end: finding roles, applying, following each application, interviews and offers. Your résumé is the one on your ICR profile."
+  ],
+  "before": [
+    "A résumé on your profile. The app builds one from your profile's experience and skills.",
+    "A mobile number. The app asks for it the first time you apply if your profile has none."
+  ],
+  "flows": {
+    "apply": {
+      "rules": [
+        "The free plan includes a set number of applications a month; the form shows how many are left, and **See plans** shows the plans with more.",
+        "You cannot apply to a job your own company posted."
+      ]
+    },
+    "track": {
+      "after": [
+        "When a recruiter books an interview, it appears under **Up next** and in your notifications.",
+        "An offer appears on the application's page, where you accept or decline it."
+      ]
+    }
+  },
+  "website": [
+    "Building several résumés and the résumé coach.",
+    "Writing a review, a salary or an interview experience for a company. You can read them in the app."
+  ]
+}

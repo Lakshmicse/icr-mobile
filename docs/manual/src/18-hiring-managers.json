@@ -1,0 +1,23 @@
+{
+  "who": "Hiring managers",
+  "overview": [
+    "A hiring manager's part in hiring is the interview: prepare, meet the candidate, give feedback. Your profile menu is the same as any member's; interviews reach you through your notifications and your email."
+  ],
+  "flows": {
+    "feedback": {
+      "rules": [
+        "You can change your scorecard until the recruiter closes the round."
+      ]
+    }
+  },
+  "website": [
+    "The list of all your interviews. In the app, open each one from its notification or from the link in the email."
+  ],
+  "menu": [
+    {
+      "row": "**Jobs**",
+      "pages": "My applications · My saved jobs · Search jobs"
+    }
+  ],
+  "menuTitle": "What a hiring manager's menu shows"
+}

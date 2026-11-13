@@ -1,0 +1,23 @@
+{
+  "who": "Everyone",
+  "overview": [
+    "Three things take you everywhere in the app: the **tabs** along the bottom, the **Discover** sheet, and your **profile menu**. Search, the bell and Saathi are on hand from Home."
+  ],
+  "flows": {
+    "profile-menu": {
+      "rules": [
+        "A member acting for a company sees that company's rows here too, and the chapters of Part 3 show each one.",
+        "The same menu is where you switch between yourself and a company you belong to."
+      ]
+    },
+    "notifications": {
+      "rules": [
+        "The app checks for new notifications about once a minute while it is open. It does not send alerts to your lock screen yet; ICR also emails you about the kinds you leave switched on (see Settings).",
+        "The gear at the top right opens your notification preferences."
+      ]
+    },
+    "saathi": {
+      "rules": ["Saathi explains how ICR works and points to the right page. It does not act for you: it will not apply, post or pay."]
+    }
+  }
+}

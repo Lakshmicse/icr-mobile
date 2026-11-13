@@ -1,0 +1,26 @@
+{
+  "who": "Admins and staff of a partner institute",
+  "overview": [
+    "An institute becomes a partner when ICR approves its company as one. From then on the company's admin, and any team member given a learning role, sees **Partner Institute** in their profile menu."
+  ],
+  "flows": {
+    "enquiries": {
+      "rules": [
+        "A member's contact details show in full on plans that include them; otherwise they are partly hidden until you choose to reveal them.",
+        "Only the enquiries for your own institute are listed."
+      ]
+    }
+  },
+  "website": [
+    "Publishing courses and batches, and sending a course for ICR's review. **Open console** on the app's Partner courses screen opens these website pages inside the app.",
+    "Enrolments, attendance registers and trainers' timetables.",
+    "The institute's plan and its payouts."
+  ],
+  "menu": [
+    {
+      "row": "**Partner Institute**",
+      "pages": "Enquiries · Add a team member · Add a trainer · Add a programme specialist"
+    }
+  ],
+  "menuTitle": "What the institute adds to your menu"
+}
