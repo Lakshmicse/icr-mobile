@@ -31,3 +31,16 @@ the learning console's kind (`admin.learning`) was wholly staff-only, though its
 `test/partner_enquiries_test.dart` (the rows, the masked contact and banner, the status sheet and the note, the filter, the
 focused row, the error and empty states), `test/notification_openers_test.dart` (the opener: enquiries open the screen on `lead`,
 another section says staff tools), `test/role_workspaces_test.dart` (the drawer row).
+
+## 13 Nov 2026: copy refined to the client's standard
+
+Wording only; three sentences changed.
+
+| Where | Old | New |
+| --- | --- | --- |
+| No enquiries | No enquiries yet. The form is on every course page of yours and on your institute page. | No enquiries yet. The enquiry form is on each of your course pages and on your institute page. |
+| A masked contact | Past this month's number on your plan. The details open with a larger plan, or next month. | Over your plan's monthly limit. The details open with a larger plan, or next month. |
+| The plan banner | 4 of 9 enquiries this month came with contact details — your plan includes 5 a month. | 4 of 9 enquiries this month came with contact details. Your plan includes 5 a month. |
+
+Left as they were: Enquiries, Status, the status chips (All, New, Contacted, Converted, Closed), "Corporate training" /
+"Individual", "Note saved.", "Your note", and "Try again" on the error state, which is `site_kit.dart`'s.

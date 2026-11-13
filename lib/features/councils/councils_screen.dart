@@ -20,7 +20,6 @@ import 'widgets/council_card.dart';
 import 'widgets/council_search_field.dart';
 import 'widgets/joined_council_card.dart';
 import 'widgets/roundtable_row.dart';
-import 'widgets/stat_tiles.dart';
 
 /// The Councils screen: the stats, the member's seats, the upcoming
 /// roundtables, the directory and the city chapters, as the design.
@@ -30,7 +29,10 @@ import 'widgets/stat_tiles.dart';
 /// repository. Without either (a preview, a test double that only feeds the board) they hand the council's page
 /// on the website to [opener] instead.
 class CouncilsScreen extends StatefulWidget {
-  const CouncilsScreen({super.key, required this.onBack, this.opener = openUrl, this.handoffs});
+  const CouncilsScreen({super.key, required this.onBack, this.opener = openUrl, this.handoffs, this.onManage});
+
+  /// The pencil beside the bell: the Manage Councils page, for the staff who run councils. No pencil when null.
+  final VoidCallback? onManage;
 
   /// The arrow at the top left; the shell goes back to Home.
   final VoidCallback onBack;
@@ -106,7 +108,7 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
           child: Stack(
             children: [
               Positioned.fill(
-                top: TitleBar.height,
+                top: TitleBar.reserved(context),
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: councils.refresh,
@@ -121,7 +123,15 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
                 top: 0,
                 left: 0,
                 right: 0,
-                child: TitleBar(title: 'Councils', onBack: widget.onBack, unread: councils.unread, onBell: _bell),
+                child: TitleBar(
+                  title: 'Councils',
+                  onBack: widget.onBack,
+                  actions: [
+                    if (widget.onManage != null) BarEditButton(label: 'Manage councils', onTap: widget.onManage!),
+                  ],
+                  unread: councils.unread,
+                  onBell: _bell,
+                ),
               ),
             ],
           ),
@@ -143,9 +153,9 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
       }
       return [
         _Notice(
-          title: "Couldn't load councils",
+          title: 'Unable to Load Councils',
           body: councils.error ?? 'Something went wrong.',
-          action: 'Try again',
+          action: 'Try Again',
           onAction: councils.refresh,
         ),
       ];
@@ -154,11 +164,8 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
     final joined = councils.joined;
     final roundtables = councils.roundtables;
     final shown = councils.councils;
+    // The page opens on the member's joined councils; the four stat tiles that stood above them went (owner, 12 Nov 2026: no count tiles over the Chapters, Councils and Events hubs).
     return [
-      const SizedBox(height: 7),
-      StatTiles(stats: overview.stats),
-      const SizedBox(height: 9),
-      const _SoftRule(color: CouncilsColors.rowRule),
       if (joined.isNotEmpty) ...[
         const SizedBox(height: 10),
         _JoinedHeading(count: joined.length, onManage: () => _manageSeats(context, councils)),
@@ -237,11 +244,11 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
       const SizedBox(height: 11.5),
       if (shown.isEmpty)
         _Notice(
-          title: councils.narrowed ? 'No councils match' : 'No councils yet',
+          title: councils.narrowed ? 'No Councils Match' : 'No Councils Yet',
           body: councils.narrowed
               ? 'Try other words, or clear the filters.'
-              : 'Councils show up here as ICR charters them.',
-          action: councils.narrowed ? 'Clear filters' : null,
+              : 'Councils will appear here once ICR charters them.',
+          action: councils.narrowed ? 'Clear Filters' : null,
           onAction: councils.narrowed ? councils.clearFilters : null,
         ),
       for (final (i, c) in shown.indexed) ...[
@@ -278,7 +285,7 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
     if (next.isEmpty) {
       showMessage(
         context,
-        'No session is scheduled for ${council.name} yet. The meeting link appears here once one is.',
+        'No session is scheduled for ${council.name} yet. The meeting link will appear here when one is scheduled.',
       );
       return;
     }
@@ -305,7 +312,7 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('Your councils', style: CouncilsText.sheetTitle),
+                    child: Text('Your Councils', style: CouncilsText.sheetTitle),
                   ),
                 ),
                 if (seats.isEmpty)
@@ -357,7 +364,7 @@ class _CouncilsScreenState extends State<CouncilsScreen> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Sort councils', style: CouncilsText.sheetTitle),
+                child: Text('Sort Councils', style: CouncilsText.sheetTitle),
               ),
             ),
             for (final sort in CouncilSort.values)

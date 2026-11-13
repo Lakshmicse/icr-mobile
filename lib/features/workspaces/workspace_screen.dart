@@ -226,7 +226,7 @@ class _WebsitePage extends StatelessWidget {
             FilledButton(
               key: ValueKey('workspace-open-${item.path}'),
               onPressed: () => openSitePage(context, item.path),
-              child: Text('Open ${item.label.toLowerCase()}'),
+              child: Text('Open ${item.label}'),
             ),
           ],
         ),

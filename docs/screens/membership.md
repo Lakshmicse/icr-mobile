@@ -49,3 +49,27 @@ Nothing at the call sites changed: the Learning locks (`plansLink()` in `learnin
 ## API gap (for the lead)
 
 `POST /subscriptions/checkout` answers a PayU **form** (`action`, `fields`) meant for a browser to POST. A phone cannot be handed a POST from a URL, so a gateway checkout started in the app is finished on the website's plans page. A `GET /subscriptions/pay/:subscriptionId` that renders and auto-submits that form (or a hosted-page URL from PayU) would let the app open the phone's browser straight at the gateway and return through `in.org.icr://`. Written up in `docs/backend-requests/membership.md`.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client's marked-up manual (13 Nov 2026) asks for crisp, international wording: Title Case for buttons, headings,
+labels and chips, plain sentences, "Unable to load" for "Couldn't load", "Select" for "Choose", and "Marketplace",
+never "Supplier Mart". Wording only.
+
+The lead's rulings of the same day are applied too: an empty-state, locked-state or error *title* is a heading (Title Case, no full stop) and the line under it a sentence; the retry button reads "Try Again".
+
+| Where | Was | Now |
+|---|---|---|
+| Buttons, headings and chips to Title Case (18 strings) | Current plan · Custom pricing · Not renewing · Plan history & receipts · Plan history · Changed plan · Pay for your plan · What my plans include · See plans · Winning work · Your listing · Your team · Courses and learners · Member prices · Learning: access · Learning: discounts · Service terms | Current Plan · Custom Pricing · Not Renewing · Plan History & Receipts · Plan History · Changed Plan · Pay for Your Plan · What My Plans Include · See Plans · Winning Work · Your Listing · Your Team · Courses and Learners · Member Prices · Learning: Access · Learning: Discounts · Service Terms |
+| A plan's button | Choose Gold | Select Gold |
+| A priced-per-customer plan's button (it opens the contact form) | Talk to us | Contact Us |
+| Empty and error titles (the lead's ruling) | Couldn't load the plans · Couldn't load the history · No plans on sale yet · No plan here · No terms yet | Unable to Load the Plans · Unable to Load the History · No Plans on Sale Yet · No Plan Here · No Terms Yet |
+| Retry | Try again | Try Again |
+| A failed read of What My Plans Include (a sentence, not a title) | Couldn't read your plans. | Unable to load your plans. |
+| A plan no longer sold | Gold is no longer sold: choose another plan below before this term ends. | Gold is no longer sold. Select another plan below before this term ends. |
+| Checkout started with no gateway | The checkout for Gold was started; ICR will confirm it. | Checkout for Gold has started. ICR will confirm it. |
+| The Market Place ladder's description | For manufacturers, service providers, consultants and technology companies on Supplier Mart. | For manufacturers, service providers, consultants and technology companies on the Marketplace. |
+
+Left as they were: the ladders' names and taglines ("Market Place", "Job Portal", "Learn. Connect. Grow."), which are
+the website's; plan and benefit names and values, which come from the API; "Free", "Running", "Complimentary",
+"Renewed", "Cancelled", "Ended"; "Renew for ₹…".

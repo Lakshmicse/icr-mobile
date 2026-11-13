@@ -80,7 +80,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
             const SheetHandle(top: 11, height: 28, rule: false),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-              child: Text('Filter discussions', style: ForumDesign.sheetTitle),
+              child: Text('Filter Discussions', style: ForumDesign.sheetTitle),
             ),
             Flexible(
               child: ListView(
@@ -115,7 +115,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                     children: [
                       _Pill(
                         key: const ValueKey('filter-topic:all'),
-                        label: 'All topics',
+                        label: 'All Topics',
                         selected: _q.category == null,
                         onTap: () => setState(() => _q = _q.copyWith(clearCategory: true)),
                       ),
@@ -159,7 +159,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                     style: ForumDesign.field,
                     textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
-                      hintText: 'A tag, like hvac',
+                      hintText: 'Enter a tag, e.g. hvac',
                       hintStyle: ForumDesign.fieldHint,
                       prefixText: '#',
                       prefixStyle: ForumDesign.field.copyWith(color: AppColors.outline),
@@ -186,7 +186,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                     key: const ValueKey('filters-clear'),
                     onPressed: () =>
                         Navigator.pop(context, ForumQuery(view: widget.query.view, search: widget.query.search)),
-                    child: Text('Clear all', style: ForumDesign.chip.copyWith(color: AppColors.primary, fontSize: 13)),
+                    child: Text('Clear All', style: ForumDesign.chip.copyWith(color: AppColors.primary, fontSize: 13)),
                   ),
                   const Spacer(),
                   FilledButton(
@@ -197,7 +197,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                       minimumSize: const Size(140, 44),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: Text('Show results', style: ForumDesign.button),
+                    child: Text('Show Results', style: ForumDesign.button),
                   ),
                 ],
               ),

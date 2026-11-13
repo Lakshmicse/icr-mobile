@@ -119,7 +119,7 @@ class SuggestDateTile extends StatelessWidget {
                 const SizedBox(height: 12),
                 const Icon(LucideIcons.mapPinPlus, size: 16, color: AppColors.primary),
                 const SizedBox(height: 5.5),
-                Text('Suggest A Date &\nLocation', style: LearningText.tileSuggest, textAlign: TextAlign.center),
+                Text('Suggest a Date &\nLocation', style: LearningText.tileSuggest, textAlign: TextAlign.center),
               ],
             ),
           ),

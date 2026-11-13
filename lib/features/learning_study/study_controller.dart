@@ -41,7 +41,7 @@ class DeckStudyController extends ChangeNotifier with NotifySafely {
 
   /// The member's starred cards, from every deck.
   DeckStudyController.starred(this.repository, {math.Random? random, StudyPacing? pacing})
-    : title = 'Starred cards',
+    : title = 'Starred Cards',
       _slug = null,
       _random = random ?? math.Random(),
       _pacing = pacing ?? readingTime;

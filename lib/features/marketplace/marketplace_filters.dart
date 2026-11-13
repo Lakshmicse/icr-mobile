@@ -4,10 +4,10 @@ import 'marketplace_models.dart';
 /// higher trust first, then this.
 enum SupplierSort {
   recommended('Recommended', null),
-  topRated('Top rated', 'rating'),
-  mostReviewed('Most reviewed', 'ratingCount'),
-  mostProjects('Most projects', 'projectsCompleted'),
-  mostExperienced('Most experienced', 'yearsExperience'),
+  topRated('Top Rated', 'rating'),
+  mostReviewed('Most Reviewed', 'ratingCount'),
+  mostProjects('Most Projects', 'projectsCompleted'),
+  mostExperienced('Most Experienced', 'yearsExperience'),
   newest('Newest', 'createdAt');
 
   const SupplierSort(this.label, this.sortBy);
@@ -19,7 +19,7 @@ enum SupplierSort {
 /// The minimum ratings the "By ratings" sheet offers.
 const ratingSteps = <double>[4.5, 4, 3.5, 3];
 
-String ratingStepLabel(double v) => '${v == v.roundToDouble() ? v.toInt() : v}★ & up';
+String ratingStepLabel(double v) => '${v == v.roundToDouble() ? v.toInt() : v}★ & Up';
 
 /// Company sizes the API filters on (`COMPANY_SIZES`).
 const companySizes = <String>['1-10', '11-50', '51-200', '201-500', '500+'];

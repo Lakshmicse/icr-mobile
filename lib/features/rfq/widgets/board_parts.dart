@@ -27,7 +27,7 @@ class OpportunityCard extends StatelessWidget {
   final VoidCallback onOpen;
   final DateTime? now;
 
-  /// On the board of everything posted, which holds ended requirements too: where it stands (Live, Awarded,
+  /// On the board of everything posted, which holds ended requirements too: where it stands (Open for bids, Awarded,
   /// Closed, Cancelled) and how many responses it has drawn, as the website's cards show.
   final bool showStatus;
 
@@ -41,18 +41,18 @@ class OpportunityCard extends StatelessWidget {
     final invited = rfq.inviteStatus == InviteStatus.invited;
     final responses = rfq.quoteCount;
     final pills = [
-      if (showStatus) StatusPill(rfq.status),
+      if (showStatus) StatusPill(rfq.status, toSuppliers: true),
       if (showStatus && responses > 0)
         TonePill(
           rfq.isEnquiry
-              ? (responses == 1 ? '1 reply' : '$responses replies')
-              : (responses == 1 ? '1 bid' : '$responses bids'),
+              ? (responses == 1 ? '1 response received' : '$responses responses received')
+              : (responses == 1 ? '1 bid received' : '$responses bids received'),
           icon: LucideIcons.messageSquare,
         ),
-      if (rfq.hasBid) const TonePill('Bid sent', tone: Tone.green, icon: LucideIcons.check),
-      if (invited) const TonePill('Invited to quote', tone: Tone.blue, icon: LucideIcons.mailPlus),
-      if (rfq.inviteStatus == InviteStatus.declined) const TonePill('You declined'),
-      if (rfq.visibility == RfqVisibility.targeted && !invited) const TonePill('Invite only', icon: LucideIcons.lock),
+      if (rfq.hasBid) const TonePill('Bid Submitted', tone: Tone.green, icon: LucideIcons.check),
+      if (invited) const TonePill('Invited to Quote', tone: Tone.blue, icon: LucideIcons.mailPlus),
+      if (rfq.inviteStatus == InviteStatus.declined) const TonePill('You Declined'),
+      if (rfq.visibility == RfqVisibility.targeted && !invited) const TonePill('Invite Only', icon: LucideIcons.lock),
     ];
     return RfqCard(
       onTap: onOpen,
@@ -201,7 +201,7 @@ class _BoardFiltersState extends State<_BoardFilters> {
   void _apply() {
     final min = _amount(_min.text, (e) => _minError = e);
     final max = _amount(_max.text, (e) => _maxError = e);
-    if (min != null && max != null && max < min) _maxError = 'The most cannot be below the least';
+    if (min != null && max != null && max < min) _maxError = 'The maximum cannot be below the minimum';
     if (_minError != null || _maxError != null) {
       setState(() {});
       return;
@@ -238,7 +238,7 @@ class _BoardFiltersState extends State<_BoardFilters> {
                 Expanded(
                   child: RfqField(
                     fieldKey: const ValueKey('filter-min'),
-                    label: 'Budget from',
+                    label: 'Budget From',
                     value: _min.text,
                     prefixText: '₹ ',
                     keyboardType: TextInputType.number,
@@ -278,7 +278,7 @@ class _BoardFiltersState extends State<_BoardFilters> {
                     key: const ValueKey('filters-apply'),
                     onPressed: _apply,
                     style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
-                    child: const Text('Show requirements'),
+                    child: const Text('Show Requirements'),
                   ),
                 ),
               ],

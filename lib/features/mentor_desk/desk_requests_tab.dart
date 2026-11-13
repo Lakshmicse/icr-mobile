@@ -51,11 +51,11 @@ class DeskRequestsTab extends StatelessWidget {
         const EmptyNote(
           icon: LucideIcons.inbox,
           compact: true,
-          title: 'Nothing is waiting on you',
-          body: 'Mentoring requests, session requests and programme requests land here.',
+          title: 'Nothing Needs Your Attention',
+          body: 'Mentoring requests, session requests and programme requests will appear here.',
         ),
       if (pending.isNotEmpty) ...[
-        const GroupLabel('Mentoring requests', top: 0),
+        const GroupLabel('Mentoring Requests', top: 0),
         for (final r in pending)
           RequestCard(
             request: r,
@@ -71,19 +71,19 @@ class DeskRequestsTab extends StatelessWidget {
           ),
       ],
       if (c.sessionRequests.isNotEmpty) ...[
-        GroupLabel('Sessions asked for', top: pending.isEmpty ? 0 : 12),
+        GroupLabel('Session Requests', top: pending.isEmpty ? 0 : 12),
         for (final r in c.sessionRequests) _SessionRequestCard(controller: c, links: links, row: r),
       ],
       if (c.heldTimes.isNotEmpty) ...[
-        const GroupLabel('Waiting on the mentee', top: 12),
+        const GroupLabel('Waiting for the Mentee', top: 12),
         for (final r in c.heldTimes) _HeldTimeCard(controller: c, links: links, row: r),
       ],
       if (c.programmeRequests.isNotEmpty) ...[
-        const GroupLabel('Programme and plan requests', top: 12),
+        const GroupLabel('Programme and Plan Requests', top: 12),
         for (final t in c.programmeRequests) _TermRequestCard(controller: c, term: t),
       ],
       if (c.unpaidTerms.isNotEmpty) ...[
-        const GroupLabel('Accepted, waiting for payment', top: 12),
+        const GroupLabel('Accepted, Awaiting Payment', top: 12),
         for (final t in c.unpaidTerms)
           MentoringCard(
             key: ValueKey('unpaid-${t.id}'),
@@ -93,28 +93,28 @@ class DeskRequestsTab extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(child: Text(t.title, style: MentoringText.cardTitle)),
-                    const StatusPill('Payment due', tone: PillTone.amber),
+                    const StatusPill('Payment Due', tone: PillTone.amber),
                   ],
                 ),
                 if (t.counterpart != null)
                   MetaLine(icon: LucideIcons.user, text: '${t.counterpart!.name} · ${moneyLabel(t.totalPaisa)}'),
                 const MetaLine(
                   icon: LucideIcons.hourglass,
-                  text: 'They pay on the website; the mentorship starts when they do.',
+                  text: 'They pay on the website. The mentorship starts when they pay.',
                 ),
               ],
             ),
           ),
       ],
       if (answered.isNotEmpty) ...[
-        GroupLabel('Answered lately', top: empty ? 0 : 12),
+        GroupLabel('Recently Answered', top: empty ? 0 : 12),
         for (final r in answered) RequestCard(request: r, received: true),
       ],
     ];
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your requests",
+      errorTitle: 'Unable to Load Your Requests',
       onRefresh: () => controller.refreshTab(DeskTab.requests),
       children: loading || failed != null ? const [] : children,
     );
@@ -142,7 +142,7 @@ class _SessionRequestCard extends StatelessWidget {
             PersonRow(
               person: buyer,
               subline: 'asked ${dayLabel(p.createdAt, now: controller.now)}',
-              trailing: const StatusPill('Waiting on you', tone: PillTone.amber),
+              trailing: const StatusPill('Awaiting Your Reply', tone: PillTone.amber),
             ),
           const SizedBox(height: 8),
           Text(p.title, style: MentoringText.cardTitle),
@@ -157,7 +157,7 @@ class _SessionRequestCard extends StatelessWidget {
               child: Text('"${req.topic}"', style: MentoringText.quote),
             ),
           if (req.preferredTimes != null)
-            MetaLine(icon: LucideIcons.calendarClock, text: 'Suits them: ${req.preferredTimes}'),
+            MetaLine(icon: LucideIcons.calendarClock, text: 'Preferred times: ${req.preferredTimes}'),
           if (row.timeDeclinedAt != null && req.timeDeclineNote != null)
             Callout(
               tone: PillTone.grey,
@@ -166,7 +166,7 @@ class _SessionRequestCard extends StatelessWidget {
           ActionWrap(
             children: [
               SolidButton(
-                label: 'Accept and set time',
+                label: 'Accept and Set Time',
                 icon: LucideIcons.calendarCheck,
                 onPressed: () async {
                   final sent = await showFormSheet(context, (_) => AcceptSessionForm(controller: controller, row: row));
@@ -174,7 +174,7 @@ class _SessionRequestCard extends StatelessWidget {
                     showMessage(
                       context,
                       p.duePaisa == 0
-                          ? 'Booked. ${buyerName(row)} has been told.'
+                          ? 'Booked. ${buyerName(row)} has been notified.'
                           : 'Time set. ${buyerName(row)} confirms it and pays.',
                     );
                   }
@@ -190,11 +190,11 @@ class _SessionRequestCard extends StatelessWidget {
                 danger: true,
                 onPressed: () => showTextSheet(
                   context,
-                  title: 'Decline this request?',
+                  title: 'Decline This Request?',
                   subtitle: '${buyerName(row)} reads your reason as written.',
-                  label: 'Why',
+                  label: 'Reason',
                   hint: 'I am not taking new sessions this month',
-                  submitLabel: 'Send decline',
+                  submitLabel: 'Decline Request',
                   minLength: minDeclineReason,
                   maxLength: maxDeclineReason,
                   danger: true,
@@ -225,7 +225,7 @@ class _HeldTimeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (p.buyer != null) PersonRow(person: p.buyer!, trailing: const StatusPill('Awaiting answer')),
+          if (p.buyer != null) PersonRow(person: p.buyer!, trailing: const StatusPill('Awaiting Answer')),
           const SizedBox(height: 8),
           Text(p.title, style: MentoringText.cardTitle),
           if (req.scheduledAt != null) MetaLine(icon: LucideIcons.calendarClock, text: whenLabel(req.scheduledAt!)),
@@ -239,18 +239,18 @@ class _HeldTimeCard extends StatelessWidget {
               ),
               if (p.status == PurchaseStatus.accepted)
                 QuietButton(
-                  label: 'Withdraw this time',
+                  label: 'Withdraw This Time',
                   onPressed: () async {
                     final ok = await showDialog<bool>(
                       context: context,
                       builder: (dialog) => AlertDialog(
-                        title: const Text('Withdraw this time?'),
+                        title: const Text('Withdraw This Time?'),
                         content: Text(
-                          'The request is cancelled and ${buyerName(row)} is told. '
-                          'The hour you held is free again, and they can ask again.',
+                          'The request is cancelled and ${buyerName(row)} is notified. '
+                          'The time you held is free again, and they can ask again.',
                         ),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Keep it')),
+                          TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Keep It')),
                           TextButton(onPressed: () => Navigator.pop(dialog, true), child: const Text('Withdraw')),
                         ],
                       ),
@@ -286,7 +286,7 @@ class _TermRequestCard extends StatelessWidget {
             PersonRow(
               person: t.counterpart!,
               subline: 'asked ${dayLabel(t.createdAt, now: controller.now)}',
-              trailing: const StatusPill('Waiting on you', tone: PillTone.amber),
+              trailing: const StatusPill('Awaiting Your Reply', tone: PillTone.amber),
             ),
           const SizedBox(height: 8),
           Text(t.title, style: MentoringText.cardTitle),
@@ -297,7 +297,7 @@ class _TermRequestCard extends StatelessWidget {
           ),
           const MetaLine(
             icon: LucideIcons.info,
-            text: 'Accepting promises your time; they are charged only when they pay.',
+            text: 'Accepting commits your time. They are charged only when they pay.',
           ),
           ActionWrap(
             children: [
@@ -314,12 +314,12 @@ class _TermRequestCard extends StatelessWidget {
                 danger: true,
                 onPressed: () => showTextSheet(
                   context,
-                  title: 'Decline this request?',
+                  title: 'Decline This Request?',
                   subtitle:
-                      'They read your reason as written. A kind line helps: they may look at another offer of yours.',
-                  label: 'Why',
+                      'They read your reason as written. A kind note helps, as they may consider another of your offerings.',
+                  label: 'Reason',
                   hint: 'My programme places are full until the new year',
-                  submitLabel: 'Send decline',
+                  submitLabel: 'Decline Request',
                   minLength: 5,
                   maxLength: 400,
                   danger: true,

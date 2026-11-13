@@ -130,7 +130,7 @@ class _RequirementsBoardScreenState extends State<RequirementsBoardScreen> {
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: IcrSearchField(controller: _search, hint: 'Search requirements', onSubmitted: b.setSearch),
+          child: IcrSearchField(controller: _search, hint: 'Search Requirements', onSubmitted: b.setSearch),
         ),
         const SizedBox(height: 10),
         ChipRow(
@@ -157,7 +157,7 @@ class _RequirementsBoardScreenState extends State<RequirementsBoardScreen> {
             if (b.offersFindWork)
               IcrChip(
                 key: const ValueKey('posted-find-work'),
-                label: 'Find work',
+                label: 'Find Work',
                 tone: ChipTone.outlined,
                 icon: LucideIcons.compass,
                 onTap: () => _after(pushBoard(context, _hooks)),
@@ -201,9 +201,9 @@ class _RequirementsBoardScreenState extends State<RequirementsBoardScreen> {
         fill(
           RfqNotice(
             icon: LucideIcons.cloudOff,
-            title: "Couldn't load the requirements",
+            title: 'Unable to Load the Requirements',
             body: b.error,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: b.refresh,
           ),
         ),
@@ -239,7 +239,7 @@ class _RequirementsBoardScreenState extends State<RequirementsBoardScreen> {
                   key: const ValueKey('posted-cut-short'),
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Text(
-                    'Showing the newest ${b.rows.length} of ${b.total}. Search, or pick a tab, to find the others.',
+                    'Showing the newest ${b.rows.length} of ${b.total}. Search or select a tab to find the others.',
                     textAlign: TextAlign.center,
                     style: RfqText.small,
                   ),
@@ -255,9 +255,9 @@ class _RequirementsBoardScreenState extends State<RequirementsBoardScreen> {
     if (b.narrowed) {
       return RfqNotice(
         icon: LucideIcons.searchX,
-        title: 'No requirements match',
-        body: 'Try other words.',
-        action: 'Clear search',
+        title: 'No Requirements Match',
+        body: 'Try different words.',
+        action: 'Clear Search',
         onAction: () {
           _search.clear();
           b.setSearch('');
@@ -267,17 +267,17 @@ class _RequirementsBoardScreenState extends State<RequirementsBoardScreen> {
     if (b.tab != PostedTab.all) {
       return RfqNotice(
         icon: LucideIcons.clipboardList,
-        title: 'None ${b.tab.label.toLowerCase()} right now',
+        title: 'None ${b.tab.label} Right Now',
         body: 'Everything posted is under All.',
-        action: 'See all',
+        action: 'See All',
         onAction: () => b.setTab(PostedTab.all),
       );
     }
     return RfqNotice(
       icon: LucideIcons.clipboardList,
-      title: 'No requirements posted yet',
-      body: 'Requirements show here as buyers post them. Pull down to check again.',
-      action: b.offersPost ? 'Post a requirement' : null,
+      title: 'No Requirements Posted Yet',
+      body: 'Requirements will appear here as buyers post them. Pull down to refresh.',
+      action: b.offersPost ? 'Post Requirement' : null,
       onAction: b.offersPost ? () => _after(pushComposer(context, _hooks).then((_) {})) : null,
     );
   }

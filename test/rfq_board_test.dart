@@ -14,7 +14,7 @@ import 'package:icr_mobile/features/rfq/widgets/rfq_widgets.dart' show MatchRing
 import 'helpers/fonts.dart';
 import 'rfq_fakes.dart';
 
-/// Every control of the supplier's board ("Find work"), tapped. What the API
+/// Every control of the supplier's board ("Find Work"), tapped. What the API
 /// does with the filters is proved in `test/live/rfq_live_test.dart`.
 void main() {
   late FlakyRfqRepository repo;
@@ -56,13 +56,13 @@ void main() {
     // The match ring and the buyer.
     expect(find.byWidgetPredicate((w) => w is MatchRing && w.score == 82), findsOneWidget);
     expect(find.text('Alpha Tech Parks'), findsOneWidget);
-    expect(find.text('Verified buyer'), findsWidgets);
+    expect(find.text('Verified Buyer'), findsWidgets);
     expect(find.text('ENQUIRY · ENGINEERING SERVICES'), findsNothing);
   });
 
   testWidgets('All open adds the ones that do not match', (tester) async {
     await open(tester);
-    await tester.tap(find.text('All open'));
+    await tester.tap(find.text('All Open'));
     await settle(tester);
     expect(find.byType(OpportunityCard), findsNWidgets(3));
     expect(card('demo-board-pest'), findsOneWidget);
@@ -78,7 +78,7 @@ void main() {
 
   testWidgets('searching narrows the board and clearing brings it back', (tester) async {
     await open(tester);
-    await tester.tap(find.text('All open'));
+    await tester.tap(find.text('All Open'));
     await settle(tester);
     await tester.enterText(find.byType(TextField), 'pest');
     await tester.testTextInput.receiveAction(TextInputAction.search);
@@ -89,8 +89,8 @@ void main() {
     await tester.enterText(find.byType(TextField), 'zzz nothing');
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await settle(tester);
-    expect(find.text('No requirements match'), findsOneWidget);
-    await tester.tap(find.text('Clear search and filters'));
+    expect(find.text('No Requirements Match'), findsOneWidget);
+    await tester.tap(find.text('Clear Search and Filters'));
     await settle(tester);
     expect(find.byType(OpportunityCard), findsNWidgets(3));
   });
@@ -98,11 +98,11 @@ void main() {
   testWidgets('Sort puts the highest budget first', (tester) async {
     await open(tester);
     await tapChip(tester, 'board-sort');
-    await tester.tap(find.text('Highest budget'));
+    await tester.tap(find.text('Highest Budget'));
     await settle(tester);
     final order = tester.widgetList<OpportunityCard>(find.byType(OpportunityCard)).map((c) => c.rfq.id).toList();
     expect(order, ['demo-board-housekeeping', 'demo-board-hvac']);
-    expect(find.text('Sort: Highest budget'), findsOneWidget);
+    expect(find.text('Sort: Highest Budget'), findsOneWidget);
   });
 
   testWidgets('Closing soon keeps what closes within a week, and turns off again', (tester) async {
@@ -116,7 +116,7 @@ void main() {
 
   testWidgets('Verified buyers drops the buyer that is not', (tester) async {
     await open(tester);
-    await tester.tap(find.text('All open'));
+    await tester.tap(find.text('All Open'));
     await settle(tester);
     await tapChip(tester, 'board-verified');
     expect(find.byType(OpportunityCard), findsNWidgets(2));
@@ -147,15 +147,15 @@ void main() {
       board.dispose();
     });
 
-    testWidgets('the chip shows them instead of "No requirements match"', (tester) async {
+    testWidgets('the chip shows them instead of "No Requirements Match"', (tester) async {
       final paged = _FiltersAfterPaging(pageSize: 20, unverifiedFirst: 20);
       await pumpScreen(tester, OpenRequirementsScreen(repository: paged, links: RecordingRfqLinks()));
-      await tester.tap(find.text('All open'));
+      await tester.tap(find.text('All Open'));
       await settle(tester);
       expect(find.byType(OpportunityCard), findsWidgets);
       await tapChip(tester, 'board-verified');
       expect(
-        find.text('No requirements match'),
+        find.text('No Requirements Match'),
         findsNothing,
         reason: 'the first twenty of the API are not verified; the next are',
       );
@@ -191,7 +191,7 @@ void main() {
     await tester.enterText(find.byKey(const ValueKey('filter-max')), '100000');
     await tester.tap(find.byKey(const ValueKey('filters-apply')));
     await tester.pump();
-    expect(find.text('The most cannot be below the least'), findsOneWidget);
+    expect(find.text('The maximum cannot be below the minimum'), findsOneWidget);
   });
 
   testWidgets('Invited shows the invitation, marked, with its count on the tab', (tester) async {
@@ -200,7 +200,7 @@ void main() {
     await tester.tap(find.text('Invited 1'));
     await settle(tester);
     expect(card('demo-board-facade'), findsOneWidget);
-    expect(find.text('Invited to quote'), findsOneWidget);
+    expect(find.text('Invited to Quote'), findsOneWidget);
   });
 
   testWidgets('a card opens the requirement as the supplier reads it', (tester) async {
@@ -220,7 +220,7 @@ void main() {
   testWidgets('a bid already sent is marked on its card', (tester) async {
     await repo.placeBid('demo-board-hvac', {'message': 'Ready to start.'});
     await open(tester);
-    expect(find.descendant(of: card('demo-board-hvac'), matching: find.text('Bid sent')), findsOneWidget);
+    expect(find.descendant(of: card('demo-board-hvac'), matching: find.text('Bid Submitted')), findsOneWidget);
   });
 
   testWidgets('an unverified listing is told it cannot bid yet', (tester) async {
@@ -238,8 +238,8 @@ void main() {
   testWidgets('with no listing the board offers to start selling, and does', (tester) async {
     repo.vendorAccess = const VendorAccess();
     await open(tester);
-    expect(find.text('Start selling to find work'), findsOneWidget);
-    await tester.tap(find.text('Start selling'));
+    expect(find.text('Start Selling to Find Work'), findsOneWidget);
+    await tester.tap(find.text('Start Selling'));
     await settle(tester);
     expect(find.byType(OpportunityCard), findsWidgets);
   });
@@ -247,15 +247,15 @@ void main() {
   testWidgets('a buyer account is told the board is for suppliers', (tester) async {
     repo.accessError = ApiError('Insufficient role permissions', statusCode: 403);
     await open(tester);
-    expect(find.text('This is for supplier accounts'), findsOneWidget);
+    expect(find.text('This Is for Supplier Accounts'), findsOneWidget);
   });
 
   testWidgets('a failed load says so and Try again reads it again; pull down reads it again', (tester) async {
     repo.failReads = true;
     await open(tester);
-    expect(find.text("Couldn't load the board"), findsOneWidget);
+    expect(find.text("Unable to Load the Board"), findsOneWidget);
     repo.failReads = false;
-    await tester.tap(find.text('Try again'));
+    await tester.tap(find.text('Try Again'));
     await settle(tester);
     expect(find.byType(OpportunityCard), findsNWidgets(2));
 
@@ -267,13 +267,13 @@ void main() {
 
   testWidgets('with nothing matched, Recommended says so and All open is the way on', (tester) async {
     await pumpScreen(tester, OpenRequirementsScreen(repository: _EmptyBoard(), links: RecordingRfqLinks()));
-    expect(find.text('Nothing matched to your services yet'), findsOneWidget);
-    await tester.tap(find.text('See all open'));
+    expect(find.text('Nothing Matched to Your Services Yet'), findsOneWidget);
+    await tester.tap(find.text('See All Open'));
     await settle(tester);
-    expect(find.text('No open requirements right now'), findsOneWidget);
+    expect(find.text('No Open Requirements Right Now'), findsOneWidget);
     await tester.tap(find.text('Invited'));
     await settle(tester);
-    expect(find.text('No invitations'), findsOneWidget);
+    expect(find.text('No Invitations'), findsOneWidget);
   });
 
   test('more is read as the list is scrolled, and stops when a page is short', () async {
@@ -349,7 +349,7 @@ class _EmptyBoard extends FlakyRfqRepository {
   Future<List<Requirement>> invited() async => const [];
 }
 
-/// A board like the portal's: the page is cut first and "Verified buyers" is applied to the page afterwards, so a page
+/// A board like the portal's: the page is cut first and "Verified Buyers" is applied to the page afterwards, so a page
 /// can come back short, or empty, with more behind it. [unverifiedFirst] rows of an unverified buyer, then verified ones
 /// up to twelve past them.
 class _FiltersAfterPaging extends FlakyRfqRepository {

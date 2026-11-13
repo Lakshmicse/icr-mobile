@@ -139,7 +139,7 @@ class _BidResponseCardState extends State<BidResponseCard> {
                       ),
                       Text(
                         [
-                          if (enquiry && b.amount != null) 'Indicative',
+                          if (enquiry && b.amount != null) 'Indicative quote',
                           if (b.leadTimeDays != null) '${leadTimeLabel(b.leadTimeDays!)} lead time',
                         ].join(' · '),
                         style: RfqText.small,
@@ -147,9 +147,9 @@ class _BidResponseCardState extends State<BidResponseCard> {
                     ],
                   ),
                 ),
-                if (widget.best) const TonePill('Best price', tone: Tone.green),
+                if (widget.best) const TonePill('Best Price', tone: Tone.green),
                 if (widget.best && widget.topRated) const SizedBox(width: 6),
-                if (widget.topRated) const TonePill('Top rated', tone: Tone.blue),
+                if (widget.topRated) const TonePill('Top Rated', tone: Tone.blue),
               ],
             ),
             if (message != null) ...[
@@ -168,7 +168,7 @@ class _BidResponseCardState extends State<BidResponseCard> {
                   onTap: () => setState(() => _expanded = !_expanded),
                   child: Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(_expanded ? 'Show less' : 'Show more', style: RfqText.link),
+                    child: Text(_expanded ? 'Show Less' : 'Show More', style: RfqText.link),
                   ),
                 ),
             ],
@@ -186,17 +186,19 @@ class _BidResponseCardState extends State<BidResponseCard> {
                       child: Container(
                         constraints: const BoxConstraints(maxWidth: 230),
                         padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: AppColors.slate100,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                        decoration: BoxDecoration(color: AppColors.slate100, borderRadius: BorderRadius.circular(10)),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             FileThumb(file: f, size: 30),
                             const SizedBox(width: 8),
                             Flexible(
-                              child: Text(f.title, style: RfqText.metaStrong, maxLines: 1, overflow: TextOverflow.ellipsis),
+                              child: Text(
+                                f.title,
+                                style: RfqText.metaStrong,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                             const SizedBox(width: 4),
                           ],
@@ -223,7 +225,7 @@ class _BidResponseCardState extends State<BidResponseCard> {
                   if (b.status == BidStatus.shortlisted)
                     RfqSmallButton(
                       key: ValueKey('bid-unshortlist-$id'),
-                      label: 'Remove shortlist',
+                      label: 'Remove Shortlist',
                       icon: LucideIcons.starOff,
                       onTap: widget.busy ? null : widget.onRestore,
                     )
@@ -243,7 +245,7 @@ class _BidResponseCardState extends State<BidResponseCard> {
                   ),
                   RfqSmallButton(
                     key: ValueKey('bid-award-$id'),
-                    label: enquiry ? 'Select' : 'Award',
+                    label: enquiry ? 'Select Supplier' : 'Award',
                     icon: LucideIcons.trophy,
                     filled: true,
                     onTap: widget.busy ? null : widget.onAward,
@@ -293,18 +295,29 @@ class _CompareSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final priced = [for (final b in bids) if (b.amount != null) b.amount!];
+    final priced = [
+      for (final b in bids)
+        if (b.amount != null) b.amount!,
+    ];
     final lowest = priced.isEmpty ? null : priced.reduce((a, b) => a < b ? a : b);
-    final leads = [for (final b in bids) if (b.leadTimeDays != null) b.leadTimeDays!];
+    final leads = [
+      for (final b in bids)
+        if (b.leadTimeDays != null) b.leadTimeDays!,
+    ];
     final fastest = leads.isEmpty ? null : leads.reduce((a, b) => a < b ? a : b);
     final topRating = bids.map((b) => b.supplier.rating).fold<double>(0, (a, b) => a > b ? a : b);
     const labelWidth = 92.0;
     const columnWidth = 132.0;
 
     TableRow row(String label, Widget Function(Bid) cell) => TableRow(
-      decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.slate100))),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.slate100)),
+      ),
       children: [
-        Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Text(label, style: RfqText.meta)),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Text(label, style: RfqText.meta),
+        ),
         for (final b in bids) Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6), child: cell(b)),
       ],
     );
@@ -321,7 +334,7 @@ class _CompareSheet extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-              child: Text(enquiry ? 'Compare the replies' : 'Compare the quotes', style: RfqText.sheetTitle),
+              child: Text(enquiry ? 'Compare the Replies' : 'Compare the Quotes', style: RfqText.sheetTitle),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
@@ -371,13 +384,13 @@ class _CompareSheet extends StatelessWidget {
                         ],
                       ),
                       row(
-                        enquiry ? 'Indicative price' : 'Price',
+                        enquiry ? 'Indicative Price' : 'Price',
                         (b) => b.amount == null
                             ? Text('Not given', style: RfqText.small)
                             : good(formatInr(b.amount!), lowest != null && priced.length > 1 && b.amount == lowest),
                       ),
                       if (lowest != null && priced.length > 1)
-                        row('Against the lowest', (b) {
+                        row('Against the Lowest', (b) {
                           if (b.amount == null) return Text('-', style: RfqText.small);
                           final over = lowest == 0 ? 0 : ((b.amount! - lowest) / lowest * 100);
                           return Text(
@@ -386,10 +399,13 @@ class _CompareSheet extends StatelessWidget {
                           );
                         }),
                       row(
-                        'Lead time',
+                        'Lead Time',
                         (b) => b.leadTimeDays == null
                             ? Text('Not given', style: RfqText.small)
-                            : good(leadTimeLabel(b.leadTimeDays!), fastest != null && leads.length > 1 && b.leadTimeDays == fastest),
+                            : good(
+                                leadTimeLabel(b.leadTimeDays!),
+                                fastest != null && leads.length > 1 && b.leadTimeDays == fastest,
+                              ),
                       ),
                       row(
                         'Rating',
@@ -453,9 +469,9 @@ class PreQualCard extends StatelessWidget {
     final r = response;
     final id = r.supplier.vendorId;
     final fact = <(String, String)>[
-      ('Years in business', r.yearsInBusiness?.toString() ?? '-'),
-      ('Annual turnover', r.annualTurnover == null ? '-' : compactInr(r.annualTurnover!)),
-      if (r.last3YrTurnover != null) ('Last 3 years', compactInr(r.last3YrTurnover!)),
+      ('Years in Business', r.yearsInBusiness?.toString() ?? '-'),
+      ('Annual Turnover', r.annualTurnover == null ? '-' : compactInr(r.annualTurnover!)),
+      if (r.last3YrTurnover != null) ('Last 3 Years', compactInr(r.last3YrTurnover!)),
       ('Employees', r.employeeCount ?? '-'),
       ('Presence', r.presence?.label ?? '-'),
     ];
@@ -505,7 +521,10 @@ class PreQualCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
-                  children: [Text(label, style: RfqText.small), Text(value, style: RfqText.metaStrong)],
+                  children: [
+                    Text(label, style: RfqText.small),
+                    Text(value, style: RfqText.metaStrong),
+                  ],
                 ),
             ],
           ),
@@ -532,11 +551,16 @@ class PreQualCard extends StatelessWidget {
               key: ValueKey('prequal-verdict-$id'),
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Padding(padding: EdgeInsets.only(top: 1), child: Icon(LucideIcons.triangleAlert, size: 15, color: AppColors.amber800)),
+                const Padding(
+                  padding: EdgeInsets.only(top: 1),
+                  child: Icon(LucideIcons.triangleAlert, size: 15, color: AppColors.amber800),
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    r.failures.isEmpty ? 'Does not meet your criteria' : '${r.failures.length} unmet: ${r.failures.join(', ')}',
+                    r.failures.isEmpty
+                        ? 'Does not meet your criteria'
+                        : '${r.failures.length} unmet: ${r.failures.join(', ')}',
                     style: RfqText.metaStrong.copyWith(color: AppColors.amber800),
                   ),
                 ),
@@ -564,7 +588,7 @@ class PreQualCard extends StatelessWidget {
               if (canAct && r.status != PreQualStatus.rejected)
                 RfqSmallButton(
                   key: ValueKey('prequal-reject-$id'),
-                  label: 'Not qualified',
+                  label: 'Not Qualified',
                   icon: LucideIcons.ban,
                   danger: true,
                   onTap: busy ? null : onReject,
@@ -581,7 +605,7 @@ class PreQualCard extends StatelessWidget {
           ),
           if (canAct && r.status == PreQualStatus.qualified && !r.shortlisted && !canShortlist) ...[
             const SizedBox(height: 6),
-            Text('Move the RFQ on to "Screening & shortlist" to shortlist qualified suppliers.', style: RfqText.small),
+            Text('Move the RFQ on to "Screening & Shortlist" to shortlist qualified suppliers.', style: RfqText.small),
           ],
         ],
       ),
@@ -620,7 +644,7 @@ class TenderStageCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Tender stage', style: RfqText.section),
+          Text('Tender Stage', style: RfqText.section),
           const SizedBox(height: 10),
           for (final (i, s) in RfqStage.values.indexed)
             IntrinsicHeight(
@@ -637,14 +661,21 @@ class TenderStageCard extends StatelessWidget {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: i < index ? AppColors.emerald700 : (i == index ? AppColors.primary : AppColors.slate100),
+                            color: i < index
+                                ? AppColors.emerald700
+                                : (i == index ? AppColors.primary : AppColors.slate100),
                           ),
                           child: i < index
                               ? const Icon(LucideIcons.check, size: 13, color: Colors.white)
-                              : Text('${i + 1}', style: RfqText.step.copyWith(color: i == index ? Colors.white : AppColors.slate500)),
+                              : Text(
+                                  '${i + 1}',
+                                  style: RfqText.step.copyWith(color: i == index ? Colors.white : AppColors.slate500),
+                                ),
                         ),
                         if (i < RfqStage.values.length - 1)
-                          Expanded(child: Container(width: 1.5, color: i < index ? AppColors.emerald700 : AppColors.slate200)),
+                          Expanded(
+                            child: Container(width: 1.5, color: i < index ? AppColors.emerald700 : AppColors.slate200),
+                          ),
                       ],
                     ),
                   ),
@@ -663,7 +694,14 @@ class TenderStageCard extends StatelessWidget {
                                 color: i > index ? AppColors.slate500 : AppColors.slate900,
                               ),
                               children: [
-                                if (i == index) TextSpan(text: '  Now', style: RfqText.small.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                                if (i == index)
+                                  TextSpan(
+                                    text: '  Now',
+                                    style: RfqText.small.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                               ],
                             ),
                           ),

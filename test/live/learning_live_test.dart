@@ -207,7 +207,7 @@ void main() {
     expect(cals.badge, 'PREMIUM CERTIFICATION', reason: 'a certificate-issuing course at the Leadership level');
     expect(cals.provider?.name, 'ICR Institute');
     expect(courseMeta(cals), '5 days · 35 hours • In person');
-    expect(cals.priceAmount ?? 0, 0, reason: 'free: ADD TO CART takes the place in the app');
+    expect(cals.priceAmount ?? 0, 0, reason: 'free: ENROL NOW takes the place in the app');
 
     final cover = await Dio().get<List<int>>(cals.cover!.url!, options: Options(responseType: ResponseType.bytes));
     expect(cover.statusCode, 200);
@@ -265,7 +265,7 @@ void main() {
 
     learning.toggleMine();
     await learning.refresh();
-    expect(learning.sections.single.title, 'My courses');
+    expect(learning.sections.single.title, 'My Courses');
     expect(learning.sections.single.courses.map((c) => c.code), contains('CALS'));
     expect(learning.sections.single.courses.every((c) => c.enrolled), isTrue);
 
@@ -348,7 +348,7 @@ void main() {
   });
 
   liveTest(
-    'ADD TO CART on a free course takes the selected run as Pooja; the place is the API\'s; withdrawing gives it back',
+    'ENROL NOW on a free course takes the selected run as Pooja; the place is the API\'s; withdrawing gives it back',
     () async {
       final api = await _as(pooja);
       await _withdraw(api.dio); // a place left by an interrupted run
@@ -360,7 +360,7 @@ void main() {
       final sheet = CourseSheetController(repository: repo, seed: seed, onChanged: learning.update);
       await sheet.load();
       sheet.selectRun(sheet.course.runs.firstWhere((r) => r.id == _londonRun));
-      expect(sheet.ctaLabel, 'ADD TO CART');
+      expect(sheet.ctaLabel, 'ENROL NOW');
       expect(sheet.paidPlace, isFalse, reason: 'CALS is free, so the app takes the place itself');
 
       try {
@@ -403,12 +403,12 @@ void main() {
         seed: _cals(await (await _repoFor(pooja)).courses()),
       );
       await reopenedFree.load();
-      expect(reopenedFree.ctaLabel, 'ADD TO CART', reason: 'and the button is the design\'s again');
+      expect(reopenedFree.ctaLabel, 'ENROL NOW', reason: 'and the button is the design\'s again');
     },
   );
 
   liveTest(
-    'holding two places on one course is refused by the API (the app never offers a second ADD TO CART)',
+    'holding two places on one course is refused by the API (the app never offers a second ENROL NOW)',
     () async {
       final api = await _as(pooja);
       await _withdraw(api.dio);
@@ -546,8 +546,8 @@ void main() {
   liveWidgetTest('a card opens the real course sheet', (tester) async {
     await _pumpGrid(tester, bharat);
     await _tapOnline(tester, find.text('Certificate in Advanced Leadership Skills'));
-    await _settle(tester, until: () => find.text('Select Date').evaluate().isNotEmpty);
-    expect(find.text('Select Date'), findsOneWidget);
+    await _settle(tester, until: () => find.text('Select Batch').evaluate().isNotEmpty);
+    expect(find.text('Select Batch'), findsOneWidget);
     expect(find.text('Riyadh, KSA'), findsOneWidget);
     expect(find.text('CONFIRMED'), findsOneWidget, reason: "Bharat's seeded place");
     expect(
@@ -569,8 +569,8 @@ void main() {
     await tester.enterText(find.byType(TextField), 'zzzznothing');
     await tester.pump();
     expect(find.byType(CourseCard), findsNothing);
-    expect(find.text('No courses match'), findsOneWidget);
-    await tester.tap(find.text('Clear search'));
+    expect(find.text('No Courses Match'), findsOneWidget);
+    await tester.tap(find.text('Clear Search'));
     await tester.pumpAndSettle();
     expect(find.byType(CourseCard), findsNWidgets(all));
     expect(learning.search, '');
@@ -578,7 +578,7 @@ void main() {
 
   liveWidgetTest("My courses shows the member's places as cards, with the run each is on", (tester) async {
     await _pumpGrid(tester, bharat);
-    await _tapOnline(tester, find.text('My courses'));
+    await _tapOnline(tester, find.text('My Courses'));
     await _settle(tester, until: () => find.byType(CourseCard).evaluate().length == 1);
     expect(find.byType(CourseCard), findsOneWidget);
     expect(find.text('Certificate in Advanced Leadership Skills'), findsOneWidget);
@@ -588,7 +588,7 @@ void main() {
     final card = tester.getRect(find.byType(CourseCard));
     expect(card.left, closeTo(9, 0.01));
     expect(card.width, closeTo((390 - 9 - 9.5 - 3) / 2, 0.01), reason: 'one place: a half-width card at the left');
-    await tester.tap(find.text('My courses').first); // off: no request, the catalogue is already loaded
+    await tester.tap(find.text('My Courses').first); // off: no request, the catalogue is already loaded
     await tester.pumpAndSettle();
     expect(find.byType(CourseCard).evaluate().length, greaterThan(1), reason: 'pressed again: the catalogue is back');
   });

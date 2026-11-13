@@ -65,7 +65,7 @@ Future<MartUnderTest> openForm(
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const ValueKey('request-quote')));
   await tester.pumpAndSettle();
-  expect(find.text('Request a quote'), findsOneWidget);
+  expect(find.text('Request a Quote'), findsOneWidget);
   return mart;
 }
 
@@ -169,13 +169,13 @@ void main() {
     ) async {
       final mart = await openForm(tester);
       expect(find.text('Sent privately to Vikasha Aero Tech.'), findsOneWidget);
-      expect(find.text('Required service'), findsOneWidget);
+      expect(find.text('Required Service'), findsOneWidget);
       expect(find.text('Not sure: a general enquiry'), findsOneWidget);
-      expect(find.text('Project scope / area'), findsOneWidget);
-      expect(find.text('Target timeline'), findsOneWidget);
-      expect(find.text('Brief project notes'), findsOneWidget);
+      expect(find.text('Project Scope / Area'), findsOneWidget);
+      expect(find.text('Target Timeline'), findsOneWidget);
+      expect(find.text('Brief Project Notes'), findsOneWidget);
       // A member with a number on file is not asked for one.
-      expect(find.text('Your mobile number'), findsNothing);
+      expect(find.text('Mobile Number'), findsNothing);
       expect(mart.repo.calls, containsAll(['hasPhone', 'servicesOf']));
     });
 
@@ -190,8 +190,8 @@ void main() {
       expect(q.title, 'Quote request — Vikasha Aero Tech');
       expect(q.timeline, QuoteTimeline.immediate);
       expect(find.byKey(const ValueKey('quote-sent')), findsOneWidget);
-      expect(find.text('Request sent'), findsOneWidget);
-      expect(find.textContaining('Vikasha Aero Tech has your request'), findsOneWidget);
+      expect(find.text('Request Sent'), findsOneWidget);
+      expect(find.textContaining('Vikasha Aero Tech has received your request'), findsOneWidget);
     });
 
     testWidgets('a chosen service, the scope, a timeline and the notes all go in the request', (tester) async {
@@ -221,7 +221,7 @@ void main() {
         find.descendant(of: find.byKey(const ValueKey('service-sv1')), matching: find.text('Get Quote')),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Request a quote'), findsOneWidget);
+      expect(find.text('Request a Quote'), findsOneWidget);
       expect(find.text('Drone Facade Cleaning'), findsWidgets);
       await send(tester);
       expect(mart.repo.quotes.single.title, 'Drone Facade Cleaning — quote request');
@@ -239,10 +239,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Biometric Access Terminal'), findsWidgets);
       expect(find.text('₹18,500 / piece'), findsWidgets);
-      expect(find.text('Project scope / area'), findsNothing);
+      expect(find.text('Project Scope / Area'), findsNothing);
 
       const refused = {
-        '': 'Enter how many you need.',
+        '': 'Enter the quantity you need.',
         '0': 'Enter a number from 1 to 1,000,000.',
         '2.5': 'Enter a whole number.',
         '1000001': 'Enter a number from 1 to 1,000,000.',
@@ -268,10 +268,10 @@ void main() {
     testWidgets('asked when the profile has none, refused when short, sent and saved when good', (tester) async {
       final repo = repoFor()..phoneOnFile = false;
       final mart = await openForm(tester, repo: repo);
-      expect(find.text('Your mobile number'), findsOneWidget);
+      expect(find.text('Mobile Number'), findsOneWidget);
 
       await send(tester);
-      expect(find.text('Add a mobile number so the supplier can reach you.'), findsOneWidget);
+      expect(find.text('Add a mobile number so the supplier can contact you.'), findsOneWidget);
       expect(mart.repo.quotes, isEmpty);
 
       await tester.enterText(find.byKey(const ValueKey('quote-phone')), '12345');
@@ -290,14 +290,14 @@ void main() {
       final repo = repoFor()..failing['hasPhone'] = ApiError('offline');
       var refuse = true;
       final mart = await openForm(tester, repo: repo);
-      expect(find.text('Your mobile number'), findsNothing);
+      expect(find.text('Mobile Number'), findsNothing);
       repo.failing.remove('hasPhone');
       // The API refuses the first send for want of a number.
-      repo.failing['requestQuote'] = ApiError('Add a mobile number so the supplier can reach you.', statusCode: 400);
+      repo.failing['requestQuote'] = ApiError('Add a mobile number so the supplier can contact you.', statusCode: 400);
       await tester.enterText(find.byKey(const ValueKey('quote-notes')), 'Keep this text');
       await send(tester);
-      expect(find.text('Add a mobile number so the supplier can reach you.'), findsWidgets);
-      expect(find.text('Your mobile number'), findsOneWidget);
+      expect(find.text('Add a mobile number so the supplier can contact you.'), findsWidgets);
+      expect(find.text('Mobile Number'), findsOneWidget);
       expect(find.text('Keep this text'), findsOneWidget);
       refuse = false;
       repo.failing.clear();
@@ -322,7 +322,7 @@ void main() {
       expect(find.textContaining('Only a company can ask suppliers for quotes'), findsOneWidget);
       expect(find.byKey(const ValueKey('quote-create-company')), findsOneWidget);
       // Still the form, with every field as it was.
-      expect(find.text('Request a quote'), findsOneWidget);
+      expect(find.text('Request a Quote'), findsOneWidget);
       expect(find.text('14 towers'), findsOneWidget);
       expect(find.text('Night shifts only.'), findsOneWidget);
       expect(find.text('Drone Facade Cleaning'), findsWidgets);
@@ -356,14 +356,14 @@ void main() {
         expect(find.text(said), findsOneWidget);
         final button = find.byKey(const ValueKey('quote-create-company'));
         expect(button, findsOneWidget);
-        expect(find.descendant(of: button, matching: find.text('Create a company')), findsOneWidget);
+        expect(find.descendant(of: button, matching: find.text('Create a Company')), findsOneWidget);
 
         await tester.ensureVisible(button);
         await tester.tap(button);
         await tester.pump();
         expect(created, 1, reason: 'the button founds a company, in the app');
         // The form is still there with what was typed.
-        expect(find.text('Request a quote'), findsOneWidget);
+        expect(find.text('Request a Quote'), findsOneWidget);
         expect(find.text('Night shifts only.'), findsOneWidget);
       },
     );
@@ -425,7 +425,7 @@ void main() {
   });
 
   group('after it is sent', () {
-    testWidgets('"View my request" goes to the requirement: the lead\'s screen, else its page on the website', (
+    testWidgets('"View My Request" goes to the requirement: the lead\'s screen, else its page on the website', (
       tester,
     ) async {
       final opened = <String>[];
@@ -448,7 +448,7 @@ void main() {
       await send(tester);
       await tester.tap(find.byKey(const ValueKey('quote-done')));
       await tester.pumpAndSettle();
-      expect(find.text('Request sent'), findsNothing);
+      expect(find.text('Request Sent'), findsNothing);
       expect(find.text('Request for Quote (RFQ)'), findsOneWidget);
     });
 
@@ -467,7 +467,7 @@ void main() {
         await tester.tap(find.byKey(const ValueKey('request-quote')));
         await tester.pumpAndSettle();
         expect(asked, [_id]);
-        expect(find.text('Request a quote'), findsNothing);
+        expect(find.text('Request a Quote'), findsNothing);
         expect(mart.repo.calls, isNot(contains('hasPhone')));
       },
     );

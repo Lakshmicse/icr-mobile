@@ -19,16 +19,17 @@ import '../widgets/account_kit.dart';
 import '../widgets/account_session.dart';
 import 'contact_sheet.dart';
 
-/// "Sign-in & security", the website's `/profile?tab=security`: how to reach
+/// "Sign-In & Security", the website's `/profile?tab=security`: how to reach
 /// the person (email, mobile number with its confirmation, work email, second
-/// number, links) and how they sign in (the password).
+/// number, links) and how they sign in (the password). The words are the
+/// client's (the marked-up manual, 13 Nov 2026).
 ///
-/// * the sign-in email is shown with whether it is confirmed; a confirmed one
+/// * the sign-in email is shown with whether it is verified; a verified one
 ///   needs nothing, an old account's opens the confirmation (`VerifyEmailScreen`);
 /// * the mobile number opens its sheet: **Send code**, **Verify** for a +91
 ///   number, **Save number** for any other country's, **Remove number**;
-/// * **Edit contact info** opens the work email, second number and links;
-/// * **Change password** sends the reset link to the account's own address,
+/// * **Edit Contact Information** opens the work email, second number and links;
+/// * **Change** (beside Password) sends the reset link to the account's own address,
 ///   which is the only way the API changes a password (it also sets one for an
 ///   account that signed up with Google or LinkedIn).
 class SignInSecurityScreen extends StatefulWidget {
@@ -49,7 +50,8 @@ class _SignInSecurityScreenState extends State<SignInSecurityScreen> {
   void initState() {
     super.initState();
     _repository =
-        widget.repository ?? (AppConfig.demo ? DemoAccountRepository() : ApiAccountRepository(api: context.read<ApiClient>()));
+        widget.repository ??
+        (AppConfig.demo ? DemoAccountRepository() : ApiAccountRepository(api: context.read<ApiClient>()));
     _c = MyProfileController(_repository, onIdentityChanged: maybeAuth(context)?.refreshUser);
     _read();
   }
@@ -75,12 +77,14 @@ class _SignInSecurityScreenState extends State<SignInSecurityScreen> {
       showMessage(context, 'Your links are still loading. Try again in a moment.');
       return;
     }
-    if (await showContactSheet(context, _c) && mounted) showMessage(context, 'Contact info saved.');
+    if (await showContactSheet(context, _c) && mounted) showMessage(context, 'Contact information saved.');
   }
 
   void _changePassword(MyProfile me) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => ForgotPasswordScreen(email: me.email, title: 'Change your password')),
+      MaterialPageRoute<void>(
+        builder: (_) => ForgotPasswordScreen(email: me.email, title: 'Change Password'),
+      ),
     );
   }
 
@@ -98,7 +102,7 @@ class _SignInSecurityScreenState extends State<SignInSecurityScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.slate50,
-      appBar: AccountBar(title: 'Sign-in & security', onBack: widget.onBack),
+      appBar: AccountBar(title: 'Sign-In & Security', onBack: widget.onBack),
       body: ListenableBuilder(
         listenable: _c,
         builder: (context, _) {
@@ -117,7 +121,7 @@ class _SignInSecurityScreenState extends State<SignInSecurityScreen> {
               padding: const EdgeInsets.only(top: 12, bottom: 28),
               children: [
                 AccountCard(
-                  title: 'Sign in',
+                  title: 'Sign-In',
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -126,16 +130,25 @@ class _SignInSecurityScreenState extends State<SignInSecurityScreen> {
                         label: 'Email',
                         value: me.email,
                         chip: confirmed
-                            ? const AccountChip(label: 'Confirmed', color: Color(0xFFECFDF5), ink: Color(0xFF047857), icon: Symbols.verified)
-                            : const AccountChip(label: 'Not confirmed', color: Color(0xFFFFF7E6), ink: Color(0xFF92400E)),
-                        action: confirmed ? null : 'Confirm',
+                            ? const AccountChip(
+                                label: 'Verified',
+                                color: Color(0xFFECFDF5),
+                                ink: Color(0xFF047857),
+                                icon: Symbols.verified,
+                              )
+                            : const AccountChip(
+                                label: 'Not Verified',
+                                color: Color(0xFFFFF7E6),
+                                ink: Color(0xFF92400E),
+                              ),
+                        action: confirmed ? null : 'Verify',
                         actionKey: const Key('security.confirmEmail'),
                         onAction: _confirmEmail,
                       ),
                       _Line(
                         icon: Symbols.lock,
                         label: 'Password',
-                        value: 'Change it with a link sent to ${me.email}',
+                        value: 'Reset your password using a secure email link.',
                         action: 'Change',
                         actionKey: const Key('security.changePassword'),
                         onAction: () => _changePassword(me),
@@ -145,11 +158,11 @@ class _SignInSecurityScreenState extends State<SignInSecurityScreen> {
                   ),
                 ),
                 AccountCard(
-                  title: 'Contact info',
+                  title: 'Contact Information',
                   trailing: CardIconButton(
                     key: const Key('security.editContact'),
                     icon: Symbols.edit,
-                    tooltip: 'Edit contact info',
+                    tooltip: 'Edit Contact Information',
                     onPressed: _editContact,
                   ),
                   child: Column(
@@ -157,24 +170,35 @@ class _SignInSecurityScreenState extends State<SignInSecurityScreen> {
                     children: [
                       _Line(
                         icon: Symbols.smartphone,
-                        label: 'Mobile number',
+                        label: 'Mobile Number',
                         value: me.phone == null ? 'Not added' : formatPhone(me.phone),
                         // Only a number a code can reach is ever "not verified".
                         chip: me.phone == null
                             ? null
                             : me.phoneVerified
-                            ? const AccountChip(label: 'Verified', color: Color(0xFFECFDF5), ink: Color(0xFF047857), icon: Symbols.verified)
+                            ? const AccountChip(
+                                label: 'Verified',
+                                color: Color(0xFFECFDF5),
+                                ink: Color(0xFF047857),
+                                icon: Symbols.verified,
+                              )
                             : textable
-                            ? const AccountChip(label: 'Not verified', color: Color(0xFFFFF7E6), ink: Color(0xFF92400E))
+                            ? const AccountChip(label: 'Not Verified', color: Color(0xFFFFF7E6), ink: Color(0xFF92400E))
                             : null,
                         subtitle: me.phone == null ? null : phoneCountryName(me.phone),
                         action: me.phone == null ? 'Add' : (me.phoneVerified || !textable ? 'Edit' : 'Verify'),
                         actionKey: const Key('security.phone'),
                         onAction: () => _editPhone(me),
                       ),
-                      if (me.workEmail != null) _Line(icon: Symbols.work, label: 'Work email', value: me.workEmail!, divider: true),
+                      if (me.workEmail != null)
+                        _Line(icon: Symbols.work, label: 'Work Email', value: me.workEmail!, divider: true),
                       if (me.altPhone != null)
-                        _Line(icon: Symbols.call, label: 'Alternative number', value: formatPhone(me.altPhone), divider: true),
+                        _Line(
+                          icon: Symbols.call,
+                          label: 'Alternate Mobile Number',
+                          value: formatPhone(me.altPhone),
+                          divider: true,
+                        ),
                       for (final e in links.entries)
                         _Line(
                           icon: Symbols.link,
@@ -185,7 +209,11 @@ class _SignInSecurityScreenState extends State<SignInSecurityScreen> {
                       if (_c.links.error != null && !_c.links.ready)
                         Padding(
                           padding: const EdgeInsets.only(top: 10),
-                          child: SectionLoadError(what: 'links', message: _c.links.error!, onRetry: () => _c.retry(_c.links)),
+                          child: SectionLoadError(
+                            what: 'links',
+                            message: _c.links.error!,
+                            onRetry: () => _c.retry(_c.links),
+                          ),
                         ),
                     ],
                   ),

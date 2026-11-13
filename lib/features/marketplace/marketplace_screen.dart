@@ -174,23 +174,36 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
             child: Stack(
               children: [
                 Positioned.fill(
-                  top: TitleBar.height,
+                  top: TitleBar.reserved(context),
                   child: RefreshIndicator(
                     color: AppColors.primary,
                     onRefresh: market.refresh,
-                    child: CustomScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      slivers: [
-                        SliverToBoxAdapter(
-                          child: MarketToolbar(
-                            searchController: _search,
-                            focusNode: _focus,
-                            onChanged: _typing,
-                            onSearch: _runSearch,
+                    // Nearing the end of the list brings the next suppliers by itself (owner, 12 Nov 2026: "scroll
+                    // should load the next items"); "Load more suppliers" stays for a list shorter than the screen.
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: (n) {
+                        if (n is ScrollUpdateNotification &&
+                            (n.scrollDelta ?? 0) > 0 &&
+                            n.metrics.axis == Axis.vertical &&
+                            n.metrics.extentAfter < 600) {
+                          market.loadMore();
+                        }
+                        return false;
+                      },
+                      child: CustomScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: MarketToolbar(
+                              searchController: _search,
+                              focusNode: _focus,
+                              onChanged: _typing,
+                              onSearch: _runSearch,
+                            ),
                           ),
-                        ),
-                        if (_focus.hasFocus) _suggestions(market) else ..._body(context, market, nav),
-                      ],
+                          if (_focus.hasFocus) _suggestions(market) else ..._body(context, market, nav),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -254,9 +267,9 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
         SliverFillRemaining(
           hasScrollBody: false,
           child: _Notice(
-            title: "Couldn't load suppliers",
+            title: 'Unable to Load Suppliers',
             body: market.error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: market.refresh,
           ),
         ),
@@ -280,17 +293,17 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           hasScrollBody: false,
           child: market.filters.savedOnly
               ? _Notice(
-                  title: 'No saved suppliers yet',
-                  body: 'Save a supplier from its profile and it will be here.',
-                  action: 'Show all suppliers',
+                  title: 'No Saved Suppliers Yet',
+                  body: 'Save a supplier from its profile and it will appear here.',
+                  action: 'Show All Suppliers',
                   onAction: () => market.setFilters(market.filters.copyWith(savedOnly: false)),
                 )
               : _Notice(
-                  title: market.narrowed ? 'No suppliers match' : 'No suppliers listed yet',
+                  title: market.narrowed ? 'No Suppliers Match' : 'No Suppliers Listed Yet',
                   body: market.narrowed
-                      ? 'Try other words, or clear the filters.'
-                      : 'Suppliers show up here as they join.',
-                  action: market.narrowed ? 'Clear filters' : null,
+                      ? 'Try different words or clear the filters.'
+                      : 'Suppliers will appear here as they join.',
+                  action: market.narrowed ? 'Clear Filters' : null,
                   onAction: market.narrowed ? market.clearFilters : null,
                 ),
         )

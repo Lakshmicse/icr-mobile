@@ -180,7 +180,7 @@ class _CareerHubScreenState extends State<CareerHubScreen> {
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) => CareerScaffold(
-        title: 'Your career',
+        title: 'Your Career',
         onBack: widget.onBack,
         unread: _c.unread,
         onBell: () => widget.navigation.openNotifications(context, widget.links),
@@ -203,7 +203,7 @@ class _CareerHubScreenState extends State<CareerHubScreen> {
         CareerNotice(
           key: const ValueKey('hub-error'),
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load your career hub",
+          title: 'Unable to Load Your Career Hub',
           body: _c.error!,
           action: 'Try again',
           onAction: _c.refresh,
@@ -318,7 +318,7 @@ class _Quota extends StatelessWidget {
           TextButton(
             key: const ValueKey('quota-plans'),
             onPressed: () => links.openSite(context, '/career/plans'),
-            child: Text('Go unlimited', style: CareerText.link),
+            child: Text('View Plans', style: CareerText.link),
           ),
         ],
       ),
@@ -384,7 +384,7 @@ class _NextSteps extends StatelessWidget {
           key: const ValueKey('step-profile'),
           lead: _IconBlock(icon: LucideIcons.filePen),
           title: missing,
-          detail: 'A fuller résumé gets more from recruiters.',
+          detail: 'A complete résumé attracts more recruiters.',
           action: 'Update',
           onTap: () => navigation.editProfile(context, links),
         ),
@@ -400,11 +400,11 @@ class _NextSteps extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 12, 6, 2),
             child: Row(
               children: [
-                Expanded(child: Text('Next steps', style: CareerText.heading.copyWith(fontSize: 14))),
+                Expanded(child: Text('Next Steps', style: CareerText.heading.copyWith(fontSize: 14))),
                 TextButton(
                   key: const ValueKey('tracker-link'),
                   onPressed: () => onGo((r) => r.applications()),
-                  child: Text('Open tracker', style: CareerText.link),
+                  child: Text('Open Tracker', style: CareerText.link),
                 ),
               ],
             ),
@@ -421,8 +421,8 @@ class _NextSteps extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("You're all caught up", style: CareerText.bodyStrong),
-                        Text('Nothing is waiting on you right now.', style: CareerText.body),
+                        Text('No Pending Actions', style: CareerText.bodyStrong),
+                        Text('Nothing needs your attention right now.', style: CareerText.body),
                       ],
                     ),
                   ),
@@ -531,7 +531,7 @@ class _Visibility extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text('How visible you are', style: CareerText.heading.copyWith(fontSize: 14))),
+              Expanded(child: Text('Your Visibility', style: CareerText.heading.copyWith(fontSize: 14))),
               Text('LAST 30 DAYS', style: CareerText.label),
             ],
           ),
@@ -539,11 +539,11 @@ class _Visibility extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                metric('Search appearances', perf.searchAppearances30d),
+                metric('Search Appearances', perf.searchAppearances30d),
                 const SizedBox(width: 6),
-                metric('Recruiters viewed you', perf.profileViews30d),
+                metric('Recruiter Views', perf.profileViews30d),
                 const SizedBox(width: 6),
-                metric('Recruiter actions', perf.recruiterActions),
+                metric('Recruiter Actions', perf.recruiterActions),
               ],
             ),
           ],
@@ -576,7 +576,7 @@ class _Visibility extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Résumé strength', style: CareerText.bodyStrong),
+                      Text('Résumé Strength', style: CareerText.bodyStrong),
                       Text(
                         insights!.missing.isEmpty
                             ? 'Your résumé is complete.'
@@ -599,7 +599,7 @@ class _Visibility extends StatelessWidget {
           if (perf == null && score == null)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Text('Nothing to show yet.', style: CareerText.body),
+              child: Text('No data yet.', style: CareerText.body),
             ),
         ],
       ),
@@ -616,7 +616,7 @@ class _Pipeline extends StatelessWidget {
 
   static const _stages = [
     ('APPLIED', 'Applied'),
-    ('SCREENING', 'In review'),
+    ('SCREENING', 'In Review'),
     ('INTERVIEW', 'Interview'),
     ('OFFER', 'Offer'),
     ('HIRED', 'Hired'),
@@ -636,18 +636,18 @@ class _Pipeline extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text('Your applications', style: CareerText.heading.copyWith(fontSize: 14))),
+              Expanded(child: Text('Your Applications', style: CareerText.heading.copyWith(fontSize: 14))),
               TextButton(
                 key: const ValueKey('open-tracker'),
                 onPressed: () => onGo((r) => r.applications(tab: ApplicationsTab.all)),
-                child: Text('Open tracker', style: CareerText.link),
+                child: Text('Open Tracker', style: CareerText.link),
               ),
             ],
           ),
           if (c.apps.isEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: Text('Jobs you apply to show up here, with where each one stands.', style: CareerText.body),
+              child: Text('Jobs you apply to will appear here with their status.', style: CareerText.body),
             )
           else ...[
             Row(
@@ -750,7 +750,7 @@ class _Shortcuts extends StatelessWidget {
           row(
             'go-applications',
             LucideIcons.clipboardList,
-            'My applications',
+            'My Applications',
             '${controller.apps.length}',
             (r) => r.applications(),
           ),
@@ -763,17 +763,17 @@ class _Shortcuts extends StatelessWidget {
             (r) => r.interviews(),
           ),
           rule,
-          row('go-saved', LucideIcons.bookmark, 'Saved jobs', '${controller.saved}', (r) => r.savedJobs()),
+          row('go-saved', LucideIcons.bookmark, 'Saved Jobs', '${controller.saved}', (r) => r.savedJobs()),
           rule,
           row(
             'go-hidden',
             LucideIcons.eyeOff,
-            'Hidden jobs',
+            'Hidden Jobs',
             '${controller.hidden}',
             (r) => r.savedJobs(tab: SavedTab.hidden),
           ),
           rule,
-          row('go-alerts', LucideIcons.bellRing, 'Job alerts', null, (r) => r.alerts()),
+          row('go-alerts', LucideIcons.bellRing, 'Job Alerts', null, (r) => r.alerts()),
           rule,
           row(
             'go-invitations',
@@ -787,7 +787,7 @@ class _Shortcuts extends StatelessWidget {
             row(
               'go-posted',
               LucideIcons.briefcaseBusiness,
-              'Jobs you posted',
+              'Jobs You Posted',
               null,
               (r) => r.postedJobs?.call() ?? Future.value(),
             ),

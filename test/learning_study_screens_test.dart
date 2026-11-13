@@ -135,14 +135,14 @@ void main() {
       'a deck is a card with its name and how many cards it holds; a member whose plan opens three sees the line and no locks',
       (tester) async {
         await _pump(tester, FlashCardsScreen(onBack: () {}, repository: repoOn(FakePortal())));
-        expect(find.text('Flash Cards'), findsOneWidget);
+        expect(find.text('Flashcards'), findsOneWidget);
         for (final name in ['Capital Planning', 'Collabaration', 'Communication', 'ESG and Sustainability']) {
           expect(find.text(name), findsOneWidget);
         }
         expect(find.text('200 CARDS'), findsNWidgets(2), reason: 'Capital Planning and ESG hold 200');
         expect(find.text('199 CARDS'), findsNWidgets(2));
         expect(find.text('4 decks'), findsOneWidget);
-        expect(find.text('Your plan opens 3 flash-card decks (1 used).'), findsOneWidget);
+        expect(find.text('Your plan opens 3 flashcard decks (1 used).'), findsOneWidget);
         expect(find.text('Locked'), findsNothing);
         expect(find.text('Study'), findsNWidgets(4));
       },
@@ -158,10 +158,10 @@ void main() {
             repository: repoOn(FakePortal(unlocks: 'paper_unlocks_bharat')),
           ),
         );
-        expect(find.text('Flash cards are not included in your plan.'), findsOneWidget);
+        expect(find.text('Flashcards are not included in your plan.'), findsOneWidget);
         expect(find.text('Locked'), findsNWidgets(4));
         expect(find.text('Study'), findsNothing);
-        await tester.tap(find.text('See plans'));
+        await tester.tap(find.text('See Plans'));
         await tester.pump();
         expect(launches.urls, ['https://icr.org.in/pricing/professional']);
       },
@@ -189,9 +189,9 @@ void main() {
 
         await tester.enterText(find.byType(TextField), 'zebra');
         await tester.pumpAndSettle();
-        expect(find.text('No deck matches'), findsOneWidget);
+        expect(find.text('No Deck Matches'), findsOneWidget);
         expect(find.textContaining('Nothing matches "zebra"'), findsOneWidget);
-        await tester.tap(find.text('Clear search'));
+        await tester.tap(find.text('Clear Search'));
         await tester.pumpAndSettle();
         expect(find.text('Capital Planning'), findsOneWidget);
         expect(find.text('4 decks'), findsOneWidget);
@@ -199,7 +199,7 @@ void main() {
         await tester.enterText(find.byType(TextField), 'ESG');
         await tester.pumpAndSettle();
         expect(find.text('Capital Planning'), findsNothing);
-        await tester.tap(find.byTooltip('Clear search'));
+        await tester.tap(find.byTooltip('Clear Search'));
         await tester.pumpAndSettle();
         expect(find.text('Capital Planning'), findsOneWidget);
       },
@@ -221,19 +221,19 @@ void main() {
       await tester.pumpWidget(_host(FlashCardsScreen(onBack: () {}, repository: repoOn(portal))));
       expect(find.text('4 decks'), findsNothing);
       await tester.pumpAndSettle();
-      expect(find.text('No flash-card decks yet'), findsOneWidget);
+      expect(find.text('No Flashcards Available Yet'), findsOneWidget);
     });
 
     testWidgets('a failed load says why, Try again reads the list again', (tester) async {
       final portal = FakePortal()..listFails = 'The catalogue is down.';
       await _pump(tester, FlashCardsScreen(onBack: () {}, repository: repoOn(portal)));
-      expect(find.text("Couldn't load the decks"), findsOneWidget);
+      expect(find.text("Unable to Load the Decks"), findsOneWidget);
       expect(find.text('The catalogue is down.'), findsOneWidget);
       portal.listFails = null;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('Capital Planning'), findsOneWidget);
-      expect(find.text("Couldn't load the decks"), findsNothing);
+      expect(find.text("Unable to Load the Decks"), findsNothing);
     });
 
     testWidgets('pulling down reads the decks again', (tester) async {
@@ -280,7 +280,7 @@ void main() {
       await _pump(tester, FlashCardsScreen(onBack: () {}, repository: repoOn(portal)));
       await tester.tap(find.text('Capital Planning'));
       await tester.pumpAndSettle();
-      expect(find.text("This deck isn't open on your plan"), findsOneWidget);
+      expect(find.text("This Deck Is Not Open on Your Plan"), findsOneWidget);
       expect(find.text('Flash-card decks are not included in your plan.'), findsWidgets);
     });
 
@@ -289,11 +289,11 @@ void main() {
       (tester) async {
         final portal = FakePortal(starred: ['cmv6lubcf01dfmyt8t4g9it5d']);
         await _pump(tester, FlashCardsScreen(onBack: () {}, repository: repoOn(portal)));
-        expect(find.text('Study starred (1)'), findsOneWidget);
+        expect(find.text('Study Starred (1)'), findsOneWidget);
         expect(find.text('1'), findsOneWidget, reason: 'the star count on Capital Planning');
         await tester.tap(find.byKey(const ValueKey('study-starred-chip')));
         await tester.pumpAndSettle();
-        expect(find.text('Starred cards'), findsOneWidget);
+        expect(find.text('Starred Cards'), findsOneWidget);
         expect(find.text('What is capital planning in CRE & FM?'), findsOneWidget);
         expect(find.text('CAPITAL PLANNING · STRATEGY & FUNDAMENTALS'), findsOneWidget);
       },
@@ -486,8 +486,8 @@ void main() {
       // The menu now offers the way back too.
       await tester.tap(find.byKey(const ValueKey('study-menu')));
       await tester.pumpAndSettle();
-      expect(find.text('Back to all cards'), findsOneWidget);
-      await tester.tap(find.text('Back to all cards'));
+      expect(find.text('Back to All Cards'), findsOneWidget);
+      await tester.tap(find.text('Back to All Cards'));
       await tester.pumpAndSettle();
       expect(find.text('Card 1 of 20'), findsOneWidget);
       expect(find.byKey(const ValueKey('study-starred-pass')), findsNothing);
@@ -506,10 +506,10 @@ void main() {
       await tester.pumpAndSettle();
       final starred = tester.widget<PopupMenuItem<Object?>>(find.byKey(const ValueKey('study-menu-starred')));
       expect(starred.enabled, isFalse);
-      expect(find.text('Study starred cards (0)'), findsOneWidget);
+      expect(find.text('Study Starred Cards (0)'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('study-menu-summary')));
       await tester.pumpAndSettle();
-      expect(find.text('Deck complete'), findsOneWidget);
+      expect(find.text('Deck Complete'), findsOneWidget);
       expect(find.byKey(const ValueKey('study-summary')), findsOneWidget);
     });
 
@@ -638,9 +638,9 @@ void main() {
 
         await tester.enterText(find.byKey(const ValueKey('study-search')), 'zebra');
         await tester.pumpAndSettle();
-        expect(find.text('No card matches “zebra”'), findsOneWidget);
+        expect(find.text('No Card Matches “zebra”'), findsOneWidget);
         expect(find.byKey(const ValueKey('study-play')), findsNothing, reason: 'no cards, no player');
-        await tester.tap(find.text('Clear search'));
+        await tester.tap(find.text('Clear Search'));
         await tester.pumpAndSettle();
         expect(find.text('Card 1 of 20'), findsOneWidget);
         expect(tester.widget<TextField>(find.byKey(const ValueKey('study-search'))).controller!.text, isEmpty);
@@ -685,6 +685,8 @@ void main() {
         ),
       );
       expect(find.bySemanticsLabel('Play the cards'), findsOneWidget);
+      // Read-aloud (owner, 7 Nov 2026): a speaker beside the player's controls.
+      expect(find.byKey(const ValueKey('study-speak')), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('study-play')));
       await tester.pump();
       expect(find.bySemanticsLabel('Pause'), findsOneWidget);
@@ -742,7 +744,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 4));
       await tester.pumpAndSettle();
-      expect(find.text('Deck complete'), findsOneWidget, reason: 'two cards, a question and an answer each');
+      expect(find.text('Deck Complete'), findsOneWidget, reason: 'two cards, a question and an answer each');
       expect(find.text('You went through 2 cards.'), findsOneWidget);
       expect(find.byKey(const ValueKey('study-play')), findsNothing, reason: 'the summary has no player');
       handle.dispose();
@@ -759,7 +761,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('study-still-learning')));
       await tester.pumpAndSettle();
       expect(find.text('Card 3 of 5'), findsOneWidget);
-      expect(find.text('Got it 1 · Still learning 1'), findsOneWidget);
+      expect(find.text('Known 1 · Still learning 1'), findsOneWidget);
     });
 
     testWidgets('the last card\'s Next finishes the pass; the summary has the numbers and the way on', (tester) async {
@@ -779,18 +781,18 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('study-next')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Deck complete'), findsOneWidget);
+      expect(find.text('Deck Complete'), findsOneWidget);
       expect(find.text('You went through 4 cards.'), findsOneWidget);
       expect(_stat(tester, 'known'), '1');
       expect(_stat(tester, 'learning'), '1');
       expect(_stat(tester, 'unmarked'), '2');
-      expect(find.text('Study the 3 you have not got'), findsOneWidget);
+      expect(find.text('Study the 3 Not Yet Known'), findsOneWidget);
 
       // Study the rest: three cards, the restriction banner, Whole deck leaves it.
       await tester.tap(find.byKey(const ValueKey('study-summary-rest')));
       await tester.pumpAndSettle();
       expect(find.text('Card 1 of 3'), findsOneWidget);
-      expect(find.text('Studying the 3 you have not got yet'), findsOneWidget);
+      expect(find.text('Studying the 3 not yet known'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('study-show-all')));
       await tester.pumpAndSettle();
       expect(find.text('Card 1 of 4'), findsOneWidget);
@@ -808,7 +810,7 @@ void main() {
         await tester.pumpAndSettle();
       }
       expect(find.text('You know all 3 cards.'), findsOneWidget);
-      expect(find.text('Study them again'), findsOneWidget);
+      expect(find.text('Study Them Again'), findsOneWidget);
       expect(find.byKey(const ValueKey('study-summary-again')), findsNothing, reason: 'nothing left to study over');
 
       await tester.tap(find.byKey(const ValueKey('study-summary-last')));
@@ -816,7 +818,7 @@ void main() {
       expect(find.text('Card 3 of 3'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('study-next')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('study-summary-rest'))); // "Study them again"
+      await tester.tap(find.byKey(const ValueKey('study-summary-rest'))); // "Study Them Again"
       await tester.pumpAndSettle();
       expect(find.text('Card 1 of 3'), findsOneWidget);
       expect(find.byKey(const ValueKey('study-tally')), findsNothing, reason: 'the marks are cleared');
@@ -832,7 +834,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('study-still-learning')));
       await tester.pumpAndSettle();
-      expect(find.text('Study the 2 you have not got'), findsOneWidget);
+      expect(find.text('Study the 2 Not Yet Known'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('study-summary-again')));
       await tester.pumpAndSettle();
       expect(find.text('Card 1 of 3'), findsOneWidget);
@@ -894,7 +896,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('study-got-it')));
       await tester.pumpAndSettle();
-      expect(find.text('Deck complete'), findsOneWidget);
+      expect(find.text('Deck Complete'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('study-summary-back')));
       await tester.pumpAndSettle();
       expect(find.text('open'), findsOneWidget);
@@ -918,13 +920,13 @@ void main() {
         );
         await tester.tap(find.text('open'));
         await tester.pumpAndSettle();
-        expect(find.text("This deck isn't open on your plan"), findsOneWidget);
+        expect(find.text("This Deck Is Not Open on Your Plan"), findsOneWidget);
         expect(find.text('Your plan opens 3 flash-card decks, and you have opened them all.'), findsOneWidget);
         expect(find.byKey(const ValueKey('study-flip')), findsNothing);
-        await tester.tap(find.text('See plans'));
+        await tester.tap(find.text('See Plans'));
         await tester.pump();
         expect(launches.urls, ['https://icr.org.in/pricing/professional']);
-        await tester.tap(find.text('All decks'));
+        await tester.tap(find.text('All Decks'));
         await tester.pumpAndSettle();
         expect(find.text('open'), findsOneWidget);
       },
@@ -933,10 +935,10 @@ void main() {
     testWidgets('a failed load says why and Try again reads the deck again', (tester) async {
       final portal = FakePortal()..shelfFails.add('capital-planning');
       await _pump(tester, _deck(portal));
-      expect(find.text("Couldn't load the cards"), findsOneWidget);
+      expect(find.text("Unable to Load the Cards"), findsOneWidget);
       expect(find.text('The shelf capital-planning is not available.'), findsOneWidget);
       portal.shelfFails.clear();
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('Card 1 of 14'), findsOneWidget);
     });
@@ -945,13 +947,13 @@ void main() {
       final portal = FakePortal();
       portal.extra['empty'] = bigDeck('empty', count: 0);
       await _pump(tester, DeckStudyScreen.deck(repository: repoOn(portal), deck: _topic('empty')));
-      expect(find.text('No cards in this deck yet'), findsOneWidget);
-      expect(find.text('Back to decks'), findsOneWidget);
+      expect(find.text('No Cards in This Deck Yet'), findsOneWidget);
+      expect(find.text('Back to Decks'), findsOneWidget);
     });
 
     testWidgets('a starred session with nothing starred says how to star', (tester) async {
       await _pump(tester, DeckStudyScreen.starred(repository: repoOn(FakePortal())));
-      expect(find.text('No starred cards yet'), findsOneWidget);
+      expect(find.text('No Starred Cards Yet'), findsOneWidget);
     });
 
     testWidgets('a long answer scrolls inside the card; the card, its star and both faces read to a screen reader', (
@@ -982,16 +984,20 @@ void main() {
     });
   });
 
-  group('Knowledge Center', () {
+  group('Knowledge Centre', () {
     testWidgets(
       'the formulas are one list under their group\'s heading, numbered within the group, with a chip per group',
       (tester) async {
         await _pump(tester, KnowledgeCenterScreen(onBack: () {}, repository: repoOn(FakePortal())));
-        expect(find.text('Knowledge Center'), findsOneWidget);
+        expect(find.text('Knowledge Centre'), findsOneWidget);
         expect(find.text('Corporate Real Estate (CRE)'), findsOneWidget);
         expect(find.text('25 formulas'), findsWidgets);
         expect(find.text('All 87'), findsOneWidget);
         expect(find.text('Cost Analysis 25'), findsOneWidget);
+        // "All" lists the topics (owner, 9 Nov 2026); a topic opens its formulas, numbered within it.
+        expect(find.text('Portfolio Occupancy Rate'), findsNothing);
+        await tester.tap(find.text('Corporate Real Estate (CRE)'));
+        await tester.pumpAndSettle();
         expect(find.text('Portfolio Occupancy Rate'), findsOneWidget);
         expect(find.text('01'), findsWidgets);
       },
@@ -1015,11 +1021,11 @@ void main() {
 
         await tester.enterText(find.byType(TextField), 'qqqq');
         await tester.pumpAndSettle();
-        expect(find.text('No formula matches'), findsOneWidget);
-        await tester.tap(find.text('Clear search'));
+        expect(find.text('No Formula Matches'), findsOneWidget);
+        await tester.tap(find.text('Clear Search'));
         await tester.pumpAndSettle();
         expect(find.text('All 87'), findsOneWidget);
-        expect(find.text('Portfolio Occupancy Rate'), findsOneWidget);
+        expect(find.text('Corporate Real Estate (CRE)'), findsOneWidget, reason: 'All shows the topics again');
       },
     );
 
@@ -1029,10 +1035,13 @@ void main() {
       expect(find.text('Fixed Cost (FC)'), findsOneWidget);
       expect(find.text('Portfolio Occupancy Rate'), findsNothing);
       await _tapChip(tester, 'knowledge-chip-cost-analysis');
-      expect(find.text('Portfolio Occupancy Rate'), findsOneWidget);
+      // Back on "All": the topics, not every formula (owner, 9 Nov 2026).
+      expect(find.text('Portfolio Occupancy Rate'), findsNothing);
+      expect(find.text('Corporate Real Estate (CRE)'), findsOneWidget);
       await _tapChip(tester, 'knowledge-chip-time-value-of-money');
       await _tapChip(tester, 'knowledge-chip-all');
-      expect(find.text('Portfolio Occupancy Rate'), findsOneWidget);
+      expect(find.text('Portfolio Occupancy Rate'), findsNothing);
+      expect(find.text('Corporate Real Estate (CRE)'), findsOneWidget);
     });
 
     testWidgets('a formula opens in a sheet: its expression drawn as math, its variables, its worked examples', (
@@ -1060,9 +1069,9 @@ void main() {
       }
 
       // Both worked examples: figures, working, answer, analysis and decision.
-      expect(find.text('Worked example 1'), findsOneWidget);
-      await tester.scrollUntilVisible(find.text('Worked example 2'), 300, scrollable: _sheetScroll());
-      expect(find.text('Worked example 2'), findsOneWidget);
+      expect(find.text('Worked Example 1'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Worked Example 2'), 300, scrollable: _sheetScroll());
+      expect(find.text('Worked Example 2'), findsOneWidget);
       expect(find.text('Given'), findsWidgets);
       expect(find.text('Future Building Value'), findsOneWidget);
       expect(find.text('₹25 Crores'), findsOneWidget);
@@ -1097,31 +1106,31 @@ void main() {
       expect(tester.widget<Text>(find.byKey(const ValueKey('formula-title'))).data, 'Perpetuity');
     });
 
-    testWidgets('Copy formula puts the name, the formula and the variables on the clipboard and says Copied', (
-      tester,
-    ) async {
-      final copied = <String>[];
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
-        if (call.method == 'Clipboard.setData') copied.add((call.arguments as Map)['text'] as String);
-        return null;
-      });
-      addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
-      await _pump(tester, KnowledgeCenterScreen(onBack: () {}, repository: repoOn(FakePortal())));
-      await tester.enterText(find.byType(TextField), 'present value (pv)');
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Present Value (PV)'));
-      await tester.pumpAndSettle();
-      expect(find.text('Copy formula'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('formula-copy')));
-      await tester.pump(const Duration(milliseconds: 50));
-      expect(
-        copied.single,
-        'Present Value (PV)\nPV = FV ÷ (1+r)^n\nPV = Present Value\nFV = Future Value\nr = Discount Rate\nn = Number of Years',
-      );
-      expect(find.text('Copied'), findsOneWidget);
-      await tester.pump(const Duration(seconds: 3));
-      expect(find.text('Copy formula'), findsOneWidget);
-    });
+    testWidgets(
+      'Share formula hands the name, the formula, its variables and the Knowledge Center link to the share sheet',
+      (tester) async {
+        const share = MethodChannel('dev.fluttercommunity.plus/share');
+        final shared = <String>[];
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(share, (call) async {
+          shared.add((call.arguments as Map)['text'] as String);
+          return 'dev.fluttercommunity.plus/share/success';
+        });
+        addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(share, null));
+        await _pump(tester, KnowledgeCenterScreen(onBack: () {}, repository: repoOn(FakePortal())));
+        await tester.enterText(find.byType(TextField), 'present value (pv)');
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Present Value (PV)'));
+        await tester.pumpAndSettle();
+        expect(find.text('Share formula'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('formula-share')));
+        await tester.pump(const Duration(milliseconds: 50));
+        expect(
+          shared.single,
+          'Present Value (PV)\nPV = FV ÷ (1+r)^n\nPV = Present Value\nFV = Future Value\nr = Discount Rate\nn = Number of Years'
+          '\n\nOn ICR: https://icr.org.in/learning/formulas',
+        );
+      },
+    );
 
     testWidgets(
       'an expression that is plain text, one the renderer cannot read, and a free-text example all show as text',
@@ -1162,9 +1171,9 @@ void main() {
         expect(find.byKey(const ValueKey('formula-math')), findsNothing);
         expect(find.byKey(const ValueKey('formula-note')), findsOneWidget);
         expect(find.text('Where price is per unit.'), findsOneWidget);
-        expect(find.text('Worked example 1'), findsOneWidget);
+        expect(find.text('Worked Example 1'), findsOneWidget);
         await tester.scrollUntilVisible(find.text('Price 2, quantity 3 = 6.'), 200, scrollable: _sheetScroll());
-        expect(find.text('Worked example 2'), findsOneWidget);
+        expect(find.text('Worked Example 2'), findsOneWidget);
         expect(find.text('KPI'), findsOneWidget);
 
         await tester.tap(find.byKey(const ValueKey('formula-next')));
@@ -1199,25 +1208,27 @@ void main() {
       expect(find.text('Cost Analysis'), findsOneWidget, reason: 'the failed group keeps its heading');
       portal.shelfFails.clear();
       await tester.tap(
-        find.descendant(of: find.byKey(const ValueKey('knowledge-shelf-error')), matching: find.text('Try again')),
+        find.descendant(of: find.byKey(const ValueKey('knowledge-shelf-error')), matching: find.text('Try Again')),
       );
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('knowledge-shelf-error')), findsNothing);
-      expect(find.text('Fixed Cost (FC)'), findsOneWidget, reason: 'the formulas of the group are where its error was');
+      await tester.tap(find.text('Cost Analysis'));
+      await tester.pumpAndSettle();
+      expect(find.text('Fixed Cost (FC)'), findsOneWidget, reason: 'the group opens with its formulas once read');
     });
 
     testWidgets('a failed load says why and Try again recovers; no formulas published says so', (tester) async {
       final portal = FakePortal()..listFails = 'Down.';
       await _pump(tester, KnowledgeCenterScreen(onBack: () {}, repository: repoOn(portal)));
-      expect(find.text("Couldn't load the formulas"), findsOneWidget);
+      expect(find.text("Unable to Load the Formulas"), findsOneWidget);
       portal.listFails = null;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
-      expect(find.text('Portfolio Occupancy Rate'), findsOneWidget);
+      expect(find.text('Corporate Real Estate (CRE)'), findsOneWidget, reason: 'the topics are back');
 
       final empty = FakePortal()..list = [];
       await _pump(tester, KnowledgeCenterScreen(key: UniqueKey(), onBack: () {}, repository: repoOn(empty)));
-      expect(find.text('No formulas yet'), findsOneWidget);
+      expect(find.text('No Knowledge Resources Available Yet'), findsOneWidget);
     });
 
     testWidgets("pulling down reads the groups again; Back goes back; the bell opens the app's notifications", (
@@ -1228,7 +1239,7 @@ void main() {
       var backs = 0;
       await _pump(tester, KnowledgeCenterScreen(onBack: () => backs++, repository: repoOn(portal)));
       final before = portal.calls.where((c) => c == 'GET /learning/resources').length;
-      await tester.fling(find.text('Portfolio Occupancy Rate'), const Offset(0, 400), 1000);
+      await tester.fling(find.text('Corporate Real Estate (CRE)'), const Offset(0, 400), 1000);
       await tester.pumpAndSettle();
       expect(portal.calls.where((c) => c == 'GET /learning/resources').length, before + 1);
       await tester.tap(find.bySemanticsLabel('Back'));
@@ -1266,7 +1277,7 @@ void main() {
         // The plan opens two places; only the deck on its own (Energy Management) could take one.
         expect(
           find.text(
-            'Your plan opens 2 flash-card decks (0 used). A deck that goes with an Assess your knowledge course opens with that course.',
+            'Your plan opens 2 flashcard decks (0 used). A deck linked to a Knowledge Assessment course opens with that course.',
           ),
           findsOneWidget,
         );
@@ -1278,7 +1289,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Opens with “Contract Management”'), findsOneWidget);
         expect(find.text('Open Contract Management'), findsOneWidget);
-        await tester.tap(find.text('All decks'));
+        await tester.tap(find.text('All Decks'));
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Energy Management'));
@@ -1294,7 +1305,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('study-back')));
         await tester.pumpAndSettle();
-        expect(find.text('Study starred (1)'), findsOneWidget);
+        expect(find.text('Study Starred (1)'), findsOneWidget);
       },
     );
 
@@ -1304,11 +1315,14 @@ void main() {
       await _pump(tester, KnowledgeCenterScreen(onBack: () {}, repository: DemoStudyRepository()));
       expect(find.text('Time Value of Money'), findsOneWidget);
       expect(find.text('All 6'), findsOneWidget);
+      // "All" lists the two topics; the formulas are a tap in (owner, 9 Nov 2026).
+      await tester.tap(find.text('Time Value of Money'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Present Value (PV)'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('formula-math')), findsOneWidget);
       expect(find.byKey(const ValueKey('formula-variables')), findsOneWidget);
-      expect(find.text('Worked example'), findsOneWidget);
+      expect(find.text('Worked Example'), findsOneWidget);
     });
   });
 }

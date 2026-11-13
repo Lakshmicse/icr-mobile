@@ -73,7 +73,7 @@ class ScreeningEditor extends StatelessWidget {
                         Text(
                           [
                             typeLabel(q.type),
-                            if (q.mustHave) 'Must have',
+                            if (q.mustHave) 'Must-Have',
                             if (q.hasOptions && q.options.isNotEmpty) '${q.options.length} options',
                           ].join(' • '),
                           style: CareerText.meta,
@@ -85,7 +85,7 @@ class ScreeningEditor extends StatelessWidget {
                 if (i > 0)
                   IconButton(
                     key: ValueKey('question-up-$i'),
-                    tooltip: 'Move up',
+                    tooltip: 'Move Up',
                     visualDensity: VisualDensity.compact,
                     onPressed: () {
                       final next = [...questions];
@@ -96,7 +96,7 @@ class ScreeningEditor extends StatelessWidget {
                   ),
                 IconButton(
                   key: ValueKey('question-remove-$i'),
-                  tooltip: 'Remove question',
+                  tooltip: 'Remove Question',
                   visualDensity: VisualDensity.compact,
                   onPressed: () => onChanged([...questions]..removeAt(i)),
                   icon: const Icon(LucideIcons.trash2, size: 16, color: AppColors.error),
@@ -110,7 +110,7 @@ class ScreeningEditor extends StatelessWidget {
             key: const ValueKey('add-question'),
             onPressed: questions.length >= JobLimits.screeningQuestionsMax ? null : () => _edit(context),
             icon: const Icon(LucideIcons.plus, size: 15),
-            label: const Text('Add a question'),
+            label: const Text('Add a Question'),
           ),
         ),
       ],
@@ -180,7 +180,7 @@ class _ScreeningQuestionDialogState extends State<ScreeningQuestionDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       key: const ValueKey('question-dialog'),
-      title: Text(widget.initial == null ? 'Add a question' : 'Edit question'),
+      title: Text(widget.initial == null ? 'Add a Question' : 'Edit Question'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -256,7 +256,7 @@ class _ScreeningQuestionDialogState extends State<ScreeningQuestionDialog> {
             SwitchListTile(
               key: const ValueKey('question-must'),
               contentPadding: EdgeInsets.zero,
-              title: Text('Must have', style: JobsText.formLabel),
+              title: Text('Must-Have', style: JobsText.formLabel),
               subtitle: Text('Missing it marks the applicant unqualified.', style: JobsText.formHelp),
               value: _must,
               onChanged: (v) => setState(() => _must = v),
@@ -272,7 +272,7 @@ class _ScreeningQuestionDialogState extends State<ScreeningQuestionDialog> {
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        TextButton(key: const ValueKey('question-save'), onPressed: _save, child: const Text('Save question')),
+        TextButton(key: const ValueKey('question-save'), onPressed: _save, child: const Text('Save Question')),
       ],
     );
   }

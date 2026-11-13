@@ -73,7 +73,7 @@ class ProfileBottomBar extends StatelessWidget {
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(
-                                actions.barLabel,
+                                actions.barLabel ?? actions.primaryLabel,
                                 style: MentorText.barButton,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,

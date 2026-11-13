@@ -177,7 +177,7 @@ void main() {
       mart.links.opens = false;
       await tester.tap(find.byKey(const ValueKey('call-hq')));
       await tester.pump();
-      expect(find.textContaining("Couldn't open"), findsOneWidget);
+      expect(find.textContaining('Unable to open'), findsOneWidget);
     });
   });
 
@@ -259,7 +259,7 @@ void main() {
       expect(find.text('2 Hubs'), findsOneWidget);
     });
 
-    testWidgets('a short description is shown whole; a long one is two lines with "Read full company charter"', (
+    testWidgets('a short description is shown whole; a long one is two lines with "Read Full Company Charter"', (
       tester,
     ) async {
       await openSheet(tester);
@@ -272,11 +272,11 @@ void main() {
       await openSheet(tester, repo: repoWith(fullSupplier(_supplierId, about: long)));
       await scrollSheetTo(tester, find.byKey(const ValueKey('about')));
       final collapsed = tester.getSize(find.byKey(const ValueKey('about'))).height;
-      expect(find.text('Read full company charter'), findsOneWidget);
+      expect(find.text('Read Full Company Charter'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('charter')));
       await tester.pumpAndSettle();
       expect(tester.getSize(find.byKey(const ValueKey('about'))).height, greaterThan(collapsed * 2));
-      expect(find.text('Show less'), findsOneWidget);
+      expect(find.text('Show Less'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('charter')));
       await tester.pumpAndSettle();
       expect(tester.getSize(find.byKey(const ValueKey('about'))).height, collapsed);
@@ -291,9 +291,9 @@ void main() {
       expect(find.textContaining('Bengaluru • Pune'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('view-hubs')));
       await tester.pumpAndSettle();
-      expect(find.text('Vikasha Aero Tech offices'), findsOneWidget);
+      expect(find.text('Vikasha Aero Tech Offices'), findsOneWidget);
       expect(find.text('Bengaluru HQ'), findsOneWidget);
-      expect(find.text('Head office'), findsOneWidget);
+      expect(find.text('Head Office'), findsOneWidget);
       expect(find.text('Pune Hub'), findsOneWidget);
       // The head office is listed first.
       expect(tester.getTopLeft(find.text('Bengaluru HQ')).dy, lessThan(tester.getTopLeft(find.text('Pune Hub')).dy));
@@ -308,7 +308,7 @@ void main() {
 
     testWidgets('good to know: only the facts the listing declares', (tester) async {
       await openSheet(tester);
-      await scrollSheetTo(tester, find.text('Good to know'));
+      await scrollSheetTo(tester, find.text('Good to Know'));
       expect(find.text('2019'), findsOneWidget);
       expect(find.text('51-200 employees'), findsOneWidget);
       expect(find.text('Within 4 hours'), findsOneWidget);
@@ -339,7 +339,7 @@ void main() {
     });
   });
 
-  group('Products & services', () {
+  group('Products & Services', () {
     testWidgets('chips for each kind, the rows of the open kind, and "All (n)" counts everything', (tester) async {
       await openSheet(
         tester,
@@ -425,7 +425,7 @@ void main() {
     testWidgets('nothing listed, and a failed read, say so', (tester) async {
       await openSheet(tester);
       await openTab(tester, 'catalog');
-      expect(find.text('Nothing listed yet'), findsOneWidget);
+      expect(find.text('No Products or Services Listed Yet'), findsOneWidget);
 
       await tester.pumpWidget(const SizedBox());
       final repo = repoWith(fullSupplier(_supplierId))..failing['servicesOf'] = ApiError('Services are down.');
@@ -460,11 +460,11 @@ void main() {
       expect(find.text('Insured'), findsOneWidget);
     });
 
-    testWidgets('a rating is anonymous: "Verified buyer", what they are, the stars and what they said', (tester) async {
+    testWidgets('a rating is anonymous: "Verified Buyer", what they are, the stars and what they said', (tester) async {
       await openSheet(tester, repo: repoWith(fullSupplier(_supplierId), compliances: compliances));
       await openTab(tester, 'proofs');
       await scrollSheetTo(tester, find.text('Audited Enterprise Proofs'));
-      expect(find.text('Verified buyer'), findsNWidgets(2));
+      expect(find.text('Verified Buyer'), findsNWidgets(2));
       expect(find.text('ICR member • Oct 2026'), findsOneWidget);
       expect(find.text('"Transitioned our 14-tower facade cleaning to drones."'), findsOneWidget);
       expect(find.descendant(of: find.byType(ProofItem), matching: find.byIcon(Icons.star)), findsNWidgets(10));
@@ -488,15 +488,15 @@ void main() {
       await scrollSheetTo(tester, find.text('Audited Enterprise Proofs'));
       expect(find.text('Embassy TechZone (Pune SEZ Campus)'), findsOneWidget);
       expect(find.text('Facilities Director • 14 Towers Project'), findsOneWidget);
-      expect(find.text('Verified buyer'), findsNothing);
+      expect(find.text('Verified Buyer'), findsNothing);
     });
 
     testWidgets('no compliances and no ratings say so', (tester) async {
       await openSheet(tester, repo: repoWith(fullSupplier(_supplierId, reviews: const [], ratingCount: 0)));
       await openTab(tester, 'proofs');
-      expect(find.text('No compliances on file'), findsOneWidget);
+      expect(find.text('No Compliances on File'), findsOneWidget);
       await scrollSheetTo(tester, find.text('Audited Enterprise Proofs'));
-      expect(find.textContaining('Be the first to rate'), findsOneWidget);
+      expect(find.textContaining('You can rate'), findsOneWidget);
     });
 
     testWidgets('a failed read of the compliances says why and Try again reads them', (tester) async {
@@ -529,7 +529,7 @@ void main() {
       expect(find.text('Rate Vikasha Aero Tech'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('rating-send')));
       await tester.pump();
-      expect(find.text('Pick one to five stars first.'), findsOneWidget);
+      expect(find.text('Select one to five stars first.'), findsOneWidget);
       expect(mart.repo.ratings, isEmpty);
 
       await tester.tap(find.byKey(const ValueKey('star-4')));
@@ -538,7 +538,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(mart.repo.ratings.single, (id: _supplierId, score: 4, comment: 'Quick and tidy.'));
       expect(find.text('Rate Vikasha Aero Tech'), findsNothing);
-      expect(find.text('Thanks, your rating is saved.'), findsOneWidget);
+      expect(find.text('Your rating is saved.'), findsOneWidget);
       // The listing is read again for the new average.
       expect(mart.repo.calls.where((c) => c == 'supplier').length, greaterThanOrEqualTo(2));
     });
@@ -579,7 +579,7 @@ void main() {
       final mart = await openSheet(tester);
       await tester.tap(find.byKey(const ValueKey('request-quote')));
       await tester.pumpAndSettle();
-      expect(find.text('Request a quote'), findsOneWidget);
+      expect(find.text('Request a Quote'), findsOneWidget);
       expect(mart.links.opened, isEmpty);
     });
 

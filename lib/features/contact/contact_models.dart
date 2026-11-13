@@ -7,13 +7,13 @@ import 'dart:convert';
 /// The form's topics, in the website's order (`CONTACT_TOPICS`, with the labels
 /// of `ContactLanding`). The API takes `api`; the person reads `label`.
 enum ContactTopic {
-  membership('MEMBERSHIP', 'Membership & chapters'),
-  vendor('VENDOR', 'Becoming a supplier'),
+  membership('MEMBERSHIP', 'Membership & Chapters'),
+  vendor('VENDOR', 'Becoming a Supplier'),
   volunteer('VOLUNTEER', 'Volunteering with ICR'),
-  partnership('PARTNERSHIP', 'Partnerships & sponsorship'),
-  press('PRESS', 'Press & media'),
-  support('SUPPORT', 'Product support'),
-  other('OTHER', 'Something else');
+  partnership('PARTNERSHIP', 'Partnerships & Sponsorship'),
+  press('PRESS', 'Press & Media'),
+  support('SUPPORT', 'Product Support'),
+  other('OTHER', 'Something Else');
 
   const ContactTopic(this.api, this.label);
 
@@ -90,10 +90,6 @@ class ContactSender {
   final String? phone;
 }
 
-/// Where else to reach the team (the website's "Reach us directly" card).
-const contactEmail = 'hello@icr.network';
-const contactHours = 'Mon–Fri, 9:30–18:30 IST';
-
 // ---------------------------------------------------------------------------
 // The API's email check
 // ---------------------------------------------------------------------------
@@ -165,13 +161,19 @@ class ContactRules {
     return null;
   }
 
-  static String? phone(String v) => v.trim().length > ContactLimits.phone
-      ? 'Use ${ContactLimits.phone} characters or fewer for the phone number.'
-      : null;
+  /// Required on the Contact form since 12 Nov 2026 (owner); the API still takes it
+  /// as optional, so the form is the only thing that insists on it. The volunteer
+  /// form shares the rule and keeps its phone optional ([required] false).
+  static String? phone(String v, {bool required = true}) {
+    final t = v.trim();
+    if (t.isEmpty) return required ? 'Enter your mobile number.' : null;
+    if (t.length > ContactLimits.phone) return 'Use ${ContactLimits.phone} characters or fewer for the mobile number.';
+    return null;
+  }
 
   static String? message(String v) {
     final t = v.trim();
-    if (t.isEmpty) return 'Write your message.';
+    if (t.isEmpty) return 'Enter your message.';
     if (t.length > ContactLimits.message) return 'Use 4,000 characters or fewer for your message.';
     return null;
   }

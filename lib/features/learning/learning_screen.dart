@@ -11,7 +11,6 @@ import '../../core/widgets/chips.dart';
 import '../../core/widgets/search_field.dart';
 import '../../core/widgets/section_heading.dart';
 import '../../core/widgets/title_bar.dart';
-import '../feed/feed_models.dart';
 import '../learning_assess/api_assess_repository.dart';
 import '../learning_assess/assess_models.dart';
 import '../learning_assess/catalogue_controller.dart';
@@ -24,6 +23,7 @@ import '../learning_study/study_models.dart';
 import 'course_sheet.dart';
 import 'learning_controller.dart';
 import 'opened_learning.dart';
+import 'learning_links.dart';
 import 'widgets/course_card.dart';
 import '../notifications/notifications_screen.dart';
 
@@ -61,6 +61,10 @@ class LearningScreen extends StatefulWidget {
 class _LearningScreenState extends State<LearningScreen> {
   final _search = TextEditingController();
 
+  /// The My Courses chip that is on: one of [myCourseGroups], or null for All (owner, 12 Nov 2026: "add the chips
+  /// like Mock Exams, and other so that clicks will show those course enrolled").
+  String? _group;
+
   @override
   void initState() {
     super.initState();
@@ -87,7 +91,8 @@ class _LearningScreenState extends State<LearningScreen> {
     key: ValueKey('opened-${item.key}'),
     title: item.title,
     cover: item.cover ?? FeedPicture.asset(_doorFor(item.kind).image),
-    badge: item.via == OpenedVia.credits ? 'Credits' : null,
+    tag: item.via == OpenedVia.credits ? 'Credits' : null,
+    onShare: () => shareLearningLink(item.title, item.link),
     onTap: () => _openOpened(item),
   );
 
@@ -136,7 +141,7 @@ class _LearningScreenState extends State<LearningScreen> {
           child: Stack(
             children: [
               Positioned.fill(
-                top: TitleBar.height,
+                top: TitleBar.reserved(context),
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: learning.refresh,
@@ -146,6 +151,10 @@ class _LearningScreenState extends State<LearningScreen> {
                       SliverToBoxAdapter(
                         child: LearningToolbar(searchController: _search, routes: widget.routes),
                       ),
+                      if (learning.mineOnly)
+                        SliverToBoxAdapter(
+                          child: MyCourseChips(on: _group, onSelect: (g) => setState(() => _group = g)),
+                        ),
                       ..._body(learning),
                     ],
                   ),
@@ -184,34 +193,54 @@ class _LearningScreenState extends State<LearningScreen> {
         SliverFillRemaining(
           hasScrollBody: false,
           child: _Notice(
-            title: "Couldn't load courses",
+            title: 'Unable to Load Courses',
             body: learning.error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: learning.refresh,
           ),
         ),
       ];
     }
-    final shelves = learning.openedShelves;
+    final allShelves = learning.openedShelves;
+    final group = learning.mineOnly ? _group : null;
+    // My Courses' chips: one group at a time, the rest hidden.
+    final shelves = [
+      for (final s in allShelves)
+        if (group == null || s.title == group) s,
+    ];
+    if (group != null && learning.sections.every((s) => s.title != group) && shelves.isEmpty) {
+      final words = myCourseGroupNotices[group]!;
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _Notice(
+            title: learning.narrowed ? 'No Matches Found' : words.$1,
+            body: learning.narrowed ? 'Try other words, or clear the search.' : words.$2,
+            action: 'Show All',
+            onAction: () => setState(() => _group = null),
+          ),
+        ),
+      ];
+    }
     if (sections.isEmpty && shelves.isEmpty) {
       return [
         SliverFillRemaining(
           hasScrollBody: false,
           child: _Notice(
             title: learning.narrowed
-                ? 'No courses match'
+                ? 'No Courses Match'
                 : learning.mineOnly
-                ? 'No courses yet'
-                : 'No courses published yet',
+                ? 'No Courses Yet'
+                : 'No Courses Published Yet',
             body: learning.narrowed
                 ? 'Try other words, or clear the search.'
                 : learning.mineOnly
-                ? 'Courses and mock exams you open, and courses you take a place on, show up here.'
-                : 'Courses show up here as ICR and its partner institutes publish them.',
+                ? 'Courses and mock exams you open, and courses you take a place on, will appear here.'
+                : 'Courses will appear here as ICR and its partner institutes publish them.',
             action: learning.narrowed
-                ? 'Clear search'
+                ? 'Clear Search'
                 : learning.mineOnly
-                ? 'Browse courses'
+                ? 'Browse Courses'
                 : null,
             onAction: learning.narrowed
                 ? () {
@@ -243,6 +272,7 @@ class _LearningScreenState extends State<LearningScreen> {
       children.add(const SizedBox(height: 12.5));
     }
     for (final section in sections) {
+      if (group != null && section.title != group) continue;
       children.add(const SizedBox(height: 12));
       children.add(SectionHeading(title: section.title));
       children.add(const SizedBox(height: 11.5));
@@ -288,63 +318,72 @@ class LearningToolbar extends StatelessWidget {
             onSubmitted: learning.setSearch,
           ),
         ),
-        const SizedBox(height: 6.5),
-        ChipRow(
-          children: [
-            IcrChip(
-              label: 'My courses',
-              tone: learning.mineOnly ? ChipTone.primary : ChipTone.filled,
-              icon: LucideIcons.graduationCap,
-              iconSize: 14,
-              padding: const EdgeInsets.only(left: 10, right: 12),
-              gap: 6,
-              onTap: learning.toggleMine,
-            ),
-            IcrChip(
-              label: 'Mock exams',
-              tone: ChipTone.outlined,
-              icon: LucideIcons.clipboardCheck,
-              iconSize: 14,
-              padding: const EdgeInsets.only(left: 11, right: 12),
-              onTap: () => pushLearningPage(context, routes.mockTests),
-            ),
-            IcrChip(
-              label: 'Certificates',
-              tone: ChipTone.outlined,
-              icon: LucideIcons.award,
-              iconSize: 14,
-              padding: const EdgeInsets.only(left: 11, right: 12),
-              onTap: () => pushLearningPage(context, routes.certificates),
-            ),
-            IcrChip(
-              label: 'My attempts',
-              tone: ChipTone.outlined,
-              icon: LucideIcons.history,
-              iconSize: 14,
-              padding: const EdgeInsets.only(left: 11, right: 12),
-              onTap: () => pushLearningPage(context, routes.myAttempts),
-            ),
-            IcrChip(
-              label: 'Flash cards',
-              tone: ChipTone.outlined,
-              icon: LucideIcons.layers,
-              iconSize: 14,
-              padding: const EdgeInsets.only(left: 11, right: 12),
-              onTap: () => pushLearningPage(context, routes.flashCards),
-            ),
-            IcrChip(
-              label: 'Knowledge center',
-              tone: ChipTone.outlined,
-              icon: LucideIcons.sigma,
-              iconSize: 14,
-              padding: const EdgeInsets.only(left: 11, right: 12),
-              onTap: () => pushLearningPage(context, routes.knowledgeCenter),
-            ),
-          ],
-        ),
+        // No row of chips under the search (owner, 7 Nov 2026: "remove this bar, let it be navigation through
+        // top 3 categories"): the hub's tabs are the way around.
         const SizedBox(height: 12),
         const Hairline(color: AppColors.blockRule),
       ],
+    );
+  }
+}
+
+/// My Courses' groups, as its shelves and sections are headed: what each chip shows.
+const myCourseGroups = ['Mock Exams', 'Knowledge Assessments', 'Flashcards', 'ICR Programmes', 'Partner Programmes'];
+
+/// What a chip with nothing under it says.
+const myCourseGroupNotices = {
+  'Mock Exams': (
+    'No Mock Exams Yet',
+    'Mock exams you open with your plan, ICR credits or a purchase will appear here.',
+  ),
+  'Knowledge Assessments': (
+    'No Knowledge Assessments Yet',
+    'Assessments you open with your plan, ICR credits or a purchase will appear here.',
+  ),
+  'Flashcards': ('No Flashcards Yet', 'Flashcard decks included with your plan or your courses will appear here.'),
+  'ICR Programmes': ('No ICR Programmes Yet', 'ICR programmes you take a place on will appear here.'),
+  'Partner Programmes': (
+    'No Partner Programmes Yet',
+    "Partner institutes' programmes you take a place on will appear here.",
+  ),
+};
+
+/// The chips under My Courses' search: All, then each group. Always the same chips, whatever the member holds, so
+/// none comes and goes (owner, 9 Nov 2026); one with nothing under it says so.
+class MyCourseChips extends StatelessWidget {
+  const MyCourseChips({super.key, required this.on, required this.onSelect});
+
+  /// The group that is on; null for All.
+  final String? on;
+  final ValueChanged<String?> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget chip(String label, String? group) => IcrChip(
+      key: ValueKey('my-courses-chip-${group ?? 'all'}'),
+      label: label,
+      tone: on == group ? ChipTone.primary : ChipTone.outlined,
+      height: 34,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      textStyle: AppText.workSans(13, FontWeight.w600, AppColors.onSurface, lineHeight: 18),
+      onTap: () => onSelect(group),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: 10, bottom: 2),
+      child: SizedBox(
+        height: 34,
+        // Six chips: all built at once (a lazy list would leave the last ones unbuilt until scrolled to).
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            children: [
+              chip('All', null),
+              for (final g in myCourseGroups) ...[const SizedBox(width: 8), chip(g, g)],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

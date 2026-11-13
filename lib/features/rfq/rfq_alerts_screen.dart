@@ -99,7 +99,10 @@ class _RfqAlertsScreenState extends State<RfqAlertsScreen> {
           onRefresh: _alerts.refresh,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [SliverToBoxAdapter(child: _toolbar()), ..._body()],
+            slivers: [
+              SliverToBoxAdapter(child: _toolbar()),
+              ..._body(),
+            ],
           ),
         ),
       ),
@@ -123,7 +126,7 @@ class _RfqAlertsScreenState extends State<RfqAlertsScreen> {
             TextButton(
               key: const ValueKey('alerts-read-all'),
               onPressed: () => _say(a.markAllRead()),
-              child: Text('Mark all read', style: RfqText.link),
+              child: Text('Mark All Read', style: RfqText.link),
             ),
         ],
       ),
@@ -139,9 +142,9 @@ class _RfqAlertsScreenState extends State<RfqAlertsScreen> {
         fill(
           RfqNotice(
             icon: LucideIcons.cloudOff,
-            title: "Couldn't load your alerts",
+            title: 'Unable to Load Your Alerts',
             body: a.error,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: a.refresh,
           ),
         ),
@@ -152,11 +155,11 @@ class _RfqAlertsScreenState extends State<RfqAlertsScreen> {
         fill(
           RfqNotice(
             icon: LucideIcons.bellOff,
-            title: a.unreadOnly ? 'No new alerts' : 'No alerts yet',
+            title: a.unreadOnly ? 'No New Alerts' : 'No Alerts Yet',
             body: a.unreadOnly
-                ? 'You are all caught up. Matches, invitations and bids show here as they come in.'
-                : 'When a requirement matches your services, a bid comes in or a decision is made, it shows here.',
-            action: a.unreadOnly ? 'Show all alerts' : null,
+                ? 'You have no unread alerts. Matches, invitations and bids will appear here as they arrive.'
+                : 'When a requirement matches your services, a bid arrives or a decision is made, it will appear here.',
+            action: a.unreadOnly ? 'Show All Alerts' : null,
             onAction: a.unreadOnly ? () => a.setUnreadOnly(false) : null,
           ),
         ),
@@ -290,10 +293,7 @@ class AlertTile extends StatelessWidget {
                   Text(alert.body!, style: RfqText.body, maxLines: 3, overflow: TextOverflow.ellipsis),
                 ],
                 const SizedBox(height: 5),
-                Text(
-                  [?when, ?alert.companyName].join(' · '),
-                  style: RfqText.small,
-                ),
+                Text([?when, ?alert.companyName].join(' · '), style: RfqText.small),
               ],
             ),
           ),

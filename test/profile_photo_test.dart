@@ -169,7 +169,7 @@ void main() {
       expect(uploads, hasLength(1));
       expect(h.api.last('PATCH /users/me').json, {'avatarUrl': '/uploads/new-photo.png'});
       expect(h.api.count('GET /auth/me'), greaterThan(1), reason: 'the session is read again');
-      expect(find.text('Change photo'), findsOneWidget);
+      expect(find.text('Change Photo'), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('sheet.save')));
       await settle(tester);
@@ -215,7 +215,11 @@ void main() {
       avatar = '/uploads/new-photo.png';
       await tester.runAsync(() async {
         await h.auth.refreshUser();
-        await Future<void>.delayed(const Duration(milliseconds: 50));
+        // The menu reads eight things again at once; wait for it (up to 2 s) rather than a fixed 50 ms, which a busy
+        // machine overran (12 Nov 2026).
+        for (var i = 0; i < 100 && menu.data.photoUrl != 'http://api.test/uploads/new-photo.png'; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+        }
       });
       expect(menu.data.photoUrl, 'http://api.test/uploads/new-photo.png');
     });
@@ -329,7 +333,7 @@ void main() {
       final junk = PickedPhoto(bytes: List.filled(5 * 1024 * 1024 + 1, 1), name: 'big.jpg');
       final out = (await tester.runAsync(() => fitForUpload(junk)))!;
       expect(identical(out, junk), isTrue);
-      expect(photoProblem(out), 'That file is too big. Choose one under 5 MB.');
+      expect(photoProblem(out), 'The file is too large. Choose one under 5 MB.');
     });
   });
 }

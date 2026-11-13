@@ -17,12 +17,12 @@ String inr(int paisa) {
   return paise == 0 ? '₹$grouped' : '₹$grouped.${paise.toString().padLeft(2, '0')}';
 }
 
-/// "Video call", as the website names a meeting mode.
+/// "Video Call", as the website names a meeting mode.
 String modeLabel(String key) => switch (key) {
-  'VIDEO' => 'Video call',
+  'VIDEO' => 'Video Call',
   'PHONE' => 'Phone',
-  'IN_PERSON' => 'In person',
-  'CHAT' => 'Chat / async',
+  'IN_PERSON' => 'In Person',
+  'CHAT' => 'Chat / Async',
   _ => key,
 };
 

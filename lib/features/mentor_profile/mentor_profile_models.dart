@@ -46,7 +46,7 @@ class MentorViewer {
   final String? blockedReason;
   final AskBlocker? blocker;
 
-  /// A live pairing with this mentor: "Send Message" opens its thread.
+  /// A live pairing with this mentor: "Send message" opens its thread.
   final String? mentorshipId;
   final String? pendingRequestId;
 
@@ -200,7 +200,7 @@ class MentorProfile {
     this.competencies = const [],
     this.topics = const [],
     this.competenciesLabel = 'Domain Expertise',
-    this.topicsLabel = 'Softwares & Frameworks',
+    this.topicsLabel = 'Software & Frameworks',
     this.rating = 0,
     this.ratingCount = 0,
     required this.stats,
@@ -234,7 +234,7 @@ class MentorProfile {
   final int? yearsExperience;
   final String? city;
 
-  /// "Video", "In person"…
+  /// "Video", "In Person"…
   final List<String> modes;
 
   /// The same modes as the API names them (`VIDEO`, `IN_PERSON`…), for a request.
@@ -266,11 +266,11 @@ class MentorProfile {
 
   /// How the mentor meets: "Hybrid" when they offer both a meeting in person
   /// and a remote one (the design's "Hyderabad (Hybrid)"), else the modes
-  /// themselves ("Video / Phone", "In person").
+  /// themselves ("Video / Phone", "In Person").
   String? get meetingLabel {
     if (modes.isEmpty) return null;
-    final inPerson = modes.contains('In person');
-    final remote = modes.any((m) => m != 'In person');
+    final inPerson = modes.contains('In Person');
+    final remote = modes.any((m) => m != 'In Person');
     if (inPerson && remote) return 'Hybrid';
     return modes.join(' / ');
   }

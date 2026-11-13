@@ -113,7 +113,7 @@ class DocumentController extends ChangeNotifier {
   /// opening of the document (`POST /documents/:id/view`, best effort).
   Future<FileOutcome> preview(LibraryFile file) async {
     final d = _doc;
-    if (d == null || _busy.contains(file.id)) return const FileOutcome.failed('Please wait.');
+    if (d == null || _busy.contains(file.id)) return const FileOutcome.failed('Wait a moment.');
     _busy.add(file.id);
     _lock = null;
     _notify();
@@ -138,7 +138,7 @@ class DocumentController extends ChangeNotifier {
   Future<FileOutcome> download(LibraryFile file) async {
     final d = _doc;
     final key = 'download:${file.id}';
-    if (d == null || _busy.contains(key)) return const FileOutcome.failed('Please wait.');
+    if (d == null || _busy.contains(key)) return const FileOutcome.failed('Wait a moment.');
     _busy.add(key);
     _lock = null;
     _notify();
@@ -204,6 +204,25 @@ class DocumentController extends ChangeNotifier {
   }
 
   /// Retires the document; a sentence when the API refuses.
+  /// Saves a new title or description (the uploader's Edit). Returns the API's refusal, or null.
+  Future<String?> update({String? title, String? description}) async {
+    if (_busy.contains('update')) return null;
+    _busy.add('update');
+    _notify();
+    try {
+      final next = await repository.update(documentId, title: title, description: description);
+      final doc = (_doc ?? next).copyWith(title: next.title, description: next.description);
+      _doc = doc;
+      onChanged?.call(doc);
+      return null;
+    } catch (e) {
+      return ApiError.from(e).message;
+    } finally {
+      _busy.remove('update');
+      _notify();
+    }
+  }
+
   Future<String?> delete() async {
     if (_busy.contains('delete')) return null;
     _busy.add('delete');

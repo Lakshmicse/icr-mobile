@@ -158,7 +158,7 @@ class _CatalogueViewState extends State<_CatalogueView> with WidgetsBindingObser
           child: Stack(
             children: [
               Positioned.fill(
-                top: TitleBar.height,
+                top: TitleBar.reserved(context),
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: catalogue.refresh,
@@ -180,7 +180,7 @@ class _CatalogueViewState extends State<_CatalogueView> with WidgetsBindingObser
                 left: 0,
                 right: 0,
                 child: TitleBar(
-                  title: isMock ? 'Mock Exams' : 'Assess Your Knowledge',
+                  title: isMock ? 'Mock Exams' : 'Knowledge Assessments',
                   onBack: widget.onBack,
                   unread: catalogue.unread,
                   onBell: () => openNotifications(context),
@@ -202,9 +202,9 @@ class _CatalogueViewState extends State<_CatalogueView> with WidgetsBindingObser
       return [
         SliverToBoxAdapter(
           child: AssessNotice(
-            title: isMock ? "Couldn't load the mock exams" : "Couldn't load the assessments",
+            title: isMock ? 'Unable to Load the Mock Exams' : 'Unable to Load the Assessments',
             body: catalogue.error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: catalogue.refresh,
           ),
         ),
@@ -215,14 +215,15 @@ class _CatalogueViewState extends State<_CatalogueView> with WidgetsBindingObser
       return [
         SliverToBoxAdapter(
           child: AssessNotice(
-            title: isMock ? 'No subjects are published yet' : 'No assessments are published yet',
+            title: isMock ? 'No Mock Exams Available Yet' : 'No Assessments Available Yet',
             body: isMock
-                ? 'Subjects show up here as ICR publishes their sets.'
+                ? 'Mock exams will appear here once published by the Learning Administrator. Each subject may include '
+                      'multiple practice test sets to help you prepare for global certification examinations.'
                 : partnerOnly
                 ? 'ICR has no assessment of its own published yet. The certifications available to sit are awarded '
                       'by partner institutes and listed under Professional Development.'
-                : 'Programmes show up here as ICR publishes an assessment for each of their levels.',
-            action: partnerOnly ? 'Partner certifications' : null,
+                : 'Assessments will appear here once published by the Learning Administrator.',
+            action: partnerOnly ? 'Partner Certifications' : null,
             onAction: partnerOnly
                 ? () => widget.launcher(context, context.read<CatalogueController>().repository.partnerLink())
                 : null,
@@ -235,9 +236,9 @@ class _CatalogueViewState extends State<_CatalogueView> with WidgetsBindingObser
       return [
         SliverToBoxAdapter(
           child: AssessNotice(
-            title: isMock ? 'No subject matches' : 'No certification matches',
+            title: isMock ? 'No Subject Matches' : 'No Certification Matches',
             body: 'Try other words, or clear the search and the filter.',
-            action: 'Reset filters',
+            action: 'Reset Filters',
             onAction: _resetFilters,
           ),
         ),
@@ -272,8 +273,8 @@ class _CatalogueViewState extends State<_CatalogueView> with WidgetsBindingObser
               if (!isMock && catalogue.hasPartner) ...[
                 const SizedBox(height: 10),
                 Text(
-                  'Looking for a partner institute’s certification? Those are listed under Professional '
-                  'Development, and are sat and issued through ICR just the same.',
+                  'Looking for a partner institute’s certification? These are listed under Professional '
+                  'Development, and are also taken and issued through ICR.',
                   style: AssessText.sectionHint,
                 ),
                 const SizedBox(height: 4),
@@ -283,7 +284,7 @@ class _CatalogueViewState extends State<_CatalogueView> with WidgetsBindingObser
                     constraints: const BoxConstraints(minHeight: 48),
                     child: Row(
                       children: [
-                        Text('Partner certifications', style: AssessText.noteLink),
+                        Text('Partner Certifications', style: AssessText.noteLink),
                         const SizedBox(width: 6),
                         const Icon(LucideIcons.externalLink, size: 14, color: AppColors.primary),
                       ],
@@ -323,27 +324,28 @@ class _Toolbar extends StatelessWidget {
             onSubmitted: catalogue.setSearch,
           ),
         ),
-        // The chips are 36 dp; the touch target around each is 48.
-        ChipRow(
-          height: 48,
-          children: [
-            for (final f in AccessFilter.values)
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => catalogue.setFilter(f),
-                child: Center(
-                  child: IcrChip(
-                    label: f.label,
-                    height: 36,
-                    tone: catalogue.filter == f ? ChipTone.primary : ChipTone.outlined,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    textStyle: AssessText.progressTitle,
-                    onTap: () => catalogue.setFilter(f),
+        // The chips are 36 dp; the touch target around each is 48. Drawn only while both kinds exist.
+        if (catalogue.hasAccessFacet)
+          ChipRow(
+            height: 48,
+            children: [
+              for (final f in AccessFilter.values)
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => catalogue.setFilter(f),
+                  child: Center(
+                    child: IcrChip(
+                      label: f.label,
+                      height: 36,
+                      tone: catalogue.filter == f ? ChipTone.primary : ChipTone.outlined,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      textStyle: AssessText.progressTitle,
+                      onTap: () => catalogue.setFilter(f),
+                    ),
                   ),
                 ),
-              ),
-          ],
-        ),
+            ],
+          ),
         const SizedBox(height: 4),
         const Hairline(color: AppColors.blockRule),
       ],

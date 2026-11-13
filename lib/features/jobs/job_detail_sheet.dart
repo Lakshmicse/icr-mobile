@@ -124,7 +124,7 @@ class JobSheetBody extends StatelessWidget {
                   const SizedBox(width: 5.5),
                   Flexible(
                     child: Text(
-                      job.statusLine ?? (job.applied ? 'You have applied' : 'Accepting applications'),
+                      job.statusLine ?? (job.applied ? 'You Have Applied' : 'Accepting Applications'),
                       style: JobsText.status,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -192,7 +192,7 @@ class JobSheetBody extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('About the job', style: JobsText.section),
+                Text('About the Job', style: JobsText.section),
                 const SizedBox(height: 12),
                 if (intro.isEmpty)
                   Text('The employer has not written a description yet.', style: JobsText.body)
@@ -349,13 +349,13 @@ class JobSheetBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = context.watch<JobDetailController>();
     final job = controller.job;
-    final label = job.applied ? 'Applied' : (job.externalApply ? 'Apply on company site' : 'Easy Apply');
+    final label = job.applied ? 'Applied' : (job.externalApply ? 'Apply on Company Site' : 'Easy Apply');
     return BottomActionBar(
       gap: 13,
       children: [
         SoftIconButton(
           icon: job.saved ? LucideIcons.bookmarkCheck : LucideIcons.bookmark,
-          label: job.saved ? 'Remove bookmark' : 'Save job',
+          label: job.saved ? 'Remove bookmark' : 'Save Job',
           selected: job.saved,
           iconColor: job.saved ? AppColors.primary : AppColors.onSurface,
           onPressed: () => JobSheetBody._run(context, controller.toggleSave()),
@@ -415,7 +415,7 @@ class _Toolbar extends StatelessWidget {
         _ToolIcon(
           icon: job.saved ? LucideIcons.bookmarkCheck : LucideIcons.bookmark,
           size: 20,
-          label: job.saved ? 'Remove bookmark' : 'Save job',
+          label: job.saved ? 'Remove bookmark' : 'Save Job',
           color: job.saved ? AppColors.primary : AppColors.onSurfaceVariant,
           onTap: onSave,
         ),
@@ -434,17 +434,17 @@ class _Toolbar extends StatelessWidget {
                 children: [
                   ListTile(
                     leading: const Icon(Symbols.link),
-                    title: Text('Copy link', style: AppText.small.copyWith(color: AppColors.onSurface, fontSize: 14)),
+                    title: Text('Copy Link', style: AppText.small.copyWith(color: AppColors.onSurface, fontSize: 14)),
                     onTap: () {
                       Clipboard.setData(ClipboardData(text: link.toString()));
                       Navigator.pop(sheet);
-                      showMessage(context, 'Link copied');
+                      showMessage(context, 'Link copied.');
                     },
                   ),
                   ListTile(
                     leading: const Icon(Symbols.reviews),
                     title: Text(
-                      'Reviews, salaries and interviews',
+                      'Reviews, Salaries and Interviews',
                       style: AppText.small.copyWith(color: AppColors.onSurface, fontSize: 14),
                     ),
                     onTap: () {
@@ -461,10 +461,10 @@ class _Toolbar extends StatelessWidget {
                   ListTile(
                     leading: const Icon(Symbols.visibility_off),
                     title: Text(
-                      'Not interested',
+                      'Not Interested',
                       style: AppText.small.copyWith(color: AppColors.onSurface, fontSize: 14),
                     ),
-                    subtitle: Text('Hide this job from your board', style: AppText.small.copyWith(fontSize: 13)),
+                    subtitle: Text('Hide this job from your board.', style: AppText.small.copyWith(fontSize: 13)),
                     onTap: () async {
                       Navigator.pop(sheet);
                       final refusal = await controller.hide();
@@ -782,7 +782,7 @@ class _HiringTeam extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Meet the hiring team', style: JobsText.section),
+        Text('Meet the Hiring Team', style: JobsText.section),
         const SizedBox(height: 16.5),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),

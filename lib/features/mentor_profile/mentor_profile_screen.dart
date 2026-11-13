@@ -80,7 +80,7 @@ class _MentorProfileScreenState extends State<MentorProfileScreen> {
           child: Stack(
             children: [
               Positioned.fill(
-                top: TitleBar.height,
+                top: TitleBar.reserved(context),
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: c.load,
@@ -100,7 +100,8 @@ class _MentorProfileScreenState extends State<MentorProfileScreen> {
                   onBell: () => c.navigation.notifications(context),
                 ),
               ),
-              if (actions != null) Positioned(bottom: 0, left: 0, right: 0, child: ProfileBottomBar(actions: actions)),
+              if (actions != null && actions.barLabel != null)
+                Positioned(bottom: 0, left: 0, right: 0, child: ProfileBottomBar(actions: actions)),
             ],
           ),
         ),
@@ -194,7 +195,7 @@ class _Placeholder extends StatelessWidget {
                       const Icon(LucideIcons.userRound, size: 36, color: AppColors.outline),
                       const SizedBox(height: 12),
                       Text(
-                        "Couldn't load this mentor",
+                        'Unable to Load This Mentor',
                         textAlign: TextAlign.center,
                         style: AppText.postTitle.copyWith(fontSize: 16, height: 1.3),
                       ),
@@ -208,7 +209,7 @@ class _Placeholder extends StatelessWidget {
                           side: const BorderSide(color: AppColors.outlineVariant),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
-                        child: Text('Try again', style: AppText.link),
+                        child: Text('Try Again', style: AppText.link),
                       ),
                     ],
                   ),

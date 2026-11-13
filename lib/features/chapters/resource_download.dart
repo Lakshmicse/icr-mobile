@@ -75,7 +75,7 @@ class SystemResourceDownloader extends ResourceDownloader {
     final uri = webLink(resource.url);
     if (uri == null) throw const ResourceDownloadException('This resource has no file attached yet.');
     if (isPlaceholderLink(uri)) {
-      throw ResourceDownloadException('"${resource.title}" has no real file yet: its address is only a placeholder.');
+      throw ResourceDownloadException('"${resource.title}" has no file yet. Its address is a placeholder.');
     }
     final client =
         dio ??
@@ -86,7 +86,7 @@ class SystemResourceDownloader extends ResourceDownloader {
         options: Options(responseType: ResponseType.stream, headers: {'Accept': '*/*'}),
       );
       final body = res.data;
-      if (body == null) throw const ResourceDownloadException('That address sent nothing back.');
+      if (body == null) throw const ResourceDownloadException('No response from that address.');
       final type = _typeOf(res.headers.value(Headers.contentTypeHeader));
       if (_isPage(type)) {
         await _discard(body);
@@ -106,7 +106,7 @@ class SystemResourceDownloader extends ResourceDownloader {
         bytes.add(chunk);
         if (bytes.length > maxBytes) throw _tooLarge(uri, null);
       }
-      if (bytes.isEmpty) throw const ResourceDownloadException('That file came back empty.');
+      if (bytes.isEmpty) throw const ResourceDownloadException('The file is empty.');
       final name = resourceFileName(resource, uri, disposition: res.headers.value('content-disposition'), type: type);
       return ResourceFileOutcome(
         DocumentBytes(bytes: bytes.takeBytes(), fileName: name, mimeType: _mimeFor(name, type)),
@@ -123,8 +123,8 @@ class SystemResourceDownloader extends ResourceDownloader {
 
   static ResourceDownloadException _tooLarge(Uri uri, int? length) => ResourceDownloadException(
     length == null
-        ? 'That file is too large to save from the app.'
-        : 'That file is ${(length / (1024 * 1024)).round()} MB, too large to save from the app.',
+        ? 'The file is too large to save from the app.'
+        : 'The file is ${(length / (1024 * 1024)).round()} MB, too large to save from the app.',
     openInstead: uri,
   );
 
@@ -134,26 +134,26 @@ class SystemResourceDownloader extends ResourceDownloader {
     switch (e.type) {
       case DioExceptionType.badResponse:
         if (status == 404 || status == 410) {
-          return ResourceDownloadException("That file isn't at its address any more ($host says $status).");
+          return ResourceDownloadException('The file is no longer available ($host returned $status).');
         }
         if (status == 401 || status == 403) {
-          return ResourceDownloadException("$host won't let the app download that file ($status).");
+          return ResourceDownloadException('$host does not allow the app to download this file ($status).');
         }
         if (status != null && status >= 500) {
-          return ResourceDownloadException('$host had a problem sending that file ($status). Try again later.');
+          return ResourceDownloadException('$host had a problem sending the file ($status). Try again later.');
         }
         return ResourceDownloadException('$host refused the download ($status).');
       case DioExceptionType.badCertificate:
-        return ResourceDownloadException("Couldn't make a secure connection to $host.");
+        return ResourceDownloadException('Unable to make a secure connection to $host.');
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
       case DioExceptionType.connectionError:
-        return ResourceDownloadException("Couldn't reach $host. Check your connection and try again.");
+        return ResourceDownloadException('Unable to reach $host. Check your connection and try again.');
       case DioExceptionType.cancel:
       case DioExceptionType.transformTimeout:
       case DioExceptionType.unknown:
-        return const ResourceDownloadException("Couldn't download that file. Try again.");
+        return const ResourceDownloadException('Unable to download the file. Try again.');
     }
   }
 }

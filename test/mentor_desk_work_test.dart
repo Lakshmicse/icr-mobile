@@ -146,21 +146,21 @@ void main() {
       tester,
     ) async {
       await pumpDesk(tester, DeskWorld(), tab: DeskTab.work);
-      expect(find.text('NEEDS YOU'), findsOneWidget);
+      expect(find.text('ACTION NEEDED'), findsOneWidget);
       for (final k in ['issue-p-issue', 'ended-p-ended', 'move-p-move']) {
         expect(find.byKey(ValueKey(k)), findsOneWidget, reason: k);
       }
-      expect(find.text('CALLS AHEAD'), findsOneWidget);
+      expect(find.text('UPCOMING CALLS'), findsOneWidget);
       expect(find.byKey(const ValueKey('call-p-ahead')), findsOneWidget);
       expect(
         find.byKey(const ValueKey('call-p-mine')),
         findsNothing,
         reason: 'a move the mentor asked for waits on the mentee',
       );
-      expect(find.text('WAITING ON OTHERS'), findsOneWidget);
+      expect(find.text('WAITING FOR OTHERS'), findsOneWidget);
       expect(find.byKey(const ValueKey('waiting-p-mine')), findsOneWidget);
       expect(find.byKey(const ValueKey('waiting-p-held')), findsOneWidget);
-      expect(find.text('PROGRAMMES AND PLANS RUNNING'), findsOneWidget);
+      expect(find.text('ACTIVE PROGRAMMES AND PLANS'), findsOneWidget);
       expect(find.byKey(const ValueKey('running-t-run')), findsOneWidget);
       expect(find.textContaining('1 of 2 sessions left'), findsOneWidget);
     });
@@ -170,7 +170,7 @@ void main() {
         ..sold = []
         ..terms = [];
       await pumpDesk(tester, w, tab: DeskTab.work);
-      expect(find.text('No paid work right now'), findsOneWidget);
+      expect(find.text('No Paid Work at Present'), findsOneWidget);
     });
 
     testWidgets('a problem a buyer reported is answered (ten characters at least), and the reply shows', (
@@ -180,22 +180,22 @@ void main() {
       expect(find.text('"The file would not open on my phone."'), findsOneWidget);
       await tapIn(tester, 'issue-p-issue', 'Reply');
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'Sorry');
-      await tester.tap(find.text('Send reply'));
+      await tester.tap(find.text('Send Reply'));
       await tester.pump();
-      expect(find.text('Write at least 10 characters.'), findsOneWidget);
+      expect(find.text('Enter at least 10 characters.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'I have sent the file again as a PDF.');
-      await tester.tap(find.text('Send reply'));
+      await tester.tap(find.text('Send Reply'));
       await settle(tester);
       expect(api.bodyOf('POST /mentor-services/purchases/p-issue/respond-issue'), {
         'note': 'I have sent the file again as a PDF.',
       });
       expect(find.textContaining('You replied 26 Oct: I have sent the file again as a PDF.'), findsOneWidget);
-      expect(find.text('Reply again'), findsOneWidget);
+      expect(find.text('Reply Again'), findsOneWidget);
     });
 
     testWidgets('a call that ended is confirmed held', (tester) async {
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.work);
-      await tapIn(tester, 'ended-p-ended', 'Mark held');
+      await tapIn(tester, 'ended-p-ended', 'Mark as Held');
       expect(api.count('POST /mentor-services/purchases/p-ended/complete'), 1);
       expect(find.text('Marked as held.'), findsOneWidget);
       expect(find.byKey(const ValueKey('ended-p-ended')), findsNothing);
@@ -203,13 +203,13 @@ void main() {
 
     testWidgets('a call can be cancelled with a reason of five characters', (tester) async {
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.work);
-      await tapIn(tester, 'ended-p-ended', 'Cancel call');
+      await tapIn(tester, 'ended-p-ended', 'Cancel Call');
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'Sick');
-      await tester.tap(find.text('Cancel call').last);
+      await tester.tap(find.text('Cancel Call').last);
       await tester.pump();
-      expect(find.text('Write at least 5 characters.'), findsOneWidget);
+      expect(find.text('Enter at least 5 characters.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'I was unwell that day');
-      await tester.tap(find.text('Cancel call').last);
+      await tester.tap(find.text('Cancel Call').last);
       await settle(tester);
       expect(api.bodyOf('POST /mentor-services/purchases/p-ended/cancel'), {'reason': 'I was unwell that day'});
       expect(find.byKey(const ValueKey('ended-p-ended')), findsNothing);
@@ -218,7 +218,7 @@ void main() {
     testWidgets('a move the mentee asked for is accepted, or the booked time is kept', (tester) async {
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.work);
       expect(find.text('"A site visit that day"'), findsOneWidget);
-      await tapIn(tester, 'move-p-move', 'Accept new time');
+      await tapIn(tester, 'move-p-move', 'Accept New Time');
       expect(api.count('POST /mentor-services/purchases/p-move/reschedule/accept'), 1);
       expect(find.text('Moved to the new time.'), findsOneWidget);
       expect(find.byKey(const ValueKey('move-p-move')), findsNothing);
@@ -226,7 +226,7 @@ void main() {
 
     testWidgets('keeping the booked time declines the move', (tester) async {
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.work);
-      await tapIn(tester, 'move-p-move', 'Keep the booked time');
+      await tapIn(tester, 'move-p-move', 'Keep the Booked Time');
       expect(api.count('POST /mentor-services/purchases/p-move/reschedule/decline'), 1);
       expect(find.text('Kept the booked time.'), findsOneWidget);
     });
@@ -235,15 +235,15 @@ void main() {
       'another time is offered from the mentor\'s free hours, with a note, and the call waits on the mentee',
       (tester) async {
         final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.work);
-        await tapIn(tester, 'move-p-move', 'Offer another time');
-        expect(find.text('Free times in your hours'), findsOneWidget);
-        await tester.tap(find.text('Send new time'));
+        await tapIn(tester, 'move-p-move', 'Offer Another Time');
+        expect(find.text('Free Times in Your Hours'), findsOneWidget);
+        await tester.tap(find.text('Send New Time'));
         await tester.pump();
-        expect(find.text('Pick a time first.'), findsOneWidget);
+        expect(find.text('Select a time first.'), findsOneWidget);
         await tester.tap(find.text('7:00 PM'));
         await tester.pump();
         await tester.enterText(find.byKey(const ValueKey('move-note')), 'Mornings are free');
-        await tester.tap(find.text('Send new time'));
+        await tester.tap(find.text('Send New Time'));
         await settle(tester);
         expect(api.queryOf('GET /mentorship/mentors/mp-anand/slots'), {'durationMin': 45, 'days': 14});
         expect(api.bodyOf('POST /mentor-services/purchases/p-move/reschedule'), {
@@ -263,13 +263,13 @@ void main() {
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.work);
       final urls = launches(tester);
       expect(find.text('No meeting link yet'), findsOneWidget);
-      await tapIn(tester, 'call-p-ahead', 'Meeting link');
+      await tapIn(tester, 'call-p-ahead', 'Meeting Link');
       await tester.enterText(find.byKey(const ValueKey('call-link')), 'not a link');
-      await tester.tap(find.text('Save link'));
+      await tester.tap(find.text('Save Link'));
       await tester.pump();
       expect(find.textContaining('Enter a full web address'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('call-link')), 'meet.google.com/abc-defg-hij');
-      await tester.tap(find.text('Save link'));
+      await tester.tap(find.text('Save Link'));
       await settle(tester);
       expect(api.bodyOf('PATCH /mentor-services/purchases/p-ahead/meeting-link'), {
         'meetingLink': 'https://meet.google.com/abc-defg-hij',
@@ -293,7 +293,7 @@ void main() {
       expect(rec.opened, ['conversation:conv-ahead']);
       await tapIn(tester, 'call-p-ahead', 'Cancel');
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'A site shutdown came up');
-      await tester.tap(find.text('Cancel call').last);
+      await tester.tap(find.text('Cancel Call').last);
       await settle(tester);
       expect(api.bodyOf('POST /mentor-services/purchases/p-ahead/cancel'), {'reason': 'A site shutdown came up'});
       expect(find.byKey(const ValueKey('call-p-ahead')), findsNothing);
@@ -301,7 +301,7 @@ void main() {
 
     testWidgets('an offer to move can be withdrawn', (tester) async {
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.work);
-      await tapIn(tester, 'waiting-p-mine', 'Withdraw the offer');
+      await tapIn(tester, 'waiting-p-mine', 'Withdraw Offer');
       expect(api.count('POST /mentor-services/purchases/p-mine/reschedule/decline'), 1);
       expect(find.text('Offer withdrawn.'), findsOneWidget);
     });
@@ -330,7 +330,7 @@ void main() {
         lessThan(tester.getTopLeft(find.byKey(const ValueKey('day-0'))).dy),
       );
       expect(
-        tester.widget<SolidButton>(find.widgetWithText(SolidButton, 'Save hours')).onPressed,
+        tester.widget<SolidButton>(find.widgetWithText(SolidButton, 'Save Hours')).onPressed,
         isNull,
         reason: 'nothing changed',
       );
@@ -340,17 +340,17 @@ void main() {
       final w = DeskWorld();
       final (api, _) = await pumpDesk(tester, w, tab: DeskTab.hours);
       await tapKey(tester, 'add-window');
-      await tester.tap(find.text('Add window'));
+      await tester.tap(find.text('Add Window'));
       await tester.pump();
-      expect(find.text('Pick at least one day.'), findsOneWidget);
+      expect(find.text('Select at least one day.'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('pick-day-1')));
       await tester.tap(find.byKey(const ValueKey('pick-day-3')));
       await tester.pump();
-      await tester.tap(find.text('Add window'));
+      await tester.tap(find.text('Add Window'));
       await settle(tester);
       expect(find.byKey(const ValueKey('window-1-1080-1200')), findsOneWidget);
       expect(find.byKey(const ValueKey('window-3-1080-1200')), findsOneWidget);
-      await tester.tap(find.text('Save hours'));
+      await tester.tap(find.text('Save Hours'));
       await settle(tester);
       expect(api.bodyOf('PUT /mentorship/mentors/me/availability'), {
         'blocks': [
@@ -370,10 +370,10 @@ void main() {
       await tapKey(tester, 'add-window');
       await tester.tap(find.byKey(const ValueKey('pick-day-2')));
       await tester.pump();
-      await tester.tap(find.text('Add window'));
+      await tester.tap(find.text('Add Window'));
       await tester.pump();
       expect(find.text('Windows on the same day must not overlap.'), findsOneWidget);
-      expect(find.text('Add a window'), findsWidgets);
+      expect(find.text('Add a Window'), findsWidgets);
     });
 
     testWidgets('a window is removed, saved, and Discard puts the saved week back', (tester) async {
@@ -385,7 +385,7 @@ void main() {
       expect(find.byKey(const ValueKey('window-2-1080-1230')), findsOneWidget);
       await tester.tap(find.byTooltip('Remove Tuesday 18:00 to 20:30'));
       await tester.pump();
-      await tester.tap(find.text('Save hours'));
+      await tester.tap(find.text('Save Hours'));
       await settle(tester);
       final sent = ((api.bodyOf('PUT /mentorship/mentors/me/availability') as Map)['blocks'] as List).cast<Map>();
       expect(sent.map((b) => b['weekday']), [4, 6]);
@@ -400,7 +400,7 @@ void main() {
       );
       await tester.tap(find.byTooltip('Remove Tuesday 18:00 to 20:30'));
       await tester.pump();
-      await tester.tap(find.text('Save hours'));
+      await tester.tap(find.text('Save Hours'));
       await settle(tester);
       expect(find.text('Each window must end after it starts.'), findsOneWidget);
       expect(find.byKey(const ValueKey('window-2-1080-1230')), findsNothing, reason: 'the edit stays');
@@ -423,7 +423,7 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey('timezone')), 'Asia/Dubai');
       await tester.enterText(find.byKey(const ValueKey('standing-link')), 'meet.google.com/new-room');
       await tester.enterText(find.byKey(const ValueKey('availability-note')), 'Weekday evenings');
-      await tapText(tester, 'Save settings');
+      await tapText(tester, 'Save Settings');
       expect(api.bodyOf('PUT /mentorship/mentors/me'), {
         'preferredModes': ['VIDEO', 'PHONE', 'IN_PERSON'],
         'cadence': 'MONTHLY',
@@ -438,7 +438,7 @@ void main() {
     testWidgets('a bio that was edited is sent as escaped paragraphs', (tester) async {
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.settings);
       await tester.enterText(find.byKey(const ValueKey('bio')), 'I help people grow.\n\nSites & portfolios');
-      await tapText(tester, 'Save settings');
+      await tapText(tester, 'Save Settings');
       expect(api.bodyOf('PUT /mentorship/mentors/me'), {
         'bioHtml': '<p>I help people grow.</p><p>Sites &amp; portfolios</p>',
       });
@@ -446,7 +446,7 @@ void main() {
 
     testWidgets('saving with nothing changed sends nothing', (tester) async {
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.settings);
-      await tapText(tester, 'Save settings');
+      await tapText(tester, 'Save Settings');
       expect(api.count('PUT /mentorship/mentors/me'), 0);
     });
 
@@ -454,23 +454,23 @@ void main() {
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.settings);
       await tapKey(tester, 'mode-VIDEO');
       await tapKey(tester, 'mode-PHONE');
-      await tapText(tester, 'Save settings');
-      expect(find.text('Pick at least one way you meet.'), findsOneWidget);
+      await tapText(tester, 'Save Settings');
+      expect(find.text('Select at least one meeting mode.'), findsOneWidget);
       await tapKey(tester, 'mode-VIDEO');
       await tester.enterText(find.byKey(const ValueKey('standing-link')), 'not a link');
-      await tapText(tester, 'Save settings');
+      await tapText(tester, 'Save Settings');
       expect(find.textContaining('Enter a full web address'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('standing-link')), 'meet.google.com/ok-room');
       await tester.enterText(find.byKey(const ValueKey('timezone')), '');
-      await tapText(tester, 'Save settings');
-      expect(find.text('Give your timezone, for example Asia/Kolkata.'), findsOneWidget);
+      await tapText(tester, 'Save Settings');
+      expect(find.text('Enter your time zone, for example Asia/Kolkata.'), findsOneWidget);
       expect(api.count('PUT /mentorship/mentors/me'), 0);
     });
 
     testWidgets('a standing link can be cleared', (tester) async {
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.settings);
       await tester.enterText(find.byKey(const ValueKey('standing-link')), '');
-      await tapText(tester, 'Save settings');
+      await tapText(tester, 'Save Settings');
       expect(api.bodyOf('PUT /mentorship/mentors/me'), {'meetingLink': ''});
     });
 
@@ -482,7 +482,7 @@ void main() {
         extra: {'PUT /mentorship/mentors/me': (_) => refuse('That note is too long.')},
       );
       await tester.enterText(find.byKey(const ValueKey('availability-note')), 'Evenings');
-      await tapText(tester, 'Save settings');
+      await tapText(tester, 'Save Settings');
       expect(find.text('That note is too long.'), findsOneWidget);
       expect(find.text('Evenings'), findsOneWidget);
     });
@@ -492,9 +492,9 @@ void main() {
     testWidgets('reads what was earned and what is paid out, and changes nothing', (tester) async {
       await pumpDesk(tester, DeskWorld(), tab: DeskTab.earnings);
       expect(find.text('₹8,796'), findsOneWidget);
-      expect(find.text('Awaiting payout'), findsOneWidget);
+      expect(find.text('Awaiting Payout'), findsOneWidget);
       expect(find.text('₹1,997.60'), findsOneWidget);
-      expect(find.text('Paid out'), findsOneWidget);
+      expect(find.text('Paid Out'), findsOneWidget);
       expect(find.text('₹1,199.20'), findsOneWidget);
       expect(find.text('Facilities leadership strategy session'), findsOneWidget);
       expect(find.text('Meera Nair · 23 Oct · awaiting payout'), findsOneWidget);
@@ -502,13 +502,13 @@ void main() {
       expect(find.text('Meera Nair · 16 Oct · paid out 21 Oct (NEFT-DEMO-0042)'), findsOneWidget);
       expect(find.byType(SolidButton), findsNothing);
       expect(find.byType(QuietButton), findsNothing);
-      expect(find.textContaining('Nothing on this page can be changed'), findsOneWidget);
+      expect(find.textContaining('This page cannot be edited'), findsOneWidget);
     });
 
     testWidgets('a mentor with no sales yet is told when earnings appear', (tester) async {
       final w = DeskWorld()..earnings = {'unsettledPaisa': 0, 'settledPaisa': 0, 'entries': <Object?>[]};
       await pumpDesk(tester, w, tab: DeskTab.earnings);
-      expect(find.text('No earnings yet'), findsOneWidget);
+      expect(find.text('No Earnings Yet'), findsOneWidget);
     });
 
     testWidgets('a failed read says why and Try again reads it again', (tester) async {
@@ -523,9 +523,9 @@ void main() {
               fail ? refuse('Earnings are unavailable.', status: 500) : w.earnings,
         },
       );
-      expect(find.text("Couldn't load your earnings"), findsOneWidget);
+      expect(find.text('Unable to Load Your Earnings'), findsOneWidget);
       fail = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester);
       expect(find.text('₹8,796'), findsOneWidget);
       expect(api.count('GET /mentor-services/mine/earnings'), 2);
@@ -539,7 +539,7 @@ void main() {
       expect(find.text('4.8'), findsOneWidget);
       expect(find.text('14'), findsOneWidget);
       expect(find.text('Anand asked the questions I had been avoiding.'), findsOneWidget);
-      expect(find.text('A mentee'), findsNWidgets(2));
+      expect(find.text('Anonymous mentee'), findsNWidgets(2));
       expect(find.text('Worth every rupee.'), findsOneWidget);
       expect(find.text('Tanvi Joshi'), findsOneWidget);
       expect(find.text('Facilities leadership strategy session'), findsOneWidget);

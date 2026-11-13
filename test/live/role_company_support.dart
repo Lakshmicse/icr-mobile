@@ -118,7 +118,13 @@ Future<({AuthController auth, ApiClient api, String email})> signUpThrowaway({St
   final code = await auth.sendEmailCode(email);
   expect(code, matches(RegExp(r'^\d{6}$')), reason: 'a non-production API hands the code back');
   await auth.verifyEmailCode(email, code!);
-  await auth.register(email: email, password: throwawayPassword, firstName: first, lastName: 'Tester');
+  await auth.register(
+    email: email,
+    password: throwawayPassword,
+    firstName: first,
+    lastName: 'Tester',
+    phone: '+447700900123',
+  );
   expect(auth.status, SessionStatus.signedIn);
   return (auth: auth, api: api, email: email);
 }

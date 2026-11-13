@@ -441,7 +441,7 @@ void main() {
       final form = UploadController(repository: repo);
       form.pick([PickedFile(name: 'notes.exe', bytes: Uint8List(10))]);
       expect(form.entries, isEmpty, reason: 'the form refuses it before the API is asked');
-      expect(form.error, 'Not added: notes.exe is not a format the library takes.');
+      expect(form.error, 'Not added: notes.exe is not a supported format.');
     },
   );
 

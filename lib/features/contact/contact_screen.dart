@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/config.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text.dart';
 import '../../core/util/links.dart';
 import '../../core/widgets/chips.dart';
 import '../chapters/community_kit.dart';
@@ -23,8 +20,9 @@ import 'demo_contact_repository.dart';
 /// * [onRaiseRequest] is the support desk: a signed-in member is told a support
 ///   request serves them better (it has a reference and a thread), and the
 ///   button shows only when this is given.
-/// * [onRequestQuote] is the quote form; the line that points to it shows only
-///   when this is given.
+/// * [onRequestQuote] is kept for the callers: the "Reach us directly" card that
+///   pointed to the quote form was removed (owner, 12 Nov 2026), so nothing
+///   reads it now.
 /// * [onBell] opens the notifications; the website's page when left out.
 Widget contactRoute(
   BuildContext context, {
@@ -81,10 +79,11 @@ class ContactScreen extends StatefulWidget {
   /// reference and a thread); the button shows when this is given.
   final VoidCallback? onRaiseRequest;
 
-  /// "Looking for service quotes?": the app's quote form. The line shows when this is given.
+  /// Kept for the callers: the "Reach us directly" card that offered the quote
+  /// form was removed (owner, 12 Nov 2026), so the screen no longer reads it.
   final VoidCallback? onRequestQuote;
 
-  /// Hands a link to the phone (the email address).
+  /// Hands a link to the phone (the website's notifications page, when [onBell] is left out).
   final Future<void> Function(BuildContext context, Uri uri) opener;
 
   @override
@@ -138,24 +137,11 @@ class _ContactScreenState extends State<ContactScreen> {
     });
   }
 
-  Future<void> _mail() async {
-    try {
-      await widget.opener(context, Uri(scheme: 'mailto', path: contactEmail));
-    } catch (_) {
-      if (mounted) showMessage(context, 'No email app found. Write to $contactEmail.');
-    }
-  }
-
-  Future<void> _copyEmail() async {
-    await Clipboard.setData(const ClipboardData(text: contactEmail));
-    if (mounted) showMessage(context, 'Email address copied');
-  }
-
   @override
   Widget build(BuildContext context) {
     final contact = context.watch<ContactController>();
     return CommunityPage(
-      title: 'Contact us',
+      title: 'Contact Us',
       onBack: _back,
       onBell: widget.onBell ?? () => widget.opener(context, AppConfig.sitePage('/notifications')),
       unread: contact.unread,
@@ -170,27 +156,16 @@ class _ContactScreenState extends State<ContactScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'Talk to the ICR team',
-                    style: AppText.workSans(18, FontWeight.w700, AppColors.slate900, lineHeight: 24),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Questions about membership, chapters, becoming a verified supplier, or anything else — we read '
-                    'every message.',
-                    style: CommunityText.body,
-                  ),
+                  // The website's "Talk to the ICR team" heading with its blurb, and the "Reach us directly"
+                  // card under the form, were removed (owner, 12 Nov 2026): the page is the form.
                   if (contact.signedIn && widget.onRaiseRequest != null && !contact.sent) ...[
-                    const SizedBox(height: 14),
                     _SignedInNote(onRaiseRequest: widget.onRaiseRequest!),
+                    const SizedBox(height: 14),
                   ],
-                  const SizedBox(height: 14),
                   if (contact.sent)
                     _Sent(email: contact.sentTo ?? '', onAnother: contact.another, onDone: _back)
                   else
                     _Form(contact: contact, boxes: _boxes, errorBox: _errorBox, onSend: () => _send(contact)),
-                  const SizedBox(height: 16),
-                  _Direct(onEmail: _mail, onCopy: _copyEmail, onRequestQuote: widget.onRequestQuote),
                 ],
               ),
             ),
@@ -225,15 +200,15 @@ class _Form extends StatelessWidget {
               key: const ValueKey('contact-identity-failed'),
               icon: LucideIcons.circleAlert,
               text:
-                  "We couldn't check whether you are signed in, so your details are not filled in. You can still "
-                  'write to us.',
-              action: 'Retry',
+                  'Unable to check whether you are signed in, so your details are not filled in. You can still '
+                  'send a message.',
+              action: 'Try Again',
               onAction: contact.loading ? null : contact.refresh,
             ),
           KeyedSubtree(
             key: boxes[ContactField.name],
             child: CommunityField(
-              label: 'Your name',
+              label: 'Your Name',
               fieldKey: const ValueKey('contact-name'),
               controller: contact.name,
               hint: 'Jane Doe',
@@ -263,7 +238,7 @@ class _Form extends StatelessWidget {
           KeyedSubtree(
             key: boxes[ContactField.phone],
             child: CommunityField(
-              label: 'Phone (optional)',
+              label: 'Mobile Number',
               fieldKey: const ValueKey('contact-phone'),
               controller: contact.phone,
               hint: '+91 98765 43210',
@@ -300,7 +275,7 @@ class _Form extends StatelessWidget {
               label: 'Message',
               fieldKey: const ValueKey('contact-message'),
               controller: contact.message,
-              hint: 'Tell us how we can help',
+              hint: 'Describe how we can help.',
               error: contact.messageError,
               enabled: idle,
               minLines: 5,
@@ -341,7 +316,7 @@ class _Form extends StatelessWidget {
           const SizedBox(height: 12),
           CommunityButton(
             key: const ValueKey('contact-send'),
-            label: contact.sending ? 'Sending…' : 'Send message',
+            label: contact.sending ? 'Sending…' : 'Send',
             icon: LucideIcons.send,
             busy: contact.sending,
             expand: true,
@@ -423,10 +398,10 @@ class _Sent extends StatelessWidget {
           children: [
             const Icon(LucideIcons.circleCheck, size: 26, color: CommunityColors.green700),
             const SizedBox(height: 8),
-            Text('Message sent', style: CommunityText.cardTitleLarge),
+            Text('Message Sent', style: CommunityText.cardTitleLarge),
             const SizedBox(height: 4),
             Text(
-              "Thanks — your message is in. We'll get back to you within one business day.",
+              'Thank you. We have received your message and will reply within one business day.',
               style: CommunityText.body,
             ),
             if (email.isNotEmpty) ...[
@@ -440,7 +415,7 @@ class _Sent extends StatelessWidget {
               children: [
                 CommunityButton(
                   key: const ValueKey('contact-another'),
-                  label: 'Send another',
+                  label: 'Send Another',
                   outlined: true,
                   height: 36,
                   onPressed: onAnother,
@@ -478,7 +453,7 @@ class _SignedInNote extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'You are signed in — raising a request gives you a reference number, a reply target, and a thread '
+                  'You are signed in. A support request gives you a reference number, a reply target and a thread '
                   'you can follow. This form does not.',
                   style: CommunityText.cardCopy.copyWith(color: CommunityColors.slate800),
                 ),
@@ -490,98 +465,11 @@ class _SignedInNote extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: CommunityButton(
               key: const ValueKey('contact-raise'),
-              label: 'Raise a request',
+              label: 'Raise a Request',
               onPressed: onRaiseRequest,
               height: 34,
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/// "Reach us directly": the address (opens the mail app; the copy button is for
-/// a phone with none) and the hours.
-class _Direct extends StatelessWidget {
-  const _Direct({required this.onEmail, required this.onCopy, this.onRequestQuote});
-
-  final VoidCallback onEmail;
-  final VoidCallback onCopy;
-  final VoidCallback? onRequestQuote;
-
-  @override
-  Widget build(BuildContext context) {
-    return CommunityCard(
-      radius: 12,
-      padding: const EdgeInsets.fromLTRB(14, 14, 6, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Reach us directly', style: CommunityText.cardTitle),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Expanded(
-                child: InkWell(
-                  key: const ValueKey('contact-mail'),
-                  onTap: onEmail,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 40),
-                    child: Row(
-                      children: [
-                        const Icon(LucideIcons.mail, size: 14, color: AppColors.primary),
-                        const SizedBox(width: 8),
-                        Flexible(child: Text(contactEmail, style: CommunityText.link)),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              IconButton(
-                key: const ValueKey('contact-copy'),
-                tooltip: 'Copy email address',
-                onPressed: onCopy,
-                iconSize: 15,
-                color: AppColors.slate500,
-                icon: const Icon(LucideIcons.copy),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 8, bottom: 4),
-            child: Row(
-              children: [
-                const Icon(LucideIcons.clock, size: 14, color: AppColors.slate500),
-                const SizedBox(width: 8),
-                Flexible(child: Text(contactHours, style: CommunityText.cardCopy)),
-              ],
-            ),
-          ),
-          if (onRequestQuote != null) ...[
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Text(
-                'Looking for service quotes? Our sourcing desk answers a quote request faster.',
-                style: CommunityText.cardCopy,
-              ),
-            ),
-            InkWell(
-              key: const ValueKey('contact-quote'),
-              onTap: onRequestQuote,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 40),
-                child: Row(
-                  children: [
-                    Text('Request a quote', style: CommunityText.link),
-                    const SizedBox(width: 4),
-                    const Icon(LucideIcons.arrowRight, size: 12, color: AppColors.primary),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );

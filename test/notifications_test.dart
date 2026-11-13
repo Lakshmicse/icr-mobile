@@ -587,7 +587,10 @@ void main() {
       expect(c.needsSwitch(c.items[0]), isFalse);
 
       repo.switchError = ApiError('gone', statusCode: 403);
-      expect(await c.switchTo(const ChatCompany(id: 'co-3', name: 'Gone Ltd')), contains('no longer part of Gone Ltd'));
+      expect(
+        await c.switchTo(const ChatCompany(id: 'co-3', name: 'Gone Ltd')),
+        contains('no longer a member of Gone Ltd'),
+      );
       c.dispose();
     });
 
@@ -618,7 +621,7 @@ void main() {
 
       repo.saveError = ApiError('boom', statusCode: 500);
       final again = c.preferences!.firstWhere((p) => p.category.id == 'messages');
-      expect(await c.setChannel(again, inApp: false), 'Your change could not be saved. Try again.');
+      expect(await c.setChannel(again, inApp: false), 'Unable to save your change. Try again.');
       expect(c.preferences!.firstWhere((p) => p.category.id == 'messages').inApp, isTrue, reason: 'put back');
       expect(c.saveError, isNotNull);
       c.clearSaveError();

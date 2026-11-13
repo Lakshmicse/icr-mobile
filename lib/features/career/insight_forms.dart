@@ -16,7 +16,7 @@ import 'company_insights_controller.dart';
 Future<void> showReviewForm(BuildContext context, CompanyInsightsController controller) async {
   final sent = await _showForm(context, ReviewForm(controller: controller));
   if (sent == true && context.mounted) {
-    showMessage(context, 'Thanks. Your review is anonymous and appears once ICR has read it.');
+    showMessage(context, 'Thank you. Your review is anonymous and will appear once ICR has reviewed it.');
   }
 }
 
@@ -24,7 +24,7 @@ Future<void> showReviewForm(BuildContext context, CompanyInsightsController cont
 Future<void> showSalaryForm(BuildContext context, CompanyInsightsController controller) async {
   final sent = await _showForm(context, SalaryForm(controller: controller));
   if (sent == true && context.mounted) {
-    showMessage(context, 'Thanks. Salaries are anonymous and only ever shown as an average.');
+    showMessage(context, 'Thank you. Salaries are anonymous and shown only as an average.');
   }
 }
 
@@ -32,7 +32,7 @@ Future<void> showSalaryForm(BuildContext context, CompanyInsightsController cont
 Future<void> showInterviewForm(BuildContext context, CompanyInsightsController controller) async {
   final sent = await _showForm(context, InterviewForm(controller: controller));
   if (sent == true && context.mounted) {
-    showMessage(context, 'Thanks. Your interview experience appears once ICR has read it.');
+    showMessage(context, 'Thank you. Your interview experience will appear once ICR has reviewed it.');
   }
 }
 
@@ -45,12 +45,12 @@ Future<bool?> _showForm(BuildContext context, Widget form) => showModalBottomShe
   builder: (_) => form,
 );
 
-const _employmentStatuses = [('CURRENT', 'Current employee'), ('FORMER', 'Former employee')];
+const _employmentStatuses = [('CURRENT', 'Current Employee'), ('FORMER', 'Former Employee')];
 const _outcomes = [
-  ('OFFER_ACCEPTED', 'Offer accepted'),
-  ('OFFER_DECLINED', 'Offer declined'),
-  ('NO_OFFER', 'No offer'),
-  ('IN_PROGRESS', 'Still in progress'),
+  ('OFFER_ACCEPTED', 'Offer Accepted'),
+  ('OFFER_DECLINED', 'Offer Declined'),
+  ('NO_OFFER', 'No Offer'),
+  ('IN_PROGRESS', 'Still in Progress'),
 ];
 
 /// The frame all three forms share: a title, the fields, the API's refusal, and the send button.
@@ -263,14 +263,14 @@ class _ReviewFormState extends State<ReviewForm> {
   Widget build(BuildContext context) {
     final company = widget.controller.company.name;
     return _FormFrame(
-      title: _earlier == null ? 'Review $company' : 'Update your review of $company',
-      lead: 'Reviews are published anonymously and are read by ICR before they show.',
-      submitLabel: _earlier == null ? 'Submit review' : 'Replace my review',
+      title: _earlier == null ? 'Review $company' : 'Update Your Review of $company',
+      lead: 'Reviews are published anonymously after ICR has reviewed them.',
+      submitLabel: _earlier == null ? 'Submit Review' : 'Replace My Review',
       sending: _sending,
       problem: _problem,
       onSubmit: _submit,
       children: [
-        _stars('Overall rating', _overall, (v) => setState(() => _overall = v), 'overall', size: 34),
+        _stars('Overall Rating', _overall, (v) => setState(() => _overall = v), 'overall', size: 34),
         for (final e in reviewSubRatings.entries)
           _stars(e.value, _subs[e.key] ?? 0, (v) => setState(() => _subs[e.key] = v), 'sub-${e.key}', size: 22),
         const SizedBox(height: 4),
@@ -291,9 +291,9 @@ class _ReviewFormState extends State<ReviewForm> {
           maxLength: ReviewDraft.textMax,
           hint: 'What could be better',
         ),
-        _field('Advice to management (optional)', _advice, minLines: 2, maxLength: ReviewDraft.textMax),
-        _field('Your job title (optional)', _jobTitle, maxLength: ReviewDraft.jobTitleMax),
-        _choices('Employment status', _employmentStatuses, _status, (v) => setState(() => _status = v), 'status'),
+        _field('Advice to Management (Optional)', _advice, minLines: 2, maxLength: ReviewDraft.textMax),
+        _field('Your Job Title (Optional)', _jobTitle, maxLength: ReviewDraft.jobTitleMax),
+        _choices('Employment Status', _employmentStatuses, _status, (v) => setState(() => _status = v), 'status'),
       ],
     );
   }
@@ -359,15 +359,15 @@ class _SalaryFormState extends State<SalaryForm> {
   @override
   Widget build(BuildContext context) {
     return _FormFrame(
-      title: 'Share a salary at ${widget.controller.company.name}',
-      lead: 'Anonymous. It only ever shows as an average, once at least five people report the same role.',
-      submitLabel: 'Share salary',
+      title: 'Share a Salary at ${widget.controller.company.name}',
+      lead: 'Anonymous. It is shown only as an average, once at least five people report the same role.',
+      submitLabel: 'Share Salary',
       sending: _sending,
       problem: _problem,
       onSubmit: _submit,
       children: [
-        _field('Job title', _jobTitle, fieldKey: const ValueKey('salary-title'), maxLength: SalaryDraft.jobTitleMax),
-        _field('City (optional)', _city, maxLength: SalaryDraft.cityMax),
+        _field('Job Title', _jobTitle, fieldKey: const ValueKey('salary-title'), maxLength: SalaryDraft.jobTitleMax),
+        _field('City (Optional)', _city, maxLength: SalaryDraft.cityMax),
         _field(
           'Amount',
           _amount,
@@ -377,19 +377,19 @@ class _SalaryFormState extends State<SalaryForm> {
           prefix: '₹ ',
         ),
         _choices(
-          'Paid',
-          const [('YEARLY', 'Per year'), ('MONTHLY', 'Per month'), ('HOURLY', 'Per hour')],
+          'Pay Period',
+          const [('YEARLY', 'Per Year'), ('MONTHLY', 'Per Month'), ('HOURLY', 'Per Hour')],
           _period,
           (v) => setState(() => _period = v ?? _period),
           'period',
         ),
         _field(
-          'Years of experience (optional)',
+          'Years of Experience (Optional)',
           _years,
           keyboard: const TextInputType.numberWithOptions(decimal: true),
           formatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
         ),
-        _choices('Employment status', _employmentStatuses, _status, (v) => setState(() => _status = v), 'status'),
+        _choices('Employment Status', _employmentStatuses, _status, (v) => setState(() => _status = v), 'status'),
       ],
     );
   }
@@ -457,16 +457,16 @@ class _InterviewFormState extends State<InterviewForm> {
   @override
   Widget build(BuildContext context) {
     return _FormFrame(
-      title: 'Your interview at ${widget.controller.company.name}',
-      lead: 'Anonymous. It helps the next person who sits there.',
-      submitLabel: 'Share interview',
+      title: 'Your Interview at ${widget.controller.company.name}',
+      lead: 'Anonymous. It helps other candidates prepare.',
+      submitLabel: 'Share Interview',
       sending: _sending,
       problem: _problem,
       onSubmit: _submit,
       children: [
-        _field('Role you interviewed for (optional)', _jobTitle, maxLength: SalaryDraft.jobTitleMax),
-        _stars('Difficulty (1 easy, 5 hard)', _difficulty, (v) => setState(() => _difficulty = v), 'difficulty'),
-        _stars('Overall experience', _experience, (v) => setState(() => _experience = v), 'experience'),
+        _field('Role You Interviewed For (Optional)', _jobTitle, maxLength: SalaryDraft.jobTitleMax),
+        _stars('Difficulty (1 Easy, 5 Hard)', _difficulty, (v) => setState(() => _difficulty = v), 'difficulty'),
+        _stars('Overall Experience', _experience, (v) => setState(() => _experience = v), 'experience'),
         _choices('Outcome', _outcomes, _outcome, (v) => setState(() => _outcome = v), 'outcome'),
         _field(
           'How did the process go?',
@@ -475,9 +475,9 @@ class _InterviewFormState extends State<InterviewForm> {
           minLines: 3,
           maxLength: InterviewReviewDraft.textMax,
         ),
-        _field('Questions you were asked (optional)', _questions, minLines: 2, maxLength: InterviewReviewDraft.textMax),
+        _field('Questions You Were Asked (Optional)', _questions, minLines: 2, maxLength: InterviewReviewDraft.textMax),
         _field(
-          'Process length in days (optional)',
+          'Process Length in Days (Optional)',
           _days,
           keyboard: TextInputType.number,
           formatters: [FilteringTextInputFormatter.digitsOnly],

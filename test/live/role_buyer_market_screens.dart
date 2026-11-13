@@ -65,7 +65,7 @@ void roleBuyerMarketScreens() {
           expect(ask, findsOneWidget, reason: '${w.email}: the sheet offers Request for Quote');
           await tester.tap(ask);
           await afterTap(tester);
-          expect(find.text('Request a quote'), findsOneWidget);
+          expect(find.text('Request a Quote'), findsOneWidget);
           await tester.enterText(find.byKey(const ValueKey('quote-notes')), 'Night shifts only (role matrix).');
           if (find.byKey(const ValueKey('quote-phone')).evaluate().isNotEmpty) {
             await tester.enterText(find.byKey(const ValueKey('quote-phone')), '+91 98123 45670');
@@ -130,8 +130,8 @@ void roleBuyerMarketScreens() {
           expect(chip, all, reason: '${w.email}: the Marketplace chip and the All tab agree');
           record('Requirements: My RFQ\'s screen', w.person, 'works', 'All tab $all = chip $chip');
         } else {
-          expect(text, contains('Requirements are posted by buyers and companies'));
-          final button = find.text('Create a company page');
+          expect(text, contains('Requirements Are Posted by Buyers and Companies'));
+          final button = find.text('Create a Company Page');
           expect(button, findsOneWidget);
           await tester.tap(button);
           await tester.pump();
@@ -195,7 +195,7 @@ void roleBuyerMarketScreens() {
             size: const Size(390, 900),
           );
           var text = expectHealthy(tester, 'Find work as ${w.email}');
-          expect(text, contains('This is for supplier accounts'));
+          expect(text, contains('This Is for Supplier Accounts'));
           await unmount(tester);
           await loadScreen(
             tester,
@@ -203,7 +203,7 @@ void roleBuyerMarketScreens() {
             size: const Size(390, 900),
           );
           text = expectHealthy(tester, 'My Bids as ${w.email}');
-          expect(text, contains('This is for supplier accounts'));
+          expect(text, contains('This Is for Supplier Accounts'));
           await unmount(tester);
           record(
             'Requirements: Alerts, Find work, My Bids screens',

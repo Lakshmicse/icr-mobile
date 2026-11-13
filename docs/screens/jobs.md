@@ -132,3 +132,49 @@ The alert's "2 new" stays until Alerts is tapped (opening the board only reads t
 `ChangeNotifierProvider<JobsController>` above `AppShell` (see `lib/app.dart`), `JobsScreen(onBack: ..., navigation: ...)` as the shell's `jobs` tab. The controller starts loading when the tab is first shown, and reads who the member is to the hiring side (`hiringAccess()`, once). `JobsController(repository, {links, hiring})` takes where a tap leaves the app (`JobLinks`: the website and the share sheet; a test passes a recorder), which the sheet's controller inherits, and the employer source (`hiringRepositoryFor(repository)` unless given).
 
 `JobsNavigation` is the one place the lead wires the hand-overs these screens need from the rest of the app (company page, conversation, member profile, notifications, the Jobs tab, the profile editor, Create a company, Verify the company, assessments). Each has a website fallback, so a tap is never dead before it is wired; the table is in `docs/screens/career.md`.
+
+## 7 Nov 2026
+
+Applying to a gender-only role: when the API refuses after the member chose a gender, the sheet says the profile already holds a different, locked gender and that ICR support corrects it (the API judges the gender on file — `applicantGender`, locked once set). The report of 7 Nov (a woman refused a women-only role) is that case: her profile's gender on production must be corrected by staff.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The Jobs board, the job sheet, the filters, My Jobs and the apply form (`lib/features/jobs/`, not `employer/`). Wording only: no layout, colour or behaviour changed. The rules are the client's marked-up manual of 13 Nov ("refine text and make it crisp for global standard"): Title Case for what is tapped or read as a label, sentence case with a full stop for sentences, plain international English, no dash inside a sentence, one term for one thing.
+
+| Where | Was | Now |
+|---|---|---|
+| `job_detail_sheet.dart` | Link copied | Link copied. |
+| `job_detail_sheet.dart` | Hide this job from your board | Hide this job from your board. |
+| `jobs_screen.dart` | Couldn't load jobs | Unable to Load Jobs |
+| `jobs_screen.dart` | No Easy Apply jobs here | No Easy Apply Jobs |
+| `jobs_screen.dart` | No jobs match | No Matching Jobs |
+| `jobs_screen.dart` | No open jobs right now | No Open Jobs |
+| `jobs_screen.dart` | Try other words, or clear the filters. | Try different keywords or clear the filters. |
+| `jobs_screen.dart` | New roles show up here as employers post them. | New roles will appear here as employers post them. |
+| `job_filters_sheet.dart` | Save this search as a job alert | Save Search as Job Alert |
+| `jobs_toolbar.dart` | Jobs at companies in your network aren't in the app yet. | Jobs at companies in your network are not available in the app yet. |
+| `my_jobs_sheet.dart` | See all applications | View All Applications |
+| `my_jobs_sheet.dart` | See all saved jobs | View All Saved Jobs |
+| `my_jobs_sheet.dart` | Couldn't load your jobs. | Unable to load your jobs. |
+| `my_jobs_sheet.dart` | Jobs you bookmark show up here. | Jobs you save will appear here. |
+| `job_models.dart` | from ICR works at this organization. | from ICR works at this company. |
+| `job_models.dart` | from ICR work at this organization. | from ICR work at this company. |
+| `job_links.dart` | Couldn't open …… | Unable to open …… |
+| `apply_sheet.dart` | Choose the group that applies to you, or this role cannot take your application. | Select the group that applies to you, or this role cannot accept your application. |
+| `apply_sheet.dart` | Choose your gender: this role is open to one gender only. | Select your gender. This role is open to one gender only. |
+| `apply_sheet.dart` | The employer asks | Employer Questions |
+| `apply_sheet.dart` | Your LinkedIn profile (optional) | LinkedIn Profile (Optional) |
+| `apply_sheet.dart` | A note to the hiring team (optional) | Note to the Hiring Team (Optional) |
+| `apply_sheet.dart` | You've used all … applications on your plan this month. | You have used all … applications on your plan this month. |
+| `apply_sheet.dart` | See plans | View Plans |
+| `apply_sheet.dart` | Choose | Select |
+| `apply_sheet.dart` | Pick a date | Select a Date |
+| `screening.dart` | Choose Yes or No. | Select Yes or No. |
+| `screening.dart` | Choose one of the listed options. | Select one of the listed options. |
+| `screening.dart` | Choose at least one of the listed options. | Select at least one of the listed options. |
+| `screening.dart` | Pick a rating from 1 to …. | Select a rating from 1 to …. |
+| `screening.dart` | Choose your years of experience. | Select your years of experience. |
+
+**To Title Case, words unchanged (42 strings):** You have applied → You Have Applied; About the job → About the Job; Apply on company site → Apply on Company Site; Copy link → Copy Link; Reviews, salaries and interviews → Reviews, Salaries and Interviews; Not interested → Not Interested; Show all jobs → Show All Jobs; Clear filters → Clear Filters; Past 24 hours → Past 24 Hours; Past week → Past Week; Past month → Past Month; Past … days → Past … Days; Any time → Any Time; Work mode → Work Mode; Employment type → Employment Type; Clear all → Clear All; Show jobs → Show Jobs; Post a job → Post a Job; My jobs → My Jobs; … new → … New; Demonstrate skills → Demonstrate Skills; In my network → In My Network; Open network → Open Network; Your career hub → Your Career Hub; Jobs you posted → Jobs You Posted; Jobs matching "…" → Jobs Matching "…"; Jobs matching your filters → Jobs Matching Your Filters; On-site → On-Site; Full-time → Full-Time; Part-time → Part-Time; In screening → In Screening; Offer made → Offer Made; Not selected → Not Selected; Mobile number → Mobile Number; Résumé to send → Résumé to Send; Expected salary (optional) → Expected Salary (Optional); Submit application → Submit Application; Women returning to work → Women Returning to Work; Ex-defence personnel → Ex-Defence Personnel; Differently-abled → Differently-Abled; Non-binary → Non-Binary; Prefer not to say → Prefer Not to Say.
+
+**Left as they were.** The client's own words of 12 Nov ("Posted 3 Days Ago", "Accepting Applications", "Meet the Hiring Team", "Desired Qualifications", "Save Job", "Easy Apply", "View More" / "Show Less", "Date Posted", "Recommended Jobs for You", "Matching Your Preferences", "Latest Jobs", "… Profile Match"); "Try again" (the style sheet keeps it); the industry, organisation-type, degree and stream names (stored values); the quick-search chips and the salary and experience facts ("₹6L - ₹9L / yr", "5+ years"); the semantics labels tests find controls by ("Remove bookmark", "Open <company>", "Clear search scope"); the sentence the API's gender refusal is answered with (7 Nov); `demo_jobs_repository.dart`. **Goldens.** `jobs_board.png` and `job_sheet.png` were re-recorded: the diff was these words only (the chips' capitals, "On-Site", "Full-Time", "About the Job").

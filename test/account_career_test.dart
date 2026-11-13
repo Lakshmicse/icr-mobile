@@ -100,26 +100,26 @@ void main() {
       await reveal(tester, find.text('Experience'));
       final titles = tester.widgetList<Text>(find.textContaining('Manager')).map((t) => t.data).toList();
       expect(titles.indexOf('Lead Operations Manager'), lessThan(titles.indexOf('Facilities Manager')));
-      expect(find.text('TechCorp · Full-time'), findsOneWidget);
+      expect(find.text('TechCorp · Full-Time'), findsOneWidget);
       expect(find.text('Apr 2021 — Present · 5 yrs 6 mos'), findsOneWidget);
       expect(find.text('Jul 2016 — Mar 2021 · 4 yrs 8 mos'), findsOneWidget);
       expect(find.textContaining('3.2M sq ft'), findsOneWidget);
     });
 
-    testWidgets('an empty list offers "Add experience"', (tester) async {
+    testWidgets('an empty list offers "Add Experience"', (tester) async {
       await pump(tester, repo: withRoles(const []));
-      await reveal(tester, find.text('Add your roles, newest first. Employers and mentors read these.'));
-      await tester.tap(find.text('Add experience').last);
+      await reveal(tester, find.text('Add your work experience including career break if applicable.'));
+      await tester.tap(find.text('Add Experience').last);
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('role.title')), findsOneWidget);
     });
 
     testWidgets('Add: a typed role is saved with the whole list, and shows at the top', (tester) async {
       final repo = await pump(tester);
-      await reveal(tester, find.byTooltip('Add experience'));
-      await tester.tap(find.byTooltip('Add experience'));
+      await reveal(tester, find.byTooltip('Add Experience'));
+      await tester.tap(find.byTooltip('Add Experience'));
       await tester.pumpAndSettle();
-      expect(find.text('Add experience'), findsWidgets);
+      expect(find.text('Add Experience'), findsWidgets);
 
       await type(tester, 'role.title', 'Site Engineer');
       await type(tester, 'role.organisation', 'Harbour Builders');
@@ -147,22 +147,22 @@ void main() {
 
     testWidgets('Add: what is missing or wrong is said beside the field, and nothing is sent', (tester) async {
       final repo = await pump(tester);
-      await reveal(tester, find.byTooltip('Add experience'));
-      await tester.tap(find.byTooltip('Add experience'));
+      await reveal(tester, find.byTooltip('Add Experience'));
+      await tester.tap(find.byTooltip('Add Experience'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('sheet.save')));
       await tester.pumpAndSettle();
       expect(find.text('Add your role.'), findsOneWidget);
       expect(find.text('Add the organisation.'), findsOneWidget);
-      expect(find.text('Choose when you started.'), findsOneWidget);
-      expect(find.text('Add when this role ended, or tick “I work here now”.'), findsOneWidget);
+      expect(find.text('Select when you started.'), findsOneWidget);
+      expect(find.text('Add when this role ended, or select “I work here now”.'), findsOneWidget);
       expect(repo.count('saveExperience'), 0);
     });
 
     testWidgets('an end before the start, and a start in the future, are refused', (tester) async {
       await pump(tester);
-      await reveal(tester, find.byTooltip('Add experience'));
-      await tester.tap(find.byTooltip('Add experience'));
+      await reveal(tester, find.byTooltip('Add Experience'));
+      await tester.tap(find.byTooltip('Add Experience'));
       await tester.pumpAndSettle();
       await type(tester, 'role.title', 'Analyst');
       await type(tester, 'role.organisation', 'Acme');
@@ -183,7 +183,7 @@ void main() {
       await reveal(tester, find.byTooltip('Edit Facilities Manager at Global Infra Solutions'));
       await tester.tap(find.byTooltip('Edit Facilities Manager at Global Infra Solutions'));
       await tester.pumpAndSettle();
-      expect(find.text('Edit experience'), findsOneWidget);
+      expect(find.text('Edit Experience'), findsOneWidget);
       expect(tester.widget<TextField>(find.byKey(const Key('role.title'))).controller!.text, 'Facilities Manager');
       await type(tester, 'role.title', 'Senior Facilities Manager');
       await save(tester);
@@ -199,7 +199,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('sheet.delete')));
       await tester.pumpAndSettle();
-      expect(find.text('Delete this role?'), findsOneWidget);
+      expect(find.text('Delete This Role?'), findsOneWidget);
       await tester.tap(find.text('Cancel').last);
       await tester.pumpAndSettle();
       expect(repo.count('saveExperience'), 0);
@@ -211,10 +211,12 @@ void main() {
       expect(find.text('Facilities Manager'), findsNothing);
     });
 
-    testWidgets('a company picked from ICR is linked, and "Ask to join" is sent before the role is saved', (tester) async {
+    testWidgets('a company picked from ICR is linked, and "Ask to Join" is sent before the role is saved', (
+      tester,
+    ) async {
       final repo = await pump(tester, repo: withRoles(const []));
-      await reveal(tester, find.text('Add experience').last);
-      await tester.tap(find.text('Add experience').last);
+      await reveal(tester, find.text('Add Experience').last);
+      await tester.tap(find.text('Add Experience').last);
       await tester.pumpAndSettle();
       await type(tester, 'role.title', 'Facility Manager');
       await type(tester, 'role.organisation', 'Global');
@@ -238,8 +240,8 @@ void main() {
 
     testWidgets('unticking Ask to join sends no request; typing over a picked name unlinks it', (tester) async {
       final repo = await pump(tester, repo: withRoles(const []));
-      await reveal(tester, find.text('Add experience').last);
-      await tester.tap(find.text('Add experience').last);
+      await reveal(tester, find.text('Add Experience').last);
+      await tester.tap(find.text('Add Experience').last);
       await tester.pumpAndSettle();
       await type(tester, 'role.title', 'Facility Manager');
       await type(tester, 'role.organisation', 'Global');
@@ -264,10 +266,11 @@ void main() {
     });
 
     testWidgets('a refused request to join saves nothing and says why', (tester) async {
-      final repo = withRoles(const [])..failures['requestToJoin'] = ApiError('You already asked to join this company.', statusCode: 409);
+      final repo = withRoles(const [])
+        ..failures['requestToJoin'] = ApiError('You already asked to join this company.', statusCode: 409);
       await pump(tester, repo: repo);
-      await reveal(tester, find.text('Add experience').last);
-      await tester.tap(find.text('Add experience').last);
+      await reveal(tester, find.text('Add Experience').last);
+      await tester.tap(find.text('Add Experience').last);
       await tester.pumpAndSettle();
       await type(tester, 'role.title', 'Facility Manager');
       await type(tester, 'role.organisation', 'Global');
@@ -285,8 +288,8 @@ void main() {
 
     testWidgets('a company the person already belongs to is not offered to join', (tester) async {
       await pump(tester, repo: withRoles(const []));
-      await reveal(tester, find.text('Add experience').last);
-      await tester.tap(find.text('Add experience').last);
+      await reveal(tester, find.text('Add Experience').last);
+      await tester.tap(find.text('Add Experience').last);
       await tester.pumpAndSettle();
       await type(tester, 'role.organisation', 'TechCorp');
       await tester.pump(const Duration(milliseconds: 400));
@@ -298,7 +301,8 @@ void main() {
     });
 
     testWidgets("the API's refusal keeps what was typed", (tester) async {
-      final repo = DemoAccountRepository()..failures['saveExperience'] = ApiError('You can hold at most 20 roles.', statusCode: 400);
+      final repo = DemoAccountRepository()
+        ..failures['saveExperience'] = ApiError('You can hold at most 20 roles.', statusCode: 400);
       await pump(tester, repo: repo);
       await reveal(tester, find.byTooltip('Edit Facilities Manager at Global Infra Solutions'));
       await tester.tap(find.byTooltip('Edit Facilities Manager at Global Infra Solutions'));
@@ -309,7 +313,9 @@ void main() {
       expect(tester.widget<TextField>(find.byKey(const Key('role.title'))).controller!.text, 'Director');
     });
 
-    testWidgets('a role with no end year and not current cannot be saved; ticking "I work here now" removes the end', (tester) async {
+    testWidgets('a role with no end year and not current cannot be saved; ticking "I work here now" removes the end', (
+      tester,
+    ) async {
       final repo = await pump(tester);
       await reveal(tester, find.byTooltip('Edit Lead Operations Manager at TechCorp'));
       await tester.tap(find.byTooltip('Edit Lead Operations Manager at TechCorp'));
@@ -319,56 +325,67 @@ void main() {
       expect(find.byKey(const Key('role.end.year')), findsOneWidget);
       await tester.tap(find.byKey(const Key('sheet.save')));
       await tester.pumpAndSettle();
-      expect(find.text('Add when this role ended, or tick “I work here now”.'), findsOneWidget);
+      expect(find.text('Add when this role ended, or select “I work here now”.'), findsOneWidget);
       expect(repo.count('saveExperience'), 0);
     });
   });
 
   group('career breaks and gaps', () {
-    testWidgets('Add a career break: reason and dates are saved through the breaks list, and the break shows in date order', (tester) async {
-      final repo = await pump(tester);
-      await reveal(tester, find.byTooltip('Add a career break'));
-      await tester.tap(find.byTooltip('Add a career break'));
-      await tester.pumpAndSettle();
-      expect(find.text('Add career break'), findsOneWidget);
-      await tapKey(tester, 'break.reason');
-      await tester.tap(find.widgetWithText(ListTile, 'Study or upskilling'));
-      await tester.pumpAndSettle();
-      await pickYear(tester, 'break.start.year', 2014);
-      await pickYear(tester, 'break.end.year', 2015);
-      await type(tester, 'break.description', 'MBA.');
-      await save(tester);
-      final rows = repo.sent['saveCareerBreaks']! as List;
-      expect(rows.single, {'reason': 'STUDY', 'startYear': 2014, 'endYear': 2015, 'isCurrent': false, 'description': 'MBA.'});
-      await reveal(tester, find.text('Career break · Study or upskilling'));
-      expect(find.text('Career break saved.'), findsOneWidget);
-    });
+    testWidgets(
+      'Add a career break: reason and dates are saved through the breaks list, and the break shows in date order',
+      (tester) async {
+        final repo = await pump(tester);
+        await reveal(tester, find.byTooltip('Add a Career Break'));
+        await tester.tap(find.byTooltip('Add a Career Break'));
+        await tester.pumpAndSettle();
+        expect(find.text('Add Career Break'), findsOneWidget);
+        await tapKey(tester, 'break.reason');
+        await tester.tap(find.widgetWithText(ListTile, 'Study or upskilling'));
+        await tester.pumpAndSettle();
+        await pickYear(tester, 'break.start.year', 2014);
+        await pickYear(tester, 'break.end.year', 2015);
+        await type(tester, 'break.description', 'MBA.');
+        await save(tester);
+        final rows = repo.sent['saveCareerBreaks']! as List;
+        expect(rows.single, {
+          'reason': 'STUDY',
+          'startYear': 2014,
+          'endYear': 2015,
+          'isCurrent': false,
+          'description': 'MBA.',
+        });
+        await reveal(tester, find.text('Career break · Study or upskilling'));
+        expect(find.text('Career break saved.'), findsOneWidget);
+      },
+    );
 
     testWidgets('a break needs a reason and dates in order', (tester) async {
       final repo = await pump(tester);
-      await reveal(tester, find.byTooltip('Add a career break'));
-      await tester.tap(find.byTooltip('Add a career break'));
+      await reveal(tester, find.byTooltip('Add a Career Break'));
+      await tester.tap(find.byTooltip('Add a Career Break'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('sheet.save')));
       await tester.pumpAndSettle();
-      expect(find.text('Choose why you took this break.'), findsOneWidget);
-      expect(find.text('Choose when the break started.'), findsOneWidget);
+      expect(find.text('Select why you took this break.'), findsOneWidget);
+      expect(find.text('Select when the break started.'), findsOneWidget);
       expect(repo.count('saveCareerBreaks'), 0);
     });
 
     testWidgets('Edit and Delete a break', (tester) async {
       final repo = DemoAccountRepository()
-        ..breaksNow = const [CareerBreak(id: 'b1', reason: 'TRAVEL', startYear: 2012, startMonth: 1, endYear: 2012, endMonth: 8)];
+        ..breaksNow = const [
+          CareerBreak(id: 'b1', reason: 'TRAVEL', startYear: 2012, startMonth: 1, endYear: 2012, endMonth: 8),
+        ];
       await pump(tester, repo: repo);
-      await reveal(tester, find.byTooltip('Edit career break'));
-      await tester.tap(find.byTooltip('Edit career break'));
+      await reveal(tester, find.byTooltip('Edit Career Break'));
+      await tester.tap(find.byTooltip('Edit Career Break'));
       await tester.pumpAndSettle();
-      expect(find.text('Edit career break'), findsOneWidget);
+      expect(find.text('Edit Career Break'), findsOneWidget);
       await type(tester, 'break.description', 'Backpacking.');
       await save(tester);
       expect((repo.sent['saveCareerBreaks']! as List).single['description'], 'Backpacking.');
 
-      await tester.tap(find.byTooltip('Edit career break'));
+      await tester.tap(find.byTooltip('Edit Career Break'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('sheet.delete')));
       await tester.pumpAndSettle();
@@ -377,29 +394,55 @@ void main() {
       expect(repo.sent['saveCareerBreaks'], isEmpty);
     });
 
-    testWidgets('a stretch no role covers is shown to the person as a gap, with "Add a career break" that fills in its dates', (tester) async {
-      final repo = withRoles(const [
-        Experience(id: 'a', title: 'Analyst', organisation: 'Acme', startYear: 2015, startMonth: 1, endYear: 2018, endMonth: 12),
-        Experience(id: 'b', title: 'Manager', organisation: 'Beta', startYear: 2020, startMonth: 1, isCurrent: true),
-      ]);
-      await pump(tester, repo: repo);
-      await reveal(tester, find.byKey(const Key('career.gap')));
-      expect(find.text('A gap of 1 yr', findRichText: true), findsNothing);
-      expect(find.textContaining('A gap of 1 yr', findRichText: true), findsOneWidget);
-      expect(find.text('Only you see this.'), findsOneWidget);
-      await tester.tap(find.byKey(const Key('gap.addBreak')));
-      await tester.pumpAndSettle();
-      expect(find.text('Add career break'), findsOneWidget);
-      // The dates of the gap (Jan 2019 – Dec 2019) are already in the sheet.
-      expect(find.text('2019'), findsWidgets);
-      expect(find.text('January'), findsOneWidget);
-      expect(find.text('December'), findsOneWidget);
-    });
+    testWidgets(
+      'a stretch no role covers is shown to the person as a gap, with "Add a Career Break" that fills in its dates',
+      (tester) async {
+        final repo = withRoles(const [
+          Experience(
+            id: 'a',
+            title: 'Analyst',
+            organisation: 'Acme',
+            startYear: 2015,
+            startMonth: 1,
+            endYear: 2018,
+            endMonth: 12,
+          ),
+          Experience(id: 'b', title: 'Manager', organisation: 'Beta', startYear: 2020, startMonth: 1, isCurrent: true),
+        ]);
+        await pump(tester, repo: repo);
+        await reveal(tester, find.byKey(const Key('career.gap')));
+        expect(find.text('A gap of 1 yr', findRichText: true), findsNothing);
+        expect(find.textContaining('A gap of 1 yr', findRichText: true), findsOneWidget);
+        expect(find.text('Only you see this.'), findsOneWidget);
+        await tester.tap(find.byKey(const Key('gap.addBreak')));
+        await tester.pumpAndSettle();
+        expect(find.text('Add Career Break'), findsOneWidget);
+        // The dates of the gap (Jan 2019 – Dec 2019) are already in the sheet.
+        expect(find.text('2019'), findsWidgets);
+        expect(find.text('January'), findsOneWidget);
+        expect(find.text('December'), findsOneWidget);
+      },
+    );
 
     testWidgets('a gap shorter than six months is not a gap; a break that covers it removes it', (tester) async {
       final roles = [
-        const Experience(id: 'a', title: 'Analyst', organisation: 'Acme', startYear: 2015, startMonth: 1, endYear: 2018, endMonth: 12),
-        const Experience(id: 'b', title: 'Manager', organisation: 'Beta', startYear: 2019, startMonth: 4, isCurrent: true),
+        const Experience(
+          id: 'a',
+          title: 'Analyst',
+          organisation: 'Acme',
+          startYear: 2015,
+          startMonth: 1,
+          endYear: 2018,
+          endMonth: 12,
+        ),
+        const Experience(
+          id: 'b',
+          title: 'Manager',
+          organisation: 'Beta',
+          startYear: 2019,
+          startMonth: 4,
+          isCurrent: true,
+        ),
       ];
       await pump(tester, repo: withRoles(roles));
       await reveal(tester, find.text('Experience'));
@@ -417,8 +460,8 @@ void main() {
 
     testWidgets('Add sends the whole list with the new qualification; blanks are left out', (tester) async {
       final repo = await pump(tester);
-      await reveal(tester, find.byTooltip('Add education'));
-      await tester.tap(find.byTooltip('Add education'));
+      await reveal(tester, find.byTooltip('Add Education'));
+      await tester.tap(find.byTooltip('Add Education'));
       await tester.pumpAndSettle();
       await type(tester, 'edu.institution', 'IIM Bangalore');
       await type(tester, 'edu.degree', 'PGDM');
@@ -433,8 +476,8 @@ void main() {
 
     testWidgets('an institution is required, and the end year may not be before the start', (tester) async {
       final repo = await pump(tester);
-      await reveal(tester, find.byTooltip('Add education'));
-      await tester.tap(find.byTooltip('Add education'));
+      await reveal(tester, find.byTooltip('Add Education'));
+      await tester.tap(find.byTooltip('Add Education'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('sheet.save')));
       await tester.pumpAndSettle();
@@ -469,23 +512,31 @@ void main() {
   });
 
   group('credentials', () {
-    testWidgets('the ones ICR issued are read-only chips that open their certificate; external ones can be edited', (tester) async {
+    testWidgets('the ones ICR issued are read-only chips that open their certificate; external ones can be edited', (
+      tester,
+    ) async {
       final opened = <String>[];
       await pump(tester, onCertificate: (c) => opened.add(c.id));
       await reveal(tester, find.text('Certified Facility Professional (CFP)'));
       expect(find.text('Issued by ICR'), findsOneWidget);
       expect(find.byTooltip('Edit Certified Facility Professional'), findsNothing);
       expect(find.byTooltip('Edit IFMA Facility Management Professional'), findsOneWidget);
-      expect(find.text('Self-declared'), findsOneWidget);
+      expect(
+        find.text('Self-declared'),
+        findsNothing,
+        reason: 'no status on a credential the person added (owner, 12 Nov 2026)',
+      );
       await tester.tap(find.text('Certified Facility Professional (CFP)'));
       await tester.pump();
       expect(opened, ['cred-1']);
     });
 
-    testWidgets('Add: name, code in capitals, issuer, the date, a certificate; the body leaves blanks out', (tester) async {
+    testWidgets('Add: name, code in capitals, issuer, the date, a certificate; the body leaves blanks out', (
+      tester,
+    ) async {
       final repo = await pump(tester);
-      await reveal(tester, find.byTooltip('Add credential'));
-      await tester.tap(find.byTooltip('Add credential'));
+      await reveal(tester, find.byTooltip('Add Credential'));
+      await tester.tap(find.byTooltip('Add Credential'));
       await tester.pumpAndSettle();
       await type(tester, 'cred.name', 'Certified Facility Manager');
       await type(tester, 'cred.code', 'cfm');
@@ -509,21 +560,24 @@ void main() {
       expect(body.containsKey('credentialUrl'), isFalse);
       expect(find.text('Credential saved.'), findsOneWidget);
       await reveal(tester, find.text('Certified Facility Manager (CFM)'));
-      expect(find.text('Certificate on file'), findsOneWidget);
+      expect(find.text('Certificate on file'), findsNothing, reason: 'no status chip (owner, 12 Nov 2026)');
     });
 
-    testWidgets('a name is required; an expiry before the issue date and a link that is not a web address are refused', (tester) async {
-      final repo = await pump(tester);
-      await reveal(tester, find.byTooltip('Add credential'));
-      await tester.tap(find.byTooltip('Add credential'));
-      await tester.pumpAndSettle();
-      await type(tester, 'cred.url', 'not a link');
-      await tester.tap(find.byKey(const Key('sheet.save')));
-      await tester.pumpAndSettle();
-      expect(find.text('Give the credential a name.'), findsOneWidget);
-      expect(find.text('Enter a full web address, like https://issuer.org/verify/12345.'), findsOneWidget);
-      expect(repo.count('addCredential'), 0);
-    });
+    testWidgets(
+      'a name is required; an expiry before the issue date and a link that is not a web address are refused',
+      (tester) async {
+        final repo = await pump(tester);
+        await reveal(tester, find.byTooltip('Add Credential'));
+        await tester.tap(find.byTooltip('Add Credential'));
+        await tester.pumpAndSettle();
+        await type(tester, 'cred.url', 'not a link');
+        await tester.tap(find.byKey(const Key('sheet.save')));
+        await tester.pumpAndSettle();
+        expect(find.text('Enter the credential name.'), findsOneWidget);
+        expect(find.text('Enter a full web address, like https://issuer.org/verify/12345.'), findsOneWidget);
+        expect(repo.count('addCredential'), 0);
+      },
+    );
 
     testWidgets('Edit sends only that credential; the evidence can be removed', (tester) async {
       final repo = DemoAccountRepository()
@@ -540,7 +594,11 @@ void main() {
         ];
       await pump(tester, repo: repo);
       await reveal(tester, find.byTooltip('Edit NEBOSH IGC'));
-      expect(find.text('Certificate on file'), findsOneWidget, reason: 'a certificate with no review yet');
+      expect(
+        find.text('Certificate on file'),
+        findsNothing,
+        reason: 'no status chip, reviewed or not (owner, 12 Nov 2026)',
+      );
       await tester.tap(find.byTooltip('Edit NEBOSH IGC'));
       await tester.pumpAndSettle();
       expect(find.text('nebosh.pdf'), findsOneWidget);
@@ -561,22 +619,27 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('sheet.delete')));
       await tester.pumpAndSettle();
-      expect(find.text('Delete this credential?'), findsOneWidget);
+      expect(find.text('Delete This Credential?'), findsOneWidget);
       await tester.tap(find.byKey(const Key('confirm.ok')));
       await tester.pumpAndSettle();
-      expect(find.text('Removed from your mentor profile'), findsOneWidget);
+      expect(find.text('Removed from Your Mentor Profile'), findsOneWidget);
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
       expect(repo.credentialsNow.map((c) => c.id), ['cred-1']);
     });
 
-    testWidgets('an evidence file over 10 MB is refused before it is sent; a refused upload shows the API sentence', (tester) async {
-      final repo = await pump(tester, pickEvidence: () async => PickedPhoto(bytes: List.filled(10 * 1024 * 1024 + 1, 1), name: 'scan.pdf'));
-      await reveal(tester, find.byTooltip('Add credential'));
-      await tester.tap(find.byTooltip('Add credential'));
+    testWidgets('an evidence file over 10 MB is refused before it is sent; a refused upload shows the API sentence', (
+      tester,
+    ) async {
+      final repo = await pump(
+        tester,
+        pickEvidence: () async => PickedPhoto(bytes: List.filled(10 * 1024 * 1024 + 1, 1), name: 'scan.pdf'),
+      );
+      await reveal(tester, find.byTooltip('Add Credential'));
+      await tester.tap(find.byTooltip('Add Credential'));
       await tester.pumpAndSettle();
       await tapKey(tester, 'cred.attach');
-      expect(find.text('That file is too big. Choose one under 10 MB.'), findsOneWidget);
+      expect(find.text('The file is too large. Choose one under 10 MB.'), findsOneWidget);
       expect(repo.count('upload'), 0);
     });
   });

@@ -176,7 +176,7 @@ class _MeetingLink extends StatelessWidget {
           height: 25,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Center(widthFactor: 1, child: Text('Meeting link', style: CouncilsText.meetingLink)),
+            child: Center(widthFactor: 1, child: Text('Meeting Link', style: CouncilsText.meetingLink)),
           ),
         ),
       ),

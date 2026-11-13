@@ -79,6 +79,10 @@ Map<String, Object?> member(String id, String name, {String? headline}) {
   };
 }
 
+/// One clock for every card a test builds: cards of the same age must carry the same moment, or the feed's
+/// newest-first sort puts the card built a millisecond later on top and a test flakes under load (9 Nov 2026).
+final DateTime fixtureNow = DateTime.now().toUtc();
+
 /// A thread as `GET /forum/threads` lists it.
 Map<String, Object?> threadCard(
   String id, {
@@ -117,8 +121,8 @@ Map<String, Object?> threadCard(
   'score': likes,
   'likes': likes,
   'hasAcceptedAnswer': false,
-  'lastActivityAt': DateTime.now().toUtc().subtract(age).toIso8601String(),
-  'createdAt': DateTime.now().toUtc().subtract(age).toIso8601String(),
+  'lastActivityAt': fixtureNow.subtract(age).toIso8601String(),
+  'createdAt': fixtureNow.subtract(age).toIso8601String(),
   'myVote': myReaction == null ? null : 1,
   'myReaction': myReaction,
   'reactions': reactions,

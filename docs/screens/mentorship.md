@@ -9,7 +9,7 @@ Seed: `tool/seed/mentorship.ts` (the 48 listed mentors, the cohort, the storefro
 | Screen | Where | What it is |
 | --- | --- | --- |
 | `MentorshipScreen` | the Mentorship tab | The landing: the Home header, "Explore by Companies", the two mentor grids, "Explore by Expertise", the "Become an ICR Mentor" band (only for someone who could still apply — `canOfferToMentor`, as the website hides its band from a mentor, an applicant and staff; `offerMentoring`), the next cohort, "Featured Advisory Sessions". |
-| `FindMentorsScreen` | pushed over the tab, bottom bar kept | The directory: title bar with the search box, "Find Mentors" with its match count, category chips, filter chips, the 2-column mentor cards, "Showing 8 of 48", "Load more mentors". |
+| `FindMentorsScreen` | pushed over the tab, bottom bar kept | The directory: title bar with the search box, "Find Mentors" with its match count, an "All" chip then the category chips, filter chips, the 2-column mentor cards, "Showing 8 of 48"; the next page is fetched as the list is scrolled (since 9 Nov 2026; no "Load more mentors" button). |
 
 ## Wiring
 
@@ -45,7 +45,7 @@ Unchanged from before, so `app.dart` needs nothing. This pass only **added optio
 
 | Call | For |
 | --- | --- |
-| `GET /mentorship/mentors` (`page`, `limit` 8 / 24 / 48, `sortBy`, `sortDir`, `competencies`, `minExperience`, `availableOnly`, `search`, `companies`) | The directory, the landing's two grids, Find Mentors, its `meta.total` ("48 matches") and `meta.hasNext` (whether "Load more" shows). |
+| `GET /mentorship/mentors` (`page`, `limit` 8 / 24 / 48, `sortBy`, `sortDir`, `competencies`, `minExperience`, `availableOnly`, `search`, `companies`) | The directory, the landing's two grids, Find Mentors, its `meta.total` ("48 matches") and `meta.hasNext` (whether another page is fetched on scrolling). |
 | `GET /mentorship/mentors/facets` | The category chips (`competencies`: label and mentor count), the topics, and the count behind "50+ Domains". |
 | `GET /mentorship/public-stats` | `listedMentors`, for the banner's "Join 60+ senior leaders". |
 | `GET /mentorship/programmes?status=OPEN&limit=1` | The "UPCOMING COHORT" card: name, `enrolmentCount`, organiser, `coverUrl`, slug. |
@@ -82,7 +82,7 @@ Website pages opened where the app has no screen: `/notifications`, `/become-a-m
 | "Filters (2)" | Counts the category chip, the minimum-experience filter, the company chip and the free-slot switch that are on. |
 | "Sort: Top rated" | `sortBy`: Top rated, Most mentees helped, Most sessions, Most experienced, Newest. |
 | "Exp: 10+ Yrs" | `minExperience`, chosen as 5+, 10+ or 15+ in the Filters sheet; the chip's cross clears it. |
-| "Showing 8 of 48 mentors in this category" and the bar | Loaded count, `meta.total`, and the fraction between them; "in this category" only while a category chip is on. "Load more mentors" fetches the next page of eight (real page 2, 3 ... of the API). |
+| "Showing 8 of 48 mentors in this category" and the bar | Loaded count, `meta.total`, and the fraction between them; "in this category" only while a category chip is on. The next page of eight (real page 2, 3 ... of the API) is fetched when the list comes within 400 dp of its end, and again when a page leaves the list shorter than the screen; a small spinner shows under the bar meanwhile (owner, 9 Nov 2026: "infinite scrolling"). |
 | Save / bookmark a mentor | The controllers (`toggleSave`) save optimistically and roll back with the API's message, but the designs draw no heart, so no screen calls them. (The save is live: it feeds "your network".) |
 
 ## Every control, and what proves it
@@ -113,7 +113,7 @@ W = `test/mentorship_test.dart` (what the API cannot change), L = `test/live/men
 | Find Mentors: "Clear all" | Takes off every filter "Filters (n)" counts (words and sort stay) | W "Clear all in the sheet takes off every filter the chip counts"; L "the Filters sheet's Clear all state is the whole directory" |
 | Find Mentors: Sort | Orders by rating, mentees, sessions, experience or newest | W "the sort menu orders the directory by what is chosen"; L "every sort reaches the API and the cards come back in that order" |
 | Find Mentors: "Company: X" chip | Stays out of the search box; its cross takes it off | W "the company chip stays out of the search box...", "a company chip leads the filter row..."; L "a company tile narrows to that employer..." (and the `companies` filter path: "a company on mentors' accounts goes to the directory's own filter") |
-| Find Mentors: "Load more mentors" | Appends the next real page and moves the bar | W "Load more mentors appends the next page..."; L "Load more mentors reads the real next page, and the pages add up to the total", "a filter changed after Load more starts again from page one" |
+| Find Mentors: scrolling to the end | Appends the next real page and moves the bar; a first page shorter than the screen is followed by the next without a tap; the "All" chip clears the domain | W "scrolling to the end fetches the next page...", "a first page shorter than the screen...", "the \"All\" chip clears the domain"; L "Load more mentors reads the real next page, and the pages add up to the total", "a filter changed after Load more starts again from page one" |
 | Find Mentors: card | Opens that mentor's profile | W "a card opens that mentor's profile" |
 | Find Mentors: bell | Opens `/notifications` | W "the bell opens the notifications on the website" |
 | Find Mentors: pull to refresh | Reads the directory again, filters kept | W "pulling down reads the directory again"; L "pulling down reads the directory again and keeps the filters" |
@@ -172,3 +172,37 @@ Things drawn differently: the design's grey-filled first topic chip (a pressed s
 ## Shared kit
 
 Reused unchanged: `HomeHeader`, `TitleBar`, `IcrSearchField`, `IcrChip`, `ChipRow`, `Hairline`. Own copies or additions inside this feature: `CategoryChipRow` (a scrolling row of its own now, so it can bring the lit chip into view), `MentorCard`, `LandingHeading`, the company tiles, topic grid, banner, cohort card and session cards (`widgets/`), `MentorshipNotice` (the Jobs screen's `_Notice` is private), `mentorship_format.dart` (the "+" rounding) and `MentorshipBrand` (the wordmark palette). `TitleBar` is given a custom `leading` and a padded `middle` so the search box starts and ends where the design's does.
+
+## 9 Nov 2026: "All" and infinite scrolling on Find Mentors
+
+The owner: "this page should have the filter All, and infinite scrolling: if he scrolls, the API should fetch the next view of the mentors." `CategoryChipRow` takes `allLabel`/`onAll` (Find Mentors passes "All"; the landing's row has none); `FindMentorsScreen` owns a `ScrollController` and asks `loadMore()` within 400 dp of the end and after any frame that leaves the list shorter than the screen (`autoLoad`, on by default; tests that pin the first page pass false). The "Load more mentors" button is gone; the foot keeps "Showing N of M" and the bar, with a small spinner while a page is on its way.
+
+## 12 Nov 2026: Message on a mentor's card
+
+Owner: "connect to message them and click on the other space it will goes to profile". Every mentor card (the
+Mentorship tab's grid and Find Mentors) has a **Message** button at its foot (`MentorCard.onMessage`, through
+`MentorRow` / `MentorGrid`): it opens a plain conversation with the mentor's account (`MessagingLauncher.withPerson`,
+`POST /messaging/conversations`, reused when the two already share one). The rest of the card opens the profile as
+before. No button on a card whose mentor has no account id, nor on the viewer's own card. The buttons of a row sit
+level at the cards' foot. The website's directory cards have no such button; the profile's own "Send message" is
+unchanged (the pairing's thread, else the request sheet).
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client asked for the on-screen text to be refined "crisp, for global standard", in the style of the wording they marked up for sign-in and Settings. Wording only: no layout, colour or behaviour changed. Names of things a person taps or reads as a label are in Title Case; sentences are in sentence case with a full stop; no dash is used as punctuation; "pick" and "tick" read "select", "is told" reads "is notified", "show up / land here" reads "will appear here", and a load that fails reads "Unable to Load …". The title of an empty state or an error block is a heading (Title Case, no full stop: "No Purchases Yet", "Unable to Load Mentors"); the line under it is a sentence. The retry button reads **Try Again**.
+
+* The card's **Message** button (the owner's 12 Nov wording) is unchanged.
+* Left as they are: the banner ("Become an ICR Mentor & Shape the Next Generation", "Apply as Mentor"), the section headings (already Title Case), the kind names ("1:1 Session", "Async Query", "Group Session", "Resource"), the search hint, counts ("48 matches", "Showing 10 of 48 mentors"), the "UPCOMING COHORT" overline, and the sample content in `demo_mentorship_repository.dart`.
+
+| Old | New |
+| --- | --- |
+| Couldn't load mentors | Unable to Load Mentors |
+| No mentors match | No Matching Mentors |
+| No mentors are listed yet | No Mentors Listed Yet |
+| Mentors show up here as ICR approves them. | Mentors will appear here once ICR approves them. |
+| {slaHours} Hrs TAT | {slaHours}-Hr Reply |
+| Only mentors with a free slot | Free Slot Only |
+| Be the first to guide the next generation of facility and real estate leaders. | Apply to guide the next generation of facility and real estate leaders. |
+| Learn from top leaders at top enterprises | Learn from top leaders at top enterprises. |
+| Learn from top topics | Learn from mentors on top topics. |
+| Buttons, headings, tabs, chips, field labels and status names to Title Case: 13 strings | e.g. "Cohort programme" → "Cohort Programme"; "Clear filters" → "Clear Filters"; "Free slot" → "Free Slot" |

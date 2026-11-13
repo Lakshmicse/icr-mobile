@@ -260,7 +260,7 @@ class _InterviewsScreenState extends State<InterviewsScreen> {
         CareerNotice(
           key: const ValueKey('interviews-error'),
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load your interviews",
+          title: 'Unable to Load Your Interviews',
           body: _c.error!,
           action: 'Try again',
           onAction: _c.refresh,
@@ -275,7 +275,7 @@ class _InterviewsScreenState extends State<InterviewsScreen> {
           CareerNotice(
             key: const ValueKey('past-error'),
             icon: LucideIcons.cloudOff,
-            title: "Couldn't load your past interviews",
+            title: 'Unable to Load Your Past Interviews',
             body: _c.pastError!,
             action: 'Try again',
             onAction: _c.refresh,
@@ -290,10 +290,10 @@ class _InterviewsScreenState extends State<InterviewsScreen> {
         CareerNotice(
           key: ValueKey(upcoming ? 'upcoming-empty' : 'past-empty'),
           icon: LucideIcons.calendarX,
-          title: upcoming ? 'No interviews coming up' : 'No past interviews',
+          title: upcoming ? 'No Upcoming Interviews' : 'No Past Interviews',
           body: upcoming
-              ? 'When an employer schedules an interview, it appears here with the time and how to join.'
-              : 'Rounds you have been to appear here.',
+              ? 'When an employer schedules an interview, it will appear here with the time and joining details.'
+              : 'Interviews you have attended will appear here.',
         ),
       ];
     }
@@ -433,7 +433,7 @@ class InterviewCard extends StatelessWidget {
                 ),
                 StripButton(
                   key: ValueKey('reschedule-${iv.id}'),
-                  label: 'Ask for another time',
+                  label: 'Ask for Another Time',
                   icon: LucideIcons.calendarClock,
                   onTap: onReschedule,
                 ),

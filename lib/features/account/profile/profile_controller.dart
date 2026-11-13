@@ -28,7 +28,8 @@ class Section<T> {
 /// one item and the controller merges it into the list it holds; the buttons
 /// wait for the list to load, since saving against nothing would wipe it.
 class MyProfileController extends ChangeNotifier {
-  MyProfileController(this.repository, {this.onIdentityChanged, DateTime Function()? clock}) : clock = clock ?? DateTime.now;
+  MyProfileController(this.repository, {this.onIdentityChanged, DateTime Function()? clock})
+    : clock = clock ?? DateTime.now;
 
   final AccountRepository repository;
 
@@ -131,20 +132,40 @@ class MyProfileController extends ChangeNotifier {
     ];
     final ordered = newerFirst<TimelineEntry>(entries, (e) => experienceKeys(e.dates));
     if (!experience.ready || !breaks.ready) return ordered;
-    final gaps = careerGaps([for (final r in roles) _datesOf(r)], breaks: [for (final b in pauses) _datesOf(b)], now: clock());
-    return newerFirst<TimelineEntry>([...ordered, for (final g in gaps) TimelineEntry.gap(g)], (e) => experienceKeys(e.dates));
+    final gaps = careerGaps(
+      [for (final r in roles) _datesOf(r)],
+      breaks: [for (final b in pauses) _datesOf(b)],
+      now: clock(),
+    );
+    return newerFirst<TimelineEntry>([
+      ...ordered,
+      for (final g in gaps) TimelineEntry.gap(g),
+    ], (e) => experienceKeys(e.dates));
   }
 
   static TimelineDates _datesOf(Object r) => switch (r) {
-    Experience() => (startYear: r.startYear, startMonth: r.startMonth, endYear: r.endYear, endMonth: r.endMonth, isCurrent: r.isCurrent),
-    CareerBreak() => (startYear: r.startYear, startMonth: r.startMonth, endYear: r.endYear, endMonth: r.endMonth, isCurrent: r.isCurrent),
+    Experience() => (
+      startYear: r.startYear,
+      startMonth: r.startMonth,
+      endYear: r.endYear,
+      endMonth: r.endMonth,
+      isCurrent: r.isCurrent,
+    ),
+    CareerBreak() => (
+      startYear: r.startYear,
+      startMonth: r.startMonth,
+      endYear: r.endYear,
+      endMonth: r.endMonth,
+      isCurrent: r.isCurrent,
+    ),
     _ => (startYear: null, startMonth: null, endYear: null, endMonth: null, isCurrent: false),
   };
 
   /// Qualifications in date order.
   List<Education> get educationOrdered => newerFirst<Education>(
     education.value ?? const [],
-    (e) => educationKeys((startYear: e.startYear, startMonth: null, endYear: e.endYear, endMonth: null, isCurrent: false)),
+    (e) =>
+        educationKeys((startYear: e.startYear, startMonth: null, endYear: e.endYear, endMonth: null, isCurrent: false)),
   );
 
   // --- the intro ---------------------------------------------------------------------------------------------
@@ -383,11 +404,23 @@ class TimelineEntry {
   TimelineDates get dates {
     final r = role;
     if (r != null) {
-      return (startYear: r.startYear, startMonth: r.startMonth, endYear: r.endYear, endMonth: r.endMonth, isCurrent: r.isCurrent);
+      return (
+        startYear: r.startYear,
+        startMonth: r.startMonth,
+        endYear: r.endYear,
+        endMonth: r.endMonth,
+        isCurrent: r.isCurrent,
+      );
     }
     final b = pause;
     if (b != null) {
-      return (startYear: b.startYear, startMonth: b.startMonth, endYear: b.endYear, endMonth: b.endMonth, isCurrent: b.isCurrent);
+      return (
+        startYear: b.startYear,
+        startMonth: b.startMonth,
+        endYear: b.endYear,
+        endMonth: b.endMonth,
+        isCurrent: b.isCurrent,
+      );
     }
     final g = gap!;
     return (

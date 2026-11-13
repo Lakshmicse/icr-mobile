@@ -102,7 +102,7 @@ Future<void> openPostJob(BuildContext context, {JobsNavigation? navigation}) asy
   if (access == null) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text("Couldn't check your account. Try again in a moment.")));
+      ..showSnackBar(const SnackBar(content: Text('Unable to check your account. Try again in a moment.')));
     return;
   }
   if (access.canManage) {
@@ -125,19 +125,19 @@ Future<void> showHirersOnly(
   final canSwitch = !actingForCompany && (access?.companiesHeld ?? 0) > 0;
   final (title, body) = actingForCompany
       ? (
-          'Jobs are posted by the hiring team',
-          'Your role at this company does not post jobs. Ask its admin to make you a recruiter, and you can post '
-              'jobs, run applicants and make offers here.',
+          'Jobs Are Posted by the Hiring Team',
+          'Your role at this company cannot post jobs. Ask its admin to make you a recruiter to post '
+              'jobs, manage applicants and make offers.',
         )
       : canSwitch
       ? (
-          "You're using your personal account",
+          'You Are Using Your Personal Account',
           'Jobs belong to a company. Switch to one of your companies to post a job on its behalf.',
         )
       : (
-          'Jobs are posted for a company',
-          'Set up your company on ICR and you can post jobs, run applicants and make offers. '
-              'If your company is already here, ask its admin to make you a recruiter.',
+          'Jobs Are Posted for a Company',
+          'Create your company on ICR to post jobs, manage applicants and make offers. '
+              'If your company is already on ICR, ask its admin to make you a recruiter.',
         );
   return showDialog<void>(
     context: context,
@@ -149,7 +149,7 @@ Future<void> showHirersOnly(
         TextButton(
           key: const ValueKey('hirers-only-later'),
           onPressed: () => Navigator.pop(dialog),
-          child: Text(actingForCompany ? 'OK' : 'Not now'),
+          child: Text(actingForCompany ? 'OK' : 'Not Now'),
         ),
         if (canSwitch)
           TextButton(
@@ -158,7 +158,7 @@ Future<void> showHirersOnly(
               Navigator.pop(dialog);
               navigation.switchCompany(context, links);
             },
-            child: const Text('Switch company'),
+            child: const Text('Switch Company'),
           )
         else if (!actingForCompany)
           TextButton(
@@ -167,7 +167,7 @@ Future<void> showHirersOnly(
               Navigator.pop(dialog);
               navigation.createCompany(context, links);
             },
-            child: const Text('Create a company'),
+            child: const Text('Create a Company'),
           ),
       ],
     ),

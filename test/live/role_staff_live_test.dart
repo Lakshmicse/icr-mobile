@@ -60,10 +60,10 @@ void main() {
 
           // Each tab, in the bottom bar's order.
           final probes = {
-            'Learning': 'Assess Your Knowledge',
+            'Learning': 'Test Your Knowledge',
             'Mentorship': 'Top Mentors in Your Network',
             'Marketplace': 'Post RFQ',
-            'Jobs': 'Post a job',
+            'Jobs': 'Post a Job',
           };
           for (final entry in probes.entries) {
             await tester.tap(find.descendant(of: find.byType(IcrBottomNav), matching: find.text(entry.key)).first);
@@ -87,7 +87,7 @@ void main() {
           expectNoRawErrors(tester, 'the menu');
 
           await tester.tap(find.text('Sign Out'));
-          expect(await pumpUntil(tester, find.textContaining('Sign in'), timeout: const Duration(seconds: 15)), isTrue);
+          expect(await pumpUntil(tester, find.textContaining('Sign In'), timeout: const Duration(seconds: 15)), isTrue);
           expect(thrown(tester), isNull);
           await finishLive(tester);
         },
@@ -104,15 +104,15 @@ void main() {
   final limits = <String, Map<String, List<String>>>{
     // Candidate routes (applications, saved jobs, invitations, profile performance) are closed to a SUPER_ADMIN.
     'superadmin@icr.test': {
-      'the career hub': ['Your career', 'Insufficient role permissions'],
+      'the career hub': ['Your Career', 'Insufficient role permissions'],
     },
     // A person on no company's team: jobs are posted for a company. A requirement form is theirs (an enquiry needs
     // no company, as on the website since 3 Nov 2026), so its usual probe applies.
     'contentadmin@icr.test': {
-      'jobs you posted': ['Posting jobs is for hiring teams', 'Set up a company'],
+      'jobs you posted': ['Job Posting Is for Hiring Teams', 'Create a Company'],
     },
     'supportagent@icr.test': {
-      'jobs you posted': ['Posting jobs is for hiring teams', 'Set up a company'],
+      'jobs you posted': ['Job Posting Is for Hiring Teams', 'Create a Company'],
     },
   };
 

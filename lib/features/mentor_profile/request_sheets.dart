@@ -156,7 +156,7 @@ class _PhoneField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Labelled(
-      label: 'Mobile number',
+      label: 'Mobile Number',
       help: 'The mentor needs a way to reach you. It is saved to your profile.',
       child: TextField(
         controller: controller,
@@ -196,7 +196,7 @@ class _MentoringRequestFormState extends State<_MentoringRequestForm> {
 
   Future<void> _submit() async {
     if (_message.text.trim().length < _minMessage) {
-      setState(() => _problem = 'Tell the mentor a little more: at least $_minMessage characters.');
+      setState(() => _problem = 'Enter at least $_minMessage characters for the mentor.');
       return;
     }
     if (_needsPhone && _phone.text.trim().length < 8) {
@@ -224,14 +224,14 @@ class _MentoringRequestFormState extends State<_MentoringRequestForm> {
   Widget build(BuildContext context) {
     final name = widget.controller.profile?.firstName ?? 'the mentor';
     return _FormFrame(
-      title: 'Ask $name to mentor you',
-      subtitle: 'Free. $name reads this before answering, so say why them and what help you want.',
-      submitLabel: _sending ? 'Sending…' : 'Send request',
+      title: 'Ask $name to Mentor You',
+      subtitle: 'Free. $name reads this before answering. Explain why you chose them and what help you need.',
+      submitLabel: _sending ? 'Sending…' : 'Send Request',
       onSubmit: _sending ? null : _submit,
       problem: _problem,
       children: [
         _Labelled(
-          label: 'Your message',
+          label: 'Your Message',
           child: TextField(
             controller: _message,
             minLines: 4,
@@ -290,7 +290,7 @@ class _SessionRequestFormState extends State<_SessionRequestForm> {
 
   Future<void> _submit() async {
     if (_topic.text.trim().length < _minTopic) {
-      setState(() => _problem = 'Say what you want to discuss: at least $_minTopic characters.');
+      setState(() => _problem = 'Describe what you want to discuss in at least $_minTopic characters.');
       return;
     }
     if (_needsPhone && _phone.text.trim().length < 8) {
@@ -328,24 +328,24 @@ class _SessionRequestFormState extends State<_SessionRequestForm> {
       title: 'Request ${o.title}',
       subtitle:
           '$price${o.durationMin == null ? '' : ' • ${o.durationMin} min'}. The mentor sets the time when they accept'
-          '${o.free ? '.' : '; you pay only after that.'}',
-      submitLabel: _sending ? 'Sending…' : 'Send request',
+          '${o.free ? '.' : '. You pay only after that.'}',
+      submitLabel: _sending ? 'Sending…' : 'Send Request',
       onSubmit: _sending ? null : _submit,
       problem: _problem,
       children: [
         _Labelled(
-          label: 'What do you want to discuss?',
+          label: 'Discussion Topic',
           child: TextField(
             controller: _topic,
             minLines: 3,
             maxLines: 6,
             maxLength: _maxTopic,
             style: MentorText.formInput,
-            decoration: _decoration('Your goal, and where you are stuck'),
+            decoration: _decoration('Your goal and where you need help'),
           ),
         ),
         _Labelled(
-          label: 'How would you like to meet?',
+          label: 'Meeting Mode',
           child: Wrap(
             spacing: 8,
             children: [
@@ -359,7 +359,7 @@ class _SessionRequestFormState extends State<_SessionRequestForm> {
           ),
         ),
         _Labelled(
-          label: 'Days and times that suit you (optional)',
+          label: 'Preferred Days and Times (Optional)',
           child: TextField(
             controller: _times,
             maxLength: 300,

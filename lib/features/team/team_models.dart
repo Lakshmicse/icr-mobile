@@ -33,8 +33,8 @@ String learningRoleLabel(String role) => learningStaffRoleLabels[role] ?? role;
 
 /// `MESSAGE_TOPIC_LABELS` (the company inbox's topics).
 const messageTopicLabels = {
-  'SALES': 'Sales & quotes',
-  'PROCUREMENT': 'Requirements & buying',
+  'SALES': 'Sales & Quotes',
+  'PROCUREMENT': 'Requirements & Buying',
   'CAREERS': 'Careers',
   'PARTNERSHIP': 'Partnerships',
   'GENERAL': 'General',
@@ -274,7 +274,7 @@ class Office {
   const Office({required this.id, required this.name, this.parentId, this.depth = 0});
 
   /// "No office": the member covers the whole company.
-  static const companyWide = Office(id: '', name: 'Company-wide');
+  static const companyWide = Office(id: '', name: 'Company-Wide');
 
   final String id;
   final String name;

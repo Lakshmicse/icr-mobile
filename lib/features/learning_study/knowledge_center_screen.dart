@@ -70,7 +70,7 @@ class _KnowledgeCenterScreenState extends State<KnowledgeCenterScreen> {
             builder: (context, _) => Stack(
               children: [
                 Positioned.fill(
-                  top: TitleBar.height,
+                  top: TitleBar.reserved(context),
                   child: RefreshIndicator(
                     color: AppColors.primary,
                     onRefresh: _formulas.refresh,
@@ -88,7 +88,7 @@ class _KnowledgeCenterScreenState extends State<KnowledgeCenterScreen> {
                   left: 0,
                   right: 0,
                   child: TitleBar(
-                    title: 'Knowledge Center',
+                    title: 'Knowledge Centre',
                     onBack: widget.onBack,
                     unread: _formulas.unread,
                     onBell: () => openNotifications(context),
@@ -112,7 +112,7 @@ class _KnowledgeCenterScreenState extends State<KnowledgeCenterScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: IcrSearchField(
             controller: _search,
-            hint: 'Search formulas...',
+            hint: 'Search topics, concepts or keywords...',
             height: 40,
             onSubmitted: _formulas.setSearch,
           ),
@@ -164,9 +164,9 @@ class _KnowledgeCenterScreenState extends State<KnowledgeCenterScreen> {
           hasScrollBody: false,
           child: StudyNotice(
             icon: LucideIcons.cloudOff,
-            title: "Couldn't load the formulas",
+            title: 'Unable to Load the Formulas',
             body: _formulas.error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: _formulas.refresh,
           ),
         ),
@@ -179,8 +179,10 @@ class _KnowledgeCenterScreenState extends State<KnowledgeCenterScreen> {
           hasScrollBody: false,
           child: StudyNotice(
             icon: LucideIcons.sigma,
-            title: 'No formulas yet',
-            body: 'Formulas show up here as ICR publishes them.',
+            title: 'No Knowledge Resources Available Yet',
+            body:
+                'Knowledge resources will appear here once published by the ICR Learning Administrator. Check back soon '
+                'for industry insights, technical references, best practices and professional learning materials.',
           ),
         ),
       ];
@@ -191,14 +193,32 @@ class _KnowledgeCenterScreenState extends State<KnowledgeCenterScreen> {
           hasScrollBody: false,
           child: StudyNotice(
             icon: LucideIcons.searchX,
-            title: 'No formula matches',
+            title: 'No Formula Matches',
             body: 'Nothing matches "${_formulas.search}". Try other words, or clear the search.',
-            action: 'Clear search',
+            action: 'Clear Search',
             onAction: () {
               _search.clear();
               _formulas.clearSearch();
             },
           ),
+        ),
+      ];
+    }
+
+    // "All" is the list of topics (bug sheet #22, 9 Nov 2026: "when All is tapped it should show all topics", not
+    // every formula at once); a topic opens its own formulas, and a search still looks across every topic.
+    // A single group has no topics to choose from: its formulas are the list.
+    if (_formulas.shelfSlug == null && !_formulas.narrowed && sections.length > 1) {
+      return [
+        SliverList(
+          delegate: SliverChildListDelegate([
+            const SizedBox(height: 4),
+            for (final s in sections) ...[
+              _TopicRow(shelf: s.shelf, onTap: () => _formulas.selectShelf(s.shelf.topic.slug)),
+              if (s.shelf.error != null) _ShelfError(message: s.shelf.error!, onRetry: _formulas.refresh),
+            ],
+            const SizedBox(height: 28),
+          ]),
         ),
       ];
     }
@@ -246,6 +266,60 @@ class _KnowledgeCenterScreenState extends State<KnowledgeCenterScreen> {
         ]),
       ),
     ];
+  }
+}
+
+/// A topic in the "All" list: its picture, its name, how many formulas it holds and a chevron; a tap opens it.
+class _TopicRow extends StatelessWidget {
+  const _TopicRow({required this.shelf, required this.onTap});
+
+  final FormulaShelf shelf;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = shelf.cards.length;
+    return Semantics(
+      button: true,
+      label: '${shelf.topic.title}, ${formulasLabel(total)}. Opens the topic.',
+      excludeSemantics: true,
+      child: InkWell(
+        key: ValueKey('knowledge-topic-${shelf.topic.slug}'),
+        onTap: onTap,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: SizedBox(width: 44, height: 44, child: _Thumb(picture: shelf.topic.cover)),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          shelf.topic.title,
+                          style: StudyText.shelfTitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(formulasLabel(total), style: StudyText.shelfCount),
+                      ],
+                    ),
+                  ),
+                  const Icon(LucideIcons.chevronRight, size: 20, color: AppColors.slate400),
+                ],
+              ),
+            ),
+            const Divider(height: 1, thickness: 1, color: AppColors.blockRule),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -397,11 +471,11 @@ class _ShelfError extends StatelessWidget {
         decoration: BoxDecoration(color: AppColors.slate100, borderRadius: BorderRadius.circular(12)),
         child: Row(
           children: [
-            Expanded(child: Text("Couldn't load this group. $message", style: StudyText.note)),
+            Expanded(child: Text('Unable to load this group. $message', style: StudyText.note)),
             TextButton(
               onPressed: onRetry,
               style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-              child: Text('Try again', style: StudyText.noteLink),
+              child: Text('Try Again', style: StudyText.noteLink),
             ),
           ],
         ),

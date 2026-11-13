@@ -75,12 +75,13 @@ class _VerifyBodyState extends State<VerifyBody> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
       children: [
-        Text('CERTIFICATE VERIFICATION', style: ExamText.eyebrow),
+        Text('ICR CERTIFICATE VERIFICATION', style: ExamText.eyebrow),
         const SizedBox(height: 4),
-        Text('Check a certificate number', style: ExamText.heroTitle.copyWith(fontSize: 22)),
+        Text('Verify an ICR Certificate', style: ExamText.heroTitle.copyWith(fontSize: 22)),
         const SizedBox(height: 6),
         Text(
-          'Every ICR certificate carries a unique number in the form $sampleCertificateNumber. Enter it below to see what it certifies.',
+          'Every ICR certificate has a unique verification number. Enter the certificate number below to verify its '
+          'authenticity and view the certification details.',
           style: ExamText.body,
         ),
         const SizedBox(height: 16),
@@ -98,7 +99,7 @@ class _VerifyBodyState extends State<VerifyBody> {
                 onSubmitted: (_) => _verify(),
                 style: AppText.plexSans(16, FontWeight.w600, AppColors.onSurface, spacing: 0.3),
                 decoration: InputDecoration(
-                  labelText: 'Certificate number',
+                  labelText: 'Certificate Number',
                   hintText: sampleCertificateNumber,
                   hintStyle: AppText.plexSans(16, FontWeight.w400, AppColors.slate400),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -114,7 +115,7 @@ class _VerifyBodyState extends State<VerifyBody> {
               ),
               const SizedBox(height: 12),
               ExamButton(
-                label: _busy ? 'Checking…' : 'Verify',
+                label: _busy ? 'Checking…' : 'Verify Certificate',
                 icon: LucideIcons.shieldCheck,
                 busy: _busy,
                 onPressed: _number.text.trim().isEmpty ? null : _verify,
@@ -124,12 +125,12 @@ class _VerifyBodyState extends State<VerifyBody> {
         ),
         if (_error != null) ...[
           const SizedBox(height: 16),
-          Notice(tone: NoticeTone.error, text: _error!, action: 'Try again', onAction: _verify),
+          Notice(tone: NoticeTone.error, text: _error!, action: 'Try Again', onAction: _verify),
         ] else if (_checked && !_busy && found == null) ...[
           const SizedBox(height: 16),
           const Notice(
             tone: NoticeTone.warning,
-            text: 'No certificate was found with that number. Check the number and try again.',
+            text: 'No certificate matches this number. Check the number and try again.',
           ),
         ],
         if (found != null && !_busy) ...[const SizedBox(height: 16), _Verified(certificate: found)],
@@ -148,10 +149,10 @@ class _Verified extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = certificate;
     final rows = <(String, String, bool)>[
-      ('Certificate number', c.certificateId, true),
-      if (c.holder != null) ('Issued to', c.holder!, false),
+      ('Certificate Number', c.certificateId, true),
+      if (c.holder != null) ('Issued To', c.holder!, false),
       ('Credential', c.title, false),
-      ('Awarded by', c.providerName ?? 'Institute for Corporate Real Estate', false),
+      ('Awarded By', c.providerName ?? 'Institute for Corporate Real Estate', false),
       if (c.levelLabel != null) ('Level', c.levelLabel!, false),
       if (c.passPercentage > 0) ('Result', '${c.percentage}% against a ${c.passPercentage}% pass standard', false),
       ('Issued', longDayLabel(c.issuedAt), false),
@@ -167,7 +168,7 @@ class _Verified extends StatelessWidget {
             children: [
               const Icon(LucideIcons.circleCheck, size: 22, color: AppColors.success),
               const SizedBox(width: 10),
-              Expanded(child: Text('Certificate verified', style: ExamText.heading)),
+              Expanded(child: Text('Certificate Verified', style: ExamText.heading)),
               const InfoPill(label: 'Genuine', color: AppColors.emerald700, fill: AppColors.emerald50),
             ],
           ),

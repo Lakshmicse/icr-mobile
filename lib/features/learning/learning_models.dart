@@ -26,7 +26,7 @@ enum CourseKind {
 /// `LearningDeliveryMode` has four values; the retired ONLINE and HYBRID ones
 /// fold into these by the only question the tabs ask — do you have to turn up.
 enum DeliveryMode {
-  inPerson('Face to Face On site Training'),
+  inPerson('Classroom Training'),
   virtual('Live Virtual Training');
 
   const DeliveryMode(this.label);

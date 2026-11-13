@@ -168,7 +168,9 @@ class _MyMentoringScreenState extends State<MyMentoringScreen> {
   bool _visible(MyTab t) {
     if (t == _tab) return true;
     return switch (t) {
-      MyTab.saved || MyTab.purchases || MyTab.goals => _c.actsAsMentee,
+      // Purchases always (owner, 9 Nov 2026: it must not come and go with how the page was reached).
+      MyTab.purchases => true,
+      MyTab.saved || MyTab.goals => _c.actsAsMentee,
       MyTab.reports => _c.concerns.data?.isNotEmpty ?? false,
       _ => true,
     };

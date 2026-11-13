@@ -2,7 +2,7 @@ name: icr_mobile
 description: "ICR — Institute for Corporate Real Estate mobile app"
 publish_to: 'none'
 
-version: 1.0.0+13
+version: 1.0.0+34
 
 environment:
   sdk: ^3.11.1
@@ -31,6 +31,9 @@ dependencies:
   archive: ^4.5.2
   xml: ^7.0.1
   webview_flutter: ^4.14.1
+  flutter_tts: ^4.2.5
+  geolocator: ^14.0.1
+  video_player: ^2.11.1
 
 dev_dependencies:
   flutter_test:

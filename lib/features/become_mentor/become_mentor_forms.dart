@@ -11,7 +11,7 @@ import 'become_mentor_widgets.dart';
 
 typedef SaveProfile = Future<String?> Function(Map<String, dynamic> patch);
 
-/// "How you mentor": plain paragraphs, stored as HTML. A draft saves with any length under the limit; the
+/// 'How You Mentor': plain paragraphs, stored as HTML. A draft saves with any length under the limit; the
 /// 100 characters are needed to submit.
 class BioForm extends StatefulWidget {
   const BioForm({super.key, required this.initialHtml, required this.onSave});
@@ -39,7 +39,7 @@ class _BioFormState extends State<BioForm> with SheetState<BioForm> {
     final chars = htmlToPlainText(_html).length;
     final under = mentorProfileProblems(MentorProfileFacts(bioHtml: _html));
     return frame(
-      title: 'How you mentor',
+      title: 'How You Mentor',
       subtitle:
           'What you are good at, who you tend to help, and how you like to work. This is the first thing a mentee reads on your card.',
       submitLabel: 'Save',
@@ -51,7 +51,7 @@ class _BioFormState extends State<BioForm> with SheetState<BioForm> {
             ),
       children: [
         FieldBlock(
-          label: 'How you mentor',
+          label: 'How You Mentor',
           help: chars < MentorLimits.bioMin
               ? '$chars of the ${MentorLimits.bioMin} characters needed to submit. Blank lines start a new paragraph.'
               : 'Blank lines start a new paragraph.',
@@ -101,8 +101,8 @@ class _ExpertiseFormState extends State<ExpertiseForm> with SheetState<Expertise
             ),
       children: [
         FieldBlock(
-          label: 'Areas of expertise *',
-          help: 'It is how mentees find you. Up to ${MentorLimits.competenciesMax}.',
+          label: 'Areas of Expertise *',
+          help: 'This is how mentees find you. Up to ${MentorLimits.competenciesMax}.',
           child: OptionPicker(
             options: competencyDomains,
             selected: _competencies,
@@ -113,13 +113,13 @@ class _ExpertiseFormState extends State<ExpertiseForm> with SheetState<Expertise
           ),
         ),
         FieldBlock(
-          label: 'Happy to talk about',
-          help: 'Concrete conversations, e.g. “Managing your first team”. Up to ${MentorLimits.topicsMax}.',
+          label: 'Conversation Topics',
+          help: 'Specific topics, for example “Managing your first team”. Up to ${MentorLimits.topicsMax}.',
           child: TextChipEditor(
             fieldKey: const ValueKey('topic-text'),
             items: _topics,
             max: MentorLimits.topicsMax,
-            hint: 'Type a topic',
+            hint: 'Enter a topic',
             error: of(MentorProfileField.topics),
             onChanged: (v) => setState(() => _topics = v),
           ),
@@ -159,7 +159,7 @@ class _AudienceFormState extends State<AudienceForm> with SheetState<AudienceFor
     final problems = mentorProfileProblems(MentorProfileFacts(targetAudiences: _audiences, targetRoles: _roles));
     String? of(MentorProfileField f) => problems.where((p) => p.field == f).firstOrNull?.message;
     return frame(
-      title: 'Who you mentor',
+      title: 'Who You Mentor',
       submitLabel: 'Save',
       onSubmit: busy
           ? null
@@ -169,8 +169,8 @@ class _AudienceFormState extends State<AudienceForm> with SheetState<AudienceFor
             ),
       children: [
         FieldBlock(
-          label: 'Who you want to mentor *',
-          help: 'Pick everyone you are happy to hear from.',
+          label: 'Who You Want to Mentor *',
+          help: 'Select everyone you are willing to mentor.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -197,14 +197,14 @@ class _AudienceFormState extends State<AudienceForm> with SheetState<AudienceFor
           ),
         ),
         FieldBlock(
-          label: 'Roles you can help people reach',
-          help: 'Pick from the list or type your own. Up to ${MentorLimits.targetRolesMax}.',
+          label: 'Roles You Can Help People Reach',
+          help: 'Select from the list or enter your own. Up to ${MentorLimits.targetRolesMax}.',
           child: TextChipEditor(
             fieldKey: const ValueKey('role-text'),
             items: _roles,
             max: MentorLimits.targetRolesMax,
             suggestions: widget.jobTitles,
-            hint: 'Pick or type a role',
+            hint: 'Select or enter a role',
             error: of(MentorProfileField.targetRoles),
             onChanged: (v) => setState(() => _roles = v),
           ),
@@ -262,7 +262,7 @@ class _AvailabilityFormState extends State<AvailabilityForm> with SheetState<Ava
             ),
       children: [
         FieldBlock(
-          label: "How you'll meet",
+          label: 'Meeting Modes',
           child: Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -278,7 +278,7 @@ class _AvailabilityFormState extends State<AvailabilityForm> with SheetState<Ava
           ),
         ),
         FieldBlock(
-          label: 'Preferred cadence',
+          label: 'Preferred Meeting Frequency',
           help: 'Leave it empty for no preference.',
           child: Wrap(
             spacing: 6,
@@ -295,7 +295,7 @@ class _AvailabilityFormState extends State<AvailabilityForm> with SheetState<Ava
           ),
         ),
         FieldBlock(
-          label: "When you're free",
+          label: 'Availability Note',
           help: '${_note.text.length} / ${MentorLimits.availabilityNoteMax}',
           child: TextField(
             key: const ValueKey('availability-note'),
@@ -304,7 +304,7 @@ class _AvailabilityFormState extends State<AvailabilityForm> with SheetState<Ava
             maxLines: 4,
             onChanged: (_) => setState(() {}),
             style: MentoringText.formInput,
-            decoration: fieldDecoration('Weekday evenings after 7pm IST'),
+            decoration: fieldDecoration('Weekday evenings after 7 pm IST'),
           ),
         ),
       ],
@@ -351,7 +351,7 @@ class _WeeklyHoursFormState extends State<WeeklyHoursForm> with SheetState<Weekl
   /// What is wrong with the windows, as the API words it, or null.
   String? _check() {
     if (_windows.length > MentorLimits.availabilityBlocksMax) {
-      return 'That is ${_windows.length} windows. Keep it to ${MentorLimits.availabilityBlocksMax}.';
+      return 'You have ${_windows.length} windows. The maximum is ${MentorLimits.availabilityBlocksMax}.';
     }
     for (final w in _windows) {
       if (w.end <= w.start) return 'Each window must end after it starts.';
@@ -375,9 +375,9 @@ class _WeeklyHoursFormState extends State<WeeklyHoursForm> with SheetState<Weekl
   Widget build(BuildContext context) {
     final slots = [for (var m = 0; m < 1440; m += _step) m];
     return frame(
-      title: 'Weekly hours',
+      title: 'Weekly Hours',
       subtitle: 'When mentees can book you, in ${widget.timezone.replaceAll('_', ' ')}. Saving replaces your hours.',
-      submitLabel: 'Save hours',
+      submitLabel: 'Save Hours',
       onSubmit: busy
           ? null
           : () => send(
@@ -396,7 +396,7 @@ class _WeeklyHoursFormState extends State<WeeklyHoursForm> with SheetState<Weekl
                 onTap: () => _add(day),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                  child: Text('Add window', style: MentoringText.buttonQuiet),
+                  child: Text('Add Window', style: MentoringText.buttonQuiet),
                 ),
               ),
             ],
@@ -448,7 +448,7 @@ class _WeeklyHoursFormState extends State<WeeklyHoursForm> with SheetState<Weekl
                     ),
                     IconButton(
                       key: ValueKey('remove-window-$i'),
-                      tooltip: 'Remove this window',
+                      tooltip: 'Remove This Window',
                       icon: const Icon(LucideIcons.trash2, size: 16, color: AppColors.outline),
                       onPressed: () => setState(() => _windows.removeAt(i)),
                     ),
@@ -498,19 +498,19 @@ class _CertificationsFormState extends State<CertificationsForm> with SheetState
     final staleMessage = stale.isEmpty
         ? null
         : stale.length == 1
-        ? '${stale.first} is no longer on your profile — remove it to save.'
-        : '${stale.join(', ')} are no longer on your profile — remove them to save.';
+        ? '${stale.first} is no longer on your profile. Remove it to save.'
+        : '${stale.join(', ')} are no longer on your profile. Remove them to save.';
     return frame(
-      title: 'Certifications on your card',
+      title: 'Certifications on Your Card',
       submitLabel: 'Save',
       onSubmit: busy ? null : () => send(() => staleMessage, () => widget.onSave({'certifications': _codes})),
       children: [
         FieldBlock(
-          label: 'Certifications you hold',
+          label: 'Certifications You Hold',
           help: widget.held.isEmpty && stale.isEmpty
               ? 'Record a certification under your credentials and you can show it here.'
               : _codes.length >= CertificationsForm.max
-              ? '${CertificationsForm.max} of ${CertificationsForm.max} — the most your mentor card shows.'
+              ? '${CertificationsForm.max} of ${CertificationsForm.max}. This is the most your mentor card shows.'
               : 'Only credentials you have recorded, by their short code.',
           child: Wrap(
             spacing: 6,
@@ -551,7 +551,7 @@ class _CertificationsFormState extends State<CertificationsForm> with SheetState
           Align(
             alignment: Alignment.centerLeft,
             child: QuietButton(
-              label: 'Manage my credentials',
+              label: 'Manage My Credentials',
               icon: LucideIcons.externalLink,
               onPressed: widget.onManage,
             ),
@@ -641,15 +641,15 @@ class _ConductSheetState extends State<ConductSheet> with SheetState<ConductShee
 
 /// "Where the pop-up for a checklist line is opened" lives in the screen; this names a line's button.
 String fixLabel(FixTarget t) => switch (t) {
-  FixTarget.photo => 'Add a photo',
-  FixTarget.intro => 'Edit role and years',
-  FixTarget.languages => 'Edit languages',
-  FixTarget.experience => 'Add a role',
-  FixTarget.bio => 'Edit how you mentor',
-  FixTarget.expertise => 'Edit expertise',
-  FixTarget.audience => 'Edit who you mentor',
-  FixTarget.availability => 'Edit availability',
-  FixTarget.certifications => 'Edit certifications',
-  FixTarget.training => 'Open training',
-  FixTarget.conduct => 'Read the code of conduct',
+  FixTarget.photo => 'Add a Photo',
+  FixTarget.intro => 'Edit Role and Years',
+  FixTarget.languages => 'Edit Languages',
+  FixTarget.experience => 'Add a Role',
+  FixTarget.bio => 'Edit How You Mentor',
+  FixTarget.expertise => 'Edit Expertise',
+  FixTarget.audience => 'Edit Who You Mentor',
+  FixTarget.availability => 'Edit Availability',
+  FixTarget.certifications => 'Edit Certifications',
+  FixTarget.training => 'Open Training',
+  FixTarget.conduct => 'Read the Code of Conduct',
 };

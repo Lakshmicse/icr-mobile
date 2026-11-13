@@ -69,7 +69,7 @@ class _OwnListing extends StatelessWidget {
       controller: scroll,
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       children: [
-        Text('Request a quote', style: MartText.sheetTitle),
+        Text('Request a Quote', style: MartText.sheetTitle),
         const SizedBox(height: 10),
         Text(ownListingNote, key: const ValueKey('quote-own-listing'), style: MartText.sheetRow),
         const SizedBox(height: 16),
@@ -97,7 +97,7 @@ class _Form extends StatelessWidget {
             controller: scroll,
             padding: EdgeInsets.fromLTRB(20, 0, 20, 12 + MediaQuery.viewInsetsOf(context).bottom),
             children: [
-              Text('Request a quote', style: MartText.sheetTitle),
+              Text('Request a Quote', style: MartText.sheetTitle),
               const SizedBox(height: 4),
               Row(
                 children: [
@@ -131,7 +131,7 @@ class _Form extends StatelessWidget {
                 )
               else if (options.isNotEmpty || q.service != null)
                 _Field(
-                  label: 'Required service',
+                  label: 'Required Service',
                   child: InputDecorator(
                     decoration: _decoration(),
                     child: DropdownButtonHideUnderline(
@@ -168,7 +168,7 @@ class _Form extends StatelessWidget {
               const SizedBox(height: 12),
               if (product == null)
                 _Field(
-                  label: 'Project scope / area',
+                  label: 'Project Scope / Area',
                   child: TextField(
                     key: const ValueKey('quote-scope'),
                     controller: q.scope,
@@ -180,7 +180,7 @@ class _Form extends StatelessWidget {
                 ),
               const SizedBox(height: 4),
               _Field(
-                label: 'Target timeline',
+                label: 'Target Timeline',
                 child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -197,7 +197,7 @@ class _Form extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _Field(
-                label: 'Brief project notes',
+                label: 'Brief Project Notes',
                 child: TextField(
                   key: const ValueKey('quote-notes'),
                   controller: q.notes,
@@ -212,7 +212,7 @@ class _Form extends StatelessWidget {
               if (q.needsPhone) ...[
                 const SizedBox(height: 4),
                 _Field(
-                  label: 'Your mobile number',
+                  label: 'Mobile Number',
                   child: TextField(
                     key: const ValueKey('quote-phone'),
                     controller: q.phone,
@@ -223,7 +223,7 @@ class _Form extends StatelessWidget {
                       hint: '+91 98765 43210',
                       error: q.phoneProblem,
                       helper:
-                          '${supplier.name} may answer by phone. It is saved to your profile, not shown on the request.',
+                          '${supplier.name} may reply by phone. It is saved to your profile and not shown on the request.',
                     ),
                   ),
                 ),
@@ -255,7 +255,7 @@ class _Form extends StatelessWidget {
                     ),
                     onPressed: () => MarketplaceScope.navigationOf(context).createCompany(context),
                     icon: const Icon(LucideIcons.building2, size: 16),
-                    label: Text('Create a company', style: MartText.sheetButton.copyWith(color: AppColors.primary)),
+                    label: Text('Create a Company', style: MartText.sheetButton.copyWith(color: AppColors.primary)),
                   ),
                 ],
               ],
@@ -283,7 +283,7 @@ class _Form extends StatelessWidget {
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
                     : const Icon(LucideIcons.send, size: 16),
-                label: Text(q.sending ? 'Sending...' : 'Submit quote request', style: MartText.sheetButton),
+                label: Text(q.sending ? 'Sending...' : 'Submit Quote Request', style: MartText.sheetButton),
               ),
             ),
           ),
@@ -430,10 +430,10 @@ class _Sent extends StatelessWidget {
             child: const Icon(LucideIcons.check, size: 28, color: AppColors.successInk),
           ),
           const SizedBox(height: 14),
-          Text('Request sent', key: const ValueKey('quote-sent'), style: MartText.sheetTitle),
+          Text('Request Sent', key: const ValueKey('quote-sent'), style: MartText.sheetTitle),
           const SizedBox(height: 6),
           Text(
-            '${q.supplier.name} has your request and will answer on it. You will be told when a quote comes in.',
+            '${q.supplier.name} has received your request. You will be notified when a quote arrives.',
             textAlign: TextAlign.center,
             style: MartText.sheetRowMuted.copyWith(fontSize: 13),
           ),
@@ -451,7 +451,7 @@ class _Sent extends StatelessWidget {
                 Navigator.pop(context);
                 nav.openRfq(context, links, sent.id);
               },
-              child: Text('View my request', style: MartText.sheetButton),
+              child: Text('View My Request', style: MartText.sheetButton),
             ),
           ),
           TextButton(

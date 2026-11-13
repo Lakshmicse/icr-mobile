@@ -107,7 +107,8 @@ class _OptionBar extends StatelessWidget {
       selected: mine,
       label: '${option.label}${percent == null ? '' : ', $percent percent'}${mine ? ', your vote' : ''}',
       excludeSemantics: true,
-      // A tinted pill, no outline: the check and "(Your vote)" mark the member's own.
+      // A tinted pill, no outline. A radio before each option while the reader may vote (owner, 7 Nov 2026:
+      // "enable radio button for user to click if it's a poll"); the check and "(Your vote)" mark their own.
       child: Material(
         color: AppColors.surfaceContainer,
         shape: const StadiumBorder(),
@@ -131,6 +132,9 @@ class _OptionBar extends StatelessWidget {
                       children: [
                         if (mine) ...[
                           const Icon(LucideIcons.circleCheck, size: 16, color: HomeLook.ink),
+                          const SizedBox(width: 8),
+                        ] else if (onTap != null) ...[
+                          Icon(LucideIcons.circle, key: ValueKey('poll-radio:${option.id}'), size: 16, color: ink),
                           const SizedBox(width: 8),
                         ],
                         Expanded(

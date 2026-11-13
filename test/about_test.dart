@@ -34,7 +34,7 @@ void main() {
     expect(find.text('10,000+'), findsOneWidget);
     expect(find.text('businesses on ICR'), findsOneWidget);
     expect(find.text('WHO WE ARE'), findsOneWidget);
-    expect(find.text('A global professional association for the built workplace'), findsOneWidget);
+    expect(find.text('A Global Professional Association for the Built Workplace'), findsOneWidget);
     expect(tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor, Colors.white);
     expect(find.byType(Card), findsNothing);
     // Signed in, the page offers no sign-up.
@@ -42,7 +42,7 @@ void main() {
     expect(find.byKey(const ValueKey('about-create-account')), findsNothing);
   });
 
-  testWidgets('"Explore the ecosystem" scrolls to the nine modules, and each opens its page in the app', (
+  testWidgets('"Explore the Ecosystem" scrolls to the nine modules, and each opens its page in the app', (
     tester,
   ) async {
     final opened = await pump(tester);
@@ -52,7 +52,7 @@ void main() {
     expect(aboutModules.map((m) => m.label), [
       'Mentorship',
       'Jobs',
-      'Supplier Mart',
+      'Marketplace',
       'Community',
       'Documents',
       'Learning',

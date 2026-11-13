@@ -178,7 +178,7 @@ String? normalizePhone(String? raw) {
 
 /// Why a person's own mobile is refused, or null.
 String? ownPhoneProblem(String raw) {
-  if (raw.trim().isEmpty) return 'Add the mobile number suppliers can reach you on.';
+  if (raw.trim().isEmpty) return 'Add the mobile number suppliers can contact you on.';
   if (normalizePhone(raw) != null) return null;
   final s = raw.trim().replaceAll(RegExp(r'[\s().-]'), '');
   if (!s.startsWith('+') && !s.startsWith('00')) {
@@ -382,7 +382,7 @@ class RequirementDraft {
 
     final t = effectiveTitle.trim();
     if (t.isEmpty) {
-      out['title'] = 'Give the requirement a title';
+      out['title'] = 'Enter a title for the requirement';
     } else if (t.length > RfqLimits.title) {
       out['title'] = 'Use at most ${RfqLimits.title} characters';
     }
@@ -401,9 +401,9 @@ class RequirementDraft {
     }
     final phone = contactPhone.trim();
     if (phone.isEmpty && goingLive) {
-      out['contactPhone'] = 'Enter a phone number';
+      out['contactPhone'] = 'Enter a mobile number';
     } else if (phone.isNotEmpty && (phone.length > RfqLimits.phoneMax || !contactPhonePattern.hasMatch(phone))) {
-      out['contactPhone'] = 'Enter a phone number of 10 to 15 digits';
+      out['contactPhone'] = 'Enter a mobile number of 10 to 15 digits';
     }
 
     if (goingLive && facilityType.isEmpty) {
@@ -412,7 +412,7 @@ class RequirementDraft {
       out['facilityType'] = 'Select a facility type from the list';
     }
     if (goingLive && places.isEmpty) {
-      out['locations'] = 'Pick at least one place';
+      out['locations'] = 'Select at least one place';
     } else if (places.length > RfqLimits.maxLocations) {
       out['locations'] = 'At most ${RfqLimits.maxLocations} places';
     } else if (places.any((p) => p.label.length > RfqLimits.place || (p.city ?? '').length > RfqLimits.place)) {
@@ -424,7 +424,7 @@ class RequirementDraft {
     if (goingLive && n == 0) {
       out['text'] = isRfq ? 'Describe the scope of services' : 'Describe what you need';
     } else if (goingLive && n < RfqLimits.descriptionMin) {
-      out['text'] = 'Add a little more detail: at least ${RfqLimits.descriptionMin} characters ($n so far)';
+      out['text'] = 'Add more detail: at least ${RfqLimits.descriptionMin} characters ($n so far)';
     } else if (n > RfqLimits.descriptionMax) {
       out['text'] = 'Use at most ${RfqLimits.descriptionMax} characters ($n now)';
     }
@@ -435,7 +435,7 @@ class RequirementDraft {
     if (attachments.length > RfqLimits.maxAttachments) {
       out['attachments'] = 'At most ${RfqLimits.maxAttachments} files';
     } else if (attachments.any((a) => a.title.trim().isEmpty)) {
-      out['attachments'] = 'Give every file a title';
+      out['attachments'] = 'Enter a title for every file';
     } else if (attachments.any((a) => a.title.trim().length > RfqLimits.attachmentTitle)) {
       out['attachments'] = 'A file title can have at most ${RfqLimits.attachmentTitle} characters';
     }
@@ -454,7 +454,7 @@ class RequirementDraft {
       }
       if (audience == Audience.invited && !isRfq) {
         if (invited.isEmpty) {
-          out['invited'] = 'Choose at least one supplier to invite';
+          out['invited'] = 'Select at least one supplier to invite';
         } else if (invited.length > RfqLimits.maxInvites) {
           out['invited'] = 'Invite at most ${RfqLimits.maxInvites} suppliers at once';
         }
@@ -492,7 +492,7 @@ class RequirementDraft {
       } else if (pq != null && pq.isBefore(today)) {
         out['preQualEndDate'] = 'The pre-qualification deadline cannot be in the past';
       } else if (pq != null && pq.isAfter(horizon)) {
-        out['preQualEndDate'] = 'Pick a date within two years';
+        out['preQualEndDate'] = 'Select a date within two years';
       }
       if (due == null && goingLive) {
         out['dueDate'] = 'Set a quote deadline';
@@ -501,14 +501,14 @@ class RequirementDraft {
       } else if (due != null && due.isBefore(today)) {
         out['dueDate'] = 'The quote deadline cannot be in the past';
       } else if (due != null && due.isAfter(horizon)) {
-        out['dueDate'] = 'Pick a date within two years';
+        out['dueDate'] = 'Select a date within two years';
       }
     } else if (dueDate != null) {
       final due = _dayOnly(dueDate!);
       if (due.isBefore(today)) {
         out['dueDate'] = 'That date has already passed';
       } else if (due.isAfter(horizon)) {
-        out['dueDate'] = 'Pick a date within two years';
+        out['dueDate'] = 'Select a date within two years';
       }
     }
     return out;
@@ -627,7 +627,7 @@ class QuoteRequestDraft {
     final out = <String, String>{};
     final t = title.trim();
     if (t.isEmpty) {
-      out['title'] = 'Say what you need';
+      out['title'] = 'Enter what you need';
     } else if (t.length > RfqLimits.title) {
       out['title'] = 'Use at most ${RfqLimits.title} characters';
     }
@@ -650,7 +650,7 @@ class QuoteRequestDraft {
       if (due.isBefore(today)) {
         out['dueDate'] = 'That date has already passed';
       } else if (due.isAfter(today.add(const Duration(days: RfqLimits.deadlineHorizonDays)))) {
-        out['dueDate'] = 'Pick a date within two years';
+        out['dueDate'] = 'Select a date within two years';
       }
     }
     if (description.trim().length > RfqLimits.descriptionMax) {
@@ -735,7 +735,7 @@ class BidDraft {
     if (attachments.length > RfqLimits.maxBidAttachments) {
       out['attachments'] = 'At most ${RfqLimits.maxBidAttachments} files';
     } else if (attachments.any((f) => f.title.trim().isEmpty)) {
-      out['attachments'] = 'Give every file a title';
+      out['attachments'] = 'Enter a title for every file';
     } else if (attachments.any((f) => f.title.trim().length > RfqLimits.attachmentTitle)) {
       out['attachments'] = 'A file title can have at most ${RfqLimits.attachmentTitle} characters';
     }

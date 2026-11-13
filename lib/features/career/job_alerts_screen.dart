@@ -100,7 +100,7 @@ class _JobAlertsScreenState extends State<JobAlertsScreen> {
 
   Future<void> _newAlert([AlertCriteria? criteria]) async {
     final saved = await showAlertForm(context, criteria: criteria, onSave: (draft) => _c.create(draft));
-    if (saved == true && mounted) showMessage(context, 'Alert saved. We will tell you when new jobs match.');
+    if (saved == true && mounted) showMessage(context, 'Alert saved. We will notify you when new jobs match.');
   }
 
   Future<void> _edit(JobAlert alert) async {
@@ -114,7 +114,9 @@ class _JobAlertsScreenState extends State<JobAlertsScreen> {
       builder: (_) => AlertDialog(
         key: const ValueKey('delete-alert-dialog'),
         title: Text('Delete “${alert.name}”?'),
-        content: const Text('You will stop hearing about new jobs for this search. You can make it again any time.'),
+        content: const Text(
+          'You will no longer be notified about new jobs for this search. You can create it again at any time.',
+        ),
         actions: [
           TextButton(
             key: const ValueKey('delete-alert-keep'),
@@ -161,14 +163,14 @@ class _JobAlertsScreenState extends State<JobAlertsScreen> {
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) => CareerScaffold(
-        title: 'Job alerts',
+        title: 'Job Alerts',
         onBack: widget.onBack,
         unread: _c.unread,
         onBell: () => widget.navigation.openNotifications(context, widget.links),
         actions: [
           IconButton(
             key: const ValueKey('new-alert'),
-            tooltip: 'New alert',
+            tooltip: 'New Alert',
             onPressed: () => _newAlert(),
             icon: const Icon(LucideIcons.circlePlus, size: 22, color: AppColors.primary),
           ),
@@ -192,7 +194,7 @@ class _JobAlertsScreenState extends State<JobAlertsScreen> {
         CareerNotice(
           key: const ValueKey('alerts-error'),
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load your alerts",
+          title: 'Unable to Load Your Alerts',
           body: _c.error!,
           action: 'Try again',
           onAction: _c.refresh,
@@ -205,9 +207,9 @@ class _JobAlertsScreenState extends State<JobAlertsScreen> {
         CareerNotice(
           key: const ValueKey('alerts-empty'),
           icon: LucideIcons.bellRing,
-          title: 'No job alerts yet',
-          body: 'Save a search and we will tell you when new jobs match it.',
-          action: 'Create an alert',
+          title: 'No Job Alerts Yet',
+          body: 'Save a search and we will notify you when new jobs match.',
+          action: 'Create an Alert',
           onAction: () => _newAlert(),
         ),
       ];
@@ -217,7 +219,7 @@ class _JobAlertsScreenState extends State<JobAlertsScreen> {
         padding: const EdgeInsets.only(bottom: 10),
         child: Text(
           _c.totalNew == 0
-              ? 'Searches you saved. We tell you when new jobs match.'
+              ? 'Your saved searches. We will notify you when new jobs match.'
               : '${_c.totalNew} new ${_c.totalNew == 1 ? 'job matches' : 'jobs match'} your searches.',
           key: const ValueKey('alerts-lead'),
           style: CareerText.body,
@@ -295,7 +297,7 @@ class _AlertCard extends StatelessWidget {
                       ),
                       if (isNew) ...[
                         const SizedBox(width: 8),
-                        PillBadge('${alert.newMatches} new', color: AppColors.primary),
+                        PillBadge('${alert.newMatches} New', color: AppColors.primary),
                       ],
                     ],
                   ),
@@ -306,8 +308,8 @@ class _AlertCard extends StatelessWidget {
                   icon: const Icon(LucideIcons.ellipsisVertical, size: 18, color: AppColors.onSurfaceVariant),
                   onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
                   itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'edit', child: Text('Edit search')),
-                    PopupMenuItem(value: 'delete', child: Text('Delete alert')),
+                    PopupMenuItem(value: 'edit', child: Text('Edit Search')),
+                    PopupMenuItem(value: 'delete', child: Text('Delete Alert')),
                   ],
                 ),
               ],
@@ -340,7 +342,7 @@ class _AlertCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     alert.alertsEnabled
-                        ? (alert.frequency == 'WEEKLY' ? 'Telling you weekly' : 'Telling you daily')
+                        ? (alert.frequency == 'WEEKLY' ? 'Notifying you weekly' : 'Notifying you daily')
                         : 'Alerts are off',
                     key: ValueKey('alert-state-${alert.id}'),
                     style: CareerText.meta,
@@ -380,7 +382,7 @@ class _AlertCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: OutlinePillButton(
                 key: ValueKey('alert-matches-${alert.id}'),
-                label: open ? 'Hide matches' : (isNew ? 'See ${alert.newMatches} new' : 'See matches'),
+                label: open ? 'Hide Matches' : (isNew ? 'View ${alert.newMatches} New' : 'View Matches'),
                 height: 30,
                 onPressed: onToggleMatches,
               ),
@@ -569,9 +571,9 @@ class _AlertFormState extends State<AlertForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(editing ? 'Edit search' : 'New job alert', style: JobsText.formTitle),
+            Text(editing ? 'Edit Search' : 'New Job Alert', style: JobsText.formTitle),
             const SizedBox(height: 4),
-            Text('Save a search and we tell you when new jobs match it.', style: JobsText.formHelp),
+            Text('Save a search and we will notify you when new jobs match.', style: JobsText.formHelp),
             Flexible(
               child: SingleChildScrollView(
                 child: Column(
@@ -588,7 +590,7 @@ class _AlertFormState extends State<AlertForm> {
                     _field(_search, key: const ValueKey('alert-keywords'), hint: 'Job title or skill'),
                     _label('Cities'),
                     _field(_cities, key: const ValueKey('alert-cities'), hint: 'Mumbai, Pune'),
-                    _label('Work mode'),
+                    _label('Work Mode'),
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
@@ -602,7 +604,7 @@ class _AlertFormState extends State<AlertForm> {
                           ),
                       ],
                     ),
-                    _label('Job type'),
+                    _label('Job Type'),
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
@@ -621,7 +623,7 @@ class _AlertFormState extends State<AlertForm> {
                           ),
                       ],
                     ),
-                    _label('Minimum salary (a year, in rupees)'),
+                    _label('Minimum Salary (Yearly, in Rupees)'),
                     _field(
                       _salary,
                       key: const ValueKey('alert-salary'),
@@ -633,7 +635,7 @@ class _AlertFormState extends State<AlertForm> {
                     SwitchListTile(
                       key: const ValueKey('alert-enabled'),
                       contentPadding: EdgeInsets.zero,
-                      title: Text('Tell me when new jobs match', style: JobsText.formLabel),
+                      title: Text('Notify Me When New Jobs Match', style: JobsText.formLabel),
                       value: _enabled,
                       onChanged: (v) => setState(() => _enabled = v),
                     ),
@@ -659,7 +661,7 @@ class _AlertFormState extends State<AlertForm> {
             const SizedBox(height: 12),
             PrimaryButton(
               key: const ValueKey('alert-save'),
-              label: _saving ? 'Saving…' : (editing ? 'Save changes' : 'Save alert'),
+              label: _saving ? 'Saving…' : (editing ? 'Save Changes' : 'Save Alert'),
               icon: LucideIcons.bellRing,
               onPressed: _saving ? null : _submit,
             ),

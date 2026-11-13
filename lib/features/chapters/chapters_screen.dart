@@ -6,6 +6,8 @@ import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
 import '../../core/widgets/chips.dart';
+import '../../core/widgets/manage_pencil.dart';
+import '../../core/widgets/title_bar.dart' show BarEditButton;
 import 'chapter_format.dart';
 import 'chapter_models.dart';
 import 'chapter_screen.dart';
@@ -34,7 +36,19 @@ class ChaptersScreen extends StatefulWidget {
     this.onMessage,
     this.opener = openUrl,
     this.share = shareChapterLink,
+    this.onManage,
+    this.manage,
+    this.pageWrap = plainPage,
   });
+
+  /// The pencil beside the bell: the Manage Chapters page, for the staff who run chapters. No pencil when null.
+  final VoidCallback? onManage;
+
+  /// The same pencil on one chapter's page, for the chapters this person may manage.
+  final RecordManage? manage;
+
+  /// Frames a chapter's page pushed from the board (the app's bottom bar under it).
+  final PageWrap pageWrap;
 
   /// The arrow at the top left.
   final VoidCallback onBack;
@@ -69,6 +83,8 @@ class ChaptersScreen extends StatefulWidget {
     onMessage: onMessage,
     opener: opener,
     share: share,
+    manage: manage,
+    pageWrap: pageWrap,
   );
 
   @override
@@ -146,6 +162,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
       title: 'Regional Chapters',
       onBack: widget.onBack,
       onBell: _bell,
+      actions: [if (widget.onManage != null) BarEditButton(label: 'Manage chapters', onTap: widget.onManage!)],
       unread: board.unread,
       onRefresh: board.refresh,
       children: _body(board),
@@ -158,30 +175,19 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
       return [
         CommunityNotice(
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load chapters",
+          title: 'Unable to Load Chapters',
           body: board.error ?? 'Something went wrong.',
-          action: 'Try again',
+          action: 'Try Again',
           onAction: board.refresh,
         ),
       ];
     }
-    final stats = board.stats!;
     final joined = board.joined;
     final meetups = board.meetups;
     final shown = board.chapters;
     final now = board.now;
+    // The board opens on the member's own chapters; the four count tiles that stood above them went (owner, 12 Nov 2026: no count tiles over the Chapters, Councils and Events hubs).
     return [
-      const SizedBox(height: 6),
-      CommunityStatGrid(
-        tiles: [
-          CommunityStatTile(label: 'Chapters', value: groupThousands(stats.chapters)),
-          CommunityStatTile(label: 'Members', value: groupThousands(stats.members)),
-          CommunityStatTile(label: 'Countries', value: groupThousands(stats.countries)),
-          CommunityStatTile(label: 'Upcoming events', value: groupThousands(stats.upcomingEvents), blue: true),
-        ],
-      ),
-      const SizedBox(height: 8),
-      const Divider(height: 1, thickness: 1, color: CommunityColors.tileRule),
       const SizedBox(height: 10),
       CommunitySectionHeading(
         title: 'Your Chapters',
@@ -211,7 +217,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
       const SizedBox(height: 16),
       const Divider(height: 1, thickness: 1, color: CommunityColors.tileRule),
       const SizedBox(height: 12),
-      const CommunitySectionHeading(title: 'Upcoming Meetups', caption: 'Chapter events'),
+      const CommunitySectionHeading(title: 'Upcoming Meetups', caption: 'Chapter Events'),
       const SizedBox(height: 4),
       if (meetups.isEmpty)
         Padding(
@@ -296,7 +302,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => _clear(board),
-                child: Text('Clear filters', style: CommunityText.sectionLink),
+                child: Text('Clear Filters', style: CommunityText.sectionLink),
               ),
           ],
         ),
@@ -323,9 +329,9 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
           child: CommunityHostCard(
             icon: LucideIcons.handHeart,
-            title: 'Lead or serve on a chapter',
+            title: 'Lead or Serve on a Chapter',
             body: 'Committee members and chapter leaders earn CPD credits.',
-            action: 'Get involved',
+            action: 'Get Involved',
             onAction: () => widget.onOpenVolunteer!(null),
           ),
         ),
@@ -338,20 +344,21 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
     if (board.scope == ChapterScope.nearby && board.scopeCount(ChapterScope.joined) == 0 && !board.filtered) {
       return CommunityNotice(
         icon: LucideIcons.mapPin,
-        title: 'Nothing nearby yet',
-        body: 'Nearby shows chapters in the regions and countries of the ones you join. Join your own city first.',
-        action: 'Show all chapters',
+        title: 'No Nearby Chapters Yet',
+        body:
+            "Nearby shows chapters in the regions and countries of chapters you join. Join your city's chapter first.",
+        action: 'Show All Chapters',
         onAction: () => board.setScope(ChapterScope.all),
         padding: const EdgeInsets.fromLTRB(32, 24, 32, 24),
       );
     }
     return CommunityNotice(
       icon: LucideIcons.mapPinOff,
-      title: board.narrowed ? 'No chapters match' : 'No chapters yet',
+      title: board.narrowed ? 'No Chapters Match' : 'No Chapters Yet',
       body: board.narrowed
           ? 'Try clearing a filter or searching for another city.'
           : 'City chapters will appear here once they are chartered.',
-      action: board.narrowed ? 'Clear filters' : null,
+      action: board.narrowed ? 'Clear Filters' : null,
       onAction: () => _clear(board),
       padding: const EdgeInsets.fromLTRB(32, 24, 32, 24),
     );
@@ -360,7 +367,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
   Future<void> _filters(ChaptersController board) async {
     await showCommunitySheet<void>(
       context,
-      title: 'Sort and filter',
+      title: 'Sort and Filter',
       body: (sheet, setState) {
         final regions = board.regions;
         final cities = board.cities;
@@ -368,7 +375,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CommunityChoiceWrap<ChapterSort>(
-              title: 'Sort by',
+              title: 'Sort By',
               options: ChapterSort.values,
               selected: board.sort,
               label: (s) => s.label,
@@ -380,7 +387,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
                 title: 'Region',
                 options: [null, ...regions],
                 selected: board.region,
-                label: (r) => r ?? 'Any region',
+                label: (r) => r ?? 'Any Region',
                 onSelected: (r) => setState(() => board.setRegion(r)),
               ),
             ],
@@ -390,7 +397,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
                 title: 'City',
                 options: [null, ...cities],
                 selected: board.city,
-                label: (c) => c ?? 'Any city',
+                label: (c) => c ?? 'Any City',
                 onSelected: (c) => setState(() => board.setCity(c)),
               ),
             ],
@@ -438,7 +445,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: CommunityButton(
-                label: 'Show chapters',
+                label: 'Show Chapters',
                 height: 38,
                 expand: true,
                 onPressed: () => Navigator.pop(sheet),

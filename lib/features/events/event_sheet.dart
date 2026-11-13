@@ -12,6 +12,7 @@ import 'event_models.dart';
 import 'event_pass.dart';
 import 'event_tickets.dart';
 import 'events_controller.dart';
+import 'event_manage_scope.dart';
 import 'events_styles.dart';
 import 'widgets/pills.dart';
 
@@ -20,19 +21,38 @@ Future<void> showEventSheet(BuildContext context, EventSummary event) async {
   final events = context.read<EventsController>();
   final controller = EventDetailController(repository: events.repository, seed: event, onChanged: events.update)
     ..load();
+  // For the staff who run events: the pencil closes the sheet, and the event's manage page opens once it has
+  // gone (and once whatever opened the sheet has finished leaving with it).
+  final manage = EventManageScope.maybeOf(context);
+  String? manageId;
   await showDetailSheet<void>(
     context,
     handleTop: 10,
     handleHeight: 24,
-    body: (_) => ChangeNotifierProvider.value(value: controller, child: const EventSheetBody()),
+    body: (sheet) => ChangeNotifierProvider.value(
+      value: controller,
+      child: EventSheetBody(
+        onManage: manage == null
+            ? null
+            : (id) {
+                manageId = id;
+                Navigator.of(sheet).maybePop();
+              },
+      ),
+    ),
     bottomBar: (_) => ChangeNotifierProvider.value(value: controller, child: const EventSheetBar()),
   );
   controller.dispose();
+  final id = manageId;
+  if (manage != null && id != null) Future<void>.delayed(Duration.zero, () => manage(id));
 }
 
 /// The scrolling part of the sheet.
 class EventSheetBody extends StatelessWidget {
-  const EventSheetBody({super.key});
+  const EventSheetBody({super.key, this.onManage});
+
+  /// The pencil beside the share glyph, given the event's id; no pencil when null.
+  final ValueChanged<String>? onManage;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +68,12 @@ class EventSheetBody extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(15.5, 1.5, 18, 0),
-          child: _TopRow(event: e, onSave: controller.toggleSave),
+          child: _TopRow(
+            event: e,
+            onSave: controller.toggleSave,
+            // The id is the event's own only once it has been read (a link names it by its slug).
+            onManage: onManage == null || controller.loading ? null : () => onManage!(e.id),
+          ),
         ),
         const SizedBox(height: 11),
         Padding(
@@ -161,17 +186,17 @@ class EventSheetBar extends StatelessWidget {
     final seats = e.seatsLeft;
 
     final (title, note, dot) = e.past
-        ? ('This event has ended', '${groupThousands(e.going)} attended', AppColors.outline)
+        ? ('This Event Has Ended', '${groupThousands(e.going)} attended', AppColors.outline)
         : going
         ? ('Your Booking is Active', '1 delegate seat confirmed', AppColors.online)
         : waitlisted
-        ? ("You're on the waitlist", 'We will move you up as seats free', AppColors.amber500)
+        ? ("You're on the Waitlist", 'You will move up as seats become available', AppColors.amber500)
         : e.inviteOnly && !detail.invited
-        ? ('By invitation', 'This event is invite-only', AppColors.outline)
+        ? ('By Invitation', 'This event is invite-only', AppColors.outline)
         : e.full
-        ? ('This event is full', 'Join the waitlist', AppColors.amber500)
+        ? ('This Event Is Full', 'Join the waitlist', AppColors.amber500)
         : (
-            'Seats available',
+            'Seats Available',
             e.priced
                 ? '${priceLabel(e.pricePaisa)} per pass'
                 : seats == null
@@ -326,10 +351,11 @@ class _BarButton extends StatelessWidget {
 
 /// The status and CPD pills, then share, bookmark and close.
 class _TopRow extends StatelessWidget {
-  const _TopRow({required this.event, required this.onSave});
+  const _TopRow({required this.event, required this.onSave, this.onManage});
 
   final EventSummary event;
   final VoidCallback onSave;
+  final VoidCallback? onManage;
 
   @override
   Widget build(BuildContext context) {
@@ -381,6 +407,18 @@ class _TopRow extends StatelessWidget {
             height: 29,
             child: Row(
               children: [
+                if (onManage != null) ...[
+                  GlyphButton(
+                    key: const ValueKey('event-manage'),
+                    icon: LucideIcons.pencil,
+                    size: 17,
+                    box: 24,
+                    color: AppColors.onSurfaceVariant,
+                    label: 'Manage event',
+                    onTap: onManage!,
+                  ),
+                  const SizedBox(width: 6),
+                ],
                 GlyphButton(
                   icon: LucideIcons.share2,
                   size: 19,
@@ -583,7 +621,7 @@ class _PassCard extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              pass.reference == null ? 'Your place' : 'Pass #${pass.reference}',
+                              pass.reference == null ? 'Your Place' : 'Pass #${pass.reference}',
                               style: EventsText.passTitle,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -728,7 +766,7 @@ class _WhenWherePanel extends StatelessWidget {
                       color: EventsColors.mintInk,
                     ),
                     const SizedBox(width: 3),
-                    Text(synced ? 'Synced to Calendar' : 'Add to calendar', style: EventsText.synced),
+                    Text(synced ? 'Synced to Calendar' : 'Add to Calendar', style: EventsText.synced),
                   ],
                 ),
               ),

@@ -14,7 +14,6 @@ import '../account_rules.dart';
 import '../api_account_repository.dart';
 import '../demo_account_repository.dart';
 import '../phone/phone_sheets.dart';
-import '../settings/security_screen.dart';
 import '../settings/settings_screen.dart';
 import '../widgets/account_kit.dart';
 import '../widgets/account_session.dart';
@@ -42,8 +41,8 @@ Future<void> shareWithPhone(String text, String subject) =>
 /// What the lead wires:
 ///
 /// * [onOpenPublicProfile]: "View public profile", the member page (`MemberProfileScreen`);
-/// * [onOpenSettings] and [onOpenSecurity]: the gear, and the Sign-in & security row (this
-///   feature's `SettingsScreen` and `SignInSecurityScreen` when left out);
+/// * [onOpenSettings]: the gear (this feature's `SettingsScreen` when left out), where Sign-In and Security lives —
+///   the profile has no row of its own for it (owner, 12 Nov 2026);
 /// * [onOpenCertificate]: a credential ICR issued opens its certificate (the
 ///   Learning Center's, or the mentoring one); the website page when left out;
 /// * [onProfileChanged]: call `ProfileDrawerController.refresh()` here, so the menu shows the new
@@ -55,7 +54,6 @@ class MyProfileScreen extends StatefulWidget {
     this.onBack,
     this.onOpenPublicProfile,
     this.onOpenSettings,
-    this.onOpenSecurity,
     this.onOpenCertificate,
     this.onProfileChanged,
     this.initialSection,
@@ -76,9 +74,6 @@ class MyProfileScreen extends StatefulWidget {
 
   /// The gear in the bar: Settings (`SettingsScreen` when left out).
   final VoidCallback? onOpenSettings;
-
-  /// The "Sign-in & security" row (`SignInSecurityScreen` when left out).
-  final VoidCallback? onOpenSecurity;
 
   /// A credential ICR issued: its certificate page path (`/learning/certificates/…`).
   final void Function(Credential credential)? onOpenCertificate;
@@ -112,21 +107,27 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   void initState() {
     super.initState();
     _repository =
-        widget.repository ?? (AppConfig.demo ? DemoAccountRepository() : ApiAccountRepository(api: context.read<ApiClient>()));
+        widget.repository ??
+        (AppConfig.demo ? DemoAccountRepository() : ApiAccountRepository(api: context.read<ApiClient>()));
     final auth = maybeAuth(context);
-    _c = MyProfileController(_repository, onIdentityChanged: () async {
-        await auth?.refreshUser();
-        widget.onProfileChanged?.call();
-      }, clock: widget.now == null ? null : () => widget.now!)
-      ..load().then((_) {
-        final section = widget.initialSection;
-        if (section != null && mounted) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            final ctx = _keys[section]!.currentContext;
-            if (ctx != null) Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 250));
+    _c =
+        MyProfileController(
+            _repository,
+            onIdentityChanged: () async {
+              await auth?.refreshUser();
+              widget.onProfileChanged?.call();
+            },
+            clock: widget.now == null ? null : () => widget.now!,
+          )
+          ..load().then((_) {
+            final section = widget.initialSection;
+            if (section != null && mounted) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                final ctx = _keys[section]!.currentContext;
+                if (ctx != null) Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 250));
+              });
+            }
           });
-        }
-      });
   }
 
   @override
@@ -166,11 +167,15 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   }
 
   void _editRole([Experience? role]) {
-    if (_needs(_c.experience, 'experience')) _afterSave(showExperienceSheet(context, _c, role: role), 'Experience saved.');
+    if (_needs(_c.experience, 'experience')) {
+      _afterSave(showExperienceSheet(context, _c, role: role), 'Experience saved.');
+    }
   }
 
   void _editDegree([Education? degree]) {
-    if (_needs(_c.education, 'education')) _afterSave(showEducationSheet(context, _c, degree: degree), 'Education saved.');
+    if (_needs(_c.education, 'education')) {
+      _afterSave(showEducationSheet(context, _c, degree: degree), 'Education saved.');
+    }
   }
 
   void _editBreak({CareerBreak? pause, CareerGap? gap}) {
@@ -180,7 +185,10 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   }
 
   void _editCredential([Credential? credential]) {
-    _afterSave(showCredentialSheet(context, _c, credential: credential, pickEvidence: widget.pickEvidence), 'Credential saved.');
+    _afterSave(
+      showCredentialSheet(context, _c, credential: credential, pickEvidence: widget.pickEvidence),
+      'Credential saved.',
+    );
   }
 
   void _openCredential(Credential c) {
@@ -233,7 +241,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     if (me == null) return;
     final choice = await showAccountPicker<String>(
       context,
-      title: 'Add profile section',
+      title: 'Add Profile Section',
       items: [
         if (me.hasResume) 'about',
         'experience',
@@ -247,7 +255,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         'about' => 'About',
         'experience' => 'Experience',
         'education' => 'Education',
-        'break' => 'Career break',
+        'break' => 'Career Break',
         'credential' => 'Credential',
         'skills' => 'Skills',
         _ => 'Languages',
@@ -272,11 +280,10 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     }
   }
 
-  /// What the gear and the security row do when the lead wires nothing: this feature's own screens.
-  void _openSettings() => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => SettingsScreen(repository: widget.repository)));
-
-  void _openSecurity() =>
-      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => SignInSecurityScreen(repository: widget.repository)));
+  /// What the gear does when the lead wires nothing: this feature's own screen.
+  void _openSettings() => Navigator.of(
+    context,
+  ).push(MaterialPageRoute<void>(builder: (_) => SettingsScreen(repository: widget.repository)));
 
   void _openPublic(MyProfile me) {
     final open = widget.onOpenPublicProfile;
@@ -297,7 +304,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         actions: [
           IconButton(
             key: const Key('profile.share'),
-            tooltip: 'Share profile',
+            tooltip: 'Share Profile',
             onPressed: _share,
             icon: const Icon(Symbols.ios_share, size: 22, color: AppColors.onSurfaceVariant),
           ),
@@ -315,7 +322,10 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           final me = _c.profile.value;
           if (me == null) {
             if (_c.profile.loading) return const AccountLoading();
-            return AccountError(message: _c.profile.error ?? 'Try again in a moment.', onRetry: () => _c.retry(_c.profile));
+            return AccountError(
+              message: _c.profile.error ?? 'Try again in a moment.',
+              onRetry: () => _c.retry(_c.profile),
+            );
           }
           return RefreshIndicator(
             onRefresh: _c.refresh,
@@ -332,7 +342,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                 if (me.hasResume) _skills(me),
                 _languages(me),
                 _publicCard(me),
-                _securityCard(),
               ],
             ),
           );
@@ -361,8 +370,18 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       onEditPhoto: () => showPhotoSheet(context, _c, pick: widget.pickPhoto),
       onEditIntro: _editIntro,
       actions: [
-        PillAction(key: const Key('profile.addSection'), label: 'Add section', icon: Icons.add_rounded, onPressed: _addSection),
-        PillAction(key: const Key('profile.viewPublic'), label: 'View public profile', icon: Symbols.visibility, onPressed: () => _openPublic(me)),
+        PillAction(
+          key: const Key('profile.addSection'),
+          label: 'Add Section',
+          icon: Icons.add_rounded,
+          onPressed: _addSection,
+        ),
+        PillAction(
+          key: const Key('profile.viewPublic'),
+          label: 'View Public Profile',
+          icon: Symbols.visibility,
+          onPressed: () => _openPublic(me),
+        ),
       ],
     );
   }
@@ -371,7 +390,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     final c = me.completeness;
     return AccountCard(
       key: const Key('profile.completion'),
-      title: 'Profile strength ${c.score}%',
+      title: 'Profile Strength ${c.score}%',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -386,7 +405,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           ),
           if (c.missing.isNotEmpty) ...[
             const SizedBox(height: 10),
-            Text('Finish your profile', style: AccountText.meta.copyWith(fontWeight: FontWeight.w600)),
+            Text('Finish Your Profile', style: AccountText.meta.copyWith(fontWeight: FontWeight.w600)),
             for (final item in c.missing)
               InkWell(
                 key: Key('missing.$item'),
@@ -397,7 +416,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                     children: [
                       const Icon(Icons.radio_button_unchecked_rounded, size: 18, color: AppColors.slate400),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(item, style: AccountText.body)),
+                      Expanded(child: Text(completionTaskLabel(item), style: AccountText.body)),
                       const Icon(Icons.chevron_right_rounded, color: AppColors.slate400),
                     ],
                   ),
@@ -416,11 +435,12 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       child: SectionCard(
         title: 'About',
         onEdit: summary == null ? null : _editAbout,
-        editLabel: 'Edit about',
+        editLabel: 'Edit About',
         child: summary == null
             ? AccountEmpty(
-                text: 'Tell people about your experience, your strengths and what you are looking for.',
-                action: 'Add a summary',
+                text:
+                    'You can write about your years of professional experience, industry or skills, achievements etc.',
+                action: 'Add a Summary',
                 onAction: _editAbout,
               )
             : Column(
@@ -442,16 +462,16 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         title: 'Experience',
         loading: s.loading && !s.ready,
         onAdd: s.error != null || full ? null : _editRole,
-        addLabel: 'Add experience',
+        addLabel: 'Add Experience',
         extraAction: s.error != null || breaksFull
             ? null
-            : CardIconButton(icon: Symbols.more_time, tooltip: 'Add a career break', onPressed: _editBreak),
+            : CardIconButton(icon: Symbols.more_time, tooltip: 'Add a Career Break', onPressed: _editBreak),
         child: s.error != null && !s.ready
             ? SectionLoadError(what: 'experience', message: s.error!, onRetry: () => _c.retry(s))
             : entries.isEmpty
             ? AccountEmpty(
-                text: 'Add your roles, newest first. Employers and mentors read these.',
-                action: 'Add experience',
+                text: 'Add your work experience including career break if applicable.',
+                action: 'Add Experience',
                 onAction: _editRole,
               )
             : Column(
@@ -459,12 +479,16 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                 children: [
                   for (final (i, e) in entries.indexed)
                     if (e.gap != null)
-                      _GapRow(gap: e.gap!, onBreak: () => _editBreak(gap: e.gap), onRole: _editRole)
+                      _GapRow(
+                        gap: e.gap!,
+                        onBreak: () => _editBreak(gap: e.gap),
+                        onRole: _editRole,
+                      )
                     else if (e.pause != null)
                       ItemRow(
                         key: Key('break.${e.pause!.id}'),
                         divider: i > 0 && entries[i - 1].gap == null,
-                        editLabel: 'Edit career break',
+                        editLabel: 'Edit Career Break',
                         onEdit: () => _editBreak(pause: e.pause),
                         child: CareerBreakTile(pause: e.pause!, now: widget.now),
                       )
@@ -476,7 +500,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                         onEdit: () => _editRole(e.role),
                         child: ExperienceTile(role: e.role!, now: widget.now),
                       ),
-                  if (full) Text('That is the most roles a profile holds.', style: AccountText.meta),
+                  if (full) Text('You have added the maximum number of roles.', style: AccountText.meta),
                 ],
               ),
       ),
@@ -492,11 +516,15 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         title: 'Education',
         loading: s.loading && !s.ready,
         onAdd: s.error != null || rows.length >= maxEducationRows ? null : _editDegree,
-        addLabel: 'Add education',
+        addLabel: 'Add Education',
         child: s.error != null && !s.ready
             ? SectionLoadError(what: 'education', message: s.error!, onRetry: () => _c.retry(s))
             : rows.isEmpty
-            ? AccountEmpty(text: 'Add your degrees and courses.', action: 'Add education', onAction: _editDegree)
+            ? AccountEmpty(
+                text: 'Your Education, field of study and year of passing.',
+                action: 'Add Education',
+                onAction: _editDegree,
+              )
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -520,16 +548,16 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     return KeyedSubtree(
       key: _keys[ProfileSection.credentials],
       child: SectionCard(
-        title: 'Licenses & certifications',
+        title: 'Licenses and Certifications',
         loading: s.loading && !s.ready,
         onAdd: s.error != null && !s.ready ? null : _editCredential,
-        addLabel: 'Add credential',
+        addLabel: 'Add Credential',
         child: s.error != null && !s.ready
             ? SectionLoadError(what: 'credentials', message: s.error!, onRetry: () => _c.retry(s))
             : rows.isEmpty
             ? AccountEmpty(
-                text: 'Certificates ICR issues appear here by themselves. Add the ones you hold from elsewhere.',
-                action: 'Add credential',
+                text: 'Add your professional certifications and licenses.',
+                action: 'Add Credential',
                 onAction: _editCredential,
               )
             : Column(
@@ -541,7 +569,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                       divider: i > 0,
                       editLabel: 'Edit ${c.name}',
                       onEdit: c.editable ? () => _editCredential(c) : null,
-                      onTap: c.editable || (c.href == null && widget.onOpenCertificate == null) ? null : () => _openCredential(c),
+                      onTap: c.editable || (c.href == null && widget.onOpenCertificate == null)
+                          ? null
+                          : () => _openCredential(c),
                       child: CredentialTile(credential: c),
                     ),
                 ],
@@ -556,9 +586,13 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       child: SectionCard(
         title: 'Skills',
         onEdit: me.skills.isEmpty ? null : _editSkills,
-        editLabel: 'Edit skills',
+        editLabel: 'Edit Skills',
         child: me.skills.isEmpty
-            ? AccountEmpty(text: 'Add the skills you want to be found for.', action: 'Add skills', onAction: _editSkills)
+            ? AccountEmpty(
+                text: 'Add the skills you want to be found for.',
+                action: 'Add Skills',
+                onAction: _editSkills,
+              )
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [ChipWrap(me.skills), const PublicNote('Shown on your public profile.')],
@@ -573,9 +607,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       child: SectionCard(
         title: 'Languages',
         onEdit: me.languages.isEmpty ? null : _editLanguages,
-        editLabel: 'Edit languages',
+        editLabel: 'Edit Languages',
         child: me.languages.isEmpty
-            ? AccountEmpty(text: 'Add the languages you speak.', action: 'Add languages', onAction: _editLanguages)
+            ? AccountEmpty(text: 'Add the languages you speak.', action: 'Add Languages', onAction: _editLanguages)
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [ChipWrap(me.languages), const PublicNote('Shown on your public profile.')],
@@ -587,11 +621,14 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   Widget _publicCard(MyProfile me) {
     final link = AppConfig.sitePage(me.publicPath).toString();
     return AccountCard(
-      title: 'Your public profile',
+      title: 'Your Public Profile',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(link.replaceFirst(RegExp(r'^https?://'), ''), style: AccountText.body.copyWith(color: AppColors.primary)),
+          Text(
+            link.replaceFirst(RegExp(r'^https?://'), ''),
+            style: AccountText.body.copyWith(color: AppColors.primary),
+          ),
           const SizedBox(height: 4),
           Text('This is the address people can open without signing in.', style: AccountText.meta),
           const SizedBox(height: 12),
@@ -600,7 +637,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               Expanded(
                 child: AccountButton(
                   key: const Key('profile.copyLink'),
-                  label: 'Copy link',
+                  label: 'Copy Link',
                   icon: Icons.copy_rounded,
                   outlined: true,
                   onPressed: () => copyWithNotice(context, link, 'Link copied.'),
@@ -618,20 +655,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _securityCard() {
-    return AccountCard(
-      padding: EdgeInsets.zero,
-      child: ListTile(
-        key: const Key('profile.security'),
-        onTap: widget.onOpenSecurity ?? _openSecurity,
-        leading: const Icon(Symbols.shield_lock, color: AppColors.slate600),
-        title: Text('Sign-in & security', style: AccountText.itemTitle),
-        subtitle: Text('Email, mobile number, password and your links', style: AccountText.meta),
-        trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.slate400),
       ),
     );
   }
@@ -655,10 +678,7 @@ class _GapRow extends StatelessWidget {
       key: const Key('career.gap'),
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.slate50,
-        borderRadius: BorderRadius.circular(10),
-      ),
+      decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -667,7 +687,10 @@ class _GapRow extends StatelessWidget {
               style: AccountText.body.copyWith(fontWeight: FontWeight.w700, color: AppColors.slate900),
               children: [
                 TextSpan(text: 'A gap of ${careerDuration(gap.months)}'),
-                TextSpan(text: ' · $range', style: AccountText.body.copyWith(fontWeight: FontWeight.w400)),
+                TextSpan(
+                  text: ' · $range',
+                  style: AccountText.body.copyWith(fontWeight: FontWeight.w400),
+                ),
               ],
             ),
           ),
@@ -678,8 +701,8 @@ class _GapRow extends StatelessWidget {
             spacing: 8,
             runSpacing: 4,
             children: [
-              PillAction(key: const Key('gap.addBreak'), label: 'Add a career break', onPressed: onBreak),
-              PillAction(key: const Key('gap.addRole'), label: 'Add a role', onPressed: onRole),
+              PillAction(key: const Key('gap.addBreak'), label: 'Add a Career Break', onPressed: onBreak),
+              PillAction(key: const Key('gap.addRole'), label: 'Add a Role', onPressed: onRole),
             ],
           ),
         ],

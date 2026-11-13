@@ -184,12 +184,32 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  /// `POST /auth/phone/send-otp`: texts the sign-up OTP to an Indian number (the gateway reaches no other). Off
+  /// production the API hands the code back instead of texting it; that comes back here to show on screen.
+  Future<String?> sendPhoneOtp(String phone) async {
+    try {
+      final res = await api.dio.post<Map<String, dynamic>>('/auth/phone/send-otp', data: {'phone': phone});
+      return res.data?['code'] as String?;
+    } catch (e) {
+      throw ApiError.from(e);
+    }
+  }
+
+  Future<void> verifyPhoneOtp(String phone, String code) async {
+    try {
+      await api.dio.post<void>('/auth/phone/verify-otp', data: {'phone': phone, 'code': code});
+    } catch (e) {
+      throw ApiError.from(e);
+    }
+  }
+
   /// `POST /auth/register` with the provider's token (and the app's secret
   /// that unlocks it): the account is made and signed in.
   Future<void> completeSocialSignup({
     required SocialSignup signup,
     required String firstName,
     required String lastName,
+    required String phone,
   }) async {
     try {
       final res = await api.dio.post<Map<String, dynamic>>(
@@ -199,6 +219,7 @@ class AuthController extends ChangeNotifier {
           if (signup.verifier.isNotEmpty) 'socialVerifier': signup.verifier,
           'firstName': firstName.trim(),
           'lastName': lastName.trim(),
+          'phone': phone,
           'acceptTerms': true,
           'termsVersion': termsVersion,
         },
@@ -213,13 +234,17 @@ class AuthController extends ChangeNotifier {
   static const termsVersion = '2026-07-01';
 
   /// `POST /auth/register` with an email and password, after the 6-digit code
-  /// has been checked (`verifyEmailCode`): the account is made and signed in,
-  /// as the website's "About you" screen does. A taken address is a 409.
+  /// has been checked (`verifyEmailCode`) and, for an Indian number, the OTP
+  /// (`verifyPhoneOtp`): the account is made and signed in, as the website's
+  /// "About you" screen does. The API has required [phone] since 29 Oct 2026
+  /// (the sign-ups the app sent without one were refused: "Enter your mobile
+  /// number"). A taken address is a 409.
   Future<void> register({
     required String email,
     required String password,
     required String firstName,
     required String lastName,
+    required String phone,
   }) async {
     try {
       final res = await api.dio.post<Map<String, dynamic>>(
@@ -229,6 +254,7 @@ class AuthController extends ChangeNotifier {
           'lastName': lastName.trim(),
           'email': email.trim().toLowerCase(),
           'password': password,
+          'phone': phone,
           'acceptTerms': true,
           'termsVersion': termsVersion,
         },

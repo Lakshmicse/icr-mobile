@@ -90,31 +90,49 @@ void main() {
       for (final t in ['ACCOUNT', 'PREFERENCES', 'PRIVACY & DATA']) {
         expect(find.text(t), findsOneWidget);
       }
+      // The client's words on the manual, 13 Nov 2026: title case throughout.
       for (final t in [
-        'Sign-in & security',
-        'My companies',
-        'Saved items',
+        'View Profile',
+        'Sign-In & Security',
+        'My Companies',
+        'Saved Items',
         'Language',
         'Notifications',
-        'Download my data',
+        'Background Activity & Permissions',
+        'Download My Data',
+        'Delete Account',
       ]) {
-        expect(find.text(t), findsOneWidget);
+        expect(find.text(t), findsOneWidget, reason: t);
       }
-      expect(find.text('Acting as yourself'), findsOneWidget);
       expect(find.text('English'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings.signOut')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      for (final t in ['ABOUT ICR', 'Contact Us', 'Terms of Service', 'Privacy Policy', 'Sign Out']) {
+        expect(find.text(t), findsOneWidget, reason: t);
+      }
     });
 
-    testWidgets('the row for companies names the company being acted for', (tester) async {
+    testWidgets('the My Companies row has no line under it, whoever the person acts for', (tester) async {
+      // The client's note on the manual, 13 Nov 2026: "(Remove the text below)".
       final repo = DemoAccountRepository();
+      await pumpSettings(tester, repo);
+      expect(find.text('Acting as yourself'), findsNothing);
+      expect(repo.count('myCompanies'), 0, reason: 'nothing on the screen reads the companies any more');
+
       repo.companiesNow = MyCompanies(
         personalRole: 'PROFESSIONAL',
         companies: [const MyCompany(companyId: 'co-1', name: 'TechCorp', role: 'COMPANY_ADMIN', active: true)],
       );
       await pumpSettings(tester, repo);
-      expect(find.text('Acting for TechCorp'), findsOneWidget);
+      expect(find.textContaining('Acting for'), findsNothing);
+      final row = find.byKey(const Key('settings.companies'));
+      expect(find.descendant(of: row, matching: find.byType(Text)), findsOneWidget);
     });
 
-    testWidgets('View profile, My companies, Saved items and Contact us call out to the app', (tester) async {
+    testWidgets('View Profile, My Companies, Saved Items and Contact Us call out to the app', (tester) async {
       final log = <String>[];
       await pumpSettings(tester, DemoAccountRepository(), log: log);
       await tester.tap(find.byKey(const Key('settings.profile')));
@@ -167,23 +185,20 @@ void main() {
       ]);
     });
 
-    testWidgets('Sign-in & security and Notifications open their screens', (tester) async {
+    testWidgets('Sign-In & Security and Notifications open their screens', (tester) async {
       await pumpSettings(tester, DemoAccountRepository());
       await tester.tap(find.byKey(const Key('settings.security')));
       await tester.pumpAndSettle();
-      expect(find.text('Sign-in & security'), findsWidgets);
-      expect(find.text('Contact info'), findsOneWidget);
+      expect(find.text('Sign-In & Security'), findsWidgets);
+      expect(find.text('Contact Information'), findsOneWidget);
       await tester.pageBack();
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('settings.notifications')));
       await tester.pumpAndSettle();
-      expect(
-        find.text('Choose how ICR tells you about each kind of update: in the app, and by email.'),
-        findsOneWidget,
-      );
+      expect(find.text('Select how ICR notifies you of each type of update, in the app and by email.'), findsOneWidget);
     });
 
-    testWidgets('Sign out asks first, then ends the session on this phone and at the API', (tester) async {
+    testWidgets('Sign Out asks first, then ends the session on this phone and at the API', (tester) async {
       await pumpSettings(tester, DemoAccountRepository());
       await tester.scrollUntilVisible(
         find.byKey(const Key('settings.signOut')),
@@ -194,7 +209,10 @@ void main() {
       await tester.pump();
       await tester.tap(find.byKey(const Key('settings.signOut')));
       await tester.pumpAndSettle();
-      expect(find.text('Sign out of ICR?'), findsOneWidget);
+      // The client's words on the manual, 13 Nov 2026.
+      expect(find.text('Sign Out of ICR?'), findsOneWidget);
+      expect(find.text('You will need to sign in again to access your account on this device.'), findsOneWidget);
+      expect(find.widgetWithText(TextButton, 'Sign Out'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
       expect(h.auth.status, SessionStatus.signedIn);
@@ -261,7 +279,7 @@ void main() {
   });
 
   group('privacy and data', () {
-    testWidgets('Download my data reads the export, shows it, and Copy and Share send it', (tester) async {
+    testWidgets('Download My Data reads the export, shows it, and Copy and Share send it', (tester) async {
       final copied = <String>[];
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
         if (call.method == 'Clipboard.setData') copied.add((call.arguments as Map)['text'] as String);
@@ -307,7 +325,7 @@ void main() {
       expect(find.text('Try again in a minute.'), findsOneWidget);
     });
 
-    testWidgets('Delete my account needs the word DELETE, then closes the account and signs this phone out', (
+    testWidgets('Delete Account needs the word DELETE, then closes the account and signs this phone out', (
       tester,
     ) async {
       final repo = DemoAccountRepository();
@@ -318,7 +336,8 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       await tapKey(tester, 'settings.delete');
-      expect(find.textContaining('It cannot be undone.'), findsOneWidget);
+      expect(find.text('Delete Account'), findsWidgets);
+      expect(find.textContaining('This cannot be undone.'), findsOneWidget);
       // Disabled until the word is typed.
       await type(tester, 'delete.word', 'delet');
       await tester.tap(find.byKey(const Key('sheet.save')));
@@ -361,7 +380,7 @@ void main() {
       await pumpPrefs(tester);
       expect(find.text('Messages'), findsOneWidget);
       expect(find.text('New direct messages.'), findsOneWidget);
-      expect(find.text('Jobs and applications'), findsOneWidget);
+      expect(find.text('Jobs and Applications'), findsOneWidget);
       expect(tester.widget<Switch>(find.byKey(const Key('pref.jobs.email'))).value, isTrue);
     });
 
@@ -435,36 +454,68 @@ void main() {
       return r;
     }
 
-    testWidgets('the email with its confirmation, the verified mobile number and the LinkedIn link', (tester) async {
+    testWidgets('the verified email, the verified mobile number and the LinkedIn link, in the client\'s words', (
+      tester,
+    ) async {
       await pumpSecurity(tester);
+      // The manual's notes, 13 Nov 2026: the title, the two sections and each line's label.
+      expect(find.text('Sign-In & Security'), findsOneWidget);
+      for (final t in ['Sign-In', 'Email', 'Password', 'Contact Information', 'Mobile Number', 'LinkedIn', 'Change']) {
+        expect(find.text(t), findsOneWidget, reason: t);
+      }
+      expect(find.text('Reset your password using a secure email link.'), findsOneWidget);
       expect(find.text('nikhil@techcorp.example'), findsOneWidget);
-      expect(find.text('Confirmed'), findsOneWidget);
       expect(find.text('+91 9876543210'), findsOneWidget);
       expect(find.text('India'), findsOneWidget);
-      expect(find.text('Verified'), findsOneWidget);
+      // One chip under the email and one under the mobile number.
+      expect(find.text('Verified'), findsNWidgets(2));
+      expect(find.text('Confirmed'), findsNothing);
       expect(find.text('linkedin.com/in/nikhil-majjagi'), findsOneWidget);
       expect(find.byKey(const Key('security.confirmEmail')), findsNothing);
     });
 
-    testWidgets('an email that was never confirmed offers Confirm, which opens the confirmation', (tester) async {
-      await pumpSecurity(tester, confirmed: false);
-      expect(find.text('Not confirmed'), findsOneWidget);
-      await tester.tap(find.byKey(const Key('security.confirmEmail')));
-      await tester.pumpAndSettle();
-      expect(find.text('Confirm your email'), findsOneWidget);
+    testWidgets('the work email and the second number read "Work Email" and "Alternate Mobile Number"', (tester) async {
+      final repo = DemoAccountRepository(
+        profile: MyProfile.fromJson({
+          'user': {
+            'id': 'me',
+            'email': 'a@b.co',
+            'firstName': 'A',
+            'lastName': 'B',
+            'role': 'PROFESSIONAL',
+            'workEmail': 'a@work.example.com',
+            'altPhone': '+919812340000',
+          },
+        }),
+      );
+      await pumpSecurity(tester, repo: repo);
+      expect(find.text('Work Email'), findsOneWidget);
+      expect(find.text('a@work.example.com'), findsOneWidget);
+      expect(find.text('Alternate Mobile Number'), findsOneWidget);
+      expect(find.text('Not added'), findsOneWidget, reason: 'the main mobile number');
+      expect(find.text('Add'), findsOneWidget);
     });
 
-    testWidgets('Change password sends the reset link to the account\'s own address, fixed', (tester) async {
+    testWidgets('an email that was never verified offers Verify, which opens the verification', (tester) async {
+      await pumpSecurity(tester, confirmed: false);
+      expect(find.text('Not Verified'), findsOneWidget);
+      expect(find.widgetWithText(TextButton, 'Verify'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('security.confirmEmail')));
+      await tester.pumpAndSettle();
+      expect(find.text('Verify Your Email'), findsOneWidget);
+    });
+
+    testWidgets('Change (password) sends the reset link to the account\'s own address, fixed', (tester) async {
       await pumpSecurity(tester);
       await tester.tap(find.byKey(const Key('security.changePassword')));
       await tester.pumpAndSettle();
-      expect(find.text('Change your password'), findsOneWidget);
+      expect(find.text('Change Password'), findsOneWidget);
       expect(tester.widget<TextFormField>(find.byKey(const Key('forgot.email'))).enabled, isFalse);
       expect(find.text('nikhil@techcorp.example'), findsWidgets);
     });
 
     testWidgets(
-      'a number with no code to confirm it is not marked "Not verified"; an Indian one that is, offers Verify',
+      'a number with no code to confirm it is not marked "Not Verified"; an Indian one that is, offers Verify',
       (tester) async {
         final repo = DemoAccountRepository(
           profile: MyProfile.fromJson({
@@ -481,7 +532,7 @@ void main() {
         );
         await pumpSecurity(tester, repo: repo);
         expect(find.text('+44 7700900123'), findsOneWidget);
-        expect(find.text('Not verified'), findsNothing);
+        expect(find.text('Not Verified'), findsNothing);
         expect(find.text('Edit'), findsOneWidget);
 
         repo.profileNow = MyProfile.fromJson({
@@ -497,7 +548,7 @@ void main() {
         });
         await tester.fling(find.byType(ListView).first, const Offset(0, 400), 1000);
         await tester.pumpAndSettle(const Duration(seconds: 1));
-        expect(find.text('Not verified'), findsOneWidget);
+        expect(find.text('Not Verified'), findsOneWidget);
         expect(find.text('Verify'), findsOneWidget);
       },
     );
@@ -509,7 +560,7 @@ void main() {
       repo.failures.clear();
       await tester.tap(find.byKey(const Key('account.retry')));
       await tester.pumpAndSettle();
-      expect(find.text('Mobile number'), findsOneWidget);
+      expect(find.text('Mobile Number'), findsOneWidget);
     });
 
     group('the mobile number', () {
@@ -525,9 +576,9 @@ void main() {
         final repo = await pumpSecurity(tester, repo: noPhone());
         expect(find.text('Not added'), findsOneWidget);
         await tapKey(tester, 'security.phone');
-        expect(find.text('Mobile number'), findsWidgets);
+        expect(find.text('Mobile Number'), findsWidgets);
         await type(tester, 'phone.number', '98765 43210');
-        expect(find.text('Send code'), findsOneWidget);
+        expect(find.text('Send Code'), findsOneWidget);
         await save(tester);
         expect(repo.calls, contains('sendPhoneCode:+919876543210'));
         expect(find.text('Test mode: your code is 246810.'), findsOneWidget);
@@ -541,7 +592,8 @@ void main() {
         expect(repo.profileNow.phoneVerified, isTrue);
         expect(find.text('Mobile number saved.'), findsOneWidget);
         expect(find.text('+91 9876543210'), findsOneWidget);
-        expect(find.text('Verified'), findsOneWidget);
+        // The email's chip and now the number's.
+        expect(find.text('Verified'), findsNWidgets(2));
       });
 
       testWidgets('a wrong code is the API\'s sentence under the code, and the sheet stays', (tester) async {
@@ -567,7 +619,7 @@ void main() {
         expect(repo.count('sendPhoneCode'), 2);
         await type(tester, 'phone.number', '9876543211');
         expect(find.byKey(const Key('phone.code')), findsNothing);
-        expect(find.text('Send code'), findsOneWidget);
+        expect(find.text('Send Code'), findsOneWidget);
       });
 
       testWidgets('a number typed wrongly is refused with the website\'s words, before any call', (tester) async {
@@ -589,12 +641,12 @@ void main() {
         await tester.tap(find.widgetWithText(ListTile, 'United Arab Emirates  +971'));
         await tester.pumpAndSettle();
         await type(tester, 'phone.number', '501234567');
-        expect(find.text('Save number'), findsOneWidget);
-        expect(find.text('We can only text codes to +91 numbers, so this one is saved as typed.'), findsOneWidget);
+        expect(find.text('Save Number'), findsOneWidget);
+        expect(find.text('Codes can be sent only to +91 numbers, so this number is saved as entered.'), findsOneWidget);
         await save(tester);
         expect(repo.sent['updateMe'], {'phone': '+971501234567'});
         expect(repo.count('sendPhoneCode'), 0);
-        expect(find.text('Not verified'), findsNothing);
+        expect(find.text('Not Verified'), findsNothing);
       });
 
       testWidgets('Remove number asks first, then clears it', (tester) async {
@@ -602,7 +654,7 @@ void main() {
         await tapKey(tester, 'security.phone');
         await tester.tap(find.byKey(const Key('sheet.delete')));
         await tester.pumpAndSettle();
-        expect(find.text('Remove your number?'), findsOneWidget);
+        expect(find.text('Remove Your Number?'), findsOneWidget);
         await tester.tap(find.byKey(const Key('confirm.ok')));
         await tester.pumpAndSettle();
         expect(repo.sent['updateMe'], {'phone': ''});
@@ -620,11 +672,13 @@ void main() {
       });
     });
 
-    group('contact info', () {
+    group('contact information', () {
       testWidgets('the work email, a second number and links are saved together; a link gets https://', (tester) async {
         final repo = await pumpSecurity(tester);
         await tapKey(tester, 'security.editContact');
-        expect(find.text('Contact info'), findsWidgets);
+        expect(find.text('Contact Information'), findsWidgets);
+        expect(find.text('Alternate Mobile Number'), findsOneWidget);
+        expect(find.text('Work Email'), findsOneWidget);
         await type(tester, 'contact.workEmail', 'nikhil@work.example.com');
         await type(tester, 'contact.githubUrl', 'github.com/nikhil');
         await save(tester);
@@ -636,7 +690,7 @@ void main() {
           'portfolioUrl': '',
         });
         expect(repo.sent['updateMe'], {'workEmail': 'nikhil@work.example.com'});
-        expect(find.text('Contact info saved.'), findsOneWidget);
+        expect(find.text('Contact information saved.'), findsOneWidget);
         expect(find.text('nikhil@work.example.com'), findsOneWidget);
         expect(find.text('github.com/nikhil'), findsOneWidget);
       });

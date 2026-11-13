@@ -418,7 +418,7 @@ void main() {
       expect(profile.viewer?.canRequest, isTrue);
       expect(profile.verified, isTrue);
       expect(profile.yearsLabel, '15+ Years Experience');
-      expect(profile.topicsLabel, 'Softwares & Frameworks');
+      expect(profile.topicsLabel, 'Software & Frameworks');
     });
 
     test('a banner that is only a preset key is no picture', () async {
@@ -447,9 +447,9 @@ void main() {
       expect(program.kind, OfferingKind.program);
       expect(program.ctaLabel, 'Book Now');
       expect(program.tags.map((t) => t.label), ['2 Sessions']);
-      expect(program.previewLabel, 'Inspect 2-session syllabus preview');
+      expect(program.previewLabel, 'View 2-Session Syllabus Preview');
       expect(program.roadmap.single.label, '3 Months');
-      expect(program.roadmap.single.modules.single.title, '2-session syllabus');
+      expect(program.roadmap.single.modules.single.title, '2-Session Syllabus');
       expect(program.roadmap.single.modules.single.badge, 'Months 1-3');
       expect(program.roadmap.single.modules.single.steps, ['Session 1: Diagnose', 'Session 2: Plan']);
 
@@ -468,7 +468,7 @@ void main() {
       expect(guide.tags.map((t) => t.label), ['PDF Guide']);
       expect(guide.ctaLabel, 'Purchase Guide');
 
-      expect(offerings[4].tags.single.label, 'Async Query • 24h TAT');
+      expect(offerings[4].tags.single.label, 'Async Query • 24h Reply');
       expect(offerings.last.kind, OfferingKind.groupSession);
       expect(offerings.last.seatsLeft, 5);
     });
@@ -486,7 +486,7 @@ void main() {
       final reviews = await repo.reviews(await repo.profile('m1'));
       expect(reviews.map((r) => r.id), ['t-t1', 'f-f1']);
       expect(reviews.first.name, 'Dev Mangtani');
-      expect(reviews.last.name, 'A mentee');
+      expect(reviews.last.name, 'Anonymous mentee');
       expect(reviews.last.rating, 5);
       // A curated testimonial has no rating of its own: it reads with the mentor's (4.96 rounds to five stars).
       expect(reviews.first.rating, 5);
@@ -730,25 +730,25 @@ void main() {
       final controller = await pump(tester);
       await tester.tap(find.text('Book Trial (₹0)'));
       await tester.pumpAndSettle();
-      expect(find.text('What do you want to discuss?'), findsOneWidget);
+      expect(find.text('Discussion Topic'), findsOneWidget);
 
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await tester.pumpAndSettle();
       expect(find.textContaining('at least 20 characters'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField).first, 'I want to move from aerospace into cloud logistics.');
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await tester.pumpAndSettle();
-      expect(find.text('What do you want to discuss?'), findsNothing);
+      expect(find.text('Discussion Topic'), findsNothing);
       expect(controller.offerings.firstWhere((o) => o.id == 'demo-discovery').myOpenRequestId, isNotNull);
       expect(find.text('Trial Requested'), findsWidgets);
     });
 
-    testWidgets('Send Message on a profile with no pairing opens the mentoring request', (tester) async {
+    testWidgets('Send message on a profile with no pairing opens the mentoring request', (tester) async {
       await pump(tester);
       await tester.tap(find.text('Send Message'));
       await tester.pumpAndSettle();
-      expect(find.text('Ask Srikanth to mentor you'), findsOneWidget);
+      expect(find.text('Ask Srikanth to Mentor You'), findsOneWidget);
     });
 
     testWidgets('the route helper builds the screen on the API source and shows a failure', (tester) async {
@@ -763,7 +763,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text("Couldn't load this mentor"), findsOneWidget);
+      expect(find.text('Unable to Load This Mentor'), findsOneWidget);
       expect(api.calls, contains('GET /mentorship/mentors/nobody'));
     });
 
@@ -900,18 +900,18 @@ void main() {
       await tester.tap(find.text('Offerings'));
       await tester.pumpAndSettle();
       expect(find.text('About Srikanth'), findsNothing);
-      expect(find.textContaining('Tap any offering to inspect'), findsOneWidget);
+      expect(find.textContaining('Select an offering to view'), findsOneWidget);
       for (final chip in ['All', '1:1 Mentorship', 'Group Sessions', 'Resources']) {
         expect(find.text(chip), findsOneWidget);
       }
 
       await tester.tap(find.text('Recommendations'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Tap any offering to inspect'), findsNothing);
+      expect(find.textContaining('Select an offering to view'), findsNothing);
       // Both reviews (a named testimonial and a written one), and the way to the rest.
       expect(find.text('Dev Mangtani'), findsOneWidget);
-      expect(find.text('A mentee'), findsOneWidget);
-      expect(find.text('View all 42 verified reviews'), findsOneWidget);
+      expect(find.text('Anonymous mentee'), findsOneWidget);
+      expect(find.text('View All 42 Verified Reviews'), findsOneWidget);
 
       await tester.tap(find.text('Overview'));
       await tester.pumpAndSettle();
@@ -937,7 +937,7 @@ void main() {
 
       await tester.tap(find.text('Group Sessions'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('has not listed anything under this filter'), findsOneWidget);
+      expect(find.textContaining('This mentor has no offerings under this filter'), findsOneWidget);
 
       await tester.tap(find.text('All'));
       await tester.pumpAndSettle();
@@ -958,8 +958,8 @@ void main() {
       final urls = _launches(tester);
       await pump(tester);
       expect(find.text('...read more'), findsOneWidget, reason: 'the Overview tab shows the About section');
-      await tester.ensureVisible(find.text('View all 42 verified reviews'));
-      await tester.tap(find.text('View all 42 verified reviews'));
+      await tester.ensureVisible(find.text('View All 42 Verified Reviews'));
+      await tester.tap(find.text('View All 42 Verified Reviews'));
       await tester.pumpAndSettle();
       expect(urls, isEmpty);
       expect(find.text('...read more'), findsNothing, reason: 'the Recommendations tab has replaced the Overview');
@@ -972,14 +972,14 @@ void main() {
       expect(find.text('Book Free Trial'), findsOneWidget);
       await tester.tap(find.text('Book Free Trial'));
       await tester.pumpAndSettle();
-      expect(find.text('What do you want to discuss?'), findsOneWidget);
+      expect(find.text('Discussion Topic'), findsOneWidget);
     });
 
-    testWidgets('the chat glyph on the bar opens the same ask as Send Message', (tester) async {
+    testWidgets('the chat glyph on the bar opens the same ask as Send message', (tester) async {
       await pump(tester);
       await tester.tap(find.byIcon(LucideIcons.messageSquare).last);
       await tester.pumpAndSettle();
-      expect(find.text('Ask Srikanth to mentor you'), findsOneWidget);
+      expect(find.text('Ask Srikanth to Mentor You'), findsOneWidget);
     });
 
     testWidgets('each offering button does its own job', (tester) async {
@@ -994,7 +994,7 @@ void main() {
       expect(find.text('Request Personal Interview & GD Preparation'), findsOneWidget);
       await tester.tapAt(const Offset(10, 10));
       await tester.pumpAndSettle();
-      expect(find.text('What do you want to discuss?'), findsNothing);
+      expect(find.text('Discussion Topic'), findsNothing);
 
       // Ask Query: the same kind of ask for a written consultation.
       await tester.tap(find.text('Ask Query'));
@@ -1049,7 +1049,7 @@ void main() {
       expect(inBar, findsOneWidget);
       await tester.tap(inBar);
       await tester.pumpAndSettle();
-      expect(find.text('What do you want to discuss?'), findsOneWidget);
+      expect(find.text('Discussion Topic'), findsOneWidget);
     });
 
     testWidgets('a session form without a number on file asks for one, and sends it', (tester) async {
@@ -1071,19 +1071,19 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Book Trial (₹0)'));
       await tester.pumpAndSettle();
-      expect(find.text('Mobile number'), findsOneWidget);
+      expect(find.text('Mobile Number'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField).first, 'I want to move from aerospace into cloud logistics.');
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await tester.pumpAndSettle();
       expect(find.text('Add the mobile number the mentor can reach you on.'), findsOneWidget);
       expect(repo.sent, isEmpty);
 
       await tester.enterText(find.byType(TextField).at(2), '+919811111111');
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await tester.pumpAndSettle();
       expect(repo.sent, ['+919811111111']);
-      expect(find.text('Mobile number'), findsNothing);
+      expect(find.text('Mobile Number'), findsNothing);
     });
 
     testWidgets("an API that finds the number missing makes the form ask for it, then sends it", (tester) async {
@@ -1099,21 +1099,21 @@ void main() {
       // The profile says a number is on file, so the form does not ask up front.
       await tester.tap(find.text('Book Trial (₹0)'));
       await tester.pumpAndSettle();
-      expect(find.text('Mobile number'), findsNothing);
+      expect(find.text('Mobile Number'), findsNothing);
 
       await tester.enterText(find.byType(TextField).first, 'I want to move from aerospace into cloud logistics.');
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await tester.pumpAndSettle();
       expect(attempts, 1);
       expect(find.text('Add a mobile number so your mentor can reach you.'), findsOneWidget);
-      expect(find.text('Mobile number'), findsOneWidget);
+      expect(find.text('Mobile Number'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField).at(2), '+919811111111');
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await tester.pumpAndSettle();
       expect(attempts, 2);
       expect(api.bodies['POST /mentor-services/s1/request'], containsPair('phone', '+919811111111'));
-      expect(find.text('Mobile number'), findsNothing);
+      expect(find.text('Mobile Number'), findsNothing);
     });
 
     testWidgets('the mentoring request: checks its length, asks for a number, sends, and says so', (tester) async {
@@ -1129,29 +1129,29 @@ void main() {
       expect(find.text('Request Mentoring'), findsWidgets);
       await tester.tap(find.text('Send Message'));
       await tester.pumpAndSettle();
-      expect(find.text('Ask Srikanth to mentor you'), findsOneWidget);
-      expect(find.text('Mobile number'), findsOneWidget);
+      expect(find.text('Ask Srikanth to Mentor You'), findsOneWidget);
+      expect(find.text('Mobile Number'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField).first, 'Too short');
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await tester.pumpAndSettle();
       expect(find.textContaining('at least 30 characters'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField).first, 'Please mentor me on moving into supply planning.');
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await tester.pumpAndSettle();
       expect(find.text('Add the mobile number the mentor can reach you on.'), findsOneWidget);
       expect(api.calls, isNot(contains('POST /mentorship/requests')));
 
       await tester.enterText(find.byType(TextField).at(1), '+919811111111');
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await tester.pumpAndSettle();
       expect(api.bodies['POST /mentorship/requests'], {
         'mentorProfileId': 'm1',
         'message': 'Please mentor me on moving into supply planning.',
         'phone': '+919811111111',
       });
-      expect(find.text('Ask Srikanth to mentor you'), findsNothing);
+      expect(find.text('Ask Srikanth to Mentor You'), findsNothing);
       expect(find.textContaining('Request sent to Srikanth'), findsOneWidget);
       // Sent: the button waits for the mentor's answer.
       expect(controller.profile!.viewer!.blocker, AskBlocker.requestPending);
@@ -1159,7 +1159,7 @@ void main() {
     });
 
     testWidgets(
-      "Send Message: a live pairing opens its thread; a blocked viewer reads the API's reason; the owner has none",
+      "Send message: a live pairing opens its thread; a blocked viewer reads the API's reason; the owner has none",
       (tester) async {
         final urls = _launches(tester);
         final hops = _Hops();
@@ -1231,13 +1231,9 @@ void main() {
       await expectLabel({'canRequest': false, 'mentorshipId': 'ms1'}, 'Open Our Mentorship', hop: 'pairing:ms1');
       await expectLabel({'canRequest': false, 'pendingRequestId': 'r1'}, 'Request Pending');
       await expectLabel({'canRequest': false, 'blocker': 'AT_CAPACITY'}, 'At Capacity');
-      await expectLabel({'canRequest': false, 'blocker': 'PLAN_LIMIT'}, 'See Plans', opens: '/career/plans');
+      await expectLabel({'canRequest': false, 'blocker': 'PLAN_LIMIT'}, 'View Plans', opens: '/career/plans');
       // No mentee profile yet: the goals are written in the app (My mentoring, Goals), not on the website.
-      await expectLabel(
-        {'canRequest': false, 'blocker': 'NO_MENTEE_PROFILE'},
-        'Tell Us Your Goals First',
-        hop: 'goals',
-      );
+      await expectLabel({'canRequest': false, 'blocker': 'NO_MENTEE_PROFILE'}, 'Set Your Goals First', hop: 'goals');
     });
 
     testWidgets('a free guide is taken in the app; a refusal is shown, not hidden', (tester) async {
@@ -1305,7 +1301,7 @@ void main() {
         api: api,
         navigation: hops.navigation,
       );
-      expect(find.text('Inspect 2-session syllabus preview'), findsOneWidget);
+      expect(find.text('View 2-Session Syllabus Preview'), findsOneWidget);
       await tester.tap(find.text('Book Now').first);
       await tester.pumpAndSettle();
       expect(api.calls.where((c) => c == 'POST /mentor-plans/pl2/request'), hasLength(1));
@@ -1335,7 +1331,7 @@ void main() {
       await pumpApi(tester, routes, tab: ProfileTab.offerings, api: api);
       await tester.tap(find.text('Book Now').first);
       await tester.pumpAndSettle();
-      expect(find.text('Add your mobile number'), findsOneWidget);
+      expect(find.text('Add Your Mobile Number'), findsOneWidget);
       expect(api.calls, isNot(contains('POST /mentor-plans/pl2/request')));
 
       await tester.enterText(find.byType(TextField).first, '+919811111111');
@@ -1364,14 +1360,14 @@ void main() {
       final routes = <String, Object Function(RequestOptions)>{};
       final api = _Api(routes);
       await pumpApi(tester, routes, api: api);
-      expect(find.text("Couldn't load this mentor"), findsOneWidget);
+      expect(find.text('Unable to Load This Mentor'), findsOneWidget);
       expect(find.text('Srikanth Sriramagiri'), findsNothing);
 
       routes.addAll(_routes(profile: _plainProfile()));
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('Srikanth Sriramagiri'), findsOneWidget);
-      expect(find.text("Couldn't load this mentor"), findsNothing);
+      expect(find.text('Unable to Load This Mentor'), findsNothing);
     });
 
     testWidgets("a group session's seat is reserved on the website, on that session's page", (tester) async {
@@ -1408,9 +1404,9 @@ void main() {
     );
 
     test('a mentor who meets in person and remotely is Hybrid; otherwise the modes read as they are', () {
-      expect(mentor(city: 'Hyderabad', modes: const ['Video', 'In person']).placeLabel, 'Hyderabad (Hybrid)');
-      expect(mentor(city: 'Pune', modes: const ['Phone', 'Video', 'In person']).placeLabel, 'Pune (Hybrid)');
-      expect(mentor(city: 'Pune', modes: const ['In person']).placeLabel, 'Pune (In person)');
+      expect(mentor(city: 'Hyderabad', modes: const ['Video', 'In Person']).placeLabel, 'Hyderabad (Hybrid)');
+      expect(mentor(city: 'Pune', modes: const ['Phone', 'Video', 'In Person']).placeLabel, 'Pune (Hybrid)');
+      expect(mentor(city: 'Pune', modes: const ['In Person']).placeLabel, 'Pune (In Person)');
       expect(mentor(city: 'Pune', modes: const ['Video', 'Phone']).placeLabel, 'Pune (Video / Phone)');
       expect(mentor(modes: const ['Video']).placeLabel, 'Video');
       expect(mentor(city: 'Pune').placeLabel, 'Pune');
@@ -1569,9 +1565,9 @@ void main() {
       await tester.pumpAndSettle();
       // One row for the three terms, with the preview link.
       expect(find.text('Discovery'), findsOneWidget);
-      expect(find.text('Inspect 2-session syllabus preview'), findsOneWidget);
+      expect(find.text('View 2-Session Syllabus Preview'), findsOneWidget);
 
-      await tester.tap(find.text('Inspect 2-session syllabus preview'));
+      await tester.tap(find.text('View 2-Session Syllabus Preview'));
       await tester.pumpAndSettle();
       expect(find.text('Curriculum Roadmap'), findsOneWidget);
       for (final label in ['1 Month', '3 Months', '6 Months']) {
@@ -1589,7 +1585,7 @@ void main() {
 
       await tester.tap(find.text('3 Months'));
       await tester.pumpAndSettle();
-      expect(find.text('3-session syllabus'), findsOneWidget);
+      expect(find.text('3-Session Syllabus'), findsOneWidget);
       expect(find.text('Session 3: Execute'), findsOneWidget);
       expect(find.text('Months 1-3'), findsOneWidget);
       expect(inBar('Book Trial (₹0)'), findsNothing);
@@ -1627,7 +1623,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Inspect 2-session syllabus preview'));
+      await tester.tap(find.text('View 2-Session Syllabus Preview'));
       await tester.pumpAndSettle();
       expect(find.text('Curriculum Roadmap'), findsOneWidget);
       expect(find.text('Session 1: Diagnose'), findsOneWidget);

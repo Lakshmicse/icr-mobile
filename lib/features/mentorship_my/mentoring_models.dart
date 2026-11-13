@@ -117,7 +117,7 @@ class Pairing {
 
 /// `MentorshipRequestStatus`.
 enum RequestStatus {
-  pending('Awaiting reply'),
+  pending('Awaiting Reply'),
   accepted('Accepted'),
   declined('Declined'),
   withdrawn('Withdrawn'),
@@ -174,11 +174,11 @@ class MentoringRequest {
 
 /// `MentorshipSessionStatus`.
 enum SessionStatus {
-  requested('Awaiting the mentor'),
+  requested('Awaiting Mentor'),
   scheduled('Scheduled'),
   completed('Held'),
   cancelled('Cancelled'),
-  noShow('No-show');
+  noShow('No-Show');
 
   const SessionStatus(this.label);
   final String label;
@@ -329,9 +329,9 @@ class PairingFeedback {
 enum ConcernCategory {
   conduct('CONDUCT', 'Conduct', 'Behaviour that broke the code of conduct.'),
   safety('SAFETY', 'Safety', 'Someone may be at risk. ICR treats it as urgent.'),
-  unresponsive('UNRESPONSIVE', 'Not responding', 'The other person has gone quiet.'),
-  boundary('BOUNDARY', 'Boundaries', 'Contact outside what you agreed, or asks that made you uneasy.'),
-  other('OTHER', 'Something else', 'Anything else ICR should know.');
+  unresponsive('UNRESPONSIVE', 'Not Responding', 'The other person has stopped responding.'),
+  boundary('BOUNDARY', 'Boundaries', 'Contact beyond what you agreed, or requests that made you uncomfortable.'),
+  other('OTHER', 'Something Else', 'Anything else ICR should know.');
 
   const ConcernCategory(this.api, this.label, this.hint);
   final String api;
@@ -343,17 +343,17 @@ enum ConcernCategory {
 
 /// `ServicePurchaseStatus`.
 enum PurchaseStatus {
-  pendingPayment('PENDING_PAYMENT', 'Payment pending'),
+  pendingPayment('PENDING_PAYMENT', 'Payment Pending'),
   paid('PAID', 'Booked'),
   fulfilled('FULFILLED', 'Delivered'),
   expired('EXPIRED', 'Expired'),
-  refundDue('REFUND_DUE', 'Refund due'),
+  refundDue('REFUND_DUE', 'Refund Due'),
   refunded('REFUNDED', 'Refunded'),
   cancelled('CANCELLED', 'Cancelled'),
   requested('REQUESTED', 'Requested'),
-  accepted('ACCEPTED', 'Time proposed'),
+  accepted('ACCEPTED', 'Time Proposed'),
   declined('DECLINED', 'Declined'),
-  confirmed('CONFIRMED', 'Payment due');
+  confirmed('CONFIRMED', 'Payment Due');
 
   const PurchaseStatus(this.api, this.label);
   final String api;
@@ -370,10 +370,10 @@ enum PurchaseStatus {
 
 /// `MentorServiceType`.
 enum ServiceType {
-  oneOnOne('ONE_ON_ONE', '1:1 session'),
-  query('QUERY', 'Written consultation'),
+  oneOnOne('ONE_ON_ONE', '1:1 Session'),
+  query('QUERY', 'Written Consultation'),
   resource('RESOURCE', 'Resource'),
-  groupSession('GROUP_SESSION', 'Group session');
+  groupSession('GROUP_SESSION', 'Group Session');
 
   const ServiceType(this.api, this.label);
   final String api;
@@ -643,7 +643,7 @@ class ProgrammeEnrolment {
     'ACCEPTED' => 'Accepted',
     'MATCHED' => 'Matched',
     'WITHDRAWN' => 'Withdrawn',
-    'REJECTED' => 'Not selected',
+    'REJECTED' => 'Not Selected',
     _ => status,
   };
 }
@@ -697,8 +697,9 @@ class Programme {
   bool get open => status == 'OPEN' && (applicationsCloseAt == null || applicationsCloseAt!.isAfter(mentoringNow()));
 
   String get statusLabel => switch (status) {
-    'OPEN' => 'Applications open',
-    'RUNNING' => 'Under way',
+    // An OPEN programme past its closing day reads closed, as its dates do (bug sheet #18, 9 Nov 2026).
+    'OPEN' => open ? 'Applications Open' : 'Applications Closed',
+    'RUNNING' => 'In Progress',
     'COMPLETED' => 'Completed',
     'CANCELLED' => 'Cancelled',
     _ => 'Draft',
@@ -799,8 +800,8 @@ class PlanTerm {
   int get sessionsLeft => (sessionsAllowance - sessionsUsed).clamp(0, 1 << 20);
 
   String get statusLabel => switch (status) {
-    'PENDING_MENTOR' => 'Awaiting the mentor',
-    'PENDING_PAYMENT' => 'Accepted, payment due',
+    'PENDING_MENTOR' => 'Awaiting Mentor',
+    'PENDING_PAYMENT' => 'Accepted, Payment Due',
     'ACTIVE' => 'Active',
     'COMPLETED' => 'Completed',
     'EXPIRED' => 'Expired',
@@ -893,9 +894,9 @@ class MentoringConcern {
 
   String get statusLabel => switch (status) {
     'OPEN' => 'Received',
-    'REVIEWING' => 'ICR is looking into it',
-    'ACTIONED' => 'Acted on',
-    'DISMISSED' => 'Closed, no action',
+    'REVIEWING' => 'Under Review',
+    'ACTIONED' => 'Action Taken',
+    'DISMISSED' => 'Closed, No Action',
     _ => status,
   };
 
@@ -961,8 +962,8 @@ class MentoringQuota {
 const careerStages = <String, String>{
   'STUDENT': 'Student',
   'GRADUATE': 'Graduate',
-  'EARLY_CAREER': 'Early career',
-  'MID_CAREER': 'Mid career',
+  'EARLY_CAREER': 'Early Career',
+  'MID_CAREER': 'Mid Career',
   'SENIOR': 'Senior',
   'LEADERSHIP': 'Leadership',
 };
@@ -972,14 +973,14 @@ const cadences = <String, String>{
   'WEEKLY': 'Weekly',
   'FORTNIGHTLY': 'Fortnightly',
   'MONTHLY': 'Monthly',
-  'ADHOC': 'As needed',
+  'ADHOC': 'As Needed',
 };
 
 /// `MentorshipMode`.
 const meetingModes = <String, String>{
-  'VIDEO': 'Video call',
+  'VIDEO': 'Video Call',
   'PHONE': 'Phone',
-  'IN_PERSON': 'In person',
+  'IN_PERSON': 'In Person',
   'CHAT': 'Chat',
 };
 
@@ -1206,25 +1207,25 @@ class TimelineEntry {
 }
 
 const timelineLabels = <String, String>{
-  'REQUESTED': 'Request sent',
-  'ACCEPTED': 'Request accepted',
-  'DECLINED': 'Request declined',
-  'WITHDRAWN': 'Request withdrawn',
-  'STARTED': 'Mentorship started',
+  'REQUESTED': 'Request Sent',
+  'ACCEPTED': 'Request Accepted',
+  'DECLINED': 'Request Declined',
+  'WITHDRAWN': 'Request Withdrawn',
+  'STARTED': 'Mentorship Started',
   'PAUSED': 'Paused',
   'RESUMED': 'Resumed',
   'COMPLETED': 'Completed',
-  'ENDED_EARLY': 'Ended early',
+  'ENDED_EARLY': 'Ended Early',
   'NOTE_ADDED': 'Note',
-  'GOAL_ADDED': 'Goal added',
-  'GOAL_ACHIEVED': 'Goal achieved',
-  'GOAL_PROGRESS': 'Goal progress',
-  'SESSION_REQUESTED': 'Session requested',
-  'SESSION_SCHEDULED': 'Session scheduled',
-  'SESSION_COMPLETED': 'Session completed',
-  'SESSION_RESCHEDULED': 'Session moved',
-  'SESSION_CANCELLED': 'Session cancelled',
-  'CERTIFICATE_ISSUED': 'Certificate issued',
+  'GOAL_ADDED': 'Goal Added',
+  'GOAL_ACHIEVED': 'Goal Achieved',
+  'GOAL_PROGRESS': 'Goal Progress',
+  'SESSION_REQUESTED': 'Session Requested',
+  'SESSION_SCHEDULED': 'Session Scheduled',
+  'SESSION_COMPLETED': 'Session Completed',
+  'SESSION_RESCHEDULED': 'Session Moved',
+  'SESSION_CANCELLED': 'Session Cancelled',
+  'CERTIFICATE_ISSUED': 'Certificate Issued',
 };
 
 /// `ResourceKind`, worded as the website words it.

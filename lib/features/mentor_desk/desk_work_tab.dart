@@ -37,32 +37,32 @@ class DeskWorkTab extends StatelessWidget {
         const EmptyNote(
           icon: LucideIcons.briefcase,
           compact: true,
-          title: 'No paid work right now',
-          body: 'Calls, programmes and plans people buy from you show up here.',
+          title: 'No Paid Work at Present',
+          body: 'Calls, programmes and plans people buy from you will appear here.',
         ),
       if (needs > 0) ...[
-        const GroupLabel('Needs you', top: 0),
+        const GroupLabel('Action Needed', top: 0),
         for (final r in c.issues) _IssueCard(controller: c, links: links, row: r),
         for (final r in c.endedCalls) _EndedCallCard(controller: c, links: links, row: r),
         for (final r in c.moveRequests) _MoveAskedCard(controller: c, links: links, row: r),
       ],
       if (upcoming.isNotEmpty) ...[
-        GroupLabel('Calls ahead', top: needs > 0 ? 12 : 0),
+        GroupLabel('Upcoming Calls', top: needs > 0 ? 12 : 0),
         for (final r in upcoming) _CallCard(controller: c, links: links, row: r),
       ],
       if (waiting.isNotEmpty) ...[
-        const GroupLabel('Waiting on others', top: 12),
+        const GroupLabel('Waiting for Others', top: 12),
         for (final r in waiting) _WaitingCard(controller: c, row: r),
       ],
       if (active.isNotEmpty) ...[
-        const GroupLabel('Programmes and plans running', top: 12),
+        const GroupLabel('Active Programmes and Plans', top: 12),
         for (final t in active) _TermCard(term: t, onOpenPairing: onOpenPairing),
       ],
     ];
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your paid work",
+      errorTitle: 'Unable to Load Your Paid Work',
       onRefresh: () => controller.refreshTab(DeskTab.work),
       children: loading || failed != null ? const [] : children,
     );
@@ -89,7 +89,7 @@ class _IssueCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buyerRow(row, trailing: const StatusPill('Problem reported', tone: PillTone.red)),
+          _buyerRow(row, trailing: const StatusPill('Problem Reported', tone: PillTone.red)),
           const SizedBox(height: 8),
           Text(p.title, style: MentoringText.cardTitle),
           if (row.issueReportedAt != null)
@@ -108,14 +108,14 @@ class _IssueCard extends StatelessWidget {
           ActionWrap(
             children: [
               SolidButton(
-                label: row.issueRespondedAt != null ? 'Reply again' : 'Reply',
+                label: row.issueRespondedAt != null ? 'Reply Again' : 'Reply',
                 onPressed: () => showTextSheet(
                   context,
                   title: 'Reply to ${buyerName(row)}',
                   subtitle: 'Both ${buyerName(row)} and ICR read it.',
-                  label: 'Your reply',
+                  label: 'Your Reply',
                   hint: 'I am sorry about that. I have moved the call to...',
-                  submitLabel: 'Send reply',
+                  submitLabel: 'Send Reply',
                   minLength: minIssueReply,
                   maxLength: maxIssueReply,
                   lines: 4,
@@ -150,7 +150,7 @@ class _EndedCallCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buyerRow(row, trailing: const StatusPill('Confirm held', tone: PillTone.amber)),
+          _buyerRow(row, trailing: const StatusPill('Confirm Held', tone: PillTone.amber)),
           const SizedBox(height: 8),
           Text(row.purchase.title, style: MentoringText.cardTitle),
           MetaLine(
@@ -161,19 +161,19 @@ class _EndedCallCard extends StatelessWidget {
           const MetaLine(
             icon: LucideIcons.info,
             text:
-                'ICR settles an unclosed call as held a day after it ends. Confirm it, or cancel if it did not happen.',
+                'ICR marks an unconfirmed call as held one day after it ends. Confirm it, or cancel it if it did not take place.',
           ),
           ActionWrap(
             children: [
               SolidButton(
-                label: 'Mark held',
+                label: 'Mark as Held',
                 icon: LucideIcons.circleCheck,
                 onPressed: () async {
                   final refusal = await controller.completeCall(row);
                   if (context.mounted) showMessage(context, refusal ?? 'Marked as held.');
                 },
               ),
-              QuietButton(label: 'Cancel call', danger: true, onPressed: () => _cancel(context, controller, row)),
+              QuietButton(label: 'Cancel Call', danger: true, onPressed: () => _cancel(context, controller, row)),
               QuietButton(
                 label: 'Message',
                 icon: LucideIcons.messageSquare,
@@ -189,11 +189,11 @@ class _EndedCallCard extends StatelessWidget {
 
 Future<void> _cancel(BuildContext context, MentorDeskController c, SoldRow row) => showTextSheet(
   context,
-  title: 'Cancel this call?',
-  subtitle: '${whenLabel(row.purchase.booking!.scheduledAt)}. ${buyerName(row)} is told, with your reason.',
+  title: 'Cancel This Call?',
+  subtitle: '${whenLabel(row.purchase.booking!.scheduledAt)}. ${buyerName(row)} is notified, with your reason.',
   label: 'Reason',
   hint: 'Something came up at work',
-  submitLabel: 'Cancel call',
+  submitLabel: 'Cancel Call',
   minLength: 5,
   maxLength: 500,
   danger: true,
@@ -215,13 +215,13 @@ class _MoveAskedCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buyerRow(row, trailing: const StatusPill('Asks to move', tone: PillTone.amber)),
+          _buyerRow(row, trailing: const StatusPill('Move Requested', tone: PillTone.amber)),
           const SizedBox(height: 8),
           Text(row.purchase.title, style: MentoringText.cardTitle),
           MetaLine(icon: LucideIcons.calendarClock, text: 'Booked: ${whenLabel(b.scheduledAt)}'),
           MetaLine(
             icon: LucideIcons.calendarArrowDown,
-            text: 'They ask for: ${whenLabel(b.proposedAt!)}',
+            text: 'Requested: ${whenLabel(b.proposedAt!)}',
             color: MentoringColors.mintInk,
           ),
           if (b.proposedNote != null && b.proposedNote!.isNotEmpty)
@@ -232,7 +232,7 @@ class _MoveAskedCard extends StatelessWidget {
           ActionWrap(
             children: [
               SolidButton(
-                label: 'Accept new time',
+                label: 'Accept New Time',
                 icon: LucideIcons.check,
                 onPressed: () async {
                   final refusal = await controller.answerMove(row, accept: true);
@@ -240,7 +240,7 @@ class _MoveAskedCard extends StatelessWidget {
                 },
               ),
               QuietButton(
-                label: 'Offer another time',
+                label: 'Offer Another Time',
                 onPressed: () async {
                   final sent = await showFormSheet(context, (_) => ProposeMoveForm(controller: controller, row: row));
                   if (sent && context.mounted) {
@@ -249,7 +249,7 @@ class _MoveAskedCard extends StatelessWidget {
                 },
               ),
               QuietButton(
-                label: 'Keep the booked time',
+                label: 'Keep the Booked Time',
                 onPressed: () async {
                   final refusal = await controller.answerMove(row, accept: false);
                   if (context.mounted) showMessage(context, refusal ?? 'Kept the booked time.');
@@ -306,7 +306,7 @@ class _CallCard extends StatelessWidget {
                   clock: () => controller.now,
                 ),
               QuietButton(
-                label: 'Meeting link',
+                label: 'Meeting Link',
                 icon: LucideIcons.link,
                 onPressed: () async {
                   final sent = await showFormSheet(context, (_) => CallLinkForm(controller: controller, row: row));
@@ -314,7 +314,7 @@ class _CallCard extends StatelessWidget {
                 },
               ),
               QuietButton(
-                label: 'Offer another time',
+                label: 'Offer Another Time',
                 onPressed: () async {
                   final sent = await showFormSheet(context, (_) => ProposeMoveForm(controller: controller, row: row));
                   if (sent && context.mounted) {
@@ -354,7 +354,7 @@ class _WaitingCard extends StatelessWidget {
         children: [
           _buyerRow(
             row,
-            trailing: StatusPill(moved ? 'New time asked' : (row.timeHeld ? 'Awaiting answer' : 'Payment due')),
+            trailing: StatusPill(moved ? 'New Time Requested' : (row.timeHeld ? 'Awaiting Answer' : 'Payment Due')),
           ),
           const SizedBox(height: 8),
           Text(p.title, style: MentoringText.cardTitle),
@@ -364,7 +364,7 @@ class _WaitingCard extends StatelessWidget {
             ActionWrap(
               children: [
                 QuietButton(
-                  label: 'Withdraw the offer',
+                  label: 'Withdraw Offer',
                   onPressed: () async {
                     final refusal = await controller.answerMove(row, accept: false);
                     if (context.mounted) showMessage(context, refusal ?? 'Offer withdrawn.');
@@ -376,10 +376,10 @@ class _WaitingCard extends StatelessWidget {
             MetaLine(
               icon: LucideIcons.hourglass,
               text:
-                  'You set ${p.request?.scheduledAt == null ? 'a time' : whenLabel(p.request!.scheduledAt!)}; they accept and pay.',
+                  'You set ${p.request?.scheduledAt == null ? 'a time' : whenLabel(p.request!.scheduledAt!)}. They accept and pay.',
             )
           else
-            const MetaLine(icon: LucideIcons.hourglass, text: 'The call is done; the buyer has not paid yet.'),
+            const MetaLine(icon: LucideIcons.hourglass, text: 'The call is complete. The buyer has not paid yet.'),
         ],
       ),
     );
@@ -420,7 +420,7 @@ class _TermCard extends StatelessWidget {
             ),
           if (t.mentorshipId != null)
             ActionWrap(
-              children: [QuietButton(label: 'Open mentorship', onPressed: () => onOpenPairing(t.mentorshipId!))],
+              children: [QuietButton(label: 'Open Mentorship', onPressed: () => onOpenPairing(t.mentorshipId!))],
             ),
         ],
       ),

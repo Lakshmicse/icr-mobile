@@ -162,9 +162,9 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
       context: context,
       builder: (_) => AlertDialog(
         key: const ValueKey('decline-invite-dialog'),
-        title: const Text('Decline this invitation?'),
+        title: const Text('Decline This Invitation?'),
         content: Text(
-          '${invite.invitedBy ?? 'The recruiter'} will be told you are not interested in ${invite.jobTitle}.',
+          '${invite.invitedBy ?? 'The recruiter'} will be notified that you are not interested in ${invite.jobTitle}.',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Keep')),
@@ -225,7 +225,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
         CareerNotice(
           key: const ValueKey('invites-error'),
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load your invitations",
+          title: 'Unable to Load Your Invitations',
           body: _c.error!,
           action: 'Try again',
           onAction: _c.refresh,
@@ -238,8 +238,8 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
         CareerNotice(
           key: ValueKey('invites-empty'),
           icon: LucideIcons.mailOpen,
-          title: 'No invitations yet',
-          body: 'When a recruiter invites you to apply for a role, it shows up here.',
+          title: 'No Invitations Yet',
+          body: 'When a recruiter invites you to apply for a role, the invitation will appear here.',
         ),
       ];
     }
@@ -276,7 +276,7 @@ class _Visibility extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text('Open to opportunities', style: CareerText.cardTitle.copyWith(fontSize: 14))),
+              Expanded(child: Text('Open to Opportunities', style: CareerText.cardTitle.copyWith(fontSize: 14))),
               Switch(
                 key: const ValueKey('discoverable-switch'),
                 value: discoverable ?? false,
@@ -286,7 +286,10 @@ class _Visibility extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: Text('When on, recruiters can find your résumé and invite you to apply.', style: CareerText.body),
+            child: Text(
+              'When this is on, recruiters can find your résumé and invite you to apply.',
+              style: CareerText.body,
+            ),
           ),
           if (loaded && discoverable == null)
             Padding(
@@ -361,7 +364,7 @@ class _InviteCard extends StatelessWidget {
                 width: 130,
                 child: PrimaryButton(
                   key: ValueKey('open-${invite.id}'),
-                  label: 'View & apply',
+                  label: 'View & Apply',
                   height: 34,
                   radius: 17,
                   textStyle: CareerText.link.copyWith(color: Colors.white),

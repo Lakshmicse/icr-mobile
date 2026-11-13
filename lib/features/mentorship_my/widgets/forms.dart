@@ -189,7 +189,7 @@ class _TextFormState extends State<_TextForm> {
   Future<void> _submit() async {
     final value = _text.text.trim();
     if (!(widget.optional && value.isEmpty) && value.length < widget.minLength) {
-      setState(() => _problem = 'Write at least ${widget.minLength} characters.');
+      setState(() => _problem = 'Enter at least ${widget.minLength} characters.');
       return;
     }
     setState(() {
@@ -329,12 +329,12 @@ class _ReviewFormState extends State<_ReviewForm> {
 
   Future<void> _submit() async {
     if (_rating == 0) {
-      setState(() => _problem = 'Choose a rating from one to five stars.');
+      setState(() => _problem = 'Select a rating from one to five stars.');
       return;
     }
     final comment = _comment.text.trim();
     if (comment.isNotEmpty && comment.length < widget.minComment) {
-      setState(() => _problem = 'Write at least ${widget.minComment} characters, or leave the comment empty.');
+      setState(() => _problem = 'Enter at least ${widget.minComment} characters, or leave the comment empty.');
       return;
     }
     setState(() {
@@ -358,17 +358,17 @@ class _ReviewFormState extends State<_ReviewForm> {
     return MentoringForm(
       title: widget.title,
       subtitle: widget.subtitle,
-      submitLabel: 'Send review',
+      submitLabel: 'Send Review',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
       children: [
         FieldBlock(
-          label: 'Your rating',
+          label: 'Your Rating',
           child: RatingStars(value: _rating, onChanged: (v) => setState(() => _rating = v)),
         ),
         FieldBlock(
-          label: 'What was it like? (optional)',
+          label: 'Comment (Optional)',
           child: TextField(
             key: const ValueKey('review-comment'),
             controller: _comment,
@@ -515,11 +515,11 @@ class _TimeFormState extends State<_TimeForm> {
   Future<void> _submit() async {
     final at = _at;
     if (at == null) {
-      setState(() => _problem = 'Pick a time first.');
+      setState(() => _problem = 'Select a time first.');
       return;
     }
     if (!at.isAfter(mentoringNow())) {
-      setState(() => _problem = 'Pick a time in the future.');
+      setState(() => _problem = 'Select a time in the future.');
       return;
     }
     setState(() {
@@ -560,10 +560,10 @@ class _TimeFormState extends State<_TimeForm> {
             final slots = snap.data ?? const <Slot>[];
             final own = _at != null && !slots.any((s) => s.at.isAtSameMomentAs(_at!));
             return FieldBlock(
-              label: slots.isEmpty ? 'When?' : 'Free times',
+              label: slots.isEmpty ? 'Date and Time' : 'Free Times',
               help: slots.isEmpty
-                  ? 'No open times are listed for the next two weeks; pick a day and time.'
-                  : 'On your phone\'s clock.',
+                  ? 'No open times are listed for the next two weeks. Select a day and time.'
+                  : 'Times are shown in your phone\'s time zone.',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -571,7 +571,7 @@ class _TimeFormState extends State<_TimeForm> {
                     SlotPicker(slots: slots, selected: _at, onSelect: (at) => setState(() => _at = at)),
                   const SizedBox(height: 8),
                   QuietButton(
-                    label: own ? whenLabel(_at!) : (slots.isEmpty ? 'Pick a day and time' : 'Another time'),
+                    label: own ? whenLabel(_at!) : (slots.isEmpty ? 'Select a Day and Time' : 'Another Time'),
                     icon: LucideIcons.calendarClock,
                     onPressed: _pickOwn,
                   ),

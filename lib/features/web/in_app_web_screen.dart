@@ -209,7 +209,9 @@ class _InAppWebScreenState extends State<InAppWebScreen> {
     if (!opened && mounted) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text("Couldn't open ${uri.host.isEmpty ? uri.scheme : uri.host}${uri.path}")));
+        ..showSnackBar(
+          SnackBar(content: Text('Unable to open ${uri.host.isEmpty ? uri.scheme : uri.host}${uri.path}.')),
+        );
     }
   }
 
@@ -339,11 +341,11 @@ class _Failed extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("This page didn't load.", style: AppText.barTitle, textAlign: TextAlign.center),
+            Text('Unable to Load This Page', style: AppText.barTitle, textAlign: TextAlign.center),
             const SizedBox(height: 6),
             const Text('Check your connection and try again.', textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            FilledButton(key: const Key('web.retry'), onPressed: onRetry, child: const Text('Try again')),
+            FilledButton(key: const Key('web.retry'), onPressed: onRetry, child: const Text('Try Again')),
           ],
         ),
       ),

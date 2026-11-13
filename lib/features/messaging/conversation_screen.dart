@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
@@ -286,6 +287,41 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
     }
   }
 
+  /// "Location": where the phone is, sent as a map link anyone can open (the API has no place message; the website
+  /// shows the link). Asks for the permission, and for location services when they are off (owner, 9 Nov 2026).
+  Future<void> _shareLocation() async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        if (!mounted) return;
+        showMessage(context, 'Turn on location services to share where you are.');
+        await Geolocator.openLocationSettings();
+        return;
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.deniedForever) {
+        if (!mounted) return;
+        showMessage(context, "Allow ICR to use your location in the phone's settings to share it.");
+        await Geolocator.openAppSettings();
+        return;
+      }
+      if (permission == LocationPermission.denied) {
+        if (mounted) showMessage(context, 'ICR needs your location to share it.');
+        return;
+      }
+      if (mounted) showMessage(context, 'Finding your location…');
+      final here = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 20)),
+      );
+      if (!mounted) return;
+      final lat = here.latitude.toStringAsFixed(6);
+      final lng = here.longitude.toStringAsFixed(6);
+      unawaited(_c.send('📍 My location: https://maps.google.com/?q=$lat,$lng'));
+    } catch (_) {
+      if (mounted) showMessage(context, 'Unable to get your location. Try again outdoors or with Wi-Fi on.');
+    }
+  }
+
   Future<void> _attach() async {
     final pick = widget.pickAttachment ?? MessagingLauncher.attachmentPicker;
     if (pick == null) return;
@@ -296,6 +332,16 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
   }
 
   /// "RFQ": the "Share an ICR record" sheet, on Requirements.
+  /// The "RFQ" pill shares a requirement: not in a mentoring, consultation or group-session thread (owner, 7 Nov
+  /// 2026: a mentee "should not have that option"), where nothing is bought or sold.
+  bool get _sharesRecords => switch (_c.context?.kind ?? _c.conversation?.kind) {
+    ConversationKind.mentorship || ConversationKind.consultation || ConversationKind.groupSession => false,
+    // A plain chat between two people, which is what "Connect" on a mentor's card opens (owner, 12 Nov 2026:
+    // "remove RFQ for the mentors"). Requirement, bid, enquiry and company threads keep it.
+    ConversationKind.direct => false,
+    _ => true,
+  };
+
   Future<void> _shareRecord() async {
     final picked = await showRecordPicker(context, _repository, initial: RecordType.requirement);
     if (picked == null || !mounted) return;
@@ -361,7 +407,7 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
     } catch (e) {
       if (mounted) {
         final why = e is StateError ? 'Try again.' : ApiError.from(e).message;
-        showMessage(context, "The file couldn't be opened. $why");
+        showMessage(context, 'Unable to open the file. $why');
       }
     }
   }
@@ -417,9 +463,9 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
           children: [
             const SizedBox(height: 8),
             _SheetRow(icon: LucideIcons.reply, label: 'Reply', value: 'reply'),
-            if (m.body.trim().isNotEmpty) _SheetRow(icon: LucideIcons.copy, label: 'Copy text', value: 'copy'),
-            if (mine) _SheetRow(icon: LucideIcons.trash2, label: 'Delete message', value: 'delete', danger: true),
-            if (!mine) _SheetRow(icon: LucideIcons.flag, label: 'Report message', value: 'report'),
+            if (m.body.trim().isNotEmpty) _SheetRow(icon: LucideIcons.copy, label: 'Copy Text', value: 'copy'),
+            if (mine) _SheetRow(icon: LucideIcons.trash2, label: 'Delete Message', value: 'delete', danger: true),
+            if (!mine) _SheetRow(icon: LucideIcons.flag, label: 'Report Message', value: 'report'),
             const SizedBox(height: 8),
           ],
         ),
@@ -432,13 +478,13 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
         _focus.requestFocus();
       case 'copy':
         await Clipboard.setData(ClipboardData(text: m.body));
-        if (mounted) showMessage(context, 'Copied');
+        if (mounted) showMessage(context, 'Copied.');
       case 'delete':
         final ok = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Delete this message?'),
-            content: const Text('It is removed for everyone in the conversation.'),
+            title: const Text('Delete This Message?'),
+            content: const Text('It will be removed for everyone in the conversation.'),
             actions: [
               TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
               TextButton(
@@ -468,7 +514,7 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
     if (result == null || !mounted) return;
     final error = await _c.report(m, result.reason, note: result.note);
     if (!mounted) return;
-    showMessage(context, error ?? 'Thanks. ICR will review this message.');
+    showMessage(context, error ?? 'Thank you. ICR will review this message.');
   }
 
   Future<void> _toggle(Future<String?> Function() action) async {
@@ -519,8 +565,9 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
                             onAttach: (widget.pickAttachment ?? MessagingLauncher.attachmentPicker) == null
                                 ? null
                                 : _attach,
-                            onShareRecord: _shareRecord,
+                            onShareRecord: _sharesRecords ? _shareRecord : null,
                             onMeet: sessionHref == null ? null : () => _openHref(sessionHref),
+                            onShareLocation: _shareLocation,
                             onEmoji: _pickEmoji,
                             asCompany: _c.side == null ? null : _c.myParty?.name,
                             draftSaved: _draftKept,
@@ -552,7 +599,7 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
               icon: _c.cannotOpen ? LucideIcons.lock : LucideIcons.cloudOff,
               title: _c.error!,
               body: _c.cannotOpen ? 'It may belong to another account, or you may have left it.' : null,
-              action: _c.cannotOpen ? 'Back to messages' : 'Retry',
+              action: _c.cannotOpen ? 'Back to Messages' : 'Try Again',
               onAction: _c.cannotOpen ? () => Navigator.maybePop(context) : _c.retry,
             ),
           ),
@@ -603,7 +650,7 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
                   : TextButton(
                       key: const ValueKey('load-earlier'),
                       onPressed: _c.loadOlder,
-                      child: Text('Load earlier messages', style: ChatText.barAction),
+                      child: Text('Load Earlier Messages', style: ChatText.barAction),
                     ),
             ),
           );
@@ -837,18 +884,18 @@ class _ContactCardState extends State<_ContactCard> {
                     itemBuilder: (_) => [
                       PopupMenuItem(
                         value: 'star',
-                        child: Text(conversation.starred ? 'Remove star' : 'Star conversation'),
+                        child: Text(conversation.starred ? 'Remove Star' : 'Star Conversation'),
                       ),
-                      PopupMenuItem(value: 'pin', child: Text(conversation.pinned ? 'Unpin from top' : 'Pin to top')),
+                      PopupMenuItem(value: 'pin', child: Text(conversation.pinned ? 'Unpin from Top' : 'Pin to Top')),
                       if (party != null) ...[
                         const PopupMenuDivider(),
                         if (party.status == ThreadStatus.open) ...[
-                          const PopupMenuItem(value: 'done', child: Text('Mark done')),
-                          const PopupMenuItem(value: 'spam', child: Text('Mark as spam')),
+                          const PopupMenuItem(value: 'done', child: Text('Mark Done')),
+                          const PopupMenuItem(value: 'spam', child: Text('Mark as Spam')),
                         ] else
-                          const PopupMenuItem(value: 'open', child: Text('Move back to open')),
+                          const PopupMenuItem(value: 'open', child: Text('Move Back to Open')),
                         if (party.assignee == null)
-                          const PopupMenuItem(value: 'assign', child: Text('Assign to me'))
+                          const PopupMenuItem(value: 'assign', child: Text('Assign to Me'))
                         else
                           const PopupMenuItem(value: 'unassign', child: Text('Unassign')),
                       ],
@@ -945,7 +992,7 @@ class _Empty extends StatelessWidget {
             Text(introText(context0), textAlign: TextAlign.center, style: ChatText.rowPreview),
             if (chips.isNotEmpty) ...[
               const SizedBox(height: 14),
-              Text('Start with', style: ChatText.hint),
+              Text('Suggested Messages', style: ChatText.hint),
               const SizedBox(height: 8),
               Wrap(
                 alignment: WrapAlignment.center,
@@ -996,7 +1043,7 @@ class _ReportSheetState extends State<_ReportSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Report this message', style: ChatText.sheetTitle),
+            Text('Report This Message', style: ChatText.sheetTitle),
             const SizedBox(height: 4),
             Text(
               'ICR reviews reports and may remove the message. The sender is not told who reported it.',
@@ -1024,7 +1071,7 @@ class _ReportSheetState extends State<_ReportSheet> {
               maxLength: 1000,
               maxLines: 3,
               minLines: 1,
-              decoration: const InputDecoration(hintText: 'Add a note (optional)', border: OutlineInputBorder()),
+              decoration: const InputDecoration(hintText: 'Add a note (Optional)', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 8),
             SizedBox(

@@ -7,19 +7,27 @@ import '../../feed/widgets/feed_avatar.dart';
 import '../mentorship_models.dart';
 import '../mentorship_styles.dart';
 
-/// One mentor in the grid, as the Find Mentors design draws them: a landscape
-/// cover with a round photo over its lower edge, the name with its seal, the
-/// role line and up to three small expertise chips.
+/// One mentor in the grid: a landscape cover with a round photo centred over
+/// its lower edge, then, centred, the name with its seal, the role line and
+/// the expertise as one quiet line; then, with [onMessage], a
+/// Message button at the foot (owner, 12 Nov 2026: "connect to message them and
+/// click on the other space it will goes to profile"). The rest of the card
+/// opens the profile.
 class MentorCard extends StatelessWidget {
-  const MentorCard({super.key, required this.mentor, required this.onTap, this.bottomPad = 8.0});
+  const MentorCard({super.key, required this.mentor, required this.onTap, this.onMessage, this.bottomPad = 8.0});
 
-  /// The cover and the photo that overlaps it.
-  static const coverHeight = 36.5;
-  static const _headHeight = 58.55;
-  static const _photo = 47.0;
+  /// The cover and the photo that stands centred over its lower edge (owner's reference, 12 Nov 2026: the
+  /// "people you may know" card — photo in the middle, the words centred under it, one pill button at the foot).
+  static const coverHeight = 46.0;
+  static const _photo = 68.0;
+  static const _photoTop = 10.0;
+  static const _headHeight = _photoTop + _photo + 3;
 
   final Mentor mentor;
   final VoidCallback onTap;
+
+  /// Opens a conversation with the mentor; null draws no button.
+  final VoidCallback? onMessage;
 
   /// Under the last chip. The landing's cards stand a little taller than Find Mentors'.
   final double bottomPad;
@@ -32,16 +40,16 @@ class MentorCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(6),
-          boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 3, offset: Offset(0, 1))],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.outlineVariant),
         ),
+        clipBehavior: Clip.antiAlias,
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(
-            borderRadius: BorderRadius.circular(6),
             onTap: onTap,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
                   height: _headHeight,
@@ -51,6 +59,14 @@ class MentorCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 9.5),
                   child: _Body(mentor: mentor),
                 ),
+                if (onMessage != null) ...[
+                  // The cards of a row stand as tall as the taller; the button keeps to the foot of each.
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(9.5, 9, 9.5, 2),
+                    child: _MessageButton(name: mentor.name, onTap: onMessage!),
+                  ),
+                ],
                 SizedBox(height: bottomPad),
               ],
             ),
@@ -72,24 +88,22 @@ class _Head extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         Positioned(
-          left: 2.5,
-          right: 2.5,
+          left: 0,
+          right: 0,
           top: 0,
           height: MentorCard.coverHeight,
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
-            child: _Cover(mentor: mentor),
-          ),
+          child: _Cover(mentor: mentor),
         ),
         Positioned(
-          left: 8.1,
-          top: 8.1,
-          child: Container(
-            width: 50,
-            height: 50,
-            padding: const EdgeInsets.all(1.5),
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            child: FeedAvatar(photo: mentor.avatar, initials: mentor.initials, size: MentorCard._photo),
+          left: 0,
+          right: 0,
+          top: MentorCard._photoTop - 2,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              child: FeedAvatar(photo: mentor.avatar, initials: mentor.initials, size: MentorCard._photo),
+            ),
           ),
         ),
       ],
@@ -145,17 +159,21 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final role = mentor.roleLine;
-    final chips = mentor.expertise.take(3).toList();
+    final expertise = mentor.expertise.take(3).join(' · ');
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // The name's line is as tall as its text (a fixed 17.3 cut it at the app's 14 sp). The design's role
-        // line stands 2 dp lower under the name than the name's own line height gives; at this size the
-        // line's own 18 leaves 1.3 dp of that.
+        // A long name takes a second line rather than being cut, the seal beside it (owner, 12 Nov 2026).
         Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Flexible(
-              child: Text(mentor.name, style: MentorshipText.mentorName, maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(
+                mentor.name,
+                style: MentorshipText.mentorName,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             if (mentor.approved) ...[
               const SizedBox(width: 4.5),
@@ -163,37 +181,63 @@ class _Body extends StatelessWidget {
             ],
           ],
         ),
-        const SizedBox(height: 1.3),
-        if (role.isNotEmpty) Text(role, style: MentorshipText.mentorRole, maxLines: 2, overflow: TextOverflow.ellipsis),
-        if (chips.isNotEmpty) ...[
-          const SizedBox(height: 5.5),
-          Wrap(spacing: 4, runSpacing: 4, children: [for (final c in chips) _ExpertiseChip(c)]),
+        const SizedBox(height: 2),
+        if (role.isNotEmpty)
+          Text(
+            role,
+            style: MentorshipText.mentorRole,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        if (expertise.isNotEmpty) ...[
+          const SizedBox(height: 5),
+          Text(
+            expertise,
+            style: MentorshipText.expertise,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ],
     );
   }
 }
 
-class _ExpertiseChip extends StatelessWidget {
-  const _ExpertiseChip(this.label);
+/// The card's Message button: an outlined pill the card's width, the speech glyph and the word.
+class _MessageButton extends StatelessWidget {
+  const _MessageButton({required this.name, required this.onTap});
 
-  final String label;
+  final String name;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    // A chip is as wide as its words; a Container with an alignment would
-    // take the whole row.
-    return Container(
-      height: 15,
-      padding: const EdgeInsets.symmetric(horizontal: 8.6),
-      decoration: BoxDecoration(color: MentorshipColors.expertiseChip, borderRadius: BorderRadius.circular(7.5)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(
-            child: Text(label, style: MentorshipText.expertise, maxLines: 1, overflow: TextOverflow.ellipsis),
+    return Semantics(
+      // Its own node with its own tap: inside the card's button it was otherwise lost to a screen reader.
+      container: true,
+      button: true,
+      label: 'Message $name',
+      onTap: onTap,
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.white,
+        shape: const StadiumBorder(side: BorderSide(color: AppColors.primary)),
+        child: InkWell(
+          key: const ValueKey('mentor-card-message'),
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            height: 32,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              // "Message" (owner, 13 Nov 2026: "the card having connect do it as Message"; it read "Connect" for a
+              // day): it opens the conversation.
+              children: [Text('Message', style: MentorshipText.message)],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -206,6 +250,8 @@ class MentorRow extends StatelessWidget {
     required this.left,
     this.right,
     required this.onOpen,
+    this.onMessage,
+    this.viewerId,
     this.gap = 6.5,
     this.bottomPad = 8.0,
   });
@@ -213,8 +259,21 @@ class MentorRow extends StatelessWidget {
   final Mentor left;
   final Mentor? right;
   final void Function(Mentor) onOpen;
+
+  /// Messages a mentor from their card. Null: no card has a Message button.
+  final void Function(Mentor)? onMessage;
+
+  /// The signed-in member: their own card has no Message button.
+  final String? viewerId;
   final double gap;
   final double bottomPad;
+
+  /// The card's Message: only for a mentor with an account to reach who is not the viewer.
+  VoidCallback? _messageFor(Mentor m) {
+    final message = onMessage;
+    if (message == null || m.userId == null || m.userId == viewerId) return null;
+    return () => message(m);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -223,13 +282,23 @@ class MentorRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: MentorCard(mentor: left, onTap: () => onOpen(left), bottomPad: bottomPad),
+            child: MentorCard(
+              mentor: left,
+              onTap: () => onOpen(left),
+              onMessage: _messageFor(left),
+              bottomPad: bottomPad,
+            ),
           ),
           SizedBox(width: gap),
           Expanded(
             child: right == null
                 ? const SizedBox.shrink()
-                : MentorCard(mentor: right!, onTap: () => onOpen(right!), bottomPad: bottomPad),
+                : MentorCard(
+                    mentor: right!,
+                    onTap: () => onOpen(right!),
+                    onMessage: _messageFor(right!),
+                    bottomPad: bottomPad,
+                  ),
           ),
         ],
       ),
@@ -243,6 +312,8 @@ class MentorGrid extends StatelessWidget {
     super.key,
     required this.mentors,
     required this.onOpen,
+    this.onMessage,
+    this.viewerId,
     this.padding = 17.25,
     this.rowGap = 5,
     this.bottomPad = 8.0,
@@ -255,6 +326,10 @@ class MentorGrid extends StatelessWidget {
 
   final List<Mentor> mentors;
   final void Function(Mentor) onOpen;
+
+  /// As [MentorRow.onMessage] and [MentorRow.viewerId].
+  final void Function(Mentor)? onMessage;
+  final String? viewerId;
   final double padding;
   final double rowGap;
   final double bottomPad;
@@ -275,6 +350,8 @@ class MentorGrid extends StatelessWidget {
               left: mentors[i * 2],
               right: i * 2 + 1 < mentors.length ? mentors[i * 2 + 1] : null,
               onOpen: onOpen,
+              onMessage: onMessage,
+              viewerId: viewerId,
               bottomPad: i == 0 ? bottomPad - firstRowTrim : bottomPad,
             ),
           ],

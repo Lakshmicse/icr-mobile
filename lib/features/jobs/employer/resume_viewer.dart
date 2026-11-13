@@ -28,14 +28,14 @@ Future<void> openApplicantResume(
     if (uri != null && context.mounted) await links.openUri(context, uri);
     return;
   } catch (_) {
-    if (context.mounted) showMessage(context, "Couldn't open the résumé. Try again.");
+    if (context.mounted) showMessage(context, 'Unable to open the résumé. Try again.');
     return;
   }
   if (!context.mounted) return;
   final name = resumeFileName(url);
   final kind = previewKindFor('', name);
   if (kind == PreviewKind.none) {
-    showMessage(context, "This résumé's file type can't be shown in the app.");
+    showMessage(context, "This résumé's file type cannot be displayed in the app.");
     return;
   }
   await Navigator.of(context).push(

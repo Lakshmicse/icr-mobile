@@ -168,7 +168,13 @@ class DemoRfqRepository implements RfqRepository {
         RfqItem(name: 'CCTV cameras, 4 MP', quantity: 48, unit: 'cameras'),
       ],
       files: const [
-        RfqFile(id: 'demo-file-1', title: 'Floor plan — HQ', url: '/uploads/demo-floor-plan.pdf', name: 'floor-plan.pdf', mimeType: 'application/pdf'),
+        RfqFile(
+          id: 'demo-file-1',
+          title: 'Floor plan — HQ',
+          url: '/uploads/demo-floor-plan.pdf',
+          name: 'floor-plan.pdf',
+          mimeType: 'application/pdf',
+        ),
       ],
       quoteCount: 3,
       createdAt: _days(-4, hour: 6),
@@ -184,7 +190,8 @@ class DemoRfqRepository implements RfqRepository {
         status: BidStatus.pending,
         amount: 1140000,
         leadTimeDays: 10,
-        message: 'Twelve PSARA-licensed guards across three shifts, four biometric readers with a year of AMC, and 48 cameras installed in two weekends.',
+        message:
+            'Twelve PSARA-licensed guards across three shifts, four biometric readers with a year of AMC, and 48 cameras installed in two weekends.',
         createdAt: _days(-1, hour: 4),
         files: const [
           RfqFile(
@@ -318,7 +325,12 @@ class DemoRfqRepository implements RfqRepository {
       verificationLevel: 'VERIFIED',
       gstVerified: true,
     );
-    const zenith = BuyerInfo(name: 'Arjun Mehta', companyId: 'demo-c-zenith', companyName: 'Zenith Hospitals', verified: true);
+    const zenith = BuyerInfo(
+      name: 'Arjun Mehta',
+      companyId: 'demo-c-zenith',
+      companyName: 'Zenith Hospitals',
+      verified: true,
+    );
     _board.addAll([
       Requirement(
         id: boardId,
@@ -429,7 +441,7 @@ class DemoRfqRepository implements RfqRepository {
       buyer: alpha,
       matchScore: 70,
       matched: true,
-      );
+    );
     _myBids.addAll([
       MyBid(
         id: 'demo-mybid-1',
@@ -587,16 +599,35 @@ class DemoRfqRepository implements RfqRepository {
       final c = r.responses!;
       if (c.prequalPending > 0) {
         actions.add(
-          ActionItem(kind: 'SCREEN', rfqId: r.id, title: r.title, rfqKind: r.kind, count: c.prequalPending, deadline: r.preQualEndDate),
+          ActionItem(
+            kind: 'SCREEN',
+            rfqId: r.id,
+            title: r.title,
+            rfqKind: r.kind,
+            count: c.prequalPending,
+            deadline: r.preQualEndDate,
+          ),
         );
       } else if (c.bidsPending > 0) {
-        actions.add(ActionItem(kind: 'BIDS', rfqId: r.id, title: r.title, rfqKind: r.kind, count: c.bidsPending, deadline: r.dueDate));
+        actions.add(
+          ActionItem(
+            kind: 'BIDS',
+            rfqId: r.id,
+            title: r.title,
+            rfqKind: r.kind,
+            count: c.bidsPending,
+            deadline: r.dueDate,
+          ),
+        );
       }
     }
     return _later(
       RequirementsSummary(
         views: {for (final v in MyView.values) v: mine.where((r) => _inView(r, v)).length},
-        pendingResponses: mine.fold(0, (n, r) => n + (r.live ? r.responses!.bidsPending + r.responses!.prequalPending : 0)),
+        pendingResponses: mine.fold(
+          0,
+          (n, r) => n + (r.live ? r.responses!.bidsPending + r.responses!.prequalPending : 0),
+        ),
         enquiries: mine.where((r) => r.isEnquiry).length,
         rfqs: mine.where((r) => !r.isEnquiry).length,
         actionItems: actions,
@@ -680,7 +711,13 @@ class DemoRfqRepository implements RfqRepository {
           createdAt: now,
         ),
     ];
-    return PostResult(id: id, kind: kind, status: status, alertedNow: vendorIds.isEmpty ? 6 : vendorIds.length, alertedLater: 0);
+    return PostResult(
+      id: id,
+      kind: kind,
+      status: status,
+      alertedNow: vendorIds.isEmpty ? 6 : vendorIds.length,
+      alertedLater: 0,
+    );
   }
 
   @override
@@ -804,7 +841,12 @@ class DemoRfqRepository implements RfqRepository {
     final list = _invites[rfqId] ?? <SupplierInvite>[];
     for (final id in vendorIds) {
       if (list.any((i) => i.supplier.vendorId == id)) continue;
-      final s = hits.map((h) => h.supplier).firstWhere((s) => s.vendorId == id, orElse: () => SupplierRef(vendorId: id, name: 'Supplier'));
+      final s = hits
+          .map((h) => h.supplier)
+          .firstWhere(
+            (s) => s.vendorId == id,
+            orElse: () => SupplierRef(vendorId: id, name: 'Supplier'),
+          );
       list.add(SupplierInvite(supplier: s, status: InviteStatus.invited, createdAt: now));
     }
     _invites[rfqId] = list;
@@ -857,7 +899,9 @@ class DemoRfqRepository implements RfqRepository {
         .where(
           (r) =>
               query.closingInDays == null ||
-              (r.dueDate != null && r.dueDate!.isAfter(now) && r.dueDate!.difference(now).inDays <= query.closingInDays!),
+              (r.dueDate != null &&
+                  r.dueDate!.isAfter(now) &&
+                  r.dueDate!.difference(now).inDays <= query.closingInDays!),
         )
         .map((r) => r.copyWith(hasBid: bid.contains(r.id)))
         .toList();
@@ -978,12 +1022,22 @@ class DemoRfqRepository implements RfqRepository {
   Future<BuyerContact> revealContact(String rfqId) async {
     if (!_myBids.any((b) => b.rfqId == rfqId)) _refuse('Place a bid before contacting the buyer', 403);
     final r = _rfq(rfqId);
-    return BuyerContact(name: r.buyer?.name ?? 'The buyer', companyName: r.buyer?.companyName, email: 'procurement@example.com', phone: '+91 80 4000 1234');
+    return BuyerContact(
+      name: r.buyer?.name ?? 'The buyer',
+      companyName: r.buyer?.companyName,
+      email: 'procurement@example.com',
+      phone: '+91 80 4000 1234',
+    );
   }
 
   @override
   Future<void> startSelling(String companyId) async {
-    vendorAccess = const VendorAccess(vendorId: 'demo-vendor-new', verified: true, canBid: true, canRespondToEnquiry: true);
+    vendorAccess = const VendorAccess(
+      vendorId: 'demo-vendor-new',
+      verified: true,
+      canBid: true,
+      canRespondToEnquiry: true,
+    );
   }
 
   // ---- Alerts and counts --------------------------------------------------------------

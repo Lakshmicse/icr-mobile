@@ -7,21 +7,23 @@ import '../account_models.dart';
 import '../account_repository.dart';
 import '../account_rules.dart';
 import '../api_account_repository.dart';
+import '../../company/company_rules.dart' show foundedYearProblem;
 import 'companies_controller.dart';
 import 'company_lookups.dart';
 
 /// The fields of the form, in the order it asks them: the error summary lists
 /// them in this order and a refused Create scrolls to the first.
-enum CompanyField { name, legalName, website, industry, city, size, legalStructure, authorised }
+enum CompanyField { name, legalName, website, industry, city, size, legalStructure, foundedYear, authorised }
 
 const _fieldNames = {
-  CompanyField.name: 'Company name',
-  CompanyField.legalName: 'Registered legal name',
+  CompanyField.name: 'Company Name',
+  CompanyField.legalName: 'Registered Legal Name',
   CompanyField.website: 'Website',
   CompanyField.industry: 'Industry',
-  CompanyField.city: 'Head office',
-  CompanyField.size: 'Company size',
-  CompanyField.legalStructure: 'Organisation type',
+  CompanyField.city: 'Head Office',
+  CompanyField.size: 'Company Size',
+  CompanyField.legalStructure: 'Organisation Type',
+  CompanyField.foundedYear: 'Year Founded',
   CompanyField.authorised: 'Confirmation',
 };
 
@@ -35,14 +37,14 @@ const _logoTypes = {'image/png', 'image/jpeg', 'image/webp'};
 /// The logo limits the website's `LogoDropzone` enforces before it uploads, and its sentences.
 const logoNotAnImage = 'That is not an image. Choose a PNG, JPG or WEBP file.';
 const logoTooBig = 'That image is over 2MB. Compress it or choose a smaller one.';
-const logoUploadFailed = 'Upload failed. Please try again.';
+const logoUploadFailed = 'Upload failed. Try again.';
 
 /// "GIF files are not accepted. Use PNG, JPG or WEBP." for a picture of another type.
 String logoTypeNotAccepted(String contentType) =>
     '${contentType.replaceFirst('image/', '').toUpperCase()} files are not accepted. Use PNG, JPG or WEBP.';
 
 /// What the page says when the API gave no sentence of its own (`errorOf(err, couldNotCreate)`).
-const couldNotCreate = 'Could not create the company page.';
+const couldNotCreate = 'Unable to create the company page.';
 
 /// The sentence the website's page shows for a failed call: the API's own, else [fallback]. The app's client words a
 /// refusal that came with no message as "Something went wrong (500)…", and a request that never arrived as "Can't
@@ -111,8 +113,8 @@ const _certificateNames = {
   'PRIVATE_LIMITED': 'Certificate of Incorporation',
   'PUBLIC_LIMITED': 'Certificate of Incorporation',
   'LLP': 'LLP Incorporation Certificate',
-  'PARTNERSHIP': 'Partnership deed or registration certificate',
-  'TRUST_NGO': 'Trust deed or Societies Act registration certificate',
+  'PARTNERSHIP': 'Partnership Deed or Registration Certificate',
+  'TRUST_NGO': 'Trust Deed or Societies Act Registration Certificate',
 };
 
 bool needsIncorporationProof(String? legalStructure) => _certificateNames.containsKey(legalStructure);
@@ -129,9 +131,9 @@ List<CompanyDocument> documentsFor(String? legalStructure) => [
 
 /// What the document is called for this organisation type (`employerDocumentLabel`).
 String documentLabel(CompanyDocument doc, String? legalStructure) => switch (doc) {
-  CompanyDocument.incorporationDoc => _certificateNames[legalStructure] ?? 'Registration certificate',
-  CompanyDocument.panDoc => 'PAN card',
-  CompanyDocument.gstDoc => 'GST certificate',
+  CompanyDocument.incorporationDoc => _certificateNames[legalStructure] ?? 'Registration Certificate',
+  CompanyDocument.panDoc => 'PAN Card',
+  CompanyDocument.gstDoc => 'GST Certificate',
 };
 
 /// Why the document is asked, in the panel's words.
@@ -151,14 +153,14 @@ String documentNeed(CompanyDocument doc) => doc == CompanyDocument.gstDoc ? 'If 
 
 /// The panel's heading for an organisation type.
 String documentsHeading(String legalStructure) => switch (legalStructure) {
-  'PRIVATE_LIMITED' => 'Documents for a private limited company',
-  'PUBLIC_LIMITED' => 'Documents for a public limited company',
+  'PRIVATE_LIMITED' => 'Documents for a Private Limited Company',
+  'PUBLIC_LIMITED' => 'Documents for a Public Limited Company',
   'LLP' => 'Documents for an LLP',
-  'PARTNERSHIP' => 'Documents for a partnership firm',
-  'SOLE_PROPRIETORSHIP' => 'Documents for a sole proprietorship',
-  'GOVERNMENT' => 'Documents for a government body or PSU',
-  'TRUST_NGO' => 'Documents for a trust, NGO or society',
-  _ => 'Documents for your organisation',
+  'PARTNERSHIP' => 'Documents for a Partnership Firm',
+  'SOLE_PROPRIETORSHIP' => 'Documents for a Sole Proprietorship',
+  'GOVERNMENT' => 'Documents for a Government Body or PSU',
+  'TRUST_NGO' => 'Documents for a Trust, NGO or Society',
+  _ => 'Documents for Your Organisation',
 };
 
 /// What the panel says for a type with no registration certificate; null for a type that has one.
@@ -214,14 +216,19 @@ class FoundingDraft extends CompanyDraft {
     super.website,
     super.description,
     super.logoUrl,
+    this.foundedYear,
     this.documents = const {},
   });
+
+  /// The year it was founded (`CreateMyCompanyDto.foundedYear`, optional; owner, 12 Nov 2026).
+  final int? foundedYear;
 
   final Map<CompanyDocument, UploadedDocument> documents;
 
   @override
   Map<String, dynamic> toJson() => {
     ...super.toJson(),
+    'foundedYear': ?foundedYear,
     for (final e in documents.entries) ...{'${e.key.name}Url': e.value.url, '${e.key.name}Name': e.value.name},
   };
 }
@@ -262,6 +269,10 @@ class CreateCompanyController extends ChangeNotifier {
   String? size;
   String? legalStructure;
   String description = '';
+
+  /// "Year Founded" as typed: optional, a four-digit year from 1800 to this year when given (the API's
+  /// `@IsFoundedYear`, the shared `foundedYearError`).
+  String foundedYear = '';
   bool authorised = false;
 
   /// The optional documents, by kind. Only the ones the organisation type is offered are sent ([documentsFor]).
@@ -324,6 +335,7 @@ class CreateCompanyController extends ChangeNotifier {
           city != null ||
           size != null ||
           legalStructure != null ||
+          foundedYear.trim().isNotEmpty ||
           logoUrl != null ||
           documents.isNotEmpty ||
           authorised);
@@ -426,6 +438,12 @@ class CreateCompanyController extends ChangeNotifier {
 
   void setDescription(String v) {
     description = v;
+    _notify();
+  }
+
+  void setFoundedYear(String v) {
+    foundedYear = v;
+    _fixed(CompanyField.foundedYear);
     _notify();
   }
 
@@ -619,7 +637,11 @@ class CreateCompanyController extends ChangeNotifier {
       city: city?.name,
       authorised: authorised,
     );
-    return {for (final f in CompanyField.values) f: ?found[f.name], CompanyField.website: ?websiteProblem(website)};
+    return {
+      for (final f in CompanyField.values) f: ?found[f.name],
+      CompanyField.website: ?websiteProblem(website),
+      CompanyField.foundedYear: ?foundedYearProblem(foundedYear),
+    };
   }
 
   CompanyDraft get draft => FoundingDraft(
@@ -633,6 +655,7 @@ class CreateCompanyController extends ChangeNotifier {
     website: website,
     description: description,
     logoUrl: logoUrl,
+    foundedYear: int.tryParse(foundedYear.trim()),
     documents: documentsToSend,
   );
 
@@ -659,7 +682,7 @@ class CreateCompanyController extends ChangeNotifier {
       final error = ApiError.from(e);
       // The API allows five new pages an hour; its limiter's own words ("Too Many Requests") say nothing to a member.
       submitError = error.statusCode == 429
-          ? 'You have created several companies in the last hour. Try again a little later.'
+          ? 'You have created several companies in the last hour. Try again later.'
           : apiSentence(error, couldNotCreate);
       return false;
     } finally {

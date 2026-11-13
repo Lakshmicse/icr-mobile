@@ -200,7 +200,7 @@ class _PartnerEnquiriesScreenState extends State<PartnerEnquiriesScreen> {
                   child: Text(
                     key: const ValueKey('enquiries-empty'),
                     c.status.isEmpty
-                        ? 'No enquiries yet. The form is on every course page of yours and on your institute page.'
+                        ? 'No enquiries yet. The enquiry form is on each of your course pages and on your institute page.'
                         : 'No enquiries with that status.',
                     style: SiteText.secondary,
                   ),
@@ -396,7 +396,7 @@ class _Contact extends StatelessWidget {
 
   final Enquiry enquiry;
 
-  static const masked = "Past this month's number on your plan. The details open with a larger plan, or next month.";
+  static const masked = "Over your plan's monthly limit. The details open with a larger plan, or next month.";
 
   @override
   Widget build(BuildContext context) {

@@ -14,7 +14,7 @@ class JobsText {
   static final contextLabel = AppText.plexSans(10, FontWeight.w600, AppColors.onSurface, lineHeight: 14);
   static final contextPlace = AppText.plexSans(10.5, FontWeight.w500, AppColors.outline, lineHeight: 14);
 
-  /// The filter chips ("Filters (3)", "Easy Apply", "Date posted"): a touch
+  /// The filter chips ("Filters (3)", "Easy Apply", "Date Posted"): a touch
   /// larger than the chips above them, as the design sets them.
   static final filterChip = AppText.plexSans(10.5, FontWeight.w600, AppColors.onSurface, lineHeight: 14);
 

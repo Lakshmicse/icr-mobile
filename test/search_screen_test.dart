@@ -81,9 +81,15 @@ void main() {
 
   setUp(() {
     sources = {};
-    source(SearchKind.person, {'mentor': ['Meera Mentor', 'Mentor Rao']});
-    source(SearchKind.job, {'mentor': ['Mentor Lead']});
-    source(SearchKind.mentor, {'mentor': ['Rajesh Sharma']});
+    source(SearchKind.person, {
+      'mentor': ['Meera Mentor', 'Mentor Rao'],
+    });
+    source(SearchKind.job, {
+      'mentor': ['Mentor Lead'],
+    });
+    source(SearchKind.mentor, {
+      'mentor': ['Rajesh Sharma'],
+    });
     source(SearchKind.event, {'mentor': []});
   });
 
@@ -91,18 +97,18 @@ void main() {
     testWidgets('shows the field, the recent searches and places to go', (tester) async {
       await pumpSearch(tester, recents: ['hvac', 'plans']);
       expect(find.text('Search ICR'), findsOneWidget);
-      expect(find.text('Recent searches'), findsOneWidget);
+      expect(find.text('Recent Searches'), findsOneWidget);
       expect(find.byKey(const Key('search.recent.hvac')), findsOneWidget);
       expect(find.byKey(const Key('search.recent.plans')), findsOneWidget);
-      expect(find.text('Suggested for you'), findsOneWidget);
+      expect(find.text('Suggested for You'), findsOneWidget);
       expect(find.byKey(const Key('search.suggested.jobs')), findsOneWidget);
       expect(find.byKey(const Key('search.chip.all')), findsNothing, reason: 'no chips until there is a query');
     });
 
     testWidgets('with no history it still offers somewhere to go', (tester) async {
       await pumpSearch(tester);
-      expect(find.text('Recent searches'), findsNothing);
-      expect(find.text('Suggested for you'), findsOneWidget);
+      expect(find.text('Recent Searches'), findsNothing);
+      expect(find.text('Suggested for You'), findsOneWidget);
     });
 
     testWidgets('a suggestion opens the place it names', (tester) async {
@@ -124,13 +130,15 @@ void main() {
 
     testWidgets('a recent search is removed alone, and Clear all empties the list', (tester) async {
       await pumpSearch(tester, recents: ['one', 'two']);
-      await tester.tap(find.descendant(of: find.byKey(const Key('search.recent.one')), matching: find.byIcon(Icons.close)));
+      await tester.tap(
+        find.descendant(of: find.byKey(const Key('search.recent.one')), matching: find.byIcon(Icons.close)),
+      );
       await tester.pump();
       expect(find.byKey(const Key('search.recent.one')), findsNothing);
       expect(find.byKey(const Key('search.recent.two')), findsOneWidget);
       await tester.tap(find.byKey(const Key('search.recent.clear')));
       await tester.pump();
-      expect(find.text('Recent searches'), findsNothing);
+      expect(find.text('Recent Searches'), findsNothing);
     });
   });
 
@@ -143,14 +151,14 @@ void main() {
       expect(find.byKey(const Key('search.chip.person')), findsOneWidget);
       expect(find.byKey(const Key('search.chip.feature'), skipOffstage: false), findsOneWidget);
       // Groups, with the app's own place first because "mentor" names features.
-      expect(heading('In the app'), findsOneWidget);
+      expect(heading('In the App'), findsOneWidget);
       expect(heading('People'), findsOneWidget);
       expect(heading('Jobs'), findsOneWidget);
       expect(heading('Mentors'), findsOneWidget);
       expect(heading('Events'), findsNothing, reason: 'a source with nothing to show has no group');
-      expect(find.text('Find mentors'), findsOneWidget);
+      expect(find.text('Find Mentors'), findsOneWidget);
       expect(find.text('Meera Mentor'), findsOneWidget);
-      expect(tester.getTopLeft(heading('In the app')).dy, lessThan(tester.getTopLeft(heading('People')).dy));
+      expect(tester.getTopLeft(heading('In the App')).dy, lessThan(tester.getTopLeft(heading('People')).dy));
     });
 
     testWidgets('a hit shows its kind at the end of the row', (tester) async {
@@ -168,7 +176,7 @@ void main() {
       expect(h.opened.single.kind, SearchKind.job);
       expect(h.opened.single.title, 'Mentor Lead');
 
-      await tester.tap(find.text('Find mentors'));
+      await tester.tap(find.text('Find Mentors'));
       await tester.pump();
       expect(h.features, ['find_mentors']);
     });
@@ -196,7 +204,7 @@ void main() {
       expect(find.byKey(const Key('search.clear')), findsOneWidget);
       await tester.tap(find.byKey(const Key('search.clear')));
       await tester.pump();
-      expect(find.text('Recent searches'), findsOneWidget);
+      expect(find.text('Recent Searches'), findsOneWidget);
       expect(find.byKey(const Key('search.chip.all')), findsNothing);
     });
   });
@@ -213,26 +221,30 @@ void main() {
       expect(find.text('Person'), findsNothing);
     });
 
-    testWidgets('"See all" on a group goes to that chip', (tester) async {
-      source(SearchKind.person, {'mentor': ['A one', 'B two', 'C three', 'D four', 'E five']}, pageSize: 10);
+    testWidgets('"View All" on a group goes to that chip', (tester) async {
+      source(SearchKind.person, {
+        'mentor': ['A one', 'B two', 'C three', 'D four', 'E five'],
+      }, pageSize: 10);
       await pumpSearch(tester);
       await type(tester, 'mentor');
-      expect(find.text('See all people'), findsOneWidget);
+      expect(find.text('View All People'), findsOneWidget);
       expect(find.text('E five'), findsNothing, reason: 'the All chip shows four');
-      await tester.tap(find.text('See all people'));
+      await tester.tap(find.text('View All People'));
       await tester.pump();
       expect(find.text('E five'), findsOneWidget);
       expect(h.controller.scope, SearchKind.person);
     });
 
-    testWidgets('a paging chip loads more on "Show more results"', (tester) async {
-      source(SearchKind.job, {'mentor': ['j1', 'j2', 'j3', 'j4', 'j5']}, pageable: true);
+    testWidgets('a paging chip loads more on "View More"', (tester) async {
+      source(SearchKind.job, {
+        'mentor': ['j1', 'j2', 'j3', 'j4', 'j5'],
+      }, pageable: true);
       await pumpSearch(tester);
       await type(tester, 'mentor');
       await tapChip(tester, 'job');
       expect(find.text('j2'), findsOneWidget);
       expect(find.text('j3'), findsNothing);
-      await tester.tap(find.text('Show more results'));
+      await tester.tap(find.text('View More'));
       await tester.pump();
       await tester.pump();
       expect(find.text('j3'), findsOneWidget);
@@ -244,12 +256,12 @@ void main() {
       await type(tester, 'mentor');
       await tapChip(tester, 'feature');
       expect(find.text('Mentorship'), findsOneWidget);
-      expect(find.text('Find mentors'), findsOneWidget);
+      expect(find.text('Find Mentors'), findsOneWidget);
 
       await tapChip(tester, 'event');
       await tester.pump();
-      expect(find.textContaining('No events for'), findsOneWidget);
-      await tester.tap(find.text('Search everything'));
+      expect(find.textContaining('No Events for'), findsOneWidget);
+      await tester.tap(find.text('Search Everything'));
       await tester.pump();
       expect(h.controller.scope, isNull);
     });
@@ -259,7 +271,7 @@ void main() {
     testWidgets('nothing found says so and offers places to go', (tester) async {
       await pumpSearch(tester);
       await type(tester, 'zzzzzz');
-      expect(find.text('No results for “zzzzzz”'), findsOneWidget);
+      expect(find.text('No Results for “zzzzzz”'), findsOneWidget);
       // The chip row has a "Jobs" (the source); the body's is the place to go.
       expect(find.widgetWithText(KindChip, 'Jobs'), findsNWidgets(2), reason: 'suggested places as chips');
       await tester.tap(find.widgetWithText(KindChip, 'Jobs').last);
@@ -273,7 +285,7 @@ void main() {
       }
       await pumpSearch(tester, features: <String>{});
       await type(tester, 'mentor');
-      expect(find.text("Can't reach ICR"), findsOneWidget);
+      expect(find.text('Unable to Reach ICR'), findsOneWidget);
 
       for (final s in sources.values) {
         s.failure = null;
@@ -281,7 +293,7 @@ void main() {
       await tester.tap(find.byKey(const Key('search.retry')));
       await tester.pump();
       await tester.pump();
-      expect(find.text("Can't reach ICR"), findsNothing);
+      expect(find.text('Unable to Reach ICR'), findsNothing);
       expect(find.text('Meera Mentor'), findsOneWidget);
     });
 
@@ -307,11 +319,8 @@ void main() {
             builder: (context) => TextButton(
               onPressed: () => Navigator.of(context).push<void>(
                 MaterialPageRoute<void>(
-                  builder: (_) => SearchScreen(
-                    controller: h.controller,
-                    onOpenHit: (_) async {},
-                    onOpenFeature: (_) async {},
-                  ),
+                  builder: (_) =>
+                      SearchScreen(controller: h.controller, onOpenHit: (_) async {}, onOpenFeature: (_) async {}),
                 ),
               ),
               child: const Text('open'),
@@ -334,8 +343,15 @@ void main() {
         source(SearchKind.person, {
           'mentor': ['A very long member name that keeps going and going past the end of the line, Esq.'],
         });
-        source(SearchKind.job, {'mentor': ['Senior Vice President, Integrated Facility Management Operations and Real Estate']});
-        await pumpSearch(tester, width: width, textScale: scale, recents: ['a recent search that is quite long indeed']);
+        source(SearchKind.job, {
+          'mentor': ['Senior Vice President, Integrated Facility Management Operations and Real Estate'],
+        });
+        await pumpSearch(
+          tester,
+          width: width,
+          textScale: scale,
+          recents: ['a recent search that is quite long indeed'],
+        );
         expect(tester.takeException(), isNull);
         await type(tester, 'mentor');
         expect(tester.takeException(), isNull);
@@ -346,11 +362,18 @@ void main() {
   });
 
   group('opened from the app', () {
-    testWidgets('openGlobalSearch builds the sources from the caller and opens hits with the caller\'s context', (tester) async {
+    testWidgets('openGlobalSearch builds the sources from the caller and opens hits with the caller\'s context', (
+      tester,
+    ) async {
       BuildContext? sourceContext;
       BuildContext? openerContext;
       SearchHit? openedHit;
-      final people = FakeSource(SearchKind.person, answers: {'meera': ['Meera Iyer']});
+      final people = FakeSource(
+        SearchKind.person,
+        answers: {
+          'meera': ['Meera Iyer'],
+        },
+      );
       SearchEnvironment.current = SearchEnvironment(
         sources: (ctx) {
           sourceContext = ctx;

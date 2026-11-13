@@ -13,27 +13,27 @@ import 'site_kit.dart';
 
 /// The website's words for the partner application, `learnResources.PartnerApplyDialog` in `messages/en`.
 abstract final class PartnerApplyWords {
-  static const title = 'Apply to become a learning partner';
+  static const title = 'Apply to Become a Learning Partner';
   static const intro =
       'Partners apply as a company. Choose a company you run on ICR, or register a new one. Once ICR approves it, you add and publish your courses from your dashboard.';
-  static const companyLabel = 'Apply as';
+  static const companyLabel = 'Apply As';
   static const adminsOnly = 'Only companies you are an admin of are listed.';
   static const noCompanies = 'You are not an admin of any company on ICR yet. Register your company to apply.';
-  static const loadFailed = 'Could not load your companies. Try again in a moment.';
+  static const loadFailed = 'Unable to load your companies. Try again.';
   static const statusPartner = 'Partner';
   static const statusWaiting = 'With ICR';
-  static const statusInfo = 'More info requested';
+  static const statusInfo = 'More Info Requested';
   static const statusDeclined = 'Declined';
-  static const notesLabel = 'What courses would you like to offer? (optional)';
+  static const notesLabel = 'What courses would you like to offer? (Optional)';
   static const notesPlaceholder = 'Subjects, accreditations, the courses you run today…';
-  static const registerCompany = 'Register a new company';
-  static const submit = 'Submit application';
-  static const failed = 'Could not send the application.';
-  static const sentTitle = 'Application sent';
+  static const registerCompany = 'Register a New Company';
+  static const submit = 'Submit Application';
+  static const failed = 'Unable to send the application.';
+  static const sentTitle = 'Application Sent';
   static const sentNext =
-      'Our team reviews every application by hand. Once it is approved, your dashboard opens the partner console, where you add and publish courses.';
+      'Our team reviews every application. Once it is approved, your dashboard opens the partner console, where you add and publish courses.';
   static const close = 'Close';
-  static const goToDashboard = 'Go to dashboard';
+  static const goToDashboard = 'Go to Dashboard';
 
   /// `sentBody`: "{company}'s application is with ICR."
   static String sentBody(String company) => "$company's application is with ICR.";
@@ -233,7 +233,7 @@ class _PartnerApplyScreenState extends State<PartnerApplyScreen> {
   @override
   Widget build(BuildContext context) {
     return SitePage(
-      title: 'Become a partner',
+      title: 'Become a Partner',
       onBack: widget.onBack,
       canvas: true,
       child: FutureBuilder<List<PartnerCompany>>(

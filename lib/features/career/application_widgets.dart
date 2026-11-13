@@ -316,7 +316,7 @@ class ApplicationRow extends StatelessWidget {
     final company = JobCompany(id: app.companyId ?? '', name: app.companyName ?? app.jobTitle, logo: app.companyLogo);
     final outcome = switch (status) {
       AppStatus.notSelected =>
-        'Not selected${ended == null ? '' : ' • ${formatDay(ended, now: now)}'}. The employer moved ahead with other candidates.',
+        'Not selected${ended == null ? '' : ' • ${formatDay(ended, now: now)}'}. The employer selected other candidates.',
       AppStatus.withdrawn =>
         'You withdrew this application${ended == null ? '' : ' on ${formatDay(ended, now: now)}'}.',
       AppStatus.offerDeclined => 'You declined this offer${ended == null ? '' : ' on ${formatDay(ended, now: now)}'}.',
@@ -350,7 +350,7 @@ class ApplicationRow extends StatelessWidget {
                       Text(
                         [
                           'Applied ${formatDay(app.createdAt, now: now)}',
-                          if (app.resumeTitle != null) 'with “${app.resumeTitle}”',
+                          if (app.resumeTitle != null) 'via “${app.resumeTitle}”',
                           if (updated) 'Updated ${_ago(activity, now)}',
                         ].join(' • '),
                         style: CareerText.meta,
@@ -374,7 +374,7 @@ class ApplicationRow extends StatelessWidget {
               ),
               if (app.matchScore != null)
                 StatusPill(
-                  '${app.matchScore}% match',
+                  '${app.matchScore}% Match',
                   tone: app.matchScore! >= 70
                       ? PillTone.success
                       : app.matchScore! >= 45
@@ -426,7 +426,7 @@ class ApplicationRow extends StatelessWidget {
               child: TextButton(
                 key: const ValueKey('outcome-link'),
                 onPressed: status == AppStatus.notSelected ? onFindSimilar : onOpenJob,
-                child: Text(status == AppStatus.notSelected ? 'Find similar jobs' : 'View job', style: CareerText.link),
+                child: Text(status == AppStatus.notSelected ? 'Find Similar Jobs' : 'View Job', style: CareerText.link),
               ),
             ),
           ],
@@ -442,7 +442,7 @@ class ApplicationRow extends StatelessWidget {
                   visualDensity: VisualDensity.compact,
                   shape: const StadiumBorder(),
                 ),
-                child: Text('View application', style: CareerText.link),
+                child: Text('View Application', style: CareerText.link),
               ),
               const Spacer(),
               PopupMenuButton<_RowAction>(
@@ -457,16 +457,16 @@ class ApplicationRow extends StatelessWidget {
                 itemBuilder: (context) => [
                   PopupMenuItem(
                     value: _RowAction.job,
-                    child: Text('View job', style: AppText.small.copyWith(color: AppColors.onSurface)),
+                    child: Text('View Job', style: AppText.small.copyWith(color: AppColors.onSurface)),
                   ),
                   PopupMenuItem(
                     value: _RowAction.message,
-                    child: Text('Message hiring team', style: AppText.small.copyWith(color: AppColors.onSurface)),
+                    child: Text('Message Hiring Team', style: AppText.small.copyWith(color: AppColors.onSurface)),
                   ),
                   if (canWithdraw(app))
                     PopupMenuItem(
                       value: _RowAction.withdraw,
-                      child: Text('Withdraw application', style: AppText.small.copyWith(color: AppColors.error)),
+                      child: Text('Withdraw Application', style: AppText.small.copyWith(color: AppColors.error)),
                     ),
                 ],
               ),

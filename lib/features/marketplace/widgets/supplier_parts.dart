@@ -5,7 +5,7 @@ import '../marketplace_styles.dart';
 
 /// A part of a profile that could not be read: what happened, and a way to try again.
 class InlineNotice extends StatelessWidget {
-  const InlineNotice({super.key, required this.message, this.onRetry, this.retryLabel = 'Try again'});
+  const InlineNotice({super.key, required this.message, this.onRetry, this.retryLabel = 'Try Again'});
 
   final String message;
   final VoidCallback? onRetry;

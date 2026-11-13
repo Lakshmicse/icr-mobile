@@ -6,9 +6,9 @@ library;
 /// The groups a posting can be opened to (`JobDiversityCategory`), as the profile words them.
 const diversityLabels = <String, String>{
   'WOMEN': 'Women',
-  'WOMEN_RETURNING': 'Women returning to work',
-  'EX_DEFENCE': 'Ex-defence personnel',
-  'DIFFERENTLY_ABLED': 'Differently-abled',
+  'WOMEN_RETURNING': 'Women Returning to Work',
+  'EX_DEFENCE': 'Ex-Defence Personnel',
+  'DIFFERENTLY_ABLED': 'Differently-Abled',
   'LGBTQ': 'LGBTQ+',
 };
 
@@ -46,8 +46,8 @@ String? genderOnlySentence(String? preference) => switch (genderRequiredBy(prefe
 const genderChoices = <(String, String)>[
   ('WOMAN', 'Woman'),
   ('MAN', 'Man'),
-  ('NON_BINARY', 'Non-binary'),
-  ('PREFER_NOT_TO_SAY', 'Prefer not to say'),
+  ('NON_BINARY', 'Non-Binary'),
+  ('PREFER_NOT_TO_SAY', 'Prefer Not to Say'),
 ];
 
 final _linkedinHosts = RegExp(r'^(?:[a-z0-9-]+\.)*linkedin\.com$|^lnkd\.in$');

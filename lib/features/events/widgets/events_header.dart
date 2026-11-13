@@ -20,6 +20,7 @@ class EventsHeader extends StatelessWidget {
     required this.onAvatarTap,
     required this.onBellTap,
     this.title = 'Events',
+    this.actions = const [],
   });
 
   static const height = 50.0;
@@ -30,6 +31,9 @@ class EventsHeader extends StatelessWidget {
   final VoidCallback onAvatarTap;
   final VoidCallback onBellTap;
   final String title;
+
+  /// Drawn left of the bell (the pencil, for the staff who run events).
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +60,7 @@ class EventsHeader extends StatelessWidget {
           Expanded(
             child: Text(title, style: EventsText.title, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
+          ...actions,
           Semantics(
             button: true,
             label: unread > 0 ? 'Notifications, $unread unread' : 'Notifications',

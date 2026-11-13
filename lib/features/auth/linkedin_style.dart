@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../core/auth/social_sign_in.dart';
 import '../../core/theme/app_text.dart';
 
 /// The look of LinkedIn's own sign-in page, in ICR's colours: a plain page with
-/// no card, a big "Sign in" and one line under it, outlined fields whose label
-/// floats up, "Show" inside the password field, one pill button, "or", full
-/// width outlined buttons for the other ways in, and "New to … Join now" at the
-/// foot. The sign-in screen is the only one built with it; the join screens keep
-/// the card in `auth_widgets.dart`.
+/// no card, a big "Sign In" and one line under it, outlined fields whose label
+/// floats up, "Show" inside the password field, one pill button, and "New to …
+/// Join Now" at the foot. The other ways in ("Sign In Using" over the Google and
+/// LinkedIn pills) are the `SocialProvidersBlock` the join screen shares, in
+/// `auth_widgets.dart`, coloured from [LiColors] here. The sign-in screen is the
+/// only one built with this file; the join screens keep the card.
 ///
 /// Light and dark follow the phone, as the rest of the sign-in screens do.
 class LiColors {
@@ -41,7 +40,7 @@ class LiColors {
   /// The pill button and a field's focus ring.
   final Color accent;
 
-  /// Links on the page ("Forgot password?", "Show", "Join now"): the accent in
+  /// Links on the page ("Forgot Password?", "Show", "Join Now"): the accent in
   /// light, a lighter tint of it in dark so it reads on the dark page.
   final Color link;
   final Color error;
@@ -109,6 +108,14 @@ class LiScaffold extends StatelessWidget {
 
   final List<Widget> children;
   final Widget footer;
+
+  /// The width [children] get on this screen: the screen less the safe area,
+  /// at most 440, less 24 either side.
+  static double contentWidth(BuildContext context) {
+    final safe = MediaQuery.paddingOf(context);
+    final page = MediaQuery.sizeOf(context).width - safe.left - safe.right;
+    return (page < 440 ? page : 440) - 2 * 24;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -197,8 +204,10 @@ class LiTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = LiColors.of(context);
-    OutlineInputBorder border(Color color, double width) =>
-        OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: color, width: width));
+    OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(6),
+      borderSide: BorderSide(color: color, width: width),
+    );
     return TextFormField(
       key: fieldKey,
       controller: controller,
@@ -251,7 +260,7 @@ class LiShowButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = LiColors.of(context);
     return Tooltip(
-      message: shown ? 'Hide password' : 'Show password',
+      message: shown ? 'Hide Password' : 'Show Password',
       child: TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
@@ -266,7 +275,7 @@ class LiShowButton extends StatelessWidget {
   }
 }
 
-/// A link on the page: "Forgot password?", "Join now". The padding is the part of
+/// A link on the page: "Forgot Password?", "Join Now". The padding is the part of
 /// the screen that answers a tap.
 class LiLink extends StatelessWidget {
   const LiLink({super.key, required this.label, required this.onTap, this.padding});
@@ -339,93 +348,6 @@ class LiPrimaryButton extends StatelessWidget {
                 ],
               )
             : Text(label, style: style),
-      ),
-    );
-  }
-}
-
-/// "Continue with Google" / "Continue with LinkedIn": an outlined pill the width
-/// of the page with the provider's mark at the left and the words centred. Drawn
-/// faded when the server has no keys for it, as the website does; it still
-/// answers a tap, to say so.
-class LiSocialButton extends StatelessWidget {
-  const LiSocialButton({
-    super.key,
-    required this.provider,
-    required this.available,
-    required this.busy,
-    required this.onPressed,
-  });
-
-  final SocialProvider provider;
-  final bool available;
-  final bool busy;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = LiColors.of(context);
-    return Semantics(
-      button: true,
-      enabled: onPressed != null,
-      label: 'Continue with ${provider.label}',
-      excludeSemantics: true,
-      child: Opacity(
-        opacity: available ? 1 : (c.isDark ? 0.6 : 0.5),
-        child: SizedBox(
-          height: 52,
-          child: OutlinedButton(
-            onPressed: onPressed,
-            style: OutlinedButton.styleFrom(
-              shape: const StadiumBorder(),
-              side: BorderSide(color: c.fieldBorder),
-              foregroundColor: c.secondary,
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: busy
-                      ? SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.2, color: c.link))
-                      : SvgPicture.asset(provider.icon, width: 22, height: 22),
-                ),
-                // Room either side for the mark, so the words stay centred.
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 34),
-                  child: Text(
-                    'Continue with ${provider.label}',
-                    style: LiType.button(c.isDark ? c.ink : c.secondary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// "—— or ——"
-class LiOrDivider extends StatelessWidget {
-  const LiOrDivider({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = LiColors.of(context);
-    final line = Expanded(child: Divider(color: c.hairline, thickness: 1, height: 1));
-    return SizedBox(
-      height: 20,
-      child: Row(
-        children: [
-          line,
-          Padding(padding: const EdgeInsets.symmetric(horizontal: 14), child: Text('or', style: LiType.small(c))),
-          line,
-        ],
       ),
     );
   }

@@ -50,7 +50,7 @@ import 'features/mentor_profile/mentor_profile_screen.dart';
 import 'features/mentorship/api_mentorship_repository.dart';
 import 'features/mentorship/demo_mentorship_repository.dart';
 import 'features/mentorship/mentorship_controller.dart';
-import 'features/mentorship/mentorship_screen.dart';
+import 'features/mentorship/find_mentors_screen.dart' show FindMentorsScreen;
 import 'features/notifications/notification_router.dart';
 import 'features/notifications/notifications_bell.dart';
 import 'features/notifications/notifications_screen.dart' show openNotifications;
@@ -282,12 +282,11 @@ class _Home extends StatelessWidget {
                 onMasterclasses: () => AppShell.push<void>(ctx, screens['/events']!),
               ),
             ),
-            mentorship: SessionViewer(
-              builder: (ctx, viewer) => MentorshipScreen(
-                viewer: viewer,
-                offerMentoring: canOfferToMentor(user),
+            // The tab is the mentors themselves: the full list with its search and filters (owner, 12 Nov 2026: "user
+            // should not press view more to check the mentors"). It was the landing, whose shelf showed a few.
+            mentorship: Builder(
+              builder: (ctx) => FindMentorsScreen(
                 onBack: () => AppShell.selectHome(ctx),
-                onAccount: () => AppShell.openDrawer(ctx),
                 onOpenMentor: _openMentor,
                 openSite: _openMentorshipPath,
               ),

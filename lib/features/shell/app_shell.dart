@@ -124,35 +124,37 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
         const UpcomingTab(
           title: 'Learning',
           icon: Icon(Symbols.school_rounded, fill: 1, size: 34, color: _tint),
-          summary: 'Courses, mock exams, certificates and the resource library are on the website for now.',
+          summary: 'Courses, mock exams, certificates and the resource library are currently available on the website.',
           sitePath: '/learning',
         ),
     widget.mentorship ??
         const UpcomingTab(
           title: 'Mentorship',
           icon: Icon(Symbols.group_rounded, fill: 1, size: 34, color: _tint),
-          summary: 'Find a mentor, book a session and follow a programme on the website for now.',
+          summary:
+              'Finding a mentor, booking a session and following a programme are currently available on the website.',
           sitePath: '/mentorship',
         ),
     widget.forums ??
         const UpcomingTab(
           title: 'Forums',
           icon: Icon(Symbols.forum_rounded, fill: 1, size: 32, color: _tint),
-          summary: 'Browse every topic and start a discussion on the website. Your Home feed already shows the latest.',
+          summary:
+              'Browse every topic and start a discussion on the website. Your Home feed shows the latest discussions.',
           sitePath: '/community',
         ),
     widget.marketplace ??
         const UpcomingTab(
           title: 'Marketplace',
           icon: Icon(Symbols.storefront_rounded, fill: 1, size: 32, color: _tint),
-          summary: 'Supplier Mart, products, services and requirements are on the website for now.',
+          summary: 'Suppliers, products, services and requirements are currently available on the website.',
           sitePath: '/vendors',
         ),
     widget.jobs ??
         UpcomingTab(
           title: 'Jobs',
           icon: Transform.scale(scale: 1.45, child: const BriefcaseIcon(color: _tint)),
-          summary: 'Search roles, track your applications and get job alerts on the website for now.',
+          summary: 'Job search, application tracking and job alerts are currently available on the website.',
           sitePath: '/jobs',
         ),
   ];

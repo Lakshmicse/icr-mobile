@@ -30,6 +30,10 @@ String creditsLabel(int credits) => credits == 1 ? '1 ICR credit' : '$credits IC
 /// "1 credit", "3 credits" (the short form on a button's second line).
 String creditsShort(int credits) => credits == 1 ? '1 credit' : '$credits credits';
 
+/// The same counts as a button or a dialog's title words them, in Title Case: "5 ICR Credits", "3 Credits".
+String creditsLabelTitle(int credits) => credits == 1 ? '1 ICR Credit' : '$credits ICR Credits';
+String creditsShortTitle(int credits) => credits == 1 ? '1 Credit' : '$credits Credits';
+
 String plural(int n, String one, [String? many]) => n == 1 ? '$n $one' : '$n ${many ?? '${one}s'}';
 
 /// "30 min", "1 h 30 min", "2 h".

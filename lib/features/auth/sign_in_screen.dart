@@ -16,12 +16,13 @@ final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
 /// Sign-in, laid out as LinkedIn's own sign-in page is (`linkedin_style.dart`),
 /// in ICR's colours and following the phone's light or dark setting: the logo,
-/// a big "Sign in" with a line under it, email and password
+/// a big "Sign In" with a line under it, email and password
 /// (`POST /auth/login`) with "Show" inside the password field, "Forgot
-/// password?", one pill button, "or", then "Continue with LinkedIn" and
-/// "Continue with Google" through the API's own OAuth flow, and "New to ICR?
-/// Join now" at the foot. "Join now" opens the three sign-up screens and "Forgot
-/// password?" asks for the reset email, both in the app; someone new arriving
+/// Password?", one pill button, then under a hairline "Sign In Using" over the
+/// LinkedIn and Google pills (owner, 12 Nov 2026: moved under the form, headed,
+/// with larger marks) through the API's own OAuth flow, and "New to ICR?
+/// Join Now" at the foot. "Join Now" opens the three sign-up screens and "Forgot
+/// Password?" asks for the reset email, both in the app; someone new arriving
 /// through Google or LinkedIn finishes joining in the app too.
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -89,7 +90,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> _continueWith(SocialProvider provider) async {
     if (!_available.contains(provider)) {
-      showMessage(context, '${provider.label} sign-in is not available yet');
+      showMessage(context, '${provider.label} sign-in is not available yet.');
       return;
     }
     FocusScope.of(context).unfocus();
@@ -153,20 +154,20 @@ class _SignInScreenState extends State<SignInScreen> {
               Text('New to ICR? ', style: LiType.body(c)),
               LiLink(
                 key: const Key('signIn.create'),
-                label: 'Join now',
+                label: 'Join Now',
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
                 onTap: _join,
               ),
             ],
           ),
           children: [
-            Text('Sign in', style: LiType.title(c)),
+            Text('Sign In', style: LiType.title(c)),
             const SizedBox(height: 6),
-            Text('Stay updated on your professional world.', style: LiType.subtitle(c)),
+            Text('Stay connected with the CRE & FM community.', style: LiType.subtitle(c)),
             const SizedBox(height: 28),
             LiTextField(
               fieldKey: const Key('signIn.email'),
-              label: 'Email',
+              label: 'Email Address',
               controller: _email,
               enabled: !_busy,
               keyboardType: TextInputType.emailAddress,
@@ -176,8 +177,8 @@ class _SignInScreenState extends State<SignInScreen> {
               onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
               validator: (value) {
                 final email = value?.trim() ?? '';
-                if (email.isEmpty) return 'Please enter your email address.';
-                if (!_emailPattern.hasMatch(email)) return 'Please enter a valid email address.';
+                if (email.isEmpty) return 'Enter your email address.';
+                if (!_emailPattern.hasMatch(email)) return 'Enter a valid email address.';
                 return null;
               },
             ),
@@ -192,20 +193,23 @@ class _SignInScreenState extends State<SignInScreen> {
               textInputAction: TextInputAction.done,
               autofillHints: const [AutofillHints.password],
               autocorrect: false,
-              suffix: LiShowButton(shown: _showPassword, onPressed: () => setState(() => _showPassword = !_showPassword)),
+              suffix: LiShowButton(
+                shown: _showPassword,
+                onPressed: () => setState(() => _showPassword = !_showPassword),
+              ),
               onFieldSubmitted: (_) => _submit(),
-              validator: (value) => (value ?? '').isEmpty ? 'Please enter your password.' : null,
+              validator: (value) => (value ?? '').isEmpty ? 'Enter your password.' : null,
             ),
             const SizedBox(height: 4),
             Align(
               alignment: Alignment.centerLeft,
-              child: LiLink(key: const Key('signIn.forgot'), label: 'Forgot password?', onTap: _forgot),
+              child: LiLink(key: const Key('signIn.forgot'), label: 'Forgot Password?', onTap: _forgot),
             ),
             Align(
               alignment: Alignment.centerLeft,
               child: AuthCheckbox(
                 key: const Key('signIn.remember'),
-                label: 'Remember me',
+                label: 'Remember Me',
                 value: _rememberMe,
                 onChanged: _busy ? null : (v) => setState(() => _rememberMe = v),
               ),
@@ -214,24 +218,25 @@ class _SignInScreenState extends State<SignInScreen> {
             SizedBox(height: _error == null ? 16 : 14),
             LiPrimaryButton(
               key: const Key('signIn.submit'),
-              label: 'Sign in',
-              busyLabel: 'Signing in…',
+              label: 'Sign In',
+              busyLabel: 'Signing In…',
               busy: _submitting,
               onPressed: _socialBusy == null ? _submit : null,
             ),
-            const SizedBox(height: 22),
-            const LiOrDivider(),
-            const SizedBox(height: 22),
-            for (final (i, provider) in SocialProvider.values.indexed) ...[
-              if (i > 0) const SizedBox(height: 12),
-              LiSocialButton(
-                key: Key('signIn.${provider.name}'),
-                provider: provider,
-                available: _available.contains(provider),
-                busy: _socialBusy == provider,
-                onPressed: _busy ? null : () => _continueWith(provider),
-              ),
-            ],
+            const SizedBox(height: 24),
+            Divider(color: c.hairline, thickness: 1, height: 1),
+            const SizedBox(height: 20),
+            SocialProvidersBlock(
+              heading: 'Sign In Using',
+              headingStyle: LiType.subtitle(c),
+              keyPrefix: 'signIn',
+              style: SocialPillStyle(border: c.fieldBorder, text: c.ink, spinner: c.link, isDark: c.isDark),
+              width: LiScaffold.contentWidth(context),
+              available: _available,
+              busy: _socialBusy,
+              enabled: !_busy,
+              onPressed: _continueWith,
+            ),
           ],
         ),
       ),

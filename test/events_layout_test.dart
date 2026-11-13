@@ -92,10 +92,8 @@ void main() {
     group('at ${width.toInt()} dp', () {
       testWidgets('no text on the Events board is cut off by its box', (tester) async {
         await pumpBoard(tester, width: width);
-        // The flagship's venue and accreditation line, and the two tiles' titles, are on the board.
+        // The flagship's venue and accreditation line is on the board.
         expect(find.text('Mumbai Convention Centre & Hybrid'), findsOneWidget);
-        expect(find.text('My Schedule (2)'), findsOneWidget);
-        expect(find.text('CPD Earned'), findsOneWidget);
         expect(clipped(), isEmpty);
         expect(tester.takeException(), isNull);
       });

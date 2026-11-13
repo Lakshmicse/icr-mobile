@@ -419,11 +419,11 @@ void main() {
       expect(focus.hasFocus, isTrue, reason: 'the keyboard stays up');
     });
 
-    testWidgets('no match says "No one found"; one letter says what to type', (tester) async {
+    testWidgets('no match says "No one found."; one letter says what to type', (tester) async {
       await pump(tester, search: (q) async => const []);
       await typeIn(tester, '@zz');
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('No one found'), findsOneWidget);
+      expect(find.text('No one found.'), findsOneWidget);
       await typeIn(tester, '@z');
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Type a name to tag someone.'), findsOneWidget);

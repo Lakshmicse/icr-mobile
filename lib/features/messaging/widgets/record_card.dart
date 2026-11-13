@@ -97,7 +97,7 @@ class RecordCard extends StatelessWidget {
                             )
                           : failed
                           ? Text(
-                              blocked ? ref.type.unavailable : "Couldn't load this ${ref.type.label.toLowerCase()}.",
+                              blocked ? ref.type.unavailable : 'Unable to load this ${ref.type.label.toLowerCase()}.',
                               style: ChatText.fileMeta,
                             )
                           : Column(

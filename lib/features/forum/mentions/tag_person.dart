@@ -28,9 +28,7 @@ String? personTagHandle(String tag) {
 MentionPerson? personNamed(String name, List<MentionPerson> found) {
   String key(String s) => s.toLowerCase().replaceAll(RegExp(r'\s+'), '');
   final want = key(name);
-  final exact = found
-      .where((p) => key(p.firstName) == want || key(p.lastName) == want || key(p.name) == want)
-      .toList();
+  final exact = found.where((p) => key(p.firstName) == want || key(p.lastName) == want || key(p.name) == want).toList();
   if (exact.length == 1) return exact.single;
   if (exact.isEmpty && found.length == 1) return found.single;
   return null;

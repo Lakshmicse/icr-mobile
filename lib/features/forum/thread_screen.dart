@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../media/video_player_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +11,7 @@ import '../../core/util/links.dart';
 import '../../core/widgets/title_bar.dart';
 import '../feed/feed_models.dart';
 import '../feed/forum_json.dart';
+import '../feed/widgets/comment_widgets.dart';
 import 'forum_callbacks.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
@@ -103,6 +106,17 @@ class _ThreadScreenState extends State<ThreadScreen> {
   bool _scrolledToReplies = false;
   final _repliesKey = GlobalKey(debugLabel: 'replies');
 
+  /// Whom the reader follows, for the "Follow" beside a comment; made the first time the replies are drawn.
+  FollowBook? _followBook;
+  FollowBook get _follows {
+    final repository = _c.repository;
+    return _followBook ??= FollowBook(
+      viewerId: _c.viewer.id,
+      follows: repository.follows,
+      follow: (id) => repository.setFollowing(id, true),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -114,6 +128,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
 
   @override
   void dispose() {
+    _followBook?.dispose();
     _mentions.dispose();
     _input.dispose();
     _focus.dispose();
@@ -166,7 +181,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
 
   Future<void> _copyLink({FeedReply? reply}) async {
     await Clipboard.setData(ClipboardData(text: _c.link(reply: reply).toString()));
-    if (mounted) showMessage(context, 'Link copied');
+    if (mounted) showMessage(context, 'Link copied.');
   }
 
   Future<void> _report({FeedReply? reply}) async {
@@ -176,14 +191,14 @@ class _ThreadScreenState extends State<ThreadScreen> {
       reply: reply != null,
       onSend: (reason, note) => c.report(reply: reply, reason: reason, note: note),
     );
-    if (sent && mounted) showMessage(context, 'Thanks. A moderator will take a look.');
+    if (sent && mounted) showMessage(context, 'Thank you. A moderator will review it.');
   }
 
   Future<void> _deleteThread() async {
     final sure = await confirm(
       context,
-      title: 'Delete this discussion?',
-      body: 'It is taken down for everyone, replies included.',
+      title: 'Delete This Discussion?',
+      body: 'It will be removed for everyone, including its replies.',
       action: 'Delete',
     );
     if (!sure || !mounted) return;
@@ -204,7 +219,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
     final saved = await edit(thread);
     if (saved != null && mounted) {
       _c.adoptEdited(saved);
-      showMessage(context, 'Saved');
+      showMessage(context, 'Saved.');
     }
   }
 
@@ -226,8 +241,8 @@ class _ThreadScreenState extends State<ThreadScreen> {
             destructive: true,
             onTap: _deleteThread,
           ),
-        SheetAction(key: const ValueKey('menu-copy'), label: 'Copy link', icon: LucideIcons.link, onTap: _copyLink),
-        SheetAction(key: const ValueKey('menu-viewers'), label: 'Who viewed', icon: LucideIcons.eye, onTap: _viewers),
+        SheetAction(key: const ValueKey('menu-copy'), label: 'Copy Link', icon: LucideIcons.link, onTap: _copyLink),
+        SheetAction(key: const ValueKey('menu-viewers'), label: 'Who Viewed', icon: LucideIcons.eye, onTap: _viewers),
         if (!c.isOwn)
           SheetAction(key: const ValueKey('menu-report'), label: 'Report', icon: LucideIcons.flag, onTap: _report),
       ],
@@ -316,8 +331,8 @@ class _ThreadScreenState extends State<ThreadScreen> {
   Future<void> _deleteReply(FeedReply reply) async {
     final sure = await confirm(
       context,
-      title: 'Delete your reply?',
-      body: 'It is taken out of the discussion for everyone.',
+      title: 'Delete Your Reply?',
+      body: 'It will be removed from the discussion for everyone.',
       action: 'Delete',
     );
     if (sure && mounted) {
@@ -350,7 +365,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
           ),
         SheetAction(
           key: const ValueKey('reply-menu-copy'),
-          label: 'Copy link',
+          label: 'Copy Link',
           icon: LucideIcons.link,
           onTap: () => _copyLink(reply: reply),
         ),
@@ -451,20 +466,20 @@ class _ThreadScreenState extends State<ThreadScreen> {
       if (c.loading) return const ForumSpinner();
       return ForumMessage(
         icon: c.notFound ? LucideIcons.searchX : LucideIcons.cloudOff,
-        title: c.notFound ? "This discussion isn't here" : "Couldn't load this discussion",
+        title: c.notFound ? 'Discussion Not Found' : 'Unable to Load This Discussion',
         body: c.notFound
-            ? 'It may have been taken down, or the link is wrong.'
+            ? 'It may have been removed, or the link is incorrect.'
             : (c.error ?? 'Something went wrong. Try again.'),
-        action: c.notFound ? null : 'Try again',
+        action: c.notFound ? null : 'Try Again',
         onAction: c.start,
       );
     }
     if (c.thread == null && !c.loading && c.error != null) {
       return ForumMessage(
         icon: c.notFound ? LucideIcons.searchX : LucideIcons.cloudOff,
-        title: c.notFound ? "This discussion isn't here" : "Couldn't load this discussion",
-        body: c.notFound ? 'It may have been taken down, or the link is wrong.' : c.error!,
-        action: c.notFound ? null : 'Try again',
+        title: c.notFound ? 'Discussion Not Found' : 'Unable to Load This Discussion',
+        body: c.notFound ? 'It may have been removed, or the link is incorrect.' : c.error!,
+        action: c.notFound ? null : 'Try Again',
         onAction: c.start,
       );
     }
@@ -497,24 +512,30 @@ class _ThreadScreenState extends State<ThreadScreen> {
               onTag: _onTag,
               onTopic: widget.callbacks.onOpenTopic == null ? null : (topic) => _openTopic(topic),
               onLink: _openUrl,
+              onOpenVideo: (url) => openVideo(context, url),
               onOpenAttachment: (a) => a.url == null ? null : _openUrl(a.url!),
             ),
           ),
           if (c.thread != null && c.thread!.moderation == 'APPROVED')
-            ReplySection(
-              key: _repliesKey,
-              controller: c,
-              keyFor: _keyFor,
-              focusId: c.focusReplyId,
-              onLike: (reply) => _run(c.toggleReplyLike(reply)),
-              onReplyTo: _replyTo,
-              onMore: _replyMenu,
-              onAccept: (reply) => _run(c.accept(reply)),
-              onOpenAuthor: widget.callbacks.onOpenMember == null
-                  ? null
-                  : (reply) => widget.callbacks.onOpenMember!(reply.author.id),
-              onOpenMention: widget.callbacks.onOpenMember,
-              onOpenUrl: _openUrl,
+            ListenableBuilder(
+              listenable: _follows,
+              builder: (context, _) => ReplySection(
+                key: _repliesKey,
+                controller: c,
+                keyFor: _keyFor,
+                focusId: c.focusReplyId,
+                follows: _follows,
+                onFollow: (reply) => _run(_follows.followAuthor(reply.author)),
+                onLike: (reply) => _run(c.toggleReplyLike(reply)),
+                onReplyTo: _replyTo,
+                onMore: _replyMenu,
+                onAccept: (reply) => _run(c.accept(reply)),
+                onOpenAuthor: widget.callbacks.onOpenMember == null
+                    ? null
+                    : (reply) => widget.callbacks.onOpenMember!(reply.author.id),
+                onOpenMention: widget.callbacks.onOpenMember,
+                onOpenUrl: _openUrl,
+              ),
             )
           else if (c.loading && c.thread == null)
             const Padding(padding: EdgeInsets.symmetric(vertical: 28), child: ForumSpinner()),

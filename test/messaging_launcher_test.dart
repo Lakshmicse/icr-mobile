@@ -23,7 +23,7 @@ import 'messaging_fakes.dart';
 /// Every way into Messages: the inbox, one thread by its id, and each
 /// "Message" button (a person, a supplier by listing or by company, a company
 /// page, a job's hiring contact, a pairing, a bought session, a group room, a
-/// requirement's other side, an applicant), then "New message". The thread a
+/// requirement's other side, an applicant), then "New Message". The thread a
 /// record's endpoint answers opens over the screen that asked; a refusal is the
 /// API's own sentence and opens nothing. What each endpoint does for real:
 /// `test/live/messaging_live_test.dart`.
@@ -356,7 +356,7 @@ void main() {
     });
   });
 
-  group('"New message" (the pencil on the inbox)', () {
+  group('"New Message" (the pencil on the inbox)', () {
     late Future<String?> result;
 
     FakeMessagingRepository people() => withThread()
@@ -393,7 +393,7 @@ void main() {
 
     testWidgets('asks for two letters first; nothing is searched for fewer', (tester) async {
       await openSheet(tester, people());
-      expect(find.text('Who would you like to message?'), findsOneWidget);
+      expect(find.text('Who Would You Like to Message?'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('recipient-search')), 's');
       await tester.pump(const Duration(milliseconds: 500));
       expect(repo.calls.where((c) => c.startsWith('recipients')), isEmpty);
@@ -460,17 +460,17 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey('recipient-search')), 'zz');
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pumpAndSettle();
-      expect(find.text('No one found'), findsOneWidget);
+      expect(find.text('No One Found'), findsOneWidget);
 
       repository.errors['recipients'] = ApiError('Search is busy.', statusCode: 503);
       await tester.enterText(find.byKey(const ValueKey('recipient-search')), 'zzz');
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pumpAndSettle();
-      expect(find.text("Couldn't search."), findsOneWidget);
+      expect(find.text('Unable to Search'), findsOneWidget);
       expect(find.text('Search is busy.'), findsOneWidget);
       repository.errors.remove('recipients');
       repository.recipientsAnswer = const Recipients(people: [RecipientPerson(person: david)]);
-      await tester.tap(find.text('Retry'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('David Chen'), findsOneWidget);
     });
@@ -490,7 +490,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('compose')));
       await tester.pumpAndSettle();
-      expect(find.text('New message'), findsWidgets);
+      expect(find.text('New Message'), findsWidgets);
       await tester.enterText(find.byKey(const ValueKey('recipient-search')), 'sa');
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pumpAndSettle();

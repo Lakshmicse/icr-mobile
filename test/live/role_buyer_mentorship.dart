@@ -118,7 +118,7 @@ void roleBuyerMentorship() {
             expect(pending, isNotNull, reason: '${w.email}: the request is with the mentor');
             expect(profile.viewer?.blocker, AskBlocker.requestPending);
             final sent = await mentoringOf(w).requestsSent();
-            expect(sent.any((r) => r.id == pending), isTrue, reason: 'My mentoring lists it under Sent by you');
+            expect(sent.any((r) => r.id == pending), isTrue, reason: 'My Mentoring lists it under Requests Sent');
             await mentoringOf(w).withdrawRequest(pending!);
             expect((await profiles.profile(mentor.id)).viewer?.pendingRequestId, isNull);
             record('Mentorship: request mentoring, pending, withdrawn', w.person, 'works');
@@ -259,12 +259,8 @@ void roleBuyerMentorship() {
           var text = expectHealthy(tester, 'a mentor profile as ${w.email}');
           final blocker = controller.profile!.viewer?.blocker;
           if (blocker == AskBlocker.noMenteeProfile) {
-            expect(
-              text,
-              contains('Tell Us Your Goals First'),
-              reason: '${w.email}: the main button asks for the goals',
-            );
-            await tester.tap(find.text('Tell Us Your Goals First').first);
+            expect(text, contains('Set Your Goals First'), reason: '${w.email}: the main button asks for the goals');
+            await tester.tap(find.text('Set Your Goals First').first);
             await afterTap(tester);
             // The app's own My mentoring opens on its Goals tab; the website is not asked.
             expect(
@@ -275,7 +271,7 @@ void roleBuyerMentorship() {
             text = expectHealthy(tester, 'My mentoring on Goals as ${w.email}');
             expect(text, contains('Goals'));
             record(
-              'Mentorship: Tell Us Your Goals First',
+              'Mentorship: Set Your Goals First',
               w.person,
               'bug fixed',
               'opened the website; now opens My mentoring on the Goals tab in the app',
@@ -293,7 +289,7 @@ void roleBuyerMentorship() {
               find.byType(TextField).first,
               'Role matrix: I would like to learn how you moved into facilities leadership. Please ignore.',
             );
-            await tester.tap(find.text('Send request'));
+            await tester.tap(find.text('Send Request'));
             await afterTap(tester);
             final after = (await tester.runAsync(() => profilesOf(w).profile(mentor.id)))!;
             final pending = after.viewer?.pendingRequestId;

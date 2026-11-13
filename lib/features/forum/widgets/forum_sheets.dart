@@ -139,9 +139,9 @@ class _ReportSheetState extends State<_ReportSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.reply ? 'Report this reply' : 'Report this discussion', style: ForumDesign.sheetTitle),
+                    Text(widget.reply ? 'Report This Reply' : 'Report This Discussion', style: ForumDesign.sheetTitle),
                     const SizedBox(height: 4),
-                    Text('A moderator will look at it. Choose what is wrong.', style: ForumDesign.sheetHint),
+                    Text('A moderator will review it. Select the reason.', style: ForumDesign.sheetHint),
                   ],
                 ),
               ),
@@ -176,7 +176,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                   maxLength: ForumLimits.noteMax,
                   style: ForumDesign.field,
                   decoration: InputDecoration(
-                    hintText: 'Anything else the moderator should know (optional)',
+                    hintText: 'Additional details for the moderator (Optional)',
                     hintStyle: ForumDesign.fieldHint,
                     counterStyle: ForumDesign.count,
                     contentPadding: const EdgeInsets.all(12),
@@ -217,7 +217,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                           )
-                        : Text('Send report', style: ForumDesign.button),
+                        : Text('Send Report', style: ForumDesign.button),
                   ),
                 ),
               ),
@@ -229,26 +229,205 @@ class _ReportSheetState extends State<_ReportSheet> {
   }
 }
 
-/// Who reacted to a discussion, newest first.
+/// Who reacted to a discussion, newest first, as the owner's reference draws it (13 Nov 2026): a row of tabs —
+/// "All 175", then each reaction with its count — and under it the people, each photo wearing the reaction it gave,
+/// the name and the headline, a hairline between rows.
 Future<void> showReactorsSheet(
   BuildContext context, {
   required Future<List<ForumReactor>> Function() load,
   ValueChanged<String>? onOpenMember,
 }) {
-  return _sheet<void>(
-    context,
-    (sheet) => _PeopleSheet<ForumReactor>(
-      title: 'Reactions',
-      load: load,
-      emptyText: 'Nobody has reacted yet.',
-      rowOf: (r) => _PersonRow(
-        person: r.person,
-        trailing: ReactionBadge(kind: r.reaction, size: 24),
-        caption: timeAgo(r.at),
-        onTap: onOpenMember == null ? null : () => onOpenMember(r.person.id),
+  return _sheet<void>(context, (sheet) => _ReactorsSheet(load: load, onOpenMember: onOpenMember));
+}
+
+class _ReactorsSheet extends StatefulWidget {
+  const _ReactorsSheet({required this.load, this.onOpenMember});
+
+  final Future<List<ForumReactor>> Function() load;
+  final ValueChanged<String>? onOpenMember;
+
+  @override
+  State<_ReactorsSheet> createState() => _ReactorsSheetState();
+}
+
+class _ReactorsSheetState extends State<_ReactorsSheet> {
+  List<ForumReactor>? _items;
+  String? _error;
+
+  /// The tab that is on: one reaction, or null for All.
+  ReactionKind? _kind;
+
+  @override
+  void initState() {
+    super.initState();
+    _read();
+  }
+
+  Future<void> _read() async {
+    setState(() {
+      _items = null;
+      _error = null;
+    });
+    try {
+      final items = await widget.load();
+      if (mounted) setState(() => _items = items);
+    } catch (e) {
+      if (mounted) setState(() => _error = _sentence(e));
+    }
+  }
+
+  Widget _tab({required ReactionKind? kind, required int count}) {
+    final on = _kind == kind;
+    return InkWell(
+      key: ValueKey('reactors-tab:${kind?.name ?? 'all'}'),
+      onTap: () => setState(() => _kind = kind),
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: on ? AppColors.primary : Colors.transparent, width: 2)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (kind != null) ...[ReactionBadge(kind: kind, size: 20), const SizedBox(width: 6)],
+            Text(
+              kind == null ? 'All $count' : '$count',
+              style: ForumDesign.author.copyWith(
+                fontSize: 14,
+                color: on ? AppColors.primary : AppColors.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = _items;
+    final shown = [
+      for (final r in items ?? const <ForumReactor>[])
+        if (_kind == null || r.reaction == _kind) r,
+    ];
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.75),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SheetHandle(top: 11, height: 28, rule: false),
+          if (_error != null)
+            ForumMessage(
+              icon: LucideIcons.cloudOff,
+              title: 'Unable to Load',
+              body: _error!,
+              action: 'Try Again',
+              onAction: _read,
+            )
+          else if (items == null)
+            const Padding(padding: EdgeInsets.all(32), child: ForumSpinner())
+          else if (items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+              child: Text('Nobody has reacted yet.', style: ForumDesign.sheetHint),
+            )
+          else ...[
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  _tab(kind: null, count: items.length),
+                  for (final kind in ReactionKind.values)
+                    if (items.any((r) => r.reaction == kind))
+                      _tab(kind: kind, count: items.where((r) => r.reaction == kind).length),
+                ],
+              ),
+            ),
+            const Divider(height: 1, thickness: 1, color: AppColors.outlineVariant),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.only(bottom: 16),
+                itemCount: shown.length,
+                separatorBuilder: (_, _) =>
+                    const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20, color: AppColors.outlineVariant),
+                itemBuilder: (context, i) {
+                  final r = shown[i];
+                  final open = widget.onOpenMember;
+                  return _ReactorRow(reactor: r, onTap: open == null ? null : () => open(r.person.id));
+                },
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// One person who reacted: the photo with their reaction at its corner, the name and the headline.
+class _ReactorRow extends StatelessWidget {
+  const _ReactorRow({required this.reactor, this.onTap});
+
+  final ForumReactor reactor;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final person = reactor.person;
+    final headline = person.headline;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 52,
+              height: 50,
+              child: Stack(
+                children: [
+                  FeedAvatar(photo: person.photo, initials: person.initials, size: 46, label: person.name),
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(1.5),
+                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                      child: ReactionBadge(kind: reactor.reaction, size: 18),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 2),
+                  Text(
+                    person.name,
+                    style: ForumDesign.author.copyWith(fontSize: 15),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (headline != null && headline.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(headline, style: ForumDesign.headline, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// Who voted in a poll and for what, newest vote first — the website's voters dialog, with the option each person
@@ -266,7 +445,7 @@ Future<void> showPollVotersSheet(
     (sheet) => _PeopleSheet<ForumPollVoter>(
       title: 'Votes',
       load: load,
-      emptyText: 'Nobody has voted yet.',
+      emptyText: 'No votes yet.',
       rowOf: (v) => _PersonRow(
         person: v.person,
         caption: labels[v.optionId] ?? timeAgo(v.votedAt),
@@ -286,10 +465,9 @@ Future<void> showViewersSheet(
 }
 
 class _PersonRow extends StatelessWidget {
-  const _PersonRow({required this.person, this.trailing, this.caption, this.onTap});
+  const _PersonRow({required this.person, this.caption, this.onTap});
 
   final FeedAuthor person;
-  final Widget? trailing;
   final String? caption;
   final VoidCallback? onTap;
 
@@ -318,7 +496,6 @@ class _PersonRow extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 8),
                 child: Text(caption!, style: ForumDesign.meta),
               ),
-            if (trailing != null) Padding(padding: const EdgeInsets.only(left: 10), child: trailing),
           ],
         ),
       ),
@@ -378,9 +555,9 @@ class _PeopleSheetState<T> extends State<_PeopleSheet<T>> {
           if (_error != null)
             ForumMessage(
               icon: LucideIcons.cloudOff,
-              title: "Couldn't load this",
+              title: 'Unable to Load',
               body: _error!,
-              action: 'Try again',
+              action: 'Try Again',
               onAction: _read,
             )
           else if (items == null)
@@ -449,14 +626,14 @@ class _ViewersSheetState extends State<_ViewersSheet> {
           const SheetHandle(top: 11, height: 28, rule: false),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text('Who viewed', style: ForumDesign.sheetTitle),
+            child: Text('Who Viewed', style: ForumDesign.sheetTitle),
           ),
           if (_error != null)
             ForumMessage(
               icon: LucideIcons.cloudOff,
-              title: "Couldn't load this",
+              title: 'Unable to Load',
               body: _error!,
-              action: 'Try again',
+              action: 'Try Again',
               onAction: _read,
             )
           else if (page == null)
@@ -465,7 +642,7 @@ class _ViewersSheetState extends State<_ViewersSheet> {
             if (page.viewers.isEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-                child: Text('No members you can see have read this yet.', style: ForumDesign.sheetHint),
+                child: Text('No members visible to you have viewed this yet.', style: ForumDesign.sheetHint),
               ),
             Flexible(
               child: ListView(
@@ -484,7 +661,7 @@ class _ViewersSheetState extends State<_ViewersSheet> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
                 child: Text(
-                  '${page.hidden} ${page.hidden == 1 ? 'other member' : 'other members'} read it with a private profile.',
+                  '${page.hidden} ${page.hidden == 1 ? 'other member' : 'other members'} viewed it with a private profile.',
                   key: const ValueKey('viewers-hidden'),
                   style: ForumDesign.sheetHint,
                 ),

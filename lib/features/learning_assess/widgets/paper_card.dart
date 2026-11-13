@@ -153,8 +153,15 @@ class PaperCard extends StatelessWidget {
   Widget _actionStrip() {
     final paper = entry.paper;
     final share = actions.onShare == null ? null : _ShareGlyph(onTap: actions.onShare!, label: 'Share ${paper.title}');
-    Widget withShare(Widget child) =>
-        share == null ? child : Row(children: [Expanded(child: child), const SizedBox(width: 4), share]);
+    Widget withShare(Widget child) => share == null
+        ? child
+        : Row(
+            children: [
+              Expanded(child: child),
+              const SizedBox(width: 4),
+              share,
+            ],
+          );
     final certificate = entry.certificate == null || actions.onViewCertificate == null
         ? null
         : RowButton(
@@ -169,13 +176,13 @@ class PaperCard extends StatelessWidget {
       case PaperAccess.open:
         final again = entry.progress.started;
         final next = entry.attemptsUsedUp
-            ? RowButton(label: 'No attempts left', color: _color, onPressed: null)
+            ? RowButton(label: 'No Attempts Left', color: _color, onPressed: null)
             : RowButton(
                 label: certificate != null
                     ? 'Retake'
                     : _isMock
                     ? (again ? 'Retake Test' : 'Start Test')
-                    : (again ? 'Retake assessment' : 'Start Assessment'),
+                    : (again ? 'Retake Assessment' : 'Start Assessment'),
                 color: _color,
                 tonal: again,
                 icon: again ? LucideIcons.refreshCw : null,
@@ -184,13 +191,24 @@ class PaperCard extends StatelessWidget {
               );
         if (certificate == null) return withShare(next);
         return withShare(
-          Row(children: [Expanded(child: certificate), const SizedBox(width: 8), Expanded(child: next)]),
+          Row(
+            children: [
+              Expanded(child: certificate),
+              const SizedBox(width: 8),
+              Expanded(child: next),
+            ],
+          ),
         );
       case PaperAccess.planPlace:
         return _withCertificate(
           certificate,
           withShare(
-            RowButton(label: 'Open with my plan', color: _color, icon: LucideIcons.lockOpen, onPressed: actions.onOpenWithPlan),
+            RowButton(
+              label: 'Open with My Plan',
+              color: _color,
+              icon: LucideIcons.lockOpen,
+              onPressed: actions.onOpenWithPlan,
+            ),
           ),
         );
       case PaperAccess.closed:
@@ -216,17 +234,17 @@ class PaperCard extends StatelessWidget {
     final enough = credits != null && held >= credits;
     final priced = entry.priced;
     final buttons = <Widget>[
-      if (priced) RowButton(label: 'Pay now', color: _color, onPressed: quote!.payable ? actions.onBuy : null),
+      if (priced) RowButton(label: 'Pay Now', color: _color, onPressed: quote!.payable ? actions.onBuy : null),
       if (credits != null)
         RowButton(
-          label: entry.busy ? 'Redeeming…' : (priced ? 'Redeem' : 'Redeem ${creditsLabel(credits)}'),
+          label: entry.busy ? 'Redeeming…' : (priced ? 'Redeem' : 'Redeem ${creditsLabelTitle(credits)}'),
           color: _color,
           tonal: priced,
           loading: entry.busy,
           onPressed: enough && !entry.busy ? actions.onRedeem : null,
         ),
       if (!priced && credits == null && canPlan)
-        RowButton(label: 'See plans', color: _color, tonal: true, onPressed: actions.onSeePlans),
+        RowButton(label: 'See Plans', color: _color, tonal: true, onPressed: actions.onSeePlans),
     ];
     final price = PriceLine(quote: quote, color: _color);
     final unpayable = priced && !quote!.payable

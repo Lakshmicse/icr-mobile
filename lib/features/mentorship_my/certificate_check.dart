@@ -66,12 +66,12 @@ class _CertificateCheckState extends State<_CertificateCheck> {
             final hours = (c['hours'] as num?)?.toDouble() ?? 0;
             final sessions = (c['sessionsCount'] as num?)?.toInt() ?? 0;
             final headline = valid
-                ? 'Valid ICR mentoring certificate'
+                ? 'Valid ICR Mentoring Certificate'
                 : snap.hasError
-                ? (snap.error is ApiError ? (snap.error! as ApiError).message : 'Certificate not found')
-                : 'This certificate is no longer valid';
+                ? (snap.error is ApiError ? (snap.error! as ApiError).message : 'Certificate Not Found')
+                : 'This Certificate Is No Longer Valid';
             final rows = <(String, String)>[
-              if (c['holderName'] is String) ('Awarded to', c['holderName'] as String),
+              if (c['holderName'] is String) ('Awarded To', c['holderName'] as String),
               if (c['title'] is String) ('Certificate', c['title'] as String),
               if (c['programName'] is String) ('Programme', c['programName'] as String),
               if (sessions > 0) ('Sessions', '$sessions'),

@@ -52,6 +52,10 @@ abstract class LibraryRepository {
   /// Retires a document (`DELETE /documents/:id`): its uploader, or a SUPER_ADMIN.
   Future<void> delete(String id);
 
+  /// Changes a document's title or description (`PATCH /documents/:id`) — its uploader only. A null leaves the
+  /// field as it is. The document as stored.
+  Future<LibraryDocument> update(String id, {String? title, String? description});
+
   /// Flags a document for the ICR admin team (`POST /documents/:id/report`).
   Future<void> report(String id, DocumentReportReason reason, {String? note});
 

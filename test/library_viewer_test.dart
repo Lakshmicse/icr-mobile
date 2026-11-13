@@ -115,18 +115,18 @@ void main() {
       final pdf = FakePdfEngine(pages: 2);
       await _pump(tester, seed('fm-handover-checklist.pdf'), 'fm.pdf', PreviewKind.pdf, pdf: pdf);
       final fit = pdf.rendered.first.$2;
-      expect(find.byTooltip('Zoom out'), findsOneWidget);
+      expect(find.byTooltip('Zoom Out'), findsOneWidget);
       var out = tester.widget<IconButton>(find.widgetWithIcon(IconButton, LucideIcons.zoomOut));
       expect(out.onPressed, isNull, reason: 'already as small as it goes');
 
       pdf.rendered.clear();
-      await tester.tap(find.byTooltip('Zoom in'));
+      await tester.tap(find.byTooltip('Zoom In'));
       await tester.pumpAndSettle();
       expect(pdf.rendered.first.$2, greaterThan(fit * 1.4), reason: 'drawn again at 1.5 times the width');
       expect(find.byType(SingleChildScrollView), findsWidgets, reason: 'wider than the screen, so it scrolls sideways');
 
       for (var i = 0; i < 5; i++) {
-        await tester.tap(find.byTooltip('Zoom in'), warnIfMissed: false);
+        await tester.tap(find.byTooltip('Zoom In'), warnIfMissed: false);
         await tester.pumpAndSettle();
       }
       final inBtn = tester.widget<IconButton>(find.widgetWithIcon(IconButton, LucideIcons.zoomIn));
@@ -134,7 +134,7 @@ void main() {
       expect(pdf.rendered.map((r) => r.$2).reduce((a, b) => a > b ? a : b), lessThanOrEqualTo(2600));
 
       for (var i = 0; i < 5; i++) {
-        await tester.tap(find.byTooltip('Zoom out'), warnIfMissed: false);
+        await tester.tap(find.byTooltip('Zoom Out'), warnIfMissed: false);
         await tester.pumpAndSettle();
       }
       out = tester.widget<IconButton>(find.widgetWithIcon(IconButton, LucideIcons.zoomOut));

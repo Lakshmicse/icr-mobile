@@ -20,8 +20,7 @@ Future<List<IndustryOption>> loadIndustries(AccountRepository repository) async 
     final res = await repository.api.dio.get<Map<String, dynamic>>('/masters');
     final rows = <IndustryOption>[
       for (final row in (res.data?['industries'] as List? ?? const []))
-        if (row is Map && row['key'] is String && row['name'] is String)
-          (row['key'] as String, row['name'] as String),
+        if (row is Map && row['key'] is String && row['name'] is String) (row['key'] as String, row['name'] as String),
     ];
     return rows.isEmpty ? industries : rows;
   } catch (_) {

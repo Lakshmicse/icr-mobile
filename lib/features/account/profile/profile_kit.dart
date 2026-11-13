@@ -74,10 +74,7 @@ class ProfileHeader extends StatelessWidget {
     final editsPhoto = onEditPhoto != null;
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -103,7 +100,7 @@ class ProfileHeader extends StatelessWidget {
                     child: _RoundButton(
                       key: const Key('profile.editCover'),
                       icon: Symbols.photo_camera,
-                      tooltip: 'Change cover',
+                      tooltip: 'Change Cover',
                       onPressed: onEditCover!,
                     ),
                   ),
@@ -116,7 +113,9 @@ class ProfileHeader extends StatelessWidget {
                     behavior: HitTestBehavior.opaque,
                     child: Semantics(
                       button: editsPhoto || onAvatarTap != null,
-                      label: editsPhoto ? (avatarUrl == null ? 'Add a profile photo' : 'Change profile photo') : 'Profile photo',
+                      label: editsPhoto
+                          ? (avatarUrl == null ? 'Add a profile photo' : 'Change profile photo')
+                          : 'Profile photo',
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
@@ -148,7 +147,7 @@ class ProfileHeader extends StatelessWidget {
                     child: CardIconButton(
                       key: const Key('profile.editIntro'),
                       icon: Symbols.edit,
-                      tooltip: 'Edit intro',
+                      tooltip: 'Edit Intro',
                       onPressed: onEditIntro,
                     ),
                   ),
@@ -171,17 +170,21 @@ class ProfileHeader extends StatelessWidget {
                         Flexible(child: Text(name, style: AccountText.name)),
                         if (verified) ...[
                           const SizedBox(width: 6),
-                          const Icon(Symbols.verified, fill: 0, weight: 600, size: 20, color: AppColors.primary, semanticLabel: 'Email confirmed'),
+                          const Icon(
+                            Symbols.verified,
+                            fill: 0,
+                            weight: 600,
+                            size: 20,
+                            color: AppColors.primary,
+                            semanticLabel: 'Email verified',
+                          ),
                         ],
                       ],
                     ),
                     if (roleLabel != null) AccountChip(label: roleLabel!),
                   ],
                 ),
-                if (headline != null) ...[
-                  const SizedBox(height: 4),
-                  Text(headline!, style: AccountText.headline),
-                ],
+                if (headline != null) ...[const SizedBox(height: 4), Text(headline!, style: AccountText.headline)],
                 if (place != null) ...[
                   const SizedBox(height: 6),
                   Row(
@@ -195,14 +198,8 @@ class ProfileHeader extends StatelessWidget {
                     ],
                   ),
                 ],
-                if (facts.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(facts.join(' · '), style: AccountText.meta),
-                ],
-                if (chips.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Wrap(spacing: 6, runSpacing: 6, children: chips),
-                ],
+                if (facts.isNotEmpty) ...[const SizedBox(height: 4), Text(facts.join(' · '), style: AccountText.meta)],
+                if (chips.isNotEmpty) ...[const SizedBox(height: 10), Wrap(spacing: 6, runSpacing: 6, children: chips)],
                 if (actions.isNotEmpty) ...[
                   const SizedBox(height: 14),
                   Wrap(spacing: 8, runSpacing: 8, children: actions),
@@ -243,7 +240,14 @@ class _RoundButton extends StatelessWidget {
 
 /// A pill button under the header: outlined, or the blue one that is on.
 class PillAction extends StatelessWidget {
-  const PillAction({super.key, required this.label, required this.onPressed, this.icon, this.filled = false, this.busy = false});
+  const PillAction({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.filled = false,
+    this.busy = false,
+  });
 
   final String label;
   final VoidCallback? onPressed;
@@ -347,14 +351,18 @@ class SectionLoadError extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Couldn't load your $what.", style: AccountText.error),
+        Text('Unable to Load Your ${what[0].toUpperCase()}${what.substring(1)}', style: AccountText.error),
         const SizedBox(height: 2),
         Text(message, style: AccountText.meta),
         TextButton(
           key: Key('retry.$what'),
           onPressed: onRetry,
-          style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 36), alignment: Alignment.centerLeft),
-          child: Text('Try again', style: AccountText.link),
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(0, 36),
+            alignment: Alignment.centerLeft,
+          ),
+          child: Text('Try Again', style: AccountText.link),
         ),
       ],
     );
@@ -363,7 +371,15 @@ class SectionLoadError extends StatelessWidget {
 
 /// One row of a list section: something on the left, the text, and a pencil.
 class ItemRow extends StatelessWidget {
-  const ItemRow({super.key, required this.child, this.leading, this.onEdit, this.editLabel, this.onTap, this.divider = true});
+  const ItemRow({
+    super.key,
+    required this.child,
+    this.leading,
+    this.onEdit,
+    this.editLabel,
+    this.onTap,
+    this.divider = true,
+  });
 
   final Widget child;
   final Widget? leading;
@@ -446,7 +462,7 @@ class _ClampedTextState extends State<ClampedText> {
                 onTap: () => setState(() => _open = !_open),
                 child: Padding(
                   padding: const EdgeInsets.only(top: 4, bottom: 2),
-                  child: Text(_open ? 'See less' : 'See more', style: AccountText.link),
+                  child: Text(_open ? 'View Less' : 'View More', style: AccountText.link),
                 ),
               ),
           ],
@@ -580,10 +596,16 @@ class CareerBreakTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Career break · ${careerBreakLabel(pause.reason)}', style: AccountText.itemTitle.copyWith(color: AppColors.slate600)),
+              Text(
+                'Career break · ${careerBreakLabel(pause.reason)}',
+                style: AccountText.itemTitle.copyWith(color: AppColors.slate600),
+              ),
               const SizedBox(height: 1),
               Text(range, style: AccountText.meta),
-              if (pause.description != null) ...[const SizedBox(height: 6), ClampedText(pause.description!, maxLines: 3)],
+              if (pause.description != null) ...[
+                const SizedBox(height: 6),
+                ClampedText(pause.description!, maxLines: 3),
+              ],
             ],
           ),
         ),
@@ -604,8 +626,10 @@ class EducationTile extends StatelessWidget {
     final line = [?e.degree, ?e.fieldOfStudy].join(' · ');
     final years = e.startYear == null && e.endYear == null
         ? null
-        : [if (e.startYear != null) '${e.startYear}', if (e.endYear != null) '${e.endYear}' else if (e.startYear != null) 'Present']
-              .join(' – ');
+        : [
+            if (e.startYear != null) '${e.startYear}',
+            if (e.endYear != null) '${e.endYear}' else if (e.startYear != null) 'Present',
+          ].join(' – ');
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -621,7 +645,8 @@ class EducationTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(e.institution, style: AccountText.itemTitle),
-              if (e.university != null) Text(e.university!, style: AccountText.body.copyWith(fontWeight: FontWeight.w500)),
+              if (e.university != null)
+                Text(e.university!, style: AccountText.body.copyWith(fontWeight: FontWeight.w500)),
               if (line.isNotEmpty) Text(line, style: AccountText.body.copyWith(fontWeight: FontWeight.w500)),
               if (years != null) Text(years, style: AccountText.meta),
               if (e.grade != null) Text('Grade: ${e.grade}', style: AccountText.meta),
@@ -633,19 +658,11 @@ class EducationTile extends StatelessWidget {
   }
 }
 
-/// The chip a credential wears: who vouches for it.
-(Color, Color)? credentialTone(Credential c) {
-  if (!c.editable) return AccountChip.green;
-  return switch (c.status) {
-    'VERIFIED' => AccountChip.green,
-    'PENDING' => AccountChip.amber,
-    'REJECTED' => AccountChip.red,
-    _ => null,
-  };
-}
-
-/// A certificate or licence: the name and code, the issuer and date, and a chip
-/// for who vouches for it.
+/// A certificate or licence: the name and code, the issuer and date, and for one
+/// ICR issued a chip saying so. One the person added has no chip row at all (no
+/// Self-declared, Certificate on file, Verified, Not accepted or Expired chip; the
+/// date line still says when it expired) and shows no reviewer's note: ICR does not
+/// validate them, it displays them (owner, 12 Nov 2026).
 class CredentialTile extends StatelessWidget {
   const CredentialTile({super.key, required this.credential});
 
@@ -656,8 +673,7 @@ class CredentialTile extends StatelessWidget {
     final c = credential;
     final issued = monthYear(c.issuedAt);
     final expires = monthYear(c.expiresAt);
-    final tone = credentialTone(c);
-    final label = c.editable ? c.statusLabel : c.sourceLabel;
+    final label = c.editable ? null : c.sourceLabel;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -668,7 +684,11 @@ class CredentialTile extends StatelessWidget {
             color: c.editable ? AppColors.slate50 : AppColors.emerald50,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(Symbols.workspace_premium, size: 23, color: c.editable ? AppColors.slate500 : AppColors.emerald700),
+          child: Icon(
+            Symbols.workspace_premium,
+            size: 23,
+            color: c.editable ? AppColors.slate500 : AppColors.emerald700,
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -682,26 +702,22 @@ class CredentialTile extends StatelessWidget {
                   expires.isEmpty ? 'Issued $issued' : 'Issued $issued · ${c.expired ? 'Expired' : 'Expires'} $expires',
                   style: AccountText.meta,
                 ),
-              if (label != null || c.expired) ...[
+              if (label != null) ...[
                 const SizedBox(height: 6),
                 Wrap(
                   spacing: 6,
                   runSpacing: 4,
                   children: [
-                    if (label != null)
-                      AccountChip(
-                        label: label,
-                        color: tone?.$1 ?? AppColors.slate100,
-                        ink: tone?.$2 ?? AppColors.slate700,
-                        icon: tone == AccountChip.green ? Symbols.verified : null,
-                      ),
-                    if (c.expired) const AccountChip(label: 'Expired', color: Color(0xFFFFE4E6), ink: Color(0xFFBE123C)),
+                    AccountChip(
+                      label: label,
+                      color: AccountChip.green.$1,
+                      ink: AccountChip.green.$2,
+                      icon: Symbols.verified,
+                    ),
+                    if (c.expired)
+                      const AccountChip(label: 'Expired', color: Color(0xFFFFE4E6), ink: Color(0xFFBE123C)),
                   ],
                 ),
-              ],
-              if (c.reviewNote != null && c.status == 'REJECTED') ...[
-                const SizedBox(height: 6),
-                Text(c.reviewNote!, style: AccountText.error),
               ],
             ],
           ),

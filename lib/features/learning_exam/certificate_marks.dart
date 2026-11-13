@@ -55,7 +55,7 @@ class CertificatePdfServices {
     fileName: fileName,
     bytes: bytes,
     mimeType: 'application/pdf',
-    dialogTitle: 'Save certificate',
+    dialogTitle: 'Save Certificate',
   );
 
   /// Back to the real ones (a test's tear-down).

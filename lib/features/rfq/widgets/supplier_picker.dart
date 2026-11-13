@@ -116,7 +116,12 @@ class _SupplierPickerState extends State<_SupplierPicker> {
     try {
       final hits = await (widget.suggested?.call() ?? widget.search(''));
       if (!mounted) return;
-      setState(() => _suggested = [for (final h in hits) if (!widget.excluded.contains(h.supplier.vendorId)) h]);
+      setState(
+        () => _suggested = [
+          for (final h in hits)
+            if (!widget.excluded.contains(h.supplier.vendorId)) h,
+        ],
+      );
     } catch (_) {
       // Suggestions are a courtesy; the search below still works.
     } finally {
@@ -142,7 +147,12 @@ class _SupplierPickerState extends State<_SupplierPicker> {
     try {
       final hits = await widget.search(text);
       if (!mounted || generation != _generation) return;
-      setState(() => _found = [for (final h in hits) if (!widget.excluded.contains(h.supplier.vendorId)) h]);
+      setState(
+        () => _found = [
+          for (final h in hits)
+            if (!widget.excluded.contains(h.supplier.vendorId)) h,
+        ],
+      );
     } catch (_) {
       if (!mounted || generation != _generation) return;
       setState(() => _found = const []);
@@ -209,8 +219,15 @@ class _SupplierPickerState extends State<_SupplierPicker> {
                 ],
               ),
             ),
-            if (hit.matchScore != null) ...[TonePill('fit ${hit.matchScore}', tone: Tone.green), const SizedBox(width: 8)],
-            Icon(on ? LucideIcons.squareCheck : LucideIcons.square, size: 22, color: on ? AppColors.primary : AppColors.slate300),
+            if (hit.matchScore != null) ...[
+              TonePill('Match score: ${hit.matchScore}', tone: Tone.green),
+              const SizedBox(width: 8),
+            ],
+            Icon(
+              on ? LucideIcons.squareCheck : LucideIcons.square,
+              size: 22,
+              color: on ? AppColors.primary : AppColors.slate300,
+            ),
           ],
         ),
       ),
@@ -241,7 +258,7 @@ class _SupplierPickerState extends State<_SupplierPicker> {
                   textInputAction: TextInputAction.search,
                   onSubmitted: _run,
                   style: RfqText.formInput,
-                  decoration: rfqInputDecoration(hint: 'Search suppliers by name', prefix: LucideIcons.search),
+                  decoration: rfqInputDecoration(hint: 'Search Suppliers by Name', prefix: LucideIcons.search),
                 ),
               ),
               Expanded(
@@ -253,14 +270,18 @@ class _SupplierPickerState extends State<_SupplierPicker> {
                       if (!_searching && _found.isEmpty)
                         Padding(
                           padding: const EdgeInsets.all(24),
-                          child: Text('No supplier by that name', textAlign: TextAlign.center, style: RfqText.meta),
+                          child: Text(
+                            'No supplier found with that name.',
+                            textAlign: TextAlign.center,
+                            style: RfqText.meta,
+                          ),
                         ),
                     ] else ...[
                       if (_suggested.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
                           child: Text(
-                            widget.suggested == null ? 'Suppliers' : 'Suggested for this requirement',
+                            widget.suggested == null ? 'Suppliers' : 'Suggested suppliers based on your requirement',
                             style: RfqText.metaStrong,
                           ),
                         ),
@@ -268,17 +289,17 @@ class _SupplierPickerState extends State<_SupplierPicker> {
                       if (!_loading && _suggested.isEmpty)
                         Padding(
                           padding: const EdgeInsets.all(24),
-                          child: Text('Search a supplier by name to invite it.', textAlign: TextAlign.center, style: RfqText.meta),
+                          child: Text(
+                            'Search a supplier by name to invite it.',
+                            textAlign: TextAlign.center,
+                            style: RfqText.meta,
+                          ),
                         ),
                     ],
                   ],
                 ),
               ),
-              if (_error != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                  child: RfqBanner(_error!),
-                ),
+              if (_error != null) Padding(padding: const EdgeInsets.fromLTRB(16, 4, 16, 0), child: RfqBanner(_error!)),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                 child: FilledButton(
@@ -290,7 +311,11 @@ class _SupplierPickerState extends State<_SupplierPicker> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                   child: _sending
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
                       : Text(_chosen.isEmpty ? widget.confirmLabel : '${widget.confirmLabel} (${_chosen.length})'),
                 ),
               ),

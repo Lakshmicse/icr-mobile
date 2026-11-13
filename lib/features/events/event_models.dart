@@ -17,7 +17,7 @@ DateTime Function() eventsNow = DateTime.now;
 
 /// `EventKind` on the API.
 enum EventKind {
-  chapterMeet('CHAPTER_MEET', 'Chapter meetup', 'Chapter meetups', 'CHAPTER MEET'),
+  chapterMeet('CHAPTER_MEET', 'Chapter Meetup', 'Chapter Meetups', 'CHAPTER MEET'),
   webinar('WEBINAR', 'Webinar', 'Webinars', 'WEBINAR'),
   conference('CONFERENCE', 'Conference', 'Conferences', 'CONFERENCE'),
   workshop('WORKSHOP', 'Workshop', 'Workshops', 'WORKSHOP'),

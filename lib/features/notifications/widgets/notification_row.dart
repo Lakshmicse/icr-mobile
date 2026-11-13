@@ -39,6 +39,12 @@ class NotificationRow extends StatelessWidget {
     final unread = n.unread;
     final category = n.category;
     final name = n.actorName;
+    // A company's notice names the company first (bug sheet #23, 9 Nov 2026: "<company> Application update"),
+    // unless the sentence already carries it.
+    final company = n.actorCompany?.name;
+    final title = company != null && company.isNotEmpty && !n.title.contains(company)
+        ? '$company · ${n.title}'
+        : n.title;
     final age = compactAge(n.createdAt, now: now);
     return Semantics(
       button: true,
@@ -80,7 +86,7 @@ class NotificationRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _Sentence(title: n.title, name: name),
+                      _Sentence(title: title, name: name),
                       if (n.body != null) ...[
                         const SizedBox(height: 2),
                         Text(n.body!, maxLines: 2, overflow: TextOverflow.ellipsis, style: NoteType.body),

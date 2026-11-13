@@ -14,7 +14,7 @@ import 'supplier_parts.dart';
 /// spinner while the first page loads, the API's sentence and Try again, an empty
 /// note, and "Load more" under the last row. The caller scrolls it.
 class CatalogBoardList extends StatelessWidget {
-  const CatalogBoardList({super.key, this.emptyTitle = 'Nothing matches', this.emptyBody});
+  const CatalogBoardList({super.key, this.emptyTitle = 'No Matches Found', this.emptyBody});
 
   final String emptyTitle;
   final String? emptyBody;
@@ -28,8 +28,8 @@ class CatalogBoardList extends StatelessWidget {
     }
     if (board.items.isEmpty) {
       return EmptyPart(
-        title: board.search.isEmpty ? emptyTitle : 'No ${board.kind.label.toLowerCase()} match "${board.search}"',
-        body: board.search.isEmpty ? emptyBody : 'Try other words.',
+        title: board.search.isEmpty ? emptyTitle : 'No ${board.kind.label} Match "${board.search}"',
+        body: board.search.isEmpty ? emptyBody : 'Try different words.',
       );
     }
     final nav = MarketplaceScope.navigationOf(context);
@@ -53,7 +53,7 @@ class CatalogBoardList extends StatelessWidget {
               key: ValueKey('board-service-${item.id}'),
               image: ServiceImage(service: item, size: 56),
               title: item.name,
-              line: item.rateLabel ?? 'Price on request',
+              line: item.rateLabel ?? 'Price on Request',
               by: item.supplierName,
               verified: item.supplierLevel != null && item.supplierLevel != 'REGISTERED',
               onTap: () => nav.openService(context, links, item.id, seed: item),
@@ -67,10 +67,7 @@ class CatalogBoardList extends StatelessWidget {
                   : TextButton(
                       key: const ValueKey('board-more'),
                       onPressed: board.loadMore,
-                      child: Text(
-                        'Load more ${board.kind.label.toLowerCase()}',
-                        style: MartText.loadMore.copyWith(fontSize: 14),
-                      ),
+                      child: Text('View More', style: MartText.loadMore.copyWith(fontSize: 14)),
                     ),
             ),
           ),

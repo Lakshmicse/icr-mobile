@@ -140,7 +140,7 @@ class SiteError extends StatelessWidget {
             const SizedBox(height: 16),
             SizedBox(
               width: 160,
-              child: SiteButton(label: 'Try again', onPressed: onRetry, outlined: true),
+              child: SiteButton(label: 'Try Again', onPressed: onRetry, outlined: true),
             ),
           ],
         ),

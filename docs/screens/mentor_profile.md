@@ -165,3 +165,48 @@ Remaining deviations: type is the bundled faces sized by width, so glyphs run ab
 * Picking a time when requesting a 1:1 session (the mentor sets it on accepting, as on the website); `GET /mentors/:id/slots` is not used.
 * Withdrawing or following up a request (pay, decline-time, reschedule), the review dialog, and a session's own page: the website's `/mentorship/my/sessions/:id`.
 * Save, share and "similar mentors" on the profile, credentials and chapter rows: not in the designs.
+
+## 7 Nov 2026
+
+The mentor's own profile has one **Edit My Profile**, in the hero: `HeroActions.barLabel` is null for the owner and no bar is pinned (owner: "the edit profile is shown in two places").
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client asked for the on-screen text to be refined "crisp, for global standard", in the style of the wording they marked up for sign-in and Settings. Wording only: no layout, colour or behaviour changed. Names of things a person taps or reads as a label are in Title Case; sentences are in sentence case with a full stop; no dash is used as punctuation; "pick" and "tick" read "select", "is told" reads "is notified", "show up / land here" reads "will appear here", and a load that fails reads "Unable to Load …". The title of an empty state or an error block is a heading (Title Case, no full stop: "No Purchases Yet", "Unable to Load Mentors"); the line under it is a sentence. The retry button reads **Try Again**.
+
+* Left as they are: the hero and bar buttons already in Title Case ("Request Mentoring", "Book Trial (₹0)", "Open Our Mentorship", "Request Pending", "At Capacity", "Edit My Profile"), the kickers in capitals ("BEST SELLER", "1:1 MENTORING", "ONGOING PLAN"), "...read more" / "show less", the stat captions ("Taking new mentees", "2 slots open"), the plan card's bullet lines, mentor-written content, and `demo_mentor_profile_repository.dart` (sample content; only its "In Person" mode word follows the repository's, because "Hybrid" is worked out from that word).
+
+| Old | New |
+| --- | --- |
+| You are on {…}. Schedule your first session from My mentoring. | You have joined {…}. Schedule your first session from My Mentoring. |
+| One live call; the mentor sets the time after accepting. | One live call. The mentor sets the time after accepting. |
+| Message the mentor around the session. | Message the mentor before and after the session. |
+| Yours as soon as the purchase clears. | Available as soon as the purchase is complete. |
+| Async Query • {…}h TAT | Async Query • {…}h Reply |
+| Worked through in order. | Completed in order. |
+| The window to finish the syllabus in. | The period to complete the syllabus. |
+| Booked as you go, session by session. | Booked one session at a time. |
+| Each one a live 1:1 call. | Each is a live 1:1 call. |
+| Paid per term; it never renews on its own. | Paid per term. It never renews automatically. |
+| Inspect {total}-session syllabus preview | View {total}-Session Syllabus Preview |
+| The next occurrence. | The next session date. |
+| Reserved from the session's own page. | Seats are reserved on the session page. |
+| Tell Us Your Goals First | Set Your Goals First |
+| See Plans | View Plans |
+| Your request is with this mentor, awaiting a reply. | Your request is awaiting this mentor's reply. |
+| Softwares & Frameworks | Software & Frameworks |
+| Couldn't load this mentor | Unable to Load This Mentor |
+| Program Details | Programme Details |
+| Tell the mentor a little more: at least {_minMessage} characters. | Enter at least {_minMessage} characters for the mentor. |
+| Free. {name} reads this before answering, so say why them and what help you want. | Free. {name} reads this before answering. Explain why you chose them and what help you need. |
+| Say what you want to discuss: at least {_minTopic} characters. | Describe what you want to discuss in at least {_minTopic} characters. |
+| ; you pay only after that. | . You pay only after that. |
+| What do you want to discuss? | Discussion Topic |
+| Your goal, and where you are stuck | Your goal and where you need help |
+| How would you like to meet? | Meeting Mode |
+| Days and times that suit you (optional) | Preferred Days and Times (Optional) |
+| Tap any offering to inspect curriculum breakdown & lock your schedule. | Select an offering to view its curriculum and book your schedule. |
+| Nothing here yet. This mentor has not listed anything under this filter. | This mentor has no offerings under this filter. |
+| Education & Academic | Education |
+| You can't message this mentor yet. | You cannot message this mentor yet. |
+| Buttons, headings, tabs, chips, field labels and status names to Title Case: 28 strings | e.g. "Added to your purchases. Find it in My mentoring, under Purchases." → "Added to your purchases. Find it in My Mentoring, under Purchases."; "accepts, you pay from My mentoring, under Purchases." → "accepts, you pay from My Mentoring, under Purchases."; "1:1 {modeWord} call" → "1:1 {modeWord} Call" |

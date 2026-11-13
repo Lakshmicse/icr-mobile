@@ -10,7 +10,8 @@ import 'forum_models.dart';
 import 'forum_repository.dart';
 
 /// Repost, as the forum can hold it. The API has no repost: a repost here is a new discussion that quotes the
-/// original and links to it, filed under the same topic and carrying its tags. "Repost with your thoughts" opens
+/// original and links to it, filed under the same topic and carrying its tags. The quote (`RepostQuote`) is what a
+/// card reads back to draw the original — its photos and poll — inside the repost (11 Nov 2026). "Repost with your thoughts" opens
 /// the composer with that quote already in it; "Repost" files it as it stands.
 
 /// The repost's title: the original's, behind "Repost:", kept to the forum's limit.
@@ -83,7 +84,7 @@ Future<void> repostDiscussion(
       context,
       saved.moderation == 'APPROVED'
           ? 'Reposted to your feed.'
-          : 'Reposted. A moderator will read it before it goes public.',
+          : 'Reposted. A moderator will review it before it is published.',
     );
     onReposted?.call();
   } catch (e) {
@@ -104,7 +105,7 @@ class _RepostSheet extends StatelessWidget {
           _Option(
             key: const ValueKey('repost-thoughts'),
             icon: Icons.edit_outlined,
-            title: 'Repost with your thoughts',
+            title: 'Repost with Your Thoughts',
             body: 'Create a new post with this one attached.',
             onTap: () => Navigator.of(context).pop(_RepostChoice.withThoughts),
           ),
@@ -112,7 +113,7 @@ class _RepostSheet extends StatelessWidget {
             key: const ValueKey('repost-instant'),
             icon: Icons.repeat,
             title: 'Repost',
-            body: 'Instantly bring this post to your feed.',
+            body: 'Share this post to your feed immediately.',
             onTap: () => Navigator.of(context).pop(_RepostChoice.instant),
           ),
           const SizedBox(height: 8),

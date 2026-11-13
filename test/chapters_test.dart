@@ -642,13 +642,13 @@ void main() {
   });
 
   group('the Regional Chapters screen', () {
-    testWidgets('draws the numbers, my chapters, the next meetup and the directory', (tester) async {
+    testWidgets('draws my chapters, the next meetup and the directory, with no count tiles above them', (tester) async {
       await _pumpBoard(tester);
       expect(find.text('Regional Chapters'), findsOneWidget);
-      for (final label in ['Chapters', 'Members', 'Countries', 'Upcoming events']) {
-        expect(find.text(label), findsOneWidget);
-      }
-      expect(find.text('237'), findsOneWidget);
+      // The four count tiles went (owner, 12 Nov 2026).
+      expect(find.text('Countries'), findsNothing);
+      expect(find.text('237'), findsNothing);
+      expect(find.byType(CommunityStatGrid), findsNothing);
       expect(find.text('Your Chapters'), findsOneWidget);
       expect(find.text('2 Joined'), findsOneWidget);
       expect(find.text('Upcoming Meetups'), findsOneWidget);
@@ -658,7 +658,8 @@ void main() {
       expect(find.text('All Countries (3)'), findsOneWidget);
       expect(find.text('5 chapters'), findsOneWidget);
       expect(find.text('Join Chapter'), findsNWidgets(3));
-      expect(find.text('Open Chapter'), findsNWidgets(2));
+      // The two joined cards' link and the two directory cards' button read the same since 13 Nov 2026.
+      expect(find.text('Open Chapter'), findsNWidgets(4));
     });
 
     testWidgets('Back and the bell', (tester) async {
@@ -697,8 +698,8 @@ void main() {
         await tester.enterText(find.byType(TextField), 'zzz');
         await tester.pumpAndSettle();
         expect(find.byType(ChapterCard), findsNothing);
-        expect(find.text('No chapters match'), findsOneWidget);
-        await tester.tap(find.text('Clear filters').last);
+        expect(find.text('No Chapters Match'), findsOneWidget);
+        await tester.tap(find.text('Clear Filters').last);
         await tester.pumpAndSettle();
         expect(find.byType(ChapterCard), findsNWidgets(5));
         expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, isEmpty);
@@ -725,20 +726,20 @@ void main() {
       final board = await _pumpBoard(tester);
       await tester.tap(find.bySemanticsLabel('Sort and filter chapters'));
       await tester.pumpAndSettle();
-      expect(find.text('Sort and filter'), findsOneWidget);
-      for (final label in ['Recommended', 'Most members', 'Most active', 'Newest', 'A to Z']) {
+      expect(find.text('Sort and Filter'), findsOneWidget);
+      for (final label in ['Recommended', 'Most Members', 'Most Active', 'Newest', 'A to Z']) {
         expect(find.text(label), findsOneWidget);
       }
       await tester.tap(find.text('A to Z'));
       await tester.pumpAndSettle();
       expect(board.controller.sort, ChapterSort.az);
-      await tester.tap(find.text('10+ members'));
+      await tester.tap(find.text('10+ Members'));
       await tester.pumpAndSettle();
       expect(board.controller.size, ChapterSize.large);
-      await tester.tap(find.text('Has upcoming events'));
+      await tester.tap(find.text('Has Upcoming Events'));
       await tester.pumpAndSettle();
       expect(board.controller.activity, ChapterActivity.events);
-      await tester.tap(find.text('Show chapters'));
+      await tester.tap(find.text('Show Chapters'));
       await tester.pumpAndSettle();
       expect(find.byType(ChapterCard), findsNWidgets(2));
       expect(tester.widget<ChapterCard>(find.byType(ChapterCard).first).chapter.slug, 'bengaluru');
@@ -817,17 +818,17 @@ void main() {
 
     testWidgets('the card for a chapter I belong to opens from the rail too', (tester) async {
       final board = await _pumpBoard(tester);
-      await tester.tap(find.text('Open chapter').first);
+      await tester.tap(find.text('Open Chapter').first);
       await tester.pumpAndSettle();
       expect(board.repo.calls, contains('detail:bengaluru'));
     });
 
-    testWidgets('the "Get involved" card is the shell’s callback, and is left out without one', (tester) async {
+    testWidgets('the "Get Involved" card is the shell’s callback, and is left out without one', (tester) async {
       final board = await _pumpBoard(tester);
-      await tester.tap(find.text('Get involved'));
+      await tester.tap(find.text('Get Involved'));
       expect(board.volunteers, [null]);
       await _pumpBoard(tester, volunteer: false);
-      expect(find.text('Get involved'), findsNothing);
+      expect(find.text('Get Involved'), findsNothing);
     });
 
     testWidgets('with no chapter joined it says so, and with no meetups it says that', (tester) async {
@@ -840,16 +841,16 @@ void main() {
     testWidgets('an empty directory says so', (tester) async {
       final repo = FakeChapters(chapters: const [])..meetups = [];
       await _pumpBoard(tester, repo: repo);
-      expect(find.text('No chapters yet'), findsOneWidget);
+      expect(find.text('No Chapters Yet'), findsOneWidget);
     });
 
     testWidgets('loading shows a spinner; a failed read offers Try again, which reads again', (tester) async {
       final repo = FakeChapters()..failures['overview'] = ApiError('Server down', statusCode: 500);
       await _pumpBoard(tester, repo: repo);
-      expect(find.text("Couldn't load chapters"), findsOneWidget);
+      expect(find.text("Unable to Load Chapters"), findsOneWidget);
       expect(find.text('Server down'), findsOneWidget);
       repo.failures.clear();
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byType(ChapterCard), findsNWidgets(5));
       expect(repo.count('overview'), 2);
@@ -899,16 +900,16 @@ void main() {
       expect(find.text('ICR Bengaluru Chapter'), findsWidgets);
       expect(find.text('Karnataka'), findsOneWidget);
       expect(find.text('Est. 2014'), findsOneWidget);
-      expect(find.text('Chapter lead'), findsOneWidget);
-      expect(find.text('Active members'), findsOneWidget);
+      expect(find.text('Chapter Lead'), findsOneWidget);
+      expect(find.text('Active Members'), findsOneWidget);
       expect(find.text('1 on committee'), findsOneWidget);
-      expect(find.text('Member companies'), findsOneWidget);
-      expect(find.text('Hosted sessions'), findsOneWidget);
+      expect(find.text('Member Companies'), findsOneWidget);
+      expect(find.text('Hosted Sessions'), findsOneWidget);
       expect(find.text('since 2014'), findsOneWidget);
       for (final section in [
         'About',
         'Leadership',
-        'Events & meetups',
+        'Events & Meetups',
         'Updates',
         'Resources',
         'Members',
@@ -925,7 +926,7 @@ void main() {
       expect(find.text('PINNED'), findsOneWidget);
       expect(find.text('Benchmark 2026'), findsOneWidget);
       expect(find.text('CBRE'), findsOneWidget);
-      expect(find.text('Other chapters in India'), findsOneWidget);
+      expect(find.text('Other Chapters in India'), findsOneWidget);
     });
 
     testWidgets('Back goes back, and an unknown chapter says so with Try again', (tester) async {
@@ -934,9 +935,9 @@ void main() {
       expect(board.backs, 1);
 
       await _pumpPage(tester, 'nowhere');
-      expect(find.text("Couldn't load this chapter"), findsOneWidget);
+      expect(find.text("Unable to Load This Chapter"), findsOneWidget);
       expect(find.text('Chapter not found'), findsOneWidget);
-      expect(find.text('Try again'), findsOneWidget);
+      expect(find.text('Try Again'), findsOneWidget);
     });
 
     testWidgets('Join Chapter takes the place; Leave asks, then gives it back', (tester) async {
@@ -1043,10 +1044,10 @@ void main() {
 
     testWidgets('Volunteer with this chapter is the shell’s callback and is left out without one', (tester) async {
       final board = await _pumpPage(tester, 'bengaluru');
-      await tester.tap(find.text('Volunteer with this chapter'));
+      await tester.tap(find.text('Volunteer with This Chapter'));
       expect(board.volunteers, ['ICR Bengaluru Chapter']);
       await _pumpPage(tester, 'bengaluru', volunteer: false);
-      expect(find.text('Volunteer with this chapter'), findsNothing);
+      expect(find.text('Volunteer with This Chapter'), findsNothing);
     });
 
     testWidgets('Events: Upcoming and Past are each read, a row opens through the shell, and an empty tab says so', (
@@ -1057,7 +1058,7 @@ void main() {
         ..past = [sampleEvent('e0', 'Q2 meetup', 'bengaluru', DateTime.utc(2026, 6, 14, 5, 30))];
       final board = await _pumpPage(tester, 'bengaluru', repo: repo);
       expect(find.text('Site tour'), findsOneWidget);
-      expect(find.text('You are going'), findsOneWidget);
+      expect(find.text('You Are Going'), findsOneWidget);
       await tester.tap(find.text('Site tour'));
       expect(board.events.single, 'e5-slug');
 
@@ -1088,9 +1089,9 @@ void main() {
       expect(find.text('Events are down.'), findsOneWidget);
       expect(find.text('Connect the community.'), findsOneWidget);
       repo.failures.clear();
-      await tester.tap(find.text('Try again').first);
+      await tester.tap(find.text('Try Again').first);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Try again').first);
+      await tester.tap(find.text('Try Again').first);
       await tester.pumpAndSettle();
       expect(find.text('Updates are down.'), findsNothing);
       expect(find.text('Events are down.'), findsNothing);
@@ -1103,7 +1104,7 @@ void main() {
       expect(find.text('5 members'), findsOneWidget);
       expect(find.text('Person Number1'), findsOneWidget);
       expect(find.text('Person Number3'), findsNothing);
-      await tester.tap(find.text('Show more members'));
+      await tester.tap(find.text('View More'));
       await tester.pumpAndSettle();
       expect(repo.calls, contains('members:bengaluru:2:all:'));
       expect(find.text('Person Number3'), findsOneWidget);
@@ -1116,11 +1117,11 @@ void main() {
       expect(find.text('Person Number1'), findsOneWidget);
       expect(find.text('Person Number2'), findsNothing);
 
-      await tester.tap(find.text('Corporate only'));
+      await tester.tap(find.text('Corporate Only'));
       await tester.pumpAndSettle();
       expect(find.descendant(of: find.byType(MembersSection), matching: find.text('2 members')), findsOneWidget);
 
-      await tester.tap(find.text('All members'));
+      await tester.tap(find.text('All Members'));
       await tester.pumpAndSettle();
       await tester.enterText(find.widgetWithText(TextField, '').last, 'Number5');
       await tester.pump(const Duration(milliseconds: 400));
@@ -1198,8 +1199,8 @@ void main() {
       await _pumpBoard(tester, repo: repo);
       await tester.tap(find.text('Nearby (0)'));
       await tester.pumpAndSettle();
-      expect(find.text('Nothing nearby yet'), findsOneWidget);
-      await tester.tap(find.text('Show all chapters'));
+      expect(find.text('No Nearby Chapters Yet'), findsOneWidget);
+      await tester.tap(find.text('Show All Chapters'));
       await tester.pumpAndSettle();
       expect(find.byType(ChapterCard), findsNWidgets(2));
     });
@@ -1212,7 +1213,7 @@ void main() {
       await tester.tap(find.text('Maharashtra'));
       await tester.pumpAndSettle();
       expect(board.controller.region, 'Maharashtra');
-      await tester.tap(find.text('Show chapters'));
+      await tester.tap(find.text('Show Chapters'));
       await tester.pumpAndSettle();
       expect(find.byType(ChapterCard), findsNWidgets(2));
       expect(find.text('2 chapters of 5'), findsOneWidget);
@@ -1223,16 +1224,16 @@ void main() {
       await tester.tap(find.text('Pune').last);
       await tester.pumpAndSettle();
       expect(board.controller.city, 'Pune');
-      await tester.tap(find.text('Show chapters'));
+      await tester.tap(find.text('Show Chapters'));
       await tester.pumpAndSettle();
       expect(tester.widget<ChapterCard>(find.byType(ChapterCard)).chapter.slug, 'pune');
 
       await tester.tap(find.bySemanticsLabel('Sort and filter chapters'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Any city'));
-      await tester.tap(find.text('Any region'));
+      await tester.tap(find.text('Any City'));
+      await tester.tap(find.text('Any Region'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Show chapters'));
+      await tester.tap(find.text('Show Chapters'));
       await tester.pumpAndSettle();
       expect(board.controller.region, isNull);
       expect(board.controller.city, isNull);
@@ -1260,9 +1261,9 @@ void main() {
       expect(find.text('Overview'), findsOneWidget);
       expect(find.text('Leadership'), findsOneWidget);
       expect(find.text('Vikram Malhotra'), findsOneWidget);
-      expect(find.text('Upcoming events'), findsWidgets);
+      expect(find.text('Upcoming Events'), findsWidgets);
 
-      await tester.tap(find.text('View full details'));
+      await tester.tap(find.text('View Full Details'));
       await tester.pumpAndSettle();
       expect(find.byType(ChapterScreen), findsOneWidget);
     });
@@ -1293,9 +1294,9 @@ void main() {
       await _pumpBoard(tester, repo: repo);
       await tester.tap(find.descendant(of: _card('ICR Mumbai Chapter'), matching: find.text('Preview Chapter')));
       await tester.pumpAndSettle();
-      expect(find.text("Couldn't load this chapter"), findsOneWidget);
+      expect(find.text("Unable to Load This Chapter"), findsOneWidget);
       repo.failures.clear();
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('Overview'), findsOneWidget);
     });
@@ -1328,9 +1329,9 @@ void main() {
       expect(board.members.last, 'p1');
     });
 
-    testWidgets('a lead sees "Chapter lead" and no Leave on their own chapter’s page', (tester) async {
+    testWidgets('a lead sees "Chapter Lead" and no Leave on their own chapter’s page', (tester) async {
       await _pumpPage(tester, 'bengaluru');
-      expect(find.text('Chapter lead'), findsOneWidget);
+      expect(find.text('Chapter Lead'), findsOneWidget);
       expect(find.text('Leave'), findsNothing);
     });
   });
@@ -1351,7 +1352,7 @@ void main() {
       await tester.tap(find.text('RSVP'));
       await tester.pumpAndSettle();
       expect(repo.calls, contains('rsvp:e5'));
-      expect(find.text('You are going'), findsOneWidget);
+      expect(find.text('You Are Going'), findsOneWidget);
       expect(find.text('43 going · 17 seats left'), findsOneWidget);
 
       await tester.tap(find.descendant(of: find.byType(MeetupRsvpBar), matching: find.text('Cancel')));
@@ -1365,9 +1366,9 @@ void main() {
       final repo = repoWith([sampleEvent('e6', 'Summit', 'bengaluru', future, capacity: 30, going: 30)]);
       await _pumpPage(tester, 'bengaluru', repo: repo);
       expect(find.text('Full · 30 going'), findsOneWidget);
-      await tester.tap(find.text('Join waitlist'));
+      await tester.tap(find.text('Join Waitlist'));
       await tester.pumpAndSettle();
-      expect(find.text('On the waitlist'), findsOneWidget);
+      expect(find.text('On the Waitlist'), findsOneWidget);
       // A waitlisted place takes no seat.
       expect(find.text('Full · 30 going'), findsOneWidget);
     });
@@ -1380,7 +1381,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('This event is by invitation only.'), findsOneWidget);
       expect(find.text('RSVP'), findsOneWidget);
-      expect(find.text('You are going'), findsNothing);
+      expect(find.text('You Are Going'), findsNothing);
     });
 
     testWidgets('a paid ticket cannot be cancelled here: the API says so and the place stays', (tester) async {
@@ -1390,16 +1391,16 @@ void main() {
       await tester.tap(find.descendant(of: find.byType(MeetupRsvpBar), matching: find.text('Cancel')));
       await tester.pumpAndSettle();
       expect(find.text('Your ticket is paid for. To cancel it, contact ICR support.'), findsOneWidget);
-      expect(find.text('You are going'), findsOneWidget);
+      expect(find.text('You Are Going'), findsOneWidget);
     });
 
-    testWidgets('a ticketed event is bought on the events sheet: "Get ticket" hands it over, no RSVP is sent', (
+    testWidgets('a ticketed event is bought on the events sheet: "Get Ticket" hands it over, no RSVP is sent', (
       tester,
     ) async {
       final repo = repoWith([sampleEvent('e9', 'Lease audit', 'bengaluru', future, price: 250000)]);
       final board = await _pumpPage(tester, 'bengaluru', repo: repo);
       expect(find.text('RSVP'), findsNothing);
-      await tester.tap(find.text('Get ticket'));
+      await tester.tap(find.text('Get Ticket'));
       expect(board.events.single, 'e9-slug');
       expect(repo.count('rsvp'), 0);
     });
@@ -1414,14 +1415,14 @@ void main() {
         await tester.tap(find.text('RSVP'));
         await tester.pumpAndSettle();
         expect(find.text('This event is invite-only.'), findsOneWidget);
-        expect(find.text('You are going'), findsNothing);
+        expect(find.text('You Are Going'), findsNothing);
       },
     );
 
-    testWidgets('an event that is over has no RSVP, only "Event ended"', (tester) async {
+    testWidgets('an event that is over has no RSVP, only "Event Ended"', (tester) async {
       final repo = repoWith([sampleEvent('e10', 'Old meetup', 'bengaluru', DateTime.utc(2026, 10, 20, 4))]);
       await _pumpPage(tester, 'bengaluru', repo: repo);
-      expect(find.text('Event ended'), findsOneWidget);
+      expect(find.text('Event Ended'), findsOneWidget);
       expect(find.text('RSVP'), findsNothing);
     });
 
@@ -1433,7 +1434,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Q2 meetup'), findsOneWidget);
       expect(find.text('RSVP'), findsNothing);
-      expect(find.text('Event ended'), findsNothing);
+      expect(find.text('Event Ended'), findsNothing);
     });
 
     testWidgets('a row opens the event sheet through the shell and an RSVP in flight is not sent twice', (

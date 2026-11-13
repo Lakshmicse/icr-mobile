@@ -83,7 +83,7 @@ class DiscoverSheet extends StatelessWidget {
     DiscoverRow(
       35,
       DiscoverDoor(
-        'Post requirement',
+        'Post Requirement',
         icon: 'discover_post_requirement.png',
         iconLeft: 17.5,
         textLeft: 45.5,

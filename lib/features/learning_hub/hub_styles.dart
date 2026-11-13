@@ -78,6 +78,9 @@ class HubText {
   /// The "ICR" tab on a certification card: 31 dp wide, 13 dp tall caps.
   static final badge = AppText.workSans(18.3, FontWeight.w700, AppColors.primary, lineHeight: 22);
 
+  /// A card's small corner status ("Credits").
+  static final tag = AppText.workSans(11, FontWeight.w600, AppColors.primary, lineHeight: 14);
+
   /// A flash-card tile: the deck's name (IBM Plex 13.9 bold, "HVAC Systems" 95 dp) and its count (10.8), in white.
   static final flashTitle = AppText.plexSans(13.9, FontWeight.w700, Colors.white, lineHeight: 18);
   static final flashCount = AppText.plexSans(10.8, FontWeight.w400, const Color(0xE6FFFFFF), lineHeight: 14);

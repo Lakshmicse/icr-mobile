@@ -74,7 +74,7 @@ class MeetupRow extends StatelessWidget {
                       if (footer == null && e.myStatus != null && e.myStatus != 'CANCELLED')
                         CommunityPill(
                           label: e.going
-                              ? (e.myStatus == 'ATTENDED' ? 'You attended' : 'You are going')
+                              ? (e.myStatus == 'ATTENDED' ? 'You Attended' : 'You Are Going')
                               : _status(e.myStatus!),
                           fill: e.waitlisted ? CommunityColors.amber50 : CommunityColors.green50,
                           style: CommunityText.pill.copyWith(
@@ -110,7 +110,7 @@ class MeetupRow extends StatelessWidget {
   }
 
   static String _status(String s) => s == 'WAITLISTED'
-      ? 'On the waitlist'
+      ? 'On the Waitlist'
       : s.isEmpty
       ? s
       : '${s[0]}${s.substring(1).toLowerCase()}';
@@ -176,7 +176,7 @@ class MeetupRsvpBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final e = event;
     if (e.isOver(now)) {
-      return Text('Event ended', style: CommunityText.meta);
+      return Text('Event Ended', style: CommunityText.meta);
     }
     if (e.holding) {
       return Row(
@@ -188,7 +188,7 @@ class MeetupRsvpBar extends StatelessWidget {
           ),
           const SizedBox(width: 5),
           Text(
-            e.waitlisted ? 'On the waitlist' : 'You are going',
+            e.waitlisted ? 'On the Waitlist' : 'You Are Going',
             style: CommunityText.metaStrong.copyWith(
               color: e.waitlisted ? CommunityColors.amber700 : CommunityColors.green700,
             ),
@@ -216,7 +216,7 @@ class MeetupRsvpBar extends StatelessWidget {
       return Align(
         alignment: Alignment.centerLeft,
         child: CommunityButton(
-          label: 'Get ticket',
+          label: 'Get Ticket',
           icon: LucideIcons.ticket,
           outlined: true,
           height: 28,
@@ -227,7 +227,7 @@ class MeetupRsvpBar extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: CommunityButton(
-        label: e.full ? 'Join waitlist' : 'RSVP',
+        label: e.full ? 'Join Waitlist' : 'RSVP',
         icon: e.full ? LucideIcons.hourglass : LucideIcons.calendarCheck,
         height: 28,
         busy: busy,

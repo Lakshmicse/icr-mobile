@@ -80,11 +80,11 @@ class _ReportSheetState extends State<ReportSheet> {
           children: [
             const Icon(LucideIcons.circleCheck, size: 34, color: AppColors.success),
             const SizedBox(height: 10),
-            Text('Report sent', textAlign: TextAlign.center, style: CommunityText.sheetTitle),
+            Text('Report Sent', textAlign: TextAlign.center, style: CommunityText.sheetTitle),
             const SizedBox(height: 6),
             Text(
-              'Thanks. Your report on “${widget.title}” is with the ICR admin team, who will look at it. '
-              'The person who shared it is not told who reported it.',
+              'Thank you. The ICR admin team will review your report on “${widget.title}”. '
+              'The person who shared it will not be told who reported it.',
               textAlign: TextAlign.center,
               style: CommunityText.body,
             ),
@@ -100,7 +100,7 @@ class _ReportSheetState extends State<ReportSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Report this document', style: CommunityText.sheetTitle),
+          Text('Report This Document', style: CommunityText.sheetTitle),
           const SizedBox(height: 4),
           Text(
             'Tell the ICR admin team what is wrong with “${widget.title}”. The person who shared it is never told who reported it.',
@@ -131,12 +131,12 @@ class _ReportSheetState extends State<ReportSheet> {
             ),
           const SizedBox(height: 8),
           CommunityField(
-            label: _needsNote ? 'What is wrong? (required)' : 'Add a note (optional)',
+            label: _needsNote ? 'What is wrong? (Required)' : 'Add a Note (Optional)',
             controller: _note,
             minLines: 3,
             maxLines: 5,
             maxLength: reportNoteLimit,
-            hint: 'A page number, a link, anything that helps the admin check it',
+            hint: 'A page number, a link or other details that help the admin review it.',
             enabled: !_busy,
             onChanged: (_) => setState(() {}),
           ),
@@ -166,7 +166,7 @@ class _ReportSheetState extends State<ReportSheet> {
               const SizedBox(width: 8),
               Expanded(
                 child: CommunityButton(
-                  label: 'Send report',
+                  label: 'Send Report',
                   expand: true,
                   height: 38,
                   busy: _busy,

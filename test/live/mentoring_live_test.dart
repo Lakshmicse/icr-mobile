@@ -487,7 +487,7 @@ void main() {
       expect(c.tasks.firstWhere((t) => t.id.endsWith('-t1')).overdue, isTrue);
       expect(c.tasks.firstWhere((t) => t.id.endsWith('-t3')).isMine, isTrue);
       expect(c.timeline.first.type, 'STARTED');
-      expect(c.timeline.first.label, 'Mentorship started');
+      expect(c.timeline.first.label, 'Mentorship Started');
       expect(c.resources, isEmpty);
       expect(c.term, isNotNull, reason: 'the coaching plan behind this pairing');
       expect(c.term!.title, 'Monthly leadership coaching');
@@ -552,7 +552,10 @@ void main() {
 
           // The API's rules, in its own words.
           final yesterday = DateTime.now().subtract(const Duration(days: 1));
-          expect(await p.mentee.schedule(at: yesterday, durationMin: 45, mode: 'VIDEO'), 'Pick a time in the future.');
+          expect(
+            await p.mentee.schedule(at: yesterday, durationMin: 45, mode: 'VIDEO'),
+            'Select a time in the future.',
+          );
           expect(
             await p.mentee.schedule(at: await p.slot(day: 2), durationMin: 45, mode: 'IN_PERSON'),
             contains('is not how this mentor meets'),
@@ -826,10 +829,10 @@ void main() {
           expect(c.status, 'OPEN');
           expect(c.statusLabel, 'Received');
           expect(c.urgent, isFalse);
-          expect(await p.mentor.setStatus(PairingStatus.endedEarly, reason: 'Our schedules no longer line up'), isNull);
+          expect(await p.mentor.setStatus(PairingStatus.endedEarly, reason: 'Our schedules no longer match'), isNull);
           await p.mentee.load();
           expect(p.mentee.pairing!.status, PairingStatus.endedEarly);
-          expect(p.mentee.pairing!.endedReason, 'Our schedules no longer line up');
+          expect(p.mentee.pairing!.endedReason, 'Our schedules no longer match');
           expect(p.mentee.live, isFalse);
           expect(await p.mentee.schedule(at: await p.slot(), durationMin: 45, mode: 'VIDEO'), contains('not active'));
         } finally {

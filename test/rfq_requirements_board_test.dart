@@ -69,9 +69,9 @@ void main() {
     testWidgets('each card says where the requirement stands and what it has drawn', (tester) async {
       await open(tester);
       final hvac = card(DemoRfqRepository.boardId);
-      expect(find.descendant(of: hvac, matching: find.text('Live')), findsOneWidget);
+      expect(find.descendant(of: hvac, matching: find.text('Open for Bids')), findsOneWidget);
       expect(
-        find.descendant(of: hvac, matching: find.text('4 replies')),
+        find.descendant(of: hvac, matching: find.text('4 responses received')),
         findsOneWidget,
         reason: 'an enquiry draws replies',
       );
@@ -82,11 +82,11 @@ void main() {
       );
       final security = card(DemoRfqRepository.securityId);
       await tester.ensureVisible(security);
-      expect(find.descendant(of: security, matching: find.text('3 replies')), findsOneWidget);
+      expect(find.descendant(of: security, matching: find.text('3 responses received')), findsOneWidget);
       // An RFQ nobody has quoted on yet carries its status and no count.
       final housekeeping = card('demo-board-housekeeping');
-      expect(find.descendant(of: housekeeping, matching: find.text('Live')), findsOneWidget);
-      expect(find.descendant(of: housekeeping, matching: find.textContaining('bid')), findsNothing);
+      expect(find.descendant(of: housekeeping, matching: find.text('Open for Bids')), findsOneWidget);
+      expect(find.descendant(of: housekeeping, matching: find.textContaining('received')), findsNothing);
     });
 
     testWidgets('an RFQ counts bids, one or many, and an ended one says how it ended', (tester) async {
@@ -98,14 +98,14 @@ void main() {
       );
       const base = Requirement(id: 'x', title: 'Lifts', kind: RfqKind.rfq, status: RfqStatus.published, quoteCount: 1);
       await show(base);
-      expect(find.text('1 bid'), findsOneWidget);
+      expect(find.text('1 bid received'), findsOneWidget);
       await show(base.copyWith(status: RfqStatus.awarded));
       expect(find.text('Awarded'), findsOneWidget);
       await show(
         const Requirement(id: 'y', title: 'Lifts', kind: RfqKind.rfq, status: RfqStatus.cancelled, quoteCount: 2),
       );
       expect(find.text('Cancelled'), findsOneWidget);
-      expect(find.text('2 bids'), findsOneWidget);
+      expect(find.text('2 bids received'), findsOneWidget);
     });
 
     testWidgets('the supplier board draws its cards as before: no status and no count', (tester) async {
@@ -116,8 +116,8 @@ void main() {
           body: OpportunityCard(rfq: r, nameOf: (k) => k, onOpen: () {}),
         ),
       );
-      expect(find.text('Live'), findsNothing);
-      expect(find.text('2 bids'), findsNothing);
+      expect(find.text('Open for Bids'), findsNothing);
+      expect(find.text('2 bids received'), findsNothing);
     });
 
     testWidgets('a tab asks the API for that status only, and an empty one points back to All', (tester) async {
@@ -134,8 +134,8 @@ void main() {
 
       await tester.tap(tabNamed('Closed'));
       await settle(tester);
-      expect(find.text('None closed right now'), findsOneWidget);
-      await tester.tap(find.text('See all'));
+      expect(find.text('None Closed Right Now'), findsOneWidget);
+      await tester.tap(find.text('See All'));
       await settle(tester);
       expect(find.text('5 requirements posted'), findsOneWidget);
     });
@@ -153,8 +153,8 @@ void main() {
       await tester.enterText(find.byType(TextField), 'submarine');
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await settle(tester);
-      expect(find.text('No requirements match'), findsOneWidget);
-      await tester.tap(find.text('Clear search'));
+      expect(find.text('No Requirements Match'), findsOneWidget);
+      await tester.tap(find.text('Clear Search'));
       await settle(tester);
       expect(find.byType(OpportunityCard, skipOffstage: false), findsNWidgets(5));
     });
@@ -162,10 +162,10 @@ void main() {
     testWidgets('a list that cannot be read says so, and Try again reads it', (tester) async {
       repo.failReads = true;
       await open(tester);
-      expect(find.text("Couldn't load the requirements"), findsOneWidget);
+      expect(find.text("Unable to Load the Requirements"), findsOneWidget);
       expect(find.text('The server said no.'), findsOneWidget);
       repo.failReads = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester);
       expect(find.byType(OpportunityCard, skipOffstage: false), findsNWidgets(5));
     });

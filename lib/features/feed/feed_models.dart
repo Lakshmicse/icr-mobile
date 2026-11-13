@@ -280,6 +280,7 @@ class FeedPostDetail {
   const FeedPostDetail({
     required this.body,
     this.images = const [],
+    this.videos = const [],
     this.caption,
     this.morePhotos = 0,
     this.mentions = const [],
@@ -293,6 +294,9 @@ class FeedPostDetail {
 
   /// The first two photos, drawn as the design draws them.
   final List<FeedPicture> images;
+
+  /// The videos (each a URL the player opens), after the photos.
+  final List<String> videos;
 
   /// The photo's caption, when there is one photo and its file name reads as words.
   final String? caption;
@@ -313,6 +317,7 @@ class FeedPost {
     this.topicTone = TopicTone.green,
     this.tags = const [],
     this.images = const [],
+    this.videos = const [],
     this.imageCaption,
     this.morePhotos = 0,
     this.reactions = 0,
@@ -360,6 +365,9 @@ class FeedPost {
   final TopicTone topicTone;
   final List<String> tags;
   final List<FeedPicture> images;
+
+  /// The videos (each a URL the player opens), after the photos.
+  final List<String> videos;
   final String? imageCaption;
 
   /// Photos beyond the two shown ("+3 photos").
@@ -431,6 +439,7 @@ class FeedPost {
     String? body,
     List<String>? tags,
     List<FeedPicture>? images,
+    List<String>? videos,
     String? imageCaption,
     int? morePhotos,
     bool? detailLoaded,
@@ -458,6 +467,7 @@ class FeedPost {
     topicTone: topicTone,
     tags: tags ?? this.tags,
     images: images ?? this.images,
+    videos: videos ?? this.videos,
     imageCaption: imageCaption ?? this.imageCaption,
     morePhotos: morePhotos ?? this.morePhotos,
     reactions: reactions ?? this.reactions,
@@ -517,7 +527,7 @@ enum FeedFilter { all, trending, following, unanswered, polls }
 extension FeedFilterLabel on FeedFilter {
   String get label => switch (this) {
     FeedFilter.all => 'All Feed',
-    FeedFilter.trending => 'Trending',
+    FeedFilter.trending => 'Trending Discussions',
     FeedFilter.following => 'Following',
     FeedFilter.unanswered => 'Unanswered',
     FeedFilter.polls => 'Polls',

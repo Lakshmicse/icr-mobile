@@ -102,3 +102,89 @@ W = `mentor_offerings_test.dart` / `mentor_offerings_groups_test.dart` (widget, 
 ## Seed and what the live tests leave
 
 `tool/seed/mentoring.ts` already makes Anand's storefront (six services, a coaching plan and a programme, four group sessions); the tests only read those rows and make their own. Services and plans are deleted by the test that made them (soft delete). Each run leaves **one cancelled group session** (no delete route) and **two stored files** (a resource's PDF and a cover). `tool/seed/mentoring_offerings.ts --remove` (run from `E:\ICR\irc-portal\backend`, before `mentoring.ts --remove`) deletes the sessions the fixture mentors host that the seed did not make, and the upload records and files they own under the purposes `mentor-resource` and `mentor-offering`; it refuses any database that is not local and never touches a `dsgn-mentoring-` row.
+
+## 7 Nov 2026: tabs, no storefront card, plainer forms
+
+* The Offerings panel is three tabs — **1:1 mentoring** (sessions, programmes, ongoing plans) · **Group mentoring** · **Resources** (and older listings) — `offerings-tabs`.
+* The **Storefront card is gone** (owner, 7 and 9 Nov 2026: "Store front has to be completely removed here"): while something still stops the mentor selling, only the API's sentence shows (key `gate-reason`) with **Accept seller terms** when the terms are the one thing missing; a live desk shows nothing. The title, the Live / Not open pill, the three checklist lines and "N of 10 service listings used" are no longer drawn.
+* Forms: "Duration (minutes)" (was Length); no price criteria text and no ₹499 pre-check of the app's own (`servicePriceProblem`, `programmePriceProblem` — the API still holds `ONE_TO_ONE_MIN_PRICE_PAISA`, so its answer shows if it refuses); no "Live on your storefront" switch (Pause / Resume on the list once posted); a group session's **Mode** is Virtual | In person (phone and chat removed; an older phone/chat session edits as virtual).
+
+## 9 Nov 2026 (bug sheet #40–#44)
+
+* **#41** The **strikethrough price** field is gone from every offering form (`PriceBlock` no longer asks `compareAtPaisa`; the owner: "why is the strikethrough price, what is the purpose?"). A listing that already carries one keeps it; the rule (`compareAtProblem`) stays for the API's sake.
+* **#44** The Storefront card is removed entirely (above). **#42** Duration (minutes), no "Live on your storefront" switch, Pause / Resume on the listing row (the pill reads Live or Paused), no ₹499 text — done 8 Nov. **#43** Group sessions meet Virtual | In person under "Mode" — done 8 Nov. **#40** one Edit My Profile on the mentor's own profile — done 8 Nov.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client asked for the on-screen text to be refined "crisp, for global standard", in the style of the wording they marked up for sign-in and Settings. Wording only: no layout, colour or behaviour changed. Names of things a person taps or reads as a label are in Title Case; sentences are in sentence case with a full stop; no dash is used as punctuation; "pick" and "tick" read "select", "is told" reads "is notified", "show up / land here" reads "will appear here", and a load that fails reads "Unable to Load …". The title of an empty state or an error block is a heading (Title Case, no full stop: "No Purchases Yet", "Unable to Load Mentors"); the line under it is a sentence. The retry button reads **Try Again**.
+
+* A form's title now takes the kind's name as it is ("Edit 1:1 Session", "Add a Resource") where it was lower-cased.
+* Left as they are: the seller-terms tick ("I have read and accept the seller terms", a declaration), example hints, the price lines, and the status words already a single word ("Live", "Paused", "Draft").
+
+| Old | New |
+| --- | --- |
+| Pick a date and time for every day. | Select a date and time for every day. |
+| Pick a time in the future. | Select a time in the future. |
+| People who registered are told when the time moves. Days that already ran cannot change. | Registered members are notified when the time changes. Past days cannot be changed. |
+| Free sessions keep a waitlist; a seat price turns it off. | Free sessions keep a waitlist. A seat price turns it off. |
+| Plain text; a blank line starts a new paragraph. | Plain text. A blank line starts a new paragraph. |
+| When / Days | Date and Time / Days |
+| Seats ({minGroupSeats} to {maxGroupSeats}; empty for no limit) | Seats ({minGroupSeats} to {maxGroupSeats}, empty for no limit) |
+| Keep a waitlist when it fills | Keep a Waitlist When Full |
+| Off keeps it a draft: nobody can register. | When off, it stays a draft and nobody can register. |
+| Off saves a draft you can publish later. | When off, a draft is saved that you can publish later. |
+| Pick a date and time | Select a Date and Time |
+| Replace the file | Replace File |
+| Couldn't open your files. Try again. | Unable to open your files. Try again. |
+| That file is over 10 MB. | The file is larger than 10 MB. |
+| Couldn't load your storefront | Unable to Load Your Storefront |
+| A platform fee is taken on each sale; | A platform fee is taken on each sale. |
+| Nothing listed yet. A session is booked in one go; a programme is a fixed run of sessions. | Nothing listed yet. A session is a single booking. A programme is a fixed series of sessions. |
+| No resources. A guide or a template, paid or free as a lead magnet. | No resources yet. Add a guide or a template, paid or free. |
+| Couldn't load your plans | Unable to Load Your Plans |
+| No ongoing plans. A prepaid term with sessions every month. | No ongoing plans. A plan is a prepaid term with sessions every month. |
+| Couldn't load your group sessions | Unable to Load Your Group Sessions |
+| No group sessions yet. A clinic is an hour with a room of members; free ones keep a waitlist. | No group sessions yet. A clinic is an hour with a group of members. Free sessions keep a waitlist. |
+| It comes off your storefront. Members who already bought it keep what they bought. | It is removed from your storefront. Members who already bought it keep their purchase. |
+| Give it a title: at least {minServiceTitle} characters. | Enter a title of at least {minServiceTitle} characters. |
+| Give it a title: at least {minPlanTitle} characters. | Enter a title of at least {minPlanTitle} characters. |
+| Give it a title: at least {minGroupTitle} characters. | Enter a title of at least {minGroupTitle} characters. |
+| Enter the price in rupees, or switch on Free. | Enter the price in rupees, or turn on Free. |
+| %: the price must be at least half of the compare-at price. | %. The price must be at least half of the compare-at price. |
+| Seats: a number from {min} to {max}. | Enter seats as a number from {min} to {max}. |
+| The strikethrough price has to be higher than the price you are charging. | The strikethrough price must be higher than the price you charge. |
+| Session {n}: a title of at least {minModuleTitle} characters. | Session {n}: enter a title of at least {minModuleTitle} characters. |
+| A structured program runs between | A structured programme runs between |
+| Add the joining link people will use to get in. | Add the joining link people will use. |
+| Give the session at least one day. | Add at least one day to the session. |
+| days: a longer run is a programme. | days. A longer series is a programme. |
+| Seats: a number from {minGroupSeats} to {maxGroupSeats}, or leave it empty for no limit. | Enter seats as a number from {minGroupSeats} to {maxGroupSeats}, or leave it empty for no limit. |
+| Write at least {minCancelReason} characters. | Enter at least {minCancelReason} characters. |
+| Say how many sessions a month the plan includes: {minSessionsPerMonth} to {maxSessionsPerMonth}. | Enter how many sessions a month the plan includes, from {minSessionsPerMonth} to {maxSessionsPerMonth}. |
+| A fixed run of sessions. | A fixed series of sessions. |
+| Nothing is debited automatically: a renewal is a new purchase. | Nothing is charged automatically. A renewal is a new purchase. |
+| What are you offering? | Offering Type |
+| How long is a term? | Term Length |
+| Sessions a month ( | Sessions per Month ( |
+| Usual session length (minutes, optional) | Usual Session Length in Minutes (Optional) |
+| What it includes (one line each, up to {maxInclusions}) | Inclusions (one per line, up to {maxInclusions}) |
+| Replace the image | Replace Image |
+| What it covers (optional) | Outline (Optional) |
+| Members ask for a time; you set it. A free session is booked at once, a paid one when they pay. | Members ask for a time and you set it. A free session is booked immediately, a paid one when they pay. |
+| A file members download: a guide, a template, a checklist. Free works as a lead magnet. | A file members download, such as a guide, a template or a checklist. A free resource helps attract members. |
+| You can switch this one off or delete it. | You can turn this one off or delete it. |
+| The file | File |
+| A PDF or an image, up to 10 MB. It is needed before the resource can be live. | A PDF or an image, up to 10 MB. It is required before the resource can go live. |
+| Couldn't open this session | Unable to Open This Session |
+| {…} a seat | {…} per seat |
+| Who is coming ( | Attendees ( |
+| A draft: nobody can register until you publish it. | This is a draft. Nobody can register until you publish it. |
+| Record who came | Record Attendance |
+| Everyone registered is told, with your reason. | Everyone registered is notified, with your reason. |
+| It opens for registration now. Check the date, the place and the seats first. | It opens for registration now. Check the date, the venue and the seats first. |
+| Minutes it ran: {minSessionMinutes} to {maxSessionMinutes}, or leave it empty. | Enter the minutes it ran, from {minSessionMinutes} to {maxSessionMinutes}, or leave it empty. |
+| Who came? | Who Attended? |
+| Tick everyone who was there. Anyone left unticked is marked a no-show. | Select everyone who attended. Anyone not selected is marked as a no-show. |
+| Minutes it actually ran (optional) | Actual Minutes (Optional) |
+| A note (optional) | Note (Optional) |
+| Buttons, headings, tabs, chips, field labels and status names to Title Case: 54 strings | e.g. "In person" → "In Person"; "Edit group session" → "Edit Group Session"; "Host a group session" → "Host a Group Session" |

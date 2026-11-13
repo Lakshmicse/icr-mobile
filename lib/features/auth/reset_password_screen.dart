@@ -9,10 +9,10 @@ import 'forgot_password_screen.dart';
 import 'recovery_repository.dart';
 import 'signup_widgets.dart';
 
-/// "Choose a new password", the website's `/reset-password?token=`, finished in
+/// "Create a New Password", the website's `/reset-password?token=`, finished in
 /// the app. It opens in two ways:
 ///
-/// * with a [token] (a deep link, or "Use link" on the reset request in test
+/// * with a [token] (a deep link, or "Use the Link" on the reset request in test
 ///   mode): straight to the two password fields;
 /// * without one: the person pastes the link from their email first
 ///   ([tokenFromLink] takes the whole link, its query, or the bare token).
@@ -21,6 +21,9 @@ import 'signup_widgets.dart';
 /// a person who was signed in is signed out here (the API would refuse their
 /// next refresh anyway) and goes back to Sign in with the new password. A link
 /// the API refuses (used, expired) keeps what was typed and offers a new one.
+///
+/// The page is one plain colour, white in light, like [ForgotPasswordScreen]
+/// (the client's note on the manual, 13 Nov 2026).
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key, this.token, this.repository, this.startedFromForgot = false});
 
@@ -30,7 +33,7 @@ class ResetPasswordScreen extends StatefulWidget {
   /// Where the call goes; the API when null.
   final RecoveryRepository? repository;
 
-  /// Opened from the "Check your inbox" screen: "Request a new link" goes back to it.
+  /// Opened from the "Check Your Inbox" screen: "Resend Reset Link" goes back to it.
   final bool startedFromForgot;
 
   @override
@@ -76,7 +79,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       setState(
         () => _linkProblem = _link.text.trim().isEmpty
             ? 'Paste the link from your email.'
-            : 'That does not look like a reset link. Paste the whole link from the email.',
+            : 'This is not a valid reset link. Paste the full link from the email.',
       );
       return;
     }
@@ -94,13 +97,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     final password = _password.text;
     final problems = (
       password: password.isEmpty
-          ? 'Enter a new password'
+          ? 'Enter a new password.'
           : password.length < 8
-          ? 'At least 8 characters'
+          ? 'Use at least 8 characters.'
           : null,
       confirm: _confirm.text.isEmpty
-          ? 'Re-enter your new password'
-          : (password.isNotEmpty && _confirm.text != password ? 'The two passwords do not match.' : null),
+          ? 'Re-enter your new password.'
+          : (password.isNotEmpty && _confirm.text != password ? 'The passwords do not match.' : null),
     );
     setState(() {
       _problems = problems;
@@ -147,36 +150,37 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       child: AuthEyeButton(shown: _showPassword, onPressed: () => setState(() => _showPassword = !_showPassword)),
     );
     return AuthScaffold(
+      flat: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AuthHeader(
-            title: _done ? 'Password updated' : (_token == null ? 'Use your reset link' : 'Choose a new password'),
+            title: _done ? 'Password Updated' : (_token == null ? 'Enter Your Reset Link' : 'Create a New Password'),
           ),
           const SizedBox(height: 16),
           if (_done) ...[
             Text(
-              'Your password has been changed and every device was signed out. Sign in with your new password.',
+              'Your password has been changed. All devices have been signed out. Sign in with your new password.',
               key: const Key('reset.done'),
               style: AuthType.body(p).copyWith(color: p.text),
             ),
             const SizedBox(height: 22),
             AuthPrimaryButton(
               key: const Key('reset.signIn'),
-              label: 'Sign in',
-              busyLabel: 'Sign in',
+              label: 'Sign In',
+              busyLabel: 'Sign In',
               busy: false,
               onPressed: _toSignIn,
             ),
           ] else if (_token == null) ...[
             Text(
-              'Paste the link from the password reset email, then choose your new password here.',
+              'Paste the link from your password reset email to create a new password.',
               style: AuthType.body(p).copyWith(color: p.text),
             ),
             const SizedBox(height: 14),
             AuthField(
               fieldKey: const Key('reset.link'),
-              label: 'Reset link',
+              label: 'Reset Link',
               controller: _link,
               icon: Icons.link_rounded,
               hint: 'https://icr.org.in/reset-password?token=…',
@@ -199,14 +203,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             ),
             const SizedBox(height: 6),
             Center(
-              child: AuthLink(key: const Key('reset.requestNew'), label: 'Send me a new link', onTap: _requestNew),
+              child: AuthLink(key: const Key('reset.requestNew'), label: 'Resend Reset Link', onTap: _requestNew),
             ),
           ] else ...[
-            Text('At least 8 characters.', style: AuthType.body(p).copyWith(color: p.text)),
+            Text('Use at least 8 characters.', style: AuthType.body(p).copyWith(color: p.text)),
             const SizedBox(height: 14),
             AuthField(
               fieldKey: const Key('reset.password'),
-              label: 'New password',
+              label: 'New Password',
               controller: _password,
               icon: Icons.lock_outline_rounded,
               hint: '••••••••••••',
@@ -227,7 +231,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             const SizedBox(height: 10),
             AuthField(
               fieldKey: const Key('reset.confirm'),
-              label: 'Confirm new password',
+              label: 'Confirm New Password',
               controller: _confirm,
               focusNode: _confirmFocus,
               icon: Icons.lock_outline_rounded,
@@ -248,13 +252,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               if (_linkRefused)
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: AuthLink(key: const Key('reset.requestNew'), label: 'Request a new link', onTap: _requestNew),
+                  child: AuthLink(key: const Key('reset.requestNew'), label: 'Request a New Link', onTap: _requestNew),
                 ),
             ],
             const SizedBox(height: 20),
             AuthPrimaryButton(
               key: const Key('reset.submit'),
-              label: 'Update password',
+              label: 'Update Password',
               busyLabel: 'Updating…',
               busy: _busy,
               onPressed: _submit,

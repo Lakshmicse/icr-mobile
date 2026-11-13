@@ -259,7 +259,7 @@ class MentorService {
   String get pill {
     final parts = [
       kindLabel ?? kind.label,
-      if (durationMin != null) '$durationMin Mins' else if (slaHours != null) '$slaHours Hrs TAT',
+      if (durationMin != null) '$durationMin Mins' else if (slaHours != null) '$slaHours-Hr Reply',
       free ? 'Free' : '₹${_group(pricePaisa ~/ 100)}',
     ];
     return parts.join(' • ');
@@ -352,10 +352,10 @@ class MentorshipOverview {
 
 /// The directory's sort fields.
 enum MentorSort {
-  rating('Top rated'),
-  menteesHelped('Most mentees helped'),
-  sessionsCompleted('Most sessions'),
-  yearsExperience('Most experienced'),
+  rating('Top Rated'),
+  menteesHelped('Most Mentees Helped'),
+  sessionsCompleted('Most Sessions'),
+  yearsExperience('Most Experienced'),
   createdAt('Newest');
 
   const MentorSort(this.label);

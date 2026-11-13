@@ -238,9 +238,9 @@ class DeckPlan {
     if (anyLinked && alone.isEmpty) return null;
     final cap = limit!;
     final base = cap == 0
-        ? 'Flash cards are not included in your plan.'
-        : 'Your plan opens $cap flash-card ${cap == 1 ? 'deck' : 'decks'} (${usedBy(alone)} used).';
-    return anyLinked ? '$base A deck that goes with an Assess your knowledge course opens with that course.' : base;
+        ? 'Flashcards are not included in your plan.'
+        : 'Your plan opens $cap flashcard ${cap == 1 ? 'deck' : 'decks'} (${usedBy(alone)} used).';
+    return anyLinked ? '$base A deck linked to a Knowledge Assessment course opens with that course.' : base;
   }
 
   /// The line when no deck is known to belong with a course (the production API before the link existed): every
@@ -248,8 +248,8 @@ class DeckPlan {
   String? get note => unlimited
       ? null
       : (limit == 0
-            ? 'Flash cards are not included in your plan.'
-            : 'Your plan opens $limit flash-card ${limit == 1 ? 'deck' : 'decks'} ($used used).');
+            ? 'Flashcards are not included in your plan.'
+            : 'Your plan opens $limit flashcard ${limit == 1 ? 'deck' : 'decks'} ($used used).');
 }
 
 /// The API refused a deck: the member's plan does not open it (`403 DECK_LOCKED`). [message] is the API's own

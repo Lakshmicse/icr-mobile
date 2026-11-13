@@ -250,3 +250,91 @@ that picks "a discussion of Bharat's" now picks one from `home.ts`; a pending on
 * Tablet layout: the tab and the page are one column at any width.
 
 **6 Nov 2026 (owner's phone).** A reply's role pill (the section look, `ReplyTile._section`) overflowed the row by 16 px with a long role ("Workplace experience and employee wellbeing" — a headline split at "at"): the name may now take up to three fifths of the row and the pill two, each ellipsised past that; short ones take only their own width.
+
+## 11 Nov 2026: several photos and videos on a discussion, played in the app
+
+The owner: "not able to add multiple images and videos, and playing functionalities". The forum keeps its one file attachment (`uploadId`), so photos and videos go **inline in the body**: the composer's **Add photos or videos** (key `composer-media`, `pickForumMedia` — several at once; a photo up to 10 MB, a video up to 50 MB, `forum_file_picker.dart`) uploads each as a `forum-attachment` and holds it in `ComposerController.media` (`ForumMediaItem`: a 72 dp thumbnail with an ×, key `media-remove-<i>`); `bodyHtml` ends with `<p><img src="/uploads/<id>" alt=""></p>` / `<p><video src="/uploads/<id>" controls></video></p>` per item, and an edit reads the body's media back so they stay (or can be taken off). The server side (portal branch `feat/forum-inline-media`): the sanitiser and the website's `RichText` allow `<img>`/`<video>` whose `src` is an own `/uploads/` path, and forum uploads take mp4/webm/mov. **Until that is deployed, production strips the tags and a post shows no inline media.** Reading: `ForumJson.videoSources` beside `imageSources`; `FeedPost.videos` / `ForumThread.videos`; the feed card draws a video as a dark tile with a play glyph (`post-video:<url>`) and the thread page one per video (`thread-video:<i>`); a tap opens `VideoPlayerScreen` (`features/media/`, `video_player` + `chewie`: play, seek, full screen; a video that will not play says so). Tests: `forum_composer_test` "photos and videos are picked several at once…", "…over the forum's cap is refused…"; `feed_test` "a discussion's videos are read from its body…".
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client marked up the user manual with the wording wanted on a dozen screens and asked for the rest of the app to read the same way: Title Case for what a person taps or reads as a label, a short sentence with a full stop for everything else, plain international English, no dash inside a sentence. Wording only: no layout, colour or behaviour changed. Semantics-only labels (what a screen reader says for an icon) were left as they were. By the lead's ruling the title of an empty, locked or error state is a heading (Title Case, no full stop) with a sentence under it, and the retry button reads **Try Again** everywhere.
+
+**The list (`forums_screen.dart`, `forum_models.dart`, `widgets/forum_filters_sheet.dart`)**
+
+| Where | Old | New |
+|---|---|---|
+| A card's menu, snackbars, the report thanks | as on Home | as on Home (`home.md`) |
+| The list did not load | Couldn't load the discussions · Couldn't load the topics | Unable to Load Discussions (with **Try Again**) · Unable to load topics. (a line beside its Try Again link) |
+| Buttons, chips and headings to Title Case (11) | Clear filters · Clear all · All topics · Filter discussions · Show results · Most upvoted · Unanswered questions · Any type | Clear Filters · Clear All · All Topics · Filter Discussions · Show Results · Most Upvoted · Unanswered Questions · Any Type |
+| The tag box's hint | A tag, like hvac | Enter a tag, e.g. hvac |
+| The end of the list | You're all caught up | No more discussions. |
+| Empty: a search | No discussions match "x" / Try different words, or start the discussion yourself. | No Discussions Match "x" / Try different words, or start a discussion. |
+| Empty: a tag, filters | No discussions tagged #x yet · No discussions match these filters | No Discussions Tagged #x Yet · No Discussions Match These Filters |
+| Empty: Following, Unanswered, Polls | as on Home | as on Home |
+| Empty: Saved | Nothing saved yet / Bookmark a discussion and it will show up here. | No Saved Discussions Yet / Bookmark a discussion and it will appear here. |
+| Empty: My Contributions | You haven't posted yet / Questions and discussions you start show up here, including any still awaiting approval. | No Posts Yet / Questions and discussions you start appear here, including those awaiting approval. |
+| Empty: all | No discussions yet / Start one with "Start a discussion...". | No Discussions Yet / Select "Start a discussion..." to begin. |
+| The first-posts note (list and composer) | Your first few posts are read by a moderator before they go public. Once a couple are approved, everything you write publishes straight away. | A moderator reviews your first few posts before they are published. After a few are approved, your posts are published immediately. |
+| Reputation levels | Community leader · New member | Community Leader · New Member |
+| Report reasons | Abuse or harassment · Off topic · Undisclosed self-promotion · Misleading or incorrect · Something else | Abuse or Harassment · Off Topic · Undisclosed Self-Promotion · Misleading or Incorrect · Something Else |
+
+**The composer (`new_thread_screen.dart`, `composer_controller.dart`, `forum_flows.dart`, `repost.dart`)**
+
+| Where | Old | New |
+|---|---|---|
+| Titles | New poll · New discussion | New Poll · New Discussion |
+| Leaving | Discard your changes? / What you changed will not be saved. · Discard this draft? / What you wrote will be lost. | Discard Your Changes? / Your changes will not be saved. · Discard This Draft? / Your draft will be lost. |
+| A failed save | It couldn't be saved | Unable to Save |
+| Labels and buttons | Your question · Add photos or videos · Add more photos or videos · Replace attachment | Your Question · Add Photos or Videos · Add More Photos or Videos · Replace Attachment |
+| A title's example | e.g. What actually moved the needle on your energy numbers? | e.g. Which measures reduced your energy use the most? |
+| The rich-text note | …Changing its words turns them into plain paragraphs. | …Editing the text converts them to plain paragraphs. |
+| Categories | Couldn't load the categories: … · No matching categories · Nothing matches that. | Unable to load categories: … · No matching categories. · No matches found. |
+| The tag limit | That is the most a discussion can carry (5). | Tag limit reached (5). |
+| Refusals | x is too big: a photo can be up to N MB. · Two options read the same: make each one different. · Add some details so people know what you mean. · Choose the topic this belongs to. | x is too large. A photo can be up to N MB. · Two options are the same. Make each option different. · Add details to explain your post. · Select a category. |
+| After posting | Posted. A moderator will read it before it goes public. · Reposted. A moderator will read it before it goes public. | Posted. A moderator will review it before it is published. · Reposted. A moderator will review it before it is published. |
+| The repost sheet | Repost with your thoughts · Instantly bring this post to your feed. | Repost with Your Thoughts · Share this post to your feed immediately. |
+
+**A discussion (`thread_screen.dart`, `thread_controller.dart`, `widgets/thread_header.dart`, `reply_section.dart`, `forum_sheets.dart`, `mentions/`)**
+
+| Where | Old | New |
+|---|---|---|
+| The menus | Copy link · Who viewed | Copy Link · Who Viewed |
+| Deleting | Delete this discussion? / It is taken down for everyone, replies included. · Delete your reply? / It is taken out of the discussion for everyone. | Delete This Discussion? / It will be removed for everyone, including its replies. · Delete Your Reply? / It will be removed from the discussion for everyone. |
+| Not found, not loaded | This discussion isn't here / It may have been taken down, or the link is wrong. · Couldn't load this discussion | Discussion Not Found / It may have been removed, or the link is incorrect. · Unable to Load This Discussion |
+| Notices | Waiting for review · This discussion is not taking new replies, and its poll takes no votes. | Awaiting Review · This discussion does not accept new replies or poll votes. |
+| The facts line, the actions | · Still unanswered · Notify me | · Unanswered · Notify Me |
+| Replies | Accept answer · Accepted answer · Awaiting review · Couldn't load the replies · Replies will show up here. · Couldn't load more. Try again · Show more replies | Accept Answer · Accepted Answer · Awaiting Review · Unable to Load Replies · Replies will appear here. · Unable to load more. Try again. · View More |
+| Refusals | This discussion is locked, so it is not taking new replies. · This discussion is closed, and so is its poll. · Write something before posting. · The reply cannot be emptied. Delete it instead. | This discussion is locked and does not accept new replies. · This discussion and its poll are closed. · Enter a reply before posting. · A reply cannot be empty. Delete it instead. |
+| The report sheet | Report this reply · Report this discussion / A moderator will look at it. Choose what is wrong. / Anything else the moderator should know (optional) / Send report | Report This Reply · Report This Discussion / A moderator will review it. Select the reason. / Additional details for the moderator (Optional) / Send Report |
+| Votes and viewers | Nobody has voted yet. · Who viewed · No members you can see have read this yet. · N other members read it with a private profile. · Couldn't load this | No votes yet. · Who Viewed · No members visible to you have viewed this yet. · N other members viewed it with a private profile. · Unable to Load |
+| Tagging | Couldn't search people just now. · Couldn't search just now. · No one found | Unable to search people. Try again. · Unable to search. Try again. · No one found. |
+
+Kept: **My Contributions**, **All Feed**, **Trending Discussions**, **Recent Activity**, **Last Activity:**, the composer's labels (Your Poll Question, Discussion Title, Additional Context (Optional), Answer Options, Add Option, Add Tags, Attach File) and **Start the Conversation** / "Be the first to share your thoughts or insights." (the client's 12 Nov words); the reactions sheet (its "All N" tabs and "Nobody has reacted yet.", drawn on 13 Nov to the client's reference); the repost's stored lines ("↻ Reposted from …", "Repost: …"), which are data the feed reads back.
+
+**Network (`lib/features/network/`, which has no screen doc of its own)**
+
+| Where | Old | New |
+|---|---|---|
+| Tabs, headings, buttons to Title Case (7) | People to follow · Your network · Who to follow · Find people · Follow back | People to Follow · Your Network · Who to Follow · Find People · Follow Back |
+| More of a list | See all · Show more | View More |
+| Unfollow | Their articles and discussions leave your feed. They aren't told. | Their articles and discussions will no longer appear in your feed. They will not be notified. |
+| Not loaded | Couldn't load your network / Retry | Unable to Load Your Network / Try Again |
+| The writer's card | Be worth following / Members who follow you hear when you publish something new. | Publish for Your Followers / Members who follow you are notified when you publish something new. |
+| Empty: feed, following nobody | Follow someone to start your feed / When you follow a member, what they publish shows up here. / People worth following | Follow Members to Start Your Feed / When you follow a member, what they publish will appear here. / Who to Follow |
+| Empty: feed | Nothing new yet | No New Posts Yet |
+| Empty: suggestions | No suggestions right now / As you follow people, the people they follow show up here. | No Suggestions Yet / As you follow people, the people they follow will appear here. |
+| Empty: following, followers | You don't follow anyone yet · No followers yet / Members who follow you show up here. | Not Following Anyone Yet · No Followers Yet / Members who follow you will appear here. |
+
+
+## 13 Nov 2026: replies drawn as LinkedIn's comments
+
+The discussion page's replies use the same `CommentTile` rows as the Home feed's comments sheet (see `home.md`,
+same date): plain rows, answers one step in off a thin line and opening on the name they answer, Follow beside a
+comment by someone the reader does not follow (`FollowBook`, made by `ThreadScreen`). Accept answer, the Accepted
+answer and Awaiting review chips, a reply's file and the tint on the reply a link named are kept. The box reads
+"Add a comment...". The Forums tab's speech bubble still opens this page at its replies.
+
+
+## 13 Nov 2026: photos go as the forum's own list
+
+The portal's `main` keeps a post's photos in `imageIds` (ten at most) and returns them as `images` on every card. The composer now sends its photos there (`ForumDraft.imageIds`, `ComposerController.photoIds`; an edit sends the list only when it changed) and no longer writes `<img>` into the body; videos are still written inline. Reading goes through `ForumJson.photoPaths`: the forum's list, a pictured attachment, then any picture in the body, once each. `forumMaxPhotos` caps the composer at ten.

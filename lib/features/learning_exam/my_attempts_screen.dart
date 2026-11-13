@@ -88,7 +88,7 @@ class _MyAttemptsScreenState extends State<MyAttemptsScreen> {
             child: Column(
               children: [
                 TitleBar(
-                  title: 'My attempts',
+                  title: 'My Assessment Attempts',
                   onBack: widget.onBack,
                   unread: c.unread,
                   onBell: () => openNotifications(context),
@@ -108,9 +108,9 @@ class _MyAttemptsScreenState extends State<MyAttemptsScreen> {
       return SingleChildScrollView(
         child: ScreenNotice(
           icon: LucideIcons.clipboardCheck,
-          title: "Couldn't load your attempts",
+          title: 'Unable to Load Your Attempts',
           body: c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: c.refresh,
         ),
       );
@@ -146,7 +146,7 @@ class _MyAttemptsScreenState extends State<MyAttemptsScreen> {
                           onTap: () => c.setFilter(AttemptsFilter.assessments),
                         ),
                         _FilterChip(
-                          label: 'Mock exams',
+                          label: 'Mock Exams',
                           on: c.filter == AttemptsFilter.mocks,
                           onTap: () => c.setFilter(AttemptsFilter.mocks),
                         ),
@@ -154,7 +154,7 @@ class _MyAttemptsScreenState extends State<MyAttemptsScreen> {
                     ),
                     if (c.error != null) ...[
                       const SizedBox(height: 12),
-                      Notice(tone: NoticeTone.error, text: c.error!, action: 'Try again', onAction: c.refresh),
+                      Notice(tone: NoticeTone.error, text: c.error!, action: 'Try Again', onAction: c.refresh),
                     ],
                     const SizedBox(height: 14),
                   ],
@@ -165,8 +165,9 @@ class _MyAttemptsScreenState extends State<MyAttemptsScreen> {
             SliverToBoxAdapter(
               child: ScreenNotice(
                 icon: LucideIcons.clipboardCheck,
-                title: 'No attempts yet',
-                body: 'Papers you sit show up here, with your score and the right answers.',
+                title: 'No Attempts Yet',
+                body:
+                    'Your assessment history and scores will appear here once you complete an assessment or mock exam.',
                 action: 'Back to Learning',
                 onAction: widget.onBack,
               ),
@@ -175,9 +176,9 @@ class _MyAttemptsScreenState extends State<MyAttemptsScreen> {
             SliverToBoxAdapter(
               child: ScreenNotice(
                 icon: LucideIcons.clipboardCheck,
-                title: 'Nothing under this filter',
-                body: 'You have not sat a paper of this kind yet.',
-                action: 'Show all',
+                title: 'No Attempts Match This Filter',
+                body: 'You have not taken a paper of this kind yet.',
+                action: 'Show All',
                 onAction: () => c.setFilter(AttemptsFilter.all),
               ),
             )

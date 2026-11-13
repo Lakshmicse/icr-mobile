@@ -142,7 +142,7 @@ class TeamController extends ChangeNotifier {
 
   /// Runs one write for a sheet: null when it worked (every list is read again), else the API's sentence.
   Future<String?> _sheet(String key, Future<void> Function() write) async {
-    if (busy) return 'Another change is still running.';
+    if (busy) return 'Another change is in progress.';
     busyKey = key;
     _notify();
     try {

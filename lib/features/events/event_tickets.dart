@@ -22,9 +22,9 @@ Future<String> buyEventTicket(
     if (outcome == PaymentOutcome.success) await onPaid?.call();
     return switch (outcome) {
       PaymentOutcome.success => 'Payment received. Your seat is confirmed.',
-      PaymentOutcome.failure => "The payment didn't go through. Nothing was charged.",
+      PaymentOutcome.failure => 'The payment failed. You were not charged.',
       PaymentOutcome.cancelled =>
-        "The payment wasn't completed. If you did pay, your seat is confirmed within a minute.",
+        'The payment was not completed. If you paid, your seat will be confirmed within a minute.',
     };
   } catch (e) {
     return ApiError.from(e).message;

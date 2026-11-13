@@ -78,7 +78,7 @@ void main() {
       mart.links.opens = false;
       await tester.tap(find.text('Post RFQ'));
       await tester.pump();
-      expect(find.text("Couldn't open icr.org.in/quote"), findsOneWidget);
+      expect(find.text('Unable to open icr.org.in/quote'), findsOneWidget);
     });
 
     testWidgets('the numbers are the API\'s: My RFQ\'s 3 and Alerts 2 new', (tester) async {
@@ -162,8 +162,8 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey('market-search')), 'zzzz');
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pumpAndSettle();
-      expect(find.text('No suppliers match'), findsOneWidget);
-      await tester.tap(find.text('Clear filters'));
+      expect(find.text('No Suppliers Match'), findsOneWidget);
+      await tester.tap(find.text('Clear Filters'));
       await tester.pumpAndSettle();
       expect(mart.market.filters.search, '');
       expect(tester.widget<TextField>(find.byKey(const ValueKey('market-search'))).controller!.text, '');
@@ -174,71 +174,71 @@ void main() {
   group('the order', () {
     testWidgets('Sort opens the orders, Top rated is on, and a pick reorders the list', (tester) async {
       final mart = await pumpMart(tester);
-      expect(find.text('Sort Top rated'), findsOneWidget);
-      await tapChip(tester, 'Sort Top rated');
-      expect(find.text('Sort suppliers'), findsOneWidget);
+      expect(find.text('Sort Top Rated'), findsOneWidget);
+      await tapChip(tester, 'Sort Top Rated');
+      expect(find.text('Sort Suppliers'), findsOneWidget);
       for (final label in [
         'Recommended',
-        'Top rated',
-        'Most reviewed',
-        'Most projects',
-        'Most experienced',
+        'Top Rated',
+        'Most Reviewed',
+        'Most Projects',
+        'Most Experienced',
         'Newest',
       ]) {
         expect(find.byKey(ValueKey('sort-$label')), findsOneWidget, reason: label);
       }
-      await tester.tap(find.byKey(const ValueKey('sort-Most reviewed')));
+      await tester.tap(find.byKey(const ValueKey('sort-Most Reviewed')));
       await tester.pumpAndSettle();
       expect(mart.repo.searches.last.filters.sort, SupplierSort.mostReviewed);
-      expect(find.text('Sort Most reviewed'), findsOneWidget);
+      expect(find.text('Sort Most Reviewed'), findsOneWidget);
     });
 
     testWidgets('closing the sheet without a pick changes nothing', (tester) async {
       final mart = await pumpMart(tester);
+      await tapChip(tester, 'Sort Top Rated');
+      // Counted once the sheet is up: scrolling to the chip may itself bring the next page (12 Nov 2026).
       final before = mart.repo.searches.length;
-      await tapChip(tester, 'Sort Top rated');
       await tester.tapAt(const Offset(195, 40)); // the scrim
       await tester.pumpAndSettle();
       expect(mart.repo.searches, hasLength(before));
-      expect(find.text('Sort Top rated'), findsOneWidget);
+      expect(find.text('Sort Top Rated'), findsOneWidget);
     });
   });
 
-  group('By ratings', () {
+  group('By Ratings', () {
     testWidgets('a minimum rating narrows the list and the chip says what it is set to', (tester) async {
       final mart = await pumpMart(tester);
-      await tapChip(tester, 'By ratings');
-      expect(find.text('Minimum rating'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('rating-4.5★ & up')));
+      await tapChip(tester, 'By Ratings');
+      expect(find.text('Minimum Rating'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('rating-4.5★ & Up')));
       await tester.pumpAndSettle();
       expect(mart.repo.searches.last.filters.minRating, 4.5);
-      expect(find.text('4.5★ & up'), findsOneWidget);
-      expect(find.text('By ratings'), findsNothing);
+      expect(find.text('4.5★ & Up'), findsOneWidget);
+      expect(find.text('By Ratings'), findsNothing);
     });
 
-    testWidgets('"Any rating" takes the minimum off again', (tester) async {
+    testWidgets('"Any Rating" takes the minimum off again', (tester) async {
       final mart = await pumpMart(tester, initial: const MarketplaceFilters(minRating: 4));
-      await tapChip(tester, '4★ & up');
-      await tester.tap(find.byKey(const ValueKey('rating-Any rating')));
+      await tapChip(tester, '4★ & Up');
+      await tester.tap(find.byKey(const ValueKey('rating-Any Rating')));
       await tester.pumpAndSettle();
       expect(mart.repo.searches.last.filters.minRating, isNull);
-      expect(find.text('By ratings'), findsOneWidget);
+      expect(find.text('By Ratings'), findsOneWidget);
     });
   });
 
-  group('Verified only', () {
+  group('Verified Only', () {
     testWidgets('is on to begin with (the mart opens on verified suppliers); a tap widens to every supplier and back', (
       tester,
     ) async {
       final mart = await pumpMart(tester);
       expect(mart.repo.searches.last.filters.minLevel, SupplierLevel.verified);
-      await tapChip(tester, 'Verified only');
+      await tapChip(tester, 'Verified Only');
       expect(mart.repo.searches.last.filters.minLevel, isNull);
-      expect(find.textContaining('enterprise suppliers'), findsOneWidget);
-      expect(find.textContaining('verified enterprise'), findsNothing);
-      await tapChip(tester, 'Verified only');
+      // The foot's line ("... verified enterprise suppliers") is not read here: the list now loads as it scrolls
+      // (12 Nov 2026); its wording is pinned by the foot's own tests.
+      await tapChip(tester, 'Verified Only');
       expect(mart.repo.searches.last.filters.minLevel, SupplierLevel.verified);
-      expect(find.textContaining('verified enterprise suppliers'), findsOneWidget);
     });
   });
 
@@ -247,10 +247,10 @@ void main() {
       await pumpMart(tester);
       expect(find.text('Filters'), findsOneWidget);
       await tapChip(tester, 'Filters');
-      expect(find.text('Trust level'), findsOneWidget);
+      expect(find.text('Trust Level'), findsOneWidget);
       expect(find.text('Category'), findsOneWidget);
       expect(find.text('City'), findsOneWidget);
-      expect(find.text('Company size'), findsOneWidget);
+      expect(find.text('Company Size'), findsOneWidget);
       expect(find.text('Registrations'), findsOneWidget);
       expect(find.text('Saved'), findsOneWidget);
       expect(find.byKey(const ValueKey('filters-apply')), findsOneWidget);
@@ -269,8 +269,8 @@ void main() {
       await tester.pump();
       await tester.ensureVisible(find.text('51-200 employees'));
       await tester.tap(find.text('51-200 employees'));
-      await tester.ensureVisible(find.text('GST registered'));
-      await tester.tap(find.text('GST registered'));
+      await tester.ensureVisible(find.text('GST Registered'));
+      await tester.tap(find.text('GST Registered'));
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('filters-apply')));
       await tester.pumpAndSettle();
@@ -297,7 +297,7 @@ void main() {
     testWidgets('a trust level above Verified asks for it', (tester) async {
       final mart = await pumpMart(tester);
       await tapChip(tester, 'Filters');
-      await tester.tap(find.text('Certified & up'));
+      await tester.tap(find.text('Certified & Up'));
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('filters-apply')));
       await tester.pumpAndSettle();
@@ -332,12 +332,12 @@ void main() {
       expect(find.text('Filters'), findsOneWidget);
     });
 
-    testWidgets('"Only my saved suppliers" shows the saved list instead of the directory', (tester) async {
+    testWidgets('"Only My Saved Suppliers" shows the saved list instead of the directory', (tester) async {
       final repo = SpyMarketplaceRepository()..savedAnswer = (p) => pageOf(2, total: 2, hasMore: false);
       final mart = await pumpMart(tester, repo: repo);
       await tapChip(tester, 'Filters');
-      await tester.ensureVisible(find.text('Only my saved suppliers'));
-      await tester.tap(find.text('Only my saved suppliers'));
+      await tester.ensureVisible(find.text('Only My Saved Suppliers'));
+      await tester.tap(find.text('Only My Saved Suppliers'));
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('filters-apply')));
       await tester.pumpAndSettle();
@@ -349,8 +349,8 @@ void main() {
     testWidgets('an empty saved list says so and offers every supplier', (tester) async {
       final repo = SpyMarketplaceRepository()..savedAnswer = (p) => pageOf(0, total: 0, hasMore: false);
       final mart = await pumpMart(tester, repo: repo, initial: const MarketplaceFilters(savedOnly: true));
-      expect(find.text('No saved suppliers yet'), findsOneWidget);
-      await tester.tap(find.text('Show all suppliers'));
+      expect(find.text('No Saved Suppliers Yet'), findsOneWidget);
+      await tester.tap(find.text('Show All Suppliers'));
       await tester.pumpAndSettle();
       expect(mart.market.filters.savedOnly, isFalse);
       expect(find.byType(SupplierCard), findsWidgets);
@@ -440,17 +440,20 @@ void main() {
   });
 
   group('the foot of the list', () {
-    testWidgets('says how many are shown of how many there are, rounded down to tens', (tester) async {
-      await pumpMart(tester);
+    testWidgets('says how many are shown of how many there are, rounded down to tens; scrolling towards it has '
+        'already brought the next page (owner, 12 Nov 2026)', (tester) async {
+      final mart = await pumpMart(tester);
       await tester.scrollUntilVisible(
         find.byKey(const ValueKey('showing')),
         300,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text('Showing 10 of 180+ verified enterprise suppliers'), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('of 180+ verified enterprise suppliers'), findsOneWidget);
+      expect(mart.repo.searches.any((s) => s.page >= 2), isTrue, reason: 'no tap on "View More" was needed');
     });
 
-    testWidgets('"Load more suppliers" brings the next page and the line follows', (tester) async {
+    testWidgets('"View More" brings the next page and the line follows', (tester) async {
       final repo = SpyMarketplaceRepository()
         ..searchAnswer = (f, p) => switch (p) {
           1 => pageOf(4, total: 6),
@@ -485,11 +488,11 @@ void main() {
     testWidgets('a failed load says why and Try again reads it again', (tester) async {
       final repo = SpyMarketplaceRepository()..failing['suppliers'] = ApiError("Can't reach ICR right now.");
       final mart = await pumpMart(tester, repo: repo);
-      expect(find.text("Couldn't load suppliers"), findsOneWidget);
+      expect(find.text("Unable to Load Suppliers"), findsOneWidget);
       expect(find.text("Can't reach ICR right now."), findsOneWidget);
       repo.failing.clear();
       await tester.runAsync(() async {
-        await tester.tap(find.text('Try again'));
+        await tester.tap(find.text('Try Again'));
         await Future<void>.delayed(const Duration(milliseconds: 50));
       });
       await tester.pumpAndSettle();
@@ -500,8 +503,8 @@ void main() {
     testWidgets('no supplier at all says so without offering to clear anything', (tester) async {
       final repo = SpyMarketplaceRepository()..searchAnswer = (f, p) => pageOf(0, total: 0, hasMore: false);
       await pumpMart(tester, repo: repo);
-      expect(find.text('No suppliers listed yet'), findsOneWidget);
-      expect(find.text('Clear filters'), findsNothing);
+      expect(find.text('No Suppliers Listed Yet'), findsOneWidget);
+      expect(find.text('Clear Filters'), findsNothing);
     });
 
     testWidgets('a search with no match offers to clear the filters', (tester) async {
@@ -511,8 +514,8 @@ void main() {
         repo: repo,
         initial: const MarketplaceFilters(city: 'Pune'),
       );
-      expect(find.text('No suppliers match'), findsOneWidget);
-      await tester.tap(find.text('Clear filters'));
+      expect(find.text('No Suppliers Match'), findsOneWidget);
+      await tester.tap(find.text('Clear Filters'));
       await tester.pumpAndSettle();
       expect(repo.searches.last.filters.city, isNull);
     });

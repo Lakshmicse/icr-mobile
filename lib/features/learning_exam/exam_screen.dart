@@ -102,7 +102,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        title: Text('Leave the exam?', style: ExamText.heading),
+        title: Text('Leave the Exam?', style: ExamText.heading),
         content: Text(
           'Your answers are saved on this phone and the clock keeps running. You can resume from the paper until time runs out; after that your answers are submitted as they are.',
           style: ExamText.body,
@@ -110,7 +110,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
         actions: [
           TextButton(
             onPressed: () => popOnce(ctx, false),
-            child: Text('Keep going', style: ExamText.link),
+            child: Text('Continue Exam', style: ExamText.link),
           ),
           TextButton(
             onPressed: () => popOnce(ctx, true),
@@ -453,7 +453,7 @@ class _Strip extends StatelessWidget {
           const Spacer(),
           Semantics(
             button: true,
-            label: 'Question palette',
+            label: 'Question Palette',
             excludeSemantics: true,
             child: Material(
               color: ExamColors.greyTint,
@@ -779,7 +779,7 @@ class _SendOverlay extends StatelessWidget {
                 const Icon(LucideIcons.circleAlert, size: 38, color: AppColors.error),
                 const SizedBox(height: 14),
                 Text(
-                  "Your answers didn't go",
+                  'Answers Not Submitted',
                   textAlign: TextAlign.center,
                   style: ExamText.heroTitle.copyWith(fontSize: 22),
                 ),
@@ -788,24 +788,24 @@ class _SendOverlay extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   c.retryable
-                      ? 'They are safe on this phone. Try again when you are ready.'
-                      : 'The API turned this sitting down, so there is nothing to retry.',
+                      ? 'They are saved on this phone. Try again when you are ready.'
+                      : 'The server rejected this attempt, so it cannot be retried.',
                   textAlign: TextAlign.center,
                   style: ExamText.small,
                 ),
                 const SizedBox(height: 22),
                 if (c.retryable) ...[
                   ExamButton(
-                    label: 'Try again',
+                    label: 'Try Again',
                     icon: LucideIcons.refreshCw,
                     onPressed: () => c.submit(auto: c.autoSubmitted),
                   ),
                   const SizedBox(height: 10),
                   if (!c.timeUp) ...[
-                    ExamButton(label: 'Back to the test', quiet: true, onPressed: c.reopen),
+                    ExamButton(label: 'Back to Test', quiet: true, onPressed: c.reopen),
                     const SizedBox(height: 10),
                   ],
-                  ExamButton(label: 'Leave for now', quiet: true, color: AppColors.slate600, onPressed: onLeave),
+                  ExamButton(label: 'Leave for Now', quiet: true, color: AppColors.slate600, onPressed: onLeave),
                 ] else
                   ExamButton(label: 'Close', quiet: true, onPressed: onGiveUp),
               ],

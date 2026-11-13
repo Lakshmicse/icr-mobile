@@ -516,6 +516,15 @@ class DemoLibraryRepository implements LibraryRepository {
   }
 
   @override
+  Future<LibraryDocument> update(String id, {String? title, String? description}) async {
+    calls.add('update:$id');
+    final i = _docs.indexWhere((d) => d.id == id);
+    if (i < 0) throw ApiError('Document not found', statusCode: 404);
+    _docs[i] = _docs[i].copyWith(title: title, description: description);
+    return _docs[i];
+  }
+
+  @override
   Future<void> report(String id, DocumentReportReason reason, {String? note}) async {
     calls.add('report:$id:${reason.api}:${note ?? ''}');
     final d = _docs.firstWhere(

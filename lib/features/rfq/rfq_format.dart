@@ -114,14 +114,14 @@ DeadlineLine? deadlineOf(Requirement r, [DateTime? now]) {
   return DeadlineLine(label, relativeDay(at, n), shortDay(at), urgency);
 }
 
-/// "Posted 3d ago", "Posted today".
+/// "Posted 3 days ago", "Posted just now".
 String postedAgo(DateTime? at, [DateTime? now]) {
   if (at == null) return '';
   final n = now ?? DateTime.now();
   final diff = n.difference(at);
   if (diff.inHours < 1) return 'Posted just now';
-  if (diff.inHours < 24) return 'Posted ${diff.inHours}h ago';
-  if (diff.inDays < 30) return 'Posted ${diff.inDays}d ago';
+  if (diff.inHours < 24) return 'Posted ${plural(diff.inHours, 'hour')} ago';
+  if (diff.inDays < 30) return 'Posted ${plural(diff.inDays, 'day')} ago';
   return 'Posted ${shortDay(at)}';
 }
 
@@ -144,7 +144,7 @@ String plural(int n, String one, [String? many]) => '$n ${n == 1 ? one : (many ?
   final enquiry = r.isEnquiry;
   return (
     total: c.bids,
-    noun: enquiry ? (c.bids == 1 ? 'reply' : 'replies') : (c.bids == 1 ? 'bid' : 'bids'),
+    noun: enquiry ? (c.bids == 1 ? 'response' : 'responses') : (c.bids == 1 ? 'bid' : 'bids'),
     fresh: live ? c.bidsPending : 0,
     freshNoun: 'new',
   );
@@ -153,16 +153,16 @@ String plural(int n, String one, [String? many]) => '$n ${n == 1 ? one : (many ?
 /// The one thing a buyer's row calls for, as its button reads.
 ({String label, int? count, String? section}) primaryOf(Requirement r) {
   final c = r.responses ?? ResponseCounts(bids: r.quoteCount);
-  if (r.status == RfqStatus.draft) return (label: 'Finish draft', count: null, section: null);
-  if (r.status == RfqStatus.awarded) return (label: 'View award', count: null, section: null);
-  if (r.status != RfqStatus.published) return (label: 'View', count: null, section: null);
+  if (r.status == RfqStatus.draft) return (label: 'Continue Editing', count: null, section: null);
+  if (r.status == RfqStatus.awarded) return (label: 'View Award', count: null, section: null);
+  if (r.status != RfqStatus.published) return (label: 'View Details', count: null, section: null);
   if (c.prequalPending > 0) return (label: 'Screen', count: c.prequalPending, section: 'prequal');
   if (c.bidsPending > 0) {
-    return (label: r.isEnquiry ? 'Review replies' : 'Review bids', count: c.bidsPending, section: null);
+    return (label: r.isEnquiry ? 'Review Responses' : 'Review Bids', count: c.bidsPending, section: null);
   }
-  if (!r.staged && c.bids == 0) return (label: 'Invite suppliers', count: null, section: 'invited');
-  if (r.staged && c.bids == 0) return (label: 'View responses', count: null, section: null);
-  return (label: r.isEnquiry ? 'View replies' : 'View bids', count: null, section: null);
+  if (!r.staged && c.bids == 0) return (label: 'Invite Suppliers', count: null, section: 'invited');
+  if (r.staged && c.bids == 0) return (label: 'View Responses', count: null, section: null);
+  return (label: r.isEnquiry ? 'View Responses' : 'View Bids', count: null, section: null);
 }
 
 /// "ENQUIRY · HOUSEKEEPING": the kind and what it is for.
@@ -191,13 +191,12 @@ String plainText(String html) {
 
 /// What an action item asks of the buyer, in one line.
 String actionSentence(ActionItem a) {
-  final reply = a.rfqKind == RfqKind.enquiry ? 'reply' : 'bid';
+  final noun = a.rfqKind == RfqKind.enquiry ? 'response' : 'bid';
   return switch (a.kind) {
-    'AWARD' =>
-      'Quotes are in: ${plural(a.count, reply, a.rfqKind == RfqKind.enquiry ? 'replies' : null)} waiting for your decision',
+    'AWARD' => 'Quotes are in: ${plural(a.count, noun)} waiting for your decision',
     'SCREEN' => '${plural(a.count, 'pre-qualification response')} to screen',
-    'BIDS' => '${plural(a.count, 'new $reply', a.rfqKind == RfqKind.enquiry ? 'new replies' : null)} to review',
-    _ => 'No replies yet: invite more suppliers',
+    'BIDS' => '${plural(a.count, 'new $noun')} to review',
+    _ => 'No responses yet: invite more suppliers',
   };
 }
 

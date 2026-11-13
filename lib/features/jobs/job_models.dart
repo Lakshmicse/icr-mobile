@@ -10,7 +10,7 @@ export '../feed/feed_models.dart' show FeedPicture;
 export 'screening.dart' show ScreeningQuestion, ScreeningType;
 
 enum WorkMode {
-  onsite('On-site'),
+  onsite('On-Site'),
   remote('Remote'),
   hybrid('Hybrid');
 
@@ -26,8 +26,8 @@ enum WorkMode {
 }
 
 enum EmploymentType {
-  fullTime('Full-time'),
-  partTime('Part-time'),
+  fullTime('Full-Time'),
+  partTime('Part-Time'),
   contract('Contract'),
   internship('Internship'),
   temporary('Temporary'),
@@ -398,8 +398,8 @@ class CompanyPeople {
   String? get sentence {
     if (names.isEmpty) return null;
     return others <= 0
-        ? '${names.first} from ICR works at this organization.'
-        : '${names.first} and $others other${others == 1 ? '' : 's'} from ICR work at this organization.';
+        ? '${names.first} from ICR works at this company.'
+        : '${names.first} and $others other${others == 1 ? '' : 's'} from ICR work at this company.';
   }
 }
 
@@ -536,11 +536,11 @@ class JobApplication {
   /// "In screening", as the member reads it.
   String get stageLabel => switch (stage) {
     'APPLIED' => 'Applied',
-    'SCREENING' => 'In screening',
+    'SCREENING' => 'In Screening',
     'INTERVIEW' => 'Interview',
-    'OFFER' => 'Offer made',
+    'OFFER' => 'Offer Made',
     'HIRED' => 'Hired',
-    'REJECTED' => 'Not selected',
+    'REJECTED' => 'Not Selected',
     'WITHDRAWN' => 'Withdrawn',
     _ => stage,
   };

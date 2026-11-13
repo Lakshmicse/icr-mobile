@@ -117,7 +117,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'attempts',
-    'My exam attempts',
+    'My Exam Attempts',
     'Papers you have taken and your scores',
     Icons.history_edu_outlined,
     'attempts attempt results result scores score history taken exams my exam',
@@ -135,7 +135,7 @@ const featureCatalogue = <AppFeature>[
   // Jobs and careers.
   AppFeature(
     'saved_jobs',
-    'Saved jobs',
+    'Saved Jobs',
     'Jobs you bookmarked',
     Icons.bookmark_border,
     'saved jobs bookmarked bookmarks shortlist hidden',
@@ -143,7 +143,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'applications',
-    'My applications',
+    'My Applications',
     'Where each application stands',
     Icons.assignment_turned_in_outlined,
     'applications application applied status track interview offer my applications',
@@ -151,7 +151,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'job_alerts',
-    'Job alerts',
+    'Job Alerts',
     'Saved searches that tell you about new jobs',
     Icons.notifications_active_outlined,
     'job alerts alert saved search notify new jobs matching',
@@ -167,7 +167,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'career',
-    'Your career',
+    'Your Career',
     'Applications, alerts, interviews and invitations',
     Icons.trending_up,
     'career hub journey progress applications invitations recommendations',
@@ -175,7 +175,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'posted_jobs',
-    'Jobs you posted',
+    'Jobs You Posted',
     'Post jobs and review applicants',
     Icons.post_add_outlined,
     'post job posted hire hiring recruit recruiter recruitment applicants pipeline ats candidates employer',
@@ -185,7 +185,7 @@ const featureCatalogue = <AppFeature>[
   // Mentorship.
   AppFeature(
     'find_mentors',
-    'Find mentors',
+    'Find Mentors',
     'Search mentors by field, company and experience',
     Icons.person_search_outlined,
     'find mentors search mentor expert experts coach advice career guidance book session',
@@ -194,7 +194,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'become_mentor',
-    'Become a mentor',
+    'Become a Mentor',
     'Apply to guide others',
     Icons.volunteer_activism_outlined,
     'become mentor apply teach guide volunteer offer sessions paid mentoring join',
@@ -202,7 +202,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'my_mentoring',
-    'My mentoring',
+    'My Mentoring',
     'Your pairings, sessions, goals and purchases',
     Icons.handshake_outlined,
     'my mentoring pairing pairings sessions goals tasks purchases booked',
@@ -210,7 +210,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'mentor_desk',
-    'Mentor desk',
+    'Mentor Desk',
     'Requests, plans and earnings for mentors',
     Icons.support_agent_outlined,
     'mentor desk requests plans earnings payouts offerings services mentee',
@@ -218,7 +218,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'programmes',
-    'Mentoring programmes',
+    'Mentoring Programmes',
     'Cohorts you can join',
     Icons.diversity_3_outlined,
     'programme programmes program cohort cohorts structured mentoring apply',
@@ -226,7 +226,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'group_sessions',
-    'Group sessions',
+    'Group Sessions',
     'Live sessions with mentors',
     Icons.video_camera_front_outlined,
     'group sessions session webinar live room mentoring register seat',
@@ -236,7 +236,7 @@ const featureCatalogue = <AppFeature>[
   // Marketplace.
   AppFeature(
     'post_rfq',
-    'Post a requirement',
+    'Post a Requirement',
     'Ask suppliers to quote',
     Icons.note_add_outlined,
     'post requirement rfq enquiry quote quotes tender request proposal buy source',
@@ -244,7 +244,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'my_rfqs',
-    'My requirements',
+    'My Requirements',
     'Requirements you posted and the bids on them',
     Icons.request_quote_outlined,
     'my requirements rfqs rfq bids bid quotes received posted enquiries',
@@ -252,7 +252,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'rfq_alerts',
-    'Requirement alerts',
+    'Requirement Alerts',
     'Hear about requirements that match you',
     Icons.notifications_none,
     'requirement alerts rfq alerts tender notify matching opportunities supplier',
@@ -260,7 +260,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'create_company',
-    'Create a company',
+    'Create a Company',
     'Hire, buy or sell as a company',
     Icons.add_business_outlined,
     'create company page business organisation hire sell supplier start selling register firm',
@@ -313,7 +313,7 @@ const featureCatalogue = <AppFeature>[
   // Account.
   AppFeature(
     'profile',
-    'My profile',
+    'My Profile',
     'Your résumé, experience and photo',
     Icons.account_circle_outlined,
     'profile my profile resume cv experience education skills photo headline about',
@@ -321,7 +321,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'settings',
-    'Settings & security',
+    'Settings & Security',
     'Email, mobile number, password and privacy',
     Icons.settings_outlined,
     'settings security password email mobile phone account privacy language delete data sign out',
@@ -329,7 +329,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'saved',
-    'Saved items',
+    'Saved Items',
     'Jobs, suppliers and posts you saved',
     Icons.bookmarks_outlined,
     'saved items bookmarks bookmarked saved suppliers saved jobs saved posts',
@@ -337,7 +337,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'plans',
-    'Membership & plans',
+    'Membership & Plans',
     'Compare plans and upgrade',
     Icons.card_membership_outlined,
     'membership plans plan pricing price upgrade subscribe subscription silver gold enterprise premium billing',
@@ -346,7 +346,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'plan_history',
-    'Plan history & receipts',
+    'Plan History & Receipts',
     'Your payments and receipts',
     Icons.receipt_long_outlined,
     'plan history receipts receipt invoices invoice payments billing renew renewal',

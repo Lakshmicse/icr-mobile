@@ -88,3 +88,25 @@ None needed: the roles are constants and the CPD comes from `events-councils.ts`
 ## Handoffs kept
 
 Notifications (when `onBell` is null; the shell opens its own screen). Nothing else leaves the app.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client marked up the user manual with the wording wanted on a dozen screens and asked for the rest of the app to read the same way: Title Case for what a person taps or reads as a label, a short sentence with a full stop for everything else, plain international English, no dash inside a sentence. Wording only: no layout, colour or behaviour changed. Semantics-only labels (what a screen reader says for an icon) were left as they were. By the lead's ruling the title of an empty, locked or error state is a heading (Title Case, no full stop) with a sentence under it, and the retry button reads **Try Again** everywhere.
+
+| Where | Old | New |
+|---|---|---|
+| The opening | Volunteer, lead, shape the profession / …meaningful opportunities to give back: lead a chapter… | Volunteer, Lead, Shape the Profession / …meaningful opportunities to contribute: lead a chapter… |
+| Buttons and headings to Title Case (7) | Become a mentor · Find your chapter · Clear search · Volunteering earns CPD credits · Hours earned · This year · Apply again | Become a Mentor · Find Your Chapter · Clear Search · Volunteering Earns CPD Credits · Hours Earned · This Year · Apply Again |
+| Under Volunteer Opportunities | Ways to give back, from a few hours a month to a cohort or an event. | Ways to contribute, from a few hours a month to a cohort or an event. |
+| No role found | No role matches / Try another word, or tell the team what you have in mind. | No Roles Match / Try another word, or describe your interest to the team. |
+| The seven benefit headings | Leadership experience · Professional recognition · Expanded industry network · … | Leadership Experience · Professional Recognition · Expanded Industry Network · … |
+| Under Volunteer Benefits | Volunteering with ICR is a two-way exchange: you shape the profession and it shapes you. | Volunteering with ICR benefits both you and the profession. |
+| The button under the benefits | Raise your hand | Apply to Volunteer |
+| After sending | Your interest is with the ICR team. | Your interest has been sent to the ICR team. |
+| The form's pickers | Not sure yet: any role / Which role? · No chapter in particular / Which chapter? | Any Role / Select a Role · No Specific Chapter / Select a Chapter |
+| The form's fields | Your name * · Phone (hint "Optional") · About you * · Send to the ICR team | Your Name * · Mobile Number (Optional) · About You * · Send to the ICR Team |
+| The form's refusal | Tell us a little about you and the time you can give. | Describe your experience and the time you can give. |
+| The thanks | …reached the ICR team. They will write to x. | …has been sent to the ICR team. They will reply to x. |
+| Role and benefit text (`volunteer_data.dart`): no dash inside a sentence (8) | Help run your local ICR chapter — shaping its programme… · Per cohort — typically 8–16 hours · …summits on the ground — registration… · Chair committees and lead programmes — experience that transfers straight into your career. | Help run your local ICR chapter: shape its programme… · Per cohort, typically 8–16 hours · …summits on site: registration… · Chair committees and lead programmes. This experience transfers directly to your career. |
+
+The role names, their responsibilities and the lines the API receives ("Volunteer application: …", "Commitment: …", "Chapter: …") are unchanged, apart from the commitment's comma.

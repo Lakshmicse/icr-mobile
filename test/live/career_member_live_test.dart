@@ -69,7 +69,7 @@ void main() {
       expect(whole.signals!.map((s) => s.label), contains('Skills'));
       final next = nextStepOf(whole, now);
       expect(next, isA<InterviewStep>());
-      expect(progressOf(whole)!.map((s) => s.label), ['Applied', 'Viewed', 'In review', 'Interview', 'Offer']);
+      expect(progressOf(whole)!.map((s) => s.label), ['Applied', 'Viewed', 'In Review', 'Interview', 'Offer']);
       expect(progressOf(whole)![3].state, ProgressState.current);
     });
 

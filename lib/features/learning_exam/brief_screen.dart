@@ -50,7 +50,7 @@ class BriefScreen extends StatelessWidget {
         child: Column(
           children: [
             ExamTitleBar(
-              title: (brief.paper?.isMock ?? brief.ref.isMock) ? 'Mock Exam' : 'Assess Your Knowledge',
+              title: (brief.paper?.isMock ?? brief.ref.isMock) ? 'Mock Exam' : 'Knowledge Assessments',
               onBack: () => popOnce(context),
             ),
             Expanded(child: _Body(brief: brief)),
@@ -84,9 +84,9 @@ class _Body extends StatelessWidget {
         return SingleChildScrollView(
           child: ScreenNotice(
             icon: LucideIcons.fileQuestion,
-            title: "Couldn't open this paper",
+            title: 'Unable to Open This Paper',
             body: brief.error ?? 'Something went wrong. Try again.',
-            action: 'Try again',
+            action: 'Try Again',
             onAction: brief.load,
           ),
         );
@@ -138,7 +138,7 @@ class _Content extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: Semantics(header: true, child: Text('My attempts', style: ExamText.briefHeading)),
+                  child: Semantics(header: true, child: Text('My Attempts', style: ExamText.briefHeading)),
                 ),
                 Text(
                   '${attempts.length} ${attempts.length == 1 ? 'attempt' : 'attempts'} recorded',
@@ -203,7 +203,7 @@ class _Before extends StatelessWidget {
         ? [paper.instructions!]
         : [
             'The timer starts as soon as you begin and keeps running if you leave the page.',
-            'Your answers are saved automatically — you can resume an interrupted attempt.',
+            'Your answers are saved automatically. You can resume an interrupted attempt.',
             'You can move freely between questions and mark any for review.',
             'The paper submits itself when time runs out. Unanswered questions count as wrong.',
             _attempts,
@@ -213,7 +213,7 @@ class _Before extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Semantics(header: true, child: Text('Before you start', style: ExamText.briefHeading)),
+          Semantics(header: true, child: Text('Before You Start', style: ExamText.briefHeading)),
           const SizedBox(height: 12),
           for (final (i, line) in lines.indexed) ...[if (i > 0) const SizedBox(height: 8), _Line(text: line)],
         ],
@@ -263,12 +263,12 @@ class _Details extends StatelessWidget {
   Widget build(BuildContext context) {
     final limit = paper.attemptLimit;
     final rows = [
-      ('Number of questions', '${paper.questionCount}'),
-      ('Total marks', '${paper.totalMarks}'),
+      ('Number of Questions', '${paper.questionCount}'),
+      ('Total Marks', '${paper.totalMarks}'),
       ('Duration', plural(paper.durationMinutes, 'minute')),
-      ('Passing percentage', '${paper.passPercentage}%'),
-      ('Attempts allowed', limit == null ? 'Unlimited' : '$limit'),
-      ('Attempts used', '${brief.attemptsUsed}'),
+      ('Passing Percentage', '${paper.passPercentage}%'),
+      ('Attempts Allowed', limit == null ? 'Unlimited' : '$limit'),
+      ('Attempts Used', '${brief.attemptsUsed}'),
       ('Certificate', _certificate),
     ];
     return _Card(
@@ -278,7 +278,7 @@ class _Details extends StatelessWidget {
         children: [
           Semantics(
             header: true,
-            child: Text(paper.isMock ? 'Mock Exam details' : 'Assessment details', style: ExamText.briefHeading),
+            child: Text(paper.isMock ? 'Mock Exam Details' : 'Assessment Details', style: ExamText.briefHeading),
           ),
           const SizedBox(height: 8),
           for (final (label, value) in rows)
@@ -455,16 +455,16 @@ List<Widget> _notices(BuildContext context, BriefController brief) {
       Notice(
         tone: brief.savedExpired ? NoticeTone.warning : NoticeTone.info,
         text: brief.savedExpired
-            ? 'Time ran out on your last sitting while you were away. Your saved answers will be submitted as they are.'
-            : 'You have a sitting in progress, with ${clockLabel(brief.savedLeft)} left. Resume it to pick up where you stopped.',
-        action: 'Discard it and start over',
+            ? 'Time ran out on your last attempt while you were away. Your saved answers will be submitted as they are.'
+            : 'You have an attempt in progress, with ${clockLabel(brief.savedLeft)} left. Resume it to continue where you stopped.',
+        action: 'Discard and Start Over',
         onAction: () => _confirmDiscard(context, brief),
       ),
     if (cert != null)
       Notice(
         tone: NoticeTone.success,
         text: 'You already hold this certificate: ${cert.certificateId}.',
-        action: 'View certificate',
+        action: 'View Certificate',
         onAction: () => showCertificateSheet(context, cert),
       ),
     if (brief.exhausted && brief.saved == null)
@@ -480,12 +480,12 @@ Future<void> _confirmDiscard(BuildContext context, BriefController brief) async 
     builder: (ctx) => AlertDialog(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
-      title: Text('Start over?', style: ExamText.heading),
+      title: Text('Start Over?', style: ExamText.heading),
       content: Text('Your answers so far will be discarded and the clock will start again.', style: ExamText.body),
       actions: [
         TextButton(
           onPressed: () => popOnce(ctx, false),
-          child: Text('Keep it', style: ExamText.link),
+          child: Text('Keep It', style: ExamText.link),
         ),
         TextButton(
           onPressed: () => popOnce(ctx, true),
@@ -539,19 +539,19 @@ List<_Unlock> _unlocks(BuildContext context, BriefController brief) {
   return [
     if (lock.planCanOpen)
       _Unlock(
-        title: mock ? 'Your plan includes a mock exam' : 'Your plan includes a course',
+        title: mock ? 'Your Plan Includes a Mock Exam' : 'Your Plan Includes a Course',
         body:
             'Opening it with your plan uses ${lock.placesLeft == 1 ? 'your last place' : 'one of your free places'} and costs nothing.',
-        label: 'Open with my plan',
+        label: 'Open with My Plan',
         icon: LucideIcons.lockOpen,
         onPressed: () => _confirmOpenWithPlan(context, brief, mock: mock),
       ),
     if (redeemable)
       _Unlock(
-        title: 'Redeem ICR credits',
+        title: 'Redeem ICR Credits',
         body:
-            'It takes ${plural(quote.credits!, 'ICR credit')} (worth ${rupees(quote.credits! * quote.rupeesPerCredit * 100)}) and opens it for good. You have ${lock.credits}.',
-        label: 'Redeem ${plural(quote.credits!, 'credit')}',
+            'It takes ${plural(quote.credits!, 'ICR credit')} (worth ${rupees(quote.credits! * quote.rupeesPerCredit * 100)}) and opens it permanently. You have ${lock.credits}.',
+        label: 'Redeem ${plural(quote.credits!, 'Credit')}',
         icon: LucideIcons.coins,
         onPressed: lock.credits >= quote.credits! ? () => _confirmRedeem(context, brief, quote, lock) : null,
         note: lock.credits < quote.credits!
@@ -560,11 +560,11 @@ List<_Unlock> _unlocks(BuildContext context, BriefController brief) {
       ),
     if (buyable)
       _Unlock(
-        title: mock ? 'Buy this set' : 'Buy this level',
+        title: mock ? 'Buy This Set' : 'Buy This Level',
         body: quote.taxPaisa > 0
             ? 'GST (${percentOfBps(quote.taxBps)}) ${rupees(quote.taxPaisa)}, total ${rupees(quote.totalPaisa)}.'
             : 'Total ${rupees(quote.totalPaisa)}.',
-        label: quote.payable ? 'Pay now' : 'Payment is not available',
+        label: quote.payable ? 'Pay Now' : 'Payment Not Available',
         icon: LucideIcons.creditCard,
         onPressed: quote.payable ? () => _buyPaper(context, brief) : null,
         price: quote,
@@ -613,7 +613,7 @@ class _Access extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      mock ? 'This mock set is locked' : 'This assessment level is locked',
+                      mock ? 'This Mock Set Is Locked' : 'This Assessment Level Is Locked',
                       style: ExamText.briefHeading,
                     ),
                     const SizedBox(height: 2),
@@ -639,7 +639,7 @@ class _Access extends StatelessWidget {
               onTap: () => ExamServices.openUrl(context, brief.repository.sitePage('/pricing/${lock.pricingSlug}')),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Text('See the ${lock.plan} plan', style: ExamText.link),
+                child: Text('See the ${lock.plan} Plan', style: ExamText.link),
               ),
             ),
           ],
@@ -724,7 +724,7 @@ Future<void> _confirmOpenWithPlan(BuildContext context, BriefController brief, {
     builder: (ctx) => AlertDialog(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
-      title: Text('Open it with your plan?', style: ExamText.heading),
+      title: Text('Open with Your Plan?', style: ExamText.heading),
       content: Text(
         mock
             ? 'This opens every set of this mock exam and takes one of your plan\'s places${lock.placesLeft == null ? '' : ' (${lock.placesLeft} left)'}.'
@@ -738,7 +738,7 @@ Future<void> _confirmOpenWithPlan(BuildContext context, BriefController brief, {
         ),
         TextButton(
           onPressed: () => popOnce(ctx, true),
-          child: Text('Open it', style: ExamText.link),
+          child: Text('Open', style: ExamText.link),
         ),
       ],
     ),
@@ -772,9 +772,9 @@ Future<void> _confirmRedeem(BuildContext context, BriefController brief, PaperQu
     builder: (ctx) => AlertDialog(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
-      title: Text('Redeem ${plural(credits, 'credit')}?', style: ExamText.heading),
+      title: Text('Redeem ${plural(credits, 'Credit')}?', style: ExamText.heading),
       content: Text(
-        'This opens ${paper.name} for good. You will have ${lock.credits - credits} ICR credits left.',
+        'This opens ${paper.name} permanently. You will have ${lock.credits - credits} ICR credits left.',
         style: ExamText.body,
       ),
       actions: [
@@ -819,15 +819,15 @@ class _Bar extends StatelessWidget {
       case BriefStatus.locked:
         final options = _unlocks(context, brief);
         final primary = _primaryUnlock(options);
-        label = primary?.label ?? 'Take test';
+        label = primary?.label ?? 'Take Test';
         onTap = primary?.onPressed;
         busy = brief.working;
       case BriefStatus.ready:
         label = brief.saved != null && brief.savedExpired
-            ? 'Submit my saved answers'
+            ? 'Submit My Saved Answers'
             : brief.saved != null
             ? 'Resume · ${clockLabel(brief.savedLeft)} left'
-            : 'Take test';
+            : 'Take Test';
         onTap = brief.canStart
             ? () {
                 final start = _start(brief);

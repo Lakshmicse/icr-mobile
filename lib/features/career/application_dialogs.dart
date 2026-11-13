@@ -13,7 +13,7 @@ Future<bool> confirmWithdraw(BuildContext context, CareerApplication app) async 
     context: context,
     builder: (_) => AlertDialog(
       key: const ValueKey('withdraw-dialog'),
-      title: const Text('Withdraw your application?'),
+      title: const Text('Withdraw Your Application?'),
       content: Text(
         '$who will no longer see your application for ${app.jobTitle}. You can apply again while the job is open.',
       ),
@@ -21,7 +21,7 @@ Future<bool> confirmWithdraw(BuildContext context, CareerApplication app) async 
         TextButton(
           key: const ValueKey('withdraw-keep'),
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Keep application'),
+          child: const Text('Keep Application'),
         ),
         TextButton(
           key: const ValueKey('withdraw-confirm'),
@@ -77,7 +77,7 @@ class _OfferDialogState extends State<_OfferDialog> {
     final offer = widget.offer;
     return AlertDialog(
       key: ValueKey(accept ? 'accept-dialog' : 'decline-dialog'),
-      title: Text(accept ? 'Accept this offer?' : 'Decline this offer?'),
+      title: Text(accept ? 'Accept This Offer?' : 'Decline This Offer?'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,8 +90,8 @@ class _OfferDialogState extends State<_OfferDialog> {
           const SizedBox(height: 8),
           Text(
             accept
-                ? 'The employer is told straight away and the application moves to Hired. This cannot be undone here.'
-                : 'The employer is told, and the application moves to Archived. This cannot be undone here.',
+                ? 'The employer is notified immediately and the application moves to Hired. This cannot be undone in the app.'
+                : 'The employer is notified and the application moves to Archived. This cannot be undone in the app.',
             style: CareerText.body,
           ),
           const SizedBox(height: 12),
@@ -102,7 +102,7 @@ class _OfferDialogState extends State<_OfferDialog> {
             maxLines: 4,
             maxLength: 500,
             decoration: InputDecoration(
-              hintText: accept ? 'A note for the employer (optional)' : 'Why you are declining (optional)',
+              hintText: accept ? 'Note for the employer (Optional)' : 'Reason for declining (Optional)',
               isDense: true,
               border: const OutlineInputBorder(),
             ),
@@ -110,12 +110,12 @@ class _OfferDialogState extends State<_OfferDialog> {
         ],
       ),
       actions: [
-        TextButton(key: const ValueKey('offer-cancel'), onPressed: () => _done(false), child: const Text('Not yet')),
+        TextButton(key: const ValueKey('offer-cancel'), onPressed: () => _done(false), child: const Text('Not Yet')),
         TextButton(
           key: const ValueKey('offer-confirm'),
           onPressed: () => _done(true),
           style: TextButton.styleFrom(foregroundColor: accept ? AppColors.primary : AppColors.error),
-          child: Text(accept ? 'Accept offer' : 'Decline offer'),
+          child: Text(accept ? 'Accept Offer' : 'Decline Offer'),
         ),
       ],
     );
@@ -152,7 +152,7 @@ class _AnotherTimeDialogState extends State<_AnotherTimeDialog> {
   void _send() {
     final t = _text.text.trim();
     if (t.isEmpty) {
-      setState(() => _problem = 'Say when you could do instead.');
+      setState(() => _problem = 'Enter the times you are available.');
       return;
     }
     Navigator.pop(context, t);
@@ -162,7 +162,7 @@ class _AnotherTimeDialogState extends State<_AnotherTimeDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       key: const ValueKey('another-time-dialog'),
-      title: const Text('Ask for another time'),
+      title: const Text('Ask for Another Time'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +190,7 @@ class _AnotherTimeDialogState extends State<_AnotherTimeDialog> {
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        TextButton(key: const ValueKey('another-time-send'), onPressed: _send, child: const Text('Send message')),
+        TextButton(key: const ValueKey('another-time-send'), onPressed: _send, child: const Text('Send Message')),
       ],
     );
   }

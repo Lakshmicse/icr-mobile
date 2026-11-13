@@ -69,7 +69,7 @@ Future<void> openGroupSession(
 }
 
 String seatLine(GroupSession s) {
-  final price = s.paid ? '${inr(s.pricePaisa!)} a seat' : 'Free';
+  final price = s.paid ? '${inr(s.pricePaisa!)} per seat' : 'Free';
   if (s.capacity == null) return '$price · ${countLabel(s.seatsTaken, 'seat')} taken';
   if (s.full) return s.paid ? '$price · Sold out' : '$price · Full, with a waitlist (${s.waitlistCount} waiting)';
   return '$price · ${s.seatsLeft} of ${s.capacity} seats left';
@@ -152,7 +152,7 @@ class _GroupSessionsScreenState extends State<GroupSessionsScreen> {
         final failed = !first.loaded ? first.error : null;
         final items = _c.items;
         return MentoringPage(
-          title: 'Group sessions',
+          title: 'Group Sessions',
           onBack: widget.onBack,
           onBell: () => _links.notifications(context),
           body: Column(
@@ -162,7 +162,7 @@ class _GroupSessionsScreenState extends State<GroupSessionsScreen> {
                 child: Column(
                   children: [
                     SegmentTabs(
-                      labels: const ['Open sessions', 'My seats'],
+                      labels: const ['Open Sessions', 'My Seats'],
                       selected: _c.registeredOnly ? 1 : 0,
                       onSelect: (i) => _c.apply(registeredOnly: i == 1),
                     ),
@@ -178,7 +178,7 @@ class _GroupSessionsScreenState extends State<GroupSessionsScreen> {
                         suffixIcon: _c.search.isEmpty
                             ? null
                             : IconButton(
-                                tooltip: 'Clear search',
+                                tooltip: 'Clear Search',
                                 icon: const Icon(LucideIcons.x, size: 16),
                                 onPressed: () {
                                   _search.clear();
@@ -195,7 +195,7 @@ class _GroupSessionsScreenState extends State<GroupSessionsScreen> {
                           for (final MapEntry(key: key, value: label) in {
                             'VIDEO': 'Video',
                             'PHONE': 'Phone',
-                            'IN_PERSON': 'In person',
+                            'IN_PERSON': 'In Person',
                           }.entries)
                             Padding(
                               padding: const EdgeInsets.only(right: 6),
@@ -208,7 +208,7 @@ class _GroupSessionsScreenState extends State<GroupSessionsScreen> {
                             ),
                           FilterChip(
                             key: const ValueKey('seats-free'),
-                            label: const Text('Seats free'),
+                            label: const Text('Seats Available'),
                             selected: _c.availableOnly,
                             onSelected: (on) => _c.apply(availableOnly: on),
                           ),
@@ -222,7 +222,7 @@ class _GroupSessionsScreenState extends State<GroupSessionsScreen> {
                 child: LoadedList(
                   loading: loading,
                   error: failed,
-                  errorTitle: "Couldn't load the sessions",
+                  errorTitle: 'Unable to Load Sessions',
                   onRefresh: _c.load,
                   children: loading || failed != null
                       ? const []
@@ -230,10 +230,10 @@ class _GroupSessionsScreenState extends State<GroupSessionsScreen> {
                           if (items.isEmpty)
                             EmptyNote(
                               icon: LucideIcons.users,
-                              title: _c.registeredOnly ? 'No seats held' : 'No sessions match',
+                              title: _c.registeredOnly ? 'No Seats Held' : 'No Matching Sessions',
                               body: _c.registeredOnly
-                                  ? 'Reserve a seat at an open session and it shows up here.'
-                                  : 'Try another filter, or look again later: hosts add sessions all the time.',
+                                  ? 'Reserve a seat at an open session and it will appear here.'
+                                  : 'Try another filter, or check again later. Hosts add sessions regularly.',
                             ),
                           for (final s in items) GroupSessionCard(session: s, onTap: () => _open(s)),
                           if (_c.hasNext)
@@ -241,7 +241,7 @@ class _GroupSessionsScreenState extends State<GroupSessionsScreen> {
                               padding: const EdgeInsets.only(top: 4),
                               child: QuietButton(
                                 key: const ValueKey('groups-more'),
-                                label: _c.loadingMore ? 'Loading…' : 'Load more sessions',
+                                label: _c.loadingMore ? 'Loading…' : 'View More',
                                 onPressed: _c.loadingMore ? null : _c.loadMore,
                               ),
                             ),
@@ -290,7 +290,7 @@ class GroupSessionCard extends StatelessWidget {
               Expanded(child: Text(s.title, style: MentoringText.cardTitle)),
               if (s.myStatus != null && s.holdsSeat)
                 StatusPill(
-                  s.myStatus == 'WAITLISTED' ? 'Waitlisted' : (s.myStatus == 'ATTENDED' ? 'Attended' : 'Seat held'),
+                  s.myStatus == 'WAITLISTED' ? 'Waitlisted' : (s.myStatus == 'ATTENDED' ? 'Attended' : 'Seat Held'),
                   tone: s.myStatus == 'WAITLISTED' ? PillTone.amber : PillTone.mint,
                 )
               else if (s.status != 'SCHEDULED')
@@ -395,13 +395,13 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
       builder: (context, _) {
         final s = _c.session;
         return MentoringPage(
-          title: 'Group session',
+          title: 'Group Session',
           onBack: widget.onBack,
           onBell: () => _links.notifications(context),
           body: LoadedList(
             loading: _c.loading && s == null,
             error: s == null ? _c.error : null,
-            errorTitle: "Couldn't load this session",
+            errorTitle: 'Unable to Load This Session',
             onRefresh: _c.load,
             children: s == null ? const [] : _content(context, s),
           ),
@@ -441,7 +441,7 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
       if (s.status == 'CANCELLED' && s.cancelReason != null)
         Callout(tone: PillTone.red, text: 'Cancelled: ${s.cancelReason}'),
       if (s.occurrences.length > 1) ...[
-        const SectionTitle(title: 'The days', top: 14),
+        const SectionTitle(title: 'Session Days', top: 14),
         for (final o in s.occurrences)
           Padding(
             key: ValueKey('day-${o.id}'),
@@ -478,7 +478,7 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
         ),
       ..._seatPanel(context, s, link),
       if (s.attendees.isNotEmpty) ...[
-        SectionTitle(title: 'Who is going (${s.attendees.where((a) => a.status != 'CANCELLED').length})', top: 16),
+        SectionTitle(title: 'Attendees (${s.attendees.where((a) => a.status != 'CANCELLED').length})', top: 16),
         Wrap(
           spacing: 12,
           runSpacing: 10,
@@ -508,7 +508,7 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
           top: 16,
           children: [
             QuietButton(
-              label: 'Report a concern',
+              label: 'Report a Concern',
               icon: LucideIcons.flag,
               onPressed: () async {
                 final sent = await showFormSheet(
@@ -518,7 +518,7 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
                   ),
                 );
                 if (sent && context.mounted) {
-                  showMessage(context, 'Sent to ICR. Someone will look into it and reply to you.');
+                  showMessage(context, 'Sent to ICR. The team will review it and reply to you.');
                 }
               },
             ),
@@ -538,11 +538,11 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
   List<Widget> _seatPanel(BuildContext context, GroupSession s, Uri? link) {
     if (s.isHost) {
       return [
-        const SectionTitle(title: 'Your seat', top: 16),
+        const SectionTitle(title: 'Your Seat', top: 16),
         const Callout(tone: PillTone.blue, text: 'You host this session. Manage it from the mentor desk.'),
       ];
     }
-    final out = <Widget>[const SectionTitle(title: 'Your seat', top: 16)];
+    final out = <Widget>[const SectionTitle(title: 'Your Seat', top: 16)];
     if (s.holdsSeat && s.myStatus != 'WAITLISTED') {
       out.add(
         Callout(
@@ -551,15 +551,15 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
           text: s.myStatus == 'ATTENDED' ? 'You attended this session.' : 'You have a seat.',
           actions: [
             if (link != null && s.upcoming && joinStateOf(_joinWindows(s), mentoringNow()).state != JoinState.closed)
-              JoinButton.days(link: link, windows: _joinWindows(s), label: 'Join the session'),
+              JoinButton.days(link: link, windows: _joinWindows(s), label: 'Join Session'),
             QuietButton(
-              label: 'Room chat',
+              label: 'Room Chat',
               icon: LucideIcons.messageSquare,
               onPressed: () => _links.messageGroup(context, _c.repository, s.id),
             ),
             if (!s.paid && s.upcoming)
               QuietButton(
-                label: 'Give up my seat',
+                label: 'Give Up My Seat',
                 danger: true,
                 onPressed: () => _report(_c.leave, done: 'You gave up your seat.'),
               ),
@@ -581,10 +581,10 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
         Callout(
           key: const ValueKey('seat-waitlisted'),
           tone: PillTone.amber,
-          text: 'You are on the waitlist. You get a seat if one frees up, and the host tells you.',
+          text: 'You are on the waitlist. If a seat becomes available, you get it and the host notifies you.',
           actions: [
             QuietButton(
-              label: 'Leave the waitlist',
+              label: 'Leave Waitlist',
               danger: true,
               onPressed: () => _report(_c.leave, done: 'You left the waitlist.'),
             ),
@@ -614,7 +614,7 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
               ActionWrap(
                 children: [
                   SolidButton(
-                    label: q.chargedPaisa == 0 ? 'Reserve a seat' : 'Reserve a seat · ${inr(q.chargedPaisa)}',
+                    label: q.chargedPaisa == 0 ? 'Reserve a Seat' : 'Reserve a Seat · ${inr(q.chargedPaisa)}',
                     icon: LucideIcons.ticket,
                     onPressed: () async {
                       final done = await showFormSheet(context, (_) => _SeatForm(controller: _c, links: _links));
@@ -638,8 +638,8 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
             children: [
               Text(
                 s.full
-                    ? 'It is full, but you can join the waitlist.'
-                    : 'A free seat. Tell the host what you want out of it.',
+                    ? 'This session is full. You can join the waitlist.'
+                    : 'This seat is free. Tell the host what you want from the session.',
                 style: MentoringText.body,
               ),
               const SizedBox(height: 10),
@@ -650,13 +650,13 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
                 maxLines: 4,
                 maxLength: 1000,
                 style: MentoringText.formInput,
-                decoration: fieldDecoration('A question for the host (optional)'),
+                decoration: fieldDecoration('Question for the Host (Optional)'),
               ),
               ActionWrap(
                 top: 4,
                 children: [
                   SolidButton(
-                    label: s.full ? 'Join the waitlist' : 'Reserve my seat',
+                    label: s.full ? 'Join Waitlist' : 'Reserve My Seat',
                     icon: LucideIcons.ticket,
                     busy: _c.busy,
                     onPressed: () => _report(
@@ -686,7 +686,7 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
     final f = _c.feedback;
     final reviewed = s.paid ? s.myPurchaseHasReview : f != null;
     return [
-      const SectionTitle(title: 'Your rating', top: 16),
+      const SectionTitle(title: 'Your Rating', top: 16),
       if (reviewed)
         MentoringCard(
           key: const ValueKey('my-group-rating'),
@@ -710,16 +710,16 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
         )
       else
         Callout(
-          text: 'How was it? Your rating helps others choose.',
+          text: 'Your rating helps others choose.',
           actions: [
             SolidButton(
-              label: 'Rate this session',
+              label: 'Rate This Session',
               icon: LucideIcons.star,
               onPressed: () => showReviewSheet(
                 context,
                 title: 'Rate ${s.title}',
                 subtitle: 'Shown on the session page.',
-                flagLabel: 'Hide my name on the rating',
+                flagLabel: 'Hide My Name',
                 flagDefault: false,
                 minComment: minReviewComment,
                 onSend: (rating, comment, hide) => s.paid
@@ -790,19 +790,19 @@ class _SeatFormState extends State<_SeatForm> {
     final q = widget.controller.seatQuote!;
     final onSite = q.chargedPaisa > 0 && _live == true;
     return MentoringForm(
-      title: 'Reserve your seat',
+      title: 'Reserve Your Seat',
       subtitle: s.title,
-      submitLabel: q.chargedPaisa == 0 ? 'Reserve a seat' : 'Pay ${inr(q.chargedPaisa)}',
+      submitLabel: q.chargedPaisa == 0 ? 'Reserve a Seat' : 'Pay ${inr(q.chargedPaisa)}',
       busy: _busy,
       problem: _problem,
       onSubmit: _buy,
       children: [
-        Text('One seat', style: MentoringText.body),
+        Text('One Seat', style: MentoringText.body),
         const SizedBox(height: 4),
         QuoteBlock(quote: q),
         const SizedBox(height: 12),
         FieldBlock(
-          label: 'A question for the host (optional)',
+          label: 'Question for the Host (Optional)',
           child: TextField(
             key: const ValueKey('seat-sheet-question'),
             controller: _question,
@@ -810,12 +810,12 @@ class _SeatFormState extends State<_SeatForm> {
             maxLines: 4,
             maxLength: 1000,
             style: MentoringText.formInput,
-            decoration: fieldDecoration('What you want out of it'),
+            decoration: fieldDecoration('What you want from the session'),
           ),
         ),
         if (onSite)
           Text(
-            'You pay on ICR\'s secure PayU page, here in the app.',
+            'You pay on ICR\'s secure PayU page in the app.',
             key: const ValueKey('pay-handoff'),
             style: MentoringText.meta,
           ),
@@ -849,7 +849,7 @@ class _GroupConcernFormState extends State<_GroupConcernForm> {
 
   Future<void> _submit() async {
     if (_detail.text.trim().length < 10) {
-      setState(() => _problem = 'Tell ICR what happened: at least 10 characters.');
+      setState(() => _problem = 'Describe what happened in at least 10 characters.');
       return;
     }
     setState(() {
@@ -871,15 +871,15 @@ class _GroupConcernFormState extends State<_GroupConcernForm> {
   @override
   Widget build(BuildContext context) {
     return MentoringForm(
-      title: 'Report a concern',
-      subtitle: 'Goes to ICR\'s safeguarding team, not to the host.',
+      title: 'Report a Concern',
+      subtitle: 'This goes to ICR\'s safeguarding team, not to the host.',
       submitLabel: 'Send to ICR',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
       children: [
         FieldBlock(
-          label: 'What is it about?',
+          label: 'Concern Type',
           help: _category.hint,
           child: Wrap(
             spacing: 6,
@@ -895,7 +895,7 @@ class _GroupConcernFormState extends State<_GroupConcernForm> {
           ),
         ),
         FieldBlock(
-          label: 'What happened',
+          label: 'What Happened',
           child: TextField(
             key: const ValueKey('group-concern-detail'),
             controller: _detail,
@@ -910,7 +910,7 @@ class _GroupConcernFormState extends State<_GroupConcernForm> {
           contentPadding: EdgeInsets.zero,
           value: _urgent || _category == ConcernCategory.safety,
           onChanged: _category == ConcernCategory.safety ? null : (v) => setState(() => _urgent = v),
-          title: Text('This is urgent', style: MentoringText.formLabel),
+          title: Text('Mark as Urgent', style: MentoringText.formLabel),
         ),
       ],
     );

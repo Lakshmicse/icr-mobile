@@ -181,10 +181,10 @@ void main() {
     });
 
     test('the line over the grid is the website\'s', () {
-      expect(const DeckPlan(limit: 0).note, 'Flash cards are not included in your plan.');
-      expect(const DeckPlan(limit: 1, opened: ['a']).note, 'Your plan opens 1 flash-card deck (1 used).');
-      expect(const DeckPlan(limit: 3, opened: ['a', 'b']).note, 'Your plan opens 3 flash-card decks (2 used).');
-      expect(const DeckPlan(limit: 2, opened: ['a', 'b', 'c']).note, 'Your plan opens 2 flash-card decks (2 used).');
+      expect(const DeckPlan(limit: 0).note, 'Flashcards are not included in your plan.');
+      expect(const DeckPlan(limit: 1, opened: ['a']).note, 'Your plan opens 1 flashcard deck (1 used).');
+      expect(const DeckPlan(limit: 3, opened: ['a', 'b']).note, 'Your plan opens 3 flashcard decks (2 used).');
+      expect(const DeckPlan(limit: 2, opened: ['a', 'b', 'c']).note, 'Your plan opens 2 flashcard decks (2 used).');
     });
   });
 
@@ -288,12 +288,12 @@ void main() {
       final study = await repoOn(FakePortal()).deckPlan();
       expect(study!.limit, 3);
       expect(study.opened, ['cmv6lubc001demyt83o222rgr'], reason: 'the recorded persona had opened Capital Planning');
-      expect(study.note, 'Your plan opens 3 flash-card decks (1 used).');
+      expect(study.note, 'Your plan opens 3 flashcard decks (1 used).');
 
       final bharat = await repoOn(FakePortal(unlocks: 'paper_unlocks_bharat')).deckPlan();
       expect(bharat!.limit, 0);
       expect(bharat.stateOf('any-deck'), DeckState.locked);
-      expect(bharat.note, 'Flash cards are not included in your plan.');
+      expect(bharat.note, 'Flashcards are not included in your plan.');
 
       final portal = FakePortal();
       portal.unlocks = {};
@@ -322,7 +322,7 @@ void main() {
       ]);
       expect(c.unread, 2);
       expect(c.loading, isFalse);
-      expect(c.planNote, 'Your plan opens 3 flash-card decks (1 used).');
+      expect(c.planNote, 'Your plan opens 3 flashcard decks (1 used).');
     });
 
     test('the search narrows as you type, on every word, and clearing gives the decks back', () async {
@@ -735,7 +735,7 @@ void main() {
       await empty.load();
       expect(empty.loaded, isTrue);
       expect(empty.allCards, isEmpty);
-      expect(empty.title, 'Starred cards');
+      expect(empty.title, 'Starred Cards');
 
       final portal = FakePortal(starred: ['cmv6lubcf01dfmyt8t4g9it5d']);
       final one = DeckStudyController.starred(repoOn(portal));

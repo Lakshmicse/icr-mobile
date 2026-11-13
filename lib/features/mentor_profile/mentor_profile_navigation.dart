@@ -29,7 +29,7 @@ class MentorProfileNavigation {
   /// "Open Our Mentorship": the pairing's page, by its id.
   final void Function(BuildContext context, String mentorshipId)? onPairing;
 
-  /// "Send Message" on a live pairing: the thread, by its id (null: the API gave none).
+  /// "Send message" on a live pairing: the thread, by its id (null: the API gave none).
   final void Function(BuildContext context, String? conversationId)? onConversation;
 
   /// The bell.

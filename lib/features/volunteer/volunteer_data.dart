@@ -11,7 +11,7 @@ const volunteerRoles = <VolunteerRole>[
     key: 'chapter-committee-member',
     title: 'Chapter Committee Member',
     description:
-        'Help run your local ICR chapter — shaping its programme, growing membership and representing members in your city.',
+        'Help run your local ICR chapter: shape its programme, grow membership and represent members in your city.',
     responsibilities: [
       'Attend and contribute to chapter committee meetings',
       'Help plan the local events and knowledge calendar',
@@ -24,7 +24,7 @@ const volunteerRoles = <VolunteerRole>[
   VolunteerRole(
     key: 'chapter-leader',
     title: 'Chapter Leader',
-    description: 'Lead a chapter end to end — its strategy, committee, partnerships and standing in the local market.',
+    description: 'Lead a chapter end to end: its strategy, committee, partnerships and standing in the local market.',
     responsibilities: [
       'Set the chapter’s annual plan and objectives',
       'Chair the committee and develop its members',
@@ -84,7 +84,7 @@ const volunteerRoles = <VolunteerRole>[
       'Assess participant work where applicable',
       'Meet ICR faculty quality standards',
     ],
-    commitment: 'Per cohort — typically 8–16 hours',
+    commitment: 'Per cohort, typically 8–16 hours',
     icon: 'School',
   ),
   VolunteerRole(
@@ -97,20 +97,20 @@ const volunteerRoles = <VolunteerRole>[
       'Engage with attendee questions',
       'Share supporting material for the knowledge library',
     ],
-    commitment: 'Per event — 3–5 hours including preparation',
+    commitment: 'Per event, 3–5 hours including preparation',
     icon: 'RecordVoiceOver',
   ),
   VolunteerRole(
     key: 'event-volunteer',
     title: 'Conference & Event Volunteer',
-    description: 'Support ICR conferences and summits on the ground — registration, sessions, speakers and delegates.',
+    description: 'Support ICR conferences and summits on site: registration, sessions, speakers and delegates.',
     responsibilities: [
       'Support registration and delegate services',
       'Assist speakers and session chairs',
       'Help run the event schedule on the day',
       'Gather delegate feedback',
     ],
-    commitment: 'Per event — 1–2 days',
+    commitment: 'Per event, 1–2 days',
     icon: 'EventNote',
   ),
   VolunteerRole(
@@ -162,7 +162,7 @@ const volunteerRoles = <VolunteerRole>[
       'Uphold judging criteria and impartiality',
       'Provide feedback for finalists where requested',
     ],
-    commitment: 'Annual — 8–10 hours per cycle',
+    commitment: 'Annual, 8–10 hours per cycle',
     icon: 'Star',
   ),
   VolunteerRole(
@@ -273,37 +273,37 @@ const volunteerRoles = <VolunteerRole>[
 
 const volunteerBenefits = <VolunteerBenefit>[
   VolunteerBenefit(
-    title: 'Leadership experience',
-    description: 'Chair committees and lead programmes — experience that transfers straight into your career.',
+    title: 'Leadership Experience',
+    description: 'Chair committees and lead programmes. This experience transfers directly to your career.',
     icon: 'EmojiEvents',
   ),
   VolunteerBenefit(
-    title: 'Professional recognition',
+    title: 'Professional Recognition',
     description: 'Recognition across the ICR network for the contribution you make to the profession.',
     icon: 'Star',
   ),
   VolunteerBenefit(
-    title: 'Expanded industry network',
+    title: 'Expanded Industry Network',
     description: 'Work alongside senior practitioners across chapters, councils and corporate members.',
     icon: 'Diversity3',
   ),
   VolunteerBenefit(
-    title: 'Speaking and publishing opportunities',
+    title: 'Speaking and Publishing Opportunities',
     description: 'A platform for your practice through ICR events, webinars and the knowledge library.',
     icon: 'RecordVoiceOver',
   ),
   VolunteerBenefit(
-    title: 'Career development',
+    title: 'Career Development',
     description: 'Build capability outside your day role, with mentoring and exposure to new disciplines.',
     icon: 'TrendingUp',
   ),
   VolunteerBenefit(
-    title: 'Contribution to industry advancement',
+    title: 'Contribution to Industry Advancement',
     description: 'Shape the standards, research and certifications the profession runs on.',
     icon: 'Balance',
   ),
   VolunteerBenefit(
-    title: 'Volunteer recognition and awards',
+    title: 'Volunteer Recognition and Awards',
     description: 'Exclusive volunteer recognition, awards and CPD credits toward your certification.',
     icon: 'WorkspacePremium',
   ),

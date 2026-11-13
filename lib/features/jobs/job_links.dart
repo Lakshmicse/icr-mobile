@@ -56,7 +56,7 @@ extension JobLinksOpening on JobLinks {
     if (!opened) {
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text("Couldn't open ${uri.host}${uri.path}")));
+        ..showSnackBar(SnackBar(content: Text('Unable to open ${uri.host}${uri.path}')));
     }
   }
 }

@@ -28,7 +28,7 @@ class LearningComingSoon extends StatelessWidget {
               onBell: () => openNotifications(context),
             ),
             Expanded(
-              child: Center(child: Text('$title is on its way', style: AppText.screenLead)),
+              child: Center(child: Text('$title is coming soon.', style: AppText.screenLead)),
             ),
           ],
         ),

@@ -45,11 +45,18 @@ class CategoryChipRow extends StatefulWidget {
     this.leftPad = 9,
     this.rightPad = 10.5,
     this.iconGap = 5.5,
+    this.allLabel,
+    this.onAll,
   });
 
   final List<MentorCategory> categories;
   final String? selected;
   final ValueChanged<String> onSelect;
+
+  /// Drawn first when given ("All", owner, 9 Nov 2026): on while no domain is selected, and a tap on it calls
+  /// [onAll], which clears the domain. The landing's row has none.
+  final String? allLabel;
+  final VoidCallback? onAll;
   final double height;
   final double fontSize;
   final double gap;
@@ -120,6 +127,10 @@ class _CategoryChipRowState extends State<CategoryChipRow> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (widget.allLabel != null) ...[
+              _chip(MentorCategory(label: widget.allLabel!), all: true),
+              if (widget.categories.isNotEmpty) SizedBox(width: widget.gap),
+            ],
             for (final (i, c) in widget.categories.indexed) ...[
               if (i > 0) SizedBox(width: widget.gap),
               KeyedSubtree(key: _keys.putIfAbsent(c.label, GlobalKey.new), child: _chip(c)),
@@ -130,9 +141,9 @@ class _CategoryChipRowState extends State<CategoryChipRow> {
     );
   }
 
-  Widget _chip(MentorCategory c) {
-    final on = c.label == widget.selected;
-    final glyph = domainGlyph(c.label);
+  Widget _chip(MentorCategory c, {bool all = false}) {
+    final on = all ? widget.selected == null : c.label == widget.selected;
+    final glyph = all ? (icon: Symbols.grid_view, size: 16.0, filled: false) : domainGlyph(c.label);
     final style = MentorshipText.categoryChip(selected: on, size: widget.fontSize);
     final shape = StadiumBorder(side: on ? BorderSide.none : const BorderSide(color: AppColors.outlineVariant));
     return Semantics(
@@ -145,7 +156,7 @@ class _CategoryChipRowState extends State<CategoryChipRow> {
         shadowColor: const Color(0x14000000),
         child: InkWell(
           customBorder: shape,
-          onTap: () => widget.onSelect(c.label),
+          onTap: all ? widget.onAll : () => widget.onSelect(c.label),
           child: SizedBox(
             height: widget.height,
             child: Padding(

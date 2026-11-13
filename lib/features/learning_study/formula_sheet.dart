@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:share_plus/share_plus.dart';
 
+import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
 import '../../core/widgets/buttons.dart';
@@ -116,14 +117,14 @@ class FormulaDetail extends StatelessWidget {
         for (var i = 0; i < examples.parts.length; i++) ...[
           const SizedBox(height: 22),
           _Block(
-            title: count > 1 ? 'Worked example ${i + 1}' : 'Worked example',
+            title: count > 1 ? 'Worked Example ${i + 1}' : 'Worked Example',
             child: _ExampleCard(example: examples.parts[i]),
           ),
         ],
         for (var i = 0; i < examples.text.length; i++) ...[
           const SizedBox(height: 22),
           _Block(
-            title: count > 1 ? 'Worked example ${i + 1}' : 'Worked example',
+            title: count > 1 ? 'Worked Example ${i + 1}' : 'Worked Example',
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(14),
@@ -163,7 +164,7 @@ class FormulaDetail extends StatelessWidget {
               key: const ValueKey('formula-resource'),
               onPressed: () => openUrl(context, Uri.parse(card.resourceUrl!)),
               icon: const Icon(LucideIcons.fileText, size: 16),
-              label: Text(card.resourceLabel ?? 'Open resource'),
+              label: Text(card.resourceLabel ?? 'Open Resource'),
             ),
           ),
         ],
@@ -381,21 +382,22 @@ class FormulaBar extends StatefulWidget {
 }
 
 class _FormulaBarState extends State<FormulaBar> {
-  bool _copied = false;
+  bool _sharing = false;
 
-  @override
-  void didUpdateWidget(FormulaBar old) {
-    super.didUpdateWidget(old);
-    if (old.entry.card.id != widget.entry.card.id) _copied = false;
-  }
-
-  Future<void> _copy() async {
-    await Clipboard.setData(ClipboardData(text: formulaCopyText(widget.entry.card)));
-    if (!mounted) return;
-    setState(() => _copied = true);
-    // A snackbar would sit behind the sheet, so the button itself says it.
-    await Future<void>.delayed(const Duration(seconds: 2));
-    if (mounted) setState(() => _copied = false);
+  /// The phone's share sheet with the name, the formula, its variables and the Knowledge Center's link (owner,
+  /// 7 Nov 2026: "we should share the whole link of the formula", not copy it to the clipboard).
+  Future<void> _share() async {
+    if (_sharing) return;
+    setState(() => _sharing = true);
+    try {
+      await SharePlus.instance.share(
+        ShareParams(subject: widget.entry.card.front, text: formulaShareText(widget.entry.card)),
+      );
+    } catch (_) {
+      // No share sheet to open (a phone without one, a test): nothing else to do.
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
   }
 
   @override
@@ -410,11 +412,11 @@ class _FormulaBarState extends State<FormulaBar> {
         ),
         Expanded(
           child: PrimaryButton(
-            key: const ValueKey('formula-copy'),
-            label: _copied ? 'Copied' : 'Copy formula',
-            icon: _copied ? Symbols.check : Symbols.content_copy,
+            key: const ValueKey('formula-share'),
+            label: 'Share formula',
+            icon: Symbols.share,
             iconSize: 18,
-            onPressed: _copy,
+            onPressed: _sharing ? null : _share,
           ),
         ),
         _Step(
@@ -460,3 +462,7 @@ class _Step extends StatelessWidget {
     );
   }
 }
+
+/// What a shared formula says: the copy text (name, formula, variables), then where it lives on ICR.
+String formulaShareText(StudyCard card) =>
+    '${formulaCopyText(card)}\n\nOn ICR: ${AppConfig.sitePage('/learning/formulas')}';

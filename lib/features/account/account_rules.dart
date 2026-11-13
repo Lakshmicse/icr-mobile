@@ -76,7 +76,9 @@ String? _lengthIssue(String digits, {bool mobile = true}) {
   if (c == null) return null;
   final national = digits.substring(c.dial.length);
   if (national.isEmpty) return null;
-  if (c.dial == '91' && mobile) return _indianMobile.hasMatch(national) ? null : 'Enter a 10-digit Indian mobile number.';
+  if (c.dial == '91' && mobile) {
+    return _indianMobile.hasMatch(national) ? null : 'Enter a 10-digit Indian mobile number.';
+  }
   if (national.length >= c.min && national.length <= c.max) return null;
   return 'Enter ${c.digitCount} digits after +${c.dial} for ${c.country}.';
 }
@@ -124,9 +126,7 @@ String formatPhone(String? raw) {
   }
   final digits = s.replaceFirst(RegExp(r'^(\+|00)'), '');
   final c = _countryOfDigits(digits);
-  return c == null
-      ? (country: null, national: '+$digits')
-      : (country: c, national: digits.substring(c.dial.length));
+  return c == null ? (country: null, national: '+$digits') : (country: c, national: digits.substring(c.dial.length));
 }
 
 /// The number to store from a picked country and the typed digits: `+`, the
@@ -169,8 +169,9 @@ String? altPhoneError(String? raw) {
 
 final _email = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
-String? workEmailError(String value) =>
-    value.trim().isEmpty || _email.hasMatch(value.trim()) ? null : 'Enter a valid email address, like name@company.com.';
+String? workEmailError(String value) => value.trim().isEmpty || _email.hasMatch(value.trim())
+    ? null
+    : 'Enter a valid email address, like name@company.com.';
 
 /// The examples the website gives for each link.
 const linkExamples = {
@@ -194,10 +195,7 @@ String? linkError(String key, String raw, {bool changed = true}) {
   if (value.isEmpty) return null;
   final uri = Uri.tryParse(value);
   final ok =
-      uri != null &&
-      (uri.scheme == 'http' || uri.scheme == 'https') &&
-      uri.host.contains('.') &&
-      !value.contains(' ');
+      uri != null && (uri.scheme == 'http' || uri.scheme == 'https') && uri.host.contains('.') && !value.contains(' ');
   if (!ok) return 'Enter a full web address, like ${linkExamples[key]}';
   if (key == 'linkedinUrl' && changed && !RegExp(r'(^|\.)linkedin\.com$').hasMatch(uri.host.toLowerCase())) {
     return 'Enter your LinkedIn profile address, like https://linkedin.com/in/your-name';
@@ -263,11 +261,11 @@ Map<String, String> experienceProblems(Experience e, {bool strict = true, DateTi
       if (strict && e.endMonth != null) {
         out['end'] = 'Add the end year too.';
       } else if (strict) {
-        out['end'] = 'Add when this role ended, or tick “I work here now”.';
+        out['end'] = 'Add when this role ended, or select “I work here now”.';
       }
     } else if (_ym(e.endYear!, e.endMonth, end: e.endMonth == null) >
         _ym(today.year, today.month, end: e.endMonth == null)) {
-      out['end'] = 'The end date can’t be in the future. If you still work here, tick “I work here now”.';
+      out['end'] = 'The end date can’t be in the future. If you still work here, select “I work here now”.';
     } else if (_ym(e.endYear!, e.endMonth, end: true) < _ym(e.startYear, e.startMonth)) {
       out['end'] = 'The end date is before the start date.';
     }
@@ -280,14 +278,16 @@ Map<String, String> experienceProblems(Experience e, {bool strict = true, DateTi
 Map<String, String> careerBreakProblems(CareerBreak b, {DateTime? now}) {
   final out = <String, String>{};
   final today = indiaYearMonth(now);
-  if (b.reason.isEmpty) out['reason'] = 'Choose why you took this break.';
-  if (b.startYear < 1950) out['start'] = 'Choose a year from 1950 on.';
+  if (b.reason.isEmpty) out['reason'] = 'Select why you took this break.';
+  if (b.startYear < 1950) out['start'] = 'Select a year from 1950 onwards.';
   if (_ym(b.startYear, b.startMonth) > _ym(today.year, today.month)) {
     out['start'] = 'The start date can’t be in the future.';
   }
   if (!b.isCurrent) {
     if (b.endYear == null) {
-      out['end'] = b.endMonth != null ? 'Add the end year too.' : 'Add when the break ended, or tick “I’m on this break now”.';
+      out['end'] = b.endMonth != null
+          ? 'Add the end year too.'
+          : 'Add when the break ended, or select “I’m on this break now”.';
     } else if (_ym(b.endYear!, b.endMonth) > _ym(today.year, today.month)) {
       out['end'] = 'The end date can’t be in the future.';
     } else if (_ym(b.endYear!, b.endMonth, end: true) < _ym(b.startYear, b.startMonth)) {
@@ -324,7 +324,7 @@ Map<String, String> credentialProblems(CredentialDraft d, {DateTime? now}) {
   final out = <String, String>{};
   final name = d.name.trim();
   if (name.isEmpty) {
-    out['name'] = 'Give the credential a name.';
+    out['name'] = 'Enter the credential name.';
   } else if (name.length < 2) {
     out['name'] = 'A credential’s name needs at least 2 characters.';
   }
@@ -367,14 +367,14 @@ Map<String, String> companyProblems({
   if (n.length < 2 || !_letter.hasMatch(n)) out['name'] = 'Enter the company name.';
   final l = legalName.trim();
   if (differentLegalName && l.isNotEmpty && (l.length < 2 || !_letter.hasMatch(l))) {
-    out['legalName'] = 'Enter the registered legal name — it needs at least one letter.';
+    out['legalName'] = 'Enter the registered legal name. It needs at least one letter.';
   }
   final w = website.trim();
   if (w.isNotEmpty && !_isWebsite(w)) out['website'] = 'Enter a website like acme.com or https://acme.com';
-  if (industry == null) out['industry'] = 'Choose the industry it works in.';
-  if (city == null) out['city'] = 'Choose where the head office is.';
-  if (size == null) out['size'] = 'Choose how many people work there.';
-  if (legalStructure == null) out['legalStructure'] = 'Choose how the organisation is set up.';
+  if (industry == null) out['industry'] = 'Select the industry it works in.';
+  if (city == null) out['city'] = 'Select where the head office is.';
+  if (size == null) out['size'] = 'Select how many people work there.';
+  if (legalStructure == null) out['legalStructure'] = 'Select how the organisation is set up.';
   if (!authorised) out['authorised'] = 'Confirm that you may create this page for the company.';
   return out;
 }
@@ -429,7 +429,14 @@ const careerGapMinMonths = 6;
 
 /// A stretch no role or break accounts for. [ongoing]: it runs up to this month.
 class CareerGap {
-  const CareerGap({required this.fromYear, required this.fromMonth, required this.toYear, required this.toMonth, required this.months, required this.ongoing});
+  const CareerGap({
+    required this.fromYear,
+    required this.fromMonth,
+    required this.toYear,
+    required this.toMonth,
+    required this.months,
+    required this.ongoing,
+  });
 
   final int fromYear;
   final int fromMonth;
@@ -470,14 +477,16 @@ List<CareerGap> careerGaps(
   void flush(int until) {
     final months = until - cursor + 1;
     if (months >= minMonths) {
-      gaps.add(CareerGap(
-        fromYear: cursor ~/ 12,
-        fromMonth: cursor % 12 + 1,
-        toYear: until ~/ 12,
-        toMonth: until % 12 + 1,
-        months: months,
-        ongoing: until == nowIdx,
-      ));
+      gaps.add(
+        CareerGap(
+          fromYear: cursor ~/ 12,
+          fromMonth: cursor % 12 + 1,
+          toYear: until ~/ 12,
+          toMonth: until % 12 + 1,
+          months: months,
+          ongoing: until == nowIdx,
+        ),
+      );
     }
   }
 

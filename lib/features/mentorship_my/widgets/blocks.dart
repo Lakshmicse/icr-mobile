@@ -89,7 +89,7 @@ class NeedItem {
 /// "Needs you": what is waiting on the member, each line a way in; a quiet
 /// line when nothing is.
 class NeedsYouCard extends StatelessWidget {
-  const NeedsYouCard({super.key, required this.items, this.clear = 'You are all caught up.'});
+  const NeedsYouCard({super.key, required this.items, this.clear = 'Nothing needs your attention.'});
 
   final List<NeedItem> items;
   final String clear;
@@ -120,7 +120,10 @@ class NeedsYouCard extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
-            child: Text('NEEDS YOU', style: MentoringText.pill.copyWith(color: AppColors.amber800, letterSpacing: 0.8)),
+            child: Text(
+              'ACTION NEEDED',
+              style: MentoringText.pill.copyWith(color: AppColors.amber800, letterSpacing: 0.8),
+            ),
           ),
           for (final item in items)
             InkWell(
@@ -263,7 +266,7 @@ class RequestCard extends StatelessWidget {
               ),
             ),
           if (r.status == RequestStatus.pending && r.expiresAt != null)
-            MetaLine(icon: LucideIcons.hourglass, text: 'Lapses ${daysFromNow(r.expiresAt!)} if nobody answers'),
+            MetaLine(icon: LucideIcons.hourglass, text: 'Expires ${daysFromNow(r.expiresAt!)} if not answered'),
           ActionWrap(children: actions),
         ],
       ),
@@ -314,9 +317,7 @@ class StatStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rows = [
-      for (var i = 0; i < tiles.length; i += perRow) tiles.sublist(i, (i + perRow).clamp(0, tiles.length)),
-    ];
+    final rows = [for (var i = 0; i < tiles.length; i += perRow) tiles.sublist(i, (i + perRow).clamp(0, tiles.length))];
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(

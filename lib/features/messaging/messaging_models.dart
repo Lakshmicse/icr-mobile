@@ -77,7 +77,7 @@ extension ConversationKindWords on ConversationKind {
     ConversationKind.bid => 'Bid',
     ConversationKind.enquiry => 'Enquiry',
     ConversationKind.mentorship => 'Mentorship',
-    ConversationKind.groupSession => 'Group session',
+    ConversationKind.groupSession => 'Group Session',
     ConversationKind.consultation => 'Consultation',
     ConversationKind.company => 'Company',
     ConversationKind.direct => 'Direct',
@@ -90,8 +90,8 @@ extension ConversationKindWords on ConversationKind {
 
 /// What a company inbox is for (`MessageTopic`).
 const messageTopicLabels = {
-  'SALES': 'Sales & quotes',
-  'PROCUREMENT': 'Requirements & buying',
+  'SALES': 'Sales & Quotes',
+  'PROCUREMENT': 'Requirements & Buying',
   'CAREERS': 'Careers',
   'PARTNERSHIP': 'Partnerships',
   'GENERAL': 'General',
@@ -638,12 +638,12 @@ extension RecordTypeWords on RecordType {
   };
 
   String get hint => switch (this) {
-    RecordType.job => 'A job posting on ICR',
-    RecordType.requirement => 'Your requirements, or one on the open board',
-    RecordType.company => 'A company page',
-    RecordType.product => 'A product in Supplier Mart',
-    RecordType.mentor => "A mentor's profile",
-    RecordType.event => 'An upcoming event',
+    RecordType.job => 'A job posting on ICR.',
+    RecordType.requirement => 'Your requirements, or one on the open board.',
+    RecordType.company => 'A company page.',
+    RecordType.product => 'A product in the Marketplace.',
+    RecordType.mentor => "A mentor's profile.",
+    RecordType.event => 'An upcoming event.',
   };
 
   /// The page a record opens on: `/jobs/<id>`.

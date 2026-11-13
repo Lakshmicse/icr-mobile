@@ -131,7 +131,7 @@ Three tiles (attempts, passed, best), filter chips (All / Assessments / Mock exa
 
 ### My certificates (`GET /learning/me/certificates`)
 
-Tiles (earned, best score), awarding-body chips when there is more than one, one card per credential (a small stand-in for the certificate as the website's cards draw it, title, who awarded it, a Verified pill, issued, credential ID), View certificate, Share, Copy number, and a Verification card with "Check a certificate number".
+Tiles (earned, best score), awarding-body chips when there is more than one, then **one row per credential, drawn as My attempts draws an attempt** (owner, 9 Nov 2026: "how the list of attempts is showing, the certificates also show like that"): the title with a Verified pill, one small line "ICR-CP-2026-AB12CD34 · Issued 12 Aug 2026", and three figures — Score, Pass mark, Awarded by — with a chevron, the rows parted by a hairline. **A tap on the row opens the certificate**; View certificate, Share and Copy number live on the certificate itself now, not in the list. Then a Verification card with "Check a certificate number".
 
 **The certificate** (`certificate_view.dart`, the QR code in `qr_code.dart`, a small QR encoder written for this: versions 1 to 10, error correction M, a port of the website's generator so the code is the same module for module) is drawn as `Certificate.tsx` draws it: two panels on an A4 landscape sheet scaled to the width (ICR lockup, the Knowledge Builds Excellence seal, the partner, the awarding body when it is not ICR; CERTIFICATE OF KNOWLEDGE ASSESSMENT, the holder in gold italics, the credential, the level between stars, the date cleared, the signatory, the QR code, issued date and number), pinch to zoom, with its facts under it and Share / Copy number / Download PDF / Check it in the register / Add to LinkedIn. The brand images are copied from `frontend/public/brand` into `assets/images/demo/learning/cert_*.png` (the seal and partner mark resized).
 
@@ -139,8 +139,8 @@ Tiles (earned, best score), awarding-body chips when there is more than one, one
 
 | Control | Proved by |
 |---|---|
-| Cards and facts | `each credential is a card...`; live `his certificates carry the seeded one, and anyone can check its number` |
-| View certificate (list, brief, result) | `View certificate opens the certificate itself`; `is drawn with its holder, credential, level, dates and number...` |
+| Rows and facts | `each credential is a row...`; live `his certificates carry the seeded one, and anyone can check its number` |
+| Opening the certificate (a row of the list, View certificate on the brief and the result) | `a row opens the certificate itself...`, `a card's Share and Copy number work from the list` (through the row, on the certificate); `is drawn with its holder, credential, level, dates and number...` |
 | Share (hands the verification link to the share sheet) | `Share hands the verification link to the share sheet`, `a card's Share and Copy number work from the list` |
 | Copy number (clipboard, "Number copied") | `Copy number puts the credential number on the clipboard` |
 | Download PDF (builds the file in the app and saves it; a spinner meanwhile; "Saved ICR-….pdf"; nothing when the save sheet is closed; "Couldn't make the PDF. Try again.") | the five `Download PDF` tests in `a certificate` (`builds the PDF in the app and saves it...`, `says nothing when the person closes the save sheet`, `says so when the PDF cannot be made...`, `waits while the PDF is being made...`, `a card in the list offers no download`); `test/certificate_pdf_test.dart` (the file: header, cross-reference offsets, fonts, the words as text, the QR squares, the picture objects, the text helpers); `test/certificate_marks_test.dart` (the pictures, decoded by the real engine) |
@@ -195,3 +195,57 @@ Tiles (earned, best score), awarding-body chips when there is more than one, one
 * The live tests share the API's 120-requests-a-minute allowance with the other builders' live tests; `liveClient` waits out a 429. If the API restarts mid-run the file skips itself.
 
 **My attempts (owner, 6 Nov 2026: "top 3 tiles not required, and the below border colour, and use the full width").** The Attempts / Passed / Best tiles are gone; the filter chips sit under the heading and each attempt is a plain full-width row (name, result pill, attempt and date, score · correct · time, chevron) with a hairline between rows — no `ExamCard` box; the result pill (`InfoPill`, shared by the exam screens) is a tint with no outline now. `learning_exam_screen_test.dart` checks the totals words are absent.
+
+## 9 Nov 2026
+
+* **The certificates are rows, as the attempts are** (owner: "how the list of attempts is showing, the certificates also show like that, and by clicking upon it the data"): `CertificateCard` is now an attempt-style row (title, Verified pill, "number · Issued day", Score / Pass mark / Awarded by, chevron) and a tap opens the certificate sheet, where Share, Copy number and Download PDF are. The `CertificateThumb` stays for the sheet.
+* **No "My attempts" / "My certificates" heading inside the Learning workspace's tabs** (owner: "anyhow the tab is telling the title, there would be no use of the title again; wherever it is, remove it"): inside a workspace tab `TitleBar` draws nothing (or only its `middle`, a search box), and `AccountBar` only its actions; the pages pushed on their own still draw their title with the back arrow.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+Wording only. The rules and warnings of the exam say what they said: when the timer starts and that it keeps running,
+that answers are saved and an interrupted attempt can be resumed, that time running out submits the paper, how many
+attempts there are and what a pass earns. "Sitting" now reads "attempt" wherever the member sees it, the word the rest
+of these screens already use.
+
+State titles are headings (the lead's decision the same day): an empty-state, locked-state or error title is in Title Case with no full stop, and the line under it stays a sentence.
+
+| Where | Old | New |
+| --- | --- | --- |
+| Load errors (titles): 4 strings | Couldn't open this paper · Couldn't open this result · Couldn't load your attempts · Couldn't load your certificates | Unable to Open This Paper · Unable to Open This Result · Unable to Load Your Attempts · Unable to Load Your Certificates |
+| Screen titles and headings to Title Case: 12 strings | My assessment attempts · My certificates · My attempts · Before you start · Mock Exam details · Question palette · Assessment overview · Question status · Verify your credentials · Verify an ICR certificate · Certificate verified … | My Assessment Attempts · My Certificates · My Attempts · Before You Start · Mock Exam Details · Question Palette · Assessment Overview · Question Status · Verify Your Credentials · Verify an ICR Certificate · Certificate Verified … |
+| Buttons and links to Title Case: 15 strings | Take test · Submit my saved answers · Pay now · Open with my plan · View certificate · Review & submit · Back to test · Submit test · Retake test · Review answers · Copy number · Verify a certificate · Verify certificate · Leave for now · Try again … | Take Test · Submit My Saved Answers · Pay Now · Open with My Plan · View Certificate · Review & Submit · Back to Test · Submit Test · Retake Test · Review Answers · Copy Number · Verify a Certificate · Verify Certificate · Leave for Now · Try Again … |
+| Fact labels to Title Case: 11 strings | Number of questions · Total marks · Passing percentage · Attempts allowed · Attempts used · Awarded by · Cleared on · Pass mark · Time taken · Certificate number · Issued to | Number of Questions · Total Marks · Passing Percentage · Attempts Allowed · Attempts Used · Awarded By · Cleared On · Pass Mark · Time Taken · Certificate Number · Issued To |
+| Stat tiles and chips | Certificates earned · Best assessment score · All certificates · Mock exams | Certificates Earned · Best Assessment Score · All Certificates · Mock Exams |
+| Empty-state titles | No attempts yet · No certificates yet · Nothing under this filter | No Attempts Yet · No Certificates Yet · No Attempts Match This Filter |
+| A filter with nothing | You have not sat a paper of this kind yet. · Show all | You have not taken a paper of this kind yet. · Show All |
+| Brief, a rule | Your answers are saved automatically — you can resume an interrupted attempt. | Your answers are saved automatically. You can resume an interrupted attempt. |
+| Brief, an attempt in progress | You have a sitting in progress, with 18:00 left. Resume it to pick up where you stopped. | You have an attempt in progress, with 18:00 left. Resume it to continue where you stopped. |
+| Brief, time ran out away | Time ran out on your last sitting while you were away. … | Time ran out on your last attempt while you were away. … |
+| Brief, the notice's link and its dialog | Discard it and start over · Start over? · Keep it | Discard and Start Over · Start Over? · Keep It |
+| Brief, a locked paper | This mock set is locked · This assessment level is locked | This Mock Set Is Locked · This Assessment Level Is Locked |
+| Brief, the ways in (titles) | Your plan includes a mock exam · Redeem ICR credits · Buy this set · Buy this level | Your Plan Includes a Mock Exam · Redeem ICR Credits · Buy This Set · Buy This Level |
+| Brief, credits | It takes 4 ICR credits (worth ₹400) and opens it for good. · Redeem 4 credits · Redeem 4 credits? · This opens X for good. | It takes 4 ICR credits (worth ₹400) and opens it permanently. · Redeem 4 Credits · Redeem 4 Credits? · This opens X permanently. |
+| Brief, payment off | Payment is not available | Payment Not Available |
+| Brief, the plan's link and dialog | See the Pro Max plan · Open it with your plan? · Open it | See the Pro Max Plan · Open with Your Plan? · Open |
+| Exam, the leave dialog | Leave the exam? · Keep going | Leave the Exam? · Continue Exam |
+| Exam, a send that failed | Your answers didn't go · They are safe on this phone. … · The API turned this sitting down, so there is nothing to retry. · Back to the test | Answers Not Submitted · They are saved on this phone. … · The server rejected this attempt, so it cannot be retried. · Back to Test |
+| Result, the headline of a miss | Not quite there yet, Bharat | Not passed yet, Bharat |
+| Result, a practice paper | Practice paper — no certificate is issued. | Practice paper. No certificate is issued. |
+| Result with no paper name | Your sitting | Your attempt |
+| Review Answers | 1 question from this sitting has since been removed … · Nothing here. | 1 question from this attempt has since been removed … · No questions to show. |
+| Certificate | Pinch to zoom in and read it close. · Check it in the register · Number copied · Couldn't make the PDF. Try again. · Save certificate | Pinch to zoom in. · Verify in the Register · Number copied. · Unable to create the PDF. Try again. · Save Certificate |
+| My Certificates, the register card | … through the ICR Certificate Register—no account required. | … through the ICR Certificate Register. No account is required. |
+| The register, no match | No certificate matches this number. Please check and try again. | No certificate matches this number. Check the number and try again. |
+
+Left as they were, because they are data or the client's own text: everything printed on the certificate and its PDF
+(CERTIFICATE OF ACHIEVEMENT, OF KNOWLEDGE ASSESSMENT, AWARDING BODY, the disclaimer, "Issued Date:", "CERTIFICATE NO. :"),
+questions, options and rationales, the API's lock sentence, the ALL-CAPS eyebrows (TEST ANALYSIS — SET 1, ICR
+CERTIFICATE VERIFICATION). Also left: the leave dialog's body and the four rules other than the one above, word for word;
+"Time's up"; status words (Pass, Fail, Below pass mark, Issued, On a qualifying pass, Not visited, Flagged for review);
+the spoken labels a screen reader gets, except "Question Palette", which now matches the sheet's title.
+
+Tests: `test/learning_exam_screen_test.dart` quotes the new words. *it is one compact page…* no longer lists "Retake
+Test" among the words that must be absent, since the result's own button now reads exactly that. Every `exam_*` golden
+but `exam_question`, `exam_question_multiple`, `exam_review_answers` and `exam_review_correct` was re-recorded for the
+wording.

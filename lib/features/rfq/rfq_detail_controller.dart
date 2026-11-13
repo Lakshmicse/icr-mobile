@@ -6,9 +6,9 @@ import 'rfq_repository.dart';
 
 /// How the owner orders the bids.
 enum BidSort {
-  price('Lowest price'),
-  rating('Highest rating'),
-  lead('Fastest lead time');
+  price('Lowest Price'),
+  rating('Highest Rating'),
+  lead('Fastest Lead Time');
 
   const BidSort(this.label);
   final String label;
@@ -290,8 +290,8 @@ class RfqDetailController extends ChangeNotifier {
       ];
       _rfq = rfq.copyWith(status: RfqStatus.awarded, stage: rfq.stage == null ? null : RfqStage.completed);
       final message = rfq.isEnquiry
-          ? '${bid.supplier.name} selected. The other suppliers have been told.'
-          : 'Awarded to ${bid.supplier.name}${po == null ? '' : ' — purchase order $po'}.';
+          ? '${bid.supplier.name} selected. The other suppliers have been notified.'
+          : 'Awarded to ${bid.supplier.name}${po == null ? '' : '. Purchase order $po'}.';
       return (ok: true, message: message);
     } catch (e) {
       return (ok: false, message: ApiError.from(e).message);
@@ -345,7 +345,7 @@ class RfqDetailController extends ChangeNotifier {
 
   /// Invites the chosen suppliers; the list is what the API answers.
   Future<String?> invite(List<String> vendorIds) async {
-    if (vendorIds.isEmpty) return 'Choose at least one supplier';
+    if (vendorIds.isEmpty) return 'Select at least one supplier';
     try {
       _invites = await repository.invite(rfqId, vendorIds);
       notifyListeners();

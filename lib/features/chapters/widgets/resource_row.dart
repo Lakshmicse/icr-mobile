@@ -74,13 +74,13 @@ class _ResourceRowState extends State<ResourceRow> {
           if (r.kind == 'RECORDING') {
             if (mounted) await widget.opener(context, page);
           } else {
-            _say(messenger, '"${r.title}" is a web page, not a file you can save.', open: page, action: 'Open page');
+            _say(messenger, '"${r.title}" is a web page, not a file you can save.', open: page, action: 'Open Page');
           }
       }
     } on ResourceDownloadException catch (e) {
       _say(messenger, e.message, open: e.openInstead);
     } catch (_) {
-      _say(messenger, "Couldn't download \"${r.title}\". Try again.");
+      _say(messenger, 'Unable to download "${r.title}". Try again.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }

@@ -222,11 +222,11 @@ class VolunteerFormController extends ChangeNotifier {
     if (n != null) p[ContactField.name] = n;
     final e = ContactRules.email(email);
     if (e != null) p[ContactField.email] = e;
-    final ph = ContactRules.phone(phone);
+    final ph = ContactRules.phone(phone, required: false);
     if (ph != null) p[ContactField.phone] = ph;
     final t = message.trim();
     if (t.isEmpty) {
-      p[ContactField.message] = 'Tell us a little about you and the time you can give.';
+      p[ContactField.message] = 'Describe your experience and the time you can give.';
     } else if (t.length > messageRoom) {
       p[ContactField.message] = 'Use ${messageRoom < 0 ? 0 : messageRoom} characters or fewer here.';
     }

@@ -8,14 +8,14 @@ import 'auth_widgets.dart';
 import 'recovery_repository.dart';
 import 'signup_widgets.dart';
 
-/// "Confirm your email", the website's `/verify-email?token=`, finished in the
+/// "Verify Your Email", the website's `/verify-email?token=`, finished in the
 /// app. New accounts start confirmed (the sign-up code proves the address), so
 /// this is for older accounts that never were.
 ///
 /// With a [token] it confirms straight away (`POST /auth/verify-email`); without
 /// one it asks for the link from the email, or sends a fresh one
 /// (`POST /auth/resend-verification`, signed in). A confirmed address refreshes
-/// the session so the "not confirmed" notice goes away everywhere.
+/// the session so the "Not Verified" notice goes away everywhere.
 class VerifyEmailScreen extends StatefulWidget {
   const VerifyEmailScreen({super.key, this.token, this.repository});
 
@@ -91,7 +91,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       setState(
         () => _linkProblem = _link.text.trim().isEmpty
             ? 'Paste the link from your email.'
-            : 'That does not look like a confirmation link. Paste the whole link from the email.',
+            : 'This is not a valid verification link. Paste the full link from the email.',
       );
       return;
     }
@@ -112,7 +112,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           _resent = answer.sent;
           _testLink = answer.verifyUrl;
           // A confirmed address needs nothing more.
-          if (!answer.sent) _message = 'This email is already confirmed.';
+          if (!answer.sent) _message = 'This email is already verified.';
         });
       }
     } on ApiError catch (e) {
@@ -134,10 +134,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
         children: [
           AuthHeader(
             title: switch (_phase) {
-              _Phase.confirming => 'Confirming your email',
-              _Phase.confirmed => _alreadyVerified ? 'Already confirmed' : 'Email confirmed',
-              _Phase.failed => 'That link did not work',
-              _Phase.askForLink => 'Confirm your email',
+              _Phase.confirming => 'Verifying Your Email',
+              _Phase.confirmed => _alreadyVerified ? 'Already Verified' : 'Email Verified',
+              _Phase.failed => 'This Link Did Not Work',
+              _Phase.askForLink => 'Verify Your Email',
             },
           ),
           const SizedBox(height: 16),
@@ -152,7 +152,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
             ],
             _Phase.confirmed => [
               Text(
-                'Your address is confirmed. Thanks for keeping your account safe.',
+                'Your email address is verified.',
                 key: const Key('verify.confirmed'),
                 style: AuthType.body(p).copyWith(color: p.text),
               ),
@@ -168,15 +168,15 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
             _ => [
               Text(
                 _phase == _Phase.failed
-                    ? (_message ?? 'This confirmation link is not valid.')
-                    : 'Paste the link from the confirmation email, or have a new one sent.',
+                    ? (_message ?? 'This verification link is not valid.')
+                    : 'Paste the link from the verification email, or request a new link.',
                 key: const Key('verify.message'),
                 style: AuthType.body(p).copyWith(color: _phase == _Phase.failed ? p.error : p.text),
               ),
               const SizedBox(height: 14),
               AuthField(
                 fieldKey: const Key('verify.link'),
-                label: 'Confirmation link',
+                label: 'Verification Link',
                 controller: _link,
                 icon: Icons.link_rounded,
                 hint: 'https://icr.org.in/verify-email?token=…',
@@ -192,8 +192,8 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               const SizedBox(height: 18),
               AuthPrimaryButton(
                 key: const Key('verify.useLink'),
-                label: 'Confirm my email',
-                busyLabel: 'Confirming…',
+                label: 'Verify Email',
+                busyLabel: 'Verifying…',
                 busy: false,
                 onPressed: _useLink,
               ),
@@ -201,7 +201,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               if (signedIn) ...[
                 if (_resent)
                   Text(
-                    'A new link is on its way. Check your inbox.',
+                    'A new link has been sent. Check your inbox.',
                     key: const Key('verify.resent'),
                     textAlign: TextAlign.center,
                     style: AuthType.small(p),
@@ -209,14 +209,14 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 else
                   AuthOutlinedButton(
                     key: const Key('verify.resend'),
-                    label: _resending ? 'Sending…' : 'Send me a new link',
+                    label: _resending ? 'Sending…' : 'Resend Link',
                     onPressed: _resending ? null : _resend,
                   ),
                 if (_testLink != null)
                   Center(
                     child: AuthLink(
                       key: const Key('verify.useTestLink'),
-                      label: 'Test mode: use the link',
+                      label: 'Test Mode: Use the Link',
                       onTap: () {
                         final token = tokenFromLink(_testLink!);
                         if (token != null) _confirm(token);
@@ -231,7 +231,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 Center(
                   child: AuthLink(
                     key: const Key('verify.signIn'),
-                    label: 'Sign in to get a new link',
+                    label: 'Sign In to Get a New Link',
                     onTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
                   ),
                 ),

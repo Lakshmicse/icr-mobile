@@ -105,7 +105,7 @@ class _RecordPickerState extends State<RecordPicker> {
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text('Share an ICR record', style: ChatText.sheetTitle),
+            child: Text('Share an ICR Record', style: ChatText.sheetTitle),
           ),
         ),
         SizedBox(
@@ -165,16 +165,16 @@ class _RecordPickerState extends State<RecordPicker> {
               : _error != null
               ? ChatNotice(
                   icon: LucideIcons.cloudOff,
-                  title: "Couldn't load these.",
+                  title: 'Unable to Load Records',
                   body: _error,
-                  action: 'Retry',
+                  action: 'Try Again',
                   onAction: _load,
                 )
               : _results.isEmpty
               ? ChatNotice(
                   icon: recordIcon(_type),
-                  title: 'Nothing found',
-                  body: 'Try another word, or another kind of record.',
+                  title: 'No Results Found',
+                  body: 'Try another word or another record type.',
                 )
               : ListView.separated(
                   itemCount: _results.length,

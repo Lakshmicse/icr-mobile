@@ -36,10 +36,6 @@ class EventsColors {
   static const border = Color(0xFFEDEDED);
   static const borderSoft = Color(0xFFF1F3F5);
 
-  /// The CPD progress bar.
-  static const progressFill = Color(0xFF005C3C);
-  static const progressTrack = Color(0xFFE1E2E4);
-
   /// The light grey tiles and panels (category icon boxes, the pass card).
   static const panel = Color(0xFFF3F4F6);
 
@@ -101,13 +97,6 @@ class EventsText {
   static final attendees = AppText.plexSans(9, FontWeight.w500, AppColors.onSurfaceVariant, lineHeight: 13);
   static final rsvpButton = AppText.workSans(10, FontWeight.w700, Colors.white, lineHeight: 14);
   static final avatarInitials = AppText.plexSans(8, FontWeight.w700, Colors.white, lineHeight: 10);
-
-  // The two tiles.
-  static final tileTitle = AppText.workSans(9.4, FontWeight.w700, AppColors.onSurface, lineHeight: 13);
-  static final tileBody = AppText.plexSans(9, FontWeight.w500, AppColors.onSurfaceVariant, lineHeight: 13);
-  static final tileLink = AppText.plexSans(8.7, FontWeight.w600, EventsColors.link, lineHeight: 13);
-  static final cpdValue = AppText.plexSans(8.9, FontWeight.w700, AppColors.tertiary, lineHeight: 13);
-  static final cpdNote = AppText.plexSans(8, FontWeight.w400, AppColors.outline, lineHeight: 12);
 
   // Section headings.
   static final heading = AppText.workSans(11.7, FontWeight.w700, AppColors.onSurface, lineHeight: 16);

@@ -35,11 +35,27 @@ void main() {
     languages: const ['English', 'Hindi'],
     yearsExperience: 20,
     experience: const [
-      Experience(id: 'e1', title: 'Director', organisation: 'DLF', company: LinkedCompany(id: 'co-dlf', name: 'DLF'), startYear: 2018, isCurrent: true),
+      Experience(
+        id: 'e1',
+        title: 'Director',
+        organisation: 'DLF',
+        company: LinkedCompany(id: 'co-dlf', name: 'DLF'),
+        startYear: 2018,
+        isCurrent: true,
+      ),
     ],
     education: const [Education(id: 'd1', institution: 'IIT Delhi', degree: 'B.Tech')],
     links: const ProfileLinks(linkedin: 'https://linkedin.com/in/asha', website: 'https://asha.example.com'),
-    credentials: const [PublicCredential(name: 'Certified Facility Manager', code: 'CFM', issuer: 'IFMA', issuedAt: '2022-05-01T00:00:00.000Z', url: 'https://ifma.example/verify/1', verified: true)],
+    credentials: const [
+      PublicCredential(
+        name: 'Certified Facility Manager',
+        code: 'CFM',
+        issuer: 'IFMA',
+        issuedAt: '2022-05-01T00:00:00.000Z',
+        url: 'https://ifma.example/verify/1',
+        verified: true,
+      ),
+    ],
     reputation: 120,
     threads: 2,
     replies: 9,
@@ -107,7 +123,7 @@ void main() {
       expect(find.text('Gurugram · DLF'), findsOneWidget);
       expect(find.text('41 followers · 12 following · Member since Mar 2026'), findsOneWidget);
       expect(find.text('Mentor'), findsOneWidget);
-      expect(find.text('Ready for a new role'), findsOneWidget);
+      expect(find.text('Ready for a New Role'), findsOneWidget);
       expect(find.text('20 yrs experience'), findsOneWidget);
     });
 
@@ -116,9 +132,19 @@ void main() {
       const detail = {
         'About': 'Twenty years in workplace operations.',
         'Education': 'IIT Delhi',
-        'Licenses & certifications': 'Issued May 2022',
+        'Licenses and Certifications': 'Issued May 2022',
       };
-      for (final t in ['About', 'Experience', 'Education', 'Licenses & certifications', 'Skills', 'Languages', 'Links', 'Chapters & councils', 'Community activity']) {
+      for (final t in [
+        'About',
+        'Experience',
+        'Education',
+        'Licenses and Certifications',
+        'Skills',
+        'Languages',
+        'Links',
+        'Chapters & Councils',
+        'Community Activity',
+      ]) {
         await reveal(tester, find.text(t));
         expect(find.text(t), findsOneWidget);
         if (detail[t] != null) expect(find.text(detail[t]!), findsOneWidget);
@@ -126,10 +152,16 @@ void main() {
     });
 
     testWidgets('a section with nothing to show is left out', (tester) async {
-      final bare = MemberProfile(id: 'm-bare', firstName: 'Bo', lastName: 'Ray', follow: const FollowState(followers: 0, following: 0, viewerFollows: false), signedIn: true);
+      final bare = MemberProfile(
+        id: 'm-bare',
+        firstName: 'Bo',
+        lastName: 'Ray',
+        follow: const FollowState(followers: 0, following: 0, viewerFollows: false),
+        signedIn: true,
+      );
       await pump(tester, repoWith(bare, posts: const []), userId: 'm-bare');
       expect(find.text('Bo Ray'), findsWidgets);
-      for (final t in ['About', 'Experience', 'Education', 'Skills', 'Languages', 'Links', 'Community activity']) {
+      for (final t in ['About', 'Experience', 'Education', 'Skills', 'Languages', 'Links', 'Community Activity']) {
         expect(find.text(t), findsNothing);
       }
       expect(find.text('0 followers · 0 following'), findsOneWidget);
@@ -143,11 +175,16 @@ void main() {
     testWidgets('loading, then a page that is not available says so with Try again', (tester) async {
       final repo = DemoAccountRepository()..gate = Future<void>.delayed(const Duration(milliseconds: 300));
       usePhone(tester);
-      await tester.pumpWidget(MaterialApp(theme: buildAppTheme(), home: MemberProfileScreen(userId: 'nobody', repository: repo)));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildAppTheme(),
+          home: MemberProfileScreen(userId: 'nobody', repository: repo),
+        ),
+      );
       await tester.pump();
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       await tester.pumpAndSettle(const Duration(seconds: 1));
-      expect(find.text('This profile is not available'), findsOneWidget);
+      expect(find.text('This Profile Is Not Available'), findsOneWidget);
       expect(find.text('It may be private, or the member may have left ICR.'), findsOneWidget);
       expect(find.byKey(const Key('account.retry')), findsOneWidget);
     });
@@ -165,8 +202,8 @@ void main() {
     testWidgets('the discussions failing leaves the page whole and says so', (tester) async {
       final repo = repoWith(mentor)..failures['memberPosts'] = ApiError('x', statusCode: 500);
       await pump(tester, repo);
-      await reveal(tester, find.text('Community activity'));
-      expect(find.text("Couldn't load their discussions."), findsOneWidget);
+      await reveal(tester, find.text('Community Activity'));
+      expect(find.text("Unable to load their discussions."), findsOneWidget);
       expect(find.text('Asha Verma'), findsWidgets);
     });
 
@@ -180,7 +217,9 @@ void main() {
   });
 
   group('Follow and Message', () {
-    testWidgets('Follow changes to Following at once, counts one more follower, and Following takes it back', (tester) async {
+    testWidgets('Follow changes to Following at once, counts one more follower, and Following takes it back', (
+      tester,
+    ) async {
       final repo = repoWith(mentor);
       await pump(tester, repo);
       await tester.tap(find.byKey(const Key('member.follow')));
@@ -197,7 +236,8 @@ void main() {
     });
 
     testWidgets('a refused follow goes back with the API sentence', (tester) async {
-      final repo = repoWith(mentor)..failures['follow'] = ApiError('You can follow up to 5,000 people.', statusCode: 400);
+      final repo = repoWith(mentor)
+        ..failures['follow'] = ApiError('You can follow up to 5,000 people.', statusCode: 400);
       await pump(tester, repo);
       await tester.tap(find.byKey(const Key('member.follow')));
       await tester.pumpAndSettle();
@@ -220,7 +260,8 @@ void main() {
     });
 
     testWidgets('a refused Message shows the API sentence and opens nothing', (tester) async {
-      final repo = repoWith(mentor)..failures['startConversation'] = ApiError('This member does not take messages.', statusCode: 403);
+      final repo = repoWith(mentor)
+        ..failures['startConversation'] = ApiError('This member does not take messages.', statusCode: 403);
       final opened = <String>[];
       await pump(tester, repo, onMessage: (id, m) => opened.add(id));
       await tester.tap(find.byKey(const Key('member.message')));
@@ -229,14 +270,22 @@ void main() {
       expect(opened, isEmpty);
     });
 
-    testWidgets('Mentor profile opens the mentor by id; a member who does not mentor has no such button', (tester) async {
+    testWidgets('Mentor profile opens the mentor by id; a member who does not mentor has no such button', (
+      tester,
+    ) async {
       final log = <String>[];
       await pump(tester, repoWith(mentor), log: log);
       await tester.tap(find.byKey(const Key('member.mentor')));
       await tester.pump();
       expect(log, ['mentor:mentor-9']);
 
-      final plain = MemberProfile(id: 'm-p', firstName: 'Pia', lastName: 'Rao', follow: const FollowState(followers: 1, following: 1, viewerFollows: false), signedIn: true);
+      final plain = MemberProfile(
+        id: 'm-p',
+        firstName: 'Pia',
+        lastName: 'Rao',
+        follow: const FollowState(followers: 1, following: 1, viewerFollows: false),
+        signedIn: true,
+      );
       await pump(tester, repoWith(plain), userId: 'm-p');
       expect(find.byKey(const Key('member.mentor')), findsNothing);
     });
@@ -276,7 +325,11 @@ void main() {
       await reveal(tester, find.byKey(const Key('cred.0')));
       await tester.tap(find.byKey(const Key('cred.0')));
       await tester.pump();
-      expect(opened.map((u) => u.toString()), ['https://linkedin.com/in/asha', 'https://asha.example.com', 'https://ifma.example/verify/1']);
+      expect(opened.map((u) => u.toString()), [
+        'https://linkedin.com/in/asha',
+        'https://asha.example.com',
+        'https://ifma.example/verify/1',
+      ]);
     });
 
     testWidgets('Share hands the public link to the share sheet', (tester) async {

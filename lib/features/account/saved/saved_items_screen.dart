@@ -152,7 +152,7 @@ class _SavedItemsScreenState extends State<SavedItemsScreen> {
     }
     messenger.showSnackBar(
       SnackBar(
-        content: Text('Removed “${item.title}” from saved', maxLines: 2, overflow: TextOverflow.ellipsis),
+        content: Text('Removed “${item.title}” from Saved Items.', maxLines: 2, overflow: TextOverflow.ellipsis),
         persist: false, // an Undo snackbar would otherwise stay over every screen until dismissed
 
         action: SnackBarAction(label: 'Undo', onPressed: () => _undo(removal)),
@@ -194,7 +194,7 @@ class _SavedItemsScreenState extends State<SavedItemsScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 TitleBar(
-                  title: 'Saved items',
+                  title: 'Saved Items',
                   onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
                   unread: widget.unread,
                   onBell: widget.onBell ?? () => _site('/notifications'),
@@ -212,7 +212,7 @@ class _SavedItemsScreenState extends State<SavedItemsScreen> {
   Widget _body() {
     if (_controller.nothingAvailable) {
       return const _Centered(
-        title: 'Saving is not available here',
+        title: 'Saving Is Not Available',
         message: 'This account cannot bookmark jobs, mentors, suppliers, councils or discussions.',
       );
     }
@@ -240,7 +240,7 @@ class _SavedItemsScreenState extends State<SavedItemsScreen> {
           SizedBox(
             height: 360,
             child: AccountError(
-              title: 'Could not load saved ${kind.label.toLowerCase()}',
+              title: 'Unable to Load Saved ${kind.label}',
               message: s.error ?? 'Something went wrong.',
               onRetry: () => _controller.load(kind),
             ),
@@ -329,7 +329,7 @@ class _SavedItemsScreenState extends State<SavedItemsScreen> {
         Center(
           child: AccountButton(
             key: const ValueKey('saved.more'),
-            label: s.moreError != null ? 'Try again' : 'Show more',
+            label: s.moreError != null ? 'Try Again' : 'View More',
             outlined: true,
             expand: false,
             height: 40,

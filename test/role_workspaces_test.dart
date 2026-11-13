@@ -35,15 +35,16 @@ void main() {
     for (final i in w.firstWhere((x) => x.label == label).sections.single.items) i.path,
   ];
 
-  // The owner's table (6 Nov 2026): every user's four rows, Company for one who runs a company, then Account.
-  const design = ['Jobs', 'Learning', 'Mentorship', 'Marketplace', 'Company', 'Account'];
+  // The owner's table (6 Nov 2026): every user's four rows, Company (the one they run, and My companies for
+  // everyone — owner, 7 Nov 2026), then Account.
+  // Company second, under Jobs (owner, 12 Nov 2026).
+  const design = ['Jobs', 'Company', 'Learning', 'Mentorship', 'Marketplace', 'Account'];
 
   group('the rows, by role (every page the app could show)', () {
     test("every member gets the table's rows, each opening one set of tabs", () {
       for (final role in ['PROFESSIONAL', 'COMPANY_ADMIN', 'VENDOR', 'BUYER', 'RECRUITER', 'BRANCH_ADMIN']) {
         final w = workspacesFor(user(role), opens: everything);
-        // A plain member of a company runs none of it: no Company row for them.
-        expect(labels(w), role == 'PROFESSIONAL' ? design.where((l) => l != 'Company') : design, reason: role);
+        expect(labels(w), design, reason: role);
         for (final x in w) {
           expect(x.sections, hasLength(1), reason: '$role › ${x.label} opens straight away');
           expect(x.sections.single.title, x.label);
@@ -51,20 +52,41 @@ void main() {
       }
     });
 
-    test("a user: the table's own pages under Jobs, Learning, Mentorship and Marketplace; no Company row", () {
+    test("a user: the table's own pages under Jobs, Learning, Mentorship and Marketplace; Company is My companies", () {
       final w = workspacesFor(user('PROFESSIONAL', companyId: null), opens: everything);
-      expect(labels(w), ['Jobs', 'Learning', 'Mentorship', 'Marketplace', 'Account']);
-      expect(pages(w, 'Jobs'), ['/career/applications', '/career/saved', '/jobs']);
+      expect(labels(w), design);
+      expect(pages(w, 'Company'), ['/account/companies'], reason: 'My companies sits under Company, not Account');
+      // The owner's document "Mobile Profile Screen Text Changes" (12 Nov 2026): no search rows (the tabs are
+      // those searches); My Requirements and "Enquiries and RFQ" under Marketplace; Mentor Engagements and
+      // Mentoring Sessions under Mentorship.
+      expect(pages(w, 'Jobs'), ['/career/applications', '/career/saved']);
       expect(pages(w, 'Learning'), ['/learning?mine=1', '/learning/attempts', '/learning/certificates']);
-      expect(pages(w, 'Mentorship'), ['/mentorship/my?tab=calendar', '/mentorship/mentors']);
-      expect(pages(w, 'Marketplace'), ['/rfq/new', '/vendors']);
+      expect(pages(w, 'Mentorship'), ['/mentorship/my', '/mentorship/my?tab=calendar']);
+      expect(pages(w, 'Marketplace'), ['/manage/requirements', '/rfq']);
+      expect(w.firstWhere((x) => x.label == 'Jobs').sections.single.items.map((i) => i.label), [
+        'My Applications',
+        'My Saved Jobs',
+      ]);
+      expect(w.firstWhere((x) => x.label == 'Learning').sections.single.items.map((i) => i.label), [
+        'My Courses',
+        'My Attempts',
+        'My Certificates',
+      ]);
+      expect(w.firstWhere((x) => x.label == 'Mentorship').sections.single.items.map((i) => i.label), [
+        'Mentor Engagements',
+        'Mentoring Sessions',
+      ]);
+      expect(w.firstWhere((x) => x.label == 'Marketplace').sections.single.items.map((i) => i.label), [
+        'My Requirements',
+        'Enquiries and RFQ',
+      ]);
+      expect(w.firstWhere((x) => x.label == 'Company').sections.single.items.single.label, 'My Companies');
       expect(pages(w, 'Account'), [
         '/membership',
         '/membership/history',
         '/membership/benefits',
         '/refer',
         '/refer/credits',
-        '/account/companies',
       ]);
     });
 
@@ -90,13 +112,13 @@ void main() {
 
     test("the doors' words are the website's (WelcomeCard intents, nav label, mentorship card)", () {
       final doors = {for (final d in startDoorsFor(user('PROFESSIONAL', companyId: null))) d.key: d};
-      expect(doors['hire']!.label, 'Hire people');
+      expect(doors['hire']!.label, 'Hire Talent');
       expect(doors['hire']!.caption, 'Create your company page, then post a job.');
-      expect(doors['sell']!.label, 'Sell to FM buyers');
+      expect(doors['sell']!.label, 'Sell to FM Buyers');
       expect(doors['sell']!.caption, 'Create your company page, then list your services.');
-      expect(doors['source']!.label, 'Find suppliers');
+      expect(doors['source']!.label, 'Marketplace');
       expect(doors['source']!.caption, 'Search verified suppliers and ask for quotes.');
-      expect(doors['mentor']!.label, 'Become a mentor');
+      expect(doors['mentor']!.label, 'Become a Mentor');
       expect(doors['mentor']!.caption, 'Share your expertise with the next generation.');
     });
 
@@ -169,14 +191,10 @@ void main() {
       },
     );
 
-    test('a mentor adds the mentor dashboard and offerings under Mentorship', () {
+    test('a mentor adds the Mentor Dashboard first under Mentorship', () {
       final w = workspacesFor(user('PROFESSIONAL', companyId: null, mentorStatus: 'APPROVED'), opens: everything);
-      expect(pages(w, 'Mentorship'), [
-        '/mentorship/my?tab=calendar',
-        '/mentorship/mentors',
-        '/mentorship/mentor',
-        '/mentorship/mentor?tab=services',
-      ]);
+      expect(pages(w, 'Mentorship'), ['/mentorship/mentor', '/mentorship/my', '/mentorship/my?tab=calendar']);
+      expect(w.firstWhere((x) => x.label == 'Mentorship').sections.single.items.first.label, 'Mentor Dashboard');
       final applicant = workspacesFor(
         user('PROFESSIONAL', companyId: null, mentorStatus: 'PENDING'),
         opens: everything,
@@ -184,49 +202,80 @@ void main() {
       expect(pages(applicant, 'Mentorship').last, '/mentorship/become-a-mentor');
     });
 
-    test('a company admin: the Company row (members, services, products, enquiries, bids) and hiring under Jobs', () {
+    test('a company admin: the Company row (My Companies, Dashboard, team, enquiries, bids), the catalogue under '
+        'Marketplace, and hiring under Jobs', () {
       final w = workspacesFor(user('COMPANY_ADMIN'), opens: everything);
       expect(pages(w, 'Company'), [
+        '/account/companies',
+        '/company',
         '/manage/team',
-        '/manage/services',
-        '/manage/products',
         '/manage/requirements',
         '/manage/bids',
+      ]);
+      expect(w.firstWhere((x) => x.label == 'Company').sections.single.items.map((i) => i.label), [
+        'My Companies',
+        'Dashboard',
+        'Manage Team',
+        'View Enquiries & RFQs',
+        'Bid for Enquiries & RFQs',
       ]);
       expect(pages(w, 'Jobs'), [
         '/manage/jobs',
         '/manage/team',
+        '/talent',
         '/manage/projects',
         '/career/applications',
         '/career/saved',
-        '/jobs',
       ]);
-      expect(pages(w, 'Marketplace'), ['/rfq/new', '/vendors']);
-      expect(pages(w, 'Account'), contains('/account/companies'));
+      expect(w.firstWhere((x) => x.label == 'Jobs').sections.single.items.map((i) => i.label), [
+        'Manage Jobs',
+        'Manage Hiring Team',
+        'Source Candidates',
+        'Projects',
+        'My Applications',
+        'My Saved Jobs',
+      ]);
+      expect(pages(w, 'Marketplace'), ['/manage/requirements', '/manage/products', '/manage/services', '/rfq']);
+      expect(w.firstWhere((x) => x.label == 'Marketplace').sections.single.items.map((i) => i.label), [
+        'My Requirements',
+        'My Products',
+        'My Services',
+        'Enquiries and RFQ',
+      ]);
+      expect(pages(w, 'Account'), isNot(contains('/account/companies')));
     });
 
     test('a buyer edits its organisation and views enquiries; it does not sell or hire', () {
       final w = workspacesFor(user('BUYER'), opens: everything);
-      expect(pages(w, 'Company'), ['/company', '/manage/team', '/manage/requirements']);
+      expect(pages(w, 'Company'), ['/account/companies', '/company', '/manage/team', '/manage/requirements']);
       expect(pages(w, 'Company'), isNot(contains('/manage/bids')));
       expect(pages(w, 'Jobs'), isNot(contains('/manage/jobs')));
+      expect(pages(w, 'Marketplace'), ['/manage/requirements', '/rfq']);
     });
 
     test('a seller adds services and products and bids; it does not hire', () {
       final w = workspacesFor(user('VENDOR'), opens: everything);
-      expect(pages(w, 'Company'), containsAll(['/manage/services', '/manage/products', '/manage/bids']));
+      expect(pages(w, 'Company'), contains('/manage/bids'));
       expect(pages(w, 'Jobs'), isNot(contains('/manage/jobs')));
+      // The catalogue moved from Company to Marketplace (the owner's document, 12 Nov 2026).
+      expect(pages(w, 'Company'), isNot(contains('/manage/products')));
+      expect(pages(w, 'Marketplace'), ['/manage/requirements', '/manage/products', '/manage/services', '/rfq']);
     });
 
     test('the hiring roles: a recruiter and an office admin hire; a hiring manager has Interviews only', () {
       for (final role in ['RECRUITER', 'BRANCH_ADMIN']) {
         final w = workspacesFor(user(role), opens: everything);
-        expect(pages(w, 'Company'), ['/manage/team', '/manage/locations'], reason: role);
+        expect(pages(w, 'Company'), [
+          '/account/companies',
+          '/company',
+          '/manage/team',
+          '/manage/locations',
+        ], reason: role);
         expect(pages(w, 'Jobs').first, '/manage/jobs', reason: role);
-        expect(pages(w, 'Marketplace'), ['/rfq/new', '/vendors'], reason: role);
+        expect(pages(w, 'Marketplace'), ['/manage/requirements', '/rfq'], reason: role);
       }
       final manager = workspacesFor(user('HIRING_MANAGER'), opens: everything);
-      expect(labels(manager), isNot(contains('Company')));
+      expect(pages(manager, 'Company'), ['/account/companies'], reason: 'runs nothing; My companies only');
       expect(pages(manager, 'Jobs').first, '/manage/interviews');
       expect(pages(manager, 'Jobs'), isNot(contains('/manage/jobs')));
     });
@@ -243,33 +292,39 @@ void main() {
         reason: 'an applicant sees My mentor profile, the same page',
       );
       final w = workspacesFor(user('COMPANY_ADMIN'), opens: everything);
-      expect(w.firstWhere((x) => x.label == 'Mentorship').sections.single.items.last.label, 'Become a mentor');
+      expect(w.firstWhere((x) => x.label == 'Mentorship').sections.single.items.last.label, 'Become a Mentor');
       expect(
         pages(workspacesFor(user('PROFESSIONAL', companyId: null), opens: everything), 'Mentorship'),
         isNot(contains('/mentorship/become-a-mentor')),
       );
     });
 
-    test("a partner institute's staff get the Partner Institute row", () {
+    test("a partner institute's staff get the Learning Partner row", () {
       final w = workspacesFor(user('COMPANY_ADMIN', learningRoles: ['TRAINER']), opens: everything);
-      expect(labels(w), ['Jobs', 'Learning', 'Mentorship', 'Marketplace', 'Company', 'Partner Institute', 'Account']);
-      expect(pages(w, 'Partner Institute'), [
+      expect(labels(w), ['Jobs', 'Company', 'Learning', 'Mentorship', 'Marketplace', 'Learning Partner', 'Account']);
+      expect(pages(w, 'Learning Partner'), [
         '/admin/learning/courses',
-        '/admin/learning/batches',
-        '/admin/learning/enquiries',
         '/manage/team',
-        '/manage/team?invite=TRAINER',
-        '/manage/team?invite=COURSE_ADMIN',
+        '/admin/learning/batches',
+        '/admin/learning/enrolments',
+        '/admin/learning/enquiries',
+      ]);
+      expect(w.firstWhere((x) => x.label == 'Learning Partner').sections.single.items.map((i) => i.label), [
+        'Manage Courses',
+        'Manage Team',
+        'Manage Batches',
+        'Enrolment',
+        'Enquiries',
       ]);
       // The admin of a company ICR approved as a partner holds no learning role of their own, but runs it.
       final admin = workspacesFor(user('COMPANY_ADMIN', learningPartner: true), opens: everything);
-      expect(labels(admin), contains('Partner Institute'));
+      expect(labels(admin), contains('Learning Partner'));
       expect(
         labels(workspacesFor(user('RECRUITER', learningPartner: true), opens: everything)),
-        isNot(contains('Partner Institute')),
+        isNot(contains('Learning Partner')),
         reason: 'only the admin, as the website gives learning roles',
       );
-      expect(labels(workspacesFor(user('COMPANY_ADMIN'), opens: everything)), isNot(contains('Partner Institute')));
+      expect(labels(workspacesFor(user('COMPANY_ADMIN'), opens: everything)), isNot(contains('Learning Partner')));
     });
 
     test("ICR staff get their consoles and none of the member's rows", () {
@@ -280,7 +335,14 @@ void main() {
       expect(labels(workspacesFor(user('LEARNING_ADMIN', companyId: null), opens: everything)), ['Learn']);
       final partner = workspacesFor(user('PARTNER_ADMIN', companyId: null), opens: everything);
       expect(labels(partner), ['Learn']);
-      expect(pages(partner, 'Learn'), contains('/admin/learning'));
+      expect(
+        pages(partner, 'Learn'),
+        containsAll(['/admin/learning/courses', '/admin/learning/batches', '/admin/learning/enrolments']),
+      );
+      // ICR's own Learning Center keeps its batches and enrolments in the staff console: the app's are the institute's.
+      final learning = workspacesFor(user('LEARNING_ADMIN', companyId: null), opens: everything);
+      expect(pages(learning, 'Learn'), isNot(contains('/admin/learning/batches')));
+      expect(pages(learning, 'Learn'), isNot(contains('/admin/learning/enrolments')));
     });
 
     test('the Account rows: everything for a member, Settings alone for staff', () {
@@ -298,9 +360,9 @@ void main() {
   group('only pages the app shows itself', () {
     test('a page the app has no screen for is left out; a row left empty goes', () {
       expect(labels(workspacesFor(user('COMPANY_ADMIN'), opens: nothing)), isEmpty);
-      final w = workspacesFor(user('COMPANY_ADMIN'), opens: (p) => p == '/vendors' || p == '/manage/jobs');
+      final w = workspacesFor(user('COMPANY_ADMIN'), opens: (p) => p == '/rfq' || p == '/manage/jobs');
       expect(labels(w), ['Jobs', 'Marketplace']);
-      expect(pages(w, 'Marketplace'), ['/vendors']);
+      expect(pages(w, 'Marketplace'), ['/rfq']);
       expect(pages(w, 'Jobs'), ['/manage/jobs']);
     });
 
@@ -310,12 +372,21 @@ void main() {
       bool opens(String p) => workspaceOpens(p, screens);
       final admin = workspacesFor(user('COMPANY_ADMIN'), opens: opens);
       expect(labels(admin), design);
-      expect(pages(admin, 'Company'), containsAll(['/manage/team', '/manage/requirements', '/manage/bids']));
-      expect(pages(admin, 'Account'), contains('/account/companies'));
-      expect(pages(admin, 'Marketplace'), ['/rfq/new', '/vendors']);
-      expect(pages(admin, 'Jobs'), containsAll(['/manage/jobs', '/jobs', '/career/applications']));
+      expect(
+        pages(admin, 'Company'),
+        containsAll(['/manage/team', '/manage/requirements', '/manage/bids', '/account/companies', '/company']),
+      );
+      expect(pages(admin, 'Account'), isNot(contains('/account/companies')));
+      expect(
+        pages(admin, 'Marketplace'),
+        containsAll(['/manage/requirements', '/manage/products', '/manage/services', '/rfq']),
+      );
+      expect(
+        pages(admin, 'Jobs'),
+        containsAll(['/manage/jobs', '/talent', '/manage/projects', '/career/applications']),
+      );
       // Consoles the app has no screen for are not offered (they would open the website).
-      for (final path in ['/crm', '/payments', '/talent', '/manage/reports', '/admin/users', '/tenders', '/company']) {
+      for (final path in ['/crm', '/payments', '/manage/reports', '/admin/users', '/tenders']) {
         expect(opens(path), isFalse, reason: path);
       }
       const roles = [

@@ -109,18 +109,18 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
             if (r.status == RfqStatus.draft || r.status == RfqStatus.published)
               _MenuRow(icon: LucideIcons.pencil, label: 'Edit', value: 'edit'),
             if (r.status == RfqStatus.draft) _MenuRow(icon: LucideIcons.send, label: 'Publish', value: 'publish'),
-            _MenuRow(icon: LucideIcons.copy, label: 'Post a similar requirement', value: 'similar'),
+            _MenuRow(icon: LucideIcons.copy, label: 'Post a Similar Requirement', value: 'similar'),
             if (r.status == RfqStatus.published || r.status == RfqStatus.awarded)
-              _MenuRow(icon: LucideIcons.lock, label: enquiry ? 'Close enquiry' : 'Close requirement', value: 'close'),
+              _MenuRow(icon: LucideIcons.lock, label: enquiry ? 'Close Enquiry' : 'Close Requirement', value: 'close'),
             if (r.status == RfqStatus.published)
               _MenuRow(
                 icon: LucideIcons.ban,
-                label: enquiry ? 'Cancel enquiry' : 'Cancel requirement',
+                label: enquiry ? 'Cancel Enquiry' : 'Cancel Requirement',
                 value: 'cancel',
                 danger: true,
               ),
             if (r.status == RfqStatus.draft)
-              _MenuRow(icon: LucideIcons.trash2, label: 'Delete draft', value: 'delete', danger: true),
+              _MenuRow(icon: LucideIcons.trash2, label: 'Delete Draft', value: 'delete', danger: true),
           ],
         ),
       ),
@@ -140,18 +140,18 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
       case 'close':
         if (await confirmMove(
           context,
-          title: 'Close this requirement?',
-          body: 'Suppliers can no longer reply. The responses you have stay here.',
-          confirm: 'Close it',
+          title: 'Close This Requirement?',
+          body: 'Suppliers can no longer reply. The responses you have received remain here.',
+          confirm: 'Close It',
         )) {
           await _say(_rfqs.act(r, RfqAction.close));
         }
       case 'cancel':
         if (await confirmMove(
           context,
-          title: 'Cancel this requirement?',
-          body: 'It is taken off the board and suppliers can no longer reply. This can’t be undone.',
-          confirm: 'Cancel requirement',
+          title: 'Cancel This Requirement?',
+          body: 'It will be removed from the board and suppliers can no longer reply. This cannot be undone.',
+          confirm: 'Cancel Requirement',
           destructive: true,
         )) {
           await _say(_rfqs.act(r, RfqAction.cancel));
@@ -159,9 +159,9 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
       case 'delete':
         if (await confirmMove(
           context,
-          title: 'Delete this draft?',
-          body: 'Only your team has seen it. It is deleted for good.',
-          confirm: 'Delete draft',
+          title: 'Delete This Draft?',
+          body: 'Only your team has seen it. It will be deleted permanently.',
+          confirm: 'Delete Draft',
           destructive: true,
         )) {
           await _say(_rfqs.deleteDraft(r));
@@ -172,11 +172,11 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
   Future<void> _pickKind() async {
     final picked = await pickOne<RfqKind>(
       context,
-      title: 'Requirement type',
+      title: 'Requirement Type',
       options: RfqKind.values,
       labelOf: (k) => k == RfqKind.enquiry ? 'Enquiries' : 'RFQs',
       selected: _rfqs.kind,
-      clearLabel: 'All types',
+      clearLabel: 'All Types',
     );
     if (picked != null) await _rfqs.setKind(picked.value);
   }
@@ -184,7 +184,7 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
   Future<void> _pickSort() async {
     final picked = await pickOne<MySort>(
       context,
-      title: 'Sort by',
+      title: 'Sort By',
       options: MySort.values,
       labelOf: (s) => s.label,
       selected: _rfqs.sort,
@@ -220,7 +220,7 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
   Widget _toolbar() {
     final rfqs = _rfqs;
     final kindLabel = switch (rfqs.kind) {
-      null => 'All types',
+      null => 'All Types',
       RfqKind.enquiry => 'Enquiries',
       RfqKind.rfq => 'RFQs',
     };
@@ -230,7 +230,7 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: IcrSearchField(controller: _search, hint: 'Search your requirements', onSubmitted: rfqs.setSearch),
+          child: IcrSearchField(controller: _search, hint: 'Search Your Requirements', onSubmitted: rfqs.setSearch),
         ),
         const SizedBox(height: 10),
         ChipRow(
@@ -247,7 +247,7 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
             // The other side of the board: the open requirements a supplier bids on (the website's Find Work & Bid).
             IcrChip(
               key: const ValueKey('rfq-find-work'),
-              label: 'Find work',
+              label: 'Find Work',
               tone: ChipTone.outlined,
               icon: LucideIcons.compass,
               onTap: () => pushBoard(context, _hooks),
@@ -296,7 +296,7 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
           RfqNotice(
             key: const ValueKey('role-cannot-post'),
             icon: LucideIcons.lock,
-            title: "Requirements aren't part of your role",
+            title: "Requirements Aren't Part of Your Role",
             body: rfqs.poster!.cannotPostMessage,
           ),
         ),
@@ -307,10 +307,10 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
         fill(
           RfqNotice(
             icon: LucideIcons.building2,
-            title: 'Requirements are posted by buyers and companies',
+            title: 'Requirements Are Posted by Buyers and Companies',
             body:
                 'Your account cannot post requirements yet. Create a company page to buy on ICR, or ask a company admin to add you as a buyer.',
-            action: 'Create a company page',
+            action: 'Create a Company Page',
             onAction: _hooks.onCreateCompany ?? () => _hooks.openSite(context, '/account/companies/new'),
           ),
         ),
@@ -321,9 +321,9 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
         fill(
           RfqNotice(
             icon: LucideIcons.cloudOff,
-            title: "Couldn't load your requirements",
+            title: 'Unable to Load Your Requirements',
             body: rfqs.error,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: rfqs.refresh,
           ),
         ),
@@ -334,8 +334,8 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
         fill(
           RfqNotice(
             icon: LucideIcons.clipboardList,
-            title: 'Post your first requirement',
-            body: 'Describe what you need once; matched suppliers are alerted and their quotes come back here.',
+            title: 'Post Your First Requirement',
+            body: 'Describe what you need once. Matched suppliers are alerted and their quotes will appear here.',
             action: 'Post RFQ',
             onAction: _post,
           ),
@@ -351,11 +351,11 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
       children.add(
         RfqNotice(
           icon: LucideIcons.searchX,
-          title: rfqs.narrowed ? 'No requirements match' : 'Nothing in ${rfqs.view.label.toLowerCase()}',
+          title: rfqs.narrowed ? 'No Requirements Match' : 'Nothing in ${rfqs.view.label}',
           body: rfqs.narrowed
-              ? 'Try other words, or show every type.'
-              : 'Requirements show here as they reach this state.',
-          action: rfqs.narrowed ? 'Clear search' : null,
+              ? 'Try different words or show every type.'
+              : 'Requirements will appear here as they reach this state.',
+          action: rfqs.narrowed ? 'Clear Search' : null,
           onAction: rfqs.narrowed
               ? () {
                   _search.clear();
@@ -402,7 +402,7 @@ class _MyRfqsScreenState extends State<MyRfqsScreen> {
               children: [
                 const Icon(LucideIcons.bellRing, size: 16, color: AppColors.amber800),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Waiting on you', style: RfqText.section.copyWith(fontSize: 14))),
+                Expanded(child: Text('Waiting on You', style: RfqText.section.copyWith(fontSize: 14))),
                 Text('${summary.actionCount}', style: RfqText.metaStrong),
               ],
             ),
@@ -544,7 +544,7 @@ class RequirementCard extends StatelessWidget {
                     _ => null,
                   },
                 ),
-              if (rfq.visibility == RfqVisibility.targeted) const _Meta(icon: LucideIcons.lock, text: 'Invite only'),
+              if (rfq.visibility == RfqVisibility.targeted) const _Meta(icon: LucideIcons.lock, text: 'Invite Only'),
               if (rfq.postedBy != null) _Meta(icon: LucideIcons.user, text: 'Posted by ${rfq.postedBy}'),
               if (rfq.awardedTo != null) _Meta(icon: LucideIcons.trophy, text: 'Awarded to ${rfq.awardedTo}'),
             ],

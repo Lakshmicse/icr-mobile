@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -31,7 +33,9 @@ Future<ForumThread?> openComposer(
   String? initialTitle,
   String? initialBody,
   String? repostOfId,
+  ForumAttachment? initialAttachment,
   Future<ForumFile?> Function()? pickFile,
+  Future<List<ForumFile>> Function()? pickMedia,
 }) {
   return Navigator.of(context).push<ForumThread>(
     MaterialPageRoute<ForumThread>(
@@ -44,15 +48,17 @@ Future<ForumThread?> openComposer(
         initialTitle: initialTitle,
         initialBody: initialBody,
         repostOfId: repostOfId,
+        initialAttachment: initialAttachment,
         pickFile: pickFile,
+        pickMedia: pickMedia,
       ),
     ),
   );
 }
 
 /// The composer, laid out as the website's "Create a post" form (`ThreadComposer`): the two kinds, Category and
-/// Sub-category (optional), Title (or Poll question), a poll's options, Details in a rich-text editor (bold, italic,
-/// heading, lists, link), Tags and a file. Validated as the API's DTO is, showing the API's own refusal, and keeping
+/// Sub-category (Optional), Discussion Title (or Your Poll Question), a poll's Answer Options, Discussion Details in a
+/// rich-text editor (bold, italic, heading, lists, link), Add Tags and a file (the owner's wording, 12 Nov 2026). Validated as the API's DTO is, showing the API's own refusal, and keeping
 /// what was typed when a send fails. One control posts it: the Post in the title bar (Save on an edit).
 class NewThreadScreen extends StatefulWidget {
   const NewThreadScreen({
@@ -64,7 +70,9 @@ class NewThreadScreen extends StatefulWidget {
     this.initialTitle,
     this.initialBody,
     this.repostOfId,
+    this.initialAttachment,
     this.pickFile,
+    this.pickMedia,
   });
 
   /// The discussion this post reposts, sent with it.
@@ -79,8 +87,14 @@ class NewThreadScreen extends StatefulWidget {
   final String? initialTitle;
   final String? initialBody;
 
+  /// A new post that starts with this file attached (a repost's copy of the original's picture).
+  final ForumAttachment? initialAttachment;
+
   /// Asks for a file to attach; the phone's chooser by default.
   final Future<ForumFile?> Function()? pickFile;
+
+  /// Asks for photos and videos (several at once); the phone's chooser by default.
+  final Future<List<ForumFile>> Function()? pickMedia;
 
   @override
   State<NewThreadScreen> createState() => _NewThreadScreenState();
@@ -93,6 +107,7 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
     mode: widget.mode,
     initialTitle: widget.initialTitle,
     initialBody: widget.initialBody,
+    initialAttachment: widget.initialAttachment,
     repostOfId: widget.repostOfId,
   );
   late final TextEditingController _title = TextEditingController(text: _c.title);
@@ -176,6 +191,14 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
     setState(() => _tagNote = note);
   }
 
+  /// "Add photos or videos": the phone's chooser, several at once; each goes up as it is picked.
+  Future<void> _addMedia() async {
+    final files = await (widget.pickMedia ?? pickForumMedia)();
+    if (files.isEmpty || !mounted) return;
+    final problem = await _c.addMedia(files);
+    if (problem != null && mounted) showMessage(context, problem);
+  }
+
   Future<void> _attach() async {
     final picker = widget.pickFile ?? pickForumFile;
     final file = await picker();
@@ -188,8 +211,8 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
     if (!_c.hasUnsentWork) return true;
     return confirm(
       context,
-      title: _c.isEdit ? 'Discard your changes?' : 'Discard this draft?',
-      body: _c.isEdit ? 'What you changed will not be saved.' : 'What you wrote will be lost.',
+      title: _c.isEdit ? 'Discard Your Changes?' : 'Discard This Draft?',
+      body: _c.isEdit ? 'Your changes will not be saved.' : 'Your draft will be lost.',
       action: 'Discard',
     );
   }
@@ -223,7 +246,7 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
       builder: (_) => _TopicSheet(
         nodes: _c.subtopics,
         selectedKey: _c.subtopicKey,
-        title: 'Sub-category (optional)',
+        title: 'Sub-category (Optional)',
         allowNone: true,
       ),
     );
@@ -254,7 +277,7 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
               child: Column(
                 children: [
                   _Bar(
-                    title: c.isEdit ? 'Edit discussion' : (c.isPoll ? 'New poll' : 'New discussion'),
+                    title: c.isEdit ? 'Edit Discussion' : (c.isPoll ? 'New Poll' : 'New Discussion'),
                     action: c.isEdit ? 'Save' : 'Post',
                     sending: c.sending,
                     onClose: () async {
@@ -275,7 +298,7 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
                             key: const ValueKey('composer-error'),
                             warn: true,
                             icon: LucideIcons.circleAlert,
-                            title: "It couldn't be saved",
+                            title: 'Unable to Save',
                             text: c.error!,
                           ),
                           const SizedBox(height: 14),
@@ -285,7 +308,7 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
                             key: ValueKey('composer-approval'),
                             icon: LucideIcons.clock,
                             text:
-                                'Your first few posts are read by a moderator before they go public. Once a couple are approved, everything you write publishes straight away.',
+                                'A moderator reviews your first few posts before they are published. After a few are approved, your posts are published immediately.',
                           ),
                           const SizedBox(height: 14),
                         ],
@@ -295,15 +318,15 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
                         _Field(
                           fieldKey: const ValueKey('composer-title'),
                           controller: _title,
-                          label: newPoll ? 'Poll question' : (question ? 'Your question' : 'Title'),
+                          label: newPoll ? 'Your Poll Question' : (question ? 'Your Question' : 'Discussion Title'),
                           hint: newPoll
                               ? 'e.g. Which CAFM platform does your team use today?'
                               : (question
                                     ? 'e.g. How are you benchmarking soft services rates across cities?'
-                                    : 'e.g. What actually moved the needle on your energy numbers?'),
+                                    : 'e.g. Which measures reduced your energy use the most?'),
                           helper: newPoll
-                              ? 'One clear question. Members pick one option.'
-                              : 'Specific titles get answered. "Pricing question" does not.',
+                              ? 'Keep your question clear and focused.'
+                              : 'Use a specific title to attract relevant responses.',
                           maxLength: ForumLimits.titleMax,
                           error: c.touched ? c.titleProblem : null,
                           onChanged: c.setTitle,
@@ -314,13 +337,16 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
                           _PollEditor(controller: c, fields: _options, onChanged: () => setState(() {})),
                         ],
                         const SizedBox(height: 16),
-                        Text(c.bodyOptional ? 'Details (optional)' : 'Details', style: composerLabelStyle),
+                        Text(
+                          c.bodyOptional ? 'Additional Context (Optional)' : 'Discussion Details',
+                          style: composerLabelStyle,
+                        ),
                         const SizedBox(height: 8),
                         RichEditor(
                           controller: _body,
                           placeholder: newPoll
-                              ? 'Add context for voters — why you are asking, and anything the options leave out.'
-                              : 'Give enough context that someone can actually help — portfolio size, what you have tried, what constraints you are under.',
+                              ? 'Provide context to help members understand your question.'
+                              : 'Describe your topic, question or experience...',
                           error: c.touched && c.bodyProblem != null,
                           mentions: _mentions,
                         ),
@@ -328,7 +354,7 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
                           Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
-                              'This post has a quote or code from the website that this editor cannot show. Changing its words turns them into plain paragraphs.',
+                              'This post has a quote or code from the website that this editor cannot show. Editing the text converts them to plain paragraphs.',
                               key: const ValueKey('composer-rich-note'),
                               style: ForumDesign.meta,
                             ),
@@ -348,7 +374,7 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _FileRow(controller: c, onAttach: _attach),
+                        _FileRow(controller: c, onAttach: _attach, onMedia: _addMedia),
                         const SizedBox(height: 22),
                         if (c.attempted && c.problems.isNotEmpty)
                           Padding(
@@ -580,14 +606,14 @@ class _TopicField extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              "Couldn't load the categories: ${c.taxonomyError}",
+              'Unable to load categories: ${c.taxonomyError}',
               style: ForumDesign.notice.copyWith(color: AppColors.error),
             ),
           ),
           TextButton(
             key: const ValueKey('topics-retry'),
             onPressed: c.readTaxonomy,
-            child: Text('Try again', style: ForumDesign.metaLink),
+            child: Text('Try Again', style: ForumDesign.metaLink),
           ),
         ],
       );
@@ -600,7 +626,7 @@ class _TopicField extends StatelessWidget {
         const SizedBox(height: 16),
         picker(
           const ValueKey('composer-subtopic'),
-          'Sub-category (optional)',
+          'Sub-category (Optional)',
           c.subtopicName,
           onSubtopic,
           enabled: c.subtopics.isNotEmpty,
@@ -658,7 +684,7 @@ class _Field extends StatelessWidget {
   }
 }
 
-/// The poll's options, drawn like the votes they become: a ring and the text in a bordered row, "Add option" under
+/// The poll's options, drawn like the votes they become: a ring and the text in a bordered row, "Add Option" under
 /// them and the website's hint beside it.
 class _PollEditor extends StatelessWidget {
   const _PollEditor({required this.controller, required this.fields, required this.onChanged});
@@ -677,7 +703,7 @@ class _PollEditor extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
           children: [
-            Text('Options', style: composerLabelStyle),
+            Text('Answer Options', style: composerLabelStyle),
             const Spacer(),
             Text(
               '${c.pollOptions.length} of ${ForumLimits.pollMax}',
@@ -714,12 +740,12 @@ class _PollEditor extends StatelessWidget {
                   onChanged();
                 },
                 icon: const Icon(LucideIcons.plus, size: 16),
-                label: Text('Add option', style: composerLabelStyle.copyWith(color: AppColors.primary)),
+                label: Text('Add Option', style: composerLabelStyle.copyWith(color: AppColors.primary)),
                 style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8)),
               ),
             Expanded(
               child: Text(
-                'Members pick one; results show once they have voted.',
+                'Members can select one option. Results are visible after voting.',
                 textAlign: TextAlign.right,
                 style: AppText.plexSans(12, FontWeight.w400, const Color(0x99000000), lineHeight: 16),
               ),
@@ -789,7 +815,7 @@ class _OptionRowState extends State<_OptionRow> {
                   textCapitalization: TextCapitalization.sentences,
                   style: composerFieldStyle,
                   decoration: InputDecoration(
-                    hintText: 'Option ${widget.index + 1}',
+                    hintText: 'Enter option ${widget.index + 1}',
                     hintStyle: composerFieldStyle.copyWith(color: AppColors.outline),
                     counterText: '',
                     isDense: true,
@@ -889,9 +915,13 @@ class _Tags extends StatelessWidget {
             textInputAction: TextInputAction.done,
             style: composerFieldStyle,
             decoration: composerDecoration(
-              label: 'Tags',
+              label: 'Add Tags',
               hint: 'Add up to ${ForumLimits.tags} · @ to tag someone',
-              helper: 'Tags are how someone finds this in six months.',
+              helper: c.isEdit
+                  ? 'Add relevant keywords to help members discover your discussion.'
+                  : (c.isPoll
+                        ? 'Add relevant keywords to improve discoverability.'
+                        : 'Add relevant keywords to help members find your post.'),
               suffix: InkResponse(
                 key: const ValueKey('tag-add'),
                 onTap: onAdd,
@@ -901,7 +931,7 @@ class _Tags extends StatelessWidget {
             ),
           )
         else
-          Text('That is the most a discussion can carry (${ForumLimits.tags}).', style: ForumDesign.meta),
+          Text('Tag limit reached (${ForumLimits.tags}).', style: ForumDesign.meta),
         if (c.tags.length < ForumLimits.tags && suggestions != null) suggestions!,
         if (note != null)
           Padding(
@@ -918,10 +948,11 @@ class _Tags extends StatelessWidget {
 }
 
 class _FileRow extends StatelessWidget {
-  const _FileRow({required this.controller, required this.onAttach});
+  const _FileRow({required this.controller, required this.onAttach, required this.onMedia});
 
   final ComposerController controller;
   final VoidCallback onAttach;
+  final VoidCallback onMedia;
 
   @override
   Widget build(BuildContext context) {
@@ -930,6 +961,32 @@ class _FileRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Photos and videos first (owner, 11 Nov 2026: several on one discussion), then the one file.
+        if (c.media.isNotEmpty) ...[
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final (i, m) in c.media.indexed) _MediaThumb(item: m, index: i, onRemove: () => c.removeMedia(i)),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+        OutlinedButton.icon(
+          key: const ValueKey('composer-media'),
+          onPressed: c.uploading ? null : onMedia,
+          icon: const Icon(LucideIcons.image, size: 16),
+          label: Text(
+            c.media.isEmpty ? 'Add Photos or Videos' : 'Add More Photos or Videos',
+            style: ForumDesign.chip.copyWith(fontSize: 13),
+          ),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            side: const BorderSide(color: AppColors.composerBorder),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        const SizedBox(height: 8),
         if (file != null)
           AttachmentTile(
             key: const ValueKey('composer-file'),
@@ -944,7 +1001,7 @@ class _FileRow extends StatelessWidget {
               onPressed: c.uploading ? null : onAttach,
               icon: const Icon(LucideIcons.paperclip, size: 16),
               label: Text(
-                file == null ? 'Attach a file' : 'Replace attachment',
+                file == null ? 'Attach File' : 'Replace Attachment',
                 style: ForumDesign.chip.copyWith(fontSize: 13),
               ),
               style: OutlinedButton.styleFrom(
@@ -1133,11 +1190,80 @@ class _TopicSheetState extends State<_TopicSheet> {
                     Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
-                        widget.searchAll ? 'No matching categories' : 'Nothing matches that.',
+                        widget.searchAll ? 'No matching categories.' : 'No matches found.',
                         style: ForumDesign.sheetHint,
                       ),
                     ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A picked photo or video in the composer: a 72 dp square (the picture, or a dark tile with a play glyph) with
+/// an × that takes it off.
+class _MediaThumb extends StatelessWidget {
+  const _MediaThumb({required this.item, required this.index, required this.onRemove});
+
+  final ForumMediaItem item;
+  final int index;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = item.bytes;
+    final url = item.attachment.url;
+    final Widget picture;
+    if (item.isVideo) {
+      picture = const ColoredBox(
+        color: Color(0xFF1F1F1F),
+        child: Center(child: Icon(LucideIcons.play, size: 22, color: Colors.white)),
+      );
+    } else if (bytes != null) {
+      picture = Image.memory(
+        Uint8List.fromList(bytes),
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        errorBuilder: (_, _, _) => const ColoredBox(color: AppColors.surfaceContainer),
+      );
+    } else if (url != null) {
+      picture = Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const ColoredBox(color: AppColors.surfaceContainer),
+      );
+    } else {
+      picture = const ColoredBox(color: AppColors.surfaceContainer);
+    }
+    return Semantics(
+      label: item.isVideo ? 'Video ${index + 1}' : 'Photo ${index + 1}',
+      child: SizedBox(
+        key: ValueKey('media-thumb-$index'),
+        width: 72,
+        height: 72,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ClipRRect(borderRadius: BorderRadius.circular(8), child: picture),
+            Positioned(
+              top: 2,
+              right: 2,
+              child: Material(
+                color: Colors.black54,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  key: ValueKey('media-remove-$index'),
+                  customBorder: const CircleBorder(),
+                  onTap: onRemove,
+                  child: const Padding(
+                    padding: EdgeInsets.all(3),
+                    child: Icon(LucideIcons.x, size: 14, color: Colors.white),
+                  ),
+                ),
               ),
             ),
           ],

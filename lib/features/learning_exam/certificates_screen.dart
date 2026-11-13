@@ -19,8 +19,8 @@ import 'exam_widgets.dart';
 import 'verify_sheet.dart';
 import '../notifications/notifications_screen.dart';
 
-/// The certificates the member has earned: each drawn as a card, opening the certificate itself,
-/// with its credential number to copy, a verification link to share, and the PDF on the website.
+/// The certificates the member has earned: each a row, as the attempts are listed, opening the certificate
+/// itself, with its credential number to copy, a verification link to share, and the PDF on the website.
 ///
 /// Reads `GET /learning/me/certificates`. [repository] is a seam for tests.
 class CertificatesScreen extends StatefulWidget {
@@ -68,7 +68,7 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
             child: Column(
               children: [
                 TitleBar(
-                  title: 'My certificates',
+                  title: 'My Certificates',
                   onBack: widget.onBack,
                   unread: c.unread,
                   onBell: () => openNotifications(context),
@@ -88,9 +88,9 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
       return SingleChildScrollView(
         child: ScreenNotice(
           icon: LucideIcons.award,
-          title: "Couldn't load your certificates",
+          title: 'Unable to Load Your Certificates',
           body: c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: c.refresh,
         ),
       );
@@ -106,9 +106,10 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
             SliverToBoxAdapter(
               child: ScreenNotice(
                 icon: LucideIcons.award,
-                title: 'No certificates yet',
+                title: 'No Certificates Yet',
                 body:
-                    'Pass a certifying assessment and its certificate is issued here, for good, whatever later attempts score.',
+                    'Complete and pass a qualifying assessment to earn your ICR certificate. Your certificate will be available '
+                    'here for future access and verification.',
                 action: 'Back to Learning',
                 onAction: widget.onBack,
               ),
@@ -123,13 +124,17 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: StatTile(value: '${c.all.length}', label: 'Earned', icon: LucideIcons.award),
+                          child: StatTile(
+                            value: '${c.all.length}',
+                            label: 'Certificates Earned',
+                            icon: LucideIcons.award,
+                          ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: StatTile(
                             value: c.best == null ? '-' : '${c.best}%',
-                            label: 'Best score',
+                            label: 'Best Assessment Score',
                             icon: LucideIcons.trophy,
                             color: AppColors.amber500,
                           ),
@@ -142,14 +147,14 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          _BodyChip(label: 'All certificates', on: c.body == null, onTap: () => c.setBody(null)),
+                          _BodyChip(label: 'All Certificates', on: c.body == null, onTap: () => c.setBody(null)),
                           for (final b in c.bodies) _BodyChip(label: b, on: c.body == b, onTap: () => c.setBody(b)),
                         ],
                       ),
                     ],
                     if (c.error != null) ...[
                       const SizedBox(height: 12),
-                      Notice(tone: NoticeTone.error, text: c.error!, action: 'Try again', onAction: c.refresh),
+                      Notice(tone: NoticeTone.error, text: c.error!, action: 'Try Again', onAction: c.refresh),
                     ],
                     const SizedBox(height: 16),
                   ],
@@ -160,7 +165,8 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList.separated(
                 itemCount: rows.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 14),
+                // Rows parted by a hairline, as the attempts are (owner, 9 Nov 2026).
+                separatorBuilder: (_, _) => const Divider(height: 1, thickness: 1, color: AppColors.slate100),
                 itemBuilder: (context, i) => CertificateCard(certificate: rows[i], holder: widget.holder),
               ),
             ),
@@ -229,26 +235,25 @@ class _VerifyCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Verification', style: ExamText.heading),
+          Text('Verify Your Credentials', style: ExamText.heading),
           const SizedBox(height: 6),
           Text(
-            "Every certificate carries a number anyone can check against ICR's register, no account needed. Share hands over that link; the register confirms the holder, the credential and the date it was issued.",
+            'Every ICR certificate has a unique verification number. Anyone can verify its authenticity through the ICR '
+            'Certificate Register. No account is required.',
             style: ExamText.body,
           ),
           const SizedBox(height: 12),
-          ExamButton(
-            label: 'Check a certificate number',
-            icon: LucideIcons.shieldCheck,
-            quiet: true,
-            onPressed: onOpen,
-          ),
+          ExamButton(label: 'Verify a Certificate', icon: LucideIcons.shieldCheck, quiet: true, onPressed: onOpen),
         ],
       ),
     );
   }
 }
 
-/// One credential: a small stand-in for the certificate, its facts, and what can be done with it.
+/// A certificate as a row of the list, drawn as an attempt is (owner, 9 Nov 2026: "how the list of attempts is
+/// showing, the certificates also show like that"): the title and its Verified pill, the credential number and the
+/// day it was issued, then the score, the pass mark and who awarded it, with a chevron. A tap opens the certificate
+/// itself, where Share and Copy number live.
 class CertificateCard extends StatelessWidget {
   const CertificateCard({super.key, required this.certificate, this.holder});
 
@@ -261,85 +266,79 @@ class CertificateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = certificate;
     final holder = this.holder ?? holderNameOf(context, c);
-    return ExamCard(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            color: AppColors.primary.withValues(alpha: 0.04),
-            padding: const EdgeInsets.all(14),
-            child: CertificateThumb(certificate: c, holder: holder),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: Text(c.title, style: ExamText.heading)),
-                    const SizedBox(width: 8),
-                    const InfoPill(
-                      label: 'Verified',
-                      icon: LucideIcons.badgeCheck,
-                      color: AppColors.emerald700,
-                      fill: AppColors.emerald50,
+    final issued = c.issuedAt == null ? '' : ' · Issued ${dayLabel(c.issuedAt)}';
+    return Semantics(
+      button: true,
+      label: '${c.title}, ${c.certificateId}, awarded by ${c.awardedBy}$issued. Opens the certificate.',
+      excludeSemantics: true,
+      child: InkWell(
+        key: ValueKey('certificate-${c.id}'),
+        onTap: () => showCertificateSheet(context, c, holder: holder),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      c.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: ExamText.subheading.copyWith(fontSize: 16),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Text(c.awardedBy, style: AppText.workSans(13.5, FontWeight.w700, AppColors.primary)),
-                const SizedBox(height: 10),
-                _CardFact('Issued', dayLabel(c.issuedAt)),
-                _CardFact('Credential ID', c.certificateId, mono: true),
-                const SizedBox(height: 12),
-                ExamButton(
-                  label: 'View certificate',
-                  icon: LucideIcons.award,
-                  onPressed: () => showCertificateSheet(context, c, holder: holder),
-                ),
-                const SizedBox(height: 10),
-                CertificateActions(certificate: c, compact: true),
-              ],
-            ),
+                  ),
+                  const SizedBox(width: 8),
+                  const InfoPill(
+                    label: 'Verified',
+                    icon: LucideIcons.badgeCheck,
+                    color: AppColors.emerald700,
+                    fill: AppColors.emerald50,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text('${c.certificateId}$issued', style: ExamText.small),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _Figure('${c.percentage}%', 'Score', big: true),
+                  _Figure('${c.passPercentage}%', 'Pass Mark'),
+                  _Figure(c.awardedBy, 'Awarded By'),
+                  const Icon(LucideIcons.chevronRight, size: 20, color: AppColors.slate400),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _CardFact extends StatelessWidget {
-  const _CardFact(this.label, this.value, {this.mono = false});
+/// A figure of the row: the value over its small label, as the attempts draw theirs.
+class _Figure extends StatelessWidget {
+  const _Figure(this.value, this.label, {this.big = false});
 
-  final String label;
   final String value;
-  final bool mono;
+  final String label;
+  final bool big;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 9),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.slate100)),
-      ),
-      child: Row(
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label.toUpperCase(), style: ExamText.statLabel),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
-              style: mono
-                  ? AppText.plexSans(12.5, FontWeight.w700, AppColors.onSurface).copyWith(letterSpacing: 0.3)
-                  : ExamText.bodyStrong.copyWith(fontSize: 14),
-            ),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppText.workSans(big ? 20 : 15, FontWeight.w800, big ? AppColors.primary : AppColors.onSurface),
           ),
+          Text(label.toUpperCase(), style: ExamText.statLabel),
         ],
       ),
     );

@@ -68,7 +68,13 @@ Future<({AuthController auth, ApiClient api, String email})> signUpThrowaway({St
     reason: 'a non-production API hands the code back, for "Test mode: your code is…"',
   );
   await auth.verifyEmailCode(email, code!);
-  await auth.register(email: email, password: throwawayPassword, firstName: first, lastName: 'Tester');
+  await auth.register(
+    email: email,
+    password: throwawayPassword,
+    firstName: first,
+    lastName: 'Tester',
+    phone: '+447700900123',
+  );
   expect(auth.status, SessionStatus.signedIn);
   return (auth: auth, api: api, email: email);
 }
@@ -295,7 +301,7 @@ void main() {
   // ---------------------------------------------------------------------------------------------------
 
   group('sign-up and recovery', () {
-    liveTest('three screens: the emailed code, the account, then "Your work" written to the profile', () async {
+    liveTest('three screens: the emailed code, the account, then "Your Work" written to the profile', () async {
       final api = liveAnonymous();
       final auth = AuthController(api: api, tokens: api.tokens);
       final email = throwawayEmail();
@@ -310,14 +316,26 @@ void main() {
       // No account until the code is right.
       expect(
         (await refusalOf(
-          auth.register(email: email, password: throwawayPassword, firstName: 'Acctlive', lastName: 'Tester'),
+          auth.register(
+            email: email,
+            password: throwawayPassword,
+            firstName: 'Acctlive',
+            lastName: 'Tester',
+            phone: '+447700900123',
+          ),
         )).statusCode,
         isNotNull,
       );
       expect(auth.status, isNot(SessionStatus.signedIn));
 
       await auth.verifyEmailCode(email, code!);
-      await auth.register(email: email, password: throwawayPassword, firstName: 'Acctlive', lastName: 'Tester');
+      await auth.register(
+        email: email,
+        password: throwawayPassword,
+        firstName: 'Acctlive',
+        lastName: 'Tester',
+        phone: '+447700900123',
+      );
       expect(auth.status, SessionStatus.signedIn);
       expect(auth.user!.email, email);
       expect(auth.user!.role, 'PROFESSIONAL', reason: 'a self-serve sign-up has no account type');
@@ -330,11 +348,17 @@ void main() {
       }
       final other = AuthController(api: liveAnonymous(), tokens: MemoryTokens());
       final duplicate = await refusalOf(
-        other.register(email: email, password: throwawayPassword, firstName: 'Acctlive', lastName: 'Tester'),
+        other.register(
+          email: email,
+          password: throwawayPassword,
+          firstName: 'Acctlive',
+          lastName: 'Tester',
+          phone: '+447700900123',
+        ),
       );
       expect(duplicate.statusCode, anyOf(409, 400));
 
-      // "Your work": what the third screen writes, through the same function.
+      // "Your Work": what the third screen writes, through the same function.
       final repo = ApiAccountRepository(api: api);
       final warning = await saveYourWork(
         repo,
@@ -368,14 +392,22 @@ void main() {
     liveTest('between roles asks for no company and can say recruiters may know', () async {
       final who = await signUpThrowaway();
       final repo = ApiAccountRepository(api: who.api);
+      // The city is required on the screen since 13 Nov 2026, so the answer always carries one.
       final warning = await saveYourWork(
         repo,
-        WorkAnswer(working: false, title: 'Site Engineer', company: '', readyNext: true),
+        WorkAnswer(
+          working: false,
+          title: 'Site Engineer',
+          company: '',
+          city: const CityOption(id: 'x', name: 'Pune', state: 'Maharashtra'),
+          readyNext: true,
+        ),
       );
       expect(warning, isNull);
       expect(await repo.experience(), isEmpty, reason: 'no role is invented for someone between roles');
       final p = await repo.myProfile();
       expect(p.jobTitle, 'Site Engineer');
+      expect(p.location, 'Pune, Maharashtra');
       final raw = await getMap(who.api, '/users/me/profile');
       expect((raw['resume'] as Map)['nextRoleStatus'], 'READY_NOW');
       expect((raw['resume'] as Map)['nextRoleVisibility'], 'RECRUITERS');

@@ -94,26 +94,26 @@ String? screeningAnswerProblem(ScreeningQuestion q, String? answer) {
   final options = q.options.map((o) => o.trim().toLowerCase()).toList();
   switch (q.type) {
     case ScreeningType.yesNo:
-      return const ['true', 'false'].contains(a.toLowerCase()) ? null : 'Choose Yes or No.';
+      return const ['true', 'false'].contains(a.toLowerCase()) ? null : 'Select Yes or No.';
     case ScreeningType.numeric:
       final n = _numberOf(a);
       return n != null && n >= 0 ? null : 'Enter a number (0 or more).';
     case ScreeningType.singleSelect:
-      return options.contains(a.toLowerCase()) ? null : 'Choose one of the listed options.';
+      return options.contains(a.toLowerCase()) ? null : 'Select one of the listed options.';
     case ScreeningType.multiSelect:
       final picked = a.split(',').map((s) => s.trim().toLowerCase()).where((s) => s.isNotEmpty).toList();
-      return picked.isNotEmpty && picked.every(options.contains) ? null : 'Choose at least one of the listed options.';
+      return picked.isNotEmpty && picked.every(options.contains) ? null : 'Select at least one of the listed options.';
     case ScreeningType.text:
       return a.length <= screeningTextMax ? null : 'Keep it under $screeningTextMax characters.';
     case ScreeningType.rating:
       final n = _numberOf(a);
       final max = q.ratingMax;
-      return n != null && n == n.roundToDouble() && n >= 1 && n <= max ? null : 'Pick a rating from 1 to $max.';
+      return n != null && n == n.roundToDouble() && n >= 1 && n <= max ? null : 'Select a rating from 1 to $max.';
     case ScreeningType.years:
       final n = _numberOf(a);
       return n != null && n == n.roundToDouble() && n >= 0 && n <= screeningYearsMax
           ? null
-          : 'Choose your years of experience.';
+          : 'Select your years of experience.';
     case ScreeningType.date:
       return _isIsoDate(a) ? null : 'Enter a valid date.';
   }

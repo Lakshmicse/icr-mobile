@@ -51,7 +51,7 @@ void main() {
       expect(summary.distribution.keys, containsAll([1, 2, 3, 4, 5]));
       expect(summary.count, greaterThanOrEqualTo(4), reason: 'career.ts seeds four approved reviews');
       expect(summary.average, inInclusiveRange(1, 5));
-      expect(summary.subRatings.keys, contains('Work-life balance'));
+      expect(summary.subRatings.keys, contains('Work-Life Balance'));
 
       final reviews = await repo.reviews(company);
       expect(reviews.items.length, lessThanOrEqualTo(ApiCareerRepository.insightsPageSize));

@@ -146,7 +146,7 @@ void main() {
           expect((await tester.runAsync(deskFigures))!.pending, before.pending + 2);
           await pumpAs(tester, srikanth, (c) => const MentorDeskScreen());
           await settle(tester);
-          expect(find.text('To answer'), findsOneWidget);
+          expect(find.text('To Answer'), findsOneWidget);
           await tester.tap(find.text('Requests').first);
           await settle(tester);
           expect(find.textContaining(meeraWords), findsOneWidget);
@@ -165,8 +165,8 @@ void main() {
           await settle(tester);
           expect(find.text('Decline Meera?'), findsOneWidget);
           await tester.enterText(find.byType(TextField).last, 'Full until the new year: please ask again in January.');
-          await tester.ensureVisible(find.text('Decline request'));
-          await tester.tap(find.text('Decline request'));
+          await tester.ensureVisible(find.text('Decline Request'));
+          await tester.tap(find.text('Decline Request'));
           await settle(
             tester,
             ready: () => find.text('Decline Meera?').evaluate().isEmpty,
@@ -192,8 +192,8 @@ void main() {
             'Welcome. Bring your current org chart to our first call.',
           );
           await tester.pump();
-          await tester.ensureVisible(find.text('Accept and start'));
-          await tester.tap(find.text('Accept and start'));
+          await tester.ensureVisible(find.text('Accept and Start'));
+          await tester.tap(find.text('Accept and Start'));
           await settle(
             tester,
             ready: () => find.text('Accept Rohan').evaluate().isEmpty,
@@ -433,7 +433,7 @@ void main() {
               },
             ],
           }),
-          'Pick a time in the future.',
+          'Select a time in the future.',
         );
 
         expect(await c.saveSession(body), isNull);
@@ -512,7 +512,7 @@ void main() {
           print('[pause] 4 desk drawn');
           expect(thrown(tester), isNull);
           expect(find.textContaining('Your profile is paused'), findsOneWidget);
-          expect(find.text('Active mentees'), findsOneWidget, reason: 'the desk is still his');
+          expect(find.text('Active Mentees'), findsOneWidget, reason: 'the desk is still his');
           print('[pause] 5 callout seen');
           final desk = (await tester.runAsync(_loadedDesk))!;
           print('[pause] 5a desk loaded');
@@ -532,7 +532,7 @@ void main() {
           await settle(tester);
           expect(find.byKey(const ValueKey('banner-PAUSED')), findsOneWidget);
           expect(find.textContaining('hidden from the directory'), findsOneWidget);
-          expect(find.text('Submit for review'), findsNothing, reason: 'there is nothing to submit');
+          expect(find.text('Submit for Review'), findsNothing, reason: 'there is nothing to submit');
         } finally {
           await tester.runAsync(
             () => admin.dio.post<dynamic>('/mentorship/admin/mentors/$srikanthProfileId/unpause', data: {}),
@@ -542,7 +542,7 @@ void main() {
         await pumpAs(tester, srikanth, (c) => const BecomeMentorScreen());
         await settle(tester);
         expect(find.byKey(const ValueKey('banner-APPROVED')), findsOneWidget);
-        expect(find.text('View public profile'), findsOneWidget);
+        expect(find.text('View Public Profile'), findsOneWidget);
         await finishLive(tester);
       },
     );
@@ -568,11 +568,11 @@ void main() {
           // Not started: the page is a blank draft and the desk is not Kiran's yet.
           await pumpAs(tester, bm.kiran, (c) => const BecomeMentorScreen());
           await settle(tester);
-          expect(find.text('Not started'), findsOneWidget);
+          expect(find.text('Not Started'), findsOneWidget);
           expect(find.byKey(const ValueKey('banner-DRAFT')), findsOneWidget);
           await pumpAs(tester, bm.kiran, (c) => const MentorDeskScreen());
           await settle(tester);
-          expect(find.text("You're not a mentor yet"), findsOneWidget);
+          expect(find.text('You Are Not a Mentor Yet'), findsOneWidget);
 
           // A complete application goes in (the sheets' own calls), and is in review.
           await tester.runAsync(() async {
@@ -595,11 +595,11 @@ void main() {
           await pumpAs(tester, bm.kiran, (c) => const BecomeMentorScreen());
           await settle(tester);
           expect(find.byKey(const ValueKey('banner-PENDING')), findsOneWidget);
-          expect(find.textContaining('A member of the ICR team is reading your profile'), findsOneWidget);
-          expect(find.text('Submit for review'), findsNothing, reason: 'it is already with the team');
+          expect(find.textContaining('A member of the ICR team is reviewing your profile'), findsOneWidget);
+          expect(find.text('Submit for Review'), findsNothing, reason: 'it is already with the team');
           await pumpAs(tester, bm.kiran, (c) => const MentorDeskScreen());
           await settle(tester);
-          expect(find.text('Your application is in review'), findsOneWidget);
+          expect(find.text('Your Application Is in Review'), findsOneWidget);
 
           // ICR sends it back with a note; the page and the desk show the note word for word.
           await tester.runAsync(
@@ -609,17 +609,17 @@ void main() {
           await settle(tester);
           expect(find.byKey(const ValueKey('banner-REJECTED')), findsOneWidget);
           expect(find.textContaining(note), findsOneWidget, reason: 'the reviewer\'s words, verbatim');
-          expect(find.text('Resubmit for review'), findsOneWidget);
+          expect(find.text('Resubmit for Review'), findsOneWidget);
           await pumpAs(tester, bm.kiran, (c) => const MentorDeskScreen());
           await settle(tester);
-          expect(find.text('Your application was not approved'), findsOneWidget);
+          expect(find.text('Your Application Was Not Approved'), findsOneWidget);
           expect(find.textContaining(note), findsOneWidget);
 
           // Resubmitted from the page, it is back in review; ICR approves it and the desk opens.
           await pumpAs(tester, bm.kiran, (c) => const BecomeMentorScreen());
           await settle(tester);
-          await bringIntoView(tester, find.text('Resubmit for review'));
-          await tester.tap(find.text('Resubmit for review'));
+          await bringIntoView(tester, find.text('Resubmit for Review'));
+          await tester.tap(find.text('Resubmit for Review'));
           await settle(tester, ready: () => find.byKey(const ValueKey('banner-PENDING')).evaluate().isNotEmpty);
           expect(find.byKey(const ValueKey('banner-PENDING')), findsOneWidget);
 
@@ -639,8 +639,8 @@ void main() {
             expect(find.byKey(const ValueKey('banner-APPROVED')), findsOneWidget);
             await pumpAs(tester, bm.kiran, (c) => const MentorDeskScreen());
             await settle(tester);
-            expect(find.text('Active mentees'), findsOneWidget, reason: 'the desk is open to an approved mentor');
-            expect(find.text("You're not a mentor yet"), findsNothing);
+            expect(find.text('Active Mentees'), findsOneWidget, reason: 'the desk is open to an approved mentor');
+            expect(find.text('You Are Not a Mentor Yet'), findsNothing);
           }
           await finishLive(tester);
         } finally {
@@ -688,19 +688,19 @@ void main() {
           await retryWhileFailed(tester, what: 'the mentor page');
           expect(thrown(tester), isNull);
           expectNoRawErrors(tester, 'the mentor page');
-          expect(find.text('Your mentee'), findsOneWidget);
+          expect(find.text('Your Mentee'), findsOneWidget);
           expect(find.text('Rohan Das'), findsWidgets);
-          expect(find.textContaining('Needs you: a time to answer'), findsOneWidget);
-          for (final words in ['Approve', 'Offer another time', 'Decline', 'Book a session', 'Add goal', goal]) {
+          expect(find.textContaining('Action needed: respond to a time'), findsOneWidget);
+          for (final words in ['Approve', 'Offer Another Time', 'Decline', 'Book a Session', 'Add Goal', goal]) {
             expect(find.text(words), findsWidgets, reason: 'the mentor sees "$words"');
           }
-          expect(find.text('Ask for a time'), findsNothing, reason: "that is the mentee's button");
+          expect(find.text('Request a Time'), findsNothing, reason: "that is the mentee's button");
           expect(find.text('Withdraw'), findsNothing);
 
           // The mentor approves it: the ask is answered, the session is booked.
           await tester.tap(find.text('Approve').first);
           await settle(tester, ready: () => find.text('Approve').evaluate().isEmpty);
-          expect(find.textContaining('Needs you: a time to answer'), findsNothing);
+          expect(find.textContaining('Action needed: respond to a time'), findsNothing);
           final sessions = (await tester.runAsync(() => srikanthRepo.sessions(pairing.id)))!;
           expect(sessions.where((s) => s.status == SessionStatus.scheduled), hasLength(1));
 
@@ -718,10 +718,10 @@ void main() {
           await retryWhileFailed(tester, what: 'the mentee page');
           expect(thrown(tester), isNull);
           expectNoRawErrors(tester, 'the mentee page');
-          expect(find.text('Your mentor'), findsOneWidget);
+          expect(find.text('Your Mentor'), findsOneWidget);
           expect(find.text('Srikanth Sriramagiri'), findsWidgets);
-          expect(find.text('Mentor profile'), findsOneWidget);
-          for (final words in ['Ask for a time', 'Add goal', goal, 'Draft my org chart']) {
+          expect(find.text('Mentor Profile'), findsOneWidget);
+          for (final words in ['Request a Time', 'Add Goal', goal, 'Draft my org chart']) {
             expect(find.text(words), findsWidgets, reason: 'the mentee sees "$words"');
           }
           expect(find.text('Approve'), findsNothing, reason: 'only the mentor answers an ask');
@@ -730,16 +730,16 @@ void main() {
           // The mentor ends it from the page; the reason is read by both.
           await pumpAs(tester, srikanth, (c) => PairingScreen(id: pairing.id));
           await settle(tester);
-          await bringIntoView(tester, find.text('End early'));
-          await tester.tap(find.text('End early'));
+          await bringIntoView(tester, find.text('End Early'));
+          await tester.tap(find.text('End Early'));
           await settle(tester);
-          expect(find.text('End this mentorship early?'), findsOneWidget);
+          expect(find.text('End This Mentorship Early?'), findsOneWidget);
           await tester.enterText(find.byType(TextField).last, 'The staff test is over: thank you, Rohan.');
-          await tester.ensureVisible(find.text('End mentorship'));
-          await tester.tap(find.text('End mentorship'));
+          await tester.ensureVisible(find.text('End Mentorship'));
+          await tester.tap(find.text('End Mentorship'));
           await settle(
             tester,
-            ready: () => find.text('End this mentorship early?').evaluate().isEmpty,
+            ready: () => find.text('End This Mentorship Early?').evaluate().isEmpty,
             timeout: const Duration(seconds: 40),
           );
           final ended = (await tester.runAsync(() => srikanthRepo.pairing(pairing.id)))!;
@@ -773,21 +773,21 @@ void main() {
         for (final tab in DeskTab.values) {
           expect(find.text(tab.label), findsWidgets, reason: 'the strip shows ${tab.label}');
         }
-        expect(find.text('Listed in the directory'), findsOneWidget);
-        expect(find.text('Active mentees'), findsOneWidget);
+        expect(find.text('Listed in the Directory'), findsOneWidget);
+        expect(find.text('Active Mentees'), findsOneWidget);
         expect(find.text('Completed'), findsWidgets, reason: 'the tile that replaced Places open (no mentee limit)');
         expect(find.byKey(const ValueKey('completeness')), findsOneWidget);
 
         final probes = <DeskTab, List<String>>{
           DeskTab.requests: ['ANSWERED LATELY'],
           DeskTab.mentees: ['MENTORING NOW (2)', 'Yash Agarwal', 'Pooja Rathod', 'FINISHED'],
-          DeskTab.calendar: ['October 2026', 'Group session', 'Paid call'],
-          DeskTab.work: ['No paid work right now'],
-          DeskTab.offerings: ['Storefront', 'Personal Interview & GD Preparation', 'Add a 1:1 session'],
-          DeskTab.hours: ['Monday', 'Save hours', 'Add a window'],
-          DeskTab.earnings: ['No earnings yet', 'Awaiting payout', 'Paid out'],
-          DeskTab.reviews: ['FROM YOUR MENTEES', 'A mentee', 'Rating'],
-          DeskTab.settings: ['How you meet', 'Your timezone', 'Your standing meeting link'],
+          DeskTab.calendar: ['October 2026', 'Group Session', 'Paid Call'],
+          DeskTab.work: ['No Paid Work at Present'],
+          DeskTab.offerings: ['Storefront', 'Personal Interview & GD Preparation', 'Add a 1:1 Session'],
+          DeskTab.hours: ['Monday', 'Save Hours', 'Add a Window'],
+          DeskTab.earnings: ['No Earnings Yet', 'Awaiting Payout', 'Paid Out'],
+          DeskTab.reviews: ['FROM YOUR MENTEES', 'Anonymous mentee', 'Rating'],
+          DeskTab.settings: ['Meeting Modes', 'Your Time Zone', 'Your Standing Meeting Link'],
         };
         for (final entry in probes.entries) {
           final tab = find.text(entry.key.label);

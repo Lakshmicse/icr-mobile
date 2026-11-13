@@ -22,7 +22,7 @@ const _kinds = {
 const _statuses = {
   'OPENED': 'Redeemed',
   'PENDING_PAYMENT': 'Pending',
-  'PENDING': 'In review',
+  'PENDING': 'In Review',
   'ACTIVE': 'Live',
   'EXPIRED': 'Ended',
   'REJECTED': 'Declined · credit returned',
@@ -79,7 +79,7 @@ class _CreditsScreenState extends State<CreditsScreen> {
         child: Column(
           children: [
             TitleBar(
-              title: 'Credits & redemptions',
+              title: 'Credits & Redemptions',
               onBack: widget.onBack,
               unread: widget.unread,
               onBell: widget.onBell ?? () {},
@@ -95,7 +95,7 @@ class _CreditsScreenState extends State<CreditsScreen> {
                     return Center(
                       child: TextButton(
                         onPressed: () => setState(() => _history = _load()),
-                        child: const Text('We couldn’t load your credits. Please try again.'),
+                        child: const Text('Unable to load your credits. Try again.'),
                       ),
                     );
                   }
@@ -127,12 +127,12 @@ class _CreditsScreenState extends State<CreditsScreen> {
         ),
         if (balances.isEmpty)
           _Note(
-            title: 'No credits yet',
+            title: 'No Credits Yet',
             body:
                 'Invite colleagues to ICR: every person who joins through your invite earns you ICR credits, more as '
                 'more of them join, and suppliers earn free placements. Redeem ICR credits on assessment levels and '
                 'mock exam sets.',
-            action: widget.onRefer == null ? null : 'Refer a friend',
+            action: widget.onRefer == null ? null : 'Refer a Friend',
             onAction: widget.onRefer,
           )
         else
@@ -141,7 +141,7 @@ class _CreditsScreenState extends State<CreditsScreen> {
         _Tabs(
           labels: [
             'Redemptions (${redeemed.length})',
-            'Credits earned (${earned.length})',
+            'Credits Earned (${earned.length})',
             'Referred and Joined (${invites.length})',
           ],
           selected: _tab,
@@ -181,7 +181,7 @@ class _CreditsScreenState extends State<CreditsScreen> {
                   ],
           _ =>
             invites.isEmpty
-                ? [const _Empty('Nobody has joined through your invite yet. Share your link from Refer a friend.')]
+                ? [const _Empty('No one has joined through your invite yet. Share your link from Refer a Friend.')]
                 : [
                     for (var i = 0; i < invites.length; i++) ...[
                       if (i > 0) const _Rule(),
@@ -198,7 +198,7 @@ class _CreditsScreenState extends State<CreditsScreen> {
     final paper = (r['paper'] as Map?)?.cast<String, dynamic>();
     if (paper != null) return paper['kind'] == 'MOCK' ? 'Opened the mock exam' : 'Opened the assessment';
     final placement = (r['placement'] as Map?)?.cast<String, dynamic>();
-    return placement?['sku'] == 'HERO' ? 'Homepage banner for a month' : 'Featured in Supplier Mart for a month';
+    return placement?['sku'] == 'HERO' ? 'Homepage banner for a month' : 'Featured in Marketplace for a month';
   }
 
   /// Where a redeemed paper lives (the website's `paperHref`), which the app opens as its own screen.

@@ -3,7 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../hub_styles.dart';
 
-/// The design's foot: "Upskill with Masterclasses — Webinars by the best in the industry! — Know more ›" on a
+/// The design's foot: "Learn from Industry Experts — Join expert-led webinars… — Explore Masterclasses ›" on a
 /// light-blue band the width of the screen, 92 dp tall (taller with larger text), with three overlapping faces
 /// at the right (`docs/designs/learning-hub-v2.png`). Know more opens the Events screen.
 class MasterclassBanner extends StatelessWidget {
@@ -17,7 +17,9 @@ class MasterclassBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Upskill with Masterclasses. Webinars by the best in the industry. Know more',
+      label:
+          'Learn from Industry Experts. Join expert-led webinars and interactive sessions to gain practical insights '
+          'and advance your professional skills. Explore Masterclasses',
       excludeSemantics: true,
       child: Material(
         color: Colors.transparent,
@@ -49,23 +51,26 @@ class MasterclassBanner extends StatelessWidget {
                           children: [
                             Text.rich(
                               TextSpan(
-                                text: 'Upskill with ',
+                                text: 'Learn from ',
                                 style: HubText.masterTitle,
-                                children: [TextSpan(text: 'Masterclasses', style: HubText.masterAccent)],
+                                children: [TextSpan(text: 'Industry Experts', style: HubText.masterAccent)],
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              'Webinars by the best in the industry!',
+                              'Join expert-led webinars and interactive sessions to gain practical insights and advance your '
+                              'professional skills.',
                               style: HubText.masterBody,
-                              maxLines: 2,
+                              maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 1.4),
                             Row(
                               children: [
-                                Text('Know more', style: HubText.masterLink),
+                                // Longer than the design's "Know more": it wraps at large text or on a narrow
+                                // phone rather than running past the faces.
+                                Flexible(child: Text('Explore Masterclasses', style: HubText.masterLink)),
                                 const SizedBox(width: 2),
                                 const Icon(LucideIcons.chevronRight, size: 16, color: HubColors.bannerLink),
                               ],

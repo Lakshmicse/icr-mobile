@@ -1,8 +1,11 @@
 /// The website's sign-up rules (`frontend/src/features/auth/registerSchema.ts`,
-/// `features/auth/email.ts`), word for word, so the app refuses what the
-/// website refuses and nothing else. The API's own checks (`RegisterDto`) are
+/// `features/auth/email.ts`), so the app refuses what the website refuses and
+/// nothing else. The sentences are the app's own since 13 Nov 2026 (the client's
+/// copy standard: plain words and a full stop). The API's own checks (`RegisterDto`) are
 /// the last word; these only save a round trip.
 library;
+
+import '../account/account_rules.dart';
 
 /// Characters an email never holds, which a paste drags along: spaces, tabs,
 /// line breaks, NBSP, and the invisible zero-width ones.
@@ -11,24 +14,24 @@ final _notInAnEmail = RegExp('[\\s​-‍⁠﻿]');
 /// The address with whatever a copy-paste dragged in removed (`cleanEmail`).
 String cleanEmail(String raw) => raw.replaceAll(_notInAnEmail, '');
 
-/// What is wrong with an address, in the website's words, or null when it
+/// What is wrong with an address, or null when it
 /// looks like one (`emailIssue` + `EN_EMAIL_WORDS`). Expects [cleanEmail] output.
 String? emailProblem(String email) {
-  if (email.isEmpty) return 'Enter your email';
+  if (email.isEmpty) return 'Enter your email.';
   final at = '@'.allMatches(email).length;
-  if (at == 0) return 'Your email is missing an "@". It should look like name@company.com';
-  if (at > 1) return 'An email can have only one "@". It should look like name@company.com';
+  if (at == 0) return 'Your email is missing an "@". It should look like name@company.com.';
+  if (at > 1) return 'An email can have only one "@". It should look like name@company.com.';
   final parts = email.split('@');
   final name = parts[0];
   final domain = parts[1];
-  if (name.isEmpty) return 'Add your name before the "@", like name@company.com';
-  if (domain.isEmpty) return 'Add your email provider after the "@", like name@company.com';
+  if (name.isEmpty) return 'Add your name before the "@", like name@company.com.';
+  if (domain.isEmpty) return 'Add your email provider after the "@", like name@company.com.';
   if (RegExp(r'[<>()[\]\\,;:"]').hasMatch(email)) {
-    return 'Remove characters an email can\'t contain, such as , ; : " < > ( ) [ ]';
+    return 'Remove characters an email cannot contain, such as , ; : " < > ( ) [ ].';
   }
-  if (!domain.contains('.')) return 'The part after the "@" needs a dot, like company.com or gmail.com';
+  if (!domain.contains('.')) return 'The part after the "@" needs a dot, like company.com or gmail.com.';
   if (domain.split('.').any((part) => part.isEmpty)) {
-    return 'Check the part after the "@". It should look like company.com';
+    return 'Check the part after the "@". It should look like company.com.';
   }
   return null;
 }
@@ -42,11 +45,11 @@ String? emailProblem(String email) {
   final emailIssue = emailProblem(address);
   String? passwordIssue;
   if (password.length < 8) {
-    passwordIssue = 'At least 8 characters';
+    passwordIssue = 'Use at least 8 characters.';
   } else {
     final local = address.split('@').first.toLowerCase();
     if (local.length > 2 && password.toLowerCase().contains(local)) {
-      passwordIssue = "Don't reuse your email address as your password";
+      passwordIssue = 'Do not use your email address as your password.';
     }
   }
   return (email: emailIssue, password: passwordIssue);
@@ -59,10 +62,18 @@ String? emailProblem(String email) {
   required String code,
   required bool needsCode,
 }) => (
-  firstName: firstName.trim().isEmpty ? 'Enter your first name' : null,
-  lastName: lastName.trim().isEmpty ? 'Enter your last name' : null,
-  code: needsCode && !RegExp(r'^\d{6}$').hasMatch(code) ? 'Enter the 6-digit code from the email' : null,
+  firstName: firstName.trim().isEmpty ? 'Enter your first name.' : null,
+  lastName: lastName.trim().isEmpty ? 'Enter your last name.' : null,
+  code: needsCode && !RegExp(r'^\d{6}$').hasMatch(code) ? 'Enter the 6-digit code from your email.' : null,
 );
+
+/// Screen 2's mobile number, required at sign-up (the API's rule since 29 Oct 2026): empty, or not a number the
+/// API would take (`phoneError`, the website's words).
+String? phoneProblem(String raw) => raw.trim().isEmpty ? 'Enter your mobile number.' : phoneError(raw);
+
+/// The texted OTP, six digits.
+String? otpProblem(String code) =>
+    RegExp(r'^\d{6}$').hasMatch(code) ? null : 'Enter the 6-digit OTP sent to your mobile number.';
 
 /// One line of the password meter (`PASSWORD_RULES`).
 class PasswordRule {
@@ -101,17 +112,22 @@ List<int> careerYears([DateTime? now]) {
 }
 
 /// Screen 3's problems (`YourWorkStep.validate`): only someone working is
-/// asked for all three.
-({String? title, String? company, String? since}) workProblems({
+/// asked for the title, company and year. The city is asked of everyone (the
+/// client's note on the manual, 13 Nov 2026: "Mandatory"); [hasCity] says one
+/// was picked.
+({String? title, String? company, String? since, String? city}) workProblems({
   required bool working,
   required String title,
   required String company,
   required int? since,
+  required bool hasCity,
 }) {
-  if (!working) return (title: null, company: null, since: null);
+  final city = hasCity ? null : 'Select your city.';
+  if (!working) return (title: null, company: null, since: null, city: city);
   return (
-    title: title.trim().length < 2 ? 'Enter your job title' : null,
-    company: company.trim().length < 2 ? 'Enter where you work' : null,
-    since: since == null ? 'Choose the year you started' : null,
+    title: title.trim().length < 2 ? 'Enter your job title.' : null,
+    company: company.trim().length < 2 ? 'Enter your company.' : null,
+    since: since == null ? 'Select the year you started.' : null,
+    city: city,
   );
 }

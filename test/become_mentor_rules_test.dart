@@ -20,8 +20,8 @@ void main() {
 
     test('everything a submit needs, in the order the form asks for it', () {
       expect(profile(const MentorProfileFacts(), forSubmit: true), [
-        'Tell mentees how you mentor — at least 100 characters.',
-        'Add at least one area of expertise — it is how mentees find you.',
+        'Describe how you mentor in at least 100 characters.',
+        'Add at least one area of expertise. This is how mentees find you.',
         'Choose who you want to mentor.',
       ]);
     });
@@ -29,11 +29,11 @@ void main() {
     test('bioNeeded / bioMore name how many characters there are', () {
       expect(
         profile(MentorProfileFacts(bioHtml: bio(0)), forSubmit: true).first,
-        'Tell mentees how you mentor — at least 100 characters.',
+        'Describe how you mentor in at least 100 characters.',
       );
       expect(
         profile(MentorProfileFacts(bioHtml: bio(6)), forSubmit: true).first,
-        'Say a little more about how you mentor — at least 100 characters (6 so far).',
+        'Describe how you mentor in at least 100 characters (6 so far).',
       );
       expect(profile(MentorProfileFacts(bioHtml: bio(99)), forSubmit: true).first, contains('(99 so far)'));
       expect(
@@ -60,7 +60,7 @@ void main() {
     test('bioTooLong applies to a draft too, and is judged on the stored HTML', () {
       final huge = 'a' * 20001;
       expect(profile(MentorProfileFacts(bioHtml: huge)), [
-        '“How you mentor” is too long — keep it under 20,000 characters.',
+        '“How You Mentor” is too long. Keep it under 20,000 characters.',
       ]);
       expect(profile(MentorProfileFacts(bioHtml: 'a' * 20000)), isEmpty);
     });
@@ -71,15 +71,15 @@ void main() {
       ]);
       expect(profile(MentorProfileFacts(competencies: List.filled(12, 'x'))), isEmpty);
       final needsArea = profile(const MentorProfileFacts(bioHtml: null), forSubmit: true);
-      expect(needsArea, contains('Add at least one area of expertise — it is how mentees find you.'));
+      expect(needsArea, contains('Add at least one area of expertise. This is how mentees find you.'));
       expect(
         profile(const MentorProfileFacts(expertiseKeys: ['facilities']), forSubmit: true),
-        isNot(contains('Add at least one area of expertise — it is how mentees find you.')),
+        isNot(contains('Add at least one area of expertise. This is how mentees find you.')),
       );
     });
 
     test('topicsMax', () {
-      expect(profile(MentorProfileFacts(topics: List.filled(13, 't'))), ['Keep “Happy to talk about” to 12 topics.']);
+      expect(profile(MentorProfileFacts(topics: List.filled(13, 't'))), ['Keep “Conversation Topics” to 12 topics.']);
       expect(profile(MentorProfileFacts(topics: List.filled(12, 't'))), isEmpty);
     });
 
@@ -96,7 +96,7 @@ void main() {
     });
 
     test('availabilityNoteMax', () {
-      expect(profile(MentorProfileFacts(availabilityNote: 'a' * 281)), ['Keep “When you\'re free” to 280 characters.']);
+      expect(profile(MentorProfileFacts(availabilityNote: 'a' * 281)), ['Keep “Availability Note” to 280 characters.']);
       expect(profile(MentorProfileFacts(availabilityNote: 'a' * 280)), isEmpty);
     });
 
@@ -113,7 +113,7 @@ void main() {
 
     test('everything a submit needs, in the order the section asks for it', () {
       expect(person(const MentorPersonFacts(), forSubmit: true), [
-        'Add a profile photo — it is the first thing a mentee sees.',
+        'Add a profile photo. It is the first thing a mentee sees.',
         'Add your current role.',
         'Add your years in the profession.',
         'Add at least one language you mentor in.',
@@ -124,17 +124,17 @@ void main() {
     test('avatarNeeded: an empty address is no photo either', () {
       expect(
         person(const MentorPersonFacts(avatarUrl: ''), forSubmit: true).first,
-        'Add a profile photo — it is the first thing a mentee sees.',
+        'Add a profile photo. It is the first thing a mentee sees.',
       );
       expect(
         person(const MentorPersonFacts(avatarUrl: '/uploads/a.jpg'), forSubmit: true),
-        isNot(contains('Add a profile photo — it is the first thing a mentee sees.')),
+        isNot(contains('Add a profile photo. It is the first thing a mentee sees.')),
       );
     });
 
     test('roleMax, roleMin, roleNeeded', () {
       expect(person(MentorPersonFacts(designation: 'a' * 101)), [
-        'Keep your current role to 100 characters — just the job title.',
+        'Keep your current role to 100 characters. Enter the job title only.',
       ]);
       expect(person(const MentorPersonFacts(designation: 'a')), ['Your current role needs at least 2 characters.']);
       expect(
@@ -203,7 +203,7 @@ void main() {
       expect(designationProblem(''), isNull);
       expect(designationProblem('A'), 'A headline needs at least 2 characters.');
       expect(designationProblem('AB'), isNull);
-      expect(designationProblem('a' * 101), 'Keep your current role to 100 characters — just the job title.');
+      expect(designationProblem('a' * 101), 'Keep your current role to 100 characters. Enter the job title only.');
     });
 
     test('a bio round-trips between the paragraphs people type and the HTML the API stores', () {
@@ -261,7 +261,7 @@ void main() {
         'Add the year you started.',
       ]);
       expect(xp(const ExperienceFacts(title: 'FM', organisation: 'Prestige', startYear: 2027, isCurrent: true)), [
-        'The start date can’t be in the future.',
+        'The start date cannot be in the future.',
       ]);
       expect(
         xp(
@@ -273,7 +273,7 @@ void main() {
             isCurrent: true,
           ),
         ),
-        ['The start date can’t be in the future.'],
+        ['The start date cannot be in the future.'],
       );
       expect(
         xp(
@@ -288,18 +288,18 @@ void main() {
         isEmpty,
       );
       expect(xp(const ExperienceFacts(title: 'FM', organisation: 'Prestige', startYear: 1949, isCurrent: true)), [
-        'Choose a year from 1950 on.',
+        'Choose a year from 1950 onwards.',
       ]);
     });
 
     test('a role that ended: endMissing, endMonthWithoutYear, endFuture, endBeforeStart', () {
       const base = ExperienceFacts(title: 'FM', organisation: 'Prestige', startYear: 2019, startMonth: 6);
-      expect(xp(base), ['Add when this role ended, or tick “I work here now”.']);
+      expect(xp(base), ['Add when this role ended, or select “I Work Here Now”.']);
       expect(xp(const ExperienceFacts(title: 'FM', organisation: 'Prestige', startYear: 2019, endMonth: 3)), [
         'Add the end year too.',
       ]);
       expect(xp(const ExperienceFacts(title: 'FM', organisation: 'Prestige', startYear: 2019, endYear: 2027)), [
-        'The end date can’t be in the future. If you still work here, tick “I work here now”.',
+        'The end date cannot be in the future. If you still work here, select “I Work Here Now”.',
       ]);
       expect(xp(const ExperienceFacts(title: 'FM', organisation: 'Prestige', startYear: 2019, endYear: 2018)), [
         'The end date is before the start date.',
@@ -396,7 +396,7 @@ void main() {
       );
       expect(
         [for (final s in MentorStatus.values) s.label],
-        ['Draft', 'Awaiting review', 'Listed', 'Paused', 'Not approved'],
+        ['Draft', 'Awaiting Review', 'Listed', 'Paused', 'Not Approved'],
       );
       expect(MentorStatus.fromApi('nonsense'), MentorStatus.draft);
     });
@@ -451,7 +451,7 @@ void main() {
       });
       expect(r.conductAccepted, isTrue);
       expect(r.conductVersion, '2026.1');
-      expect(r.training.required.map((c) => c.statusLabel), ['Not started', 'Enrolment confirmed', 'Complete']);
+      expect(r.training.required.map((c) => c.statusLabel), ['Not Started', 'Enrolment Confirmed', 'Complete']);
       expect(r.training.required.first.notEnrolled, isTrue);
       expect(r.training.completedCount, 1);
       expect(r.blockers, hasLength(2));
@@ -492,7 +492,7 @@ void main() {
         'createdAt': '2026-10-19T00:00:00.000Z',
       });
       expect(d.kindLabel, 'Certificate');
-      expect(d.statusLabel, 'Not accepted');
+      expect(d.statusLabel, 'Not Accepted');
       expect(d.removable, isFalse, reason: 'only an unreviewed document can be taken back');
       expect(d.reviewNote, 'The scan is cut off.');
       expect(

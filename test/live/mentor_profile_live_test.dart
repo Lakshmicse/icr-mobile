@@ -136,7 +136,7 @@ void main() {
 
     // Technical Mastery & Tools: the design's two captions over competencies and topics.
     expect(p.competenciesLabel, 'Domain Expertise');
-    expect(p.topicsLabel, 'Softwares & Frameworks');
+    expect(p.topicsLabel, 'Software & Frameworks');
     expect(p.competencies, hasLength(4));
     expect(p.topics, [
       'Azure Cloud Planning',
@@ -173,7 +173,7 @@ void main() {
     ]);
     expect(rows.map((o) => o.pricePaisa), [0, 0, 900, 900, 0, 900]);
     expect(rows.map((o) => o.compareAtPaisa), [null, null, 49900, 39900, null, 59900]);
-    expect(rows[0].previewLabel, 'Inspect 4-session syllabus preview');
+    expect(rows[0].previewLabel, 'View 4-Session Syllabus Preview');
     expect(rows[1].previewLabel, isNull);
 
     // The row filters.
@@ -230,7 +230,7 @@ void main() {
       expect(r.createdAt, isNotNull);
       expect(reviewAgo(r.createdAt!), anyOf('1 yr ago', endsWith('mo ago')));
     }
-    // "View all 42 verified reviews" is the count the API gives.
+    // "View All 42 Verified Reviews" is the count the API gives.
     expect(c.profile!.ratingCount, 42);
   });
 
@@ -451,7 +451,7 @@ void main() {
     expect(await subscriptions(), subscriptionsBefore);
   });
 
-  liveTest('Send Message: a mentor you are paired with opens the thread; with no pairing there is none', () async {
+  liveTest('Send message: a mentor you are paired with opens the thread; with no pairing there is none', () async {
     final paired = await loaded(await signedIn(yash));
     expect(paired.profile!.viewer?.mentorshipId, isNotNull, reason: 'Yash has a live pairing with Srikanth');
     final id = await paired.openConversation();
@@ -461,10 +461,10 @@ void main() {
 
     final stranger = await loaded(await signedIn(pooja));
     expect(stranger.profile!.viewer?.mentorshipId, isNull);
-    expect(await stranger.openConversation(), isNull, reason: 'no thread to open: Send Message asks instead');
+    expect(await stranger.openConversation(), isNull, reason: 'no thread to open: Send message asks instead');
   });
 
-  liveTest('the mentoring request (Send Message with no pairing): kept by the API, pending, then withdrawn', () async {
+  liveTest('the mentoring request (Send message with no pairing): kept by the API, pending, then withdrawn', () async {
     final api = await signedIn(pooja);
     final repo = repoFor(api);
     final before = await loaded(api);

@@ -1,6 +1,6 @@
 # Councils
 
-The Councils screen (`docs/designs/councils.png`): one long page — the stat tiles, the member's joined councils, the upcoming roundtables, the searchable directory of council cards, and the In-Person Summits footer that leads to the city chapters.
+The Councils screen (`docs/designs/councils.png`): one long page — the member's joined councils, the upcoming roundtables, the searchable directory of council cards, and the In-Person Summits footer that leads to the city chapters.
 
 ## Screens and wiring
 
@@ -17,7 +17,7 @@ The Councils screen (`docs/designs/councils.png`): one long page — the stat ti
   ```
 
 - `CouncilsRepository` (abstract) → `ApiCouncilsRepository({required ApiClient api, clock})` and `DemoCouncilsRepository()`. Besides `overview`/`join`/`leave`/`unreadNotifications` it hands out the pages a control opens: `link(council, {tab})`, `eventLink`, `calendarLink`, `chapterLink`. `CouncilPageRepository` (also implemented by both) is what a council's own page reads: `detail`, `members`, `events`, `updates`, `resources`. Models in `council_models.dart`, formatting and the small rules (peer label, lead line, roundtable mode, age tier, calendar entry, rail order) in `council_format.dart`, type and colours in `councils_styles.dart`, widgets under `widgets/`.
-- Golden: `test/golden/councils_golden_test.dart` renders the demo screen at the design's frame, 390 × 2829.5 dp at 2x (`Size(780, 5659)`), writes `build/screens/councils.png` and matches `test/golden/goldens/councils.png`. Unit and control tests: `test/councils_test.dart` (formatting, the API mapping, the controller, every control on the screen) and `test/council_card_test.dart` (the cards, the row and the tiles). Live tests against the local API: `test/live/councils_live_test.dart` (`flutter test test/live/councils_live_test.dart`; it also writes `build/screens/councils_live.png`, the screen drawn from the live API, for `tool/design` comparisons).
+- Golden: `test/golden/councils_golden_test.dart` renders the demo screen at the design's frame, 390 × 2829.5 dp at 2x (`Size(780, 5659)`), writes `build/screens/councils.png` and matches `test/golden/goldens/councils.png`. Unit and control tests: `test/councils_test.dart` (formatting, the API mapping, the controller, every control on the screen) and `test/council_card_test.dart` (the cards and the row). Live tests against the local API: `test/live/councils_live_test.dart` (`flutter test test/live/councils_live_test.dart`; it also writes `build/screens/councils_live.png`, the screen drawn from the live API, for `tool/design` comparisons).
 
 ## Design frame
 
@@ -142,7 +142,7 @@ Tests: `test/council_page_test.dart` (the sections and `?tab=` ids; the API mapp
 | pull to refresh | reads everything again, the bell too | W "pulling down reads the councils again"; W "a refresh reads the councils again, and the bell with them"; L "pulling down reads what the server holds now" |
 | a failed read | "Couldn't load councils" + Try again | W "a failed read offers Try again, which reads again" |
 
-Content from the API, drawn as the design words it: W "the screen draws what the API gave, worded as the design words it"; L "the screen, drawn from the live API" (the top of the screen; narrowed to one category, the footer), L "the directory is the API's, with the designed councils first, in the design's order", L "the stat tiles are read from the data", L "the three roundtable rows are the design's…".
+Content from the API, drawn as the design words it: W "the screen draws what the API gave, worded as the design words it"; L "the screen, drawn from the live API" (the top of the screen; narrowed to one category, the footer), L "the directory is the API's, with the designed councils first, in the design's order", L "the overview stats are read from the data", L "the three roundtable rows are the design's…".
 
 ## Seed
 
@@ -178,3 +178,30 @@ Title bar 0–56; stat tiles 176 × 56 at x 16 and 199, rows at 62 and 122; rule
 - The time "15:30 – 17:00 IST" is drawn in IBM Plex Sans; the design uses a monospaced cut the app does not bundle.
 - The covers' photos are the design's (254 px wide, blurred by the export's own resolution) and the pill and tile areas are inpainted, so the area under them is smooth where the original photo has detail; the screen's own pill and tile sit over it. A council that is joined shows narrower pills than the design's baked "OFFICIAL COUNCIL · Est. 2023", so a little of the smooth area shows to their left (the Sustainability card for the member the emulator is signed in as).
 - A joined card's long press to leave is not drawn as a control, as in the design; it is the way out of a seat and is tested.
+
+
+## 12 Nov 2026: no count tiles over the hub
+
+The owner, shown the Digital Library's four count tiles: "like these 4 titles in Chapter, councils, Events remove it". The Councils hub no longer opens with the Active Councils / Peer Members / Domains Covered / Active Roundtables tiles and the rule under them; `widgets/stat_tiles.dart` is gone with them. `CouncilStats` is still read (`CouncilsController.stats`, the live test checks it) and drawn nowhere. The design measurements above that place the tiles at y 62 and 122 describe the design, not the screen. The council page's own KPI tiles are unchanged.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client marked up the user manual with the wording wanted on a dozen screens and asked for the rest of the app to read the same way: Title Case for what a person taps or reads as a label, a short sentence with a full stop for everything else, plain international English, no dash inside a sentence. Wording only: no layout, colour or behaviour changed. Semantics-only labels (what a screen reader says for an icon) were left as they were. By the lead's ruling the title of an empty, locked or error state is a heading (Title Case, no full stop) with a sentence under it, and the retry button reads **Try Again** everywhere.
+
+| Where | Old | New |
+|---|---|---|
+| Headings, links, pills to Title Case (13) | All events · Clear filters · Your councils · Sort councils · Most members · Most active · About this council · Council leadership · Knowledge library · News & updates · Council lead · Official ICR council · Industries covered · Meeting link · Add to calendar | All Events · Clear Filters · Your Councils · Sort Councils · Most Members · Most Active · About This Council · Council Leadership · Knowledge Library · News & Updates · Council Lead · Official ICR Council · Industries Covered · Meeting Link · Add to Calendar |
+| More of the roster | Show more members | View More |
+| Not loaded | Couldn't load councils · Couldn't load this council | Unable to Load Councils · Unable to Load This Council (with **Try Again**) |
+| Empty board | No councils match · No councils yet / Councils show up here as ICR charters them. | No Councils Match · No Councils Yet / Councils will appear here once ICR charters them. |
+| Room Link with no session | …The meeting link appears here once one is. | …The meeting link will appear here when one is scheduled. |
+| A council's sections | The sectors and specialisations this council represents · No upcoming events. Check back soon: sessions are planned regularly. | the same with a full stop · No upcoming events. Sessions are planned regularly. Check back soon. |
+| Clear the search (tooltip) | Clear search | Clear Search |
+
+Kept as the design draws them: "Your Joined Councils", "N Active", "Manage", "Upcoming Roundtables", "Join Council", "Open Member Lounge", "Preview Chapter", "Room Link", the roundtable line ("Lead: … • N seats claimed") and the summit card's copy.
+
+## Managing (13 Nov 2026)
+
+For the staff who hold `councils:manage` (a Super Admin, or a member given the Councils Admin or Community Manager role on the website),
+a pencil left of the bell on the board opens Manage Councils, and on a council's page that council's manage page. Nobody else sees a pencil. The pages stand over the app's bottom bar, as Home does. See
+`docs/screens/community_manage.md` and `docs/FLOW_PARITY.md` → "Managing Chapters, Councils and Events from the app".

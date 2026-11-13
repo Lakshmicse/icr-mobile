@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/api/api_client.dart';
 import 'package:icr_mobile/core/auth/auth_controller.dart';
@@ -134,8 +135,8 @@ void main() {
 
       await _submit(tester);
 
-      expect(find.text('Please enter your email address.'), findsOneWidget);
-      expect(find.text('Please enter your password.'), findsOneWidget);
+      expect(find.text('Enter your email address.'), findsOneWidget);
+      expect(find.text('Enter your password.'), findsOneWidget);
       expect(h.api.calls.any((c) => c.$1 == 'POST /auth/login'), isFalse);
     });
 
@@ -147,7 +148,7 @@ void main() {
       await tester.enterText(find.byKey(const Key('signIn.password')), 'secret');
       await _submit(tester);
 
-      expect(find.text('Please enter a valid email address.'), findsOneWidget);
+      expect(find.text('Enter a valid email address.'), findsOneWidget);
       expect(h.api.calls.any((c) => c.$1 == 'POST /auth/login'), isFalse);
     });
 
@@ -210,11 +211,11 @@ void main() {
       );
       expect(password().obscureText, isTrue);
 
-      await tester.tap(find.byTooltip('Show password'));
+      await tester.tap(find.byTooltip('Show Password'));
       await tester.pump();
       expect(password().obscureText, isFalse);
 
-      await tester.tap(find.byTooltip('Hide password'));
+      await tester.tap(find.byTooltip('Hide Password'));
       await tester.pump();
       expect(password().obscureText, isTrue);
     });
@@ -225,7 +226,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key('signIn.linkedin')));
       await tester.pump();
-      expect(find.text('LinkedIn sign-in is not available yet'), findsOneWidget);
+      expect(find.text('LinkedIn sign-in is not available yet.'), findsOneWidget);
       expect(h.social.started, isEmpty);
 
       await tester.tap(find.byKey(const Key('signIn.google')));
@@ -239,39 +240,52 @@ void main() {
 
       expect(find.bySemanticsLabel('Continue with LinkedIn'), findsOneWidget);
       expect(find.bySemanticsLabel('Continue with Google'), findsOneWidget);
-      expect(find.text('Forgot password?'), findsOneWidget);
-      expect(find.text('Join now'), findsOneWidget);
+      expect(find.text('Forgot Password?'), findsOneWidget);
+      expect(find.text('Join Now'), findsOneWidget);
     });
 
-    testWidgets(
-      'is laid out as LinkedIn is: heading, labelled fields, Show, or, full-width provider buttons, Join now',
-      (tester) async {
-        await _pump(tester, _harness());
+    testWidgets('is laid out as LinkedIn is, the providers under the form: heading, labelled fields, Show, '
+        '"Sign In Using" over two pills, Join Now', (tester) async {
+      await _pump(tester, _harness());
 
-        // The heading, and the button that carries the same words.
-        expect(find.text('Sign in'), findsNWidgets(2));
-        expect(find.text('Stay updated on your professional world.'), findsOneWidget);
-        expect(find.text('Email'), findsOneWidget);
-        expect(find.text('Password'), findsOneWidget);
-        expect(find.text('Show'), findsOneWidget);
-        expect(find.text('or'), findsOneWidget);
-        expect(find.text('Continue with LinkedIn'), findsOneWidget);
-        expect(find.text('Continue with Google'), findsOneWidget);
-        expect(find.text('New to ICR? '), findsOneWidget);
+      // The heading, and the button that carries the same words.
+      expect(find.text('Sign In'), findsNWidgets(2));
+      expect(find.text('Stay connected with the CRE & FM community.'), findsOneWidget);
+      expect(find.text('Email Address'), findsOneWidget);
+      expect(find.text('Password'), findsOneWidget);
+      expect(find.text('Show'), findsOneWidget);
+      // Owner, 12 Nov 2026: no "or"; the providers are headed "Sign In Using" (title case since 13 Nov) and carry
+      // their names.
+      expect(find.text('or'), findsNothing);
+      expect(find.text('Sign In Using'), findsOneWidget);
+      expect(find.text('LinkedIn'), findsOneWidget);
+      expect(find.text('Google'), findsOneWidget);
+      expect(find.text('New to ICR? '), findsOneWidget);
 
-        // The pill and both provider buttons span the page, the providers one under the other.
-        final width = tester.getSize(find.byKey(const Key('signIn.submit'))).width;
-        expect(tester.getSize(find.byKey(const Key('signIn.linkedin'))).width, width);
-        expect(tester.getSize(find.byKey(const Key('signIn.google'))).width, width);
-        expect(
-          tester.getTopLeft(find.byKey(const Key('signIn.google'))).dy,
-          greaterThan(tester.getBottomLeft(find.byKey(const Key('signIn.linkedin'))).dy),
+      // The pill spans the page; under it the heading, then the two providers side by side, together as
+      // wide as the pill, each with a 28 dp mark; "Join Now" below them all.
+      final submit = tester.getRect(find.byKey(const Key('signIn.submit')));
+      final heading = tester.getRect(find.text('Sign In Using'));
+      final linkedin = tester.getRect(find.byKey(const Key('signIn.linkedin')));
+      final google = tester.getRect(find.byKey(const Key('signIn.google')));
+      expect(heading.top, greaterThan(submit.bottom));
+      expect(linkedin.top, greaterThan(heading.bottom));
+      expect(linkedin.top, google.top);
+      expect(linkedin.left, submit.left);
+      expect(google.right, submit.right);
+      expect(google.left, greaterThan(linkedin.right));
+      expect(linkedin.width, google.width);
+      for (final key in const ['signIn.linkedin', 'signIn.google']) {
+        final mark = tester.widget<SvgPicture>(
+          find.descendant(of: find.byKey(Key(key)), matching: find.byType(SvgPicture)),
         );
+        expect(mark.width, 28, reason: 'the marks are larger than the 22 dp they were');
+      }
+      expect(tester.getRect(find.byKey(const Key('signIn.create'))).top, greaterThan(google.bottom));
 
-        // "New to ICR? Join now" sits at the foot of the screen (390 x 844 dp).
-        expect(tester.getRect(find.byKey(const Key('signIn.create'))).bottom, greaterThan(844 - 70));
-      },
-    );
+      // "New to ICR? Join Now" sits at the foot of the screen (390 x 844 dp).
+      expect(tester.getRect(find.byKey(const Key('signIn.create'))).bottom, greaterThan(844 - 70));
+    });
 
     testWidgets('a small phone with the keyboard up scrolls instead of overflowing', (tester) async {
       final h = _harness();
@@ -293,6 +307,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(tester.getRect(find.byKey(const Key('signIn.submit'))).bottom, lessThanOrEqualTo(568 - 260 + 1));
+
+      // A 320 dp page is too narrow for two named pills side by side: they stack, each the pill's width.
+      await tester.ensureVisible(find.byKey(const Key('signIn.google')));
+      await tester.pumpAndSettle();
+      final linkedin = tester.getRect(find.byKey(const Key('signIn.linkedin')));
+      final google = tester.getRect(find.byKey(const Key('signIn.google')));
+      expect(google.top, greaterThan(linkedin.bottom));
+      expect(google.width, tester.getSize(find.byKey(const Key('signIn.submit'))).width);
+      expect(tester.takeException(), isNull);
     });
   });
 
@@ -386,7 +409,7 @@ void main() {
     };
 
     for (final dark in [false, true]) {
-      testWidgets('shows the name to confirm and joins on "Agree & join" (${dark ? 'dark' : 'light'})', (tester) async {
+      testWidgets('shows the name to confirm and joins on "Agree & Join" (${dark ? 'dark' : 'light'})', (tester) async {
         tester.platformDispatcher.platformBrightnessTestValue = dark ? Brightness.dark : Brightness.light;
         addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
         final h = _harness(routes: pending);
@@ -394,15 +417,18 @@ void main() {
 
         // The social path joins the three screens at the second.
         expect(find.text('STEP 2 OF 3'), findsOneWidget);
-        expect(find.text('About you'), findsOneWidget);
+        expect(find.text('About You'), findsOneWidget);
         expect(find.textContaining('sam@acme.com'), findsOneWidget);
         expect(find.widgetWithText(TextFormField, 'Sam'), findsOneWidget);
         expect(find.widgetWithText(TextFormField, 'Rao'), findsOneWidget);
         // The provider vouched for the address: no code is asked.
         expect(find.byKey(const Key('signup.code')), findsNothing);
+        // A mobile number is asked (the API requires one since 29 Oct 2026); a number outside India needs no OTP.
+        await tester.enterText(find.byKey(const Key('signup.phone')), '+44 7700 900123');
+        await tester.pump();
 
-        await tester.ensureVisible(find.text('Agree & join'));
-        await tester.tap(find.text('Agree & join'));
+        await tester.ensureVisible(find.text('Agree & Join'));
+        await tester.tap(find.text('Agree & Join'));
         await tester.pumpAndSettle();
 
         final register = h.api.calls.firstWhere((c) => c.$1 == 'POST /auth/register').$2!;
@@ -410,10 +436,11 @@ void main() {
         expect(register['socialVerifier'], 'secret');
         expect(register['firstName'], 'Sam');
         expect(register['lastName'], 'Rao');
+        expect(register['phone'], '+447700900123');
         expect(register['acceptTerms'], isTrue);
         expect(register.containsKey('password'), isFalse, reason: 'the provider is the credential');
         expect(h.auth.status, SessionStatus.signedIn);
-        // The account is made; "Your work" follows.
+        // The account is made; "Your Work" follows.
         expect(find.text('STEP 3 OF 3'), findsOneWidget);
         expect(tester.takeException(), isNull);
       });
@@ -435,6 +462,8 @@ void main() {
         },
       );
       await openJoin(tester, h);
+      await tester.enterText(find.byKey(const Key('signup.phone')), '+44 7700 900123');
+      await tester.pump();
 
       // The code is sent on arrival, and shown on screen off production.
       expect(h.api.calls.any((c) => c.$1 == 'POST /auth/email/send-code'), isTrue);
@@ -442,16 +471,16 @@ void main() {
       expect(find.textContaining('Test mode: your code is 123456'), findsOneWidget);
 
       // Without the code nothing is made.
-      await tester.ensureVisible(find.text('Agree & join'));
-      await tester.tap(find.text('Agree & join'));
+      await tester.ensureVisible(find.text('Agree & Join'));
+      await tester.tap(find.text('Agree & Join'));
       await tester.pumpAndSettle();
-      expect(find.text('Enter the 6-digit code from the email'), findsOneWidget);
+      expect(find.text('Enter the 6-digit code from your email.'), findsOneWidget);
       expect(h.api.calls.any((c) => c.$1 == 'POST /auth/register'), isFalse);
 
-      await tester.tap(find.text('Use code'));
+      await tester.tap(find.text('Use Code'));
       await tester.pump();
-      await tester.ensureVisible(find.text('Agree & join'));
-      await tester.tap(find.text('Agree & join'));
+      await tester.ensureVisible(find.text('Agree & Join'));
+      await tester.tap(find.text('Agree & Join'));
       await tester.pumpAndSettle();
 
       expect(
@@ -474,10 +503,10 @@ void main() {
       await openJoin(tester, h);
 
       expect(find.text('This sign-in link has expired.'), findsOneWidget);
-      expect(find.text('Try again'), findsOneWidget);
-      await tester.tap(find.text('Back to sign in'));
+      expect(find.text('Try Again'), findsOneWidget);
+      await tester.tap(find.text('Back to Sign In'));
       await tester.pumpAndSettle();
-      expect(find.text('About you'), findsNothing);
+      expect(find.text('About You'), findsNothing);
     });
   });
 }

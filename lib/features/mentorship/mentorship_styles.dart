@@ -92,9 +92,29 @@ class MentorshipText {
   static TextStyle topicChip(Color color) => AppText.plexSans(10.9, FontWeight.w600, color, lineHeight: 14);
 
   // The mentor card.
-  static final mentorName = AppText.workSans(13.8, FontWeight.w700, AppColors.onSurface, lineHeight: 17.3);
-  static final mentorRole = AppText.plexSans(12.4, FontWeight.w600, MentorshipColors.role, lineHeight: 16.5);
-  static final expertise = AppText.plexSans(10.9, FontWeight.w400, AppColors.onSurfaceVariant, lineHeight: 13);
+  // The card's words, smaller than the app's scale gives (owner, 12 Nov 2026: "name should be font size small ...
+  // and the below font size should be small"), so each is set past [AppText.sp].
+  static final mentorName = AppText.workSans(
+    13.8,
+    FontWeight.w700,
+    AppColors.onSurface,
+    lineHeight: 17.3,
+  ).copyWith(fontSize: 13, height: 1.25);
+  static final mentorRole = AppText.plexSans(
+    12.4,
+    FontWeight.w500,
+    MentorshipColors.role,
+    lineHeight: 16.5,
+  ).copyWith(fontSize: 11.5, height: 1.3);
+  static final expertise = AppText.plexSans(
+    10.9,
+    FontWeight.w400,
+    AppColors.onSurfaceVariant,
+    lineHeight: 13,
+  ).copyWith(fontSize: 10.5, height: 1.25);
+
+  /// The card's Message button.
+  static final message = AppText.workSans(12.5, FontWeight.w600, AppColors.primary, lineHeight: 16);
 
   // Company tiles.
   static final wordmark = AppText.workSans(12.4, FontWeight.w700, AppColors.onSurface, lineHeight: 16);

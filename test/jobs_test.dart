@@ -150,9 +150,9 @@ void main() {
 
     test('posted ago counts days, then months', () {
       final now = DateTime(2026, 10, 22);
-      expect(postedAgo(now.subtract(const Duration(days: 3)), now), 'Posted 3d ago');
-      expect(postedAgo(now, now), 'Posted today');
-      expect(postedAgo(now.subtract(const Duration(days: 45)), now), 'Posted 1mo ago');
+      expect(postedAgo(now.subtract(const Duration(days: 3)), now), 'Posted 3 Days Ago');
+      expect(postedAgo(now, now), 'Posted Today');
+      expect(postedAgo(now.subtract(const Duration(days: 45)), now), 'Posted 1 Month Ago');
     });
 
     test('a description becomes paragraphs, headings and items', () {
@@ -168,7 +168,7 @@ void main() {
       expect(plain.map((b) => b.text), ['First paragraph.', 'Second one.']);
     });
 
-    test('the count after "Posted 3d ago" is applicants, else views, else openings', () {
+    test('the count after "Posted 3 Days Ago" is applicants, else views, else openings', () {
       Job job({int? applicants, int? views, int? openings}) => Job(
         id: 'a',
         title: 't',
@@ -177,11 +177,11 @@ void main() {
         views: views,
         openings: openings,
       );
-      expect(applicantsOrOpenings(job(applicants: 142, views: 900, openings: 2)), '142 applicants');
-      expect(applicantsOrOpenings(job(applicants: 1)), '1 applicant');
-      expect(applicantsOrOpenings(job(views: 310, openings: 2)), '310 views');
-      expect(applicantsOrOpenings(job(openings: 2)), '2 openings');
-      expect(applicantsOrOpenings(job(openings: 1)), '1 opening');
+      expect(applicantsOrOpenings(job(applicants: 142, views: 900, openings: 2)), '142 Applicants');
+      expect(applicantsOrOpenings(job(applicants: 1)), '1 Applicant');
+      expect(applicantsOrOpenings(job(views: 310, openings: 2)), '310 Views');
+      expect(applicantsOrOpenings(job(openings: 2)), '2 Openings');
+      expect(applicantsOrOpenings(job(openings: 1)), '1 Opening');
       expect(applicantsOrOpenings(job()), isNull);
     });
 
@@ -630,12 +630,12 @@ void main() {
       final candidate = await read({});
       expect(candidate.applicants, isNull);
       expect(candidate.views, isNull);
-      expect(applicantsOrOpenings(candidate), '2 openings');
+      expect(applicantsOrOpenings(candidate), '2 Openings');
       final team = await read({
         'viewCount': 310,
         '_count': {'applications': 12},
       });
-      expect(applicantsOrOpenings(team), '12 applicants');
+      expect(applicantsOrOpenings(team), '12 Applicants');
     });
 
     test('maps what a job asks for: degrees, credentials and the hiring contact', () async {
@@ -682,7 +682,7 @@ void main() {
       expect(people.photos[1]?.url, 'http://api.test/uploads/priya.png');
       expect(people.total, 5);
       expect(people.others, 4);
-      expect(people.text, 'Nikhil M. and 4 others from ICR work at this organization.');
+      expect(people.text, 'Nikhil M. and 4 others from ICR work at this company.');
       expect(people.initials, ['NM', 'PS']);
     });
 
@@ -724,7 +724,7 @@ void main() {
         },
       });
       final mine = await _repo(api).myJobs();
-      expect(mine.applications, hasLength(1), reason: 'a withdrawn application is not one of "My jobs"');
+      expect(mine.applications, hasLength(1), reason: 'a withdrawn application is not one of "My Jobs"');
       final app = mine.applications.single;
       expect(app.id, 'app1');
       expect(app.job.title, 'Energy Lead');

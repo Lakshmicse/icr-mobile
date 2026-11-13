@@ -61,7 +61,7 @@ class HiringAccess {
 enum PostingStatus {
   open('OPEN', 'Open'),
   draft('DRAFT', 'Draft'),
-  inReview('IN_REVIEW', 'In review'),
+  inReview('IN_REVIEW', 'In Review'),
   paused('PAUSED', 'Paused'),
   closed('CLOSED', 'Closed');
 
@@ -266,7 +266,7 @@ class AttentionItem {
   String get words => switch (kind) {
     'noApplicants' => 'No applicants yet${days == null ? '' : ' after $days days'}. Promote it or refresh the posting.',
     'closing' => 'Closes ${days == null ? 'soon' : (days == 0 ? 'today' : 'in $days days')}.',
-    _ => 'Needs a look.',
+    _ => 'Needs attention.',
   };
 }
 
@@ -301,14 +301,14 @@ class ScreeningDraft {
   final bool mustHave;
 
   static const types = [
-    ('YES_NO', 'Yes or no'),
-    ('YEARS', 'Years of experience'),
-    ('NUMERIC', 'A number'),
-    ('SINGLE_SELECT', 'Pick one'),
-    ('MULTI_SELECT', 'Pick several'),
-    ('RATING', 'A rating'),
-    ('DATE', 'A date'),
-    ('TEXT', 'Free text'),
+    ('YES_NO', 'Yes or No'),
+    ('YEARS', 'Years of Experience'),
+    ('NUMERIC', 'Number'),
+    ('SINGLE_SELECT', 'Single Choice'),
+    ('MULTI_SELECT', 'Multiple Choice'),
+    ('RATING', 'Rating'),
+    ('DATE', 'Date'),
+    ('TEXT', 'Free Text'),
   ];
 
   bool get hasOptions => type == 'SINGLE_SELECT' || type == 'MULTI_SELECT';
@@ -345,7 +345,7 @@ class ScreeningDraft {
         for (final o in options)
           if (o.trim().isNotEmpty) o.trim(),
       ];
-      if (clean.length < 2) return 'Give "$p" at least two options.';
+      if (clean.length < 2) return 'Add at least two options to "$p".';
       if (clean.length > JobLimits.screeningOptionsMax) return 'Keep to ${JobLimits.screeningOptionsMax} options.';
       if (clean.any((o) => o.length > JobLimits.screeningOptionMax)) {
         return 'Keep each option under ${JobLimits.screeningOptionMax} characters.';
@@ -512,7 +512,7 @@ class JobDraft {
 
   /// What a draft may not even be saved with: the limits the DTO checks on every save.
   String? get saveProblem {
-    if (title.trim().isEmpty) return 'Give the posting a title to save it.';
+    if (title.trim().isEmpty) return 'Enter a job title to save the posting.';
     if (title.trim().length > JobLimits.titleMax) return 'Keep the title under ${JobLimits.titleMax} characters.';
     if (descriptionToHtml(description).length > JobLimits.descriptionHtmlMax) {
       return 'The description is too long to save.';
@@ -903,9 +903,9 @@ class TeamInterview {
   bool get live => status == 'SCHEDULED' || status == 'RESCHEDULED';
 
   String get modeLabel => switch (mode) {
-    'IN_PERSON' => 'In person',
-    'PHONE' => 'Phone call',
-    _ => 'Video call',
+    'IN_PERSON' => 'In Person',
+    'PHONE' => 'Phone Call',
+    _ => 'Video Call',
   };
 }
 
@@ -926,10 +926,10 @@ class InterviewFeedbackRow {
   final String? concerns;
 
   String get recommendationLabel => switch (recommendation) {
-    'STRONG_YES' => 'Strong yes',
+    'STRONG_YES' => 'Strong Yes',
     'YES' => 'Yes',
     'NO' => 'No',
-    'STRONG_NO' => 'Strong no',
+    'STRONG_NO' => 'Strong No',
     _ => recommendation,
   };
 }
@@ -1106,10 +1106,10 @@ class InterviewDraft {
   /// Why it cannot be booked, in the API's terms.
   String? problem(DateTime now) {
     final at = scheduledAt;
-    if (at == null) return 'Pick a date and time.';
-    if (!at.isAfter(now)) return 'Pick a time in the future.';
-    if (durationMins < 5) return 'An interview is at least 5 minutes.';
-    if (mode == 'IN_PERSON' && location.trim().isEmpty) return 'Give the address for an in-person interview.';
+    if (at == null) return 'Select a date and time.';
+    if (!at.isAfter(now)) return 'Select a time in the future.';
+    if (durationMins < 5) return 'An interview must be at least 5 minutes.';
+    if (mode == 'IN_PERSON' && location.trim().isEmpty) return 'Enter the address for an in-person interview.';
     if (mode == 'VIDEO' && meetingLink.trim().isNotEmpty && !isApplyUrl(meetingLink)) {
       return 'The meeting link must be a full URL starting with https://';
     }
@@ -1119,7 +1119,7 @@ class InterviewDraft {
     if (notes.trim().length > JobLimits.interviewNotesMax) {
       return 'Keep the notes under ${JobLimits.interviewNotesMax} characters.';
     }
-    if (interviewerIds.isEmpty) return 'Choose at least one person for the panel.';
+    if (interviewerIds.isEmpty) return 'Select at least one panel member.';
     return null;
   }
 

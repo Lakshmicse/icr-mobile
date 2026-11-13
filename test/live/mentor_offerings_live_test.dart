@@ -253,7 +253,11 @@ void main() {
           expect(await refusal({'type': 'QUERY'}), 'Written consultations are no longer sold.');
           expect(await refusal({'pricePaisa': 6000000}), isNot('no refusal'), reason: 'at most ₹50,000');
           // The same checks, in the app's own rules, agree with the API on each of these.
-          expect(servicePriceProblem(free: false, price: '100', compareAt: ''), 'Priced services start at ₹499.');
+          expect(
+            servicePriceProblem(free: false, price: '100', compareAt: ''),
+            isNull,
+            reason: 'the floor is the API\'s',
+          );
           expect(
             servicePriceProblem(free: false, price: '599', compareAt: '599'),
             'The compare-at price must be higher than the price.',
@@ -554,7 +558,7 @@ void main() {
           );
           expect(
             await refusal({'compareAtPaisa': 299900}),
-            'The strikethrough price has to be higher than the price you are charging.',
+            'The strikethrough price must be higher than the price you charge.',
           );
           expect(await refusal({'sessionsPerMonth': null}), 'Say how many sessions a month this plan includes.');
           expect(
@@ -681,7 +685,7 @@ void main() {
           );
           expect(
             await refusal({'compareAtPaisa': 599900}),
-            'The strikethrough price has to be higher than the price you are charging.',
+            'The strikethrough price must be higher than the price you charge.',
           );
           expect(
             await refusal({
@@ -716,13 +720,13 @@ void main() {
             programmePriceProblem(free: false, price: '300', compareAt: ''),
             '1:1 mentoring is either free or priced at ₹499 or more.',
           );
-          expect(modulesProblem([ModuleDraft(title: 'One')]), 'A structured program runs between 2 and 24 sessions.');
+          expect(modulesProblem([ModuleDraft(title: 'One')]), 'A structured programme runs between 2 and 24 sessions.');
 
           expect(
             await c.savePlan(
               body({
                 'blurb': 'A test programme.',
-                'inclusions': ['Notes after every session'],
+                'inclusions': ['Notes After Every Session'],
                 'sessionDurationMin': 60,
               }),
             ),
@@ -814,7 +818,7 @@ void main() {
                 },
               ],
             }),
-            'Pick a time in the future.',
+            'Select a time in the future.',
           );
           expect(
             await refusal({

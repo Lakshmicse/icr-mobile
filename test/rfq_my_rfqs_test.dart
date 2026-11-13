@@ -50,13 +50,13 @@ void main() {
   testWidgets('lists the buyer\'s requirements, newest change first, with what each has drawn', (tester) async {
     await open(tester);
     expect(find.byType(RequirementCard), findsNWidgets(3));
-    // "Recently updated": the draft (today), the RFQ, then the enquiry.
+    // "Recently Updated": the draft (today), the RFQ, then the enquiry.
     final order = tester.widgetList<RequirementCard>(find.byType(RequirementCard)).map((c) => c.rfq.id).toList();
     expect(order, [DemoRfqRepository.homeId, DemoRfqRepository.ifmId, DemoRfqRepository.securityId]);
-    expect(find.text('3 replies · 2 new'), findsOneWidget);
+    expect(find.text('3 responses · 2 new'), findsOneWidget);
     expect(find.textContaining('2 to screen'), findsOneWidget);
     expect(find.text('Draft'), findsOneWidget);
-    expect(find.text('Live'), findsNWidgets(2));
+    expect(find.text('Active'), findsNWidgets(2));
     expect(find.text('Replies due in 9 days'), findsOneWidget);
     expect(find.text('Pre-qual closes in 5 days'), findsOneWidget);
   });
@@ -64,23 +64,23 @@ void main() {
   testWidgets('the tabs carry their counts and each one narrows the list', (tester) async {
     await open(tester);
     expect(find.text('All 3'), findsOneWidget);
-    expect(find.text('Live 2'), findsOneWidget);
+    expect(find.text('Active 2'), findsOneWidget);
     expect(find.text('Drafts 1'), findsOneWidget);
     expect(find.text('Awarded 0'), findsOneWidget);
     await tester.tap(find.text('Drafts 1'));
     await settle(tester);
     expect(find.byType(RequirementCard), findsOneWidget);
     expect(row(DemoRfqRepository.homeId), findsOneWidget);
-    await tester.tap(find.text('Live 2'));
+    await tester.tap(find.text('Active 2'));
     await settle(tester);
     expect(find.byType(RequirementCard), findsNWidgets(2));
     await tester.tap(find.text('Awarded 0'));
     await settle(tester);
     expect(find.byType(RequirementCard), findsNothing);
-    expect(find.text('Nothing in awarded'), findsOneWidget);
-    await tapTab(tester, 'Waiting on you 2');
+    expect(find.text('Nothing in Awarded'), findsOneWidget);
+    await tapTab(tester, 'Waiting on You 2');
     expect(find.byType(RequirementCard), findsNWidgets(2));
-    await tapTab(tester, 'Closing this week 1');
+    await tapTab(tester, 'Closing Soon 1');
     expect(row(DemoRfqRepository.ifmId), findsOneWidget);
     expect(find.byType(RequirementCard), findsOneWidget);
   });
@@ -94,14 +94,14 @@ void main() {
     await tester.enterText(find.byType(TextField).first, 'zzqx');
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await settle(tester);
-    expect(find.text('No requirements match'), findsOneWidget);
-    await tester.tap(find.text('Clear search'));
+    expect(find.text('No Requirements Match'), findsOneWidget);
+    await tester.tap(find.text('Clear Search'));
     await settle(tester);
     expect(find.byType(RequirementCard), findsNWidgets(3));
     expect(tester.widget<TextField>(find.byType(TextField).first).controller!.text, isEmpty);
   });
 
-  testWidgets('the type chip picks Enquiries or RFQs, and "All types" puts them back', (tester) async {
+  testWidgets('the type chip picks Enquiries or RFQs, and "All Types" puts them back', (tester) async {
     await open(tester);
     await tester.tap(chip('rfq-kind'));
     await settle(tester);
@@ -117,14 +117,14 @@ void main() {
     expect(find.byType(RequirementCard), findsNWidgets(2));
     await tester.tap(chip('rfq-kind'));
     await settle(tester);
-    await tester.tap(find.text('All types').last);
+    await tester.tap(find.text('All Types').last);
     await settle(tester);
     expect(find.byType(RequirementCard), findsNWidgets(3));
   });
 
   testWidgets('the sort chip reorders the list', (tester) async {
     await open(tester);
-    // The row scrolls: "Find work" sits before the sort chip since the supplier's door was added.
+    // The row scrolls: "Find Work" sits before the sort chip since the supplier's door was added.
     await tester.drag(chip('rfq-post'), const Offset(-240, 0));
     await settle(tester);
     await tester.tap(chip('rfq-sort'));
@@ -138,7 +138,7 @@ void main() {
 
   testWidgets('a row opens the requirement, and its button opens it at what is waiting', (tester) async {
     await open(tester);
-    // The title is on the row and again in "Waiting on you": the row's is the one that opens it.
+    // The title is on the row and again in "Waiting on You": the row's is the one that opens it.
     await tester.tap(
       find.descendant(
         of: row(DemoRfqRepository.securityId),
@@ -157,9 +157,9 @@ void main() {
     expect(detail.section, 'prequal');
   });
 
-  testWidgets('"Waiting on you" lists what needs a decision and each line opens its requirement', (tester) async {
+  testWidgets('"Waiting on You" lists what needs a decision and each line opens its requirement', (tester) async {
     await open(tester);
-    expect(find.text('Waiting on you'), findsOneWidget);
+    expect(find.text('Waiting on You'), findsOneWidget);
     expect(find.textContaining('2 pre-qualification responses to screen'), findsOneWidget);
     await tester.tap(chip('rfq-action-${DemoRfqRepository.ifmId}'));
     await settle(tester, 8);
@@ -196,27 +196,27 @@ void main() {
     testWidgets('a draft offers View, Edit, Publish, a similar one and Delete', (tester) async {
       await open(tester);
       await openMenu(tester, DemoRfqRepository.homeId);
-      for (final label in ['View', 'Edit', 'Publish', 'Post a similar requirement', 'Delete draft']) {
+      for (final label in ['View', 'Edit', 'Publish', 'Post a Similar Requirement', 'Delete Draft']) {
         expect(find.text(label), findsOneWidget, reason: label);
       }
-      expect(find.text('Close enquiry'), findsNothing);
-      expect(find.text('Cancel enquiry'), findsNothing);
+      expect(find.text('Close Enquiry'), findsNothing);
+      expect(find.text('Cancel Enquiry'), findsNothing);
     });
 
     testWidgets('a live enquiry offers Close and Cancel, never Publish or Delete', (tester) async {
       await open(tester);
       await openMenu(tester, DemoRfqRepository.securityId);
-      expect(find.text('Close enquiry'), findsOneWidget);
-      expect(find.text('Cancel enquiry'), findsOneWidget);
+      expect(find.text('Close Enquiry'), findsOneWidget);
+      expect(find.text('Cancel Enquiry'), findsOneWidget);
       expect(find.text('Publish'), findsNothing);
-      expect(find.text('Delete draft'), findsNothing);
+      expect(find.text('Delete Draft'), findsNothing);
     });
 
     testWidgets('a live RFQ is "requirement", not "enquiry", in its words', (tester) async {
       await open(tester);
       await openMenu(tester, DemoRfqRepository.ifmId);
-      expect(find.text('Close requirement'), findsOneWidget);
-      expect(find.text('Cancel requirement'), findsOneWidget);
+      expect(find.text('Close Requirement'), findsOneWidget);
+      expect(find.text('Cancel Requirement'), findsOneWidget);
     });
 
     testWidgets('View opens the requirement', (tester) async {
@@ -227,7 +227,7 @@ void main() {
       expect(find.byType(RfqDetailScreen), findsOneWidget);
     });
 
-    testWidgets('Edit and "Post a similar requirement" open the composer on that requirement', (tester) async {
+    testWidgets('Edit and "Post a Similar Requirement" open the composer on that requirement', (tester) async {
       await open(tester);
       await openMenu(tester, DemoRfqRepository.homeId);
       await tester.tap(find.text('Edit'));
@@ -238,7 +238,7 @@ void main() {
       await tester.tap(find.bySemanticsLabel('Back').last);
       await settle(tester, 14);
       await openMenu(tester, DemoRfqRepository.securityId);
-      await tester.tap(find.text('Post a similar requirement'));
+      await tester.tap(find.text('Post a Similar Requirement'));
       await settle(tester, 8);
       composer = tester.widget<PostRfqScreen>(find.byType(PostRfqScreen));
       expect(composer.copyFromRfqId, DemoRfqRepository.securityId);
@@ -251,35 +251,35 @@ void main() {
       await tester.tap(find.text('Publish'));
       await settle(tester);
       expect(repo.calls, contains('act'));
-      expect(find.text('Live 3'), findsOneWidget);
+      expect(find.text('Active 3'), findsOneWidget);
       expect(find.text('Drafts 0'), findsOneWidget);
     });
 
     testWidgets('Close asks first; keeping it changes nothing, confirming closes it', (tester) async {
       await open(tester);
       await openMenu(tester, DemoRfqRepository.securityId);
-      await tester.tap(find.text('Close enquiry'));
+      await tester.tap(find.text('Close Enquiry'));
       await settle(tester);
-      expect(find.text('Close this requirement?'), findsOneWidget);
-      await tester.tap(find.text('Keep it'));
+      expect(find.text('Close This Requirement?'), findsOneWidget);
+      await tester.tap(find.text('Keep It'));
       await settle(tester);
-      expect(find.text('Live 2'), findsOneWidget);
+      expect(find.text('Active 2'), findsOneWidget);
       await openMenu(tester, DemoRfqRepository.securityId);
-      await tester.tap(find.text('Close enquiry'));
+      await tester.tap(find.text('Close Enquiry'));
       await settle(tester);
-      await tester.tap(find.text('Close it'));
+      await tester.tap(find.text('Close It'));
       await settle(tester);
-      expect(find.text('Live 1'), findsOneWidget);
+      expect(find.text('Active 1'), findsOneWidget);
       expect(find.text('Ended 1'), findsOneWidget);
     });
 
     testWidgets('Cancel asks first and says it cannot be undone', (tester) async {
       await open(tester);
       await openMenu(tester, DemoRfqRepository.ifmId);
-      await tester.tap(find.text('Cancel requirement'));
+      await tester.tap(find.text('Cancel Requirement'));
       await settle(tester);
-      expect(find.textContaining('can’t be undone'), findsOneWidget);
-      await tester.tap(find.text('Cancel requirement').last);
+      expect(find.textContaining('cannot be undone'), findsOneWidget);
+      await tester.tap(find.text('Cancel Requirement').last);
       await settle(tester);
       expect(find.text('Ended 1'), findsOneWidget);
     });
@@ -287,10 +287,10 @@ void main() {
     testWidgets('Delete draft asks, then removes it from the list', (tester) async {
       await open(tester);
       await openMenu(tester, DemoRfqRepository.homeId);
-      await tester.tap(find.text('Delete draft'));
+      await tester.tap(find.text('Delete Draft'));
       await settle(tester);
-      expect(find.text('Delete this draft?'), findsOneWidget);
-      await tester.tap(find.text('Delete draft').last);
+      expect(find.text('Delete This Draft?'), findsOneWidget);
+      await tester.tap(find.text('Delete Draft').last);
       await settle(tester);
       expect(row(DemoRfqRepository.homeId), findsNothing);
       expect(find.text('All 2'), findsOneWidget);
@@ -312,9 +312,9 @@ void main() {
     testWidgets('a failed load says so, and Try again reads it again', (tester) async {
       repo.failReads = true;
       await open(tester);
-      expect(find.text("Couldn't load your requirements"), findsOneWidget);
+      expect(find.text("Unable to Load Your Requirements"), findsOneWidget);
       repo.failReads = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester);
       expect(find.byType(RequirementCard), findsNWidgets(3));
     });
@@ -323,13 +323,13 @@ void main() {
       repo.forbidMine = true;
       final links = RecordingRfqLinks();
       await pumpScreen(tester, MyRfqsScreen(repository: repo, links: links));
-      expect(find.text('Requirements are posted by buyers and companies'), findsOneWidget);
+      expect(find.text('Requirements Are Posted by Buyers and Companies'), findsOneWidget);
     });
 
     testWidgets('nothing posted yet offers the first requirement', (tester) async {
       repo.emptyMine = true;
       await open(tester);
-      expect(find.text('Post your first requirement'), findsOneWidget);
+      expect(find.text('Post Your First Requirement'), findsOneWidget);
       await tester.tap(find.text('Post RFQ').last);
       await settle(tester, 8);
       expect(find.byType(PostRfqScreen), findsOneWidget);

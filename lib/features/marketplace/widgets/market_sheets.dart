@@ -50,7 +50,7 @@ Future<void> pickSort(BuildContext context) async {
     context,
     scrollControlled: false,
     builder: (sheet) => _ChoiceSheet<SupplierSort>(
-      title: 'Sort suppliers',
+      title: 'Sort Suppliers',
       choices: [for (final s in SupplierSort.values) (s, s.label)],
       current: market.filters.sort,
       keyPrefix: 'sort',
@@ -67,8 +67,8 @@ Future<void> pickRating(BuildContext context) async {
     context,
     scrollControlled: false,
     builder: (sheet) => _ChoiceSheet<double>(
-      title: 'Minimum rating',
-      choices: [(0, 'Any rating'), for (final r in ratingSteps) (r, ratingStepLabel(r))],
+      title: 'Minimum Rating',
+      choices: [(0, 'Any Rating'), for (final r in ratingSteps) (r, ratingStepLabel(r))],
       current: current ?? 0,
       keyPrefix: 'rating',
     ),
@@ -176,7 +176,7 @@ class _MarketFiltersSheetState extends State<MarketFiltersSheet> {
                 TextButton(
                   key: const ValueKey('filters-clear'),
                   onPressed: () => setState(() => _filters = _filters.clearedSheet()),
-                  child: Text('Clear all', style: MartText.sheetLink),
+                  child: Text('Clear All', style: MartText.sheetLink),
                 ),
               ],
             ),
@@ -186,19 +186,19 @@ class _MarketFiltersSheetState extends State<MarketFiltersSheet> {
               controller: scroll,
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
               children: [
-                _Section('Trust level'),
+                _Section('Trust Level'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
                     _Pill(
-                      label: 'Any level',
+                      label: 'Any Level',
                       selected: level == null,
                       onTap: () => setState(() => _filters = _filters.copyWith(clearLevel: true)),
                     ),
                     for (final l in SupplierLevel.values.where((l) => l.isVerified))
                       _Pill(
-                        label: l == SupplierLevel.verified ? 'Verified' : '${l.label} & up',
+                        label: l == SupplierLevel.verified ? 'Verified' : '${l.label} & Up',
                         selected: level == l,
                         onTap: () => setState(() => _filters = _filters.copyWith(minLevel: l)),
                       ),
@@ -214,7 +214,7 @@ class _MarketFiltersSheetState extends State<MarketFiltersSheet> {
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     onPressed: () => showCategories(context),
-                    child: Text('Browse all', style: MartText.sheetLink),
+                    child: Text('Browse All', style: MartText.sheetLink),
                   ),
                 ),
                 _CategoryPicker(
@@ -235,7 +235,7 @@ class _MarketFiltersSheetState extends State<MarketFiltersSheet> {
                     child: SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2)),
                   )
                 else if (cities.isEmpty)
-                  Text('No cities to pick from yet.', style: MartText.sheetRowMuted)
+                  Text('No cities available yet.', style: MartText.sheetRowMuted)
                 else
                   Wrap(
                     spacing: 8,
@@ -253,7 +253,7 @@ class _MarketFiltersSheetState extends State<MarketFiltersSheet> {
                         ),
                     ],
                   ),
-                _Section('Company size'),
+                _Section('Company Size'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -272,7 +272,7 @@ class _MarketFiltersSheetState extends State<MarketFiltersSheet> {
                   runSpacing: 8,
                   children: [
                     _Pill(
-                      label: 'GST registered',
+                      label: 'GST Registered',
                       selected: _filters.gst,
                       onTap: () => setState(() => _filters = _filters.copyWith(gst: !_filters.gst)),
                     ),
@@ -285,7 +285,7 @@ class _MarketFiltersSheetState extends State<MarketFiltersSheet> {
                 ),
                 _Section('Saved'),
                 _Pill(
-                  label: 'Only my saved suppliers',
+                  label: 'Only My Saved Suppliers',
                   selected: _filters.savedOnly,
                   onTap: () => setState(() => _filters = _filters.copyWith(savedOnly: !_filters.savedOnly)),
                 ),
@@ -306,7 +306,7 @@ class _MarketFiltersSheetState extends State<MarketFiltersSheet> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () => Navigator.pop(context, _filters),
-                  child: Text('Show suppliers', style: MartText.sheetButton),
+                  child: Text('Show Suppliers', style: MartText.sheetButton),
                 ),
               ),
             ),
@@ -399,7 +399,7 @@ class _CategoryPicker extends StatelessWidget {
         child: SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2)),
       );
     }
-    if (nodes.isEmpty) return Text('No categories to pick from yet.', style: MartText.sheetRowMuted);
+    if (nodes.isEmpty) return Text('No categories available yet.', style: MartText.sheetRowMuted);
     final query = search.text.trim().toLowerCase();
     final rows = <Widget>[];
     for (final top in nodes) {
@@ -456,7 +456,7 @@ class _CategoryPicker extends StatelessWidget {
             style: MartText.sheetRow,
             decoration: InputDecoration(
               isDense: true,
-              hintText: 'Search categories',
+              hintText: 'Search Categories',
               hintStyle: MartText.sheetRowMuted.copyWith(fontSize: 14),
               prefixIcon: const Icon(LucideIcons.search, size: 16, color: AppColors.outline),
               contentPadding: const EdgeInsets.symmetric(vertical: 8),

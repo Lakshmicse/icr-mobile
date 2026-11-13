@@ -88,15 +88,15 @@ void main() {
 
     test('the line counts only the decks on their own, and adds how the others open', () {
       const plan = DeckPlan(limit: 3, opened: ['d2', 'd1']);
-      expect(plan.noteFor([alone], anyLinked: true), startsWith('Your plan opens 3 flash-card decks (1 used).'));
+      expect(plan.noteFor([alone], anyLinked: true), startsWith('Your plan opens 3 flashcard decks (1 used).'));
       expect(plan.noteFor([alone], anyLinked: true), endsWith('opens with that course.'));
-      expect(plan.noteFor([alone]), 'Your plan opens 3 flash-card decks (1 used).');
+      expect(plan.noteFor([alone]), 'Your plan opens 3 flashcard decks (1 used).');
       expect(
         plan.noteFor(const [], anyLinked: true),
         isNull,
         reason: 'every deck goes with a course: no number to tell',
       );
-      expect(const DeckPlan(limit: 0).noteFor([alone]), 'Flash cards are not included in your plan.');
+      expect(const DeckPlan(limit: 0).noteFor([alone]), 'Flashcards are not included in your plan.');
       expect(const DeckPlan(allOpen: true).noteFor([alone]), isNull);
     });
   });
@@ -176,7 +176,7 @@ void main() {
       // The line counts only the decks on their own: 1 of 3 used, and the course decks take no place.
       expect(
         find.text(
-          'Your plan opens 3 flash-card decks (1 used). A deck that goes with an Assess your knowledge course opens with that course.',
+          'Your plan opens 3 flashcard decks (1 used). A deck linked to a Knowledge Assessment course opens with that course.',
         ),
         findsOneWidget,
       );
@@ -231,7 +231,7 @@ void main() {
 
     testWidgets('the old API (decks without a course): the grid is as it was', (tester) async {
       await pump(tester, FlashCardsScreen(onBack: () {}, repository: repoOn(FakePortal())));
-      expect(find.text('Your plan opens 3 flash-card decks (1 used).'), findsOneWidget);
+      expect(find.text('Your plan opens 3 flashcard decks (1 used).'), findsOneWidget);
       expect(find.textContaining('Opens with'), findsNothing);
       expect(find.text('Locked'), findsNothing);
     });
@@ -266,9 +266,9 @@ void main() {
       expect(find.text('Opens with “Capital Planning”'), findsOneWidget);
       expect(find.textContaining('open the course with your plan'), findsOneWidget, reason: 'the API\'s own sentence');
       expect(find.text('Open Capital Planning'), findsOneWidget);
-      expect(find.text('All decks'), findsOneWidget);
-      expect(find.text('See plans'), findsNothing, reason: 'the course is the way in, not the plans page');
-      expect(find.text("This deck isn't open on your plan"), findsNothing);
+      expect(find.text('All Decks'), findsOneWidget);
+      expect(find.text('See Plans'), findsNothing, reason: 'the course is the way in, not the plans page');
+      expect(find.text("This Deck Is Not Open on Your Plan"), findsNothing);
     });
 
     testWidgets('the button opens the course\'s page; coming back, the deck is asked for again and opens', (
@@ -326,8 +326,8 @@ void main() {
       await pump(tester, FlashCardsScreen(onBack: () {}, repository: repoOn(portal)));
       await tester.tap(find.text('Capital Planning'));
       await tester.pumpAndSettle();
-      expect(find.text("This deck isn't open on your plan"), findsOneWidget);
-      expect(find.text('See plans'), findsWidgets);
+      expect(find.text("This Deck Is Not Open on Your Plan"), findsOneWidget);
+      expect(find.text('See Plans'), findsWidgets);
       expect(find.byKey(const ValueKey('deck-course-lock')), findsNothing);
     });
   });

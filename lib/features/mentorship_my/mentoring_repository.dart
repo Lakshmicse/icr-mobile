@@ -140,7 +140,7 @@ class MentoringRepository {
         CalendarItem(
           kind: CalendarKind.session,
           id: s['id'] as String,
-          title: _nonEmpty(s['agenda']) ?? 'Mentoring session',
+          title: _nonEmpty(s['agenda']) ?? 'Mentoring Session',
           at: parseDate(s['scheduledAt']) ?? from,
           durationMin: asInt(s['durationMin'], 30),
           status: s['status'] as String? ?? 'SCHEDULED',
@@ -157,7 +157,7 @@ class MentoringRepository {
         CalendarItem(
           kind: CalendarKind.booking,
           id: b['id'] as String,
-          title: b['title'] as String? ?? 'Paid session',
+          title: b['title'] as String? ?? 'Paid Session',
           at: parseDate(b['scheduledAt']) ?? from,
           durationMin: asInt(b['durationMin'], 30),
           status: b['status'] as String? ?? 'SCHEDULED',
@@ -176,7 +176,7 @@ class MentoringRepository {
         CalendarItem(
           kind: CalendarKind.group,
           id: g['id'] as String,
-          title: g['title'] as String? ?? 'Group session',
+          title: g['title'] as String? ?? 'Group Session',
           at: at,
           durationMin: asInt(g['durationMin'], 60),
           status: g['status'] as String? ?? 'SCHEDULED',
@@ -220,7 +220,7 @@ class MentoringRepository {
         MentoringCertificate(
           id: c['id'] as String,
           certificateId: c['certificateId'] as String? ?? '',
-          title: c['title'] as String? ?? 'Mentoring certificate',
+          title: c['title'] as String? ?? 'Mentoring Certificate',
           issuedAt: parseDate(c['issuedAt']) ?? parseDate(c['completedAt']) ?? mentoringNow(),
           kind: c['kind'] as String?,
           counterpartName: c['counterpartName'] as String?,

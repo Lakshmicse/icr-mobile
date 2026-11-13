@@ -345,7 +345,7 @@ void main() {
       await tapThrough(tester, '/jobs/anything');
       final title = DemoJobsRepository().detailJob.title;
       expect(find.textContaining(title), findsWidgets);
-      expect(find.text('This is no longer available.'), findsNothing);
+      expect(find.text('This item is no longer available.'), findsNothing);
     });
 
     testWidgets('an interview panel notification opens the app\'s interview page, not the website in a web view', (
@@ -354,7 +354,7 @@ void main() {
       await tapThrough(tester, '/manage/interviews/iv-7');
       expect(find.byType(InterviewBriefScreen), findsOneWidget);
       expect(find.byType(InAppWebScreen), findsNothing);
-      expect(find.text('This interview'), findsOneWidget);
+      expect(find.text('This Interview'), findsOneWidget);
     });
 
     testWidgets('an applicant notification opens that applicant page over the job applicants', (tester) async {
@@ -362,7 +362,7 @@ void main() {
       expect(find.byType(ApplicantDetailScreen), findsOneWidget);
       expect(find.byType(ApplicantsScreen, skipOffstage: false), findsOneWidget, reason: 'Back lands on the pipeline');
       expect(find.byType(InAppWebScreen), findsNothing);
-      expect(find.text('This is no longer available.'), findsNothing);
+      expect(find.text('This item is no longer available.'), findsNothing);
     });
 
     testWidgets('a pipeline link that names no applicant opens the applicants alone', (tester) async {
@@ -373,7 +373,7 @@ void main() {
 
     testWidgets('an applicant that cannot be read says so and leaves the applicants showing', (tester) async {
       await tapThrough(tester, '/manage/jobs/job-open/pipeline?applicant=gone');
-      expect(find.text('This is no longer available.'), findsOneWidget);
+      expect(find.text('This item is no longer available.'), findsOneWidget);
       expect(find.byType(ApplicantsScreen), findsOneWidget);
       expect(find.byType(ApplicantDetailScreen), findsNothing);
     });
@@ -410,7 +410,7 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey('tap')));
       await tester.pumpAndSettle();
-      expect(find.text('This is no longer available.'), findsOneWidget);
+      expect(find.text('This item is no longer available.'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing, reason: 'the spinner is gone');
       expect(find.byType(ThreadScreen), findsNothing);
     });

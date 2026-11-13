@@ -224,7 +224,7 @@ void main() {
       expect(await seen(fp), {noOffice, recruiters, officeAdmins}, reason: 'the second admin reads the same company');
       expect(await seen(rc), {recruiters, officeAdmins}, reason: 'a posting with no office is the admins\'');
       expect(await seen(ba), {recruiters, officeAdmins});
-      expect(await seen(ba, mine: true), {officeAdmins}, reason: '"Only jobs I started"');
+      expect(await seen(ba, mine: true), {officeAdmins}, reason: 'mine: only what the member started');
       expect(await seen(rc, mine: true), {recruiters});
       expect(await seen(ca, mine: true), {noOffice});
 

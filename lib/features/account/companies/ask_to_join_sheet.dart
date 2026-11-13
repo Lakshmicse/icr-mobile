@@ -151,8 +151,8 @@ class _AskToJoinSheetState extends State<AskToJoinSheet> {
   Widget build(BuildContext context) {
     final picked = _picked;
     return EditSheet(
-      title: picked == null ? CompanyWords.askToJoinTitle : 'Ask to join ${picked.name}',
-      saveLabel: 'Send request',
+      title: picked == null ? CompanyWords.askToJoinTitle : 'Ask to Join ${picked.name}',
+      saveLabel: 'Send Request',
       saving: _sending,
       error: _error,
       dirty: _note.text.trim().isNotEmpty,
@@ -168,7 +168,7 @@ class _AskToJoinSheetState extends State<AskToJoinSheet> {
       Text(CompanyWords.askToJoinLead, style: AccountText.body),
       const SizedBox(height: 14),
       AccountField(
-        label: 'Company name',
+        label: 'Company Name',
         controller: _query,
         fieldKey: const Key('join.search'),
         hint: 'Search for your company',
@@ -228,9 +228,9 @@ class _AskToJoinSheetState extends State<AskToJoinSheet> {
             if (member)
               const AccountChip(label: 'Member', color: AppColors.emerald50, ink: AppColors.emerald700)
             else if (sent)
-              const AccountChip(label: 'Request sent')
+              const AccountChip(label: 'Request Sent')
             else
-              Text('Ask to join', style: AccountText.link),
+              Text('Ask to Join', style: AccountText.link),
           ],
         ),
       ),
@@ -269,7 +269,7 @@ class _AskToJoinSheetState extends State<AskToJoinSheet> {
       ),
       const SizedBox(height: 14),
       AccountField(
-        label: 'Anything they should know (optional)',
+        label: 'Note for the Admins (Optional)',
         controller: _note,
         fieldKey: const Key('join.note'),
         hint: 'I run facilities at your Pune site.',

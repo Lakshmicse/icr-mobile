@@ -178,7 +178,11 @@ class BriefApplication {
       matchScore: (json['matchScore'] as num?)?.round(),
       signals: [
         for (final s in _maps(json['screeningSignals']))
-          MatchSignal(label: '${s['label'] ?? ''}', score: (s['score'] as num?)?.toDouble() ?? 0, detail: _text(s['detail'])),
+          MatchSignal(
+            label: '${s['label'] ?? ''}',
+            score: (s['score'] as num?)?.toDouble() ?? 0,
+            detail: _text(s['detail']),
+          ),
       ],
       aiSummary: _text(json['aiSummary']),
       screenedAt: _date(json['screenedAt']),
@@ -221,10 +225,10 @@ class BriefApplication {
   /// Nothing came from screening at all: no cover note, no answers, no score, screening not run.
   bool get nothingFromScreening => coverNote == null && answers.isEmpty && matchScore == null && screenedAt == null;
 
-  /// "Operations head · 9 yrs exp · Pune".
+  /// "Operations head · 9 years of experience · Pune".
   List<String> get facts => [
     ?headline,
-    if (experienceYears != null) '${_years(experienceYears!)} yrs exp',
+    if (experienceYears != null) '${_years(experienceYears!)} ${experienceYears == 1 ? 'year' : 'years'} of experience',
     ?currentLocation,
   ];
 
@@ -385,7 +389,15 @@ class BriefRound {
 
 /// A hiring-team note on the application: a note, a rating, or a stage change's note.
 class BriefNote {
-  const BriefNote({required this.id, required this.type, required this.at, this.note, this.rating, this.toStage, this.author});
+  const BriefNote({
+    required this.id,
+    required this.type,
+    required this.at,
+    this.note,
+    this.rating,
+    this.toStage,
+    this.author,
+  });
 
   factory BriefNote.fromJson(Map<String, dynamic> json) => BriefNote(
     id: '${json['id']}',
@@ -434,11 +446,11 @@ const scorecardRecommendations = ['STRONG_YES', 'YES', 'NEUTRAL', 'NO', 'STRONG_
 
 /// "Strong yes".
 String recommendationWord(String r) => switch (r) {
-  'STRONG_YES' => 'Strong yes',
+  'STRONG_YES' => 'Strong Yes',
   'YES' => 'Yes',
   'NEUTRAL' => 'Neutral',
   'NO' => 'No',
-  'STRONG_NO' => 'Strong no',
+  'STRONG_NO' => 'Strong No',
   _ => r,
 };
 
@@ -447,7 +459,7 @@ String roundName(int round, String? title) => title == null ? 'Round $round' : '
 
 /// "Video", "In person", "Phone": the website's mode words on the interview page.
 String interviewModeWord(String mode) => switch (mode) {
-  'IN_PERSON' => 'In person',
+  'IN_PERSON' => 'In Person',
   'PHONE' => 'Phone',
   _ => 'Video',
 };
@@ -458,7 +470,7 @@ String interviewStatusWord(String s) => switch (s) {
   'RESCHEDULED' => 'Rescheduled',
   'COMPLETED' => 'Completed',
   'CANCELLED' => 'Cancelled',
-  'NO_SHOW' => 'No show',
+  'NO_SHOW' => 'No-Show',
   _ => s,
 };
 
@@ -480,6 +492,4 @@ String? _name(Map<String, dynamic> p) {
   return n.isEmpty ? null : n;
 }
 
-List<String> _names(Object? v) => [
-  for (final p in _maps(v)) ?_name(p),
-];
+List<String> _names(Object? v) => [for (final p in _maps(v)) ?_name(p)];

@@ -76,7 +76,12 @@ class CatalogueController extends ChangeNotifier {
   MemberLearning get member => _member;
 
   /// Either the search or the facet narrows the grid.
-  bool get narrowed => _search.isNotEmpty || _filter != AccessFilter.all;
+  bool get narrowed => _search.isNotEmpty || (hasAccessFacet && _filter != AccessFilter.all);
+
+  /// Free and paid papers both exist, so Free / Paid is a real cut. The website shows only the facets present
+  /// (`topicFacets`); with one kind the chips would promise an empty page (owner, 7 Nov 2026: on production every
+  /// mock set is plan-locked and none carries a price, so "Paid" listed nothing and "Free" listed locked sets).
+  bool get hasAccessFacet => groups.any((g) => g.anyFree) && groups.any((g) => g.anyPaid);
 
   /// A partner institute's certification is catalogued under Professional Development, so it is not listed here.
   bool get hasPartner => _all.any((g) => g.isPartner);
@@ -101,7 +106,7 @@ class CatalogueController extends ChangeNotifier {
     return [
       for (final g in groups)
         if (terms.every(g.haystack.contains) &&
-            (_filter == AccessFilter.all || (_filter == AccessFilter.free ? g.anyFree : g.anyPaid)))
+            (!hasAccessFacet || _filter == AccessFilter.all || (_filter == AccessFilter.free ? g.anyFree : g.anyPaid)))
           g,
     ];
   }

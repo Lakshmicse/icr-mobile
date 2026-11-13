@@ -58,15 +58,15 @@ class _AcceptFormState extends State<_AcceptForm> {
     final mentee = widget.request.mentee;
     return MentoringForm(
       title: 'Accept ${mentee.firstName}',
-      subtitle: 'You become ${mentee.firstName}\'s mentor and they are told. You can pause or end it later.',
-      submitLabel: 'Accept and start',
+      subtitle: 'You become ${mentee.firstName}\'s mentor and they are notified. You can pause or end it later.',
+      submitLabel: 'Accept and Start',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
       children: [
         FieldBlock(
-          label: 'How often will you meet?',
-          help: 'Optional. It is a rhythm to aim for, not a rule.',
+          label: 'Meeting Frequency',
+          help: 'Optional. This is a guide, not a rule.',
           child: Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -81,7 +81,7 @@ class _AcceptFormState extends State<_AcceptForm> {
           ),
         ),
         FieldBlock(
-          label: 'A note back (optional)',
+          label: 'Reply Note (Optional)',
           child: TextField(
             key: const ValueKey('accept-note'),
             controller: _note,
@@ -105,10 +105,10 @@ Future<bool> showDeclineRequestSheet(
 }) => showTextSheet(
   context,
   title: 'Decline ${request.mentee.firstName}?',
-  subtitle: 'They are told, with your note. A kind line helps: they may look for someone else.',
-  label: 'A note back (optional)',
+  subtitle: 'They are notified, with your note. A kind note helps, as they may look for another mentor.',
+  label: 'Reply Note (Optional)',
   hint: 'My cohort is full until next quarter',
-  submitLabel: 'Decline request',
+  submitLabel: 'Decline Request',
   maxLength: 2000,
   optional: true,
   danger: true,

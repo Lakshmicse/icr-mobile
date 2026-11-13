@@ -99,7 +99,7 @@ class _IntroSheetState extends State<IntroSheet> {
   Widget build(BuildContext context) {
     final p = _problems;
     return EditSheet(
-      title: 'Edit intro',
+      title: 'Edit Intro',
       saving: _saving,
       error: _error,
       dirty: _snapshot() != _initial,
@@ -109,7 +109,7 @@ class _IntroSheetState extends State<IntroSheet> {
         const SizedBox(height: 10),
         AccountField(
           fieldKey: const Key('intro.firstName'),
-          label: 'First name',
+          label: 'First Name',
           controller: _first,
           required: true,
           maxLength: 100,
@@ -118,7 +118,7 @@ class _IntroSheetState extends State<IntroSheet> {
         ),
         AccountField(
           fieldKey: const Key('intro.lastName'),
-          label: 'Last name',
+          label: 'Last Name',
           controller: _last,
           maxLength: 100,
           onChanged: (_) => setState(() {}),
@@ -131,12 +131,12 @@ class _IntroSheetState extends State<IntroSheet> {
           suggest: _suggest,
           labelOf: (t) => t,
           error: _tried || _headline.text.isNotEmpty ? p.headline : null,
-          helper: 'Your current role. It shows under your name.',
+          helper: 'Your current role. It appears under your name.',
           onChanged: (_) => setState(() {}),
         ),
         AccountField(
           fieldKey: const Key('intro.years'),
-          label: 'Years of experience',
+          label: 'Years of Experience',
           controller: _years,
           keyboardType: TextInputType.number,
           maxLength: 2,
@@ -163,8 +163,14 @@ class _IntroSheetState extends State<IntroSheet> {
 // --- photo ---------------------------------------------------------------------------------------------------
 
 /// The profile photo. It saves the moment it is uploaded; "Remove photo" takes it off.
-Future<void> showPhotoSheet(BuildContext context, MyProfileController controller, {PhotoPicker pick = pickImageFromDevice}) =>
-    showEditSheet<void>(context, builder: (_) => PhotoSheet(controller: controller, pick: pick));
+Future<void> showPhotoSheet(
+  BuildContext context,
+  MyProfileController controller, {
+  PhotoPicker pick = pickImageFromDevice,
+}) => showEditSheet<void>(
+  context,
+  builder: (_) => PhotoSheet(controller: controller, pick: pick),
+);
 
 class PhotoSheet extends StatefulWidget {
   const PhotoSheet({super.key, required this.controller, required this.pick});
@@ -186,7 +192,7 @@ class _PhotoSheetState extends State<PhotoSheet> {
     try {
       file = await widget.pick();
     } catch (_) {
-      setState(() => _error = "Couldn't open your photos. Check that ICR may read them and try again.");
+      setState(() => _error = 'Unable to open your photos. Allow ICR to access them and try again.');
       return;
     }
     if (file == null || !mounted) return;
@@ -211,9 +217,9 @@ class _PhotoSheetState extends State<PhotoSheet> {
   Future<void> _remove() async {
     final ok = await confirmAction(
       context,
-      title: 'Remove your profile photo?',
-      message: 'Your initials will show instead.',
-      confirm: 'Remove photo',
+      title: 'Remove Your Profile Photo?',
+      message: 'Your initials will appear instead.',
+      confirm: 'Remove Photo',
     );
     if (!ok || !mounted) return;
     setState(() {
@@ -237,18 +243,20 @@ class _PhotoSheetState extends State<PhotoSheet> {
         final me = widget.controller.profile.value;
         final url = me?.avatarUrl;
         return EditSheet(
-          title: 'Profile photo',
+          title: 'Profile Photo',
           saveLabel: 'Done',
           onSave: () => Navigator.of(context).pop(),
           error: _error,
           onDelete: url == null || _saving ? null : _remove,
-          deleteLabel: 'Remove photo',
+          deleteLabel: 'Remove Photo',
           children: [
-            Center(child: AccountAvatar(url: url, initials: me?.initials ?? '?', size: 140)),
+            Center(
+              child: AccountAvatar(url: url, initials: me?.initials ?? '?', size: 140),
+            ),
             const SizedBox(height: 16),
             AccountButton(
               key: const Key('photo.choose'),
-              label: url == null ? 'Upload photo' : 'Change photo',
+              label: url == null ? 'Upload Photo' : 'Change Photo',
               icon: Icons.photo_camera_outlined,
               busy: _saving,
               outlined: true,
@@ -270,8 +278,14 @@ class _PhotoSheetState extends State<PhotoSheet> {
 // --- cover ---------------------------------------------------------------------------------------------------
 
 /// The banner: a ready-made cover, or the person's own picture.
-Future<void> showCoverSheet(BuildContext context, MyProfileController controller, {PhotoPicker pick = pickImageFromDevice}) =>
-    showEditSheet<void>(context, builder: (_) => CoverSheet(controller: controller, pick: pick));
+Future<void> showCoverSheet(
+  BuildContext context,
+  MyProfileController controller, {
+  PhotoPicker pick = pickImageFromDevice,
+}) => showEditSheet<void>(
+  context,
+  builder: (_) => CoverSheet(controller: controller, pick: pick),
+);
 
 class CoverSheet extends StatefulWidget {
   const CoverSheet({super.key, required this.controller, required this.pick});
@@ -308,7 +322,7 @@ class _CoverSheetState extends State<CoverSheet> {
     try {
       file = await widget.pick();
     } catch (_) {
-      setState(() => _error = "Couldn't open your photos. Check that ICR may read them and try again.");
+      setState(() => _error = 'Unable to open your photos. Allow ICR to access them and try again.');
       return;
     }
     if (file == null || !mounted) return;
@@ -343,7 +357,7 @@ class _CoverSheetState extends State<CoverSheet> {
           onSave: () => Navigator.of(context).pop(),
           error: _error,
           onDelete: current == null || _busyOn != null ? null : () => _set(null),
-          deleteLabel: 'Remove cover',
+          deleteLabel: 'Remove Cover',
           children: [
             GridView.count(
               shrinkWrap: true,
@@ -360,14 +374,18 @@ class _CoverSheetState extends State<CoverSheet> {
             const SizedBox(height: 12),
             AccountButton(
               key: const Key('cover.upload'),
-              label: own == null ? 'Upload your own' : 'Replace your picture',
+              label: own == null ? 'Upload Your Own' : 'Replace Your Picture',
               icon: Icons.photo_camera_outlined,
               outlined: true,
               busy: _busyOn == '@upload',
               onPressed: _upload,
             ),
             const SizedBox(height: 8),
-            Text('A wide picture works best. PNG, JPG or WebP, up to 5 MB.', textAlign: TextAlign.center, style: AccountText.meta),
+            Text(
+              'A wide picture works best. PNG, JPG or WebP, up to 5 MB.',
+              textAlign: TextAlign.center,
+              style: AccountText.meta,
+            ),
           ],
         );
       },
@@ -405,9 +423,19 @@ class _CoverSheetState extends State<CoverSheet> {
                   ),
                 ),
                 if (_busyOn == value)
-                  const Center(child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)))
+                  const Center(
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    ),
+                  )
                 else if (selected)
-                  const Positioned(top: 6, right: 6, child: Icon(Icons.check_circle_rounded, size: 20, color: Colors.white)),
+                  const Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Icon(Icons.check_circle_rounded, size: 20, color: Colors.white),
+                  ),
               ],
             ),
           ),
@@ -467,13 +495,16 @@ class _AboutSheetState extends State<AboutSheet> {
   @override
   Widget build(BuildContext context) {
     return EditSheet(
-      title: 'Edit about',
+      title: 'Edit About',
       saving: _saving,
       error: _error,
       dirty: _text.text != _initial,
       onSave: _save,
       children: [
-        Text('Your experience, your strengths and what you are looking for. Recruiters read this first.', style: AccountText.meta),
+        Text(
+          'Your experience, your strengths and what you are looking for. Recruiters read this first.',
+          style: AccountText.meta,
+        ),
         const SizedBox(height: 12),
         AccountField(
           fieldKey: const Key('about.summary'),
@@ -498,7 +529,7 @@ Future<bool> showSkillsSheet(BuildContext context, MyProfileController controlle
       context,
       builder: (_) => _ChipsSheet(
         key: const Key('skillsSheet'),
-        title: 'Edit skills',
+        title: 'Edit Skills',
         label: 'Skills',
         hint: 'e.g. HVAC, Vendor management',
         initial: controller.profile.value?.skills ?? const [],
@@ -516,7 +547,7 @@ Future<bool> showLanguagesSheet(BuildContext context, MyProfileController contro
       context,
       builder: (_) => _ChipsSheet(
         key: const Key('languagesSheet'),
-        title: 'Edit languages',
+        title: 'Edit Languages',
         label: 'Languages',
         hint: 'e.g. English, Hindi',
         initial: controller.profile.value?.languages ?? const [],

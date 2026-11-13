@@ -48,8 +48,8 @@ class OpenPlanCard extends StatelessWidget {
           icon: LucideIcons.circleCheck,
           color: AppColors.successInk,
           text: _exam
-              ? 'This mock exam is open with your plan: every set is yours to sit.'
-              : 'This course is open with your plan: every level is yours to sit.',
+              ? 'This mock exam is open with your plan. You can take every set.'
+              : 'This course is open with your plan. You can take every level.',
         ),
       );
     }
@@ -63,7 +63,7 @@ class OpenPlanCard extends StatelessWidget {
     final planLine = limit == 0
         ? (_exam
               ? 'Mock exams are not included in your plan.'
-              : 'Assess your knowledge courses are not included in your plan.')
+              : 'Knowledge Assessment courses are not included in your plan.')
         : pick
         ? 'Your plan includes ${plural(limit, noun, '${noun}s')}, and ${left == 1 ? '1 is' : '$left are'} still free.'
         : (limit == 1
@@ -85,7 +85,7 @@ class OpenPlanCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             RowButton(
-              label: opening ? 'Opening…' : 'Open with my plan',
+              label: opening ? 'Opening…' : 'Open with My Plan',
               color: AppColors.primary,
               icon: LucideIcons.lockOpen,
               loading: opening,
@@ -112,7 +112,7 @@ class OpenPlanCard extends StatelessWidget {
           if (offerPlans)
             TextButton(
               onPressed: onSeePlans,
-              child: Text(upgrade == null ? 'See plans' : 'See $upgrade', style: AssessText.noteLink),
+              child: Text(upgrade == null ? 'See Plans' : 'See $upgrade', style: AssessText.noteLink),
             ),
         ],
       ),
@@ -138,7 +138,13 @@ class _Line extends StatelessWidget {
           child: Icon(icon, size: 18, color: color),
         ),
         const SizedBox(width: 10),
-        Expanded(child: Text(text, key: textKey, style: AssessText.noticeBody.copyWith(color: AppColors.onSurface))),
+        Expanded(
+          child: Text(
+            text,
+            key: textKey,
+            style: AssessText.noticeBody.copyWith(color: AppColors.onSurface),
+          ),
+        ),
       ],
     );
   }

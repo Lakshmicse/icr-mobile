@@ -75,7 +75,7 @@ class AuthHelperLine extends StatelessWidget {
 
 /// The code a non-production API handed back instead of sending it, shown
 /// where it is typed, as the website's `DevCodeNote`: "Test mode: your code is
-/// 123456." and "Use code", which fills the field. Draws nothing without a code.
+/// 123456." and "Use Code", which fills the field. Draws nothing without a code.
 class DevCodeNote extends StatelessWidget {
   const DevCodeNote({super.key, required this.code, required this.onUse});
 
@@ -115,7 +115,7 @@ class DevCodeNote extends StatelessWidget {
           const SizedBox(width: 6),
           AuthLink(
             key: const Key('signup.useCode'),
-            label: 'Use code',
+            label: 'Use Code',
             style: AuthType.link(p).copyWith(fontSize: 14),
             onTap: () => onUse(value),
           ),
@@ -126,7 +126,7 @@ class DevCodeNote extends StatelessWidget {
 }
 
 /// The advisory password meter (the website's `PasswordStrength`): four
-/// segments, the bucket's name, "A guide, not a gate", and the four rules
+/// segments, the bucket's name, a line saying it is guidance, and the four rules
 /// ticked as they are met. Only eight characters blocks the button.
 class PasswordStrengthMeter extends StatelessWidget {
   const PasswordStrengthMeter({super.key, required this.value});
@@ -183,7 +183,7 @@ class PasswordStrengthMeter extends StatelessWidget {
               Flexible(
                 flex: 6,
                 child: Text(
-                  'A guide, not a gate — only 8 characters are required.',
+                  'This is guidance. Only 8 characters are required.',
                   textAlign: TextAlign.right,
                   style: AuthType.small(p).copyWith(fontSize: 13, height: 15 / 11.5),
                 ),
@@ -219,7 +219,7 @@ class PasswordStrengthMeter extends StatelessWidget {
   }
 }
 
-/// "I'm working | Between roles": two halves of one outlined box, the chosen
+/// "I'm Working | Between Roles": two halves of one outlined box, the chosen
 /// one filled with the accent.
 class AuthSegmented<T> extends StatelessWidget {
   const AuthSegmented({
@@ -582,7 +582,7 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
             ),
           Expanded(
             child: shown.isEmpty
-                ? Center(child: Text('Nothing matches “$_query”.', style: AuthType.small(p)))
+                ? Center(child: Text('No results for “$_query”.', style: AuthType.small(p)))
                 : ListView.builder(
                     itemCount: shown.length,
                     itemBuilder: (context, i) {

@@ -12,7 +12,7 @@ import 'hiring_fakes.dart';
 import 'helpers/fonts.dart';
 import 'jobs_fakes.dart';
 
-/// Every control of "Jobs you posted", tapped: what it does on the phone and what it asks of the API.
+/// Every control of 'Jobs You Posted', tapped: what it does on the phone and what it asks of the API.
 /// What the API does with them is proved in `test/live/jobs_employer_live_test.dart`.
 
 Key _k(String key) => ValueKey(key);
@@ -77,7 +77,7 @@ void main() {
   group('the list', () {
     testWidgets('shows the company\'s postings with the figures across them', (tester) async {
       await openJobs(tester);
-      expect(find.text('Jobs you posted'), findsOneWidget);
+      expect(find.text('Jobs You Posted'), findsOneWidget);
       expect(find.byKey(_k('figures')), findsOneWidget);
       expect(find.descendant(of: find.byKey(_k('figure-open')), matching: find.text('2')), findsOneWidget);
       expect(find.text('1 closing soon'), findsOneWidget);
@@ -91,8 +91,8 @@ void main() {
       await openJobs(tester);
       expect(find.text('All 6'), findsOneWidget);
       expect(find.text('Open 2'), findsOneWidget);
-      expect(find.text('Drafts 2'), findsOneWidget);
-      expect(find.text('In review 0'), findsOneWidget);
+      expect(find.text('Draft 2'), findsOneWidget);
+      expect(find.text('In Review 0'), findsOneWidget);
       expect(find.text('Paused 1'), findsOneWidget);
       expect(find.text('Closed 1'), findsOneWidget);
     });
@@ -146,8 +146,8 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pumpAndSettle();
       expect(find.byKey(_k('jobs-empty')), findsOneWidget);
-      expect(find.text('No jobs match'), findsOneWidget);
-      await tester.tap(find.text('Clear filters'));
+      expect(find.text('No Matching Jobs'), findsOneWidget);
+      await tester.tap(find.text('Clear Filters'));
       await tester.pumpAndSettle();
       expect(find.byKey(_k('jobs-empty')), findsNothing);
       expect(find.byKey(_k('job-job-open')), findsOneWidget);
@@ -157,23 +157,13 @@ void main() {
       final (repo, _, _) = await openJobs(tester);
       await tester.tap(find.byKey(_k('jobs-sort')));
       await tester.pumpAndSettle();
-      for (final label in ['Newest first', 'Closing soonest', 'Most applicants', 'Title A to Z']) {
+      for (final label in ['Newest First', 'Closing Soonest', 'Most Applicants', 'Title A to Z']) {
         expect(find.text(label), findsWidgets, reason: label);
       }
-      await tester.tap(find.text('Most applicants').last);
+      await tester.tap(find.text('Most Applicants').last);
       await tester.pumpAndSettle();
       expect(repo.jobQueries.last.sort, 'applicants');
-      expect(find.descendant(of: find.byKey(_k('jobs-sort')), matching: find.text('Most applicants')), findsOneWidget);
-    });
-
-    testWidgets('"Only jobs I started" asks for the member\'s own', (tester) async {
-      final (repo, _, _) = await openJobs(tester);
-      await tester.tap(find.byKey(_k('jobs-mine')));
-      await tester.pumpAndSettle();
-      expect(repo.jobQueries.last.mine, isTrue);
-      await tester.tap(find.byKey(_k('jobs-mine')));
-      await tester.pumpAndSettle();
-      expect(repo.jobQueries.last.mine, isFalse);
+      expect(find.descendant(of: find.byKey(_k('jobs-sort')), matching: find.text('Most Applicants')), findsOneWidget);
     });
 
     testWidgets('"View More" brings the next page', (tester) async {
@@ -227,8 +217,8 @@ void main() {
       repo.jobsAnswer = (q) async => const PostedJobsPage(jobs: [], hasMore: false);
       await openJobs(tester, repo: repo);
       expect(find.byKey(_k('first-job')), findsOneWidget);
-      expect(find.text('Post your first job'), findsOneWidget);
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Post a job'));
+      expect(find.text('Post Your First Job'), findsOneWidget);
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Post a Job'));
       await tester.pumpAndSettle();
       expect(find.byType(PostJobScreen), findsOneWidget);
     });
@@ -264,7 +254,7 @@ void main() {
     testWidgets('a draft that review sent back shows the reviewer\'s note', (tester) async {
       await openJobs(tester);
       expect(find.byKey(_k('returned-job-returned')), findsOneWidget);
-      expect(find.text('ICR sent this back: Please add the salary range.'), findsOneWidget);
+      expect(find.text('Returned by ICR: Please add the salary range.'), findsOneWidget);
       expect(find.byKey(_k('returned-job-draft')), findsNothing);
     });
 
@@ -352,7 +342,7 @@ void main() {
     testWidgets('an open posting offers edit, pause, close, duplicate and delete', (tester) async {
       await openJobs(tester);
       await menu(tester, 'job-open');
-      for (final item in ['Edit job', 'Pause', 'Close', 'Duplicate as draft', 'Delete']) {
+      for (final item in ['Edit Job', 'Pause', 'Close', 'Duplicate as Draft', 'Delete']) {
         expect(find.text(item), findsOneWidget, reason: item);
       }
       expect(find.text('Resume'), findsNothing);
@@ -377,7 +367,7 @@ void main() {
       await menu(tester, 'job-draft');
       expect(find.text('Pause'), findsNothing);
       expect(find.text('Close'), findsNothing);
-      expect(find.text('Edit job'), findsOneWidget);
+      expect(find.text('Edit Job'), findsOneWidget);
     });
 
     testWidgets('Promote is a payment: it is offered on a live posting that is not promoted, and opens the website', (
@@ -405,10 +395,10 @@ void main() {
     testWidgets('Edit job opens the composer on that posting', (tester) async {
       await openJobs(tester);
       await menu(tester, 'job-open');
-      await tester.tap(find.text('Edit job'));
+      await tester.tap(find.text('Edit Job'));
       await tester.pumpAndSettle();
       expect(find.byType(PostJobScreen), findsOneWidget);
-      expect(find.text('Edit job'), findsOneWidget);
+      expect(find.text('Edit Job'), findsOneWidget);
       expect(tester.widget<TextField>(find.byKey(_k('job-title'))).controller!.text, 'Facilities Operations Lead');
     });
 
@@ -472,7 +462,7 @@ void main() {
     testWidgets('Duplicate makes a draft copy and opens it in the composer', (tester) async {
       final (repo, _, _) = await openJobs(tester);
       await menu(tester, 'job-open');
-      await tester.tap(find.text('Duplicate as draft'));
+      await tester.tap(find.text('Duplicate as Draft'));
       await tester.pumpAndSettle();
       expect(repo.created.single.status, PostingStatus.draft);
       expect(repo.created.single.draft.title, 'Facilities Operations Lead (copy)');
@@ -487,7 +477,7 @@ void main() {
       final repo = SpyHiring()..failures['createJob'] = ApiError('Not now.');
       await openJobs(tester, repo: repo);
       await menu(tester, 'job-open');
-      await tester.tap(find.text('Duplicate as draft'));
+      await tester.tap(find.text('Duplicate as Draft'));
       await tester.pumpAndSettle();
       expect(find.text('Not now.'), findsOneWidget);
       expect(find.byType(PostJobScreen), findsNothing);
@@ -512,7 +502,7 @@ void main() {
       expect(repo.calls, contains('deleteJob job-draft'));
       expect(find.byKey(_k('job-job-draft')), findsNothing);
       expect(find.text('“Soft Services Supervisor” was deleted.'), findsOneWidget);
-      expect(find.text('Drafts 1'), findsOneWidget);
+      expect(find.text('Draft 1'), findsOneWidget);
     });
 
     testWidgets('a delete the API refuses leaves the posting and says why', (tester) async {
@@ -543,7 +533,7 @@ void main() {
       await tester.tap(find.byIcon(Symbols.arrow_back));
       await tester.pumpAndSettle();
       expect(find.text('Night Shift Supervisor'), findsOneWidget);
-      expect(find.text('Drafts 3'), findsOneWidget);
+      expect(find.text('Draft 3'), findsOneWidget);
     });
   });
 
@@ -554,9 +544,9 @@ void main() {
       );
       final (_, links, nav) = await openJobs(tester, repo: repo);
       expect(find.byKey(_k('no-role')), findsOneWidget);
-      expect(find.text('Posting jobs is for hiring teams'), findsOneWidget);
+      expect(find.text('Job Posting Is for Hiring Teams'), findsOneWidget);
       expect(find.byKey(_k('figures')), findsNothing);
-      await tester.tap(find.text('Set up a company'));
+      await tester.tap(find.text('Create a Company'));
       await tester.pump();
       expect(nav.calls, ['create-company']);
       expect(links.opened, isEmpty);

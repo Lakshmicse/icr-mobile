@@ -10,19 +10,19 @@ import '../job_models.dart';
 import '../jobs_controller.dart';
 import '../jobs_styles.dart';
 
-/// The label on the "Date posted" chip: what it is set to, or its name.
+/// The label on the "Date Posted" chip: what it is set to, or its name.
 String postedLabel(int? days) => switch (days) {
-  null => 'Date posted',
-  1 => 'Past 24 hours',
-  7 => 'Past week',
-  30 => 'Past month',
-  _ => 'Past $days days',
+  null => 'Date Posted',
+  1 => 'Past 24 Hours',
+  7 => 'Past Week',
+  30 => 'Past Month',
+  _ => 'Past $days Days',
 };
 
-/// The choices of the "Date posted" menu, as days (0 is "any time").
-const postedChoices = [(0, 'Any time'), (1, 'Past 24 hours'), (7, 'Past week'), (30, 'Past month')];
+/// The choices of the "Date Posted" menu, as days (0 is "any time").
+const postedChoices = [(0, 'Any Time'), (1, 'Past 24 Hours'), (7, 'Past Week'), (30, 'Past Month')];
 
-/// The "Date posted" menu: sets `postedWithinDays` on the board's search.
+/// The "Date Posted" menu: sets `postedWithinDays` on the board's search.
 Future<void> pickPosted(BuildContext context) async {
   final jobs = context.read<JobsController>();
   final choice = await showModalBottomSheet<int>(
@@ -120,7 +120,7 @@ class _JobFiltersSheetState extends State<JobFiltersSheet> {
             children: [
               Text('Filters', style: JobsText.formTitle),
               const SizedBox(height: 12),
-              Text('Work mode', style: JobsText.formLabel),
+              Text('Work Mode', style: JobsText.formLabel),
               Wrap(
                 spacing: 8,
                 children: [
@@ -137,7 +137,7 @@ class _JobFiltersSheetState extends State<JobFiltersSheet> {
                 ],
               ),
               const SizedBox(height: 12),
-              Text('Employment type', style: JobsText.formLabel),
+              Text('Employment Type', style: JobsText.formLabel),
               Wrap(
                 spacing: 8,
                 children: [
@@ -168,7 +168,7 @@ class _JobFiltersSheetState extends State<JobFiltersSheet> {
                   key: const ValueKey('save-as-alert'),
                   onPressed: () => Navigator.pop(context, SaveFiltersAsAlert(_withCity())),
                   icon: const Icon(LucideIcons.bellPlus, size: 16),
-                  label: Text('Save this search as a job alert', style: labelStyle.copyWith(color: AppColors.primary)),
+                  label: Text('Save Search as Job Alert', style: labelStyle.copyWith(color: AppColors.primary)),
                 ),
               ),
               const SizedBox(height: 8),
@@ -177,13 +177,13 @@ class _JobFiltersSheetState extends State<JobFiltersSheet> {
                   TextButton(
                     onPressed: () =>
                         Navigator.pop(context, JobFilters(search: _filters.search, easyApply: _filters.easyApply)),
-                    child: Text('Clear all', style: labelStyle.copyWith(color: AppColors.primary)),
+                    child: Text('Clear All', style: labelStyle.copyWith(color: AppColors.primary)),
                   ),
                   const Spacer(),
                   FilledButton(
                     style: FilledButton.styleFrom(backgroundColor: AppColors.primary, shape: const StadiumBorder()),
                     onPressed: () => Navigator.pop(context, _withCity()),
-                    child: const Text('Show jobs'),
+                    child: const Text('Show Jobs'),
                   ),
                 ],
               ),

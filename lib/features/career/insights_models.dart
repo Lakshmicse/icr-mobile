@@ -36,8 +36,8 @@ class InsightPage<T> {
 
 /// The five sub-ratings of a review, in the order the website lists them.
 const reviewSubRatings = <String, String>{
-  'workLife': 'Work-life balance',
-  'compensation': 'Pay and benefits',
+  'workLife': 'Work-Life Balance',
+  'compensation': 'Pay and Benefits',
   'culture': 'Culture',
   'management': 'Management',
   'growth': 'Growth',

@@ -288,7 +288,7 @@ void main() {
         expect(find.byKey(const ValueKey('formula-math')), findsOneWidget);
         expect(find.byKey(const ValueKey('formula-plain')), findsNothing);
         expect(find.text('Discount Rate'), findsWidgets, reason: 'a variable and a figure of the example');
-        expect(find.text('Worked example 1'), findsOneWidget);
+        expect(find.text('Worked Example 1'), findsOneWidget);
         expect(tester.takeException(), isNull);
       },
     );
@@ -310,7 +310,7 @@ void main() {
         // A deck that belongs with a course opens with it and takes no place, so when every deck is linked there
         // is no note to draw; the sentence stands while some deck takes a place of its own.
         final alone = decks.decks.where((d) => d.courseId == null);
-        expect(decks.planNote, alone.isEmpty ? isNull : 'Flash cards are not included in your plan.');
+        expect(decks.planNote, alone.isEmpty ? isNull : 'Flashcards are not included in your plan.');
         // A deck that belongs with a course the member holds is open with it; every deck of its own is locked.
         expect(alone.every((d) => decks.stateOf(d) == DeckState.locked), isTrue);
 
@@ -455,7 +455,7 @@ void main() {
 
         final session = DeckStudyController.starred(read);
         await session.load();
-        expect(session.title, 'Starred cards');
+        expect(session.title, 'Starred Cards');
         expect(session.allCards.first.id, card.id);
         expect(session.isStarred(session.allCards.first), isTrue);
 
@@ -495,7 +495,7 @@ void main() {
       final decks = snapshot._topics.where((t) => t.isDeck).toList();
       final alone = decks.where((t) => t.courseId == null).toList();
       expect(
-        find.text('Flash cards are not included in your plan.'),
+        find.text('Flashcards are not included in your plan.'),
         alone.isEmpty ? findsNothing : findsOneWidget,
         reason: 'the note is drawn only while some deck takes a place of its own',
       );

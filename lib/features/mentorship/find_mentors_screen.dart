@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 
+import '../messaging/messaging_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
 import '../../core/widgets/chips.dart';
@@ -66,6 +67,7 @@ class FindMentorsScreen extends StatefulWidget {
     required this.onBack,
     required this.onOpenMentor,
     this.category,
+    this.autoLoad = true,
     this.search = '',
     this.company,
     this.companyOnAccount = false,
@@ -80,6 +82,11 @@ class FindMentorsScreen extends StatefulWidget {
 
   /// The domain the screen opens on.
   final String? category;
+
+  /// Fetches the next page as the person nears the end of the list, and when the first page does not fill the
+  /// screen (owner, 9 Nov 2026: "infinite scrolling: if he scrolls, the API should fetch the next view of the
+  /// mentors"). A test that pins the first page turns it off.
+  final bool autoLoad;
 
   /// The words the screen opens on (the Home-style search box of the tab).
   final String search;
@@ -106,10 +113,15 @@ class _FindMentorsScreenState extends State<FindMentorsScreen> {
   late final FindMentorsController _c;
   late final bool _owns;
   late final TextEditingController _search;
+  final _scroll = ScrollController();
+
+  /// Within this many dp of the end, the next page is asked for.
+  static const prefetchExtent = 400.0;
 
   @override
   void initState() {
     super.initState();
+    _scroll.addListener(_fetchMoreIfNear);
     final given = widget.controller;
     _owns = given == null;
     _c =
@@ -127,9 +139,18 @@ class _FindMentorsScreenState extends State<FindMentorsScreen> {
 
   @override
   void dispose() {
+    _scroll.dispose();
     _search.dispose();
     if (_owns) _c.dispose();
     super.dispose();
+  }
+
+  /// The next page, when the list is near its end (or too short to scroll). The controller refuses while a page
+  /// is loading or none is left, so calling it on every scroll tick and after every frame is safe.
+  void _fetchMoreIfNear() {
+    if (!widget.autoLoad || !mounted || !_scroll.hasClients) return;
+    if (_c.loading || _c.loadingMore || !_c.hasMore || _c.mentors.isEmpty) return;
+    if (_scroll.position.extentAfter < prefetchExtent) _c.loadMore();
   }
 
   @override
@@ -142,51 +163,58 @@ class _FindMentorsScreenState extends State<FindMentorsScreen> {
           bottom: false,
           child: ListenableBuilder(
             listenable: _c,
-            builder: (context, _) => Stack(
-              children: [
-                Positioned.fill(
-                  top: TitleBar.height,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _Toolbar(controller: _c),
-                      Expanded(
-                        child: RefreshIndicator(
-                          color: AppColors.primary,
-                          onRefresh: _c.refresh,
-                          child: CustomScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            slivers: _body(context),
+            builder: (context, _) {
+              // A page that leaves the list shorter than the screen asks for the next one once it is laid out.
+              if (widget.autoLoad && _c.hasMore && !_c.loadingMore && !_c.loading) {
+                WidgetsBinding.instance.addPostFrameCallback((_) => _fetchMoreIfNear());
+              }
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    top: TitleBar.reserved(context, middle: true),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _Toolbar(controller: _c),
+                        Expanded(
+                          child: RefreshIndicator(
+                            color: AppColors.primary,
+                            onRefresh: _c.refresh,
+                            child: CustomScrollView(
+                              controller: _scroll,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              slivers: _body(context),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: TitleBar(
-                    leading: _BackLeading(onBack: widget.onBack),
-                    // The design leaves 12 dp between the box and the bell.
-                    middle: Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      // It searches mentors (the website's "Search mentors": name, company, city, domain or
-                      // topic), so it says so rather than the app-wide search's "jobs, courses, partners".
-                      child: IcrSearchField(
-                        controller: _search,
-                        height: 40,
-                        hint: 'Search mentors by name, company or topic',
-                        onSubmitted: _c.setSearch,
-                      ),
+                      ],
                     ),
-                    unread: _c.unread,
-                    onBell: () => widget.openSite(context, '/notifications'),
                   ),
-                ),
-              ],
-            ),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: TitleBar(
+                      leading: _BackLeading(onBack: widget.onBack),
+                      // The design leaves 12 dp between the box and the bell.
+                      middle: Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        // It searches mentors (the website's "Search mentors": name, company, city, domain or
+                        // topic), so it says so rather than the app-wide search's "jobs, courses, partners".
+                        child: IcrSearchField(
+                          controller: _search,
+                          height: 40,
+                          hint: 'Search mentors by name, company, or topic',
+                          onSubmitted: _c.setSearch,
+                        ),
+                      ),
+                      unread: _c.unread,
+                      onBell: () => widget.openSite(context, '/notifications'),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -208,9 +236,9 @@ class _FindMentorsScreenState extends State<FindMentorsScreen> {
         SliverFillRemaining(
           hasScrollBody: false,
           child: MentorshipNotice(
-            title: "Couldn't load mentors",
+            title: 'Unable to Load Mentors',
             body: _c.error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: _c.refresh,
           ),
         ),
@@ -222,9 +250,11 @@ class _FindMentorsScreenState extends State<FindMentorsScreen> {
         SliverFillRemaining(
           hasScrollBody: false,
           child: MentorshipNotice(
-            title: narrowed ? 'No mentors match' : 'No mentors are listed yet',
-            body: narrowed ? 'Try other words, or clear the filters.' : 'Mentors show up here as ICR approves them.',
-            action: narrowed ? 'Clear filters' : null,
+            title: narrowed ? 'No Matching Mentors' : 'No Mentors Listed Yet',
+            body: narrowed
+                ? 'Try other words, or clear the filters.'
+                : 'Mentors will appear here once ICR approves them.',
+            action: narrowed ? 'Clear Filters' : null,
             onAction: narrowed ? () => _c.setFilters(const MentorFilters()) : null,
           ),
         ),
@@ -243,6 +273,8 @@ class _FindMentorsScreenState extends State<FindMentorsScreen> {
                 left: mentors[i * 2],
                 right: i * 2 + 1 < mentors.length ? mentors[i * 2 + 1] : null,
                 onOpen: (m) => widget.onOpenMentor(context, m.id),
+                onMessage: (m) => MessagingLauncher.withPerson(context, m.userId!),
+                viewerId: MessagingLauncher.viewerIdOf(context),
               ),
             ),
           ),
@@ -252,10 +284,8 @@ class _FindMentorsScreenState extends State<FindMentorsScreen> {
         child: _Footer(
           shown: mentors.length,
           total: _c.total,
-          hasMore: _c.hasMore,
           loadingMore: _c.loadingMore,
           inCategory: _c.filters.category != null,
-          onMore: _c.loadMore,
         ),
       ),
     ];
@@ -327,6 +357,8 @@ class _Toolbar extends StatelessWidget {
           categories: controller.categories,
           selected: filters.category,
           onSelect: controller.setCategory,
+          allLabel: 'All',
+          onAll: () => controller.setCategory(null),
         ),
         const SizedBox(height: 11.5),
         ChipRow(
@@ -384,7 +416,7 @@ class _Toolbar extends StatelessWidget {
               ),
             if (filters.availableOnly)
               IcrChip(
-                label: 'Free slot',
+                label: 'Free Slot',
                 tone: ChipTone.tinted,
                 fill: Colors.white,
                 border: MentorshipColors.chipBorder,
@@ -403,25 +435,17 @@ class _Toolbar extends StatelessWidget {
   }
 }
 
-/// "Showing 8 of 48 mentors in this category", the bar, and "Load more mentors".
+/// "Showing 8 of 48 mentors in this category" and the bar; a small spinner while the next page is on its way
+/// (the pages come by scrolling since 9 Nov 2026, so there is no "Load more mentors" button).
 class _Footer extends StatelessWidget {
-  const _Footer({
-    required this.shown,
-    required this.total,
-    required this.hasMore,
-    required this.loadingMore,
-    required this.inCategory,
-    required this.onMore,
-  });
+  const _Footer({required this.shown, required this.total, required this.loadingMore, required this.inCategory});
 
   static const _barWidth = 193.0;
 
   final int shown;
   final int total;
-  final bool hasMore;
   final bool loadingMore;
   final bool inCategory;
-  final VoidCallback onMore;
 
   @override
   Widget build(BuildContext context) {
@@ -450,38 +474,13 @@ class _Footer extends StatelessWidget {
             ),
           ),
         ),
-        if (hasMore) ...[
-          const SizedBox(height: 6.3),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Material(
-              color: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-                side: const BorderSide(color: MentorshipColors.panelBorder),
-              ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(10),
-                onTap: loadingMore ? null : onMore,
-                child: SizedBox(
-                  height: 24,
-                  width: double.infinity,
-                  child: Center(
-                    child: loadingMore
-                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.8))
-                        : Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('Load more mentors', style: MentorshipText.loadMore),
-                              const SizedBox(width: 3.8),
-                              const Icon(LucideIcons.chevronDown, size: 18, color: AppColors.onSurface),
-                            ],
-                          ),
-                  ),
-                ),
-              ),
-            ),
+        if (loadingMore) ...[
+          const SizedBox(height: 10),
+          const SizedBox(
+            key: ValueKey('mentors-loading-more'),
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 1.8),
           ),
         ],
         const SizedBox(height: 24),
@@ -534,7 +533,7 @@ class _FilterSheetState extends State<_FilterSheet> {
               children: [
                 for (final y in _years)
                   ChoiceChip(
-                    label: Text(y == null ? 'Any' : '$y+ years'),
+                    label: Text(y == null ? 'Any' : '$y+ Years'),
                     selected: _filters.minExperience == y,
                     onSelected: (_) => setState(
                       () => _filters = y == null
@@ -547,7 +546,7 @@ class _FilterSheetState extends State<_FilterSheet> {
             const SizedBox(height: 8),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text('Only mentors with a free slot', style: MentorshipText.option),
+              title: Text('Free Slot Only', style: MentorshipText.option),
               value: _filters.availableOnly,
               onChanged: (on) => setState(() => _filters = _filters.copyWith(availableOnly: on)),
             ),
@@ -558,13 +557,13 @@ class _FilterSheetState extends State<_FilterSheet> {
                   // Every filter the "Filters (n)" chip counts; the words and the
                   // sort order are the member's own and stay.
                   onPressed: () => Navigator.pop(context, MentorFilters(search: _filters.search, sort: _filters.sort)),
-                  child: const Text('Clear all'),
+                  child: const Text('Clear All'),
                 ),
                 const Spacer(),
                 FilledButton(
                   style: FilledButton.styleFrom(backgroundColor: AppColors.primary, shape: const StadiumBorder()),
                   onPressed: () => Navigator.pop(context, _filters),
-                  child: const Text('Show mentors'),
+                  child: const Text('Show Mentors'),
                 ),
               ],
             ),

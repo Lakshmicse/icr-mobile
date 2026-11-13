@@ -5,7 +5,7 @@ import '../account_rules.dart';
 import '../widgets/account_kit.dart';
 
 /// The "country not in the list" choice: the typed text is the whole number.
-const otherCountry = PhoneCountry('Other country', '', 0, 0);
+const otherCountry = PhoneCountry('Other Country', '', 0, 0);
 
 /// A phone number as two parts (the website's `PhoneNumberField`): the country,
 /// from ICR's markets with its code beside it, and the number after the code.
@@ -149,7 +149,10 @@ class _AccountPhoneFieldState extends State<AccountPhoneField> {
                 excludeSemantics: true,
                 child: Material(
                   color: widget.enabled ? Colors.white : AppColors.slate50,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: border)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(color: border),
+                  ),
                   child: InkWell(
                     key: widget.countryKey,
                     onTap: widget.enabled ? _pickCountry : null,
@@ -189,11 +192,20 @@ class _AccountPhoneFieldState extends State<AccountPhoneField> {
                     fillColor: widget.enabled ? Colors.white : AppColors.slate50,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                     suffixIcon: widget.suffix,
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: border)),
-                    disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.slate200)),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: border),
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.slate200),
+                    ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: widget.error != null ? AppColors.error : AppColors.primary, width: 2),
+                      borderSide: BorderSide(
+                        color: widget.error != null ? AppColors.error : AppColors.primary,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),

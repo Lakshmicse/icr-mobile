@@ -84,7 +84,7 @@ class _CredentialSheetState extends State<CredentialSheet> {
     try {
       file = await widget.pickEvidence();
     } catch (_) {
-      setState(() => _error = "Couldn't open your files. Check that ICR may read them and try again.");
+      setState(() => _error = 'Unable to open your files. Allow ICR to access them and try again.');
       return;
     }
     if (file == null || !mounted) return;
@@ -143,8 +143,8 @@ class _CredentialSheetState extends State<CredentialSheet> {
     final credential = _c!;
     final ok = await confirmAction(
       context,
-      title: 'Delete this credential?',
-      message: '${credential.name} will be taken off your profile. Its certificate is deleted with it.',
+      title: 'Delete This Credential?',
+      message: '${credential.name} will be removed from your profile. Its certificate will also be deleted.',
       confirm: 'Delete',
     );
     if (!ok || !mounted) return;
@@ -160,8 +160,11 @@ class _CredentialSheetState extends State<CredentialSheet> {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Removed from your mentor profile', style: AccountText.cardTitle),
-            content: Text('$alsoMentor was also taken off your mentor profile, since it is no longer on your credentials.', style: AccountText.body),
+            title: Text('Removed from Your Mentor Profile', style: AccountText.cardTitle),
+            content: Text(
+              '$alsoMentor was also removed from your mentor profile because it is no longer in your credentials.',
+              style: AccountText.body,
+            ),
             actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('OK'))],
           ),
         );
@@ -179,8 +182,8 @@ class _CredentialSheetState extends State<CredentialSheet> {
     final p = _tried ? credentialProblems(_draft(), now: widget.now) : const <String, String>{};
     final today = DateTime.now();
     return EditSheet(
-      title: _c == null ? 'Add credential' : 'Edit credential',
-      subtitle: 'A certificate or licence you hold. ICR’s own are added for you.',
+      title: _c == null ? 'Add Credential' : 'Edit Credential',
+      subtitle: 'A certificate or licence you hold. ICR certificates are added automatically.',
       saving: _saving,
       error: _error,
       dirty: _snapshot() != _initial,
@@ -199,7 +202,7 @@ class _CredentialSheetState extends State<CredentialSheet> {
         ),
         AccountField(
           fieldKey: const Key('cred.code'),
-          label: 'Short code',
+          label: 'Short Code',
           controller: _code,
           maxLength: 32,
           hint: 'e.g. CFM',
@@ -208,7 +211,7 @@ class _CredentialSheetState extends State<CredentialSheet> {
         ),
         AccountField(
           fieldKey: const Key('cred.issuer'),
-          label: 'Issued by',
+          label: 'Issued By',
           controller: _issuer,
           maxLength: 160,
           hint: 'e.g. IFMA',
@@ -216,7 +219,7 @@ class _CredentialSheetState extends State<CredentialSheet> {
         ),
         DateSelectField(
           fieldKey: const Key('cred.issued'),
-          label: 'Issue date',
+          label: 'Issue Date',
           value: _issued,
           last: today,
           error: p['issuedOn'],
@@ -224,7 +227,7 @@ class _CredentialSheetState extends State<CredentialSheet> {
         ),
         DateSelectField(
           fieldKey: const Key('cred.expires'),
-          label: 'Expiry date',
+          label: 'Expiry Date',
           value: _expires,
           error: p['expiresOn'],
           helper: 'Leave blank if it does not expire.',
@@ -232,7 +235,7 @@ class _CredentialSheetState extends State<CredentialSheet> {
         ),
         AccountField(
           fieldKey: const Key('cred.url'),
-          label: 'Verification link',
+          label: 'Verification Link',
           controller: _url,
           maxLength: 500,
           keyboardType: TextInputType.url,
@@ -246,15 +249,19 @@ class _CredentialSheetState extends State<CredentialSheet> {
         if (_fileUrl != null)
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.slate50,
-              borderRadius: BorderRadius.circular(10),
-            ),
+            decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10)),
             child: Row(
               children: [
                 const Icon(Icons.description_outlined, color: AppColors.slate500),
                 const SizedBox(width: 8),
-                Expanded(child: Text(_fileName ?? 'Certificate on file', maxLines: 1, overflow: TextOverflow.ellipsis, style: AccountText.body)),
+                Expanded(
+                  child: Text(
+                    _fileName ?? 'Certificate on file',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AccountText.body,
+                  ),
+                ),
                 TextButton(
                   key: const Key('cred.removeFile'),
                   onPressed: () => setState(() {
@@ -269,7 +276,7 @@ class _CredentialSheetState extends State<CredentialSheet> {
         else
           AccountButton(
             key: const Key('cred.attach'),
-            label: 'Attach certificate',
+            label: 'Attach Certificate',
             icon: Icons.attach_file_rounded,
             outlined: true,
             busy: _uploading,

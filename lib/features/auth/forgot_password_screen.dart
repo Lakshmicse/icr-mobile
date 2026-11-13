@@ -11,24 +11,27 @@ import 'reset_password_screen.dart';
 import 'signup_rules.dart';
 import 'signup_widgets.dart';
 
-/// "Forgot password?", as the website's `/forgot-password`: the address, then
+/// "Forgot Password?", as the website's `/forgot-password`: the address, then
 /// `POST /auth/forgot-password`, which emails a link when the address has an
 /// account and answers the same either way. The new password is then chosen in
-/// the app ([ResetPasswordScreen]: "I have my link" takes the emailed link
+/// the app ([ResetPasswordScreen]: "I have the Link" takes the emailed link
 /// pasted in, or the token itself); the same link also works in a browser.
 ///
 /// On an API with no mail provider (local development) the answer carries the
-/// link it would have emailed, and the screen offers it as "Test mode: use the
-/// link", as the sign-up code does.
+/// link it would have emailed, and the screen offers it as "Test mode: no email
+/// was sent. Use the Link", as the sign-up code does.
 ///
 /// Signed in, Settings opens it with the account's address ([email]) to change
-/// a password, which the API offers no other way.
+/// a password, which the API offers no other way: "Change Password".
+///
+/// The words are the client's (the marked-up manual, 13 Nov 2026), and the page
+/// is one plain colour, white in light (`AuthScaffold(flat: true)`).
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({
     super.key,
     this.email,
     this.initialEmail,
-    this.title = 'Reset your password',
+    this.title = 'Reset Your Password',
     this.repository,
   });
 
@@ -102,15 +105,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final p = AuthPalette.of(context);
+    // Settings opened it to change a known password: Back is Settings, not Sign In.
+    final changing = widget.email != null;
     return AuthScaffold(
+      flat: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AuthHeader(title: _sent ? 'Check your inbox' : widget.title),
+          AuthHeader(title: _sent ? 'Check Your Inbox' : widget.title),
           const SizedBox(height: 16),
           if (_sent) ...[
             Text(
-              "If that address has an ICR account, we've sent a link to reset your password. It expires in an hour.",
+              'If an ICR account exists for this email, we’ve sent a password reset link. The link expires in 1 hour.',
               key: const Key('forgot.sent'),
               style: AuthType.body(p).copyWith(color: p.text),
             ),
@@ -128,7 +134,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   const SizedBox(width: 6),
                   AuthLink(
                     key: const Key('forgot.useLink'),
-                    label: 'Use the link',
+                    label: 'Use the Link',
                     onTap: () => _chooseNewPassword(tokenFromLink(_testLink!)),
                   ),
                 ],
@@ -144,7 +150,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     child: Icon(Icons.mark_email_read_outlined, size: 18, color: p.text),
                   ),
                   const Expanded(
-                    child: Text('Open the email on this phone, copy its link, and choose your new password here.'),
+                    child: Text('Open your email, copy the reset link and paste it here to create a new password.'),
                   ),
                 ],
               ),
@@ -152,14 +158,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             const SizedBox(height: 14),
             AuthOutlinedButton(
               key: const Key('forgot.haveLink'),
-              label: 'I have my link',
+              label: 'I have the Link',
               onPressed: _chooseNewPassword,
             ),
             const SizedBox(height: 22),
             AuthPrimaryButton(
               key: const Key('forgot.back'),
-              label: 'Back to sign in',
-              busyLabel: 'Back to sign in',
+              label: changing ? 'Go Back' : 'Back to Sign In',
+              busyLabel: changing ? 'Go Back' : 'Back to Sign In',
               busy: false,
               onPressed: () => Navigator.of(context).maybePop(),
             ),
@@ -167,23 +173,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             Center(
               child: AuthLink(
                 key: const Key('forgot.again'),
-                label: 'Send it again',
+                label: 'Resend Link',
                 onTap: () => setState(() => _sent = false),
               ),
             ),
           ] else ...[
             Text(
-              "Enter your work email and we'll send you a link to set a new password.",
+              changing
+                  ? 'Enter your work email to receive a password reset link.'
+                  : 'Enter your email address to receive a password reset link.',
               style: AuthType.body(p).copyWith(color: p.text),
             ),
             const SizedBox(height: 14),
             AuthField(
               fieldKey: const Key('forgot.email'),
-              label: 'Work email',
+              label: changing ? 'Work Email' : 'Email',
               controller: _email,
               icon: Icons.mail_outline_rounded,
               hint: 'name@company.com',
-              enabled: !_busy && widget.email == null,
+              enabled: !_busy && !changing,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.send,
               autofillHints: const [AutofillHints.email],
@@ -195,20 +203,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             const SizedBox(height: 20),
             AuthPrimaryButton(
               key: const Key('forgot.send'),
-              label: 'Send reset link',
+              label: 'Send Reset Link',
               busyLabel: 'Sending…',
               busy: _busy,
               onPressed: _send,
             ),
             const SizedBox(height: 12),
+            // Recovery goes back to Sign In; a change from Settings goes back to Settings.
             Wrap(
               alignment: WrapAlignment.center,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text(widget.email == null ? 'Remembered it? ' : 'Changed your mind? ', style: AuthType.body(p)),
+                Text(changing ? 'Changed your mind? ' : 'Remember your password? ', style: AuthType.body(p)),
                 AuthLink(
                   key: const Key('forgot.signIn'),
-                  label: widget.email == null ? 'Sign in' : 'Go back',
+                  label: changing ? 'Go Back' : 'Sign In',
                   style: AuthType.bodyLink(p),
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
                   onTap: () => Navigator.of(context).maybePop(),
@@ -218,7 +227,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ],
           const SizedBox(height: 4),
           Text(
-            'Signed in with Google or LinkedIn and never set a password? This sets one.',
+            changing
+                ? 'Registered with Google or LinkedIn? Sign in using the same account.'
+                : _sent
+                ? 'Registered with Google or LinkedIn? Sign in directly using the same account.'
+                : 'Signed in with Google or LinkedIn? You can sign in directly without setting a password.',
+            key: const Key('forgot.socialNote'),
             textAlign: TextAlign.center,
             style: AppText.workSans(12.5, FontWeight.w400, p.muted, lineHeight: 17),
           ),

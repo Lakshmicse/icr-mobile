@@ -307,7 +307,7 @@ void main() {
       certifying: false,
       height: 927,
     );
-    await tester.tap(find.text('Review answers'));
+    await tester.tap(find.text('Review Answers'));
     await settle(tester);
     if (n != null) {
       await tester.tap(find.byKey(ValueKey('review-q-$n')));
@@ -327,7 +327,7 @@ void main() {
     await shoot(tester, 'exam_review_correct');
   });
 
-  shadowed('My attempts', (tester) async {
+  shadowed('My Attempts', (tester) async {
     phone(tester);
     repo.unread = 1;
     repo.attemptsValue = [
@@ -338,7 +338,7 @@ void main() {
     await shoot(tester, 'exam_attempts');
   });
 
-  shadowed('My certificates', (tester) async {
+  shadowed('My Certificates', (tester) async {
     phone(tester, height: 1000);
     repo.unread = 1;
     repo.certificatesValue = [
@@ -394,7 +394,7 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await settle(tester);
-    await tester.tap(find.text('Verify'));
+    await tester.tap(find.text('Verify Certificate'));
     await settle(tester);
     await shoot(tester, 'exam_register');
   });

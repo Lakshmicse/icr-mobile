@@ -18,7 +18,11 @@ bool _blank(String s) => s.trim().isEmpty;
 
 /// Adds a role, or edits [role] (and can delete it). True when something was saved.
 Future<bool> showExperienceSheet(BuildContext context, MyProfileController controller, {Experience? role}) async =>
-    await showEditSheet<bool>(context, builder: (_) => ExperienceSheet(controller: controller, role: role)) ?? false;
+    await showEditSheet<bool>(
+      context,
+      builder: (_) => ExperienceSheet(controller: controller, role: role),
+    ) ??
+    false;
 
 class ExperienceSheet extends StatefulWidget {
   const ExperienceSheet({super.key, required this.controller, this.role, this.now});
@@ -109,7 +113,7 @@ class _ExperienceSheetState extends State<ExperienceSheet> {
 
   Map<String, String> get _problems {
     final out = experienceProblems(_draft(), now: widget.now);
-    if (_startYear == null) out['start'] = 'Choose when you started.';
+    if (_startYear == null) out['start'] = 'Select when you started.';
     return out;
   }
 
@@ -143,8 +147,8 @@ class _ExperienceSheetState extends State<ExperienceSheet> {
     final role = _r!;
     final ok = await confirmAction(
       context,
-      title: 'Delete this role?',
-      message: '${role.title} at ${role.organisation} will be taken off your profile.',
+      title: 'Delete This Role?',
+      message: '${role.title} at ${role.organisation} will be removed from your profile.',
       confirm: 'Delete',
     );
     if (!ok || !mounted) return;
@@ -176,7 +180,7 @@ class _ExperienceSheetState extends State<ExperienceSheet> {
     final p = _tried ? _problems : const <String, String>{};
     final years = careerYearOptions(widget.now);
     return EditSheet(
-      title: _r == null ? 'Add experience' : 'Edit experience',
+      title: _r == null ? 'Add Experience' : 'Edit Experience',
       saving: _saving,
       error: _error,
       dirty: _snapshot() != _initial,
@@ -197,14 +201,14 @@ class _ExperienceSheetState extends State<ExperienceSheet> {
         ),
         AccountSelectField(
           key: const Key('role.kind'),
-          label: 'Employment type',
-          hint: 'Choose one',
+          label: 'Employment Type',
+          hint: 'Select one',
           value: employmentTypeLabel(_kind),
           onClear: () => setState(() => _kind = null),
           onTap: () async {
             final picked = await showAccountPicker<(String, String)>(
               context,
-              title: 'Employment type',
+              title: 'Employment Type',
               items: employmentTypes,
               labelOf: (t) => t.$2,
               selected: employmentTypes.where((t) => t.$1 == _kind).firstOrNull,
@@ -224,7 +228,7 @@ class _ExperienceSheetState extends State<ExperienceSheet> {
           labelOf: (c) => c.name,
           subtitleOf: (c) => c.city == null ? 'On ICR' : '${c.city} · on ICR',
           error: p['organisation'],
-          helper: _picked == null ? 'Pick it from the list if it is already on ICR.' : 'Linked to its page on ICR.',
+          helper: _picked == null ? 'Select it from the list if it is already on ICR.' : 'Linked to its page on ICR.',
           onPick: (c) => setState(() {
             _picked = LinkedCompany(id: c.id, name: c.name, logoUrl: c.logoUrl);
             _askToJoin = true;
@@ -257,7 +261,7 @@ class _ExperienceSheetState extends State<ExperienceSheet> {
           onChanged: (v) => setState(() => _current = v),
         ),
         MonthYearField(
-          label: 'Start date',
+          label: 'Start Date',
           keyPrefix: 'role.start',
           required: true,
           month: _startMonth,
@@ -271,7 +275,7 @@ class _ExperienceSheetState extends State<ExperienceSheet> {
         ),
         if (!_current)
           MonthYearField(
-            label: 'End date',
+            label: 'End Date',
             keyPrefix: 'role.end',
             required: true,
             month: _endMonth,
@@ -302,7 +306,11 @@ class _ExperienceSheetState extends State<ExperienceSheet> {
 // --- a qualification -----------------------------------------------------------------------------------------
 
 Future<bool> showEducationSheet(BuildContext context, MyProfileController controller, {Education? degree}) async =>
-    await showEditSheet<bool>(context, builder: (_) => EducationSheet(controller: controller, degree: degree)) ?? false;
+    await showEditSheet<bool>(
+      context,
+      builder: (_) => EducationSheet(controller: controller, degree: degree),
+    ) ??
+    false;
 
 class EducationSheet extends StatefulWidget {
   const EducationSheet({super.key, required this.controller, this.degree, this.now});
@@ -377,8 +385,8 @@ class _EducationSheetState extends State<EducationSheet> {
     final degree = _e!;
     final ok = await confirmAction(
       context,
-      title: 'Delete this qualification?',
-      message: '${degree.institution} will be taken off your profile.',
+      title: 'Delete This Qualification?',
+      message: '${degree.institution} will be removed from your profile.',
       confirm: 'Delete',
     );
     if (!ok || !mounted) return;
@@ -401,7 +409,7 @@ class _EducationSheetState extends State<EducationSheet> {
     final p = _tried ? educationProblems(_draft(), now: widget.now) : const <String, String>{};
     final years = careerYearOptions(widget.now);
     return EditSheet(
-      title: _e == null ? 'Add education' : 'Edit education',
+      title: _e == null ? 'Add Education' : 'Edit Education',
       saving: _saving,
       error: _error,
       dirty: _snapshot() != _initial,
@@ -410,7 +418,7 @@ class _EducationSheetState extends State<EducationSheet> {
       children: [
         AccountField(
           fieldKey: const Key('edu.institution'),
-          label: 'School or institution',
+          label: 'School or Institution',
           controller: _institution,
           required: true,
           maxLength: 180,
@@ -427,7 +435,7 @@ class _EducationSheetState extends State<EducationSheet> {
         ),
         AccountField(
           fieldKey: const Key('edu.field'),
-          label: 'Field of study',
+          label: 'Field of Study',
           controller: _field,
           maxLength: 160,
           hint: 'e.g. Mechanical Engineering',
@@ -447,13 +455,20 @@ class _EducationSheetState extends State<EducationSheet> {
             Expanded(
               child: AccountSelectField(
                 key: const Key('edu.start'),
-                label: 'Start year',
+                label: 'Start Year',
                 hint: 'Year',
                 value: _start?.toString(),
                 error: p['start'],
                 onClear: () => setState(() => _start = null),
                 onTap: () async {
-                  final y = await showAccountPicker<int>(context, title: 'Start year', items: years, labelOf: (y) => '$y', searchable: true, selected: _start);
+                  final y = await showAccountPicker<int>(
+                    context,
+                    title: 'Start Year',
+                    items: years,
+                    labelOf: (y) => '$y',
+                    searchable: true,
+                    selected: _start,
+                  );
                   if (y != null) setState(() => _start = y);
                 },
               ),
@@ -462,14 +477,21 @@ class _EducationSheetState extends State<EducationSheet> {
             Expanded(
               child: AccountSelectField(
                 key: const Key('edu.end'),
-                label: 'End year',
+                label: 'End Year',
                 hint: 'Year',
                 value: _end?.toString(),
                 error: p['end'],
                 helper: 'Leave blank while you study.',
                 onClear: () => setState(() => _end = null),
                 onTap: () async {
-                  final y = await showAccountPicker<int>(context, title: 'End year', items: years, labelOf: (y) => '$y', searchable: true, selected: _end);
+                  final y = await showAccountPicker<int>(
+                    context,
+                    title: 'End Year',
+                    items: years,
+                    labelOf: (y) => '$y',
+                    searchable: true,
+                    selected: _end,
+                  );
                   if (y != null) setState(() => _end = y);
                 },
               ),
@@ -498,7 +520,11 @@ Future<bool> showCareerBreakSheet(
   CareerBreak? pause,
   CareerGap? prefill,
 }) async =>
-    await showEditSheet<bool>(context, builder: (_) => CareerBreakSheet(controller: controller, pause: pause, prefill: prefill)) ?? false;
+    await showEditSheet<bool>(
+      context,
+      builder: (_) => CareerBreakSheet(controller: controller, pause: pause, prefill: prefill),
+    ) ??
+    false;
 
 class CareerBreakSheet extends StatefulWidget {
   const CareerBreakSheet({super.key, required this.controller, this.pause, this.prefill, this.now});
@@ -519,14 +545,17 @@ class _CareerBreakSheetState extends State<CareerBreakSheet> {
   late bool _current = _b?.isCurrent ?? widget.prefill?.ongoing ?? false;
   late int? _startYear = _b?.startYear ?? widget.prefill?.fromYear;
   late int? _startMonth = _b?.startMonth ?? widget.prefill?.fromMonth;
-  late int? _endYear = _b?.endYear ?? (widget.prefill != null && !widget.prefill!.ongoing ? widget.prefill!.toYear : null);
-  late int? _endMonth = _b?.endMonth ?? (widget.prefill != null && !widget.prefill!.ongoing ? widget.prefill!.toMonth : null);
+  late int? _endYear =
+      _b?.endYear ?? (widget.prefill != null && !widget.prefill!.ongoing ? widget.prefill!.toYear : null);
+  late int? _endMonth =
+      _b?.endMonth ?? (widget.prefill != null && !widget.prefill!.ongoing ? widget.prefill!.toMonth : null);
   late final String _initial = _snapshot();
   bool _saving = false;
   bool _tried = false;
   String? _error;
 
-  String _snapshot() => [_reason, _current, _startYear, _startMonth, _endYear, _endMonth, _description.text].join('\u0001');
+  String _snapshot() =>
+      [_reason, _current, _startYear, _startMonth, _endYear, _endMonth, _description.text].join('\u0001');
 
   @override
   void dispose() {
@@ -547,7 +576,7 @@ class _CareerBreakSheetState extends State<CareerBreakSheet> {
 
   Map<String, String> get _problems {
     final out = careerBreakProblems(_draft(), now: widget.now);
-    if (_startYear == null) out['start'] = 'Choose when the break started.';
+    if (_startYear == null) out['start'] = 'Select when the break started.';
     return out;
   }
 
@@ -577,8 +606,8 @@ class _CareerBreakSheetState extends State<CareerBreakSheet> {
     final pause = _b!;
     final ok = await confirmAction(
       context,
-      title: 'Delete this career break?',
-      message: 'It will be taken off your profile.',
+      title: 'Delete This Career Break?',
+      message: 'It will be removed from your profile.',
       confirm: 'Delete',
     );
     if (!ok || !mounted) return;
@@ -601,7 +630,7 @@ class _CareerBreakSheetState extends State<CareerBreakSheet> {
     final p = _tried ? _problems : const <String, String>{};
     final years = careerYearOptions(widget.now);
     return EditSheet(
-      title: _b == null ? 'Add career break' : 'Edit career break',
+      title: _b == null ? 'Add Career Break' : 'Edit Career Break',
       subtitle: 'A pause between roles, in your own words.',
       saving: _saving,
       error: _error,
@@ -612,7 +641,7 @@ class _CareerBreakSheetState extends State<CareerBreakSheet> {
         AccountSelectField(
           key: const Key('break.reason'),
           label: 'Reason',
-          hint: 'Choose why you took this break',
+          hint: 'Select why you took this break',
           required: true,
           value: _reason == null ? null : careerBreakLabel(_reason),
           error: p['reason'],
@@ -634,7 +663,7 @@ class _CareerBreakSheetState extends State<CareerBreakSheet> {
           onChanged: (v) => setState(() => _current = v),
         ),
         MonthYearField(
-          label: 'Start date',
+          label: 'Start Date',
           keyPrefix: 'break.start',
           required: true,
           month: _startMonth,
@@ -648,7 +677,7 @@ class _CareerBreakSheetState extends State<CareerBreakSheet> {
         ),
         if (!_current)
           MonthYearField(
-            label: 'End date',
+            label: 'End Date',
             keyPrefix: 'break.end',
             required: true,
             month: _endMonth,

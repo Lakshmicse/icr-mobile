@@ -231,7 +231,7 @@ void main() {
       expect(find.text('Saved Jobs'), findsOneWidget);
       // Everything posted on ICR, with the member's own list on it (3 Nov 2026), then the supplier's board.
       expect(find.text('Requirements'), findsOneWidget);
-      expect(find.text('Find Work & Bid'), findsOneWidget);
+      expect(find.text("Enquiries and RFQ's"), findsOneWidget);
       expect(find.text('Certificates & Badges'), findsOneWidget);
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Sign Out'), findsOneWidget);

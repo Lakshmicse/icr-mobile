@@ -73,7 +73,7 @@ void main() {
   testWidgets('the three lists are tabs with their counts; Redemptions is open first', (tester) async {
     await pump(tester);
     expect(find.text('Redemptions (2)'), findsOneWidget);
-    expect(find.text('Credits earned (1)'), findsOneWidget);
+    expect(find.text('Credits Earned (1)'), findsOneWidget);
     expect(find.text('Referred and Joined (0)'), findsOneWidget);
     expect(find.text('REDEMPTIONS (2)'), findsNothing, reason: 'no stacked section headings any more');
     // Redemptions, captioned as the website does, with the credit as one phrase.
@@ -94,7 +94,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('credits-tab-2')));
     await tester.pumpAndSettle();
     expect(
-      find.text('Nobody has joined through your invite yet. Share your link from Refer a friend.'),
+      find.text('No one has joined through your invite yet. Share your link from Refer a Friend.'),
       findsOneWidget,
     );
   });

@@ -40,7 +40,7 @@ Future<void> respondToRequest(
   if (sent && context.mounted) {
     showMessage(
       context,
-      accept ? 'You are now ${r.mentee.firstName}\'s mentor.' : 'Declined. ${r.mentee.firstName} has been told.',
+      accept ? 'You are now ${r.mentee.firstName}\'s mentor.' : 'Declined. ${r.mentee.firstName} has been notified.',
     );
   }
 }
@@ -67,13 +67,13 @@ class RequestsTab extends StatelessWidget {
     final quota = c.quota.data;
     final children = <Widget>[
       if (c.actsAsMentor) ...[
-        const GroupLabel('Asked of you', top: 0),
+        const GroupLabel('Requests Received', top: 0),
         if (received.isEmpty)
           const EmptyNote(
             icon: LucideIcons.inbox,
             compact: true,
-            title: 'No requests yet',
-            body: 'When a member asks you to mentor them, it lands here.',
+            title: 'No Requests Yet',
+            body: 'When a member asks you to mentor them, the request will appear here.',
           ),
         for (final r in received)
           RequestCard(
@@ -92,7 +92,7 @@ class RequestsTab extends StatelessWidget {
           ),
       ],
       if (c.actsAsMentee) ...[
-        GroupLabel('Sent by you', top: c.actsAsMentor ? 14 : 0),
+        GroupLabel('Requests Sent', top: c.actsAsMentor ? 14 : 0),
         if (quota != null && quota.pendingLimit != null)
           Callout(
             tone: quota.canRequest ? PillTone.blue : PillTone.amber,
@@ -104,9 +104,9 @@ class RequestsTab extends StatelessWidget {
           EmptyNote(
             icon: LucideIcons.send,
             compact: true,
-            title: 'You have not asked anyone yet',
+            title: 'No Requests Sent Yet',
             body: 'Find a mentor whose experience fits and send a request.',
-            action: 'Find a mentor',
+            action: 'Find a Mentor',
             onAction: () => links.directory(context),
           ),
         for (final r in sent)
@@ -116,12 +116,12 @@ class RequestsTab extends StatelessWidget {
             actions: [
               if (r.status == RequestStatus.pending) ...[
                 QuietButton(
-                  label: 'View profile',
+                  label: 'View Profile',
                   onPressed: r.mentorProfileId.isEmpty ? null : () => links.mentor(context, r.mentorProfileId),
                 ),
                 QuietButton(label: 'Withdraw', danger: true, onPressed: () => _withdraw(context, r)),
               ] else if (r.status != RequestStatus.accepted)
-                QuietButton(label: 'Find similar mentors', onPressed: () => links.directory(context)),
+                QuietButton(label: 'Find Similar Mentors', onPressed: () => links.directory(context)),
             ],
           ),
       ],
@@ -129,7 +129,7 @@ class RequestsTab extends StatelessWidget {
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your requests",
+      errorTitle: 'Unable to Load Your Requests',
       onRefresh: () => c.refreshTab(MyTab.requests),
       children: loading || failed != null ? const [] : children,
     );
@@ -145,10 +145,10 @@ class RequestsTab extends StatelessWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
-        title: const Text('Withdraw this request?'),
+        title: const Text('Withdraw This Request?'),
         content: Text('${r.mentor.firstName} will no longer see it. You can ask again later.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Keep it')),
+          TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Keep It')),
           TextButton(onPressed: () => Navigator.pop(dialog, true), child: const Text('Withdraw')),
         ],
       ),
@@ -238,8 +238,8 @@ class _CalendarTabState extends State<CalendarTab> {
         children: [
           for (final (kind, label) in const [
             (CalendarKind.session, 'Mentoring'),
-            (CalendarKind.booking, 'Paid call'),
-            (CalendarKind.group, 'Group session'),
+            (CalendarKind.booking, 'Paid Call'),
+            (CalendarKind.group, 'Group Session'),
           ])
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -257,18 +257,18 @@ class _CalendarTabState extends State<CalendarTab> {
       ),
       SectionTitle(title: dayHeading(selected, now: widget.now), top: 16),
       if (c.calendar.error != null && c.calendar.loaded)
-        Callout(tone: PillTone.amber, text: 'Could not refresh this month: ${c.calendar.error}'),
+        Callout(tone: PillTone.amber, text: 'Unable to refresh this month: ${c.calendar.error}'),
       if (dayItems.isEmpty)
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: Text('Nothing on this day.', style: MentoringText.body),
+          child: Text('No events on this day.', style: MentoringText.body),
         ),
       for (final i in dayItems) _CalendarRow(item: i, onTap: () => _open(context, i)),
     ];
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your calendar",
+      errorTitle: 'Unable to Load Your Calendar',
       onRefresh: widget.onRefresh,
       children: loading || failed != null ? const [] : children,
     );
@@ -375,7 +375,7 @@ String _statusWord(CalendarItem i) => switch (i.status) {
   'REQUESTED' => 'Awaiting',
   'COMPLETED' => 'Held',
   'CANCELLED' => 'Cancelled',
-  'NO_SHOW' => 'No-show',
+  'NO_SHOW' => 'No-Show',
   'CONFIRMED' || 'PAID' || 'SCHEDULED' => i.kind == CalendarKind.group ? 'Going' : 'Booked',
   _ => 'Booked',
 };
@@ -394,9 +394,9 @@ class CalendarItemSheet extends StatelessWidget {
     final i = item;
     final link = meetingUri(i.meetingLink);
     final kind = switch (i.kind) {
-      CalendarKind.session => 'Mentoring session',
-      CalendarKind.booking => 'Paid call',
-      CalendarKind.group => 'Group session',
+      CalendarKind.session => 'Mentoring Session',
+      CalendarKind.booking => 'Paid Call',
+      CalendarKind.group => 'Group Session',
     };
     return SafeArea(
       child: Padding(
@@ -424,9 +424,9 @@ class CalendarItemSheet extends StatelessWidget {
               children: [
                 if (link != null && i.open && joinShown(i.at, i.durationMin, mentoringNow()))
                   JoinButton(link: link, startsAt: i.at, durationMin: i.durationMin),
-                if (onOpenPairing != null) QuietButton(label: 'Open mentorship', onPressed: onOpenPairing),
-                if (onOpenPurchase != null) QuietButton(label: 'Open booking', onPressed: onOpenPurchase),
-                if (onOpenGroup != null) QuietButton(label: 'Open session', onPressed: onOpenGroup),
+                if (onOpenPairing != null) QuietButton(label: 'Open Mentorship', onPressed: onOpenPairing),
+                if (onOpenPurchase != null) QuietButton(label: 'Open Booking', onPressed: onOpenPurchase),
+                if (onOpenGroup != null) QuietButton(label: 'Open Session', onPressed: onOpenGroup),
               ],
             ),
           ],
@@ -440,7 +440,7 @@ class CalendarItemSheet extends StatelessWidget {
 // Goals
 // ---------------------------------------------------------------------------
 
-/// "What you want from mentoring" (the mentee's own intent, which mentors read
+/// "What You Want from Mentoring" (the mentee's own intent, which mentors read
 /// before they answer) over the goals across every live pairing.
 class GoalsTab extends StatelessWidget {
   const GoalsTab({super.key, required this.controller, required this.onOpenPairing});
@@ -459,22 +459,22 @@ class GoalsTab extends StatelessWidget {
     final closed = goals.where((g) => g.status != GoalStatus.open).toList();
     final children = <Widget>[
       _IntentCard(intent: intent, onEdit: () => _editIntent(context, intent)),
-      SectionTitle(title: 'Goals in your mentorships'),
+      SectionTitle(title: 'Goals in Your Mentorships'),
       if (goals.isEmpty)
         Text(
-          'No goals yet. Open a mentorship and add one: a goal is what the two of you are working towards.',
+          'No goals yet. Open a mentorship and add one. A goal is what you both work towards.',
           style: MentoringText.body,
         ),
       for (final g in open) _GoalRow(goal: g, onTap: () => onOpenPairing(g.mentorshipId)),
       if (closed.isNotEmpty) ...[
-        const GroupLabel('Finished or dropped'),
+        const GroupLabel('Finished or Dropped'),
         for (final g in closed) _GoalRow(goal: g, onTap: () => onOpenPairing(g.mentorshipId)),
       ],
     ];
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your goals",
+      errorTitle: 'Unable to Load Your Goals',
       onRefresh: () => c.refreshTab(MyTab.goals),
       children: loading || failed != null ? const [] : children,
     );
@@ -505,9 +505,9 @@ class _IntentCard extends StatelessWidget {
     if (i == null) {
       return Callout(
         text:
-            'Tell mentors what you want out of mentoring. A request needs your career stage first, and a few '
-            'lines about the next step you want to take help it get answered.',
-        actions: [SolidButton(label: 'Set it up', icon: LucideIcons.pencil, onPressed: onEdit)],
+            'Tell mentors what you want from mentoring. A request needs your career stage first. A few '
+            'lines about your next step help it get answered.',
+        actions: [SolidButton(label: 'Set Up', icon: LucideIcons.pencil, onPressed: onEdit)],
       );
     }
     return MentoringCard(
@@ -516,9 +516,9 @@ class _IntentCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text('What you want from mentoring', style: MentoringText.cardTitle)),
+              Expanded(child: Text('What You Want from Mentoring', style: MentoringText.cardTitle)),
               StatusPill(
-                i.discoverable ? 'Visible to mentors' : 'Hidden',
+                i.discoverable ? 'Visible to Mentors' : 'Hidden',
                 tone: i.discoverable ? PillTone.mint : PillTone.grey,
               ),
             ],
@@ -627,13 +627,13 @@ class SavedTab extends StatelessWidget {
       if (rows.isEmpty)
         EmptyNote(
           icon: LucideIcons.bookmark,
-          title: 'Nothing saved yet',
-          body: 'Save a mentor from their profile to keep a shortlist before you ask anyone. Only you see it.',
-          action: 'Browse mentors',
+          title: 'No Saved Mentors Yet',
+          body: 'Save a mentor from their profile to build a shortlist before you send a request. Only you can see it.',
+          action: 'Browse Mentors',
           onAction: () => links.directory(context),
         )
       else ...[
-        Text('${rows.length} saved. Only you see this list.', style: MentoringText.meta),
+        Text('${rows.length} saved. Only you can see this list.', style: MentoringText.meta),
         const SizedBox(height: 10),
         for (final m in rows)
           MentoringCard(
@@ -651,7 +651,7 @@ class SavedTab extends StatelessWidget {
                 if (m.city != null) MetaLine(icon: LucideIcons.mapPin, text: m.city!),
                 ActionWrap(
                   children: [
-                    SolidButton(label: 'View profile', onPressed: () => links.mentor(context, m.mentorProfileId)),
+                    SolidButton(label: 'View Profile', onPressed: () => links.mentor(context, m.mentorProfileId)),
                     QuietButton(
                       label: 'Remove',
                       icon: LucideIcons.bookmarkMinus,
@@ -672,7 +672,7 @@ class SavedTab extends StatelessWidget {
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your saved mentors",
+      errorTitle: 'Unable to Load Your Saved Mentors',
       onRefresh: () => c.refreshTab(MyTab.saved),
       children: loading || failed != null ? const [] : children,
     );
@@ -700,7 +700,7 @@ class CertificatesTab extends StatelessWidget {
       if (rows.isEmpty)
         const EmptyNote(
           icon: LucideIcons.award,
-          title: 'No certificates yet',
+          title: 'No Certificates Available Yet',
           body: 'A certificate is issued when a mentorship or a programme you took part in is marked complete.',
         )
       else
@@ -741,7 +741,7 @@ class CertificatesTab extends StatelessWidget {
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your certificates",
+      errorTitle: 'Unable to Load Your Certificates',
       onRefresh: () => c.refreshTab(MyTab.certificates),
       children: loading || failed != null ? const [] : children,
     );
@@ -783,7 +783,7 @@ Future<void> showCertificateSheet(BuildContext context, MentoringCertificate cer
               top: 14,
               children: [
                 SolidButton(
-                  label: 'Verify online',
+                  label: 'Verify Online',
                   icon: LucideIcons.externalLink,
                   onPressed: () => site.openSite(sheet, '/mentorship/certificates/${cert.certificateId}'),
                 ),
@@ -820,8 +820,9 @@ class ReportsTab extends StatelessWidget {
       if (rows.isEmpty)
         const EmptyNote(
           icon: LucideIcons.flag,
-          title: 'No reports',
-          body: 'You have not raised a concern. You can from any mentorship: it goes to ICR, not to the other person.',
+          title: 'No Reports',
+          body:
+              'You have not raised a concern. You can raise one from any mentorship. It goes to ICR, not to the other person.',
         )
       else
         for (final r in rows)
@@ -870,7 +871,7 @@ class ReportsTab extends StatelessWidget {
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your reports",
+      errorTitle: 'Unable to Load Your Reports',
       onRefresh: () => c.refreshTab(MyTab.reports),
       children: loading || failed != null ? const [] : children,
     );

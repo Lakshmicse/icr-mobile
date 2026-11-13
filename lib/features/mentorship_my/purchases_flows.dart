@@ -86,7 +86,7 @@ class QuoteBlock extends StatelessWidget {
             child: Text(
               q.chargedPaisa == 0
                   ? 'The credit covers the whole session.'
-                  : 'The credit pays ${inr(q.creditPaisa)}; you pay ${inr(q.chargedPaisa)}.',
+                  : 'The credit pays ${inr(q.creditPaisa)}. You pay ${inr(q.chargedPaisa)}.',
               key: const ValueKey('quote-credit-note'),
               style: MentoringText.meta.copyWith(color: MentoringColors.mintInk),
             ),
@@ -126,10 +126,10 @@ Future<void> finishPayment(BuildContext context, MentorshipLinks links, PaymentO
   if (gateway != null) {
     final paid = await checkout.runCheckout(context, gateway, title: 'Payment');
     say(switch (paid) {
-      checkout.PaymentOutcome.success => 'Payment received. You will find it under My mentoring.',
-      checkout.PaymentOutcome.failure => "The payment didn't go through. Nothing was charged.",
+      checkout.PaymentOutcome.success => 'Payment received. You will find it under My Mentoring.',
+      checkout.PaymentOutcome.failure => 'The payment failed. Nothing was charged.',
       checkout.PaymentOutcome.cancelled =>
-        "The payment wasn't completed. If you did pay, it shows under My mentoring within a minute.",
+        'The payment was not completed. If you paid, it will appear under My Mentoring within a minute.',
     });
     return;
   }
@@ -190,9 +190,9 @@ class _AcceptTimeFormState extends State<_AcceptTimeForm> {
     final covers = quote.canCredit && quote.credits!.capPaisa >= req.listPricePaisa;
     final credit = covers && _useCredit;
     return MentoringForm(
-      title: 'Accept the time ${p.mentor?.firstName ?? 'the mentor'} set?',
-      subtitle: 'It is booked on both calendars at once.',
-      submitLabel: 'Accept and confirm',
+      title: 'Accept the Time ${p.mentor?.firstName ?? 'the Mentor'} Set?',
+      subtitle: 'It is booked on both calendars immediately.',
+      submitLabel: 'Accept and Confirm',
       busy: _busy,
       problem: _problem,
       onSubmit: () => _submit(credit),
@@ -222,8 +222,8 @@ class _AcceptTimeFormState extends State<_AcceptTimeForm> {
           credit
               ? 'A session credit pays for it, so there is nothing to pay.'
               : req.listPricePaisa == 0
-              ? 'It is free: nothing to pay.'
-              : 'You pay ${inr(PriceQuote.session(req.listPricePaisa, widget.discounts, useCredit: false).chargedPaisa)} after, to confirm it.',
+              ? 'It is free. There is nothing to pay.'
+              : 'You pay ${inr(PriceQuote.session(req.listPricePaisa, widget.discounts, useCredit: false).chargedPaisa)} afterwards to confirm it.',
           key: const ValueKey('accept-note'),
           style: MentoringText.body,
         ),
@@ -305,10 +305,10 @@ class _PayFormState extends State<_PayForm> {
     final at = p.booking?.scheduledAt ?? req?.scheduledAt;
     final confirmed = p.status == PurchaseStatus.confirmed;
     return MentoringForm(
-      title: confirmed ? 'Pay for your session' : 'Pay to confirm',
+      title: confirmed ? 'Pay for Your Session' : 'Pay to Confirm',
       subtitle: p.mentor == null ? null : 'With ${p.mentor!.name}',
       submitLabel: quote.chargedPaisa == 0
-          ? (confirmed ? 'Pay with a session credit' : 'Book with a session credit')
+          ? (confirmed ? 'Pay with a Session Credit' : 'Book with a Session Credit')
           : 'Pay ${inr(quote.chargedPaisa)}',
       busy: _busy,
       problem: _problem,
@@ -329,11 +329,7 @@ class _PayFormState extends State<_PayForm> {
         if (onSite)
           const Padding(
             padding: EdgeInsets.only(top: 10),
-            child: Text(
-              'You pay on ICR\'s secure PayU page, here in the app.',
-              key: ValueKey('pay-handoff'),
-              style: _meta,
-            ),
+            child: Text('You pay on ICR\'s secure PayU page in the app.', key: ValueKey('pay-handoff'), style: _meta),
           ),
         const SizedBox(height: 12),
       ],
@@ -405,16 +401,16 @@ class _PayTermFormState extends State<_PayTermForm> {
       ),
     );
     return MentoringForm(
-      title: t.programme ? 'Pay for your programme' : 'Pay for your plan',
+      title: t.programme ? 'Pay for Your Programme' : 'Pay for Your Plan',
       subtitle: '${t.title}${t.counterpart == null ? '' : ' with ${t.counterpart!.name}'}',
-      submitLabel: t.totalPaisa == 0 ? 'Start it' : 'Pay ${inr(t.totalPaisa)}',
+      submitLabel: t.totalPaisa == 0 ? 'Start' : 'Pay ${inr(t.totalPaisa)}',
       busy: _busy,
       problem: _problem,
       onSubmit: _pay,
       children: [
         line('Price', inr(t.pricePaisa == 0 ? t.totalPaisa : t.pricePaisa), key: const ValueKey('term-price')),
         if (t.discountPaisa > 0)
-          line('Member discount', '−${inr(t.discountPaisa)}', key: const ValueKey('term-discount')),
+          line('Member Discount', '−${inr(t.discountPaisa)}', key: const ValueKey('term-discount')),
         if (t.taxPaisa > 0) line('Tax', inr(t.taxPaisa), key: const ValueKey('term-tax')),
         const Divider(),
         line('Total', t.totalPaisa == 0 ? 'Free' : inr(t.totalPaisa), strong: true, key: const ValueKey('term-total')),
@@ -424,7 +420,7 @@ class _PayTermFormState extends State<_PayTermForm> {
           const Padding(
             padding: EdgeInsets.only(top: 10),
             child: Text(
-              'You pay on ICR\'s secure PayU page, here in the app.',
+              'You pay on ICR\'s secure PayU page in the app.',
               key: ValueKey('pay-handoff'),
               style: TextStyle(fontFamily: 'Roboto', fontSize: 12, color: AppColors.outline, height: 1.4),
             ),
@@ -445,9 +441,10 @@ Future<bool> showAskAnotherTimeSheet(BuildContext context, PurchasesBook book, S
   final at = p.request?.scheduledAt;
   return showTextSheet(
     context,
-    title: 'Ask $name for another time',
-    subtitle: '${at == null ? '' : '${whenLabel(at)} does not suit. '}Say which times would, and $name sets another.',
-    label: 'Which times would work for you?',
+    title: 'Ask $name for Another Time',
+    subtitle:
+        '${at == null ? '' : '${whenLabel(at)} does not suit. '}Enter the times that suit you, and $name sets another.',
+    label: 'Times That Suit You',
     hint: 'Weekday evenings after 7 pm',
     submitLabel: 'Send to $name',
     minLength: minDeclineTimeNote,
@@ -459,11 +456,11 @@ Future<bool> showAskAnotherTimeSheet(BuildContext context, PurchasesBook book, S
 /// Cancel a booked session, with a reason the other person reads (at least five characters).
 Future<bool> showCancelBookingSheet(BuildContext context, PurchasesBook book, ServicePurchase p) => showTextSheet(
   context,
-  title: p.status == PurchaseStatus.confirmed ? 'Cancel this unpaid session?' : 'Cancel this session?',
-  subtitle: 'The other person is told, with your reason. Whether you are refunded follows ICR\'s cancellation rules.',
+  title: p.status == PurchaseStatus.confirmed ? 'Cancel This Unpaid Session?' : 'Cancel This Session?',
+  subtitle: 'The other person is notified, with your reason. Refunds follow ICR\'s cancellation rules.',
   label: 'Reason',
   hint: 'Something came up at work',
-  submitLabel: 'Cancel session',
+  submitLabel: 'Cancel Session',
   minLength: minCancelReason,
   maxLength: maxNote,
   danger: true,
@@ -473,11 +470,12 @@ Future<bool> showCancelBookingSheet(BuildContext context, PurchasesBook book, Se
 /// Report a problem with a purchase: it lands in ICR's queue and the seller reads it.
 Future<bool> showReportIssueSheet(BuildContext context, PurchasesBook book, ServicePurchase p) => showTextSheet(
   context,
-  title: 'Report a problem',
-  subtitle: 'ICR looks into it, and ${p.mentor?.firstName ?? 'the seller'} is asked to reply.',
-  label: 'What went wrong',
+  title: 'Report a Problem',
+  // No name here (owner, 7 Nov 2026: "where is this text coming that Rashmmi will look into issue?").
+  subtitle: 'ICR reviews your report and asks the mentor to respond.',
+  label: 'What Went Wrong',
   hint: 'The file would not open',
-  submitLabel: 'Send report',
+  submitLabel: 'Send Report',
   minLength: minReportNote,
   maxLength: 2000,
   lines: 4,
@@ -489,7 +487,7 @@ Future<bool> showReviewPurchaseSheet(BuildContext context, PurchasesBook book, S
   context,
   title: 'Review ${p.title}',
   subtitle: 'Shown on ${p.mentor?.firstName ?? 'the mentor'}\'s profile.',
-  flagLabel: 'Hide my name on the review',
+  flagLabel: 'Hide My Name',
   flagDefault: false,
   minComment: minReviewComment,
   onSend: (rating, comment, hide) => book.review(p, rating: rating, comment: comment, anonymous: hide),
@@ -530,11 +528,11 @@ class _ProposeMoveFormState extends State<_ProposeMoveForm> {
   Future<void> _submit() async {
     final at = _at;
     if (at == null) {
-      setState(() => _problem = 'Pick a new time first.');
+      setState(() => _problem = 'Select a new time first.');
       return;
     }
     if (!at.isAfter(mentoringNow())) {
-      setState(() => _problem = 'Pick a time in the future.');
+      setState(() => _problem = 'Select a time in the future.');
       return;
     }
     setState(() {
@@ -557,10 +555,10 @@ class _ProposeMoveFormState extends State<_ProposeMoveForm> {
   Widget build(BuildContext context) {
     final p = widget.purchase;
     return MentoringForm(
-      title: 'Ask to move this call',
+      title: 'Ask to Move This Call',
       subtitle:
           '${p.booking == null ? '' : 'Now ${whenLabel(p.booking!.scheduledAt)}. '}${p.mentor?.firstName ?? 'The mentor'} accepts or keeps the booked time.',
-      submitLabel: 'Ask to move',
+      submitLabel: 'Ask to Move',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
@@ -577,7 +575,7 @@ class _ProposeMoveFormState extends State<_ProposeMoveForm> {
             final slots = snap.data ?? const <Slot>[];
             final own = _at != null && !slots.any((s) => s.at.isAtSameMomentAs(_at!));
             return FieldBlock(
-              label: slots.isEmpty ? 'New time' : 'Free times in their hours',
+              label: slots.isEmpty ? 'New Time' : 'Free Times in Their Hours',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -585,7 +583,7 @@ class _ProposeMoveFormState extends State<_ProposeMoveForm> {
                     SlotPicker(slots: slots, selected: _at, onSelect: (at) => setState(() => _at = at)),
                   const SizedBox(height: 8),
                   QuietButton(
-                    label: own ? whenLabel(_at!) : (slots.isEmpty ? 'Pick a day and time' : 'Another time'),
+                    label: own ? whenLabel(_at!) : (slots.isEmpty ? 'Select a Day and Time' : 'Another Time'),
                     icon: LucideIcons.calendarClock,
                     onPressed: () async {
                       final at = await pickDateTime(context, initial: _at);
@@ -598,7 +596,7 @@ class _ProposeMoveFormState extends State<_ProposeMoveForm> {
           },
         ),
         FieldBlock(
-          label: 'A note (optional)',
+          label: 'Note (Optional)',
           child: TextField(
             key: const ValueKey('move-note'),
             controller: _note,
@@ -617,11 +615,11 @@ class _ProposeMoveFormState extends State<_ProposeMoveForm> {
 /// Answers a move the mentor proposed: accept it, or keep the booked time (a reason is optional).
 Future<bool> showKeepTimeSheet(BuildContext context, PurchasesBook book, ServicePurchase p) => showTextSheet(
   context,
-  title: 'Keep the booked time?',
-  subtitle: '${p.mentor?.firstName ?? 'The mentor'} is told, with your reason if you give one.',
-  label: 'A note back (optional)',
+  title: 'Keep the Booked Time?',
+  subtitle: '${p.mentor?.firstName ?? 'The mentor'} is notified, with your reason if you give one.',
+  label: 'Reply Note (Optional)',
   hint: 'That day does not work for me',
-  submitLabel: 'Keep the booked time',
+  submitLabel: 'Keep the Booked Time',
   maxLength: maxMoveNote,
   optional: true,
   onSend: (reason) => book.answerMove(p, accept: false, reason: reason),

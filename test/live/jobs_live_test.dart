@@ -28,7 +28,7 @@ import 'package:icr_mobile/features/jobs/jobs_repository.dart';
 import '../jobs_fakes.dart';
 import 'live.dart';
 
-/// A member with no saved search and no résumé, for the board that shows plain "Latest jobs". Pooja used to be
+/// A member with no saved search and no résumé, for the board that shows plain "Latest Jobs". Pooja used to be
 /// that person; `tool/seed/career.ts` gives her two saved searches (her board is then scoped to the first), so
 /// the tests that need the unscoped board read it as Meera Iyer, who signs in with the career seed's password.
 const plainBoard = LivePerson('meera.iyer@career.icr.test', 'Career@12345', 'Meera Iyer');
@@ -125,7 +125,7 @@ void main() {
       expect(jobs.sections.map((s) => s.key), ['foryou', 'preferences', 'alert']);
       expect(jobs.sections.map((s) => s.title), [
         'Recommended Jobs for You',
-        'Matching your preferences',
+        'Matching Your Preferences',
         'Facilities & Real Estate',
       ]);
       for (final section in jobs.sections) {
@@ -204,7 +204,7 @@ void main() {
 
     await jobs.setSearch('STP');
     expect(jobs.narrowed, isTrue);
-    expect(jobs.sections.single.title, 'Jobs matching "STP"');
+    expect(jobs.sections.single.title, 'Jobs Matching "STP"');
     final stp = jobs.sections.single.jobs;
     expect(stp.map((j) => j.id), contains(stpJob));
     expect(
@@ -388,7 +388,7 @@ void main() {
       expect(job.contact?.activity, isNull);
       expect(job.applicants, isNull, reason: 'the API tells only the job\'s team');
       expect(job.views, isNull);
-      expect(applicantsOrOpenings(job), '2 openings');
+      expect(applicantsOrOpenings(job), '2 Openings');
       expect(job.educationQualifications, ['UG_BTECH_MECHANICAL', 'UG_BTECH_ELECTRICAL']);
       expect(job.externalApply, isFalse);
     },
@@ -429,7 +429,7 @@ void main() {
     expect(people!.total, 5);
     expect(people.names.first, 'Nikhil M.');
     expect(people.others, 4);
-    expect(people.text, 'Nikhil M. and 4 others from ICR work at this organization.');
+    expect(people.text, 'Nikhil M. and 4 others from ICR work at this company.');
     expect(people.initials.first, 'NM');
     expect(people.photos.whereType<FeedPicture>().map((p) => p.url), [contains('design-lj-avatar-priya.png')]);
   });

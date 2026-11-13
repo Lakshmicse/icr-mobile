@@ -13,6 +13,7 @@ import 'package:icr_mobile/core/api/api_error.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/core/widgets/detail_sheet.dart';
 import 'package:icr_mobile/features/events/api_events_repository.dart';
+import 'package:icr_mobile/features/payments/checkout_start.dart';
 import 'package:icr_mobile/features/events/event_detail_controller.dart';
 import 'package:icr_mobile/features/events/event_format.dart';
 import 'package:icr_mobile/features/events/event_models.dart';
@@ -506,6 +507,9 @@ class _OfflineCovers implements EventsRepository {
   _OfflineCovers(this.inner);
 
   final ApiEventsRepository inner;
+
+  @override
+  Future<CheckoutStart> buyTicket(EventSummary event) => inner.buyTicket(event);
 
   EventSummary _local(EventSummary e) {
     final name = e.cover?.url == null ? null : Uri.parse(e.cover!.url!).pathSegments.last;

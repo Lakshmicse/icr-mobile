@@ -63,7 +63,7 @@ class _SupplierOverviewTabState extends State<SupplierOverviewTab> {
           const SizedBox(height: 18),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text('Good to know', style: MartText.heading),
+            child: Text('Good to Know', style: MartText.heading),
           ),
           const SizedBox(height: 4),
           for (final fact in facts) FactRow(label: fact.$1, value: fact.$2),
@@ -76,10 +76,10 @@ class _SupplierOverviewTabState extends State<SupplierOverviewTab> {
 /// What a buyer asks next, from what the listing declares: only the facts it has.
 List<(String, String)> supplierFacts(Supplier s) => [
   if (s.foundedYear != null) ('Founded', '${s.foundedYear}'),
-  if (s.size != null) ('Team size', '${s.size} employees'),
+  if (s.size != null) ('Team Size', '${s.size} employees'),
   if (s.responseTime != null && responseTimeLabel(s.responseTime).isNotEmpty)
     ('Replies', responseTimeLabel(s.responseTime)[0].toUpperCase() + responseTimeLabel(s.responseTime).substring(1)),
-  ('New work', s.acceptingWork ? 'Open for new work' : 'Not taking new work right now'),
+  ('New Work', s.acceptingWork ? 'Open for new work' : 'Not taking new work right now'),
   if (s.serviceAreas.isNotEmpty) ('Serves', s.serviceAreas.join(', ')),
   if (s.certificationNames.isNotEmpty) ('Certifications', s.certificationNames.join(', ')),
 ];
@@ -204,7 +204,7 @@ class _About extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(expanded ? 'Show less' : 'Read full company charter', style: MartText.readMore),
+                      Text(expanded ? 'Show Less' : 'Read Full Company Charter', style: MartText.readMore),
                       const SizedBox(width: 6),
                       Icon(
                         expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,

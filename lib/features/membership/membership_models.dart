@@ -28,7 +28,7 @@ enum MembershipAudience {
     'Market Place',
     'supplier',
     'Showcase. Connect. Grow.',
-    'For manufacturers, service providers, consultants and technology companies on Supplier Mart.',
+    'For manufacturers, service providers, consultants and technology companies on the Marketplace.',
   ),
   company(
     'COMPANY',

@@ -378,7 +378,7 @@ class _History extends StatelessWidget {
   static String _line(SupportEvent e) {
     final to = e.toValue != null && e.type == 'STATUS_CHANGED' ? ' → ${SupportWords.status(e.toValue!)}' : '';
     final ago = e.createdAt == null ? '' : ' · ${timeAgo(e.createdAt!.toLocal())}';
-    final note = e.note == null ? '' : ' — ${e.note}';
+    final note = e.note == null ? '' : ' · ${e.note}';
     return '${SupportWords.event(e.type)}$to$ago$note';
   }
 }

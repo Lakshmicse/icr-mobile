@@ -593,7 +593,7 @@ void main() {
       expect(CouncilIndustry.of('Smart Buildings, BMS & PropTech Council', []), CouncilIndustry.tech);
       expect(CouncilIndustry.of('Corporate & Commercial Real Estate Council', []), CouncilIndustry.realEstate);
       expect(CouncilIndustry.of('CXO Workplace Strategy & FM Leadership', []), CouncilIndustry.people);
-      expect(CouncilIndustry.of('Something else', []), CouncilIndustry.general);
+      expect(CouncilIndustry.of('Something Else', []), CouncilIndustry.general);
     });
 
     test('the glyph of each designed council holds when its topics are read as well', () {
@@ -694,7 +694,7 @@ void main() {
       expect(rt.detail, 'Lead: Vikram Malhotra (DLF) • 82 seats claimed');
       expect(timeRange(rt.startsAt, rt.endsAt), '15:30 – 17:00 IST');
       expect(monthDay(rt.startsAt), 'Apr 18');
-      expect(overview.roundtablesCaption, 'All events');
+      expect(overview.roundtablesCaption, 'All Events');
       final hybrid = overview.roundtables.last;
       expect(hybrid.mode, 'HYBRID BLR');
       expect(hybrid.tone, RoundtableTone.green);
@@ -1044,7 +1044,7 @@ void main() {
       await tester.tap(find.text('Manage'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('manage-seats')), findsOneWidget);
-      expect(find.text('Your councils'), findsOneWidget);
+      expect(find.text('Your Councils'), findsOneWidget);
       expect(find.byKey(const ValueKey('leave-demo-cxo')), findsOneWidget);
       expect(find.byKey(const ValueKey('leave-demo-sustainability')), findsOneWidget);
       expect(screen.opened, isEmpty);
@@ -1092,7 +1092,7 @@ void main() {
         await tester.drag(first, const Offset(-300, 0));
         await tester.pumpAndSettle();
         expect(find.text('Next Sync: Apr 18'), findsOneWidget);
-        await tester.tap(find.text('Meeting link').first);
+        await tester.tap(find.text('Meeting Link').first);
         expect(screen.lastOpened, _site('/events'));
         // Only the two session links left the app; the card and the unread count opened the council's page.
         expect(screen.opened, hasLength(2));
@@ -1140,11 +1140,11 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'zzz');
       await tester.pumpAndSettle();
-      expect(find.text('No councils match'), findsOneWidget);
-      await tester.tap(find.text('Clear filters'));
+      expect(find.text('No Councils Match'), findsOneWidget);
+      await tester.tap(find.text('Clear Filters'));
       await tester.pumpAndSettle();
       expect(screen.cards, hasLength(6));
-      expect(find.text('No councils match'), findsNothing);
+      expect(find.text('No Councils Match'), findsNothing);
     });
 
     testWidgets('a category chip narrows the cards, tapping it again and All Categories widen them', (tester) async {
@@ -1178,7 +1178,7 @@ void main() {
 
       await tester.tap(find.byIcon(LucideIcons.slidersHorizontal));
       await tester.pumpAndSettle();
-      for (final label in ['Recommended', 'Most members', 'Most active', 'Newest', 'A to Z']) {
+      for (final label in ['Recommended', 'Most Members', 'Most Active', 'Newest', 'A to Z']) {
         expect(find.text(label), findsOneWidget);
       }
       Finder ticked(String label) =>
@@ -1199,7 +1199,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(ticked('A to Z'), findsOneWidget);
       expect(ticked('Recommended'), findsNothing);
-      await tester.tap(find.text('Most members'));
+      await tester.tap(find.text('Most Members'));
       await tester.pumpAndSettle();
       expect(screen.cards.first, 'demo-sustainability');
       expect(screen.cards.last, 'demo-legal');
@@ -1318,12 +1318,12 @@ void main() {
             : throw ApiError('No connection.'),
       );
       await _pumpScreen(tester, repository);
-      expect(find.text("Couldn't load councils"), findsOneWidget);
+      expect(find.text("Unable to Load Councils"), findsOneWidget);
       expect(find.text('No connection.'), findsOneWidget);
       up = true;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
-      expect(find.text("Couldn't load councils"), findsNothing);
+      expect(find.text("Unable to Load Councils"), findsNothing);
       expect(find.text('Council A'), findsOneWidget);
     });
 
@@ -1343,10 +1343,9 @@ void main() {
       final repository = ApiCouncilsRepository(api: client, clock: () => _now);
       final screen = await _pumpScreen(tester, repository);
 
-      // The tiles.
-      expect(find.text('+1 Q4'), findsOneWidget);
-      expect(find.text('1,560+'), findsOneWidget);
-      expect(find.text('Active Roundtables'), findsOneWidget);
+      // No stat tiles over the page (owner, 12 Nov 2026).
+      expect(find.text('+1 Q4'), findsNothing);
+      expect(find.text('Active Roundtables'), findsNothing);
       // The rail: the executive seat and its recent announcements.
       expect(find.text('Executive Seat'), findsOneWidget);
       expect(find.text('2 unread'), findsOneWidget);

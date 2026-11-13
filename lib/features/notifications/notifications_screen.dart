@@ -157,7 +157,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           showMessage(context, refusal);
           return;
         }
-        showMessage(context, 'Now working as ${n.company!.name}');
+        showMessage(context, 'Now working as ${n.company!.name}.');
         router.onCompanySwitched?.call(context, n.company!.id);
         // The role rides in the token, so the app reads who the person is now: that builds the signed-in app again
         // for the company (its tabs, menu and controllers belong to the one they were acting for), and its router
@@ -187,6 +187,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   /// The ⋮ sheet: read it, turn its category off, or go to the settings.
   Future<void> _showMenu(AppNotification n) async {
     final category = n.category;
+    // The sheet says which way the kind's switch stands, so the preferences are read first.
+    if (!category.locked && _c.preferences == null) await _c.loadPreferences();
+    if (!mounted) return;
+    final off = _c.categoryOff(category);
     final action = await showModalBottomSheet<_RowAction>(
       context: context,
       backgroundColor: Colors.white,
@@ -200,21 +204,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               _SheetRow(
                 key: const ValueKey('note-menu-read'),
                 icon: Icons.done_all,
-                title: 'Mark as read',
+                title: 'Mark as Read',
                 onTap: () => Navigator.pop(sheet, _RowAction.read),
               ),
-            if (!category.locked)
+            if (!category.locked && off)
+              _SheetRow(
+                key: const ValueKey('note-menu-on'),
+                icon: Icons.notifications_active_outlined,
+                title: 'Turn On ${category.label} Notifications',
+                hint: 'They are currently off in the app.',
+                onTap: () => Navigator.pop(sheet, _RowAction.turnOn),
+              )
+            else if (!category.locked)
               _SheetRow(
                 key: const ValueKey('note-menu-off'),
                 icon: Icons.notifications_off_outlined,
-                title: 'Turn off ${category.label} notifications',
-                hint: 'You can turn them back on in the settings.',
+                title: 'Turn Off ${category.label} Notifications',
+                hint: 'You can turn them on again in Notification Settings.',
                 onTap: () => Navigator.pop(sheet, _RowAction.turnOff),
               ),
             _SheetRow(
               key: const ValueKey('note-menu-settings'),
               icon: Icons.settings_outlined,
-              title: 'Notification settings',
+              title: 'Notification Settings',
               onTap: () => Navigator.pop(sheet, _RowAction.settings),
             ),
             const SizedBox(height: 8),
@@ -231,6 +243,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         final refusal = await _c.turnOffCategory(category);
         if (!mounted) return;
         showMessage(context, refusal ?? '${category.label} notifications are off.');
+      case _RowAction.turnOn:
+        final refusal = await _c.turnOnCategory(category);
+        if (!mounted) return;
+        showMessage(context, refusal ?? '${category.label} notifications are on.');
       case _RowAction.settings:
         await _c.setTab(NotificationsTab.preferences);
     }
@@ -262,7 +278,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         key: const ValueKey('mark-all-read'),
                         onPressed: _c.unread == 0 ? null : _markAll,
                         icon: const Icon(LucideIcons.checkCheck, size: 16),
-                        label: Text('Mark all read', style: ChatText.barAction.copyWith(color: null)),
+                        label: Text('Mark All Read', style: ChatText.barAction.copyWith(color: null)),
                         style: TextButton.styleFrom(
                           foregroundColor: AppColors.primary,
                           disabledForegroundColor: AppColors.slate400,
@@ -317,9 +333,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           hasScrollBody: false,
           child: ChatNotice(
             icon: LucideIcons.bellOff,
-            title: 'Your notifications could not be loaded.',
+            title: 'Unable to Load Notifications',
             body: _c.error,
-            action: 'Retry',
+            action: 'Try Again',
             onAction: _c.refresh,
           ),
         ),
@@ -335,15 +351,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           child: ChatNotice(
             icon: unreadTab ? LucideIcons.checkCheck : LucideIcons.bell,
             title: unreadTab
-                ? 'Nothing unread'
+                ? 'No Unread Notifications'
                 : category != null
-                ? 'Nothing under ${category.label} yet'
-                : 'No notifications yet',
+                ? 'No ${category.label} Notifications Yet'
+                : 'No Notifications Yet',
             body: unreadTab
-                ? 'You have read everything. Older notifications are under All.'
+                ? 'You have read all notifications. Older notifications are under All.'
                 : category != null
-                ? 'Notifications of this kind will show up here.'
-                : 'Replies, applications, bookings and rewards will show up here.',
+                ? 'Notifications of this type will appear here.'
+                : 'Replies, applications, bookings and rewards will appear here.',
           ),
         ),
       );
@@ -392,14 +408,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: TextButton(
           key: const ValueKey('show-older'),
           onPressed: _c.loadMore,
-          child: Text('Show older notifications', style: ChatText.barAction),
+          child: Text('View More', style: ChatText.barAction),
         ),
       ),
     );
   }
 }
 
-enum _RowAction { read, turnOff, settings }
+enum _RowAction { read, turnOff, turnOn, settings }
 
 class _SheetRow extends StatelessWidget {
   const _SheetRow({super.key, required this.icon, required this.title, required this.onTap, this.hint});

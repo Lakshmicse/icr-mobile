@@ -132,10 +132,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> with Widget
     setState(() => _busyId = null);
     showMessage(
       context,
-      message ??
-          (accept
-              ? 'Offer accepted. Congratulations! It is now under Offers.'
-              : 'Offer declined. It is now under Archived.'),
+      message ?? (accept ? 'Offer accepted. It is now under Offers.' : 'Offer declined. It is now under Archived.'),
     );
   }
 
@@ -144,7 +141,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> with Widget
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) => CareerScaffold(
-        title: 'My applications',
+        title: 'My Applications',
         onBack: widget.onBack,
         unread: _c.unread,
         onBell: () => widget.navigation.openNotifications(context, widget.links),
@@ -167,7 +164,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> with Widget
         CareerNotice(
           key: const ValueKey('applications-error'),
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load your applications",
+          title: 'Unable to Load Your Applications',
           body: _c.error!,
           action: 'Try again',
           onAction: _c.refresh,
@@ -180,11 +177,11 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> with Widget
         CareerNotice(
           key: const ValueKey('applications-first'),
           icon: LucideIcons.clipboardCheck,
-          title: 'Start tracking your job search',
-          body: 'Every job you apply to appears here with its status, interviews and offers.',
-          action: 'Find jobs',
+          title: 'Track Your Job Search',
+          body: 'Every job you apply to will appear here with its status, interviews and offers.',
+          action: 'Find Jobs',
           onAction: () => widget.navigation.findJobs(context, widget.links),
-          secondary: 'Set up a job alert',
+          secondary: 'Create a Job Alert',
           onSecondary: () =>
               openJobAlerts(context, repository: widget.repository, links: widget.links, navigation: widget.navigation),
         ),
@@ -273,9 +270,9 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> with Widget
       return CareerNotice(
         key: const ValueKey('applications-search-empty'),
         icon: LucideIcons.search,
-        title: 'No applications match “$query”',
+        title: 'No Applications Match “$query”',
         body: 'Try another job title, company or city, or clear the search.',
-        action: 'Clear search',
+        action: 'Clear Search',
         onAction: () {
           _search.clear();
           _c.setSearch('');
@@ -283,24 +280,27 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> with Widget
       );
     }
     final (title, text) = switch (_c.tab) {
-      ApplicationsTab.active => ('Nothing in progress', 'Applications you send appear here until they close.'),
+      ApplicationsTab.active => (
+        'No Applications in Progress',
+        'Applications you send will appear here until they close.',
+      ),
       ApplicationsTab.interviews => (
-        'No interviews yet',
-        'When an employer schedules an interview, it appears here with the time and how to join.',
+        'No Interviews Yet',
+        'When an employer schedules an interview, it will appear here with the time and joining details.',
       ),
-      ApplicationsTab.offers => ('No offers yet', 'Offers you receive appear here, ready to accept or decline.'),
+      ApplicationsTab.offers => ('No Offers Yet', 'Offers you receive will appear here for you to accept or decline.'),
       ApplicationsTab.archived => (
-        'Nothing archived',
-        'Applications that are not taken forward, that you withdraw, or whose offer you decline move here.',
+        'No Archived Applications',
+        'Applications that were not taken forward, that you withdrew, or whose offers you declined will appear here.',
       ),
-      ApplicationsTab.all => ('No applications yet', 'Find a job you like and apply. You can follow it here.'),
+      ApplicationsTab.all => ('No Applications Yet', 'Find a job and apply. You can track it here.'),
     };
     return CareerNotice(
       key: const ValueKey('applications-tab-empty'),
       icon: LucideIcons.clipboardList,
       title: title,
       body: text,
-      action: _c.tab == ApplicationsTab.all ? null : 'View all applications',
+      action: _c.tab == ApplicationsTab.all ? null : 'View All Applications',
       onAction: () => _c.selectTab(ApplicationsTab.all),
     );
   }
@@ -336,7 +336,7 @@ class _SearchBox extends StatelessWidget {
               decoration: InputDecoration(
                 isCollapsed: true,
                 border: InputBorder.none,
-                hintText: 'Job title, company or city',
+                hintText: 'Job title, company, or city',
                 hintStyle: CareerText.body.copyWith(color: AppColors.outline),
               ),
             ),
@@ -347,7 +347,7 @@ class _SearchBox extends StatelessWidget {
                 ? const SizedBox(width: 10)
                 : IconButton(
                     key: const ValueKey('applications-search-clear'),
-                    tooltip: 'Clear search',
+                    tooltip: 'Clear Search',
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
                     iconSize: 15,
@@ -371,7 +371,7 @@ class _SortMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<ApplicationsSort>(
       key: const ValueKey('applications-sort'),
-      tooltip: 'Sort by',
+      tooltip: 'Sort By',
       onSelected: onSelect,
       itemBuilder: (_) => [
         for (final s in ApplicationsSort.values)
@@ -432,7 +432,10 @@ class _Summary extends StatelessWidget {
     final notes = <Widget>[
       Text(s.sentThisWeek == 0 ? 'None sent this week' : '${s.sentThisWeek} sent this week', style: CareerText.meta),
       if (viewed == null)
-        Text('See plans to know when recruiters open yours', style: CareerText.meta.copyWith(color: AppColors.primary))
+        Text(
+          'View plans to see when recruiters open your application',
+          style: CareerText.meta.copyWith(color: AppColors.primary),
+        )
       else
         Text(viewed == 0 ? 'Not opened yet' : 'Opened by a recruiter', style: CareerText.meta),
       Text(
@@ -538,9 +541,9 @@ class _UpNext extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text('Up next', style: CareerText.heading),
+                  Text('Up Next', style: CareerText.heading),
                   const SizedBox(width: 6),
-                  Text('Things waiting on you', style: CareerText.meta),
+                  Text('Actions waiting for you', style: CareerText.meta),
                 ],
               ),
             ),
@@ -651,7 +654,7 @@ class _UpNextOffer extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          StripButton(label: 'Review offer', onTap: onReview),
+          StripButton(label: 'Review Offer', onTap: onReview),
         ],
       ),
     );
@@ -677,7 +680,7 @@ class LockedTimelineNotice extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'The full application timeline and recruiter viewed-receipts are part of Career Plus.',
+              'The full application timeline and recruiter read receipts are part of Career Plus.',
               style: CareerText.body.copyWith(color: AppColors.onSurface),
             ),
           ),

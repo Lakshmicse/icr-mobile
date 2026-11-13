@@ -64,7 +64,7 @@ Future<bool> runOfferingAction(BuildContext context, MentorProfileController c, 
 
 Future<String?> _askPhone(BuildContext context) => showPhoneSheet(
   context,
-  title: 'Add your mobile number',
+  title: 'Add Your Mobile Number',
   help: 'A plan or programme puts you in touch with the mentor, who needs a way to reach you.',
 );
 
@@ -86,7 +86,7 @@ HeroActions heroActionsFor(BuildContext context, MentorProfileController c) {
       } else if (v == null || v.canRequest) {
         await showMentoringRequestSheet(context, c);
       } else {
-        showMessage(context, v.blockedReason ?? "You can't message this mentor yet.");
+        showMessage(context, v.blockedReason ?? 'You cannot message this mentor yet.');
       }
     };
   }
@@ -94,7 +94,8 @@ HeroActions heroActionsFor(BuildContext context, MentorProfileController c) {
   if (v?.isOwner == true) {
     return HeroActions(
       primaryLabel: 'Edit My Profile',
-      barLabel: 'Edit My Profile',
+      // No pinned bar: the hero's button is the one Edit My Profile (owner, 7 Nov 2026).
+      barLabel: null,
       primaryIcon: LucideIcons.pencil,
       onPrimary: () => c.navigation.editMentorProfile(context),
     );
@@ -120,14 +121,14 @@ HeroActions heroActionsFor(BuildContext context, MentorProfileController c) {
   }
   return switch (v?.blocker) {
     AskBlocker.noMenteeProfile => HeroActions(
-      primaryLabel: 'Tell Us Your Goals First',
-      barLabel: 'Tell Us Your Goals First',
+      primaryLabel: 'Set Your Goals First',
+      barLabel: 'Set Your Goals First',
       onPrimary: () => c.navigation.goals(context),
       onMessage: onMessage,
     ),
     AskBlocker.planLimit => HeroActions(
-      primaryLabel: 'See Plans',
-      barLabel: 'See Plans',
+      primaryLabel: 'View Plans',
+      barLabel: 'View Plans',
       onPrimary: () => openSitePage(context, '/career/plans'),
       onMessage: onMessage,
     ),

@@ -14,7 +14,7 @@ import 'package:provider/provider.dart';
 
 /// My courses lists what the member opened outside an enrolment, as the website's `/learning/courses` does on
 /// its Mock Exams and Assess Your Knowledge shelves (owner's report, 2 Nov 2026: a member with open levels and
-/// sat mock exams saw "No courses yet").
+/// sat mock exams saw "No Courses Yet").
 AssessPaper _paper(String id, String title, {String? courseId, String? topicId, FeedPicture? cover}) => AssessPaper(
   id: id,
   slug: id,
@@ -125,7 +125,7 @@ void main() {
       expect(decks, {'d1': OpenedVia.plan, 'd3': OpenedVia.credits, 'd9': OpenedVia.plan});
       expect(items.last.title, 'HVAC');
       expect(items.last.cover, _tower);
-      expect(openedShelvesOf(items).map((s) => s.title), ['Assess Your Knowledge', 'Flash Cards']);
+      expect(openedShelvesOf(items).map((s) => s.title), ['Knowledge Assessments', 'Flashcards']);
       // A formula sheet is never a deck, and a deck with nothing behind it is not listed.
       expect(items.any((i) => i.deck?.id == 'f1'), isFalse);
       final none = openedLearning(access: const MemberAccess(), courses: _courses, mocks: _topics, decks: _decks);
@@ -149,14 +149,14 @@ void main() {
         OpenedItem(group: _courses[0], via: OpenedVia.plan),
         OpenedItem(group: _topics[0], via: OpenedVia.plan),
       ]);
-      expect(shelves.map((s) => s.title), ['Mock Exams', 'Assess Your Knowledge']);
+      expect(shelves.map((s) => s.title), ['Mock Exams', 'Knowledge Assessments']);
       expect(openedShelvesOf([OpenedItem(group: _courses[0], via: OpenedVia.plan)]).map((s) => s.title), [
-        'Assess Your Knowledge',
+        'Knowledge Assessments',
       ]);
     });
   });
 
-  group('My courses', () {
+  group('My Courses', () {
     const access = MemberAccess(
       courses: PlanPlaces(limit: 1, opened: ['c1']),
       mocks: PlanPlaces(limit: 1, opened: ['t1']),
@@ -170,10 +170,10 @@ void main() {
       expect(learning.openedShelves, isEmpty, reason: 'the chip is off');
       learning.toggleMine();
       await Future<void>.delayed(Duration.zero);
-      expect(learning.openedShelves.map((s) => s.title), ['Mock Exams', 'Assess Your Knowledge']);
+      expect(learning.openedShelves.map((s) => s.title), ['Mock Exams', 'Knowledge Assessments']);
       expect(learning.openedShelves.first.items.map((i) => i.title), ['AEE CBCP', 'AEE CEM · Set 1']);
       learning.setSearch('capital');
-      expect(learning.openedShelves.map((s) => s.title), ['Assess Your Knowledge']);
+      expect(learning.openedShelves.map((s) => s.title), ['Knowledge Assessments']);
       learning.clearSearch();
       learning.toggleMine();
       expect(learning.openedShelves, isEmpty);
@@ -184,7 +184,7 @@ void main() {
       await learning.start();
       learning.toggleMine();
       await Future<void>.delayed(Duration.zero);
-      expect(learning.openedShelves.map((s) => s.title), ['Mock Exams', 'Assess Your Knowledge', 'Flash Cards']);
+      expect(learning.openedShelves.map((s) => s.title), ['Mock Exams', 'Knowledge Assessments', 'Flashcards']);
       expect(learning.openedShelves.last.items.map((i) => i.title), ['Capital Planning cards']);
     });
 
@@ -210,17 +210,72 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('My courses'));
+      // The hub turns My courses on; the chip that did is gone (owner, 7 Nov 2026).
+      learning.setMineOnly(true);
       await tester.pumpAndSettle();
-      expect(find.text('Mock Exams'), findsOneWidget);
-      expect(find.text('Assess Your Knowledge'), findsOneWidget);
+      // Each shelf's heading, and the chip of the same name above them (12 Nov 2026).
+      expect(find.text('Mock Exams'), findsNWidgets(2));
+      expect(find.text('Knowledge Assessments'), findsNWidgets(2));
       expect(find.byKey(const ValueKey('opened-mock:t1')), findsOneWidget);
       expect(find.byKey(const ValueKey('opened-paper:t2-set1')), findsOneWidget);
       expect(find.byKey(const ValueKey('opened-assessment:c1')), findsOneWidget);
       expect(find.text('AEE CEM · Set 1'), findsOneWidget);
       expect(find.text('Credits'), findsOneWidget, reason: 'only a place redeemed with credits is badged');
       expect(find.byType(LearnCard), findsNWidgets(3));
-      expect(find.text('No courses yet'), findsNothing);
+      expect(find.text('No Courses Yet'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets("the chips under the search show one group at a time; an empty one says so (owner, 12 Nov 2026)", (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(780, 1688);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+      final learning = LearningController(DemoLearningRepository(), assess: _Assess(access));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<LearningController>.value(
+            value: learning,
+            child: LearningScreen(onBack: () {}, title: 'My Courses'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      learning.setMineOnly(true);
+      await tester.pumpAndSettle();
+      for (final key in [
+        'all',
+        'Mock Exams',
+        'Knowledge Assessments',
+        'Flashcards',
+        'ICR Programmes',
+        'Partner Programmes',
+      ]) {
+        expect(find.byKey(ValueKey('my-courses-chip-$key'), skipOffstage: false), findsOneWidget, reason: key);
+      }
+      Future<void> tapChip(String key) async {
+        final chip = find.byKey(ValueKey('my-courses-chip-$key'), skipOffstage: false);
+        await tester.ensureVisible(chip);
+        await tester.pumpAndSettle();
+        await tester.tap(chip);
+        await tester.pumpAndSettle();
+      }
+
+      await tapChip('Mock Exams');
+      expect(find.byKey(const ValueKey('opened-mock:t1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('opened-assessment:c1')), findsNothing, reason: 'another group');
+
+      await tapChip('Knowledge Assessments');
+      expect(find.byKey(const ValueKey('opened-assessment:c1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('opened-mock:t1')), findsNothing);
+
+      await tapChip('Flashcards');
+      expect(find.text('No Flashcards Yet'), findsOneWidget);
+      expect(find.byType(LearnCard), findsNothing);
+      await tester.tap(find.text('Show All'));
+      await tester.pumpAndSettle();
+      expect(find.byType(LearnCard), findsNWidgets(3));
       expect(tester.takeException(), isNull);
     });
   });

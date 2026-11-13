@@ -8,9 +8,13 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/util/links.dart' show openSitePage;
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/detail_sheet.dart';
+import '../../career/company_insights_screen.dart';
+import '../../jobs/jobs_controller.dart';
+import '../../jobs/jobs_repository.dart';
 import '../account_labels.dart';
 import '../account_models.dart';
 import '../account_repository.dart';
+import '../../company/company_rules.dart' show foundedYearHint;
 import '../widgets/account_kit.dart';
 import '../widgets/account_session.dart';
 import '../widgets/photo_picker.dart';
@@ -100,8 +104,19 @@ class CreateCompanyScreen extends StatefulWidget {
   static Widget routed(BuildContext context, {VoidCallback? onBack}) => CreateCompanyScreen(
     onBack: onBack,
     onNextStep: (step, _) => unawaited(openSitePage(context, companyNextStepPath(step))),
-    onViewCompany: (id) => unawaited(openSitePage(context, '/companies/$id')),
+    // The company's page in the app (owner, 7 Nov 2026: the website's page offered the member a review of their own
+    // company); the website's only where no shell is above to read it from.
+    onViewCompany: (id) => unawaited(openCompanyInsightsById(context, companyId: id, jobs: _jobsSourceOf(context))),
   );
+
+  /// The shell's jobs source, which the company page reads with; null below no shell.
+  static JobsRepository? _jobsSourceOf(BuildContext context) {
+    try {
+      return Provider.of<JobsController>(context, listen: false).repository;
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }
 
   @override
   State<CreateCompanyScreen> createState() => _CreateCompanyScreenState();
@@ -113,6 +128,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
   final _legalName = TextEditingController();
   final _website = TextEditingController();
   final _description = TextEditingController();
+  final _foundedYear = TextEditingController();
   final _nameFocus = FocusNode();
   final _legalFocus = FocusNode();
   final _websiteFocus = FocusNode();
@@ -138,7 +154,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
   @override
   void dispose() {
     _c.dispose();
-    for (final x in [_name, _legalName, _website, _description]) {
+    for (final x in [_name, _legalName, _website, _description, _foundedYear]) {
       x.dispose();
     }
     for (final x in [_nameFocus, _legalFocus, _websiteFocus]) {
@@ -160,8 +176,8 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
     if (_c.dirty) {
       final discard = await confirmAction(
         context,
-        title: 'Discard this company page?',
-        message: 'What you entered has not been saved.',
+        title: 'Discard This Company Page?',
+        message: 'Your entries have not been saved.',
         confirm: 'Discard',
       );
       if (!discard || !mounted) return;
@@ -217,7 +233,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
   Future<void> _pickStructure() async {
     final picked = await showAccountPicker<(String, String)>(
       context,
-      title: 'Organisation type',
+      title: 'Organisation Type',
       items: legalStructures,
       labelOf: (o) => o.$2,
       selected: legalStructures.where((o) => o.$1 == _c.legalStructure).firstOrNull,
@@ -274,7 +290,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
           child: Scaffold(
             // White, the blocks parted by hairlines, no boxes (owner, 6 Nov 2026).
             backgroundColor: Colors.white,
-            appBar: AccountBar(title: 'Create a company page', onBack: _back),
+            appBar: AccountBar(title: 'Create a Company Page', onBack: _back),
             body: created != null
                 ? _Welcome(company: created, onNextStep: widget.onNextStep, onDone: _leave)
                 : _c.canJoinCompanies == false
@@ -299,8 +315,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
             child: Text(
-              'Give your company one home on ICR for hiring, buying and selling. It takes about a minute. '
-              'Documents are optional here; we ask for them when you first post a job, bid or sell.',
+              'Create a company page to post your services, products, participate in RFQ’s, post jobs or courses.',
               style: AccountText.body,
             ),
           ),
@@ -313,22 +328,21 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
           ),
           if (c.errors.isNotEmpty) _summary(),
           _Block(
-            title: 'Company identity',
+            title: 'Company Details',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('How members find and recognise it.', style: AccountText.meta),
-                const SizedBox(height: 12),
+                const SizedBox(height: 4),
                 Container(
                   key: _anchors[CompanyField.name],
                   child: AccountField(
-                    label: 'Company name',
+                    label: 'Company Name',
                     required: true,
                     controller: _name,
                     fieldKey: const Key('create.name'),
                     focusNode: _nameFocus,
                     hint: 'Acme Facility Services',
-                    helper: 'The brand buyers and candidates know you by.',
+                    helper: 'Company Brand Name / Legal Name',
                     error: c.errors[CompanyField.name],
                     maxLength: 120,
                     textCapitalization: TextCapitalization.words,
@@ -347,7 +361,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                     key: _anchors[CompanyField.legalName],
                     padding: const EdgeInsets.only(top: 6),
                     child: AccountField(
-                      label: 'Registered legal name',
+                      label: 'Registered Legal Name',
                       controller: _legalName,
                       fieldKey: const Key('create.legalName'),
                       focusNode: _legalFocus,
@@ -370,12 +384,12 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                 Container(
                   key: _anchors[CompanyField.website],
                   child: AccountField(
-                    label: 'Company website',
+                    label: 'Company Website',
                     controller: _website,
                     fieldKey: const Key('create.website'),
                     focusNode: _websiteFocus,
                     hint: 'www.yourcompany.com',
-                    helper: 'Optional — acme.com or https://acme.com',
+                    helper: 'Optional. For example, acme.com or https://acme.com',
                     error: c.errors[CompanyField.website],
                     keyboardType: TextInputType.url,
                     textCapitalization: TextCapitalization.none,
@@ -390,8 +404,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Used to match it with the right jobs, buyers and suppliers.', style: AccountText.meta),
-                const SizedBox(height: 12),
+                const SizedBox(height: 4),
                 Container(
                   key: _anchors[CompanyField.industry],
                   child: AccountSelectField(
@@ -410,7 +423,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                     key: const Key('create.city'),
                     label: 'Where is the head office?',
                     required: true,
-                    hint: c.citiesLoading ? 'Loading cities…' : 'Choose a city',
+                    hint: c.citiesLoading ? 'Loading cities…' : 'Select a city',
                     value: c.city?.label,
                     error: c.errors[CompanyField.city] ?? c.citiesError,
                     onTap: c.citiesLoading ? null : _pickCity,
@@ -421,21 +434,37 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                   key: _anchors[CompanyField.legalStructure],
                   child: AccountSelectField(
                     key: const Key('create.structure'),
-                    label: 'Organisation type',
+                    label: 'Organisation Type',
                     required: true,
-                    hint: 'Choose how it is set up',
+                    hint: 'Select how it is set up',
                     value: legalStructures.where((o) => o.$1 == c.legalStructure).firstOrNull?.$2,
-                    helper: 'Decides which documents verification asks for.',
+                    helper: 'Determines which documents verification requires.',
                     error: c.errors[CompanyField.legalStructure],
                     onTap: _pickStructure,
                   ),
                 ),
                 if (c.legalStructure != null) _documents(c.legalStructure!),
+                Container(
+                  key: _anchors[CompanyField.foundedYear],
+                  padding: EdgeInsets.only(top: c.legalStructure != null ? 12 : 0),
+                  child: AccountField(
+                    label: 'Year Founded',
+                    controller: _foundedYear,
+                    fieldKey: const Key('create.foundedYear'),
+                    hint: 'e.g. 2014',
+                    helper: foundedYearHint(),
+                    error: c.errors[CompanyField.foundedYear],
+                    maxLength: 4,
+                    keyboardType: TextInputType.number,
+                    textCapitalization: TextCapitalization.none,
+                    onChanged: c.setFoundedYear,
+                  ),
+                ),
               ],
             ),
           ),
           _Block(
-            title: 'Logo and tagline',
+            title: 'Logo and Tagline',
             trailing: const AccountChip(label: 'Optional'),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -451,12 +480,9 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                   label: 'Tagline',
                   controller: _description,
                   fieldKey: const Key('create.description'),
-                  hint: 'What the company does, in a sentence',
-                  helper: 'Buyers and candidates read this first.',
                   maxLength: _descriptionMax,
                   maxLines: 4,
                   minLines: 3,
-                  counter: true,
                   onChanged: c.setDescription,
                 ),
               ],
@@ -465,24 +491,14 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
           _Block(
             child: Container(
               key: _anchors[CompanyField.authorised],
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  AccountCheck(
-                    key: const Key('create.authorised'),
-                    value: c.authorised,
-                    onChanged: c.setAuthorised,
-                    label: 'I’m an authorised representative of $label and may create and manage its page on ICR.',
-                    error: c.errors[CompanyField.authorised],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 12),
-                    child: Text(
-                      'ICR checks these details, and any documents you add, when the company is verified.',
-                      style: AccountText.meta,
-                    ),
-                  ),
-                ],
+              child: AccountCheck(
+                key: const Key('create.authorised'),
+                value: c.authorised,
+                onChanged: c.setAuthorised,
+                label:
+                    'I agree to the terms and policies of ICR and I am an authorised representative of $label to '
+                    'create and manage this page on ICR.',
+                error: c.errors[CompanyField.authorised],
               ),
             ),
           ),
@@ -494,25 +510,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
               decoration: BoxDecoration(color: const Color(0xFFFFF1F2), borderRadius: BorderRadius.circular(10)),
               child: Text(c.submitError!, style: AccountText.error.copyWith(fontSize: 14)),
             ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 1),
-                  child: Icon(Symbols.shield, size: 16, color: AppColors.slate500),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'You become the page’s admin. Everything here can be changed later.',
-                    style: AccountText.meta,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 6),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Column(
@@ -520,7 +518,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
               children: [
                 AccountButton(
                   key: const Key('create.submit'),
-                  label: c.submitting ? 'Creating…' : 'Create page',
+                  label: c.submitting ? 'Creating…' : 'Create Page',
                   busy: c.submitting,
                   onPressed: _submit,
                 ),
@@ -747,8 +745,8 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
             TextSpan(
               style: AccountText.label,
               children: [
-                const TextSpan(text: 'Company size *'),
-                TextSpan(text: '  · employees', style: AccountText.meta),
+                const TextSpan(text: 'Company Size *'),
+                TextSpan(text: '  · No. of Employees', style: AccountText.meta),
               ],
             ),
           ),
@@ -849,7 +847,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
           alignment: Alignment.centerLeft,
           child: AccountButton(
             key: const Key('create.logo.add'),
-            label: c.logoBusy ? 'Uploading…' : 'Add logo',
+            label: c.logoBusy ? 'Uploading…' : 'Add Logo',
             icon: Icons.add_photo_alternate_outlined,
             outlined: true,
             expand: false,
@@ -858,7 +856,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
           ),
         ),
         const SizedBox(height: 6),
-        Text('PNG, JPG or WEBP — up to 2MB', style: AccountText.meta),
+        Text('PNG, JPG or WEBP, up to 2MB.', style: AccountText.meta),
         if (c.logoError != null)
           Padding(
             padding: const EdgeInsets.only(top: 6),
@@ -892,7 +890,7 @@ class _StaffAccount extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Staff accounts don’t create companies', style: AccountText.cardTitle),
+                  Text('Staff Accounts Don’t Create Companies', style: AccountText.cardTitle),
                   const SizedBox(height: 4),
                   Text(
                     'ICR staff accounts are personal: they do not create or join companies.',
@@ -1004,7 +1002,7 @@ class _HeadOfficeSheetState extends State<_HeadOfficeSheet> {
               child: shown.isEmpty
                   ? Center(
                       child: Text(
-                        _searching || q.isEmpty ? '' : 'No city by that name yet',
+                        _searching || q.isEmpty ? '' : 'No city found with that name.',
                         key: const Key('create.city.none'),
                         style: AccountText.meta,
                       ),
@@ -1045,31 +1043,32 @@ class _Welcome extends StatelessWidget {
     (
       CompanyNextStep.team,
       Symbols.group_add,
-      'Bring your team',
-      'Invite colleagues by email, or approve the people who ask to join.',
-      'Invite people',
+      'Build Your Team',
+      'Invite colleagues or approve requests to join your company.',
+      'Invite Team Members',
     ),
     (
       CompanyNextStep.verify,
       Symbols.verified,
-      'Get verified',
-      'Needed to publish jobs, contact candidates and bid. Have the PAN, GSTIN and registration certificate to hand.',
-      'Start verification',
+      'Verify Your Company',
+      'Required to post jobs, contact candidates and participate in bidding. Keep your PAN, GSTIN and registration '
+          'documents ready.',
+      'Start Verification',
     ),
     (
       CompanyNextStep.sell,
       Symbols.storefront,
       'Sell on ICR',
-      'Start selling to appear in Supplier Mart and answer buyers’ requirements. Your listing is filled from your '
+      'Start selling to appear in the Marketplace and answer buyers’ requirements. Your listing is filled from your '
           'company and its services.',
-      'Start selling',
+      'Start Selling',
     ),
     (
       CompanyNextStep.details,
       Symbols.edit,
-      'Finish the details',
-      'Description, founding year, address and contact — what buyers and candidates read.',
-      'Edit details',
+      'Complete Company Details',
+      'Add your company description, establishment year, address and contact details.',
+      'Edit Company Profile',
     ),
   ];
 
@@ -1091,7 +1090,7 @@ class _Welcome extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        '${company.name} is on ICR',
+                        'Welcome to ICR, ${company.name}!',
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: AccountText.name.copyWith(fontSize: 22, height: 1.25),
@@ -1101,8 +1100,7 @@ class _Welcome extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'You are its admin and acting for it now. Here is what to do next, in any order, whenever you are '
-                  'ready.',
+                  'You’re now the company admin. Complete these steps to build your company presence on ICR.',
                   style: AccountText.body,
                 ),
               ],

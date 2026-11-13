@@ -10,6 +10,7 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/auth/social_sign_in.dart';
 import '../../core/config.dart';
 import '../account/account_repository.dart';
+import '../account/account_rules.dart' show canTextPhone, normalizePhone;
 import '../account/api_account_repository.dart';
 import '../account/demo_account_repository.dart';
 import 'auth_palette.dart';
@@ -26,8 +27,11 @@ enum SignupStep { join, about, work }
 /// 1. **Join** — Google or LinkedIn, or an email and a password, and the tick
 ///    that accepts the Terms and Privacy Policy. "Join" emails a 6-digit code;
 ///    nothing is made yet.
-/// 2. **About you** — first and last name and the code (`/auth/email/verify-code`).
-///    "Continue" makes the account (`POST /auth/register`) and signs in.
+/// 2. **About you** — first and last name, the mobile number (required by the
+///    API since 29 Oct 2026; an Indian number is proven with a texted OTP,
+///    `/auth/phone/send-otp` + `verify-otp`, any other is saved as typed) and
+///    the code (`/auth/email/verify-code`). "Continue" makes the account
+///    (`POST /auth/register`) and signs in.
 /// 3. **Your work** — job title and company, or between roles, written to the
 ///    profile the way the website writes it. Skippable.
 ///
@@ -60,8 +64,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _first = TextEditingController();
   final _last = TextEditingController();
   final _code = TextEditingController();
+  final _phone = TextEditingController();
+  final _otp = TextEditingController();
   final _passwordFocus = FocusNode();
   final _lastFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+  final _otpFocus = FocusNode();
   final _codeFocus = FocusNode();
 
   late final AccountRepository _account;
@@ -72,6 +80,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _agreeError = false;
   ({String? email, String? password}) _joinErrors = (email: null, password: null);
   ({String? firstName, String? lastName, String? code}) _aboutErrors = (firstName: null, lastName: null, code: null);
+  ({String? phone, String? otp}) _phoneErrors = (phone: null, otp: null);
   bool _busy = false;
   String? _error;
   bool _duplicate = false;
@@ -82,6 +91,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _codeAccepted = false;
   int _wait = 0;
   Timer? _ticker;
+
+  // The mobile number (the website's `PhoneVerifyInline acceptUntextable`): an Indian number is proven with its
+  // OTP before the account is made; any other passes its country's format check and is saved unconfirmed.
+  String? _otpSentTo;
+  String? _phoneVerified;
+  String? _phoneDevCode;
+  int _otpWait = 0;
+  Timer? _otpTicker;
+
+  String? get _e164 => normalizePhone(_phone.text);
+  bool get _textable => canTextPhone(_phone.text);
+
+  /// The number still needs its OTP: Indian, and not the one already proven.
+  bool get _otpNeeded => _textable && _e164 != null && _phoneVerified != _e164;
+
+  /// The OTP went to the number as typed now, and waits to be entered.
+  bool get _otpPending => _otpNeeded && _otpSentTo == _e164;
 
   // Google / LinkedIn
   SocialSignup? _social;
@@ -119,13 +145,51 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   void dispose() {
     _ticker?.cancel();
-    for (final c in [_email, _password, _first, _last, _code]) {
+    _otpTicker?.cancel();
+    for (final c in [_email, _password, _first, _last, _code, _phone, _otp]) {
       c.dispose();
     }
-    for (final f in [_passwordFocus, _lastFocus, _codeFocus]) {
+    for (final f in [_passwordFocus, _lastFocus, _phoneFocus, _otpFocus, _codeFocus]) {
       f.dispose();
     }
     super.dispose();
+  }
+
+  void _startOtpCooldown() {
+    _otpTicker?.cancel();
+    setState(() => _otpWait = widget.resendCooldown);
+    _otpTicker = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return t.cancel();
+      setState(() => _otpWait = _otpWait > 0 ? _otpWait - 1 : 0);
+      if (_otpWait == 0) t.cancel();
+    });
+  }
+
+  /// Texts the OTP to the Indian number typed ("Send OTP"); a refused send shows under the number.
+  Future<void> _sendOtp() async {
+    if (_busy || _otpWait > 0) return;
+    final phone = _e164;
+    if (phone == null || !_textable) {
+      setState(() => _phoneErrors = (phone: phoneProblem(_phone.text), otp: null));
+      return;
+    }
+    setState(() {
+      _phoneErrors = (phone: null, otp: null);
+      _error = null;
+    });
+    try {
+      final code = await context.read<AuthController>().sendPhoneOtp(phone);
+      if (!mounted) return;
+      setState(() {
+        _otpSentTo = phone;
+        _phoneDevCode = code;
+        _otp.clear();
+      });
+      _startOtpCooldown();
+      _otpFocus.requestFocus();
+    } on ApiError catch (e) {
+      if (mounted) setState(() => _phoneErrors = (phone: e.message, otp: null));
+    }
   }
 
   void _startCooldown() {
@@ -173,7 +237,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (!_available.contains(provider)) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('${provider.label} sign-in is not available yet')));
+        ..showSnackBar(SnackBar(content: Text('${provider.label} sign-in is not available yet.')));
       return;
     }
     FocusScope.of(context).unfocus();
@@ -259,15 +323,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
       code: _code.text.trim(),
       needsCode: askCode,
     );
+    // The number: required; an Indian one proven with its OTP, sent first from the field's own link.
+    final phoneIssue = phoneProblem(_phone.text);
+    final otpIssue = phoneIssue != null || !_otpNeeded
+        ? null
+        : (_otpPending ? otpProblem(_otp.text.trim()) : 'Send the OTP to your mobile number first.');
     setState(() {
       _aboutErrors = problems;
+      _phoneErrors = (phone: phoneIssue, otp: otpIssue);
       _error = null;
       _duplicate = false;
     });
     if (problems.firstName != null || problems.lastName != null || problems.code != null) return;
+    if (phoneIssue != null || otpIssue != null) return;
     final auth = context.read<AuthController>();
+    final phone = _e164!;
     setState(() => _busy = true);
     try {
+      if (_otpNeeded) {
+        try {
+          await auth.verifyPhoneOtp(phone, _otp.text.trim());
+          _phoneVerified = phone;
+        } on ApiError catch (e) {
+          if (mounted) setState(() => _phoneErrors = (phone: null, otp: e.message));
+          return;
+        }
+      }
       if (askCode) {
         try {
           await auth.verifyEmailCode(_address, _code.text.trim());
@@ -278,9 +359,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
         }
       }
       if (_isSocial) {
-        await auth.completeSocialSignup(signup: _social!, firstName: _first.text, lastName: _last.text);
+        await auth.completeSocialSignup(signup: _social!, firstName: _first.text, lastName: _last.text, phone: phone);
       } else {
-        await auth.register(email: _address, password: _password.text, firstName: _first.text, lastName: _last.text);
+        await auth.register(
+          email: _address,
+          password: _password.text,
+          firstName: _first.text,
+          lastName: _last.text,
+          phone: phone,
+        );
       }
       TextInput.finishAutofillContext();
       if (mounted) setState(() => _step = SignupStep.work);
@@ -329,7 +416,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SignupHeader(step: 2, title: 'About you'),
+          const SignupHeader(step: 2, title: 'About You'),
           if (_pendingError == null)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 60),
@@ -339,12 +426,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
             const SizedBox(height: 22),
             AuthErrorLine(message: _pendingError!),
             const SizedBox(height: 8),
-            Text('That sign-in has expired. Please start again from the sign-in page.', style: AuthType.small(p)),
+            Text('That sign-in has expired. Start again from the Sign In page.', style: AuthType.small(p)),
             const SizedBox(height: 18),
-            AuthOutlinedButton(label: 'Try again', onPressed: _loadPending),
+            AuthOutlinedButton(label: 'Try Again', onPressed: _loadPending),
             const SizedBox(height: 6),
             Center(
-              child: AuthLink(key: const Key('signup.backToSignIn'), label: 'Back to sign in', onTap: _toSignIn),
+              child: AuthLink(key: const Key('signup.backToSignIn'), label: 'Back to Sign In', onTap: _toSignIn),
             ),
           ],
         ],
@@ -357,8 +444,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           step: _step.index + 1,
           title: switch (_step) {
             SignupStep.join => 'Join ICR',
-            SignupStep.about => 'About you',
-            SignupStep.work => 'Your work',
+            SignupStep.about => 'About You',
+            SignupStep.work => 'Your Work',
           },
         ),
         const SizedBox(height: 18),
@@ -398,7 +485,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           AuthErrorLine(message: 'That email already has an ICR account.'),
           Align(
             alignment: Alignment.centerLeft,
-            child: AuthLink(key: const Key('signup.duplicateSignIn'), label: 'Sign in instead', onTap: _toSignIn),
+            child: AuthLink(key: const Key('signup.duplicateSignIn'), label: 'Sign In Instead', onTap: _toSignIn),
           ),
           const SizedBox(height: 10),
         ],
@@ -416,7 +503,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               Text('Already have an account? ', style: AuthType.body(p)),
               AuthLink(
                 key: const Key('signup.signIn'),
-                label: 'Sign in',
+                label: 'Sign In',
                 style: AuthType.bodyLink(p),
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
                 onTap: _busy ? () {} : _toSignIn,
@@ -428,33 +515,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
+  /// Email, password and the consent, then "Join"; under a hairline, "Sign Up
+  /// Using" over the Google and LinkedIn pills (owner, 12 Nov 2026: the marks
+  /// moved from the top of the card to under the form, headed, and larger).
   Widget _join(BuildContext context) {
+    final p = AuthPalette.of(context);
     final busy = _busy || _socialBusy != null;
     return AutofillGroup(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              for (final (i, provider) in SocialProvider.values.indexed) ...[
-                if (i > 0) const SizedBox(width: 43),
-                SocialIconButton(
-                  key: Key('signup.${provider.name}'),
-                  provider: provider,
-                  available: _available.contains(provider),
-                  busy: _socialBusy == provider,
-                  onPressed: busy ? null : () => _continueWith(provider),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 18),
-          const AuthDivider(),
-          const SizedBox(height: 14),
           AuthField(
             fieldKey: const Key('signup.email'),
-            label: 'Work Email',
+            label: 'Email',
             controller: _email,
             icon: Icons.mail_outline_rounded,
             hint: 'name@company.com',
@@ -465,11 +538,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
             autocorrect: false,
             onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
           ),
-          AuthHelperLine(error: _joinErrors.email, helper: "We'll email you a code to confirm it."),
+          AuthHelperLine(error: _joinErrors.email, helper: 'We will email you a verification code.'),
           const SizedBox(height: 10),
           AuthField(
             fieldKey: const Key('signup.password'),
-            label: 'Create Password',
+            label: 'Password',
             controller: _password,
             focusNode: _passwordFocus,
             icon: Icons.lock_outline_rounded,
@@ -506,20 +579,113 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   }),
             child: const TermsSentence(),
           ),
-          if (_agreeError)
-            const AuthHelperLine(error: 'Please agree to the Terms of Service and Privacy Policy to join.'),
+          if (_agreeError) const AuthHelperLine(error: 'Agree to the Terms of Service and Privacy Policy to join.'),
           if (_error != null) ...[const SizedBox(height: 12), AuthErrorLine(message: _error!)],
           const SizedBox(height: 18),
           AuthPrimaryButton(
             key: const Key('signup.join'),
             label: 'Join',
-            busyLabel: 'Sending your code…',
+            busyLabel: 'Sending Code…',
             busy: _busy,
             onPressed: _socialBusy == null ? _submitJoin : null,
+          ),
+          const SizedBox(height: 20),
+          Divider(color: p.rule, thickness: 1, height: 1),
+          const SizedBox(height: 16),
+          SocialProvidersBlock(
+            heading: 'Sign Up Using',
+            headingStyle: AuthType.body(p).copyWith(color: p.text),
+            keyPrefix: 'signup',
+            style: SocialPillStyle.of(p),
+            width: AuthScaffold.contentWidth(context),
+            available: _available,
+            busy: _socialBusy,
+            enabled: !busy,
+            onPressed: _continueWith,
           ),
         ],
       ),
     );
+  }
+
+  /// The mobile number and, for an Indian one, its OTP (the website's `PhoneVerifyInline acceptUntextable`).
+  List<Widget> _phoneFields(BuildContext context, {required bool askCode}) {
+    final p = AuthPalette.of(context);
+    final verified = _e164 != null && _phoneVerified == _e164;
+    final untextable = _e164 != null && !_textable;
+    final String helper;
+    if (verified) {
+      helper = 'Number verified.';
+    } else if (untextable) {
+      helper = 'An OTP can be sent only to Indian (+91) numbers. This number is saved as entered.';
+    } else if (_otpPending) {
+      helper = 'OTP sent to ${_phone.text.trim()}.';
+    } else {
+      helper = 'Indian (+91) numbers receive an OTP by text. Other numbers are saved as entered.';
+    }
+    final Widget? trailing;
+    if (_otpNeeded && !_otpPending) {
+      trailing = AuthLink(key: const Key('signup.sendOtp'), label: 'Send OTP', onTap: _busy ? () {} : _sendOtp);
+    } else if (_otpPending) {
+      trailing = AuthLink(
+        key: const Key('signup.resendOtp'),
+        label: _otpWait > 0 ? 'Resend in ${_otpWait}s' : 'Resend OTP',
+        style: AuthType.link(p).copyWith(fontSize: 14, color: _otpWait > 0 || _busy ? p.muted : p.accent),
+        onTap: _otpWait > 0 || _busy ? () {} : _sendOtp,
+      );
+    } else {
+      trailing = null;
+    }
+    return [
+      AuthField(
+        fieldKey: const Key('signup.phone'),
+        label: 'Mobile Number',
+        controller: _phone,
+        focusNode: _phoneFocus,
+        icon: Icons.smartphone_outlined,
+        hint: '+91 98765 43210',
+        enabled: !_busy,
+        keyboardType: TextInputType.phone,
+        textInputAction: _otpPending || askCode ? TextInputAction.next : TextInputAction.done,
+        autofillHints: const [AutofillHints.telephoneNumber],
+        autocorrect: false,
+        headerTrailing: trailing,
+        // The links and the helper follow the number as it is typed.
+        onChanged: (_) => setState(() => _phoneErrors = (phone: null, otp: _phoneErrors.otp)),
+        onFieldSubmitted: (_) => _otpPending
+            ? _otpFocus.requestFocus()
+            : askCode
+            ? _codeFocus.requestFocus()
+            : _submitAbout(),
+      ),
+      // Before the OTP was sent, its problem ("Send the OTP … first.") sits under the number itself.
+      AuthHelperLine(error: _phoneErrors.phone ?? (_otpPending ? null : _phoneErrors.otp), helper: helper),
+      if (_otpPending) ...[
+        const SizedBox(height: 8),
+        AuthField(
+          fieldKey: const Key('signup.phoneCode'),
+          label: 'Enter Mobile OTP',
+          controller: _otp,
+          focusNode: _otpFocus,
+          icon: Icons.sms_outlined,
+          hint: '6-digit OTP',
+          enabled: !_busy,
+          keyboardType: TextInputType.number,
+          autofillHints: const [AutofillHints.oneTimeCode],
+          maxLength: 6,
+          letterSpacing: 4,
+          onFieldSubmitted: (_) => askCode ? _codeFocus.requestFocus() : _submitAbout(),
+        ),
+        AuthHelperLine(error: _phoneErrors.otp),
+        DevCodeNote(
+          code: _phoneDevCode,
+          onUse: (code) {
+            _otp.text = code;
+            setState(() => _phoneErrors = (phone: _phoneErrors.phone, otp: null));
+          },
+        ),
+      ],
+    ];
   }
 
   Widget _about(BuildContext context) {
@@ -531,7 +697,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         children: [
           AuthField(
             fieldKey: const Key('signup.firstName'),
-            label: 'First name',
+            label: 'First Name',
             controller: _first,
             icon: Icons.person_outline_rounded,
             enabled: !_busy,
@@ -545,23 +711,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
           const SizedBox(height: 8),
           AuthField(
             fieldKey: const Key('signup.lastName'),
-            label: 'Last name',
+            label: 'Last Name',
             controller: _last,
             focusNode: _lastFocus,
             icon: Icons.person_outline_rounded,
             enabled: !_busy,
             maxLength: 80,
             textCapitalization: TextCapitalization.words,
-            textInputAction: askCode ? TextInputAction.next : TextInputAction.done,
+            textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.familyName],
-            onFieldSubmitted: (_) => askCode ? _codeFocus.requestFocus() : _submitAbout(),
+            onFieldSubmitted: (_) => _phoneFocus.requestFocus(),
           ),
           AuthHelperLine(error: _aboutErrors.lastName),
+          const SizedBox(height: 8),
+          ..._phoneFields(context, askCode: askCode),
           if (askCode) ...[
             const SizedBox(height: 8),
             AuthField(
               fieldKey: const Key('signup.code'),
-              label: 'Code from your email',
+              label: 'Email Verification Code',
               controller: _code,
               focusNode: _codeFocus,
               icon: Icons.pin_outlined,
@@ -575,7 +743,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ? null
                   : AuthLink(
                       key: const Key('signup.changeEmail'),
-                      label: 'Change email',
+                      label: 'Change Email',
                       onTap: _busy
                           ? () {}
                           : () => setState(() {
@@ -585,7 +753,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
               onFieldSubmitted: (_) => _submitAbout(),
             ),
-            AuthHelperLine(error: _aboutErrors.code, helper: 'We sent a code to $_address. It expires in 10 minutes.'),
+            AuthHelperLine(error: _aboutErrors.code, helper: 'Code sent to $_address. It expires in 10 minutes.'),
             DevCodeNote(
               code: _devCode,
               onUse: (code) {
@@ -600,10 +768,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
               child: Wrap(
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Text('No email? Check spam, or ', style: AuthType.small(p)),
+                  Text('No email? Check your spam folder. ', style: AuthType.small(p)),
                   AuthLink(
                     key: const Key('signup.resend'),
-                    label: _wait > 0 ? 'send a new one in ${_wait}s' : 'send a new one',
+                    label: _wait > 0 ? 'Resend in ${_wait}s' : 'Resend Code',
                     style: AuthType.link(p).copyWith(fontSize: 14, color: _wait > 0 || _busy ? p.muted : p.accent),
                     onTap: _wait > 0 || _busy ? () {} : _resend,
                   ),
@@ -614,13 +782,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
           if (_error != null) ...[const SizedBox(height: 12), AuthErrorLine(message: _error!)],
           if (_isSocial) ...[
             const SizedBox(height: 18),
-            const TermsSentence(lead: 'By selecting Agree & join, you agree to ICR’s', center: true),
+            const TermsSentence(lead: 'By selecting Agree & Join, you agree to ICR’s', center: true),
           ],
           const SizedBox(height: 16),
           AuthPrimaryButton(
             key: const Key('signup.continue'),
-            label: _isSocial ? 'Agree & join' : 'Continue',
-            busyLabel: 'Creating your account…',
+            label: _isSocial ? 'Agree & Join' : 'Continue',
+            busyLabel: 'Creating Account…',
             busy: _busy,
             onPressed: _submitAbout,
           ),

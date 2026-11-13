@@ -13,6 +13,8 @@ class SessionUser {
     this.mentorsSomeone = false,
     this.learningRoles = const [],
     this.learningPartner = false,
+    this.permissions = const [],
+    this.scopedPermissions = const [],
   });
 
   final String id;
@@ -41,6 +43,15 @@ class SessionUser {
   /// give learning roles on the team page.
   final bool learningPartner;
 
+  /// The staff permission keys the person was given through a role (`UserDto.permissions`: `chapters:manage`,
+  /// `councils:manage`, `events:manage`…). A Super Admin holds every key without any being listed: ask
+  /// [holdsPermission], never this list.
+  final List<String> permissions;
+
+  /// Of [permissions], the keys held only over some chapters, councils or institutes (`UserDto.scopedPermissions`):
+  /// such a grant edits those records and cannot create or retire one.
+  final List<String> scopedPermissions;
+
   String get fullName => '$firstName $lastName'.trim();
 
   String get initials {
@@ -63,8 +74,22 @@ class SessionUser {
     mentorsSomeone: json['mentorsSomeone'] == true,
     learningRoles: [for (final r in (json['learningRoles'] as List? ?? const [])) '$r'],
     learningPartner: json['learningPartner'] == true,
+    permissions: [for (final k in (json['permissions'] as List? ?? const [])) '$k'],
+    scopedPermissions: [for (final k in (json['scopedPermissions'] as List? ?? const [])) '$k'],
   );
 }
+
+/// Whether the person may use what a staff permission key opens: the website's `hasPermission`. A Super Admin
+/// holds every key; anyone else holds the ones a role gave them (Chapters Admin, Councils Admin, Events Admin,
+/// Community Manager…), which a Super Admin assigns on the website's Roles page.
+bool holdsPermission(SessionUser? user, String key) =>
+    user != null && (user.role == 'SUPER_ADMIN' || user.permissions.contains(key));
+
+/// Whether the key is held over every record, not only some chapters or councils: the website's
+/// `hasPermissionEverywhere`. Creating and retiring a record need this; the API refuses them otherwise.
+bool holdsPermissionEverywhere(SessionUser? user, String key) =>
+    user != null &&
+    (user.role == 'SUPER_ADMIN' || (user.permissions.contains(key) && !user.scopedPermissions.contains(key)));
 
 /// Whether the recruitment pitch ("Become an ICR Mentor", "Apply as Mentor") is for this person: the website's
 /// `canOfferToMentor`. A visitor, yes; a member only when they never applied (no mentor profile in any state),

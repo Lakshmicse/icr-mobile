@@ -50,6 +50,11 @@ class OfferingsPanel extends StatefulWidget {
 class _OfferingsPanelState extends State<OfferingsPanel> {
   late final OfferingsController _c;
 
+  /// The tab open (owner, 7 Nov 2026: "Show tabs below under offerings: 1:1 mentoring | Group Mentoring |
+  /// Resources"): 1:1 sessions, programmes and ongoing plans; the group sessions hosted; the files sold or given.
+  int _tab = 0;
+  static const _tabs = ['1:1 Mentoring', 'Group Mentoring', 'Resources'];
+
   @override
   void initState() {
     super.initState();
@@ -75,9 +80,20 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
             children: [
               _gatesBlock(context),
-              ..._storefrontSections(context),
-              ..._plansSections(context),
-              ..._sessionsSection(context),
+              Padding(
+                padding: const EdgeInsets.only(top: 10, bottom: 4),
+                child: SegmentTabs(
+                  key: const ValueKey('offerings-tabs'),
+                  labels: _tabs,
+                  selected: _tab,
+                  onSelect: (i) => setState(() => _tab = i),
+                ),
+              ),
+              ...switch (_tab) {
+                0 => [..._oneToOneSections(context), ..._plansSections(context)],
+                1 => _sessionsSection(context),
+                _ => _resourceSections(context),
+              },
             ],
           ),
         );
@@ -91,10 +107,13 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
     final l = _c.storefront;
     if (!l.loaded && l.loading) return const _Loading();
     if (!l.loaded && l.error != null) {
-      return _SectionError(title: "Couldn't load your storefront", error: l.error!, onRetry: l.load);
+      return _SectionError(title: 'Unable to Load Your Storefront', error: l.error!, onRetry: l.load);
     }
     final g = _c.gates;
     if (g == null) return const SizedBox.shrink();
+    // A live desk shows no storefront card (owner, 7 Nov 2026: "Store front has to be completely removed here");
+    // while something still stops the mentor selling, the card says what, with the seller terms to accept.
+    if (g.live) return const SizedBox.shrink();
     return GatesCard(
       gates: g,
       listings: _c.listingsUsed,
@@ -110,14 +129,14 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
       context: context,
       builder: (dialog) => StatefulBuilder(
         builder: (dialog, setState) => AlertDialog(
-          title: Text('Seller terms ${g.termsCurrentVersion}'),
+          title: Text('Seller Terms ${g.termsCurrentVersion}'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'ICR collects payment and settles your earnings monthly by bank transfer. A platform fee is taken on each sale; '
-                'the Earnings tab shows the figures. If a paid session is cancelled, the member is refunded. '
+                'ICR collects payment and settles your earnings monthly by bank transfer. A platform fee is taken on each sale. '
+                'The Earnings tab shows the figures. If a paid session is cancelled, the member is refunded. '
                 'The mentor code of conduct applies to paid work in the same way as to free mentoring.',
                 style: MentoringText.body,
               ),
@@ -127,7 +146,7 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
                 onTap: () => widget.links.openSite(context, '/terms'),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Text('Read the full terms', style: MentoringText.buttonQuiet),
+                  child: Text('Read the Full Terms', style: MentoringText.buttonQuiet),
                 ),
               ),
               CheckboxListTile(
@@ -141,10 +160,10 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Not now')),
+            TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Not Now')),
             TextButton(
               onPressed: read ? () => Navigator.pop(dialog, true) : null,
-              child: const Text('Accept and open'),
+              child: const Text('Accept and Open'),
             ),
           ],
         ),
@@ -157,25 +176,25 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
 
   // --- services ----------------------------------------------------------------------------
 
-  List<Widget> _storefrontSections(BuildContext context) {
+  /// The 1:1 mentoring tab's first half: sessions and programmes (the ongoing plans follow).
+  List<Widget> _oneToOneSections(BuildContext context) {
     final l = _c.storefront;
     if (!l.loaded) return const [];
     final live = _c.gates?.live ?? false;
-    final older = [..._c.legacySeats, ..._c.retired.where((r) => r.kind != ServiceKind.groupSeat)];
     return [
-      const SectionTitle(title: '1:1 mentoring', top: 18),
+      const SectionTitle(title: '1:1 Mentoring', top: 8),
       ActionWrap(
         top: 0,
         children: [
           QuietButton(
             key: const ValueKey('add-session'),
-            label: 'Add a 1:1 session',
+            label: 'Add a 1:1 Session',
             icon: LucideIcons.plus,
             onPressed: () => _addService(context, ServiceKind.oneOnOne),
           ),
           QuietButton(
             key: const ValueKey('add-programme'),
-            label: 'Add a programme',
+            label: 'Add a Programme',
             icon: LucideIcons.plus,
             onPressed: () => _addPlan(context, programme: true),
           ),
@@ -185,28 +204,37 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
       if (_c.singles.isEmpty && _c.programmes.isEmpty)
         _Hint(
           live
-              ? 'Nothing listed yet. A session is booked in one go; a programme is a fixed run of sessions.'
+              ? 'Nothing listed yet. A session is a single booking. A programme is a fixed series of sessions.'
               : 'Open your storefront to list 1:1 mentoring.',
         ),
       for (final s in _c.singles) _serviceRow(context, s),
       for (final p in _c.programmes) _planRow(context, p),
-      const SectionTitle(title: 'Resources'),
+    ];
+  }
+
+  /// The Resources tab: the files sold or given away, and any older listings.
+  List<Widget> _resourceSections(BuildContext context) {
+    final l = _c.storefront;
+    if (!l.loaded) return const [];
+    final older = [..._c.legacySeats, ..._c.retired.where((r) => r.kind != ServiceKind.groupSeat)];
+    return [
+      const SectionTitle(title: 'Resources', top: 8),
       ActionWrap(
         top: 0,
         children: [
           QuietButton(
             key: const ValueKey('add-resource'),
-            label: 'Add a resource',
+            label: 'Add a Resource',
             icon: LucideIcons.plus,
             onPressed: () => _addService(context, ServiceKind.resource),
           ),
         ],
       ),
       const SizedBox(height: 10),
-      if (_c.resources.isEmpty) const _Hint('No resources. A guide or a template, paid or free as a lead magnet.'),
+      if (_c.resources.isEmpty) const _Hint('No resources yet. Add a guide or a template, paid or free.'),
       for (final s in _c.resources) _serviceRow(context, s),
       if (older.isNotEmpty) ...[
-        const SectionTitle(title: 'Older listings'),
+        const SectionTitle(title: 'Older Listings'),
         const _Hint(
           'Seats are now sold from the group session itself. These older listings can be edited, paused or deleted.',
         ),
@@ -264,23 +292,23 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
     final l = _c.plans;
     if (!l.loaded && l.loading) return const [_Loading()];
     if (!l.loaded && l.error != null) {
-      return [_SectionError(title: "Couldn't load your plans", error: l.error!, onRetry: l.load)];
+      return [_SectionError(title: 'Unable to Load Your Plans', error: l.error!, onRetry: l.load)];
     }
     return [
-      const SectionTitle(title: 'Ongoing plans'),
+      const SectionTitle(title: 'Ongoing Plans'),
       ActionWrap(
         top: 0,
         children: [
           QuietButton(
             key: const ValueKey('add-plan'),
-            label: 'Add an ongoing plan',
+            label: 'Add an Ongoing Plan',
             icon: LucideIcons.plus,
             onPressed: () => _addPlan(context, programme: false),
           ),
         ],
       ),
       const SizedBox(height: 10),
-      if (_c.ongoing.isEmpty) const _Hint('No ongoing plans. A prepaid term with sessions every month.'),
+      if (_c.ongoing.isEmpty) const _Hint('No ongoing plans. A plan is a prepaid term with sessions every month.'),
       for (final p in _c.ongoing) _planRow(context, p),
     ];
   }
@@ -317,13 +345,13 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
     final l = _c.sessions;
     final rows = l.data ?? const <HostedSession>[];
     return [
-      const SectionTitle(title: 'Group sessions'),
+      const SectionTitle(title: 'Group Sessions', top: 8),
       ActionWrap(
         top: 0,
         children: [
           QuietButton(
             key: const ValueKey('add-group'),
-            label: 'Host a group session',
+            label: 'Host a Group Session',
             icon: LucideIcons.plus,
             onPressed: () async {
               final saved = await showFormSheet(context, (_) => GroupSessionForm(controller: _c));
@@ -335,9 +363,11 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
       const SizedBox(height: 10),
       if (!l.loaded && l.loading) const _Loading(),
       if (!l.loaded && l.error != null)
-        _SectionError(title: "Couldn't load your group sessions", error: l.error!, onRetry: l.load),
+        _SectionError(title: 'Unable to Load Your Group Sessions', error: l.error!, onRetry: l.load),
       if (l.loaded && rows.isEmpty)
-        const _Hint('No group sessions yet. A clinic is an hour with a room of members; free ones keep a waitlist.'),
+        const _Hint(
+          'No group sessions yet. A clinic is an hour with a group of members. Free sessions keep a waitlist.',
+        ),
       for (final s in rows)
         SessionRow(
           session: s,
@@ -355,9 +385,9 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
       context: context,
       builder: (dialog) => AlertDialog(
         title: Text('Delete "$title"?'),
-        content: const Text('It comes off your storefront. Members who already bought it keep what they bought.'),
+        content: const Text('It is removed from your storefront. Members who already bought it keep their purchase.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Keep it')),
+          TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Keep It')),
           TextButton(onPressed: () => Navigator.pop(dialog, true), child: const Text('Delete')),
         ],
       ),
@@ -388,58 +418,33 @@ class GatesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final g = gates;
-    return MentoringCard(
+    // No "Storefront" card, checklist or listing count (owner, 9 Nov 2026: "Store front has to be completely
+    // removed"): only the API's sentence for what still stops the mentor selling, and the terms to accept.
+    if (g.live || (g.blockedReason == null && !g.termsAreTheBlocker)) return const SizedBox.shrink();
+    return Padding(
       key: const ValueKey('gates'),
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(child: Text('Storefront', style: MentoringText.cardTitle)),
-              StatusPill(g.live ? 'Live' : 'Not open', tone: g.live ? PillTone.mint : PillTone.amber),
-            ],
-          ),
-          const SizedBox(height: 8),
-          _line('Not suspended', !g.suspended),
-          _line('Paid selling switched on', g.optedIn),
-          _line(
-            g.termsCurrentVersion.isEmpty ? 'Seller terms accepted' : 'Seller terms ${g.termsCurrentVersion} accepted',
-            g.termsCurrent,
-          ),
-          if (!g.live && g.blockedReason != null)
+          if (g.blockedReason != null)
             Callout(key: const ValueKey('gate-reason'), tone: PillTone.amber, text: g.blockedReason!),
           if (g.termsAreTheBlocker)
             ActionWrap(
               children: [
                 SolidButton(
                   key: const ValueKey('accept-terms'),
-                  label: 'Accept seller terms (${g.termsCurrentVersion})',
+                  label: 'Accept Seller Terms (${g.termsCurrentVersion})',
                   icon: LucideIcons.fileCheck,
                   onPressed: onAccept,
                 ),
-                QuietButton(label: 'Read the terms', onPressed: onReadTerms),
+                QuietButton(label: 'Read the Terms', onPressed: onReadTerms),
               ],
             ),
-          MetaLine(icon: LucideIcons.layers, text: '$listings of $maxServices service listings used'),
         ],
       ),
     );
   }
-
-  Widget _line(String text, bool ok) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 3),
-    child: Row(
-      children: [
-        Icon(
-          ok ? LucideIcons.circleCheck : LucideIcons.circle,
-          size: 16,
-          color: ok ? MentoringColors.green : AppColors.outline,
-        ),
-        const SizedBox(width: 8),
-        Expanded(child: Text(text, style: ok ? MentoringText.bodyStrong : MentoringText.body)),
-      ],
-    ),
-  );
 }
 
 class _Loading extends StatelessWidget {
@@ -465,7 +470,7 @@ class _SectionError extends StatelessWidget {
     compact: true,
     title: title,
     body: error,
-    action: 'Try again',
+    action: 'Try Again',
     onAction: onRetry,
   );
 }

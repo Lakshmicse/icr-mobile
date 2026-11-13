@@ -152,7 +152,7 @@ void main() {
         find.text('You post jobs for Acme Facilities, so you manage this one rather than apply to it.'),
         findsOneWidget,
       );
-      expect(find.text('Meet the hiring team'), findsNothing, reason: 'the API refuses the message too');
+      expect(find.text('Meet the Hiring Team'), findsNothing, reason: 'the API refuses the message too');
       expect(find.text('Message'), findsNothing);
     });
 
@@ -161,11 +161,11 @@ void main() {
       expect(find.text('Easy Apply'), findsOneWidget);
       expect(find.byKey(const ValueKey('posts-here')), findsNothing);
       await tester.scrollUntilVisible(
-        find.text('Meet the hiring team'),
+        find.text('Meet the Hiring Team'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text('Meet the hiring team'), findsOneWidget);
+      expect(find.text('Meet the Hiring Team'), findsOneWidget);
       expect(find.text('Message'), findsOneWidget);
     });
   });
@@ -279,7 +279,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('quote-own-listing')), findsOneWidget);
       expect(find.text(ownListingNote), findsOneWidget);
-      expect(find.text('Submit quote request'), findsNothing);
+      expect(find.text('Submit Quote Request'), findsNothing);
     });
 
     test('the quote controller knows the listing is the member\'s own', () async {

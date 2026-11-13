@@ -152,3 +152,76 @@ Header 56; composer 39.5 at 5.5 below; chips 28; a card's avatar 40 (5.2 or 1.2 
 - The photos are the design's export resolution (350 px for a 175 dp tile, 80 px avatars): a 2.77-density screen shows them soft, as the demo does.
 - The reply tiles' three dots now open a menu; the design draws them as a bare glyph.
 - The thread's reply box can be answered by a person who has not read the reply it names (it is the newest, behind "+N replies"): the hint says whose it is, and the whole thread opens after sending.
+
+## Tester batch, 7–8 Nov 2026 (owner's WhatsApp reports)
+
+* **A poll shows a radio before each option while the reader may vote** (`poll-radio:<option>`), the check on their own vote as before; a closed poll or one already voted shows the shares alone. Owner: "enable radio button for user to click if it's a poll".
+* **A member may like their own post.** The app's refusal ("You cannot react to your own post.") is gone from Home and Forums; the API allows the reaction (`forum-votes.service.ts`). Owner: "remove this restriction".
+* The sponsored placement was removed on 6 Nov (above).
+
+## 9 Nov 2026 (bug sheet)
+
+* **#5 Follow state agrees with the profile.** `FollowEvents` (`features/forum/follow_events.dart`) carries every follow and unfollow made anywhere — the member profile's button (`ApiAccountRepository`), a card's Follow (`ApiForumRepository.setFollowing`) — to the forum repository's copy of who the member follows, and that copy is read again after 45 s (`followingTtl`). Before, the feed kept a list read once per session, so a profile's "Following" and the feed's "Follow" disagreed.
+* **#19 A repost carries the original's picture.** The forum attaches only a file its poster uploaded, so `copyRepostImage` (`repost.dart`) reads the original's first picture and stores it again as the reposter's own `forum-attachment`, which both "Repost" and "Repost with your thoughts" (the composer's `initialAttachment`) then carry. A copy that fails still reposts, with the quote and the link. Links in a post were already tappable (`LinkSpans`).
+* **#3 The Tags field's "@" list** shows from the first letter after the "@" (it waited for two).
+* **#1, #4, #9, #25, #27** — the feed is newest-first since 30 Oct; a tapped "@" tag opens the person since 3 Nov; #9 is the website's (it shows a picture as a file name); #25 (9 views, 2 readers) is the API counting a view per open — the portal branch `fix/forum-views-per-reader` ("a discussion's views are its readers") fixes it and awaits a PR and a deploy; #27 (poll radio buttons) shipped on 8 Nov.
+
+## 9 Nov 2026: one launch logo
+
+The owner: "the app loads two logos — first the eagle alone, then ICR with the logo; remove the first." The eagle was Android 12+'s own splash, which draws the launcher icon until the app's first frame; the second is the app's `_Splash` (`lib/app.dart`, the ICR wordmark with the logo). `android/app/src/main/res/values-v31/styles.xml` (and `values-night-v31/`) now give `LaunchTheme` a white `windowSplashScreenBackground` and a transparent `windowSplashScreenAnimatedIcon` (`drawable/splash_icon_empty.xml`), so the system splash is a blank white screen and the ICR splash is the only logo. Phones below Android 12 never drew the icon; their `launch_background` was already plain white.
+
+## 11 Nov 2026: a repost shows the original
+
+The owner: "reposted post sharing the link rather than images, and poll not coming". The forum has no repost record, so a repost is a discussion whose words open with the quote `repost.dart` writes ("↻ Reposted from <author>", the title in quotes, the link). `RepostQuote.of(body)` (`feed/repost_quote.dart`) reads those lines back, and `PostCard` then draws the original inside the repost (`_QuotedPost`, key `quoted:<slug>`): a hairline box with the original's author, title, words, photos and poll — read through `quotedLoader` (`FeedController.quoted` → `FeedRepository.quoted(slug)` = `GET /forum/threads/:slug` whole; `ForumsController.quoted` → `repository.thread`), kept per slug and cleared by pull-to-refresh. A tap opens the original; a vote on its poll is cast on the original (`voteQuoted`) and shows in every repost of it. The reposter's own words stay above the box; the raw link line is not drawn; a repost's own photo is not drawn when the box is (the original carries it). The 9 Nov copy of the original's picture onto the repost is gone — the box shows the original's. Tests: `test/repost_quote_test.dart`, `feed_screen_test` "a repost draws the original inside it…".
+
+## 11 Nov 2026: videos on a card
+
+A post's videos (`FeedPost.videos`, read from the body's `<video>` tags with its photos) are tiles like the photos: one alone fills the card's width, more sit two across with "+N more"; a video tile is dark with a play glyph and opens `VideoPlayerScreen`. A quoted original shows its media the same way. See `docs/screens/forums.md` → 11 Nov 2026.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client marked up the user manual with the wording wanted on a dozen screens and asked for the rest of the app to read the same way: Title Case for what a person taps or reads as a label, a short sentence with a full stop for everything else, plain international English, no dash inside a sentence. Wording only: no layout, colour or behaviour changed. Semantics-only labels (what a screen reader says for an icon) were left as they were. By the lead's ruling the title of an empty, locked or error state is a heading (Title Case, no full stop) with a sentence under it, and the retry button reads **Try Again** everywhere.
+
+| Where | Old | New |
+|---|---|---|
+| A reply's menu | Open discussion · Copy link · Delete reply | Open Discussion · Copy Link · Delete Reply |
+| Snackbars | Link copied · Saved · Removed from saved discussions | Link copied. · Saved. · Removed from saved discussions. |
+| After a report | Thanks. A moderator will take a look. | Thank you. A moderator will review it. |
+| Delete a reply | Delete your reply? / It is taken out of the discussion for everyone. | Delete Your Reply? / It will be removed from the discussion for everyone. |
+| The feed did not load | Couldn't load the feed / Try again | Unable to Load the Feed / Try Again |
+| Nothing found | No discussions match "x" · No discussions tagged #x yet | No Discussions Match "x" · No Discussions Tagged #x Yet |
+| The end of the list | You're all caught up | No more discussions. |
+| Empty: Following | Nothing from people you follow yet | No Posts from People You Follow Yet |
+| Empty: Unanswered | Every question has an answer / New questions without replies will show up here. | No Unanswered Questions / New questions without replies will appear here. |
+| Empty: Polls | No polls right now / Polls members start in the community will show up here. | No Polls Yet / Polls started by members will appear here. |
+| Empty: all | No discussions yet / Start one with the + at the top. | No Discussions Yet / Select + at the top to start one. |
+
+Kept: the chips (**All Feed, Trending Discussions, Following, Unanswered, Polls**, the client's 12 Nov words), "Start a post" and "Search" (prompts inside a pill, written as hints), "…more", "View Discussion". The comments sheet built the same day (`widgets/comments_sheet.dart`, `comment_widgets.dart`: "No comments yet", "Be the first to comment.", "Most relevant", "Most recent") was still being written and is not part of this pass.
+
+
+## 13 Nov 2026: comments open in a sheet, drawn as LinkedIn's
+
+The owner, with LinkedIn's comment sheet beside it: "Redesign the Comment like this not the way its showing."
+
+- The speech bubble (and its count) no longer opens a thread inside the card. It opens **`CommentsSheet`**
+  (`widgets/comments_sheet.dart`, `showCommentsSheet`) over the feed: a grabber, the order ("Most relevant" /
+  "Most recent", `CommentSort`), every comment with its answers, and the box pinned at the foot ("Add a comment...").
+- A comment is a **`CommentTile`** (`widgets/comment_widgets.dart`): no bubble. Photo, then the name with the age
+  ("3d"), **Follow** and the three dots at the row's end; the headline on one line; the words; the like and reply
+  glyphs with their counts, and a small blue thumb at the end once it has likes.
+- Answers sit **one step in** off a thin line under the comment's photo (`CommentReplies`), however deep the forum
+  nests them, each opening on the name of the person it answers in blue (`commentRows`). There is no
+  "+N replies in this thread" pill: the sheet shows the whole discussion.
+- The box adds a comment **to the post**; Reply on a comment aims it at that person ("Replying to …", with an x).
+  A refusal shows above the box. Messages and menus raised from the sheet show over it (`_over(at)` in
+  `home_screen.dart`); opening a profile or the discussion's page closes the sheet first.
+- **Follow** beside a comment comes from `FollowBook`: shown only once the forum has said the reader does not
+  follow that author, never on one's own comment, gone the moment it is tapped.
+- `FeedController.readReplies(post)` reads the comments when the sheet opens; the first post's are still read ahead.
+- Gone: `widgets/reply_thread.dart`, and from `reply_widgets.dart` the bubble tile, the branch line and the pill.
+  `ReplyBox` and `ReplyAction` remain. Tests: `feed_screen_test.dart` ("the replies"), golden `feed_comments.png`.
+
+
+## 13 Nov 2026: the Like button is the reaction picked
+
+The owner: "The like button long press shows the options same to same should show the button selected by the user not the blue colored icon." Once the reader has reacted, the Like button draws that reaction's round badge (`ReactionBadge`, the same widget the long-press picker shows) with the count in `reactionInk(kind)`; unreacted it is the grey outlined thumb. The discussion page's Like does the same. Tests: `forum_home_test.dart` and `forum_thread_test.dart` (the long-press picks).

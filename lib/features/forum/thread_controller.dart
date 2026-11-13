@@ -97,7 +97,7 @@ class ThreadController extends ChangeNotifier {
     if (takesReplies) return null;
     if (t.moderation != 'APPROVED') return 'This discussion is still awaiting review.';
     return t.status == 'LOCKED'
-        ? 'This discussion is locked, so it is not taking new replies.'
+        ? 'This discussion is locked and does not accept new replies.'
         : 'This discussion has been archived.';
   }
 
@@ -308,7 +308,7 @@ class ThreadController extends ChangeNotifier {
     final t = _thread;
     final poll = t?.card.poll;
     if (t == null || poll == null) return null;
-    if (!poll.open || !t.open) return 'This discussion is closed, and so is its poll.';
+    if (!poll.open || !t.open) return 'This discussion and its poll are closed.';
     if (poll.myOptionId == optionId) return null;
     try {
       final updated = await repository.vote(t.id, optionId, open: poll.open);
@@ -354,7 +354,7 @@ class ThreadController extends ChangeNotifier {
   Future<String?> sendReply(String text, {String? parentId, List<Mention> mentions = const []}) async {
     final t = _thread;
     if (t == null) return null;
-    if (text.trim().isEmpty) return 'Write something before posting.';
+    if (text.trim().isEmpty) return 'Enter a reply before posting.';
     if (text.trim().length > ForumLimits.replyMax) {
       return 'A reply can be at most ${ForumLimits.replyMax} characters.';
     }
@@ -377,7 +377,7 @@ class ThreadController extends ChangeNotifier {
   /// Saves [text] as the words of [reply]. An edit that changes nothing sends nothing (the forum may have the
   /// website editor's formatting, which the app's plain text would flatten).
   Future<String?> editReply(FeedReply reply, String text, {List<Mention> mentions = const []}) async {
-    if (text.trim().isEmpty) return 'The reply cannot be emptied. Delete it instead.';
+    if (text.trim().isEmpty) return 'A reply cannot be empty. Delete it instead.';
     final before = ForumJson.htmlToText(reply.bodyHtml ?? '');
     if (reply.bodyHtml != null && text.trim() == before) return null;
     try {

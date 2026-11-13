@@ -23,7 +23,7 @@ enum OwnerTab {
   responses('Responses'),
   suppliers('Suppliers'),
   messages('Messages'),
-  brief('What you posted');
+  brief('What You Posted');
 
   const OwnerTab(this.label);
   final String label;
@@ -113,7 +113,9 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
     if (target == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = target.currentContext;
-      if (ctx != null && mounted) Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 250), alignment: 0.05);
+      if (ctx != null && mounted) {
+        Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 250), alignment: 0.05);
+      }
     });
   }
 
@@ -140,9 +142,9 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
     final enquiry = _c.rfq?.isEnquiry ?? false;
     final ok = await confirmMove(
       context,
-      title: enquiry ? 'Close this enquiry?' : 'Close this requirement?',
-      body: 'Suppliers can no longer reply. The responses you have stay here.',
-      confirm: 'Close it',
+      title: enquiry ? 'Close This Enquiry?' : 'Close This Requirement?',
+      body: 'Suppliers can no longer reply. The responses you have received remain here.',
+      confirm: 'Close It',
     );
     if (ok) await _say(_c.act(RfqAction.close));
   }
@@ -150,9 +152,9 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
   Future<void> _cancel() async {
     final ok = await confirmMove(
       context,
-      title: 'Cancel this requirement?',
-      body: 'It is taken off the board and suppliers can no longer reply. This can’t be undone.',
-      confirm: 'Cancel requirement',
+      title: 'Cancel This Requirement?',
+      body: 'It will be removed from the board and suppliers can no longer reply. This cannot be undone.',
+      confirm: 'Cancel Requirement',
       destructive: true,
     );
     if (ok) await _say(_c.act(RfqAction.cancel));
@@ -161,9 +163,9 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
   Future<void> _delete() async {
     final ok = await confirmMove(
       context,
-      title: 'Delete this draft?',
-      body: 'Only your team has seen it. It is deleted for good.',
-      confirm: 'Delete draft',
+      title: 'Delete This Draft?',
+      body: 'Only your team has seen it. It will be deleted permanently.',
+      confirm: 'Delete Draft',
       destructive: true,
     );
     if (!ok) return;
@@ -185,9 +187,9 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
       context,
       title: enquiry ? 'Select $name?' : 'Award to $name?',
       body: enquiry
-          ? 'This closes the enquiry with $name as your chosen supplier and tells the others. Take it forward in messages. This can’t be undone.'
-          : 'This awards the requirement to $name, generates a purchase order, and declines all other bids. This can’t be undone.',
-      confirm: enquiry ? 'Confirm selection' : 'Confirm award',
+          ? 'This closes the enquiry with $name as your chosen supplier and notifies the others. Continue in messages. This cannot be undone.'
+          : 'This awards the requirement to $name, generates a purchase order, and declines all other bids. This cannot be undone.',
+      confirm: enquiry ? 'Confirm Selection' : 'Confirm Award',
     );
     if (!ok || !mounted) return;
     final result = await _c.award(bid);
@@ -202,7 +204,7 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
     setState(() => _messaging.remove(key));
     final id = result.id;
     if (id == null) {
-      showMessage(context, result.error ?? "Couldn't open the conversation.");
+      showMessage(context, result.error ?? 'Unable to open the conversation.');
       return;
     }
     await _hooks.openConversation(context, id);
@@ -219,16 +221,16 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
     try {
       final path = await _hooks.repository.saveFile(f);
       final taken = await _hooks.links.shareFile(path, f.name ?? f.title);
-      if (!taken && mounted) showMessage(context, 'Nothing on this phone could open ${f.name ?? f.title}.');
+      if (!taken && mounted) showMessage(context, 'No app on this phone can open ${f.name ?? f.title}.');
     } catch (e) {
-      if (mounted) showMessage(context, "Couldn't fetch ${f.name ?? f.title}. Try again.");
+      if (mounted) showMessage(context, 'Unable to download ${f.name ?? f.title}. Try again.');
     }
   }
 
   Future<void> _sort() async {
     final picked = await pickOne<BidSort>(
       context,
-      title: 'Sort bids by',
+      title: 'Sort Bids By',
       options: BidSort.values,
       labelOf: (s) => s.label,
       selected: _c.sort,
@@ -258,8 +260,8 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
     final already = {for (final i in _c.invites) i.supplier.vendorId};
     return showSupplierPicker(
       context,
-      title: 'Invite companies',
-      confirmLabel: 'Invite',
+      title: 'Invite Suppliers',
+      confirmLabel: 'Send Invitations',
       search: _c.findSuppliers,
       suggested: _c.suggested,
       excluded: already,
@@ -293,9 +295,9 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
     if (rfq == null) {
       return RfqNotice(
         icon: LucideIcons.cloudOff,
-        title: "Couldn't load this requirement",
+        title: 'Unable to Load This Requirement',
         body: _c.error,
-        action: 'Try again',
+        action: 'Try Again',
         onAction: _c.refresh,
       );
     }
@@ -345,10 +347,10 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
         ? 'This enquiry closed on its reply-by date, so suppliers can no longer reply. You can still select one of the replies.'
         : switch (rfq.status) {
             RfqStatus.draft => 'Only your team can see it. Publish it to reach suppliers.',
-            RfqStatus.published => 'Live: suppliers can find it and reply.',
-            RfqStatus.awarded => 'Awarded. Close it once the work is under way.',
-            RfqStatus.closed => 'Closed: suppliers can no longer reply.',
-            RfqStatus.cancelled => 'Cancelled: it is no longer listed.',
+            RfqStatus.published => 'Your requirement is live and visible to eligible suppliers.',
+            RfqStatus.awarded => 'Awarded. Close it once the work has started.',
+            RfqStatus.closed => 'Closed. Suppliers can no longer reply.',
+            RfqStatus.cancelled => 'Cancelled. It is no longer listed.',
           };
     final busy = _c.acting;
     return Padding(
@@ -359,7 +361,7 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Manage this ${enquiry ? 'enquiry' : 'requirement'}', style: RfqText.section.copyWith(fontSize: 14)),
+            Text('Manage ${enquiry ? 'Enquiry' : 'Requirement'}', style: RfqText.section.copyWith(fontSize: 14)),
             const SizedBox(height: 4),
             Text(help, key: const ValueKey('manage-help'), style: RfqText.small),
             const SizedBox(height: 10),
@@ -385,20 +387,20 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
                 if (rfq.status == RfqStatus.published || rfq.status == RfqStatus.awarded)
                   RfqSmallButton(
                     key: const ValueKey('act-close'),
-                    label: 'Close',
+                    label: enquiry ? 'Close Enquiry' : 'Close Requirement',
                     icon: LucideIcons.lock,
                     onTap: busy ? null : _close,
                   ),
                 RfqSmallButton(
                   key: const ValueKey('act-similar'),
-                  label: 'Post a similar one',
+                  label: 'Post a Similar One',
                   icon: LucideIcons.copy,
                   onTap: busy ? null : _similar,
                 ),
                 if (rfq.status == RfqStatus.draft || rfq.status == RfqStatus.published)
                   RfqSmallButton(
                     key: const ValueKey('act-cancel'),
-                    label: 'Cancel',
+                    label: enquiry ? 'Cancel Enquiry' : 'Cancel Requirement',
                     icon: LucideIcons.ban,
                     danger: true,
                     onTap: busy ? null : _cancel,
@@ -406,7 +408,7 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
                 if (rfq.status == RfqStatus.draft)
                   RfqSmallButton(
                     key: const ValueKey('act-delete'),
-                    label: 'Delete draft',
+                    label: 'Delete Draft',
                     icon: LucideIcons.trash2,
                     danger: true,
                     onTap: busy ? null : _delete,
@@ -436,7 +438,7 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
       values: tabs,
       selected: _tab,
       labelOf: (t) => switch (t) {
-        OwnerTab.responses => rfq.staged ? 'Responses' : (enquiry ? 'Replies' : 'Bids'),
+        OwnerTab.responses => rfq.staged || enquiry ? 'Responses' : 'Bids',
         _ => t.label,
       },
       countOf: (t) => switch (t) {
@@ -469,12 +471,17 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
   List<Widget> _bids(Requirement rfq, {required bool enquiry, required DateTime now}) {
     final bids = _c.sortedBids;
     final live = bids.where((b) => b.status != BidStatus.rejected).toList();
-    final priced = [for (final b in live) if (b.amount != null) b.amount!];
+    final priced = [
+      for (final b in live)
+        if (b.amount != null) b.amount!,
+    ];
     final best = priced.length > 1 ? priced.reduce((a, b) => a < b ? a : b) : null;
-    final topRating = live.length > 1 ? live.map((b) => b.supplier.rating).fold<double>(0, (a, b) => a > b ? a : b) : null;
+    final topRating = live.length > 1
+        ? live.map((b) => b.supplier.rating).fold<double>(0, (a, b) => a > b ? a : b)
+        : null;
     return [
       RfqSectionTitle(
-        enquiry ? 'Replies (${bids.length})' : 'Bids (${bids.length})',
+        enquiry ? 'Supplier Responses (${bids.length})' : 'Bids (${bids.length})',
         trailing: bids.length > 1
             ? Row(
                 mainAxisSize: MainAxisSize.min,
@@ -499,8 +506,10 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
       if (bids.isEmpty)
         RfqNotice(
           icon: LucideIcons.inbox,
-          title: enquiry ? 'No replies yet' : 'No bids yet',
-          body: enquiry ? 'Suppliers who reply to your enquiry appear here.' : 'Companies will appear here as they bid.',
+          title: enquiry ? 'No Responses Yet' : 'No Bids Yet',
+          body: enquiry
+              ? 'Suppliers who reply to your enquiry appear here.'
+              : 'Companies will appear here as they bid.',
         )
       else
         for (final b in bids)
@@ -514,12 +523,20 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
                 enquiry: enquiry,
                 canAct: _c.canAward,
                 best: best != null && b.amount == best && b.status != BidStatus.rejected,
-                topRated: topRating != null && topRating > 0 && b.supplier.rating == topRating && b.status != BidStatus.rejected,
+                topRated:
+                    topRating != null &&
+                    topRating > 0 &&
+                    b.supplier.rating == topRating &&
+                    b.status != BidStatus.rejected,
                 focused: b.id == widget.focusBidId,
                 busy: _c.isBusy(b.id),
                 messaging: _messaging.contains('bid-${b.id}'),
                 now: now,
-                onMessage: () => _messageSupplier(conversationId: b.conversationId, companyId: b.supplier.companyId, key: 'bid-${b.id}'),
+                onMessage: () => _messageSupplier(
+                  conversationId: b.conversationId,
+                  companyId: b.supplier.companyId,
+                  key: 'bid-${b.id}',
+                ),
                 onShortlist: () => _say(_c.triage(b, BidStatus.shortlisted)),
                 onRestore: () => _say(_c.triage(b, BidStatus.pending)),
                 onDecline: () => _say(_c.triage(b, BidStatus.rejected)),
@@ -535,11 +552,11 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
   List<Widget> _prequal(Requirement rfq, {required DateTime now}) {
     final responses = _c.responses;
     return [
-      KeyedSubtree(key: _prequalKey, child: RfqSectionTitle('Pre-qualification responses (${responses.length})')),
+      KeyedSubtree(key: _prequalKey, child: RfqSectionTitle('Pre-Qualification Responses (${responses.length})')),
       if (responses.isEmpty)
         const RfqNotice(
           icon: LucideIcons.clipboardCheck,
-          title: 'No responses yet',
+          title: 'No Responses Yet',
           body: 'Suppliers who submit a pre-qualification response will appear here.',
         )
       else
@@ -567,11 +584,11 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
   List<Widget> _suppliers(Requirement rfq) {
     final canInvite = rfq.status == RfqStatus.draft || rfq.status == RfqStatus.published;
     return [
-      RfqSectionTitle('Invited companies (${_c.invites.length})'),
+      RfqSectionTitle('Invited Companies (${_c.invites.length})'),
       if (_c.invites.isEmpty)
         const RfqNotice(
           icon: LucideIcons.userPlus,
-          title: 'No one invited yet',
+          title: 'No One Invited Yet',
           body: 'Matched suppliers are alerted when it goes live. Invite more by name below.',
         )
       else
@@ -597,7 +614,7 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
               key: const ValueKey('invite-open'),
               onPressed: _invite,
               icon: const Icon(LucideIcons.userPlus, size: 16),
-              label: const Text('Invite companies'),
+              label: const Text('Invite Suppliers'),
             ),
           ),
         ),
@@ -607,11 +624,11 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
   List<Widget> _messages(Requirement rfq, {required DateTime now}) {
     final threads = _c.threads;
     return [
-      RfqSectionTitle(threads.isEmpty ? 'Supplier messages' : 'Supplier messages (${threads.length})'),
+      RfqSectionTitle(threads.isEmpty ? 'Supplier Communications' : 'Supplier Communications (${threads.length})'),
       if (threads.isEmpty)
         const RfqNotice(
           icon: LucideIcons.messageSquare,
-          title: 'No messages yet',
+          title: 'No Messages Yet',
           body: 'Suppliers who message you about this requirement appear here.',
         )
       else
@@ -635,7 +652,7 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
   }
 
   List<Widget> _briefSection(Requirement rfq, {required bool owner}) => [
-    if (owner) RfqSectionTitle('What you posted'),
+    if (owner) RfqSectionTitle('What You Posted'),
     Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: RequirementBrief(

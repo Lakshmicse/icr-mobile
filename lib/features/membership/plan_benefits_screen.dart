@@ -99,7 +99,7 @@ class _PlanBenefitsScreenState extends State<PlanBenefitsScreen> {
         child: Column(
           children: [
             TitleBar(
-              title: 'What my plans include',
+              title: 'What My Plans Include',
               onBack: widget.onBack,
               unread: widget.unread,
               onBell: widget.onBell ?? () {},
@@ -113,8 +113,8 @@ class _PlanBenefitsScreenState extends State<PlanBenefitsScreen> {
                   }
                   if (snap.hasError) {
                     return _Centered(
-                      text: snap.error is ApiError ? (snap.error! as ApiError).message : "Couldn't read your plans.",
-                      action: 'Try again',
+                      text: snap.error is ApiError ? (snap.error! as ApiError).message : 'Unable to load your plans.',
+                      action: 'Try Again',
                       onAction: () => setState(() => _benefits = _load()),
                     );
                   }
@@ -122,7 +122,7 @@ class _PlanBenefitsScreenState extends State<PlanBenefitsScreen> {
                   if (all.isEmpty) {
                     return _Centered(
                       text: 'Your plans include nothing extra yet.',
-                      action: widget.onSeePlans == null ? null : 'See plans',
+                      action: widget.onSeePlans == null ? null : 'See Plans',
                       onAction: widget.onSeePlans,
                     );
                   }
@@ -154,7 +154,7 @@ class _PlanBenefitsScreenState extends State<PlanBenefitsScreen> {
                       if (widget.onSeePlans != null)
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                          child: OutlinedButton(onPressed: widget.onSeePlans, child: const Text('See plans')),
+                          child: OutlinedButton(onPressed: widget.onSeePlans, child: const Text('See Plans')),
                         ),
                     ],
                   );
@@ -169,20 +169,20 @@ class _PlanBenefitsScreenState extends State<PlanBenefitsScreen> {
 
   /// The website's headings for an area (`BENEFIT_AREAS`), in its order.
   static const _areas = {
-    'RFQ': 'Winning work',
-    'LISTING': 'Your listing',
+    'RFQ': 'Winning Work',
+    'LISTING': 'Your Listing',
     'TALENT': 'Hiring',
     'JOBS': 'Jobs',
-    'TEAM': 'Your team',
-    'COURSES': 'Courses and learners',
+    'TEAM': 'Your Team',
+    'COURSES': 'Courses and Learners',
     'INSIGHTS': 'Insights',
     'PROMOTION': 'Visibility',
     'MENTORSHIP': 'Mentoring',
-    'DISCOUNTS': 'Member prices',
-    'CONTENT': 'Learning: access',
-    'LEARNING_DISCOUNTS': 'Learning: discounts',
+    'DISCOUNTS': 'Member Prices',
+    'CONTENT': 'Learning: Access',
+    'LEARNING_DISCOUNTS': 'Learning: Discounts',
     'SUPPORT': 'Support',
-    'SERVICE': 'Service terms',
+    'SERVICE': 'Service Terms',
   };
 
   static String _areaTitle(String area) => _areas[area] ?? 'Other';

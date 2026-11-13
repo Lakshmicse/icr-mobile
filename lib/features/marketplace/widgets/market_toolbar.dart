@@ -92,7 +92,7 @@ class MarketToolbar extends StatelessWidget {
             // everyone, as the website's console row is; the board itself says when the company does not sell yet.
             IcrChip(
               key: const ValueKey('mart-find-work'),
-              label: 'Find work',
+              label: 'Find Work',
               tone: ChipTone.outlined,
               icon: LucideIcons.compass,
               iconSize: 12.5,
@@ -126,7 +126,7 @@ class MarketToolbar extends StatelessWidget {
               onTap: () => pickSort(context),
             ),
             IcrChip(
-              label: rated ? ratingStepLabel(filters.minRating!) : 'By ratings',
+              label: rated ? ratingStepLabel(filters.minRating!) : 'By Ratings',
               tone: rated ? ChipTone.primary : ChipTone.outlined,
               padding: const EdgeInsets.only(left: 13, right: 9),
               trailing: Icon(Icons.arrow_drop_down, size: 13, color: rated ? Colors.white : AppColors.outline),
@@ -135,7 +135,7 @@ class MarketToolbar extends StatelessWidget {
               onTap: () => pickRating(context),
             ),
             IcrChip(
-              label: 'Verified only',
+              label: 'Verified Only',
               tone: ChipTone.outlined,
               icon: LucideIcons.badgeCheck,
               iconSize: 15.5,

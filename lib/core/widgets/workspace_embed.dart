@@ -2,8 +2,9 @@ import 'package:flutter/widgets.dart';
 
 /// Marks a screen shown as a tab of a workspace (`WorkspaceScreen`, opened from the profile menu's workspaces):
 /// the workspace draws one bar — back, its name — and the row of tabs for all of them, so a screen's own top bar
-/// steps aside under it. `TitleBar` and `AccountBar` keep the page's title as its heading (and a search, and
-/// actions), without a back arrow or the bell, and the Events header goes. A screen pushed from inside a tab is a
+/// steps aside under it. `TitleBar` and `AccountBar` keep only their search and actions — the tab names the page,
+/// so its own title is not drawn again (owner, 9 Nov 2026: "the tab is telling the title, there would be no use of
+/// the title again, wherever it is remove it") — and the Events header goes. A screen pushed from inside a tab is a
 /// route of its own, outside this, and draws its bar as always.
 class WorkspaceEmbed extends InheritedWidget {
   const WorkspaceEmbed({super.key, required super.child, this.openTab});

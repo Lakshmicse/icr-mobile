@@ -54,6 +54,9 @@ void main() {
       expect(roundTrip('<p>a</p><p></p><p>   </p><p>b</p>'), '<p>a</p><p>b</p>');
       expect(htmlHasFormattingEditorLoses('<blockquote>x</blockquote>'), isTrue);
       expect(htmlHasFormattingEditorLoses('<p>Hi <strong>x</strong></p><ul><li>a</li></ul>'), isFalse);
+      // The composer keeps a body's pictures and videos as its media, so an edit loses neither.
+      expect(htmlHasFormattingEditorLoses('<p>Hi</p><p><img src="/uploads/a.jpg" alt=""></p>'), isFalse);
+      expect(htmlHasFormattingEditorLoses('<p><video src="/uploads/b.mp4" controls></video></p>'), isFalse);
     });
 
     test('plain words become escaped paragraphs, a line each', () {

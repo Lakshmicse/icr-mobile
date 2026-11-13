@@ -29,7 +29,7 @@ class OverviewTab extends StatelessWidget {
   final ValueChanged<DeskTab> onSelectTab;
   final ValueChanged<String> onOpenPairing;
 
-  /// "Review my profile": where a paused mentor looks after their application.
+  /// "Review My Profile": where a paused mentor looks after their application.
   final void Function(BuildContext context)? onBecomeMentor;
 
   @override
@@ -89,7 +89,7 @@ class OverviewTab extends StatelessWidget {
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your desk",
+      errorTitle: 'Unable to Load Your Desk',
       onRefresh: c.refresh,
       children: loading || failed != null || d == null
           ? const []
@@ -98,32 +98,32 @@ class OverviewTab extends StatelessWidget {
                 Callout(
                   tone: PillTone.amber,
                   text:
-                      'Your profile is paused: it is out of the directory and takes no new requests. '
-                      'You keep serving the mentees you have.',
+                      'Your profile is paused. It is hidden from the directory and takes no new requests. '
+                      'You continue with your current mentees.',
                   actions: [
                     if (onBecomeMentor != null)
-                      QuietButton(label: 'Review my profile', onPressed: () => onBecomeMentor!(context)),
+                      QuietButton(label: 'Review My Profile', onPressed: () => onBecomeMentor!(context)),
                   ],
                 ),
               // Six figures, two rows of three, no boxes (owner, 6 Nov 2026).
               StatStrip(
                 tiles: [
-                  ('${d.menteesActive}', 'Active mentees'),
+                  ('${d.menteesActive}', 'Active Mentees'),
                   ('${d.menteesCompleted}', 'Completed'),
-                  ('${c.requestCount}', 'To answer'),
+                  ('${c.requestCount}', 'To Answer'),
                   (
                     profile == null || profile.ratingCount == 0 ? '-' : profile.rating.toStringAsFixed(1),
                     profile == null || profile.ratingCount == 0
                         ? 'No reviews yet'
                         : countLabel(profile.ratingCount, 'review'),
                   ),
-                  ('${profile?.menteesHelped ?? 0}', 'Mentees helped'),
-                  (d.answeredThisMonth == 0 ? '-' : '${d.acceptRatePct}%', 'Accepted this month'),
+                  ('${profile?.menteesHelped ?? 0}', 'Mentees Helped'),
+                  (d.answeredThisMonth == 0 ? '-' : '${d.acceptRatePct}%', 'Accepted This Month'),
                 ],
               ),
-              NeedsYouCard(items: needs, clear: 'Nothing is waiting on you.'),
+              NeedsYouCard(items: needs, clear: 'Nothing needs your attention.'),
               if (next != null) ...[
-                const SectionTitle(title: 'Up next', top: 6),
+                const SectionTitle(title: 'Up Next', top: 6),
                 MentoringCard(
                   key: const ValueKey('up-next'),
                   onTap: () => onOpenPairing(next.mentorshipId),
@@ -158,12 +158,12 @@ class OverviewTab extends StatelessWidget {
                   ),
                 ),
               ],
-              const SectionTitle(title: 'In the directory'),
+              const SectionTitle(title: 'In the Directory'),
               _Visibility(controller: c, dashboard: d),
-              const SectionTitle(title: 'Your profile'),
+              const SectionTitle(title: 'Your Profile'),
               _Completeness(dashboard: d, links: links),
               if (d.recentActivity.isNotEmpty) ...[
-                const SectionTitle(title: 'Lately'),
+                const SectionTitle(title: 'Recent Activity'),
                 for (final e in d.recentActivity.take(5))
                   Padding(
                     key: ValueKey('activity-${e.id}'),
@@ -227,9 +227,9 @@ class _Visibility extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text('Listed in the directory', style: MentoringText.cardTitle)),
+              Expanded(child: Text('Listed in the Directory', style: MentoringText.cardTitle)),
               StatusPill(
-                dashboard.isListed ? 'Listed' : 'Not listed',
+                dashboard.isListed ? 'Listed' : 'Not Listed',
                 tone: dashboard.isListed ? PillTone.mint : PillTone.grey,
               ),
             ],
@@ -247,11 +247,11 @@ class _Visibility extends StatelessWidget {
                       showMessage(context, refusal ?? (v ? 'You are listed again.' : 'Hidden from the directory.'));
                     }
                   },
-            title: Text('Let members find me', style: MentoringText.bodyStrong),
+            title: Text('Let Members Find Me', style: MentoringText.bodyStrong),
             subtitle: Text(
               profile.discoverable
-                  ? (dashboard.isListed ? 'Members can find you and ask for mentoring.' : 'Switched on.')
-                  : 'Switched off: nobody new can find you. Current mentees are not affected.',
+                  ? (dashboard.isListed ? 'Members can find you and ask for mentoring.' : 'Turned on.')
+                  : 'Turned off. New members cannot find you. Current mentees are not affected.',
               style: MentoringText.meta,
             ),
           ),
@@ -269,11 +269,11 @@ const mentorProfilePath = '/mentorship/become-a-mentor';
 /// `mentor-dashboard.service.ts`), so the sentence is the key; one this table does not know opens the editor.
 String fixPathFor(String missing) => switch (missing) {
   'Add a profile photo' => '$mentorProfilePath?fix=photo',
-  'Add your current role' || 'State your years of experience' => '$mentorProfilePath?fix=intro',
+  'Add your current role' || 'Add your years of experience' => '$mentorProfilePath?fix=intro',
   'Describe how you mentor' => '$mentorProfilePath?fix=bio',
   'Add areas of expertise' || 'Add conversation topics' => '$mentorProfilePath?fix=expertise',
   'List your certifications' => '$mentorProfilePath?fix=certifications',
-  'Say when you are free' => '$mentorProfilePath?fix=availability',
+  'Add your availability' => '$mentorProfilePath?fix=availability',
   'Add the languages you speak' => '$mentorProfilePath?fix=languages',
   'Add your work history' => '$mentorProfilePath?fix=experience',
   'Add your education' => '/profile?tab=education',
@@ -295,7 +295,7 @@ class _Completeness extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text('Profile completeness', style: MentoringText.cardTitle)),
+              Expanded(child: Text('Profile Completeness', style: MentoringText.cardTitle)),
               Text('${d.completenessScore}%', key: const ValueKey('completeness'), style: MentoringText.statValue),
             ],
           ),
@@ -312,7 +312,7 @@ class _Completeness extends StatelessWidget {
           if (d.missing.isEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Text('Nothing is missing.', style: MentoringText.body),
+              child: Text('Your profile is complete.', style: MentoringText.body),
             )
           else ...[
             const SizedBox(height: 4),
@@ -338,7 +338,7 @@ class _Completeness extends StatelessWidget {
             ActionWrap(
               children: [
                 QuietButton(
-                  label: 'Finish my profile',
+                  label: 'Complete My Profile',
                   icon: LucideIcons.pencil,
                   onPressed: () => links.openSite(context, mentorProfilePath),
                 ),

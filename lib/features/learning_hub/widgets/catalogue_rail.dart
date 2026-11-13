@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../hub_styles.dart';
 import '../learning_doors.dart';
 
-/// "Catalogue": the design's rail of four photo tiles — Assess your knowledge, Mock Exams, Flash Cards,
-/// Knowledge Centre — 109 × 80 dp photos with 8 dp corners, 4 dp apart from 15.25 dp in, a caption under each
+/// "Explore Learning Resources": the design's rail of four photo tiles — Knowledge Assessments, Mock Exams,
+/// Flashcards, Knowledge Centre — 109 × 80 dp photos with 8 dp corners, 4 dp apart from 15.25 dp in, a caption under each
 /// (Work Sans 12.7 semibold, two lines 16 dp apart, centred in a pane 41.6 dp tall). The first tile is drawn
 /// lifted, as `docs/designs/learning-hub-v2.png` has it: a white card with a soft shadow round photo and caption.
 /// The fourth tile runs off the edge: the rail scrolls.
@@ -22,9 +22,9 @@ class CatalogueRail extends StatelessWidget {
 
   /// The design's words for each tile.
   static String caption(LearningDoor door) => switch (door) {
-    LearningDoor.assessment => 'Assess your knowledge',
+    LearningDoor.assessment => 'Knowledge Assessments',
     LearningDoor.mockTests => 'Mock Exams',
-    LearningDoor.flashCards => 'Flash Cards',
+    LearningDoor.flashCards => 'Flashcards',
     LearningDoor.knowledgeCenter => 'Knowledge Centre',
     _ => door.title,
   };

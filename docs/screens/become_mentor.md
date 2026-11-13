@@ -139,3 +139,89 @@ Read against `frontend/src/lib/permissions.ts`, `app/(app)/mentorship/become-a-m
 * **Rules.** `become_mentor_rules.dart` was checked sentence by sentence against `validation.mentor.*` (18 of the 19 keys, all identical; `meetingLink` is the mentor desk's field) and limit by limit against `MENTOR_PROFILE_LIMITS` / `PERSON_PROFILE_LIMITS`; no change was needed.
 * Stale lines above, superseded: Availability has no "Capacity" (the portal retired the mentee limit on 27 Oct 2026; the sheet already had none); "Code of conduct" and "Submit" rows and the Statuses paragraph read "Draft - not yet visible" and a tick that agrees at once: see the first bullets here.
 * **Not on the website's composer, kept here:** Weekly hours, Supporting documents and Your listing (accepting requests, withdraw) are the app's own additions (the website has hours and the visibility switch on the mentor desk, and no mentor document upload and no withdrawal button at all, though the API takes both); and the person's half lacks the website's name, location, Education and Contact cards (they are /profile's). Whether to keep or drop the app-only cards is the owner's call.
+
+## 9 Nov 2026 (bug sheet #39): the details first, then the application
+
+The owner: "first it should ask the user to fill the details and then show what is completed or pending". `BecomeMentorScreen` now orders the page: the intro line, the status banner (Draft · not yet visible / Under review / Live…), the renewal callout when due, **Your ICR profile** and **Mentoring** sections to fill, then **Review and submit** — the application card (`_ApplicationCard`: the three steps, what is still needed with a tap to each fix, the code of conduct tick and Submit for review), then the footer. Nothing in the card changed; only its place.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client asked for the on-screen text to be refined "crisp, for global standard", in the style of the wording they marked up for sign-in and Settings. Wording only: no layout, colour or behaviour changed. Names of things a person taps or reads as a label are in Title Case; sentences are in sentence case with a full stop; no dash is used as punctuation; "pick" and "tick" read "select", "is told" reads "is notified", "show up / land here" reads "will appear here", and a load that fails reads "Unable to Load …". The title of an empty state or an error block is a heading (Title Case, no full stop: "No Purchases Yet", "Unable to Load Mentors"); the line under it is a sentence. The retry button reads **Try Again**.
+
+* This supersedes "Copy now byte-for-byte the website's" (6 Nov) for the strings in the table: the hints under Submit, the rule sentences and the section names now differ from the website's by the client's style.
+* Left as they are: the declaration and the code of conduct sheet (legal wording: "I confirm these details are true…", "Your Commitment as an ICR Mentor", "Mentor Declaration", "I Agree"), the operator's "Access Denied" sentence, "Draft · not yet visible", "Your listing is due for renewal", the certifications card's three empty states, the competency, language and audience option values (stored; only the audience labels shown are Title Case), "Organisation" in a career role (a past employer need not be a company on ICR), and example hints.
+
+| Old | New |
+| --- | --- |
+| from your certifications — no longer on your profile. | from your certifications (no longer on your profile). |
+| ICR review — in progress | ICR Review (In Progress) |
+| The code of conduct has not loaded yet — try again in a moment. | The code of conduct has not loaded yet. Try again in a moment. |
+| It is how mentees find you. Up to | This is how mentees find you. Up to |
+| Happy to talk about | Conversation Topics |
+| Concrete conversations, e.g. “Managing your first team”. Up to | Specific topics, for example “Managing your first team”. Up to |
+| Type a topic | Enter a topic |
+| Pick everyone you are happy to hear from. | Select everyone you are willing to mentor. |
+| Pick from the list or type your own. Up to | Select from the list or enter your own. Up to |
+| Pick or type a role | Select or enter a role |
+| How you'll meet | Meeting Modes |
+| Preferred cadence | Preferred Meeting Frequency |
+| When you're free | Availability Note |
+| That is {…} windows. Keep it to {…}. | You have {…} windows. The maximum is {…}. |
+| is no longer on your profile — remove it to save. | is no longer on your profile. Remove it to save. |
+| are no longer on your profile — remove them to save. | are no longer on your profile. Remove them to save. |
+| — the most your mentor card shows. | . This is the most your mentor card shows. |
+| Studying, or under two years in | Studying, or under two years of experience |
+| That file is too big. Choose one under | The file is too large. Choose one under |
+| Just the job title. | Job title only. |
+| Type a language | Enter a language |
+| What you did (optional) | Description (Optional) |
+| Evidence for ICR's review team: a certificate, proof of where you work, a reference. A PDF or a picture, under 10 MB. | Evidence for ICR's review team, such as a certificate, proof of employment or a reference. A PDF or an image, under 10 MB. |
+| What it is | Document Type |
+| A label (optional) | Label (Optional) |
+| The file | File |
+| “How you mentor” is too long — keep it under 20,000 characters. | “How You Mentor” is too long. Keep it under 20,000 characters. |
+| Say a little more about how you mentor — at least {…} characters ({chars} so far). | Describe how you mentor in at least {…} characters ({chars} so far). |
+| Tell mentees how you mentor — at least {…} characters. | Describe how you mentor in at least {…} characters. |
+| Add at least one area of expertise — it is how mentees find you. | Add at least one area of expertise. This is how mentees find you. |
+| Keep “Happy to talk about” to | Keep “Conversation Topics” to |
+| Keep “When you're free” to | Keep “Availability Note” to |
+| Add a profile photo — it is the first thing a mentee sees. | Add a profile photo. It is the first thing a mentee sees. |
+| characters — just the job title. | characters. Enter the job title only. |
+| minCareerYear} on. | minCareerYear} onwards. |
+| The start date can’t be in the future. | The start date cannot be in the future. |
+| Add when this role ended, or tick “I work here now”. | Add when this role ended, or select “I Work Here Now”. |
+| The end date can’t be in the future. If you still work here, tick “I work here now”. | The end date cannot be in the future. If you still work here, select “I Work Here Now”. |
+| Couldn't load your mentor profile | Unable to Load Your Mentor Profile |
+| Give an hour a month, and someone gets to skip a mistake you already made. | Give an hour a month to help someone learn from your experience. |
+| Mentor approval runs for two years. Tick the code of conduct agreement in Your application to stay | Mentor approval runs for two years. Select the code of conduct agreement in Your Application to stay |
+| Sent to the ICR review team — we will let you know when your profile is live. | Sent to the ICR review team. We will notify you when your profile is live. |
+| Worried about something in a mentoring relationship? You can raise it with ICR from any pairing, and | If you have a concern about a mentoring relationship, you can raise it with ICR from any mentorship. |
+| the other person is never told. | The other person is never notified. |
+| Not added yet — needed to submit. | Not added yet. Required to submit. |
+| The languages you can mentor in — add at least one to submit. | The languages you can mentor in. Add at least one to submit. |
+| Mentees read this first — at least | Mentees read this first. At least |
+| None yet — add at least one to submit. | None yet. Add at least one to submit. |
+| no longer on your profile — remove | no longer on your profile. Remove |
+| Not chosen yet — needed to submit. | Not selected yet. Required to submit. |
+| Cadence | Meeting Frequency |
+| Save any section above first: your hours belong to your mentor profile. | Save any section above first. Your hours belong to your mentor profile. |
+| No weekly hours set: a mentee asks you for a time instead of picking a free one. | No weekly hours set. A mentee asks you for a time instead of selecting a free one. |
+| Short modules on how ICR mentoring works — boundaries, feedback, and what to do when something goes wrong. Finish them before your profile goes to review. | Short modules on how ICR mentoring works: boundaries, feedback, and what to do when something goes wrong. Complete them before your profile goes to review. |
+| Optional evidence for ICR's review team: a certificate, proof of where you work, a reference. | Optional evidence for ICR's review team, such as a certificate, proof of employment or a reference. |
+| Attached. ICR's review team will read it. | Attached. ICR's review team will review it. |
+| Hidden: you are not taking new requests. | Hidden. You are not taking new requests. |
+| You cannot withdraw while a mentorship is under way: pause your profile instead. | You cannot withdraw while a mentorship is in progress. Pause your profile instead. |
+| A member of the ICR team is reading your profile. We vet mentors because your name will carry the | A member of the ICR team is reviewing your profile. We review every mentor because you represent the |
+| association's to someone early in their career. | association to someone early in their career. |
+| Review usually takes a couple of days. | Review usually takes a few days. |
+| Still needed to submit | Required to Submit |
+| Still missing from your card | Missing from Your Card |
+| Finish the items above to submit. | Complete the items above to submit. |
+| Tick the declaration to submit. | Select the declaration to submit. |
+| Your tick is recorded when you submit. | Your acceptance is recorded when you submit. |
+| Type and press Add | Enter and select Add |
+| That is the most you can add ({…}) | Maximum reached ({…}). |
+| Nothing matches. | No matches. |
+| {…} of {…} chosen: the most you can pick. | {…} of {…} selected. This is the maximum. |
+| {…} chosen, up to {…}. | {…} selected, up to {…}. |
+| Buttons, headings, tabs, chips, field labels and status names to Title Case: 85 strings | e.g. "Your profile" → "Your Profile"; "Code of conduct" → "Code of Conduct"; "Mentor training" → "Mentor Training" |

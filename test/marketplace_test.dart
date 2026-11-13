@@ -354,11 +354,11 @@ void main() {
         ).sheetCount,
         8,
       );
-      // Verified is the default rung (the "Verified only" chip), so it does not count.
+      // Verified is the default rung (the "Verified Only" chip), so it does not count.
       expect(const MarketplaceFilters(minLevel: SupplierLevel.verified).sheetCount, 0);
     });
 
-    test('"Clear all" keeps the search, the order, the rating and "Verified only"', () {
+    test('"Clear All" keeps the search, the order, the rating and "Verified Only"', () {
       const f = MarketplaceFilters(
         search: 'duct',
         categories: {'HVAC'},
@@ -393,8 +393,8 @@ void main() {
     });
 
     test('the rating steps read as the chip says them', () {
-      expect(ratingStepLabel(4.5), '4.5★ & up');
-      expect(ratingStepLabel(4), '4★ & up');
+      expect(ratingStepLabel(4.5), '4.5★ & Up');
+      expect(ratingStepLabel(4), '4★ & Up');
     });
   });
 
@@ -459,7 +459,7 @@ void main() {
       expect(market.extras.isEmpty, isTrue);
     });
 
-    test('the order, the rating and "Verified only" each reload the list', () async {
+    test('the order, the rating and "Verified Only" each reload the list', () async {
       await market.start();
       await market.setSort(SupplierSort.mostProjects);
       expect(repo.searches.last.filters.sort, SupplierSort.mostProjects);
@@ -476,7 +476,7 @@ void main() {
       expect(repo.searches.last.filters.minLevel, SupplierLevel.verified);
     });
 
-    test('"Load more suppliers" adds the next page once, and each supplier once', () async {
+    test('"View More" adds the next page once, and each supplier once', () async {
       repo.searchAnswer = (f, p) => switch (p) {
         1 => pageOf(3, total: 6),
         2 => pageOf(4, from: 3, total: 6, hasMore: false, page: 2), // s3 comes again
@@ -520,7 +520,7 @@ void main() {
       expect(market.suppliers.single.id, 's200');
     });
 
-    test('"Clear filters" drops the search and the sheet\'s filters and keeps the order and "Verified only"', () async {
+    test('"Clear Filters" drops the search and the sheet\'s filters and keeps the order and "Verified Only"', () async {
       await market.start();
       await market.setFilters(
         const MarketplaceFilters(search: 'x', categories: {'HVAC'}, minRating: 4, sort: SupplierSort.newest),

@@ -282,7 +282,7 @@ void main() {
       expect(job.companyName, 'Acme Facilities');
       expect(job.companyId, 'co1');
       expect(job.place, 'Mumbai, India');
-      expect(job.facts, 'Mumbai, India • On-site • Full-time');
+      expect(job.facts, 'Mumbai, India • On-Site • Full-Time');
       // The API sends a decimal column as a string.
       expect(job.salary, '₹10L - ₹15L / yr');
       expect(job.savedAt, DateTime.parse('2026-10-19T12:43:47.541Z'));
@@ -486,7 +486,7 @@ void main() {
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text('Saved items'), findsOneWidget);
+      expect(find.text('Saved Items'), findsOneWidget);
       // Chips are drawn at once, without counts.
       expect(find.text('Jobs'), findsOneWidget);
       expect(find.text('Jobs (1)'), findsNothing);
@@ -540,7 +540,7 @@ void main() {
 
       expect(find.text('Senior Facility Manager'), findsOneWidget);
       expect(find.text('Acme Facilities'), findsOneWidget);
-      expect(find.text('Mumbai, India • On-site • Full-time'), findsOneWidget);
+      expect(find.text('Mumbai, India • On-Site • Full-Time'), findsOneWidget);
       expect(find.textContaining('₹10L - ₹15L / yr'), findsOneWidget);
       expect(find.textContaining('Saved '), findsWidgets);
       expect(find.byKey(const ValueKey('saved.unsave.jobs.job1')), findsOneWidget);
@@ -549,7 +549,7 @@ void main() {
     testWidgets('a job that closed says so, and does not look like a posting', (tester) async {
       await pump(tester, harness(jobs: [stubRow()]));
 
-      expect(find.text('No longer open'), findsOneWidget);
+      expect(find.text('No Longer Open'), findsOneWidget);
       expect(find.text('A role at Old Employer'), findsOneWidget);
       expect(find.textContaining('This job has closed'), findsOneWidget);
     });
@@ -562,7 +562,7 @@ void main() {
       expect(find.text('Rajesh Sharma'), findsOneWidget);
       expect(find.text('VP Facility Ops @ Infosys'), findsOneWidget);
       expect(find.text('4.8 (12)'), findsOneWidget);
-      expect(find.text('Top mentor'), findsOneWidget);
+      expect(find.text('Top Mentor'), findsOneWidget);
       expect(find.text('From ₹7,999/mo'), findsOneWidget);
       expect(find.text('Smart Campuses'), findsOneWidget);
       expect(find.text('BMS'), findsOneWidget);

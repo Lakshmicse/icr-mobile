@@ -32,7 +32,15 @@ FeedPicture coverFor(FeedPicture? own, int index) =>
 /// lines allowed) beside a 27 dp ringed disc holding a heavy black arrow. The
 /// whole card is the button.
 class LearnCard extends StatelessWidget {
-  const LearnCard({super.key, required this.title, required this.cover, required this.onTap, this.badge, this.onShare});
+  const LearnCard({
+    super.key,
+    required this.title,
+    required this.cover,
+    required this.onTap,
+    this.badge,
+    this.tag,
+    this.onShare,
+  });
 
   /// The photo's shape: 171 × 80.
   static const photoAspect = 171 / 80;
@@ -48,8 +56,14 @@ class LearnCard extends StatelessWidget {
   final FeedPicture cover;
   final VoidCallback onTap;
 
-  /// "ICR" on a certification card.
+  /// "ICR" on a certification card: the design's white tab hanging from the top edge.
   final String? badge;
+
+  /// A short status in the photo's corner, small ("Credits" on a place redeemed with ICR credits; owner, 12 Nov
+  /// 2026: drawn in the ICR tab's 18 dp type it covered half the photo).
+  final String? tag;
+
+  /// Shares the card's page; the disc shows only with it.
   final VoidCallback? onShare;
 
   @override
@@ -77,7 +91,14 @@ class LearnCard extends StatelessWidget {
                     children: [
                       CoursePicture(picture: cover),
                       if (badge != null) Positioned(left: 10, top: 0, child: _Badge(badge!)),
-                      Positioned(right: 21, top: 10, child: _ShareDisc(onTap: onShare)),
+                      if (tag != null) Positioned(left: 8, top: 8, child: _Tag(tag!)),
+                      // The disc is drawn 21 in from the right and 10 down; its 36 dp target is centred on it.
+                      if (onShare != null)
+                        Positioned(
+                          right: 21 - _ShareDisc.slack,
+                          top: 10 - _ShareDisc.slack,
+                          child: _ShareDisc(onTap: onShare!),
+                        ),
                     ],
                   ),
                 ),
@@ -127,11 +148,32 @@ class _Badge extends StatelessWidget {
   }
 }
 
-/// The 19 dp white disc with the share glyph and a 1 dp edge.
-class _ShareDisc extends StatelessWidget {
-  const _ShareDisc({this.onTap});
+/// A short status in the photo's top-left corner: white, 11 dp type, rounded.
+class _Tag extends StatelessWidget {
+  const _Tag(this.text);
 
-  final VoidCallback? onTap;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(5)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+        child: Text(text, style: HubText.tag, maxLines: 1),
+      ),
+    );
+  }
+}
+
+/// The 19 dp white disc with the share glyph and a 1 dp edge, inside a 36 dp target a finger can find.
+class _ShareDisc extends StatelessWidget {
+  const _ShareDisc({required this.onTap});
+
+  /// How far the target reaches past the disc on each side: (36 − 19) / 2.
+  static const slack = 8.5;
+
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -145,11 +187,15 @@ class _ShareDisc extends StatelessWidget {
       ),
       child: const Icon(LucideIcons.share2, size: 12.5, color: HubColors.glyph),
     );
-    if (onTap == null) return disc;
     return Semantics(
       button: true,
       label: 'Share',
-      child: InkResponse(onTap: onTap, radius: 18, child: disc),
+      child: InkResponse(
+        key: const ValueKey('learn-card-share'),
+        onTap: onTap,
+        radius: 18,
+        child: SizedBox.square(dimension: 36, child: Center(child: disc)),
+      ),
     );
   }
 }

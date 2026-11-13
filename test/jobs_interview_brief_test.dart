@@ -54,10 +54,42 @@ void main() {
         },
         'job': {'id': 'j1', 'title': 'Facilities Operations Lead'},
         'answers': [
-          {'prompt': 'Years running sites?', 'type': 'YEARS', 'answer': '15', 'meetsIdeal': true, 'mustHave': true, 'graded': true, 'idealAnswer': '5'},
-          {'prompt': 'Rate your Excel', 'type': 'RATING', 'scaleMax': 10, 'answer': '7', 'meetsIdeal': false, 'mustHave': false, 'graded': true, 'idealAnswer': '8'},
-          {'prompt': 'Join by', 'type': 'DATE', 'answer': '2026-12-01', 'meetsIdeal': true, 'mustHave': false, 'graded': true, 'idealAnswer': '2026-12-15'},
-          {'prompt': 'Anything else?', 'type': 'TEXT', 'answer': 'No', 'meetsIdeal': false, 'mustHave': false, 'graded': false},
+          {
+            'prompt': 'Years running sites?',
+            'type': 'YEARS',
+            'answer': '15',
+            'meetsIdeal': true,
+            'mustHave': true,
+            'graded': true,
+            'idealAnswer': '5',
+          },
+          {
+            'prompt': 'Rate your Excel',
+            'type': 'RATING',
+            'scaleMax': 10,
+            'answer': '7',
+            'meetsIdeal': false,
+            'mustHave': false,
+            'graded': true,
+            'idealAnswer': '8',
+          },
+          {
+            'prompt': 'Join by',
+            'type': 'DATE',
+            'answer': '2026-12-01',
+            'meetsIdeal': true,
+            'mustHave': false,
+            'graded': true,
+            'idealAnswer': '2026-12-15',
+          },
+          {
+            'prompt': 'Anything else?',
+            'type': 'TEXT',
+            'answer': 'No',
+            'meetsIdeal': false,
+            'mustHave': false,
+            'graded': false,
+          },
         ],
         'qualification': {'met': 2, 'total': 3, 'qualified': false, 'autoArchived': false},
         'matchScore': null,
@@ -94,7 +126,15 @@ void main() {
         },
       ],
       'teamNotes': [
-        {'id': 'e1', 'type': 'STAGE_CHANGE', 'note': null, 'rating': null, 'toStage': 'INTERVIEW', 'author': null, 'createdAt': '2026-11-01T09:30:00.000Z'},
+        {
+          'id': 'e1',
+          'type': 'STAGE_CHANGE',
+          'note': null,
+          'rating': null,
+          'toStage': 'INTERVIEW',
+          'author': null,
+          'createdAt': '2026-11-01T09:30:00.000Z',
+        },
       ],
     };
 
@@ -115,7 +155,7 @@ void main() {
     test('the candidate, a blank cover note left out, and the résumé file\'s kind', () {
       final a = InterviewBrief.fromJson(json).application;
       expect(a.applicantName, 'Asha Menon');
-      expect(a.facts, ['Facilities head', '9 yrs exp', 'Pune']);
+      expect(a.facts, ['Facilities head', '9 years of experience', 'Pune']);
       expect(a.coverNote, isNull);
       expect(resumeFileName(a.resumeUrl!), 'resume.docx');
       expect(a.unscorable, isTrue, reason: 'screened, with nothing to score');
@@ -125,7 +165,10 @@ void main() {
     test('answers and what each needed, in the website\'s words', () {
       final answers = InterviewBrief.fromJson(json).application.answers;
       expect([for (final a in answers) a.display], ['15+ years', '7 / 10', '1 Dec 2026', 'No']);
-      expect([for (final a in answers) a.needed], ['at least 5 years', 'at least 8 / 10', 'on or before 15 Dec 2026', null]);
+      expect(
+        [for (final a in answers) a.needed],
+        ['at least 5 years', 'at least 8 / 10', 'on or before 15 Dec 2026', null],
+      );
     });
 
     test('a scorecard is ready with a rating and a recommendation; blank words are not sent', () {
@@ -148,25 +191,32 @@ void main() {
       return hiring;
     }
 
-    testWidgets('reads like the website\'s page: candidate, panel note, the round, screening, notes, rounds, scorecard', (
-      tester,
-    ) async {
-      final repo = await open(tester);
-      expect(repo.calls, contains('interviewBrief iv-9'));
-      expect(find.byKey(const ValueKey('brief-name')), findsOneWidget);
-      expect(find.text('Notes for the panel'), findsOneWidget);
-      for (final heading in ['This interview', 'From screening', 'Hiring team notes', 'Earlier rounds', 'Your scorecard']) {
-        expect(find.text(heading), findsOneWidget, reason: heading);
-      }
-      expect(find.text('Round 2 · Operations panel'), findsOneWidget);
-      expect(find.text('Round 1 · Screening call'), findsOneWidget);
-      expect(find.text('Employer questions'), findsOneWidget);
-      expect(find.text('2 / 2 met'), findsOneWidget);
-      expect(
-        find.text('1 panelist has scored this round. You will see their scorecards once yours is in.'),
-        findsOneWidget,
-      );
-    });
+    testWidgets(
+      'reads like the website\'s page: candidate, panel note, the round, screening, notes, rounds, scorecard',
+      (tester) async {
+        final repo = await open(tester);
+        expect(repo.calls, contains('interviewBrief iv-9'));
+        expect(find.byKey(const ValueKey('brief-name')), findsOneWidget);
+        expect(find.text('Notes for the Panel'), findsOneWidget);
+        for (final heading in [
+          'This Interview',
+          'From Screening',
+          'Hiring Team Notes',
+          'Earlier Rounds',
+          'Your Scorecard',
+        ]) {
+          expect(find.text(heading), findsOneWidget, reason: heading);
+        }
+        expect(find.text('Round 2 · Operations panel'), findsOneWidget);
+        expect(find.text('Round 1 · Screening call'), findsOneWidget);
+        expect(find.text('Employer Questions'), findsOneWidget);
+        expect(find.text('2 / 2 met'), findsOneWidget);
+        expect(
+          find.text('1 panelist has scored this round. You will see their scorecards once yours is in.'),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('the round has started: the scorecard opens, and goes in once rated and recommended', (tester) async {
       final repo = await open(tester);
@@ -185,7 +235,7 @@ void main() {
       expect(repo.calls, contains('submitScorecard iv-9 4 YES'));
       expect(find.byKey(const ValueKey('scorecard-submitted')), findsOneWidget);
       expect(find.byKey(const ValueKey('scorecard-form')), findsNothing);
-      expect(find.text('The rest of the panel'), findsOneWidget);
+      expect(find.text('Rest of the Panel'), findsOneWidget);
       expect(
         find.byKey(const ValueKey('scorecard-sc-meera')),
         findsOneWidget,
@@ -280,7 +330,7 @@ void main() {
       final repo = _Files(error: ApiError('Forbidden', statusCode: 403));
       final links = await tapOpen(tester, repo, 'http://localhost:3001/uploads/cv-1.pdf');
       expect(find.byType(DocumentViewerScreen), findsNothing);
-      expect(find.text("Couldn't open the résumé. Try again."), findsOneWidget);
+      expect(find.text('Unable to open the résumé. Try again.'), findsOneWidget);
       expect(links.opened, isEmpty);
     });
 

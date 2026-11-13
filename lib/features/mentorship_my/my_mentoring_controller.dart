@@ -92,8 +92,17 @@ class MyMentoringController extends ChangeNotifier {
     return refresh();
   }
 
-  Future<void> refresh() =>
-      Future.wait([summary.load(), pairings.load(), sent.load(), received.load(), upcoming.load(), quota.load()]);
+  /// The purchases come with the first screenful too: whether the member has any decides their tabs
+  /// ([actsAsMentee]), and what waits on them is listed on the overview.
+  Future<void> refresh() => Future.wait([
+    summary.load(),
+    pairings.load(),
+    sent.load(),
+    received.load(),
+    upcoming.load(),
+    quota.load(),
+    book.purchases.load(),
+  ]);
 
   /// Loads what [tab] shows, the first time it is opened.
   Future<void> ensureTab(MyTab tab) => switch (tab) {
@@ -128,12 +137,21 @@ class MyMentoringController extends ChangeNotifier {
     return d.approvedMentor || d.activeAsMentor > 0 || d.pendingIncoming > 0;
   }
 
-  /// Everyone who is not only a mentor: a member with nothing yet gets the mentee view.
+  /// Everyone who is not only a mentor: a member with nothing yet gets the mentee view, and so does a mentor who
+  /// bought or asked for something as a buyer.
   bool get actsAsMentee {
     final d = summary.data;
     if (d == null) return true;
-    return d.activeAsMentee > 0 || d.pendingOutgoing > 0 || !actsAsMentor;
+    return d.activeAsMentee > 0 || d.pendingOutgoing > 0 || hasPurchases || !actsAsMentor;
   }
+
+  /// Something bought or asked for as a buyer — a paid session, a programme, a plan, a seat. A mentor with one needs
+  /// the Purchases tab to answer in (7 Nov 2026: a mentor could not find the time set for the session he bought).
+  bool get hasPurchases =>
+      (book.purchases.data?.isNotEmpty ?? false) ||
+      (book.terms.data?.isNotEmpty ?? false) ||
+      (book.enrolments.data?.isNotEmpty ?? false) ||
+      (book.seats.data?.isNotEmpty ?? false);
 
   /// Live pairings (active or paused), newest first.
   List<Pairing> get livePairings => [

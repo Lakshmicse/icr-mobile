@@ -83,7 +83,7 @@ class ApiJobsRepository implements JobsRepository {
       if (preferred.jobs.isNotEmpty)
         JobSection(
           key: 'preferences',
-          title: 'Matching your preferences',
+          title: 'Matching Your Preferences',
           jobs: preferred.jobs,
           hasMore: preferred.hasMore,
         ),
@@ -104,7 +104,7 @@ class ApiJobsRepository implements JobsRepository {
       sections.add(JobSection(key: 'alert', title: scope!.label, jobs: page.jobs, hasMore: page.hasMore));
     } else {
       final latest = await _page('/jobs', {'page': 1, 'limit': pageSize});
-      sections.add(JobSection(key: 'latest', title: 'Latest jobs', jobs: latest.jobs, hasMore: latest.hasMore));
+      sections.add(JobSection(key: 'latest', title: 'Latest Jobs', jobs: latest.jobs, hasMore: latest.hasMore));
     }
     return JobsOverview(
       sections: sections,

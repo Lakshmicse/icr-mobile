@@ -839,7 +839,7 @@ void main() {
       expect(find.text('Executive strategy table.'), findsOneWidget);
       expect(find.textContaining('Chaired by'), findsOneWidget);
       expect(find.textContaining('VP Facilities @ Infosys'), findsOneWidget);
-      expect(find.text('Council lead'), findsOneWidget);
+      expect(find.text('Council Lead'), findsOneWidget);
       for (final tile in ['Members', 'Companies', 'Upcoming Events', 'Events Hosted', 'Leadership']) {
         expect(find.text(tile), findsWidgets, reason: tile);
       }
@@ -847,19 +847,19 @@ void main() {
       expect(find.text('31'), findsOneWidget);
       expect(find.text('RSVP open'), findsOneWidget);
       for (final section in [
-        'About this council',
+        'About This Council',
         'Events',
-        'Council leadership',
+        'Council Leadership',
         'Members',
-        'Knowledge library',
-        'News & updates',
+        'Knowledge Library',
+        'News & Updates',
       ]) {
         expect(_heading(section), findsOneWidget, reason: section);
       }
       expect(find.text('Mission'), findsOneWidget);
       expect(find.text('Steer the workplace.'), findsOneWidget);
       expect(find.text('Roundtables'), findsOneWidget);
-      expect(find.text('Industries covered'), findsOneWidget);
+      expect(find.text('Industries Covered'), findsOneWidget);
       expect(find.text('Rajesh Sharma'), findsOneWidget);
       expect(find.text('Chair · Infosys'), findsOneWidget);
       expect(find.text('Quarterly roundtable'), findsOneWidget);
@@ -913,10 +913,10 @@ void main() {
 
       final repo = FakeCouncils();
       await _pumpPage(tester, 'nowhere', repo: repo);
-      expect(find.text("Couldn't load this council"), findsOneWidget);
+      expect(find.text("Unable to Load This Council"), findsOneWidget);
       expect(find.text('Council not found'), findsOneWidget);
-      expect(find.text('Try again'), findsOneWidget);
-      await tester.tap(find.text('Try again'));
+      expect(find.text('Try Again'), findsOneWidget);
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(repo.count('detail'), 2);
     });
@@ -941,7 +941,7 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.text('Join Council'), findsNothing);
       await tester.pumpAndSettle(const Duration(seconds: 4));
-      expect(find.text('Council lead'), findsOneWidget);
+      expect(find.text('Council Lead'), findsOneWidget);
     });
 
     testWidgets('Join Council takes the seat; Leave asks, then gives it back', (tester) async {
@@ -952,7 +952,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(page.repo.calls, contains('join:id-legal-procurement'));
       expect(find.text('Joined'), findsOneWidget);
-      expect(find.text('Council lead'), findsNothing);
+      expect(find.text('Council Lead'), findsNothing);
       expect(find.text('341'), findsWidgets);
       expect(page.changed.last.membership, CouncilRole.member);
 
@@ -985,9 +985,9 @@ void main() {
       expect(find.text('340'), findsWidgets);
     });
 
-    testWidgets('a council lead sees "Council lead" and no Leave, as on the website', (tester) async {
+    testWidgets('a council lead sees "Council Lead" and no Leave, as on the website', (tester) async {
       await _pumpPage(tester, 'cxo-workplace-strategy');
-      expect(find.text('Council lead'), findsOneWidget);
+      expect(find.text('Council Lead'), findsOneWidget);
       expect(find.text('Leave'), findsNothing);
       expect(find.text('Join Council'), findsNothing);
     });
@@ -1049,7 +1049,7 @@ void main() {
         expect(find.text('Quarterly roundtable'), findsOneWidget);
         expect(find.text('ROUNDTABLE'), findsOneWidget);
         // The member's place is on the row.
-        expect(find.text('You are going'), findsOneWidget);
+        expect(find.text('You Are Going'), findsOneWidget);
         await tester.tap(find.text('Quarterly roundtable'));
         expect(page.events, ['e1-slug']);
 
@@ -1068,7 +1068,7 @@ void main() {
         expect(find.text('No past events. Past sessions will appear here.'), findsOneWidget);
         await tester.tap(find.text('Upcoming'));
         await tester.pumpAndSettle();
-        expect(find.textContaining('No upcoming events'), findsOneWidget);
+        expect(find.textContaining('No upcoming events.'), findsOneWidget);
       },
     );
 
@@ -1084,13 +1084,13 @@ void main() {
       for (final sentence in ['Updates are down.', 'Library is down.', 'Events are down.', 'Roster is down.']) {
         expect(find.text(sentence), findsOneWidget, reason: sentence);
       }
-      expect(find.text('Council lead'), findsOneWidget);
+      expect(find.text('Council Lead'), findsOneWidget);
       expect(find.text('Rajesh Sharma'), findsOneWidget);
-      expect(find.text('Try again'), findsNWidgets(4));
+      expect(find.text('Try Again'), findsNWidgets(4));
       repo.failures.clear();
-      await tester.tap(find.text('Try again').first);
+      await tester.tap(find.text('Try Again').first);
       await tester.pumpAndSettle();
-      expect(find.text('Try again'), findsNWidgets(3));
+      expect(find.text('Try Again'), findsNWidgets(3));
     });
 
     testWidgets('Members: the total, Show more members, the three filters and the search', (tester) async {
@@ -1099,7 +1099,7 @@ void main() {
       expect(find.text('Showing 2 of 5 members'), findsOneWidget);
       expect(find.text('Person Number1'), findsOneWidget);
       expect(find.text('Person Number3'), findsNothing);
-      await tester.tap(find.text('Show more members'));
+      await tester.tap(find.text('View More'));
       await tester.pumpAndSettle();
       expect(find.text('Person Number3'), findsOneWidget);
       expect(find.text('Person Number4'), findsOneWidget);
@@ -1111,12 +1111,12 @@ void main() {
       expect(find.text('Showing 1 of 1 member'), findsOneWidget);
       expect(find.text('Person Number2'), findsNothing);
 
-      await tester.tap(find.text('Corporate only'));
+      await tester.tap(find.text('Corporate Only'));
       await tester.pumpAndSettle();
       expect(repo.calls, contains('members:cxo-workplace-strategy:1:corporate:'));
       expect(find.text('Person Number2'), findsOneWidget);
 
-      await tester.tap(find.text('All members'));
+      await tester.tap(find.text('All Members'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'nobody');
       await tester.pump(const Duration(milliseconds: 400));
@@ -1222,14 +1222,14 @@ void main() {
       expect(await openOn(tester, 'events'), greaterThan(300));
       expect(_top(tester, _heading('Events')), lessThan(160));
       expect(await openOn(tester, 'leadership'), greaterThan(300));
-      expect(_top(tester, _heading('Council leadership')), lessThan(400));
+      expect(_top(tester, _heading('Council Leadership')), lessThan(400));
     });
 
     testWidgets('members, knowledge and updates land on their section, in sight', (tester) async {
       for (final (tab, heading) in [
         ('members', 'Members'),
-        ('knowledge', 'Knowledge library'),
-        ('updates', 'News & updates'),
+        ('knowledge', 'Knowledge Library'),
+        ('updates', 'News & Updates'),
       ]) {
         expect(await openOn(tester, tab), greaterThan(300), reason: tab);
         // The last sections may rest short of the top of the window (the page ends), but they are on it.
@@ -1241,7 +1241,7 @@ void main() {
 
     testWidgets('overview lands on About this council', (tester) async {
       expect(await openOn(tester, 'overview'), greaterThan(100));
-      expect(_top(tester, _heading('About this council')), lessThan(160));
+      expect(_top(tester, _heading('About This Council')), lessThan(160));
     });
 
     testWidgets('waits for the sections: a slow roster does not leave the page short of its target', (tester) async {
@@ -1263,12 +1263,12 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
       final scroll = tester.state<ScrollableState>(find.byType(Scrollable).first);
       // The council is here and the roster is not: the page has not moved yet.
-      expect(find.text('Council lead'), findsOneWidget);
+      expect(find.text('Council Lead'), findsOneWidget);
       expect(scroll.position.pixels, 0);
       await tester.pumpAndSettle(const Duration(seconds: 3));
       expect(scroll.position.pixels, greaterThan(300));
       // Near the end of the page, so it may rest short of the top of the window; it is on it.
-      expect(_top(tester, _heading('Knowledge library')), inInclusiveRange(40, 780));
+      expect(_top(tester, _heading('Knowledge Library')), inInclusiveRange(40, 780));
     });
 
     testWidgets('a reader who has already scrolled is not pulled away from where they are', (tester) async {

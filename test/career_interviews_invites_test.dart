@@ -150,9 +150,9 @@ void main() {
     testWidgets('a round shows when, how long, how, which job and where', (tester) async {
       await pumpInterviews(tester);
       expect(find.text('Round 2 • Technical round'), findsOneWidget);
-      expect(find.text('Fri 30 Oct, 3:00 PM • 45 min • Video call'), findsOneWidget);
+      expect(find.text('Fri 30 Oct, 3:00 PM • 45 min • Video Call'), findsOneWidget);
       expect(find.text('Global Infra Solutions • Pune'), findsOneWidget);
-      expect(find.text('Wed 28 Oct, 10:00 AM • 45 min • In person'), findsOneWidget);
+      expect(find.text('Wed 28 Oct, 10:00 AM • 45 min • In Person'), findsOneWidget);
       expect(find.text('Tech Park, Pune 411057'), findsOneWidget);
     });
 
@@ -160,7 +160,7 @@ void main() {
       final rig = await pumpInterviews(tester);
       // Four days ahead: drawn, not pressable, with the time it opens (3 PM less 15 minutes).
       expect(
-        find.descendant(of: find.byKey(const ValueKey('join-r2')), matching: find.text('Join call from 2:45 PM')),
+        find.descendant(of: find.byKey(const ValueKey('join-r2')), matching: find.text('Join Call from 2:45 PM')),
         findsOneWidget,
       );
       await tester.tap(find.byKey(const ValueKey('join-r2')));
@@ -199,7 +199,7 @@ void main() {
       expect(find.byKey(const ValueKey('another-time-dialog')), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('another-time-send')));
       await tester.pumpAndSettle();
-      expect(find.text('Say when you could do instead.'), findsOneWidget);
+      expect(find.text('Enter the times you are available.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('another-time-text')), 'Thursday morning.');
       await tester.tap(find.byKey(const ValueKey('another-time-send')));
       await tester.pumpAndSettle();
@@ -230,7 +230,7 @@ void main() {
       final repo = SpyCareer(jobs: SpyJobsRepository(), now: _now)..applicationsAnswer = [app('a1', stage: 'APPLIED')];
       await pumpInterviews(tester, repo: repo);
       expect(find.byKey(const ValueKey('upcoming-empty')), findsOneWidget);
-      expect(find.text('No interviews coming up'), findsOneWidget);
+      expect(find.text('No Upcoming Interviews'), findsOneWidget);
     });
 
     testWidgets('a list that cannot load says why, and Try again reads it again', (tester) async {
@@ -315,7 +315,7 @@ void main() {
       final rig = await pumpInvites(tester);
       await tester.tap(find.byKey(const ValueKey('decline-inv-1')));
       await tester.pumpAndSettle();
-      expect(find.text('Decline this invitation?'), findsOneWidget);
+      expect(find.text('Decline This Invitation?'), findsOneWidget);
       await tester.tap(find.text('Keep'));
       await tester.pumpAndSettle();
       expect(rig.repo.log.where((l) => l.startsWith('invite ')), isEmpty);

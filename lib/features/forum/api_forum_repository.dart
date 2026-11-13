@@ -7,6 +7,7 @@ import '../../core/api/api_error.dart';
 import '../../core/config.dart';
 import '../feed/feed_models.dart';
 import '../feed/forum_json.dart';
+import 'follow_events.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
 import 'mentions/mention_person.dart';
@@ -19,12 +20,27 @@ import 'mentions/tag_suggestions.dart' show TagCompany;
 /// The forum has no "following" or "polls" filter, so those two views read the latest 100 discussions and keep
 /// the matching ones, as the Home feed does.
 class ApiForumRepository implements ForumRepository {
-  ApiForumRepository({required this.api, required this.viewerId});
+  ApiForumRepository({required this.api, required this.viewerId}) {
+    FollowEvents.stream.listen(_noteFollow);
+  }
 
   final ApiClient api;
   @override
   final String? viewerId;
   Set<String>? _following;
+  DateTime? _followingAt;
+
+  /// How long the list of who the member follows is trusted before it is read again.
+  static const followingTtl = Duration(seconds: 45);
+
+  void _noteFollow(FollowChange e) {
+    if (e.follows) {
+      _following?.add(e.memberId);
+    } else {
+      _following?.remove(e.memberId);
+    }
+  }
+
   List<TaxonomyNode>? _taxonomy;
 
   static const pageSize = 20;
@@ -144,10 +160,8 @@ class ApiForumRepository implements ForumRepository {
             fileSize: (attachmentJson?['fileSize'] as num?)?.toInt(),
             url: AppConfig.absoluteUrl('/uploads/$uploadId', apiBase: base),
           );
-    final photos = <String>[
-      if (attachment != null && attachment.isPicture) attachment.url!,
-      for (final src in ForumJson.imageSources(html)) ?AppConfig.absoluteUrl(src, apiBase: base),
-    ];
+    final photos = <String>[for (final path in ForumJson.photoPaths(json)) ?AppConfig.absoluteUrl(path, apiBase: base)];
+    final videos = <String>[for (final src in ForumJson.videoSources(html)) ?AppConfig.absoluteUrl(src, apiBase: base)];
     ForumTopicRef? topic(Object? raw) {
       if (raw is! Map<String, dynamic>) return null;
       return ForumTopicRef(
@@ -163,6 +177,7 @@ class ApiForumRepository implements ForumRepository {
         body: ForumJson.plainText(html),
         mentions: mentionsInHtml(html),
         images: [for (final url in photos.take(2)) FeedPicture.network(url)],
+        videos: videos,
         imageCaption: photos.length == 1 && attachment != null ? ForumJson.caption(attachment.fileName) : null,
         morePhotos: math.max(0, photos.length - 2),
         detailLoaded: true,
@@ -173,6 +188,8 @@ class ApiForumRepository implements ForumRepository {
       subcategory: topic(json['subcategory']),
       attachment: attachment,
       images: [for (final url in photos) FeedPicture.network(url)],
+      imageIds: [for (final id in json['imageIds'] as List? ?? const []) id as String],
+      videos: videos,
       subscribed: json['subscribed'] == true,
       canEdit: json['canEdit'] == true,
       canModerate: json['canModerate'] == true,
@@ -260,11 +277,8 @@ class ApiForumRepository implements ForumRepository {
   @override
   Future<void> setFollowing(String memberId, bool follow) async {
     await _send(follow ? 'POST' : 'DELETE', '/members/$memberId/follow');
-    if (follow) {
-      _following?.add(memberId);
-    } else {
-      _following?.remove(memberId);
-    }
+    _noteFollow((memberId: memberId, follows: follow));
+    FollowEvents.note(memberId, follows: follow);
   }
 
   @override
@@ -304,6 +318,8 @@ class ApiForumRepository implements ForumRepository {
         ThreadKind.discussion => 'DISCUSSION',
       },
       'tags': d.tags,
+      // The post's photos, in order (the forum's `imageIds`); absent, an edit leaves them as they are.
+      'imageIds': ?d.imageIds,
       'uploadId': ?d.attachment?.uploadId,
       'fileName': ?d.attachment?.fileName,
       'fileSize': ?d.attachment?.fileSize,
@@ -424,7 +440,9 @@ class ApiForumRepository implements ForumRepository {
   /// Everyone the reader follows, a page of 100 at a time. Read once and kept (the Home feed shares it), and
   /// changed by [setFollowing].
   Future<Set<String>> followingIds() async {
-    if (_following != null) return _following!;
+    final known = _following;
+    final at = _followingAt;
+    if (known != null && at != null && DateTime.now().difference(at) < followingTtl) return known;
     final ids = <String>{};
     try {
       for (var page = 1; page <= 5; page++) {
@@ -433,9 +451,10 @@ class ApiForumRepository implements ForumRepository {
         if ((res['meta'] as Map<String, dynamic>?)?['hasNext'] != true) break;
       }
     } on ApiError {
-      // Without the list every author reads as not followed; the next read asks again.
-      return ids;
+      // Without the list every author reads as not followed (or as last known); the next read asks again.
+      return known ?? ids;
     }
+    _followingAt = DateTime.now();
     return _following = ids;
   }
 
@@ -480,6 +499,9 @@ String mimeTypeFor(String name) {
     'png' => 'image/png',
     'jpg' || 'jpeg' => 'image/jpeg',
     'webp' => 'image/webp',
+    'mp4' => 'video/mp4',
+    'webm' => 'video/webm',
+    'mov' => 'video/quicktime',
     _ => 'application/octet-stream',
   };
 }

@@ -80,7 +80,7 @@ class CertificateDetail extends StatelessWidget {
       children: [
         Text('Certificate of Knowledge Assessment', style: ExamText.heading),
         const SizedBox(height: 4),
-        Text('Pinch to zoom in and read it close.', style: ExamText.small),
+        Text('Pinch to zoom in.', style: ExamText.small),
         const SizedBox(height: 12),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
@@ -98,10 +98,10 @@ class CertificateDetail extends StatelessWidget {
           child: Column(
             children: [
               _Fact('Credential', c.title),
-              _Fact('Awarded by', c.providerName ?? 'Institute for Corporate Real Estate'),
+              _Fact('Awarded By', c.providerName ?? 'Institute for Corporate Real Estate'),
               if (certificateLevelLabel(c.level) != null) _Fact('Level', certificateLevelLabel(c.level)!),
               _Fact('Result', '${c.percentage}% against a ${c.passPercentage}% pass standard'),
-              _Fact('Cleared on', longDayLabel(c.clearedAt ?? c.issuedAt)),
+              _Fact('Cleared On', longDayLabel(c.clearedAt ?? c.issuedAt)),
               _Fact('Issued', dayLabel(c.issuedAt)),
               _Fact('Credential ID', c.certificateId, mono: true, last: true),
             ],
@@ -191,7 +191,7 @@ class _CertificateActionsState extends State<CertificateActions> {
       final saved = await CertificatePdfServices.save('${c.certificateId}.pdf', bytes);
       if (saved != null) message = 'Saved ${c.certificateId}.pdf';
     } catch (_) {
-      message = "Couldn't make the PDF. Try again.";
+      message = 'Unable to create the PDF. Try again.';
     }
     if (!mounted) return;
     setState(() => _downloading = false);
@@ -219,13 +219,13 @@ class _CertificateActionsState extends State<CertificateActions> {
             const SizedBox(width: 10),
             Expanded(
               child: ExamButton(
-                label: 'Copy number',
+                label: 'Copy Number',
                 icon: LucideIcons.copy,
                 quiet: true,
                 height: 44,
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: c.certificateId));
-                  if (context.mounted) showMessage(context, 'Number copied');
+                  if (context.mounted) showMessage(context, 'Number copied.');
                 },
               ),
             ),
@@ -243,7 +243,7 @@ class _CertificateActionsState extends State<CertificateActions> {
           ),
           const SizedBox(height: 10),
           ExamButton(
-            label: 'Check it in the register',
+            label: 'Verify in the Register',
             icon: LucideIcons.shieldCheck,
             quiet: true,
             height: 44,

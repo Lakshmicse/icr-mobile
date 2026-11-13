@@ -25,6 +25,8 @@ class StudyPlayer extends StatelessWidget {
     required this.onShuffle,
     required this.onPrevious,
     required this.onNext,
+    this.onSpeak,
+    this.speaking = false,
   });
 
   static const height = 46.0;
@@ -41,6 +43,11 @@ class StudyPlayer extends StatelessWidget {
   final VoidCallback onShuffle;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
+
+  /// Reads the face showing aloud (the website's speaker; owner, 7 Nov 2026: "Audio is not integrated in flash
+  /// cards"). Null draws no speaker.
+  final VoidCallback? onSpeak;
+  final bool speaking;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +66,8 @@ class StudyPlayer extends StatelessWidget {
           // The circles keep a gap between them when the slots are narrow.
           final round = slot < 44 ? 32.0 : 36.0;
           // What the count may take: the rest of the bar less the progress bar's least (16 dp) and the gaps.
-          final room = (box.maxWidth - (2 + 4 * slot + 8 + 8 + 12) - 16).clamp(0.0, double.infinity);
+          final slots = onSpeak == null ? 4 : 5;
+          final room = (box.maxWidth - (2 + slots * slot + 8 + 8 + 12) - 16).clamp(0.0, double.infinity);
           return Row(
             children: [
               const SizedBox(width: 2),
@@ -91,6 +99,20 @@ class StudyPlayer extends StatelessWidget {
                       : AppColors.slate300,
                 ),
               ),
+              if (onSpeak != null)
+                _Slot(
+                  width: slot,
+                  widgetKey: const ValueKey('study-speak'),
+                  label: speaking ? 'Stop reading aloud' : 'Read this card aloud',
+                  selected: speaking,
+                  onTap: onSpeak,
+                  child: Icon(
+                    speaking ? Symbols.volume_off : Symbols.volume_up,
+                    fill: 1,
+                    size: 21,
+                    color: speaking ? AppColors.primary : StudyColors.playerInk,
+                  ),
+                ),
               _Slot(
                 width: slot,
                 widgetKey: const ValueKey('study-previous'),
@@ -270,7 +292,7 @@ class StudyVerdict extends StatelessWidget {
             Expanded(
               child: _VerdictButton(
                 key: const ValueKey('study-still-learning'),
-                label: 'Still learning',
+                label: 'Still Learning',
                 icon: Symbols.replay,
                 selected: learning,
                 fill: StudyColors.amberFill,
@@ -282,7 +304,7 @@ class StudyVerdict extends StatelessWidget {
             Expanded(
               child: _VerdictButton(
                 key: const ValueKey('study-got-it'),
-                label: 'Got it',
+                label: 'Known',
                 icon: Symbols.check,
                 selected: known,
                 fill: StudyColors.greenFill,
@@ -297,7 +319,7 @@ class StudyVerdict extends StatelessWidget {
           child: marked
               ? Center(
                   child: Text(
-                    'Got it $knownCount · Still learning $learningCount',
+                    'Known $knownCount · Still learning $learningCount',
                     key: const ValueKey('study-tally'),
                     style: StudyText.tally,
                     maxLines: 1,

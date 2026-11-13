@@ -98,7 +98,7 @@ class EventPassDialog extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              pass.reference == null ? 'Your place' : 'Pass #${pass.reference}',
+              pass.reference == null ? 'Your Place' : 'Pass #${pass.reference}',
               textAlign: TextAlign.center,
               style: EventsText.passTitle.copyWith(fontSize: 13, height: 17 / 12.5),
             ),
@@ -106,7 +106,7 @@ class EventPassDialog extends StatelessWidget {
             Text('${pass.role} • ${pass.holder}', textAlign: TextAlign.center, style: EventsText.passHolder),
             const SizedBox(height: 6),
             Text(
-              "Scan to open the event's page, where your place is on your account.",
+              'Scan to open the event page. Your place is saved to your account.',
               textAlign: TextAlign.center,
               style: EventsText.attendeesNote.copyWith(color: AppColors.outline, height: 14 / 9.1),
             ),

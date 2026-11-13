@@ -234,7 +234,7 @@ void main() {
           await member.start();
           await mod.start();
           expect(member.takesReplies, isFalse);
-          expect(member.lockedReason, 'This discussion is locked, so it is not taking new replies.');
+          expect(member.lockedReason, 'This discussion is locked and does not accept new replies.');
           expect(await member.sendReply('Can I still answer?'), isNotNull, reason: 'the forum refuses a member');
           expect(mod.takesReplies, isTrue);
           expect(mod.lockedReason, isNull);
@@ -592,7 +592,7 @@ void main() {
             expect(find.textContaining('Staff test'), findsWidgets);
             expect(find.text('Report'), findsOneWidget, reason: 'it is not their own');
             expect(find.text('Delete'), entry.value ? findsOneWidget : findsNothing);
-            expect(find.text('Add files'), entry.value ? findsOneWidget : findsNothing);
+            expect(find.text('Add Files'), entry.value ? findsOneWidget : findsNothing);
             await finishLive(tester);
           } finally {
             await tester.runAsync(() => _remove(doc));

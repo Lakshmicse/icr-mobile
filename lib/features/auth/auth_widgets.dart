@@ -31,18 +31,33 @@ class AuthType {
 /// The page and the card on it. Scrolls when the card is taller than the
 /// screen (a small phone, or the keyboard up), and sits in the middle when it
 /// is not.
+///
+/// [flat] draws no page colour around the card: the page takes the card's own
+/// colour (white in light), edge to edge, so the form sits on one plain
+/// background. The password recovery screens use it (the client's note on the
+/// manual, 13 Nov 2026: "Background to be fully white").
 class AuthScaffold extends StatelessWidget {
-  const AuthScaffold({super.key, required this.child});
+  const AuthScaffold({super.key, required this.child, this.flat = false});
 
   final Widget child;
+  final bool flat;
+
+  /// The width inside the card on this screen: the screen less the safe area
+  /// and the page's 15 dp either side, at most 440, less the card's 25 dp.
+  static double contentWidth(BuildContext context) {
+    final safe = MediaQuery.paddingOf(context);
+    final page = MediaQuery.sizeOf(context).width - safe.left - safe.right - 2 * 15;
+    return (page < 440 ? page : 440) - 2 * 25;
+  }
 
   @override
   Widget build(BuildContext context) {
     final p = AuthPalette.of(context);
+    final page = flat ? p.card : p.page;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: p.overlay,
+      value: p.overlay.copyWith(statusBarColor: page, systemNavigationBarColor: page),
       child: Scaffold(
-        backgroundColor: p.page,
+        backgroundColor: page,
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, box) => SingleChildScrollView(
@@ -94,7 +109,7 @@ class AuthHeader extends StatelessWidget {
 
 /// A label above a rounded field, with an icon inside at the left and, when
 /// given, a [trailing] widget (the show/hide eye) at the right. [headerTrailing]
-/// sits opposite the label ("Forgot password?").
+/// sits opposite the label ("Change Email").
 class AuthField extends StatelessWidget {
   const AuthField({
     super.key,
@@ -154,7 +169,7 @@ class AuthField extends StatelessWidget {
       children: [
         // Every label row is at least as tall as a link's tap area, so "Email" and
         // "Password" sit the same distance above their fields; a label that wraps
-        // beside its link ("Code from your email" · "Change email") takes more.
+        // beside its link ("Email Verification Code" · "Change Email") takes more.
         ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 34),
           child: Row(
@@ -225,7 +240,7 @@ class AuthEyeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = AuthPalette.of(context);
     return IconButton(
-      tooltip: shown ? 'Hide password' : 'Show password',
+      tooltip: shown ? 'Hide Password' : 'Show Password',
       onPressed: onPressed,
       iconSize: 26,
       padding: EdgeInsets.zero,
@@ -266,7 +281,7 @@ class AuthErrorLine extends StatelessWidget {
   }
 }
 
-/// A link on the card screens: "Forgot password?", "Create an account".
+/// A link on the card screens: "Change Email", "Resend Link".
 class AuthLink extends StatelessWidget {
   const AuthLink({super.key, required this.label, required this.onTap, this.style, this.padding});
 
@@ -294,7 +309,7 @@ class AuthLink extends StatelessWidget {
   }
 }
 
-/// The full-width accent button: "Sign in", "Agree & join".
+/// The full-width accent button: "Join", "Agree & Join".
 class AuthPrimaryButton extends StatelessWidget {
   const AuthPrimaryButton({
     super.key,
@@ -372,78 +387,169 @@ class AuthOutlinedButton extends StatelessWidget {
   }
 }
 
-/// "—— OR ——"
-class AuthDivider extends StatelessWidget {
-  const AuthDivider({super.key});
+/// The colours a [SocialPillButton] draws with, from whichever palette its
+/// screen uses: the card screens' [AuthPalette] (through [SocialPillStyle.of])
+/// or the sign-in page's `LiColors`.
+class SocialPillStyle {
+  const SocialPillStyle({required this.border, required this.text, required this.spinner, required this.isDark});
+
+  /// The card screens' colours.
+  SocialPillStyle.of(AuthPalette p) : this(border: p.fieldBorder, text: p.text, spinner: p.accent, isDark: p.isDark);
+
+  final Color border;
+  final Color text;
+  final Color spinner;
+  final bool isDark;
+}
+
+/// "Sign In Using" / "Sign Up Using" over the providers side by side, each a
+/// [SocialPillButton] keyed `<keyPrefix>.<provider>` (owner, 12 Nov 2026: the
+/// marks moved under the form, headed, with larger logos). On a page too narrow
+/// for two pills with their names (under 280 dp: a 320 dp phone) they stack.
+///
+/// The choice is made from [width], the page's content width, not with a
+/// `LayoutBuilder`: the sign-in page measures its column's intrinsic height
+/// (`SliverFillRemaining`), which a `LayoutBuilder` cannot answer.
+class SocialProvidersBlock extends StatelessWidget {
+  const SocialProvidersBlock({
+    super.key,
+    required this.heading,
+    required this.headingStyle,
+    required this.keyPrefix,
+    required this.style,
+    required this.width,
+    required this.available,
+    required this.busy,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  final String heading;
+  final TextStyle headingStyle;
+  final String keyPrefix;
+  final SocialPillStyle style;
+
+  /// The width the block is laid out in: `LiScaffold.contentWidth` on the
+  /// sign-in page, [AuthScaffold.contentWidth] on the card.
+  final double width;
+
+  /// The providers this server has keys for.
+  final Set<SocialProvider> available;
+
+  /// The provider whose round trip is running, if any.
+  final SocialProvider? busy;
+  final bool enabled;
+  final ValueChanged<SocialProvider> onPressed;
+
+  /// Narrower than this, the pills go one under the other.
+  static const sideBySideMinWidth = 280.0;
+  static const gap = 12.0;
 
   @override
   Widget build(BuildContext context) {
-    final p = AuthPalette.of(context);
-    final line = Expanded(child: Divider(color: p.rule, thickness: 1, height: 1));
-    return SizedBox(
-      height: 20,
-      child: Row(
-        children: [
-          line,
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 13),
-            child: Text('OR', style: AppText.workSans(15, FontWeight.w700, p.orText, lineHeight: 18, spacing: 0.9)),
+    final pills = [
+      for (final provider in SocialProvider.values)
+        SocialPillButton(
+          key: Key('$keyPrefix.${provider.name}'),
+          provider: provider,
+          style: style,
+          available: available.contains(provider),
+          busy: busy == provider,
+          onPressed: enabled ? () => onPressed(provider) : null,
+        ),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(heading, key: Key('$keyPrefix.using'), style: headingStyle),
+        const SizedBox(height: 12),
+        if (width < sideBySideMinWidth)
+          for (final (i, pill) in pills.indexed) ...[if (i > 0) const SizedBox(height: 10), pill]
+        else
+          Row(
+            children: [
+              for (final (i, pill) in pills.indexed) ...[if (i > 0) const SizedBox(width: gap), Expanded(child: pill)],
+            ],
           ),
-          line,
-        ],
-      ),
+      ],
     );
   }
 }
 
-/// A provider's mark on its own, as the designs draw them: no box, no words.
-/// Drawn faded when this server has no keys for it, as the website does.
-class SocialIconButton extends StatelessWidget {
-  const SocialIconButton({
+/// One provider as an outlined pill: its mark, 28 dp, and its name. Drawn faded
+/// when this server has no keys for it, as the website does; it still answers a
+/// tap, to say so. The spinner takes the mark's place while its round trip runs.
+class SocialPillButton extends StatelessWidget {
+  const SocialPillButton({
     super.key,
     required this.provider,
+    required this.style,
     required this.available,
     required this.busy,
     required this.onPressed,
   });
 
   final SocialProvider provider;
+  final SocialPillStyle style;
   final bool available;
   final bool busy;
   final VoidCallback? onPressed;
 
-  /// The marks as the designs size them: LinkedIn's square 35, Google's G 37.
-  double get _size => provider == SocialProvider.google ? 37 : 35;
+  static const markSize = 28.0;
 
   @override
-  Widget build(BuildContext context) {
-    final p = AuthPalette.of(context);
-    return Semantics(
-      button: true,
-      enabled: onPressed != null,
-      label: 'Continue with ${provider.label}',
-      excludeSemantics: true,
-      child: Opacity(
-        opacity: available ? 1 : (p.isDark ? 0.6 : 0.5),
-        child: InkResponse(
-          onTap: onPressed,
-          radius: 30,
-          child: SizedBox(
-            width: 56,
-            height: 48,
-            child: Center(
-              child: busy
-                  ? SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2.4, color: p.accent))
-                  : SvgPicture.asset(provider.icon, width: _size, height: _size),
-            ),
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    enabled: onPressed != null,
+    label: 'Continue with ${provider.label}',
+    excludeSemantics: true,
+    child: Opacity(
+      opacity: available ? 1 : (style.isDark ? 0.6 : 0.5),
+      child: SizedBox(
+        height: 52,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            shape: const StadiumBorder(),
+            side: BorderSide(color: style.border),
+            foregroundColor: style.text,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: markSize,
+                height: markSize,
+                child: busy
+                    ? Center(
+                        child: SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2.2, color: style.spinner),
+                        ),
+                      )
+                    : SvgPicture.asset(provider.icon, width: markSize, height: markSize),
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  provider.label,
+                  style: AppText.workSans(16, FontWeight.w600, style.text, lineHeight: 20),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
-/// "Remember me": a 19 dp box with a 2 dp outline, filled with the accent when on.
+/// "Remember Me": a 19 dp box with a 2 dp outline, filled with the accent when on.
 class AuthCheckbox extends StatelessWidget {
   const AuthCheckbox({super.key, required this.value, required this.onChanged, required this.label});
 

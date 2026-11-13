@@ -141,12 +141,12 @@ void main() {
       expect(o.shelves.first.mentors.first.role, 'VP Facility Ops @ Infosys');
       expect(o.shelves.first.mentors.first.expertise.take(3), ['Smart Campuses', 'Smart Campuses', 'BMS']);
 
-      // "Learn from top leaders at top enterprises".
+      // "Learn from top leaders at top enterprises.".
       expect(o.companies.take(4).map((c) => c.name), ['Microsoft', 'Amazon', 'JLL', 'CBRE']);
       expect(o.companies.map((c) => c.name), containsAll(['Google', 'Infosys']));
       expect(o.companies.length, 8);
 
-      // "Learn from top topics": nine, three to a row, red for the selected (the
+      // "Learn from mentors on top topics.": nine, three to a row, red for the selected (the
       // top two while Bharat has no focus areas), blue for the suggested.
       expect(o.topics.length, 9);
       expect(o.topics.first.label, 'Space Optimization');
@@ -230,7 +230,7 @@ void main() {
           final user = profile['user'] as Map<String, dynamic>;
           expect('${user['firstName']} ${user['lastName']}', mentor.name);
         }
-        // "Know More" opens the programme's website page; the programme is there.
+        // "Learn More" opens the programme's website page; the programme is there.
         final programme = await _get(api, '/mentorship/programmes/${o.cohort!.slug}');
         expect(programme['name'], o.cohort!.name);
         // A session card opens its mentor, whose storefront is live and lists the offering.
@@ -495,7 +495,7 @@ void main() {
       expect(find.total, 48);
     });
 
-    liveTest('the Filters sheet\'s "Clear all" state is the whole directory', () async {
+    liveTest('the Filters sheet\'s "Clear All" state is the whole directory', () async {
       final find = FindMentorsController(
         ApiMentorshipRepository(api: await _client()),
         category: 'Operations & FM',

@@ -170,3 +170,34 @@ The website's dialog as a screen: choose files first (the picker is the phone's;
 - Bookmarks (backend request). The signed-link request is withdrawn: the library no longer opens files in other apps.
 - iOS: the PDF renderer and the screenshot flag exist on Android only; on iOS a PDF says it cannot be previewed yet and screenshots are not blocked.
 - A "content level" filter and a lock on cards, if the API brings the field back.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client marked up the user manual with the wording wanted on a dozen screens and asked for the rest of the app to read the same way: Title Case for what a person taps or reads as a label, a short sentence with a full stop for everything else, plain international English, no dash inside a sentence. Wording only: no layout, colour or behaviour changed. Semantics-only labels (what a screen reader says for an icon) were left as they were. By the lead's ruling the title of an empty, locked or error state is a heading (Title Case, no full stop) with a sentence under it, and the retry button reads **Try Again** everywhere.
+
+| Where | Old | New |
+|---|---|---|
+| Headings, buttons, chips to Title Case (17) | Browse by kind · Quick searches · All formats · Clear filters · Sort and filter · Sort by · Show documents · Edit document · About this document · Add files · Upload a document · Add more · File name · Report this document · Report sent · Send report · Not included in your plan | Browse by Kind · Quick Searches · All Formats · Clear Filters · Sort and Filter · Sort By · Show Documents · Edit Document · About This Document · Add Files · Upload a Document · Add More · File Name · Report This Document · Report Sent · Send Report · Not Included in Your Plan |
+| More of the list | Show more documents | View More |
+| The plan lock's button | See plans | View Plans |
+| Not loaded | Couldn't load the library · Couldn't load this document · Could not open that file. · Could not download that file. · That didn't work. Try again. | Unable to Load the Library · Unable to Load This Document (titles, with **Try Again**) · Unable to open this file. · Unable to download this file. · Something went wrong. Try again. |
+| A read already running | Please wait. | Wait a moment. |
+| After an upload | "x" is in the library. | "x" was added to the library. |
+| No match | No documents match | No Documents Match |
+| Editing | hint "What it is and who it is for" · A title is needed. | Describe the document and who it is for. · Enter a title. |
+| Deleting | It leaves the library for everyone, and its 3 files with it. This cannot be undone. · The rest of the document stays. | It will be removed from the library for everyone, with its 3 files. This cannot be undone. · The rest of the document will remain. |
+| No description | The person who shared this did not add a description. | No description added. |
+| A file with no preview | …can't be previewed in the app. Download it to read it. | …can't be previewed in the app. Download the file to read it. |
+| Zoom (tooltips) | Zoom out · Zoom in | Zoom Out · Zoom In |
+| Report reasons | Copyright or confidential material · Inappropriate or offensive · Misleading or out of date · Spam or advertising · File is broken or will not open · Something else | Copyright or Confidential Material · Inappropriate or Offensive · Misleading or Out of Date · Spam or Advertising · Damaged or Unreadable File · Something Else |
+| The report sheet | What is wrong? (required) · Add a note (optional) · hint "A page number, a link, anything that helps the admin check it" | What is wrong? (Required) · Add a Note (Optional) · A page number, a link or other details that help the admin review it. |
+| The report's thanks | Thanks. Your report on "x" is with the ICR admin team, who will look at it. The person who shared it is not told who reported it. | Thank you. The ICR admin team will review your report on "x". The person who shared it will not be told who reported it. |
+| Upload: the picker | Choose a file · Choose files / PDF, Word, Excel, PowerPoint, CSV, images or a ZIP — up to 10 MB each / Pick several to file them under one title. | Select a File · Select Files / PDF, Word, Excel, PowerPoint, CSV, images or ZIP. Up to 10 MB each. / Select several files to group them under one title. |
+| Upload: progress | Uploading x — 40% (1 of 3) | Uploading x: 40% (1 of 3) |
+| Upload: adding to a document | They join "x", under the same description and category. · That is the 10-file limit for one document. | These files will be added to "x", with the same description and category. · You have reached the 10-file limit for one document. |
+| Upload: helpers | One title for the whole set — what someone would search for. · What it is and when someone would reach for it. · Groups the document under a filter chip. · Rename it if you like — this is the name members see and download. | One title for all files. Use words people would search for. · Describe what it is and when to use it. · Used to group and filter documents. · You can rename it. Members see and download this name. |
+| Upload: category fields | Your category * · Sub-category (optional) · Your sub-category · Specialization (optional) · Your specialization · Other (add your own) | Your Category * · Sub-category (Optional) · Your Sub-category · Specialization (Optional) · Your Specialization · Other (Add Your Own) |
+| Upload: the pickers' hints | Narrow it down · Nothing listed under this category · Narrow it further · Nothing listed under this sub-category | Select a sub-category · No sub-categories in this category · Select a specialization · No specializations in this sub-category |
+| Upload: refusals | x is not a format the library takes · x — the limit is 10 files · Choose at least one file. · …has too long a name (255 characters at most). · Give the document a title. · Type the category. · Choose a category. | x is not a supported format · x: the limit is 10 files · Select at least one file. · …has a name that is too long (maximum 255 characters). · Enter a title for the document. · Enter the category. · Select a category. |
+
+Kept: **My Contributions**, **All Resources**, **Upload Resource**, **Start Building Your Library**, **Upload Your First Resource** and the empty library's sentence (the client's 12 Nov words); the ten Browse by Kind chips (search terms); the viewers' "This … can't be shown / read / previewed" sentences, which already say one plain thing each.

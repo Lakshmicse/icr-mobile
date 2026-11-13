@@ -462,7 +462,7 @@ class CohortCard extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Know More', style: MentorshipText.cohortButton),
+                      Text('Learn More', style: MentorshipText.cohortButton),
                       const SizedBox(width: 5),
                       const Icon(LucideIcons.arrowRight, size: 13, color: AppColors.primary),
                     ],
@@ -634,7 +634,7 @@ class _SessionCard extends StatelessWidget {
   }
 }
 
-/// "All domains": what the Domains pill opens — every domain a listed mentor has, with its mentor count, each a
+/// "All Domains": what the Domains pill opens — every domain a listed mentor has, with its mentor count, each a
 /// way into Find Mentors on that domain (the website's directory lists them the same way in its Domain filter).
 /// The pill's "15+" is the rounded count of this list.
 Future<void> showDomainsSheet(
@@ -657,7 +657,7 @@ Future<void> showDomainsSheet(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
               child: Row(
                 children: [
-                  Text('All domains', style: MentorshipText.formTitle),
+                  Text('All Domains', style: MentorshipText.formTitle),
                   const Spacer(),
                   Text(
                     '${domains.length} ${domains.length == 1 ? 'domain' : 'domains'}',

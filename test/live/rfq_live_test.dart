@@ -332,7 +332,7 @@ void main() {
       expect(green.supplier.verificationLevel, 'REGISTERED');
       final net = responses.firstWhere((r) => r.supplier.name == 'SecureNet Systems');
       expect(net.meetsCriteria, isFalse);
-      expect(net.failures, ['Annual turnover', 'Presence', 'Statutory compliance (ESI)']);
+      expect(net.failures, ['Annual Turnover', 'Presence', 'Statutory compliance (ESI)']);
     });
 
     liveTest('suppliers that fit are suggested, with their score, and any supplier is found by name', () async {
@@ -994,7 +994,11 @@ void main() {
       // requirements only since 3 Nov 2026).
       final ask = PostRfqController(
         repository: repo,
-        target: QuoteTarget(vendorId: bluepeakVendor, supplierName: 'Bluepeak Security', categoryKey: 'PHYSICAL_SECURITY'),
+        target: QuoteTarget(
+          vendorId: bluepeakVendor,
+          supplierName: 'Bluepeak Security',
+          categoryKey: 'PHYSICAL_SECURITY',
+        ),
       );
       await ask.start();
       ask.quote
@@ -1170,35 +1174,38 @@ void main() {
       },
     );
 
-    liveTest('acting for no company, the composer sends an enquiry named for the employer "Posting for" shows', () async {
-      final repo = await _repo(pooja);
-      final c = PostRfqController(repository: repo);
-      await c.start();
-      expect(c.personal, isTrue);
-      final pune = (await c.searchPlaces('Pune')).first;
-      c.addPlace(pune);
-      c.update((d) {
-        d
-          ..facilityType = 'IT & ITES'
-          ..category = 'SECURITY'
-          ..text = 'Round-the-clock guarding for a Pune campus: 24 guards, three shifts.';
-        // A profile with no current employer is asked the name, as the website asks it.
-        if (c.askCompany) d.companyName = 'Pooja Consulting';
-      });
-      final expected = c.postingFor ?? 'Pooja Consulting';
-      // Kept a draft, so no supplier is alerted; deleted at the end.
-      expect(await c.submit(publish: false), isTrue, reason: c.error ?? '${c.problems}');
-      final id = c.result!.id;
-      addTearDown(() async {
-        try {
-          await repo.deleteDraft(id);
-        } catch (_) {}
-      });
-      final saved = await repo.requirement(id);
-      expect(saved.kind, RfqKind.enquiry);
-      expect(saved.companyName, expected);
-      expect(saved.companyId, isNull, reason: 'it is the person\'s, not a company\'s');
-    });
+    liveTest(
+      'acting for no company, the composer sends an enquiry named for the employer "Posting for" shows',
+      () async {
+        final repo = await _repo(pooja);
+        final c = PostRfqController(repository: repo);
+        await c.start();
+        expect(c.personal, isTrue);
+        final pune = (await c.searchPlaces('Pune')).first;
+        c.addPlace(pune);
+        c.update((d) {
+          d
+            ..facilityType = 'IT & ITES'
+            ..category = 'SECURITY'
+            ..text = 'Round-the-clock guarding for a Pune campus: 24 guards, three shifts.';
+          // A profile with no current employer is asked the name, as the website asks it.
+          if (c.askCompany) d.companyName = 'Pooja Consulting';
+        });
+        final expected = c.postingFor ?? 'Pooja Consulting';
+        // Kept a draft, so no supplier is alerted; deleted at the end.
+        expect(await c.submit(publish: false), isTrue, reason: c.error ?? '${c.problems}');
+        final id = c.result!.id;
+        addTearDown(() async {
+          try {
+            await repo.deleteDraft(id);
+          } catch (_) {}
+        });
+        final saved = await repo.requirement(id);
+        expect(saved.kind, RfqKind.enquiry);
+        expect(saved.companyName, expected);
+        expect(saved.companyId, isNull, reason: 'it is the person\'s, not a company\'s');
+      },
+    );
 
     liveTest('the place search finds a city with its state and country, and a short query is not sent', () async {
       final repo = await _repo(sunrise);

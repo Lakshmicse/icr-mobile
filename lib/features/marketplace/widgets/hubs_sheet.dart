@@ -31,7 +31,7 @@ class HubsSheet extends StatelessWidget {
         controller: scroll,
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
         children: [
-          Text('${supplier.name} offices', style: MartText.sheetTitle),
+          Text('${supplier.name} Offices', style: MartText.sheetTitle),
           const SizedBox(height: 4),
           Text(hubs.length == 1 ? '1 operating hub' : '${hubs.length} operating hubs', style: MartText.sheetRowMuted),
           const SizedBox(height: 12),
@@ -72,7 +72,7 @@ class _HubCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(color: AppColors.surfaceContainer, borderRadius: BorderRadius.circular(8)),
-                  child: Text('Head office', style: MartText.groupChip.copyWith(fontSize: 12)),
+                  child: Text('Head Office', style: MartText.groupChip.copyWith(fontSize: 12)),
                 ),
             ],
           ),

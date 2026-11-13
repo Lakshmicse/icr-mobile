@@ -14,6 +14,7 @@ import '../learning/course_sheet.dart';
 import '../learning/learning_controller.dart';
 import '../learning/learning_screen.dart';
 import '../learning/opened_learning.dart';
+import '../learning/learning_links.dart';
 import '../learning_assess/api_assess_repository.dart';
 import '../learning_assess/assess_models.dart';
 import '../learning_assess/assess_repository.dart';
@@ -46,11 +47,11 @@ import 'widgets/masterclass_banner.dart';
 
 /// The Learning tab, built to the Learning Centre design
 /// (`docs/designs/hires/learning-centre.png`, a 390-wide frame at 4x). Top to
-/// bottom: the Home header (photo, search, bell), **Catalogue** (the four tiles),
-/// **Assess Your Knowledge** and **Mock Exams** (two-column grids of six cards
-/// from the paper catalogue), **Flash Cards** (a rail of dark tiles, one per
-/// deck), **ICR Certifications** and **Partner Courses** (the grids again, from
-/// the course catalogue), and the **Masterclasses** banner. Every section has a
+/// bottom: the Home header (photo, search, bell), **Explore Learning Resources** (the four tiles),
+/// **Test Your Knowledge** and **Certification Mock Exams** (two-column grids of six cards
+/// from the paper catalogue), **Learn with Flashcards** (a rail of dark tiles, one per
+/// deck), **ICR Professional Certifications** and **Partner Learning Programmes** (the grids again,
+/// from the course catalogue), and the **Masterclasses** banner (the owner's wording, 12 Nov 2026). Every section has a
 /// "View More" that opens its full screen; the header's search narrows them all.
 ///
 /// [controller] and [routes] are for tests; the app mounts
@@ -136,7 +137,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
       context,
       (route, back) => ChangeNotifierProvider<LearningController>.value(
         value: learning,
-        child: LearningScreen(onBack: back, title: 'My courses', routes: widget.routes, onOpenDeck: _openDeck),
+        child: LearningScreen(onBack: back, title: 'My Courses', routes: widget.routes, onOpenDeck: _openDeck),
       ),
     );
     if (mounted) _hub.reloadAccess();
@@ -162,7 +163,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
       context,
       (route, back) => ChangeNotifierProvider<LearningController>.value(
         value: learning,
-        child: LearningScreen(onBack: back, title: 'ICR Courses', routes: widget.routes, onOpenDeck: _openDeck),
+        child: LearningScreen(onBack: back, title: 'ICR Programmes', routes: widget.routes, onOpenDeck: _openDeck),
       ),
     );
   }
@@ -284,9 +285,9 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
     if (_hub.nothingMatches) {
       return [
         HubNotice(
-          title: 'No matches',
+          title: 'No Matches Found',
           body: 'Nothing in the Learning Centre matches that. Try other words, or clear the search.',
-          action: 'Clear search',
+          action: 'Clear Search',
           onAction: () {
             _search.clear();
             _hub.clearSearch();
@@ -307,7 +308,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
       (
         body: _grid(
           key: 'assess',
-          title: 'Assess Your Knowledge',
+          title: 'Test Your Knowledge',
           onMore: () => _pushAndRecount(widget.routes.assessment),
           loading: _hub.assessLoading,
           error: _hub.assessError,
@@ -318,6 +319,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
                 key: ValueKey('assess-${g.key}'),
                 title: g.title,
                 cover: coverFor(g.cover, i),
+                onShare: () => shareLearningLink(g.title, LearningLinks.group(g)),
                 onTap: () => _openGroup(PaperKind.assessment, g),
               ),
           ],
@@ -328,7 +330,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
       (
         body: _grid(
           key: 'mock',
-          title: 'Mock Exams',
+          title: 'Certification Mock Exams',
           onMore: () => _pushAndRecount(widget.routes.mockTests),
           loading: _hub.mockLoading,
           error: _hub.mockError,
@@ -339,6 +341,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
                 key: ValueKey('mock-${g.key}'),
                 title: g.title,
                 cover: coverFor(g.cover, i),
+                onShare: () => shareLearningLink(g.title, LearningLinks.group(g)),
                 onTap: () => _openGroup(PaperKind.mock, g),
               ),
           ],
@@ -350,7 +353,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
       (
         body: _grid(
           key: 'cert',
-          title: 'ICR Certifications',
+          title: 'ICR Professional Certifications',
           onMore: () => _openCourses(search: _search.text.trim()),
           loading: _hub.coursesLoading,
           error: _hub.coursesError,
@@ -362,6 +365,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
                 title: c.title,
                 cover: coverFor(c.cover, i),
                 badge: 'ICR',
+                onShare: () => shareLearningLink(c.title, LearningLinks.course(c)),
                 onTap: () => showCourseSheet(context, c),
               ),
           ],
@@ -371,7 +375,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
       (
         body: _grid(
           key: 'partner',
-          title: 'Partner Courses',
+          title: 'Partner Learning Programmes',
           onMore: _openPartners,
           loading: _hub.institutesLoading,
           error: _hub.institutesError,
@@ -390,7 +394,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
       // header's edge, the tiles 1 dp under it, a hairline 5 dp under their shadow, then each section's 36 dp
       // heading row 6 dp under that.
       if (!_hub.narrowed) ...[
-        HubSectionHeading(title: 'Catalogue', onAction: _openCatalogue),
+        HubSectionHeading(title: 'Explore Learning Resources', onAction: _openCatalogue),
         const SizedBox(height: 1),
         CatalogueRail(onOpen: _openDoor),
         const SizedBox(height: 5.1),
@@ -437,9 +441,9 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
     } else if (error != null) {
       rows.add(
         HubNotice(
-          title: "Couldn't load this section",
+          title: 'Unable to Load This Section',
           body: error,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: onRetry,
           padding: const EdgeInsets.fromLTRB(32, 8, 32, 8),
         ),
@@ -460,7 +464,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
     final entries = _hub.myLearning;
     if (entries.isEmpty) return const [];
     return [
-      HubSectionHeading(key: const ValueKey('my-courses-heading'), title: 'My courses', onAction: _openMyCourses),
+      HubSectionHeading(key: const ValueKey('my-courses-heading'), title: 'My Courses', onAction: _openMyCourses),
       const SizedBox(height: 1),
       SingleChildScrollView(
         key: const ValueKey('rail-my-courses'),
@@ -497,7 +501,8 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
         title: item.title,
         cover: item.cover ?? FeedPicture.asset(_doorFor(item.kind).image),
         // As the My courses page badges it: only a place redeemed with ICR credits.
-        badge: item.via == OpenedVia.credits ? 'Credits' : null,
+        tag: item.via == OpenedVia.credits ? 'Credits' : null,
+        onShare: () => shareLearningLink(item.title, item.link),
         onTap: () => _openOpened(item),
       );
     }
@@ -507,6 +512,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
       title: course.title,
       cover: coverFor(course.cover, index),
       badge: LearningHubController.isIcr(course) ? 'ICR' : null,
+      onShare: () => shareLearningLink(course.title, LearningLinks.course(course)),
       onTap: () => showCourseSheet(context, course),
     );
   }
@@ -525,7 +531,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
     return [
       HubSectionHeading(
         key: const ValueKey('flash-heading'),
-        title: 'Flash Cards',
+        title: 'Learn with Flashcards',
         onAction: () => pushLearningPage(context, widget.routes.flashCards),
       ),
       if (loading)
@@ -543,9 +549,9 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
         )
       else if (error != null)
         HubNotice(
-          title: "Couldn't load the decks",
+          title: 'Unable to Load the Decks',
           body: error,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _hub.reloadDecks,
           padding: const EdgeInsets.fromLTRB(32, 8, 32, 8),
         )

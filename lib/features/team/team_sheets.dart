@@ -58,7 +58,7 @@ class RoleSelect extends StatelessWidget {
   Widget build(BuildContext context) {
     return AccountSelectField(
       label: label,
-      hint: 'Choose a role',
+      hint: 'Select a role',
       value: labelOf(role),
       onTap: () async {
         final picked = await pickTeamRole(context, roles: roles, selected: role, labelOf: labelOf);
@@ -263,7 +263,7 @@ class _ApproveSheetState extends State<ApproveSheet> {
     final r = widget.request;
     return EditSheet(
       title: 'Approve ${r.name}',
-      subtitle: 'Asked as ${roleLabel(r.role)}. You name the role they join with.',
+      subtitle: 'Requested as ${roleLabel(r.role)}. Select the role they will join with.',
       saveLabel: TeamWords.approve,
       saving: _sending,
       error: _error,
@@ -422,7 +422,7 @@ class _EditMemberSheetState extends State<EditMemberSheet> {
 typedef SendAdd =
     Future<String?> Function(TeamPerson person, String role, String? branchId, List<String> learningRoles);
 
-/// "Add someone on ICR": find a member by name, name their role (and office), and ask them. True when asked.
+/// "Add Existing ICR Member": find a member by name, name their role (and office), and ask them. True when asked.
 Future<bool> showAddPersonSheet(
   BuildContext context, {
   required TeamViewer viewer,
@@ -643,7 +643,7 @@ typedef SendInvite = Future<String?> Function(String email, String role, String?
 
 final _looksLikeEmail = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$');
 
-/// "Invite by email". A company admin's form asks first whether the address is on ICR: someone with a public
+/// "Invite Team Member". A company admin's form asks first whether the address is on ICR: someone with a public
 /// profile is asked in the app (and joins once they accept), anyone else is sent the email. True when sent.
 Future<bool> showInviteSheet(
   BuildContext context, {
@@ -803,7 +803,7 @@ class _InviteSheetState extends State<InviteSheet> {
     final found = _settled ? _found : null;
     final person = _person;
     return EditSheet(
-      title: 'Invite a team member',
+      title: 'Invite a Team Member',
       saveLabel: _sending
           ? (_addsDirectly ? TeamWords.asking : TeamWords.sending)
           : (_addsDirectly ? TeamWords.askToJoin : TeamWords.sendInvite),

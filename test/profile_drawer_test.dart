@@ -164,7 +164,7 @@ void main() {
         'Saved Jobs': '/career/saved',
         // Everything posted on ICR, not only the member's own (owner, 3 Nov 2026).
         'Requirements': '/rfq',
-        'Find Work & Bid': '/manage/bids',
+        "Enquiries and RFQ's": '/manage/bids',
         'Certificates & Badges': '/learning/certificates',
         'Settings': '/profile?tab=security',
         'Nikhil Majjagi': '/members/nikhil-majjagi',
@@ -371,7 +371,7 @@ void main() {
     testWidgets('with no company there is no block at all: no heading, no "Create a company" row', (tester) async {
       await pumpDrawer(tester, companies: repoWith(const []), withApiClient: true);
       expect(find.text('MY COMPANIES'), findsNothing);
-      expect(find.text('Create a company'), findsNothing);
+      expect(find.text('Create a Company'), findsNothing);
       expect(find.byKey(const ValueKey('drawer-company-create')), findsNothing);
       expect(find.byKey(const ValueKey('drawer-companies-all')), findsNothing);
       expect(find.text('Regional Chapters'), findsOneWidget, reason: 'the rest of the menu is untouched');
@@ -420,7 +420,7 @@ void main() {
       );
       await pumpDrawer(tester, companies: staff);
       expect(find.text('MY COMPANIES'), findsNothing);
-      expect(find.text('Create a company'), findsNothing);
+      expect(find.text('Create a Company'), findsNothing);
     });
 
     testWidgets('without an account repository (no API client above the menu) there is no block', (tester) async {

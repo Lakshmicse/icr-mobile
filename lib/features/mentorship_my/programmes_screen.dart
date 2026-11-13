@@ -199,7 +199,7 @@ class ProgrammesScreen extends StatefulWidget {
   final MentorshipLinks? links;
   final MentoringRepository? repository;
 
-  /// Where "Set up my mentor profile" leads (the become-a-mentor flow); the website's page by default.
+  /// Where "Set Up My Mentor Profile" leads (the become-a-mentor flow); the website's page by default.
   final void Function(BuildContext context)? onBecomeMentor;
   final OpenConversation? onOpenConversation;
   final void Function(BuildContext context, String mentorProfileId)? onOpenMentor;
@@ -252,7 +252,7 @@ class _ProgrammesScreenState extends State<ProgrammesScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                 child: SegmentTabs(
-                  labels: const ['Open for applications', 'Under way', 'All'],
+                  labels: const ['Open for Applications', 'In Progress', 'All'],
                   selected: switch (_c.status) {
                     'OPEN' => 0,
                     'RUNNING' => 1,
@@ -265,7 +265,7 @@ class _ProgrammesScreenState extends State<ProgrammesScreen> {
                 child: LoadedList(
                   loading: loading,
                   error: failed,
-                  errorTitle: "Couldn't load the programmes",
+                  errorTitle: 'Unable to Load Programmes',
                   onRefresh: _c.load,
                   children: loading || failed != null
                       ? const []
@@ -273,8 +273,8 @@ class _ProgrammesScreenState extends State<ProgrammesScreen> {
                           if (rows.isEmpty)
                             const EmptyNote(
                               icon: LucideIcons.layers,
-                              title: 'No programmes here',
-                              body: 'Cohort programmes open for applications from time to time. Look again soon.',
+                              title: 'No Programmes Found',
+                              body: 'Cohort programmes open for applications periodically. Check again soon.',
                             ),
                           for (final p in rows) _ProgrammeCard(programme: p, mine: _c.mineIn(p), onTap: () => _open(p)),
                         ],
@@ -433,7 +433,7 @@ class _ProgrammeScreenState extends State<ProgrammeScreen> {
           body: LoadedList(
             loading: _c.programme.loading && p == null,
             error: p == null ? _c.programme.error : null,
-            errorTitle: "Couldn't load this programme",
+            errorTitle: 'Unable to Load This Programme',
             onRefresh: _c.load,
             children: p == null ? const [] : _content(context, p),
           ),
@@ -493,7 +493,7 @@ class _ProgrammeScreenState extends State<ProgrammeScreen> {
         Text(p.summary!, style: MentoringText.body),
       ],
       if (detail.isNotEmpty) ...[
-        const SectionTitle(title: 'The detail', top: 12),
+        const SectionTitle(title: 'Details', top: 12),
         Text(detail, key: const ValueKey('programme-detail'), style: MentoringText.body),
       ],
       if (p.competencies.isNotEmpty || p.focusAreas.isNotEmpty)
@@ -507,10 +507,10 @@ class _ProgrammeScreenState extends State<ProgrammeScreen> {
             ],
           ),
         ),
-      const SectionTitle(title: 'Your place', top: 16),
+      const SectionTitle(title: 'Your Place', top: 16),
       ..._place(context, p, mentee, mentor),
       if (sessions.isNotEmpty) ...[
-        const SectionTitle(title: 'Sessions in this programme', top: 16),
+        const SectionTitle(title: 'Sessions in This Programme', top: 16),
         for (final s in sessions)
           GroupSessionCard(
             session: s,
@@ -537,6 +537,14 @@ class _ProgrammeScreenState extends State<ProgrammeScreen> {
             label: 'Withdraw',
             danger: true,
             onPressed: () async {
+              // Asks first (owner, 7 Nov 2026).
+              if (!await confirmWithdraw(
+                context,
+                title: 'Withdraw This Application?',
+                body: 'Your place in the programme is released, and the mentor is notified.',
+              )) {
+                return;
+              }
               final refusal = await _c.withdraw(e);
               if (context.mounted) showMessage(context, refusal ?? 'Application withdrawn.');
             },
@@ -551,7 +559,7 @@ class _ProgrammeScreenState extends State<ProgrammeScreen> {
           top: mentee != null || mentor != null ? 8 : 0,
           children: [
             SolidButton(
-              label: mentee == null && mentor == null ? 'Apply to join' : 'Apply on the other side',
+              label: mentee == null && mentor == null ? 'Apply to Join' : 'Apply in the Other Role',
               icon: LucideIcons.send,
               onPressed: () => _apply(
                 context,
@@ -672,13 +680,13 @@ class _ApplyFormState extends State<_ApplyForm> {
     return MentoringForm(
       title: 'Apply to ${widget.programme.name}',
       subtitle: 'The organisers read this when they match the cohort.',
-      submitLabel: 'Send application',
+      submitLabel: 'Send Application',
       busy: _busy,
       problem: needsMentor || needsMentee ? null : _error?.message,
       onSubmit: _full ? null : _submit,
       children: [
         FieldBlock(
-          label: 'Which side are you applying on?',
+          label: 'Applying As',
           child: Wrap(
             spacing: 6,
             children: [
@@ -695,9 +703,9 @@ class _ApplyFormState extends State<_ApplyForm> {
             ],
           ),
         ),
-        if (_full) Callout(tone: PillTone.amber, text: 'The ${_role.label.toLowerCase()} side is full.'),
+        if (_full) Callout(tone: PillTone.amber, text: 'All ${_role.label.toLowerCase()} places are taken.'),
         FieldBlock(
-          label: 'Why this cohort? (optional)',
+          label: 'Why This Cohort? (Optional)',
           help: '${_why.text.length}/2000',
           child: TextField(
             key: const ValueKey('apply-motivation'),
@@ -708,7 +716,7 @@ class _ApplyFormState extends State<_ApplyForm> {
             buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
             onChanged: (_) => setState(() {}),
             style: MentoringText.formInput,
-            decoration: fieldDecoration('What you want out of it'),
+            decoration: fieldDecoration('What you want from the programme'),
           ),
         ),
         if (needsMentor || needsMentee)
@@ -719,7 +727,7 @@ class _ApplyFormState extends State<_ApplyForm> {
             actions: [
               if (needsMentor)
                 SolidButton(
-                  label: 'Set up my mentor profile',
+                  label: 'Set Up My Mentor Profile',
                   onPressed: () {
                     final go = widget.onBecomeMentor;
                     if (go != null) {
@@ -729,7 +737,7 @@ class _ApplyFormState extends State<_ApplyForm> {
                     }
                   },
                 ),
-              if (needsMentee) SolidButton(label: 'Tell us what you are after', onPressed: _fixMentee),
+              if (needsMentee) SolidButton(label: 'Add My Mentoring Goals', onPressed: _fixMentee),
             ],
           ),
       ],

@@ -91,7 +91,7 @@ class _OpenRequirementsScreenState extends State<OpenRequirementsScreen> {
   Future<void> _pickSort() async {
     final picked = await pickOne<BoardSort>(
       context,
-      title: 'Sort by',
+      title: 'Sort By',
       options: BoardSort.values,
       labelOf: (s) => s.label,
       selected: _board.query.sort,
@@ -115,7 +115,7 @@ class _OpenRequirementsScreenState extends State<OpenRequirementsScreen> {
     return ListenableBuilder(
       listenable: _board,
       builder: (context, _) => RfqScaffold(
-        title: 'Find work',
+        title: 'Find Work',
         onBack: widget.onBack ?? () => Navigator.maybePop(context),
         unread: _board.unread,
         onBell: widget.onBell ?? () => pushAlerts(context, _hooks),
@@ -145,9 +145,9 @@ class _OpenRequirementsScreenState extends State<OpenRequirementsScreen> {
         fill(
           RfqNotice(
             icon: LucideIcons.cloudOff,
-            title: "Couldn't load the board",
+            title: 'Unable to Load the Board',
             body: b.error,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: b.refresh,
           ),
         ),
@@ -191,7 +191,11 @@ class _OpenRequirementsScreenState extends State<OpenRequirementsScreen> {
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: IcrSearchField(controller: _search, hint: 'Search requirements, services, cities...', onSubmitted: b.setSearch),
+          child: IcrSearchField(
+            controller: _search,
+            hint: 'Search by requirement, service or location',
+            onSubmitted: b.setSearch,
+          ),
         ),
         const SizedBox(height: 10),
         ChipRow(
@@ -218,14 +222,14 @@ class _OpenRequirementsScreenState extends State<OpenRequirementsScreen> {
             ),
             IcrChip(
               key: const ValueKey('board-closing'),
-              label: 'Closing soon',
+              label: 'Closing Soon',
               tone: q.closingInDays == null ? ChipTone.outlined : ChipTone.primary,
               icon: LucideIcons.clock,
               onTap: b.toggleClosingSoon,
             ),
             IcrChip(
               key: const ValueKey('board-verified'),
-              label: 'Verified buyers',
+              label: 'Verified Buyers',
               tone: q.verifiedBuyer ? ChipTone.primary : ChipTone.outlined,
               icon: LucideIcons.badgeCheck,
               onTap: b.toggleVerifiedBuyers,
@@ -251,7 +255,7 @@ class _OpenRequirementsScreenState extends State<OpenRequirementsScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: const RfqBanner(
-              'Your supplier listing is not verified yet. You can read requirements, but you can bid only once it is.',
+              'Your supplier listing is not verified yet. You can read requirements, but you can bid only after it is verified.',
               tone: Tone.amber,
               icon: LucideIcons.shieldAlert,
             ),
@@ -271,16 +275,16 @@ class _OpenRequirementsScreenState extends State<OpenRequirementsScreen> {
     if (b.tab == BoardTab.invited) {
       return const RfqNotice(
         icon: LucideIcons.mailOpen,
-        title: 'No invitations',
-        body: 'When a buyer invites you to quote on a requirement, it shows here.',
+        title: 'No Invitations',
+        body: 'When a buyer invites you to quote on a requirement, it will appear here.',
       );
     }
     if (narrowed) {
       return RfqNotice(
         icon: LucideIcons.searchX,
-        title: 'No requirements match',
-        body: 'Try other words, or take a filter off.',
-        action: 'Clear search and filters',
+        title: 'No Requirements Match',
+        body: 'Try different words or remove a filter.',
+        action: 'Clear Search and Filters',
         onAction: () {
           _search.clear();
           b.setSearch('');
@@ -291,16 +295,16 @@ class _OpenRequirementsScreenState extends State<OpenRequirementsScreen> {
     if (b.tab == BoardTab.recommended) {
       return RfqNotice(
         icon: LucideIcons.sparkles,
-        title: 'Nothing matched to your services yet',
+        title: 'Nothing Matched to Your Services Yet',
         body: 'Recommended shows requirements in the categories you serve. See everything that is open.',
-        action: 'See all open',
+        action: 'See All Open',
         onAction: () => b.setTab(BoardTab.open),
       );
     }
     return const RfqNotice(
       icon: LucideIcons.clipboardList,
-      title: 'No open requirements right now',
-      body: 'New requirements show here as buyers post them. Pull down to check again.',
+      title: 'No Open Requirements Right Now',
+      body: 'New requirements will appear here as buyers post them. Pull down to refresh.',
     );
   }
 }

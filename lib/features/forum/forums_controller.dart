@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_error.dart';
 import '../feed/feed_models.dart';
+import '../feed/forum_json.dart';
 import '../feed/post_reactions.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
@@ -10,11 +11,11 @@ import 'forum_repository.dart';
 /// discussions that came back a page at a time, the topics along the top and the reader's standing. Every action on
 /// a card shows at once and is put back when the API refuses; each returns the refusal's sentence, or null.
 class ForumsController extends ChangeNotifier {
-  ForumsController(this.repository);
+  ForumsController(this.repository, {ForumView initialView = ForumView.all}) : _query = ForumQuery(view: initialView);
 
   final ForumRepository repository;
 
-  ForumQuery _query = const ForumQuery();
+  ForumQuery _query;
   List<FeedPost> _posts = const [];
   bool _loading = false;
   bool _loadingMore = false;
@@ -306,6 +307,46 @@ class ForumsController extends ChangeNotifier {
       return null;
     } catch (e) {
       return ApiError.from(e).message;
+    }
+  }
+
+  final Map<String, FeedPost?> _quotedPosts = {};
+  final Map<String, Future<FeedPost?>> _quotedPending = {};
+
+  /// The discussion a repost quotes, read once and kept, so the card draws it inside the repost.
+  Future<FeedPost?> quoted(String slug) {
+    if (_quotedPosts.containsKey(slug)) return Future.value(_quotedPosts[slug]);
+    return _quotedPending.putIfAbsent(slug, () async {
+      final post = await _quotedFrom(slug);
+      _quotedPosts[slug] = post;
+      _quotedPending.remove(slug);
+      notifyListeners();
+      return post;
+    });
+  }
+
+  /// A vote on a quoted original's poll is cast on the original; every repost of it shows the result.
+  Future<String?> voteQuoted(FeedPost original, String optionId) async {
+    final poll = original.poll;
+    if (poll == null || !poll.open || poll.myOptionId == optionId) return null;
+    try {
+      final updated = await repository.vote(original.id, optionId, open: poll.open);
+      _quotedPosts[original.slug] = original.copyWith(poll: updated);
+      _replace(_find(original.id)?.copyWith(poll: updated));
+      notifyListeners();
+      return null;
+    } catch (e) {
+      return ApiError.from(e).message;
+    }
+  }
+
+  /// The original as the forum serves it: its card, whole text and photos; null when it cannot be read.
+  Future<FeedPost?> _quotedFrom(String slug) async {
+    try {
+      final t = await repository.thread(slug);
+      return t.card.copyWith(body: ForumJson.plainText(t.bodyHtml), images: t.images, detailLoaded: true);
+    } catch (_) {
+      return null;
     }
   }
 

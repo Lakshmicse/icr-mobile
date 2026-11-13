@@ -94,7 +94,9 @@ class IcrChip extends StatelessWidget {
                   if (leading != null) ...[leading!, SizedBox(width: gap)],
                   if (icon != null) ...[Icon(icon, size: iconSize, color: glyphColor), SizedBox(width: gap)],
                   // A label wider than the chip's room gives way to an ellipsis rather than overflow.
-                  Flexible(child: Text(label, style: style, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                  Flexible(
+                    child: Text(label, style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
                   if (trailing != null) ...[SizedBox(width: trailingGap), trailing!],
                 ],
               ),

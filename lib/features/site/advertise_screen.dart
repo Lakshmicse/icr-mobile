@@ -55,10 +55,10 @@ class ApiAdvertiseRepository implements AdvertiseRepository {
   static const _offers = [
     (
       'DIRECTORY',
-      'Featured in Supplier Mart',
-      'Your listing ahead of other suppliers in Supplier Mart while the placement runs.',
+      'Featured in Marketplace',
+      'Your listing ahead of other suppliers in Marketplace while the placement runs.',
     ),
-    ('HERO', 'Homepage hero', 'Your listing card or a banner in the homepage hero. ICR reviews it before it runs.'),
+    ('HERO', 'Homepage Hero', 'Your listing card or a banner in the homepage hero. ICR reviews it before it runs.'),
   ];
 
   Future<int?> _quote(String sku) async {
@@ -131,7 +131,7 @@ class _AdvertiseScreenState extends State<AdvertiseScreen> {
             return SiteError(
               message: snapshot.error is ApiError
                   ? (snapshot.error! as ApiError).message
-                  : "Couldn't read your placements.",
+                  : 'Unable to load your placements.',
               onRetry: () => setState(() {
                 _data = _repo.read();
               }),
@@ -158,7 +158,7 @@ class _AdvertiseScreenState extends State<AdvertiseScreen> {
                           TextSpan(
                             children: [
                               TextSpan(text: _rupees(o.monthlyPaisa!), style: SiteText.title),
-                              TextSpan(text: '  a month + GST', style: SiteText.meta),
+                              TextSpan(text: '  per month + GST', style: SiteText.meta),
                             ],
                           ),
                         ),
@@ -166,7 +166,7 @@ class _AdvertiseScreenState extends State<AdvertiseScreen> {
                       const SizedBox(height: 12),
                       SiteButton(
                         key: ValueKey('talk:${o.sku}'),
-                        label: 'Talk to us',
+                        label: 'Talk to Us',
                         outlined: true,
                         onPressed: () => widget.onTalk?.call('Advertise: ${o.title}'),
                       ),
@@ -179,7 +179,7 @@ class _AdvertiseScreenState extends State<AdvertiseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Your placements', style: SiteText.subheading),
+                    Text('Your Placements', style: SiteText.subheading),
                     const SizedBox(height: 8),
                     if (data.mine.isEmpty)
                       Text('You have no placements yet.', style: SiteText.secondary)

@@ -121,13 +121,13 @@ class _PairingScreenState extends State<PairingScreen> {
       builder: (context, _) {
         final p = _c.pairing;
         return MentoringPage(
-          title: p == null ? 'Mentorship' : (p.viewerIsMentor ? 'Your mentee' : 'Your mentor'),
+          title: p == null ? 'Mentorship' : (p.viewerIsMentor ? 'Your Mentee' : 'Your Mentor'),
           onBack: widget.onBack,
           onBell: () => _links.notifications(context),
           body: LoadedList(
             loading: _c.loading,
             error: _c.error,
-            errorTitle: "Couldn't load this mentorship",
+            errorTitle: 'Unable to Load This Mentorship',
             onRefresh: _c.load,
             children: p == null ? const [] : _content(context, p),
           ),
@@ -204,7 +204,7 @@ class _Header extends StatelessWidget {
           ActionWrap(
             children: [
               SolidButton(label: 'Message', icon: LucideIcons.messageSquare, onPressed: onMessage),
-              if (onProfile != null) QuietButton(label: 'Mentor profile', onPressed: onProfile),
+              if (onProfile != null) QuietButton(label: 'Mentor Profile', onPressed: onProfile),
             ],
           ),
         ],
@@ -227,10 +227,10 @@ class _Manage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle(title: 'This mentorship'),
+        const SectionTitle(title: 'This Mentorship'),
         if (p.status.live) ...[
           FieldRow(
-            label: 'How often you meet',
+            label: 'Meeting Frequency',
             child: Wrap(
               spacing: 6,
               runSpacing: 6,
@@ -242,7 +242,7 @@ class _Manage extends StatelessWidget {
                     selected: p.cadence == key,
                     onSelected: p.cadence == key
                         ? null
-                        : (_) => report(context, () => c.setCadence(key), done: 'Rhythm changed.'),
+                        : (_) => report(context, () => c.setCadence(key), done: 'Meeting frequency updated.'),
                   ),
               ],
             ),
@@ -266,29 +266,29 @@ class _Manage extends StatelessWidget {
               ),
             if (p.status.live)
               QuietButton(
-                label: 'Mark complete',
+                label: 'Mark Complete',
                 icon: LucideIcons.circleCheck,
                 onPressed: () => _complete(context, p),
               ),
             if (p.status.live)
               QuietButton(
-                label: 'End early',
+                label: 'End Early',
                 icon: LucideIcons.circleX,
                 danger: true,
                 onPressed: () => _endEarly(context),
               ),
             QuietButton(
-              label: 'Report a concern',
+              label: 'Report a Concern',
               icon: LucideIcons.flag,
               onPressed: () async {
                 final sent = await showFormSheet(context, (_) => ConcernForm(controller: c));
                 if (sent && context.mounted) {
-                  showMessage(context, 'Sent to ICR. Someone will look into it and reply to you.');
+                  showMessage(context, 'Sent to ICR. The team will review it and reply to you.');
                 }
               },
             ),
             QuietButton(
-              label: 'Contact ICR support',
+              label: 'Contact ICR Support',
               icon: LucideIcons.lifeBuoy,
               onPressed: () async {
                 final sent = await showFormSheet(
@@ -305,7 +305,7 @@ class _Manage extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(top: 8),
           child: Text(
-            'A concern is private to ICR: $other is not told and nothing is shown to them.',
+            'A concern is private to ICR. $other is not notified and nothing is shown to them.',
             style: MentoringText.meta,
           ),
         ),
@@ -317,14 +317,14 @@ class _Manage extends StatelessWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
-        title: const Text('Mark this mentorship complete?'),
+        title: const Text('Mark This Mentorship Complete?'),
         content: Text(
-          'It closes the pairing for both of you and cancels anything still booked. '
-          '${p.counterpart.firstName} is told, and you can both leave a review.',
+          'This closes the mentorship for you both and cancels any booked sessions. '
+          '${p.counterpart.firstName} is notified, and you can both leave a review.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Not yet')),
-          TextButton(onPressed: () => Navigator.pop(dialog, true), child: const Text('Mark complete')),
+          TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Not Yet')),
+          TextButton(onPressed: () => Navigator.pop(dialog, true), child: const Text('Mark Complete')),
         ],
       ),
     );
@@ -335,11 +335,11 @@ class _Manage extends StatelessWidget {
 
   Future<void> _endEarly(BuildContext context) => showTextSheet(
     context,
-    title: 'End this mentorship early?',
-    subtitle: 'Both of you see the reason. Anything still booked is cancelled.',
+    title: 'End This Mentorship Early?',
+    subtitle: 'You both see the reason. Any booked sessions are cancelled.',
     label: 'Reason',
-    hint: 'Our schedules no longer line up',
-    submitLabel: 'End mentorship',
+    hint: 'Our schedules no longer match',
+    submitLabel: 'End Mentorship',
     minLength: 3,
     maxLength: 1000,
     danger: true,

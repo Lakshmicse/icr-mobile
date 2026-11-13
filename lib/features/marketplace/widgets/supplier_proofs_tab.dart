@@ -48,7 +48,7 @@ class SupplierProofsTab extends StatelessWidget {
         else if (rows.isEmpty) ...[
           const Hairline(indent: 15, endIndent: 15),
           const EmptyPart(
-            title: 'No compliances on file',
+            title: 'No Compliances on File',
             body: 'This supplier has not recorded a licence, certification or policy that ICR shows buyers.',
           ),
         ] else
@@ -65,8 +65,8 @@ class SupplierProofsTab extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
             child: Text(
               s.ratingCount > 0
-                  ? '${s.reviewsLabel}, none written up yet.'
-                  : (c.onTeam ? 'No ratings yet.' : 'No ratings yet. Be the first to rate ${s.name}.'),
+                  ? '${s.reviewsLabel}. No written reviews yet.'
+                  : (c.onTeam ? 'No ratings yet.' : 'No ratings yet. You can rate ${s.name} below.'),
               style: MartText.body,
             ),
           )
@@ -81,7 +81,7 @@ class SupplierProofsTab extends StatelessWidget {
               key: const ValueKey('rate-supplier'),
               onPressed: () => showRateSheet(context),
               icon: const Icon(LucideIcons.star, size: 15),
-              label: Text('Rate this supplier', style: MartText.sheetLink),
+              label: Text('Rate This Supplier', style: MartText.sheetLink),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 minimumSize: const Size.fromHeight(38),
@@ -190,7 +190,7 @@ class ProofItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = review;
-    final who = r.byline ?? 'Verified buyer';
+    final who = r.byline ?? 'Verified Buyer';
     final role = r.role ?? _memberLine(r);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -274,4 +274,4 @@ class Stars extends StatelessWidget {
 }
 
 /// Shown when the sheet has something to say about a rating the member left.
-void showRated(BuildContext context) => showMessage(context, 'Thanks, your rating is saved.');
+void showRated(BuildContext context) => showMessage(context, 'Your rating is saved.');

@@ -84,7 +84,7 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
       for (final t in testimonials.where((t) => t['mentorProfileId'] == mentor.id))
         MentorReview(
           id: 't-${t['id']}',
-          name: t['authorName'] as String? ?? 'A mentee',
+          name: t['authorName'] as String? ?? 'Anonymous mentee',
           subline: t['authorTitle'] as String? ?? 'Mentee',
           photo: _picture(t['avatarUrl'] as String?),
           // A curated testimonial has no rating of its own: it reads with the
@@ -96,7 +96,7 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
       for (final f in feedback.where((f) => (f['comment'] as String?)?.trim().isNotEmpty ?? false))
         MentorReview(
           id: 'f-${f['id']}',
-          name: 'A mentee',
+          name: 'Anonymous mentee',
           subline: 'Mentee',
           rating: (f['rating'] as num?)?.toInt(),
           quote: f['comment'] as String,
@@ -165,7 +165,7 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
         }
         return const CheckoutOutcome(
           CheckoutState.completed,
-          message: 'Added to your purchases. Find it in My mentoring, under Purchases.',
+          message: 'Added to your purchases. Find it in My Mentoring, under Purchases.',
         );
       case OfferingKind.plan:
         final res = await _send('POST', '/mentor-plans/${offering.id}/subscribe', phoneBody) as Map<String, dynamic>?;
@@ -175,14 +175,14 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
         final mentorshipId = res?['mentorshipId'] as String?;
         return CheckoutOutcome(
           CheckoutState.completed,
-          message: 'You are on ${offering.title}. Schedule your first session from My mentoring.',
+          message: 'You have joined ${offering.title}. Schedule your first session from My Mentoring.',
           sitePath: mentorshipId == null ? '/mentorship/my' : '/mentorship/my/$mentorshipId',
         );
       case OfferingKind.program:
         await _send('POST', '/mentor-plans/${offering.id}/request', phoneBody);
         return CheckoutOutcome(
           CheckoutState.requested,
-          message: 'Request sent. Once ${mentor.firstName} accepts, you pay from My mentoring, under Purchases.',
+          message: 'Request sent. Once ${mentor.firstName} accepts, you pay from My Mentoring, under Purchases.',
           sitePath: '/mentorship/my?tab=purchases',
         );
       case OfferingKind.groupSession:
@@ -342,15 +342,15 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
           myUpcomingBookingAt: base.bookingAt,
           kicker: price == 0 ? 'FREE SESSION' : '1:1 SESSION',
           facts: [
-            OfferingFact(glyph: OfferingGlyph.person, label: '1:1 $modeWord call'),
+            OfferingFact(glyph: OfferingGlyph.person, label: '1:1 $modeWord Call'),
             if (duration != null) OfferingFact(glyph: OfferingGlyph.clock, label: '$duration Minutes'),
-            OfferingFact(glyph: OfferingGlyph.calendar, label: slotDaysLabel(mentor.availability) ?? 'Any day'),
+            OfferingFact(glyph: OfferingGlyph.calendar, label: slotDaysLabel(mentor.availability) ?? 'Any Day'),
           ],
           details: [
             const OfferingDetail(
               glyph: OfferingGlyph.sessions,
               title: '1 Session',
-              body: 'One live call; the mentor sets the time after accepting.',
+              body: 'One live call. The mentor sets the time after accepting.',
             ),
             if (duration != null)
               OfferingDetail(
@@ -360,13 +360,13 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
               ),
             OfferingDetail(
               glyph: OfferingGlyph.person,
-              title: mentor.modes.isEmpty ? 'Any mode' : mentor.modes.join(' / '),
+              title: mentor.modes.isEmpty ? 'Any Mode' : mentor.modes.join(' / '),
               body: 'How you meet, in the mentor\'s own hours.',
             ),
             const OfferingDetail(
               glyph: OfferingGlyph.chat,
-              title: 'Private thread',
-              body: 'Message the mentor around the session.',
+              title: 'Private Thread',
+              body: 'Message the mentor before and after the session.',
             ),
           ],
         );
@@ -394,18 +394,18 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
           fileName: base.fileName,
           kicker: 'RESOURCE',
           facts: [
-            const OfferingFact(glyph: OfferingGlyph.download, label: 'Instant download'),
+            const OfferingFact(glyph: OfferingGlyph.download, label: 'Instant Download'),
             if (base.fileName != null) OfferingFact(glyph: OfferingGlyph.list, label: base.fileName!),
           ],
           details: [
             const OfferingDetail(
               glyph: OfferingGlyph.download,
-              title: 'Instant download',
-              body: 'Yours as soon as the purchase clears.',
+              title: 'Instant Download',
+              body: 'Available as soon as the purchase is complete.',
             ),
             OfferingDetail(
               glyph: OfferingGlyph.list,
-              title: ext == null || ext.length > 5 ? 'One file' : '$ext file',
+              title: ext == null || ext.length > 5 ? 'One File' : '$ext File',
               body: base.fileName ?? 'Kept under Purchases on the website.',
             ),
           ],
@@ -419,7 +419,7 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
           blurb: base.blurb,
           pricePaisa: price,
           compareAtPaisa: base.compareAt,
-          tags: [OfferingTag('Async Query • ${sla}h TAT')],
+          tags: [OfferingTag('Async Query • ${sla}h Reply')],
           ctaLabel: 'Ask Query',
           rating: base.rating,
           ratingCount: base.ratingCount,
@@ -429,13 +429,13 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
           myOpenRequestId: base.openId,
           kicker: 'WRITTEN CONSULTATION',
           facts: [
-            const OfferingFact(glyph: OfferingGlyph.chat, label: 'Written answer'),
-            OfferingFact(glyph: OfferingGlyph.clock, label: 'Within $sla hours'),
+            const OfferingFact(glyph: OfferingGlyph.chat, label: 'Written Answer'),
+            OfferingFact(glyph: OfferingGlyph.clock, label: 'Within $sla Hours'),
           ],
           details: [
             OfferingDetail(
               glyph: OfferingGlyph.clock,
-              title: '$sla-hour answer',
+              title: '$sla-Hour Answer',
               body: 'The mentor replies in a private thread.',
             ),
           ],
@@ -495,32 +495,32 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
       kicker: curriculum ? '1:1 MENTORING' : 'ONGOING PLAN',
       facts: curriculum
           ? [
-              OfferingFact(glyph: OfferingGlyph.person, label: '1:1 $modeWord call'),
+              OfferingFact(glyph: OfferingGlyph.person, label: '1:1 $modeWord Call'),
               if (duration != null) OfferingFact(glyph: OfferingGlyph.clock, label: '$duration Minutes'),
-              OfferingFact(glyph: OfferingGlyph.calendar, label: slotDays ?? 'Within $access months'),
+              OfferingFact(glyph: OfferingGlyph.calendar, label: slotDays ?? 'Within $access Months'),
             ]
           : [
-              OfferingFact(glyph: OfferingGlyph.sessions, label: '$perMonth / month'),
+              OfferingFact(glyph: OfferingGlyph.sessions, label: '$perMonth / Month'),
               if (duration != null) OfferingFact(glyph: OfferingGlyph.clock, label: '$duration Minutes'),
-              OfferingFact(glyph: OfferingGlyph.calendar, label: '$months-month term'),
+              OfferingFact(glyph: OfferingGlyph.calendar, label: '$months-Month Term'),
             ],
       details: curriculum
           ? [
-              OfferingDetail(glyph: OfferingGlyph.sessions, title: '$total Sessions', body: 'Worked through in order.'),
+              OfferingDetail(glyph: OfferingGlyph.sessions, title: '$total Sessions', body: 'Completed in order.'),
               if (duration != null)
                 OfferingDetail(
                   glyph: OfferingGlyph.clock,
-                  title: '$duration Minutes / session',
+                  title: '$duration Minutes / Session',
                   body: 'Each step is one live call.',
                 ),
               OfferingDetail(
                 glyph: OfferingGlyph.list,
-                title: 'Within $access month${access == 1 ? '' : 's'}',
-                body: 'The window to finish the syllabus in.',
+                title: 'Within $access Month${access == 1 ? '' : 's'}',
+                body: 'The period to complete the syllabus.',
               ),
               const OfferingDetail(
                 glyph: OfferingGlyph.chat,
-                title: 'Private thread',
+                title: 'Private Thread',
                 body: 'Message the mentor between sessions.',
               ),
             ]
@@ -528,22 +528,22 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
               OfferingDetail(
                 glyph: OfferingGlyph.sessions,
                 title: '$perMonth Session${perMonth == 1 ? '' : 's'} / Month',
-                body: 'Booked as you go, session by session.',
+                body: 'Booked one session at a time.',
               ),
               if (duration != null)
                 OfferingDetail(
                   glyph: OfferingGlyph.clock,
-                  title: '$duration Minutes / session',
-                  body: 'Each one a live 1:1 call.',
+                  title: '$duration Minutes / Session',
+                  body: 'Each is a live 1:1 call.',
                 ),
               OfferingDetail(
                 glyph: OfferingGlyph.calendar,
-                title: '$months-month term',
-                body: 'Paid per term; it never renews on its own.',
+                title: '$months-Month Term',
+                body: 'Paid per term. It never renews automatically.',
               ),
               const OfferingDetail(
                 glyph: OfferingGlyph.chat,
-                title: 'Private thread',
+                title: 'Private Thread',
                 body: 'Message the mentor between sessions.',
               ),
             ],
@@ -556,7 +556,7 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
                 label: termLabel(access),
                 modules: [
                   RoadmapModule(
-                    title: '$total-session syllabus',
+                    title: '$total-Session Syllabus',
                     badge: monthsSpan(access),
                     steps: [for (final (i, m) in modules.indexed) stepLabel(i, '${m['title']}')],
                   ),
@@ -564,7 +564,7 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
               ),
             ]
           : const [],
-      previewLabel: curriculum && modules.isNotEmpty ? 'Inspect $total-session syllabus preview' : null,
+      previewLabel: curriculum && modules.isNotEmpty ? 'View $total-Session Syllabus Preview' : null,
       planKicker: curriculum ? '1:1 MENTORING' : 'ONGOING PLAN',
       seatsNote: slots > 0 && slots <= 3 ? 'Only $slots slot${slots == 1 ? '' : 's'} left' : null,
       applyLabel: 'Apply for ${applyName(title)}',
@@ -603,12 +603,12 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
       ],
       details: [
         if (at != null)
-          OfferingDetail(glyph: OfferingGlyph.calendar, title: sessionDateLabel(at), body: 'The next occurrence.'),
+          OfferingDetail(glyph: OfferingGlyph.calendar, title: sessionDateLabel(at), body: 'The next session date.'),
         if (seatsLeft != null)
           OfferingDetail(
             glyph: OfferingGlyph.group,
             title: '$seatsLeft seat${seatsLeft == 1 ? '' : 's'} left',
-            body: 'Reserved from the session\'s own page.',
+            body: 'Seats are reserved on the session page.',
           ),
       ],
     );
@@ -617,7 +617,7 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
   static String? _modeLabel(String mode) => switch (mode) {
     'VIDEO' => 'Video',
     'PHONE' => 'Phone',
-    'IN_PERSON' => 'In person',
+    'IN_PERSON' => 'In Person',
     'CHAT' => 'Chat',
     _ => null,
   };

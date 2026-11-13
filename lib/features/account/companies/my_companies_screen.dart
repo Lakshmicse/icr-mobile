@@ -214,7 +214,7 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
             return AccountError(
               message: c.loadError ?? CompanyWords.couldNotLoad,
               onRetry: c.load,
-              title: CompanyWords.couldNotLoad,
+              title: CompanyWords.couldNotLoadTitle,
             );
           }
           return RefreshIndicator(onRefresh: () => c.load(refresh: true), child: _list(context, c, data));
@@ -230,7 +230,6 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(top: 12, bottom: 24),
         children: [
-          _Intro(),
           AccountCard(
             child: Row(
               key: const Key('companies.staff'),
@@ -268,7 +267,6 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
       padding: const EdgeInsets.only(top: 12, bottom: 24),
       children: [
         if (c.actionError != null) _ErrorBanner(message: c.actionError!, onClose: c.dismissError),
-        const _Intro(),
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
           child: Column(
@@ -276,14 +274,14 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
             children: [
               AccountButton(
                 key: const Key('companies.create'),
-                label: 'Create a company',
+                label: 'Create a Company',
                 icon: Symbols.add_business,
                 onPressed: busy ? null : _create,
               ),
               const SizedBox(height: 8),
               AccountButton(
                 key: const Key('companies.join'),
-                label: 'Ask to join a company',
+                label: 'Ask to Join a Company',
                 icon: Symbols.group_add,
                 outlined: true,
                 onPressed: busy ? null : _askToJoin,
@@ -294,7 +292,6 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
         if (data.invitations.isNotEmpty) _invitations(c, data),
         if (data.requests.isNotEmpty) _requests(c, data),
         _workspaces(c, data, shown, personalActive),
-        const PrinciplesCard(),
       ],
     );
   }
@@ -471,18 +468,6 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
   }
 }
 
-class _Intro extends StatelessWidget {
-  const _Intro();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Text(CompanyWords.listIntro, style: AccountText.body),
-    );
-  }
-}
-
 class _ErrorBanner extends StatelessWidget {
   const _ErrorBanner({required this.message, required this.onClose});
 
@@ -552,14 +537,14 @@ class _Empty extends StatelessWidget {
           const SizedBox(height: 16),
           AccountButton(
             key: const Key('companies.empty.create'),
-            label: 'Create a company',
+            label: 'Create a Company',
             icon: Symbols.add_business,
             onPressed: busy ? null : onCreate,
           ),
           const SizedBox(height: 8),
           AccountButton(
             key: const Key('companies.empty.join'),
-            label: 'Find your company',
+            label: 'Find Your Company',
             icon: Symbols.group_add,
             outlined: true,
             onPressed: busy ? null : onJoin,

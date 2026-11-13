@@ -91,7 +91,7 @@ ContextStripModel? contextStripModel(ConversationContext? context, String? conve
   }
   final g = c?.groupSession;
   if (g != null) {
-    final facts = <String>['Group session'];
+    final facts = <String>['Group Session'];
     final next = g.nextAt;
     if (next != null && !next.isBefore(current)) facts.add('Next session ${weekdayDate(next)}, ${clockTime(next)}');
     return ContextStripModel(title: g.title, href: groupSessionHref(g.id), facts: facts);
@@ -168,7 +168,7 @@ String introText(ConversationContext? context) {
     }
   }
   if (c?.kind == ConversationKind.mentorship) return 'Say hello and agree how you would like to work together.';
-  return 'No messages yet — say hello.';
+  return 'No messages yet. Say hello.';
 }
 
 // --- business events inside the thread -------------------------------------------
@@ -186,27 +186,27 @@ String introText(ConversationContext? context) {
           : (e.mine ? 'Your bid submitted' : 'Bid submitted');
       return (
         title: e.amount != null ? '$title · ${rupees(e.amount!)}' : title,
-        action: rfqId == null ? null : (enquiry ? 'View reply' : 'View bid'),
+        action: rfqId == null ? null : (enquiry ? 'View Reply' : 'View Bid'),
         href: rfqId == null ? null : bidHref(rfqId, perspective),
       );
     case 'PURCHASE_ORDER':
       return (
         title: 'Purchase order ${e.label ?? ''} issued'.replaceAll('  ', ' '),
-        action: rfqId == null ? null : 'View bid',
+        action: rfqId == null ? null : 'View Bid',
         href: rfqId == null ? null : bidHref(rfqId, perspective),
       );
     case 'MENTORSHIP_STARTED':
       final m = context?.mentorship;
       return (
         title: 'Mentorship started',
-        action: m == null ? null : 'Open mentorship',
+        action: m == null ? null : 'Open Mentorship',
         href: m == null ? null : mentorshipHref(m.id),
       );
     case 'SESSION_HELD':
       final m = context?.mentorship;
       return (
         title: e.label != null ? 'Session held: ${e.label}' : 'Session held',
-        action: m == null ? null : 'Open mentorship',
+        action: m == null ? null : 'Open Mentorship',
         href: m == null ? null : mentorshipHref(m.id),
       );
     case 'CONSULTATION_OPENED':
@@ -214,7 +214,7 @@ String introText(ConversationContext? context) {
       final k = context?.consultation;
       return (
         title: e.type == 'CONSULTATION_OPENED' ? 'Consultation opened' : 'Consultation answered',
-        action: k == null ? null : 'Open consultation',
+        action: k == null ? null : 'Open Consultation',
         href: k == null ? null : consultationHref(buyer: k.buyer),
       );
   }

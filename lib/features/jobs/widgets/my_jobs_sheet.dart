@@ -136,7 +136,7 @@ class _MyJobsSheetState extends State<MyJobsSheet> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text('My jobs', style: JobsText.formTitle),
+            child: Text('My Jobs', style: JobsText.formTitle),
           ),
           const SizedBox(height: 10),
           Padding(
@@ -182,7 +182,7 @@ class _MyJobsSheetState extends State<MyJobsSheet> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          _tab == _MyTab.applied ? 'See all applications' : 'See all saved jobs',
+                          _tab == _MyTab.applied ? 'View All Applications' : 'View All Saved Jobs',
                           style: JobsText.insights,
                         ),
                         const SizedBox(width: 3),
@@ -202,7 +202,7 @@ class _MyJobsSheetState extends State<MyJobsSheet> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Your career hub', style: JobsText.insights),
+                        Text('Your Career Hub', style: JobsText.insights),
                         const SizedBox(width: 3),
                         const Icon(LucideIcons.chevronRight, size: 12, color: AppColors.primary),
                       ],
@@ -222,7 +222,7 @@ class _MyJobsSheetState extends State<MyJobsSheet> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Jobs you posted', style: JobsText.insights),
+                    Text('Jobs You Posted', style: JobsText.insights),
                     const SizedBox(width: 3),
                     const Icon(LucideIcons.chevronRight, size: 12, color: AppColors.primary),
                   ],
@@ -248,7 +248,7 @@ class _MyJobsSheetState extends State<MyJobsSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(_error ?? "Couldn't load your jobs.", textAlign: TextAlign.center, style: AppText.small),
+            Text(_error ?? 'Unable to load your jobs.', textAlign: TextAlign.center, style: AppText.small),
             TextButton(
               onPressed: _load,
               child: Text('Try again', style: AppText.link),
@@ -263,7 +263,7 @@ class _MyJobsSheetState extends State<MyJobsSheet> {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
         child: Text(
-          applied ? "You haven't applied to a job yet." : 'Jobs you bookmark show up here.',
+          applied ? "You haven't applied to a job yet." : 'Jobs you save will appear here.',
           textAlign: TextAlign.center,
           style: AppText.small,
         ),

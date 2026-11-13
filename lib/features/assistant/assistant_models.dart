@@ -13,10 +13,10 @@ abstract final class AssistantCopy {
       "events or membership, and I'll point you to the right page.";
   static const placeholder = 'Ask about jobs, suppliers, mentors, courses…';
   static const online = 'Online';
-  static const troubleResponding = 'Sorry, I had trouble responding. Please try again in a moment.';
+  static const troubleResponding = 'I was unable to respond. Try again in a moment.';
 
   /// The website's line for a 429: asking again straight away would only be refused again.
-  static const rateLimited = "I'm getting a lot of questions at once. Please try again in a minute.";
+  static const rateLimited = 'I am receiving many questions right now. Try again in a minute.';
 }
 
 enum ChatRole { user, assistant }

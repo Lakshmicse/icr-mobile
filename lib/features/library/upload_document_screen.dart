@@ -158,7 +158,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
             if (!didPop) _back();
           },
           child: CommunityPage(
-            title: _c.appending ? 'Add files' : 'Upload a document',
+            title: _c.appending ? 'Add Files' : 'Upload a Document',
             onBack: _back,
             onBell: _bell,
             onRefresh: () async {},
@@ -176,8 +176,8 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
     if (c.saving) return 'Saving…';
     final percent = percentLabel(c.progress);
     return c.entries.length > 1
-        ? 'Uploading ${c.uploadingName} — $percent (${c.uploadingIndex} of ${c.entries.length})'
-        : 'Uploading ${c.uploadingName} — $percent';
+        ? 'Uploading ${c.uploadingName}: $percent (${c.uploadingIndex} of ${c.entries.length})'
+        : 'Uploading ${c.uploadingName}: $percent';
   }
 
   Widget _sendBar() {
@@ -208,7 +208,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
             const SizedBox(height: 10),
           ],
           CommunityButton(
-            label: c.appending ? (c.entries.isEmpty ? 'Add files' : 'Add ${filesLabel(c.entries.length)}') : 'Upload',
+            label: c.appending ? (c.entries.isEmpty ? 'Add Files' : 'Add ${filesLabel(c.entries.length)}') : 'Upload',
             icon: LucideIcons.upload,
             expand: true,
             height: 42,
@@ -232,7 +232,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
           children: [
             if (c.appending) ...[
               Text(
-                'They join “${c.target!.title}”, under the same description and category.',
+                'These files will be added to “${c.target!.title}”, with the same description and category.',
                 style: CommunityText.body,
               ),
               const SizedBox(height: 12),
@@ -269,7 +269,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                 label: 'Title *',
                 controller: _title,
                 maxLength: LibraryLimits.title,
-                help: c.entries.length > 1 ? 'One title for the whole set — what someone would search for.' : null,
+                help: c.entries.length > 1 ? 'One title for all files. Use words people would search for.' : null,
                 error: c.problemFor('title'),
                 enabled: !c.busy,
                 textInputAction: TextInputAction.next,
@@ -283,7 +283,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                 minLines: 3,
                 maxLines: 6,
                 maxLength: LibraryLimits.description,
-                help: 'What it is and when someone would reach for it.',
+                help: 'Describe what it is and when to use it.',
                 error: c.problemFor('description'),
                 enabled: !c.busy,
                 onChanged: c.setDescription,
@@ -293,7 +293,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
               _PickerField(
                 label: 'Category *',
                 hint: 'Type a category, sub-category or specialization',
-                help: 'Groups the document under a filter chip.',
+                help: 'Used to group and filter documents.',
                 value: c.category,
                 error: c.problemFor('category'),
                 enabled: !c.busy,
@@ -303,7 +303,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
               if (c.category == otherOption) ...[
                 const SizedBox(height: 8),
                 CommunityField(
-                  label: 'Your category *',
+                  label: 'Your Category *',
                   controller: _categoryOther,
                   hint: 'e.g. Board papers',
                   maxLength: LibraryLimits.category,
@@ -316,8 +316,8 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
               if (c.resolvedCategory.isNotEmpty) ...[
                 const SizedBox(height: 14),
                 _PickerField(
-                  label: 'Sub-category (optional)',
-                  hint: c.hasSubcategories ? 'Narrow it down' : 'Nothing listed under this category',
+                  label: 'Sub-category (Optional)',
+                  hint: c.hasSubcategories ? 'Select a sub-category' : 'No sub-categories in this category',
                   value: c.subcategory,
                   error: c.problemFor('subcategory'),
                   enabled: !c.busy,
@@ -327,7 +327,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                 if (c.subcategory == otherOption) ...[
                   const SizedBox(height: 8),
                   CommunityField(
-                    label: 'Your sub-category',
+                    label: 'Your Sub-category',
                     controller: _subOther,
                     maxLength: LibraryLimits.subcategory,
                     enabled: !c.busy,
@@ -339,8 +339,8 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
               if (c.resolvedSubcategory.isNotEmpty) ...[
                 const SizedBox(height: 14),
                 _PickerField(
-                  label: 'Specialization (optional)',
-                  hint: c.hasSpecializations ? 'Narrow it further' : 'Nothing listed under this sub-category',
+                  label: 'Specialization (Optional)',
+                  hint: c.hasSpecializations ? 'Select a specialization' : 'No specializations in this sub-category',
                   value: c.specialization,
                   error: c.problemFor('specialization'),
                   enabled: !c.busy,
@@ -351,7 +351,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                 if (c.specialization == otherOption) ...[
                   const SizedBox(height: 8),
                   CommunityField(
-                    label: 'Your specialization',
+                    label: 'Your Specialization',
                     controller: _specOther,
                     maxLength: LibraryLimits.specialization,
                     enabled: !c.busy,
@@ -402,7 +402,7 @@ class _FilesBox extends StatelessWidget {
         children: [
           Semantics(
             button: true,
-            label: room == 1 ? 'Choose a file' : 'Choose files',
+            label: room == 1 ? 'Select a File' : 'Select Files',
             child: InkWell(
               onTap: busy ? null : onPick,
               borderRadius: BorderRadius.circular(12),
@@ -416,16 +416,16 @@ class _FilesBox extends StatelessWidget {
                   children: [
                     const Icon(LucideIcons.cloudUpload, size: 30, color: AppColors.primary),
                     const SizedBox(height: 8),
-                    Text(room == 1 ? 'Choose a file' : 'Choose files', style: CommunityText.cardTitle),
+                    Text(room == 1 ? 'Select a File' : 'Select Files', style: CommunityText.cardTitle),
                     const SizedBox(height: 4),
                     Text(
-                      'PDF, Word, Excel, PowerPoint, CSV, images or a ZIP — up to 10 MB each',
+                      'PDF, Word, Excel, PowerPoint, CSV, images or ZIP. Up to 10 MB each.',
                       textAlign: TextAlign.center,
                       style: CommunityText.personLine,
                     ),
                     if (room > 1) ...[
                       const SizedBox(height: 3),
-                      Text('Pick several to file them under one title.', style: CommunityText.meta),
+                      Text('Select several files to group them under one title.', style: CommunityText.meta),
                     ],
                   ],
                 ),
@@ -456,7 +456,7 @@ class _FilesBox extends StatelessWidget {
                     children: [
                       const Icon(LucideIcons.plus, size: 13, color: AppColors.primary),
                       const SizedBox(width: 3),
-                      Text('Add more', style: CommunityText.link),
+                      Text('Add More', style: CommunityText.link),
                     ],
                   ),
                 ),
@@ -479,7 +479,7 @@ class _FilesBox extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             appending
-                ? 'That is the ${LibraryLimits.maxFiles}-file limit for one document.'
+                ? 'You have reached the ${LibraryLimits.maxFiles}-file limit for one document.'
                 : 'A document holds up to ${LibraryLimits.maxFiles} files.',
             style: CommunityText.personLine,
           ),
@@ -574,7 +574,7 @@ class _FileRowState extends State<_FileRow> {
             ],
           ),
           const SizedBox(height: 8),
-          Text('File name', style: CommunityText.fieldLabel),
+          Text('File Name', style: CommunityText.fieldLabel),
           const SizedBox(height: 5),
           Focus(
             onFocusChange: _focusChanged,
@@ -614,7 +614,7 @@ class _FileRowState extends State<_FileRow> {
           Text(
             renamed
                 ? 'Will be saved as “$typed${e.extension}”'
-                : 'Rename it if you like — this is the name members see and download.',
+                : 'You can rename it. Members see and download this name.',
             style: CommunityText.fieldHelp,
           ),
         ],

@@ -156,7 +156,7 @@ void main() {
 
       final access = await repo.access();
       expect(access.level, 'NEW');
-      expect(access.levelLabel, 'New member');
+      expect(access.levelLabel, 'New Member');
       expect(access.requiresApproval, isFalse);
       expect(await repo.unreadNotifications(), (fixture('unread') as Map)['unread']);
     });
@@ -243,12 +243,20 @@ void main() {
     test('an edit that leaves the body alone sends no body, so the website\'s formatting survives', () async {
       final a = FakeForum({'PATCH /forum/threads/t1': (_) => fixture('thread_sarah')});
       final r = forumOn(a);
-      await r.update('t1', const ForumDraft(categoryKey: 'TECHNOLOGY_INNOVATION', title: 'A new title here', body: null));
+      await r.update(
+        't1',
+        const ForumDraft(categoryKey: 'TECHNOLOGY_INNOVATION', title: 'A new title here', body: null),
+      );
       expect(a.bodyOf('PATCH', '/forum/threads/t1').containsKey('bodyHtml'), isFalse);
       // A poll cannot be changed once posted: an edit never sends options.
       await r.update(
         't1',
-        const ForumDraft(categoryKey: 'TECHNOLOGY_INNOVATION', title: 'A new title here', body: 'x', pollOptions: ['A', 'B']),
+        const ForumDraft(
+          categoryKey: 'TECHNOLOGY_INNOVATION',
+          title: 'A new title here',
+          body: 'x',
+          pollOptions: ['A', 'B'],
+        ),
       );
       expect(a.bodyOf('PATCH', '/forum/threads/t1').containsKey('pollOptions'), isFalse);
     });
@@ -293,14 +301,25 @@ void main() {
     });
 
     test('a reply sent joins its parent, or the end', () {
-      final tree = [reply('r1', kids: [reply('r2', parent: 'r1')])];
+      final tree = [
+        reply('r1', kids: [reply('r2', parent: 'r1')]),
+      ];
       expect(findReply(insertReply(tree, reply('r3', parent: 'r2')), 'r2')!.children.single.id, 'r3');
       expect(insertReply(tree, reply('r4')).map((r) => r.id), ['r1', 'r4']);
     });
 
     test('deleting a reply leaves its answers in the thread, at the top', () {
       final tree = [
-        reply('r1', kids: [reply('r2', parent: 'r1', kids: [reply('r3', parent: 'r2')])]),
+        reply(
+          'r1',
+          kids: [
+            reply(
+              'r2',
+              parent: 'r1',
+              kids: [reply('r3', parent: 'r2')],
+            ),
+          ],
+        ),
         reply('r4'),
       ];
       final after = removeReplyKeepAnswers(tree, 'r2');
@@ -310,7 +329,10 @@ void main() {
     });
 
     test('accepting an answer marks that one and no other, and lifts it first', () {
-      final tree = [reply('r1'), reply('r2', kids: [reply('r3', parent: 'r2')])];
+      final tree = [
+        reply('r1'),
+        reply('r2', kids: [reply('r3', parent: 'r2')]),
+      ];
       final accepted = markAccepted(markAccepted(tree, 'r1'), 'r3');
       expect(accepted.every((r) => !r.accepted), isTrue);
       expect(findReply(accepted, 'r3')!.accepted, isTrue);
@@ -355,11 +377,16 @@ void main() {
       expect(blocks[8].text, 'a = 1\nb = 2');
     });
 
-    test('a link that is not http, https or mailto is not a link; markup the forum does not draw is looked through', () {
-      final blocks = parseForumHtml('<p><a href="javascript:alert(1)">bad</a> <span style="x">kept</span> <img src="/uploads/a.jpg"></p>');
-      expect(blocks.single.text, 'bad kept');
-      expect(blocks.single.runs.every((r) => r.href == null), isTrue);
-    });
+    test(
+      'a link that is not http, https or mailto is not a link; markup the forum does not draw is looked through',
+      () {
+        final blocks = parseForumHtml(
+          '<p><a href="javascript:alert(1)">bad</a> <span style="x">kept</span> <img src="/uploads/a.jpg"></p>',
+        );
+        expect(blocks.single.text, 'bad kept');
+        expect(blocks.single.runs.every((r) => r.href == null), isTrue);
+      },
+    );
 
     test('entities are decoded, whitespace between tags is layout, a break is a line break', () {
       final blocks = parseForumHtml('<p>Tom &amp; Jerry<br>next &lt;line&gt;</p>\n<p>  two  </p>');
@@ -387,7 +414,11 @@ void main() {
       );
       expect(plain.hasRichBody, isFalse);
       expect(
-        ForumThread(card: plain.card, bodyHtml: '<p>Hi <strong>there</strong></p>', lastActivityAt: DateTime(2026)).hasRichBody,
+        ForumThread(
+          card: plain.card,
+          bodyHtml: '<p>Hi <strong>there</strong></p>',
+          lastActivityAt: DateTime(2026),
+        ).hasRichBody,
         isTrue,
       );
     });
@@ -424,7 +455,12 @@ void main() {
     });
 
     test('the only reaction taken back empties the stack', () {
-      final one = base.copyWith(reactions: 1, reactionCounts: {ReactionKind.like: 1}, reactionKinds: [ReactionKind.like], myReaction: ReactionKind.like);
+      final one = base.copyWith(
+        reactions: 1,
+        reactionCounts: {ReactionKind.like: 1},
+        reactionKinds: [ReactionKind.like],
+        myReaction: ReactionKind.like,
+      );
       final none = withReaction(one, null);
       expect(none.reactions, 0);
       expect(none.reactionKinds, isEmpty);
@@ -434,18 +470,27 @@ void main() {
   group('refusals are the API\'s own words', () {
     test('an error body\'s message reaches the screen as it is written', () async {
       final a = FakeForum({
-        'POST /forum/threads/t/replies': (_) => (400, jsonEncode({'statusCode': 400, 'message': 'Write something before posting.'})),
+        'POST /forum/threads/t/replies': (_) =>
+            (400, jsonEncode({'statusCode': 400, 'message': 'Enter a reply before posting.'})),
       });
       final r = forumOn(a);
       await expectLater(
         r.reply('t', 'x'),
-        throwsA(isA<ApiError>().having((e) => e.message, 'message', 'Write something before posting.')),
+        throwsA(isA<ApiError>().having((e) => e.message, 'message', 'Enter a reply before posting.')),
       );
     });
 
     test('a validation failure lists every sentence', () async {
       final a = FakeForum({
-        'POST /forum/threads': (_) => (400, jsonEncode({'message': ['title must be longer than or equal to 8 characters', 'pollOptions must contain at least 2 elements']})),
+        'POST /forum/threads': (_) => (
+          400,
+          jsonEncode({
+            'message': [
+              'title must be longer than or equal to 8 characters',
+              'pollOptions must contain at least 2 elements',
+            ],
+          }),
+        ),
         'GET /members/me/following': (_) => fixture('following'),
       });
       await expectLater(
@@ -458,7 +503,11 @@ void main() {
   group('the controller', () {
     ThreadController controllerOn(ForumWorld world, {String viewer = 'me'}) {
       final a = FakeForum(world.routes());
-      return ThreadController(repository: forumOn(a, viewerId: viewer), slug: ForumWorld.slug, viewer: reader);
+      return ThreadController(
+        repository: forumOn(a, viewerId: viewer),
+        slug: ForumWorld.slug,
+        viewer: reader,
+      );
     }
 
     test('it reads the discussion, then its replies, and counts the read once', () async {
@@ -510,7 +559,7 @@ void main() {
       final a = FakeForum(world.routes());
       final c = ThreadController(repository: forumOn(a), slug: ForumWorld.slug, viewer: reader);
       await c.start();
-      expect(await c.sendReply('   '), 'Write something before posting.');
+      expect(await c.sendReply('   '), 'Enter a reply before posting.');
       expect(await c.sendReply('x' * (ForumLimits.replyMax + 1)), contains('at most'));
       expect(a.count('POST', '/forum/threads/t-q/replies'), 0);
       c.dispose();
@@ -520,9 +569,10 @@ void main() {
       final world = ForumWorld();
       final a = FakeForum({
         ...world.routes(),
-        'POST /forum/threads/t-q/replies': (_) => replyJson('wait', by: 'Bharat Buyer', authorId: 'me', headline: null, body: 'Hold.')
-          ..['moderation'] = 'PENDING'
-          ..['canEdit'] = true,
+        'POST /forum/threads/t-q/replies': (_) =>
+            replyJson('wait', by: 'Bharat Buyer', authorId: 'me', headline: null, body: 'Hold.')
+              ..['moderation'] = 'PENDING'
+              ..['canEdit'] = true,
       });
       final c = ThreadController(repository: forumOn(a), slug: ForumWorld.slug, viewer: reader);
       await c.start();
@@ -562,7 +612,7 @@ void main() {
       c.dispose();
       c = await read(ForumWorld(status: 'LOCKED'));
       expect(c.takesReplies, isFalse);
-      expect(c.lockedReason, 'This discussion is locked, so it is not taking new replies.');
+      expect(c.lockedReason, 'This discussion is locked and does not accept new replies.');
       c.dispose();
       c = await read(ForumWorld(status: 'ARCHIVED'));
       expect(c.lockedReason, 'This discussion has been archived.');

@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_error.dart';
+import '../../core/config.dart';
 import '../feed/feed_models.dart';
+import '../feed/forum_json.dart';
+import 'forum_file_picker.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
 import 'rich_document.dart';
@@ -20,6 +23,7 @@ class ComposerController extends ChangeNotifier {
     ComposerMode mode = ComposerMode.discussion,
     String? initialTitle,
     String? initialBody,
+    ForumAttachment? initialAttachment,
     this.repostOfId,
   }) : _mode = mode,
        title = editing?.card.title ?? initialTitle ?? '',
@@ -29,8 +33,24 @@ class ComposerController extends ChangeNotifier {
        tags = [for (final t in editing?.card.tags ?? const <String>[]) t.startsWith('#') ? t.substring(1) : t],
        _topicKey = editing?.category?.key,
        _subKey = editing?.subcategory?.key,
-       _attachment = editing?.attachment {
-    _originalHtml = doc.toHtml();
+       _attachment = editing?.attachment ?? initialAttachment {
+    // The photos and videos a discussion already carries, so an edit keeps them and can take one off: the forum's
+    // own photos, any picture an older build wrote into the body, then the body's videos.
+    final photos = <String>[for (final id in editing?.imageIds ?? const <String>[]) '/uploads/$id'];
+    for (final src in ForumJson.imageSources(editing?.bodyHtml ?? '')) {
+      if (!photos.contains(src)) photos.add(src);
+    }
+    for (final src in [...photos, ...ForumJson.videoSources(editing?.bodyHtml ?? '')]) {
+      final name = src.split('/').last;
+      media.add(
+        ForumMediaItem(
+          attachment: ForumAttachment(uploadId: name, fileName: name, url: AppConfig.absoluteUrl(src)),
+          isVideo: isForumVideoName(name),
+        ),
+      );
+    }
+    _originalMedia = [for (final m in media) m.src];
+    _originalHtml = doc.toHtml() + _mediaHtml;
     _originalTitle = title;
     _originalTags = [...tags];
   }
@@ -55,6 +75,12 @@ class ComposerController extends ChangeNotifier {
   String? _subKey;
   ForumAttachment? _attachment;
   bool _attachmentChanged = false;
+
+  /// The photos and videos in the body, in order (owner, 11 Nov 2026: several on one discussion).
+  final List<ForumMediaItem> media = [];
+  List<String> _originalMedia = const [];
+
+  String get _mediaHtml => media.map((m) => m.html).join();
 
   late final String _originalHtml;
   late final String _originalTitle;
@@ -194,7 +220,7 @@ class ComposerController extends ChangeNotifier {
 
   /// The details as the forum's HTML (what is sent): each tagged member still in the words is a link to their
   /// profile.
-  String get bodyHtml => _html ??= doc.withMentions(_mentions).toHtml();
+  String get bodyHtml => _html ??= doc.withMentions(_mentions).toHtml() + _mediaHtml;
 
   List<Mention> _mentions = const [];
 
@@ -293,6 +319,45 @@ class ComposerController extends ChangeNotifier {
     }
   }
 
+  /// Sends each of [files] to the forum's upload and holds it as a photo or video of the body. Stops at the first
+  /// refusal and returns its sentence; a file over the forum's cap is refused before it is sent.
+  Future<String?> addMedia(List<ForumFile> files) async {
+    if (files.isEmpty) return null;
+    _uploading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      for (final file in files) {
+        final video = isForumVideoName(file.name);
+        final cap = video ? forumVideoMaxBytes : forumImageMaxBytes;
+        if (file.bytes.length > cap) {
+          return '${file.name} is too large. A ${video ? 'video' : 'photo'} can be up to ${cap ~/ (1024 * 1024)} MB.';
+        }
+        if (!video && photoIds.length >= forumMaxPhotos) {
+          return 'A post can carry up to $forumMaxPhotos photos.';
+        }
+        final uploaded = await repository.upload(file);
+        media.add(ForumMediaItem(attachment: uploaded, isVideo: video, bytes: file.bytes));
+        _html = null;
+        _touched = true;
+      }
+      return null;
+    } catch (e) {
+      return ApiError.from(e).message;
+    } finally {
+      _uploading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Takes the photo or video at [index] off the body.
+  void removeMedia(int index) {
+    if (index < 0 || index >= media.length) return;
+    media.removeAt(index);
+    _html = null;
+    _changed();
+  }
+
   /// Takes a file not yet sent off the draft. (A file a discussion already carries cannot be taken off: the forum has
   /// no way to clear it, so an edit can only replace it.)
   void removeAttachment() {
@@ -318,7 +383,7 @@ class ComposerController extends ChangeNotifier {
     final filled = filledOptions;
     if (filled.length < ForumLimits.pollMin) return 'A poll needs at least ${ForumLimits.pollMin} options.';
     if (filled.map((o) => o.toLowerCase()).toSet().length != filled.length) {
-      return 'Two options read the same: make each one different.';
+      return 'Two options are the same. Make each option different.';
     }
     return null;
   }
@@ -331,12 +396,12 @@ class ComposerController extends ChangeNotifier {
   }
 
   String? get bodyProblem {
-    if (doc.isBlank && !bodyOptional) return 'Add some details so people know what you mean.';
+    if (doc.isBlank && !bodyOptional) return 'Add details to explain your post.';
     if (doc.plainLength > ForumLimits.bodyMax) return 'The details can be at most ${ForumLimits.bodyMax} characters.';
     return null;
   }
 
-  String? get topicProblem => _topicKey == null ? 'Choose the topic this belongs to.' : null;
+  String? get topicProblem => _topicKey == null ? 'Select a category.' : null;
 
   /// What is missing, in the order the form asks for it.
   List<String> get problems => [?topicProblem, ?titleProblem, ?pollProblem, ?bodyProblem];
@@ -350,6 +415,7 @@ class ComposerController extends ChangeNotifier {
     }
     return title.trim() != _originalTitle ||
         bodyHtml != _originalHtml ||
+        !listEquals([for (final m in media) m.src], _originalMedia) ||
         !listEquals(tags, _originalTags) ||
         _topicKey != editing!.category?.key ||
         _subKey != editing!.subcategory?.key ||
@@ -362,6 +428,16 @@ class ComposerController extends ChangeNotifier {
   /// The details are as the post has them, so an edit that does not change them sends none and leaves the stored
   /// HTML exactly as it is (the website's editor can hold a quote or code this one reads as paragraphs).
   bool get bodyUnchanged => isEdit && bodyHtml == _originalHtml;
+
+  /// The photos on the draft, as the forum names them (`imageIds`).
+  List<String> get photoIds => [
+    for (final m in media)
+      if (!m.isVideo) m.attachment.uploadId,
+  ];
+
+  /// An edit that changed the photos (against what the forum holds, so a picture an older build wrote into the body
+  /// moves to the forum's own list whenever the post is saved).
+  bool get photosChanged => !isEdit || !listEquals(photoIds, editing!.imageIds);
 
   /// The post has formatting this editor cannot hold (quotes, code), which an edit of its words would flatten.
   bool get editLosesFormatting => isEdit && htmlHasFormattingEditorLoses(editing!.bodyHtml);
@@ -379,6 +455,7 @@ class ComposerController extends ChangeNotifier {
     kind: kind,
     tags: tags,
     attachment: !isEdit || _attachmentChanged ? _attachment : null,
+    imageIds: isEdit ? (photosChanged ? photoIds : null) : (photoIds.isEmpty ? null : photoIds),
     pollOptions: isPoll && !isEdit ? filledOptions : null,
     repostOfId: isEdit ? null : repostOfId,
   );

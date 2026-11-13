@@ -316,8 +316,8 @@ void roleBuyerAccount() {
             size: size,
           );
           text = expectHealthy(tester, 'Settings as ${w.email}');
-          expect(text, contains('Sign out'));
-          expect(text, contains('Download my data'));
+          expect(text, contains('Sign Out'));
+          expect(text, contains('Download My Data'));
           await unmount(tester);
 
           await loadScreen(

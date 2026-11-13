@@ -56,7 +56,7 @@ void main() {
     expect(find.byKey(const ValueKey('masked-lead-1')), findsNothing);
     expect(
       find.text(
-        '2 of 3 enquiries this month came with contact details — your plan includes 2 a month. The rest are here, '
+        '2 of 3 enquiries this month came with contact details. Your plan includes 2 a month. The rest are here, '
         'with the details masked.',
       ),
       findsOneWidget,
@@ -112,13 +112,13 @@ void main() {
     await pump(tester, repository: DemoEnquiriesRepository(failList: true));
     expect(find.byKey(const ValueKey('enquiries-error')), findsOneWidget);
     expect(find.text('Could not load enquiries.'), findsOneWidget);
-    expect(find.text('Try again'), findsOneWidget);
+    expect(find.text('Try Again'), findsOneWidget);
   });
 
   testWidgets('nothing yet says where the form is', (tester) async {
     await pump(tester, repository: DemoEnquiriesRepository(rows: []));
     expect(
-      find.text('No enquiries yet. The form is on every course page of yours and on your institute page.'),
+      find.text('No enquiries yet. The enquiry form is on each of your course pages and on your institute page.'),
       findsOneWidget,
     );
   });

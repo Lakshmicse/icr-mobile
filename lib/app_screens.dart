@@ -4,10 +4,13 @@ import 'package:provider/provider.dart';
 import 'core/api/api_client.dart';
 import 'core/auth/auth_controller.dart';
 import 'core/config.dart';
+import 'app_community_manage.dart';
 import 'app_site_pages.dart';
 import 'core/util/links.dart' show SiteRouteOpener, openSitePage;
 import 'app_workspaces.dart' show workspaceRouteFor;
 import 'features/directory/companies_directory_screen.dart';
+import 'features/career/company_insights_screen.dart';
+import 'features/jobs/jobs_controller.dart';
 import 'features/councils/api_councils_repository.dart';
 import 'features/councils/council_screen.dart' show CouncilHandoffs;
 import 'features/councils/councils_controller.dart';
@@ -16,6 +19,7 @@ import 'features/councils/demo_councils_repository.dart';
 import 'features/events/api_events_repository.dart';
 import 'features/events/demo_events_repository.dart';
 import 'features/events/events_controller.dart';
+import 'features/events/event_manage_scope.dart';
 import 'features/events/events_screen.dart';
 import 'features/account/companies/create_company_screen.dart';
 import 'features/account/members/member_profile_screen.dart';
@@ -23,7 +27,7 @@ import 'features/assistant/open_assistant.dart' show openAssistant;
 import 'features/account/profile/my_profile_screen.dart';
 import 'features/account/saved/saved_items_screen.dart';
 import 'features/account/settings/settings_screen.dart';
-import 'features/account/widgets/account_session.dart' show accountRepositoryOf;
+import 'features/account/widgets/account_session.dart';
 import 'features/chapters/api_chapters_repository.dart';
 import 'features/chapters/chapters_controller.dart';
 import 'features/chapters/chapters_screen.dart';
@@ -31,9 +35,17 @@ import 'features/chapters/demo_chapters_repository.dart';
 import 'features/events/event_models.dart' show EventKind, EventSummary, eventsNow;
 import 'features/events/event_sheet.dart' show showEventSheet;
 import 'features/feed/feed_models.dart';
+import 'features/feed/session_viewer.dart';
+import 'features/forum/api_forum_repository.dart';
+import 'features/forum/demo_forum_repository.dart';
+import 'features/forum/forum_callbacks.dart';
+import 'features/forum/forum_models.dart' show ForumView;
+import 'features/forum/forums_controller.dart';
+import 'features/forum/forums_screen.dart';
 import 'features/library/api_library_repository.dart';
 import 'features/library/demo_library_repository.dart';
 import 'features/library/library_controller.dart';
+import 'features/library/library_models.dart' show LibraryQuery;
 import 'features/library/library_screen.dart';
 import 'features/volunteer/api_volunteer_repository.dart';
 import 'features/volunteer/demo_volunteer_repository.dart';
@@ -58,7 +70,16 @@ import 'features/messaging/messaging_launcher.dart';
 import 'features/network/network_screen.dart' show networkRoute;
 import 'features/notifications/notifications_bell.dart';
 import 'features/notifications/notifications_screen.dart' show openNotifications;
+import 'features/partner_console/batches_screen.dart' show ManageBatchesScreen;
+import 'features/partner_console/courses_screen.dart' show ManageCoursesScreen;
+import 'features/partner_console/enrolments_screen.dart' show EnrolmentsScreen;
 import 'features/partner_enquiries/enquiries_screen.dart';
+import 'features/catalog/products_screen.dart' show ProductsScreen;
+import 'features/company/company_workspace_screen.dart' show CompanyWorkspaceScreen;
+import 'features/catalog/services_screen.dart' show ServicesScreen;
+import 'features/projects/project_screen.dart' show ProjectScreen;
+import 'features/projects/projects_screen.dart' show ProjectsScreen;
+import 'features/talent/talent_screen.dart' show TalentScreen;
 import 'features/rfq/my_bids_screen.dart';
 import 'features/rfq/my_rfqs_screen.dart';
 import 'features/rfq/open_requirements_screen.dart';
@@ -93,8 +114,10 @@ Future<void> openEventBySlug(BuildContext context, String slugOrId) {
   return Navigator.of(context).push<void>(
     PageRouteBuilder<void>(
       opaque: false,
-      pageBuilder: (_, _, _) =>
-          ChangeNotifierProvider<EventsController>.value(value: events, child: _EventSheetLauncher(slugOrId)),
+      pageBuilder: (_, _, _) => ChangeNotifierProvider<EventsController>.value(
+        value: events,
+        child: EventManageScope(onManage: manageEventDoor(context), child: _EventSheetLauncher(slugOrId)),
+      ),
     ),
   );
 }
@@ -130,16 +153,23 @@ class _EventSheetLauncherState extends State<_EventSheetLauncher> {
   Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
+/// The Chapters board, in the Home frame (the bottom bar under it, as under every Chapters, Councils and Events
+/// page; owner, 13 Nov 2026), with the pencil for the staff who run chapters.
 Widget chaptersScreen(BuildContext ctx) => ChangeNotifierProvider<ChaptersController>(
   create: (c) =>
       ChaptersController(AppConfig.demo ? DemoChaptersRepository() : ApiChaptersRepository(api: c.read<ApiClient>())),
-  child: ChaptersScreen(
-    onBack: () => Navigator.of(ctx).pop(),
-    onOpenEvent: (slugOrId) => openEventBySlug(ctx, slugOrId),
-    onOpenVolunteer: (chapter) => AppShell.push<void>(ctx, (c) => getInvolvedScreen(c, chapter: chapter)),
-    onBell: () => openNotifications(ctx),
-    onOpenMember: (id) => openMemberProfile(ctx, id),
-    onMessage: (id) => MessagingLauncher.withPerson(ctx, id),
+  child: communityFrame(
+    ChaptersScreen(
+      onBack: () => Navigator.of(ctx).pop(),
+      onOpenEvent: (slugOrId) => openEventBySlug(ctx, slugOrId),
+      onOpenVolunteer: (chapter) => AppShell.push<void>(ctx, (c) => getInvolvedScreen(c, chapter: chapter)),
+      onBell: () => openNotifications(ctx),
+      onOpenMember: (id) => openMemberProfile(ctx, id),
+      onMessage: (id) => MessagingLauncher.withPerson(ctx, id),
+      onManage: manageChaptersDoor(ctx),
+      manage: chapterManageDoor(ctx),
+      pageWrap: communityFrame,
+    ),
   ),
 );
 
@@ -150,17 +180,48 @@ CouncilHandoffs appCouncilHandoffs(BuildContext ctx) => CouncilHandoffs(
   onBell: () => openNotifications(ctx),
   onOpenMember: (id) => openMemberProfile(ctx, id),
   onMessage: (id) => MessagingLauncher.withPerson(ctx, id),
+  manage: councilManageDoor(ctx),
+  pageWrap: communityFrame,
 );
 
-Widget libraryScreen(BuildContext ctx) => ChangeNotifierProvider<LibraryController>(
-  create: (c) =>
-      LibraryController(AppConfig.demo ? DemoLibraryRepository() : ApiLibraryRepository(api: c.read<ApiClient>())),
+Widget libraryScreen(BuildContext ctx) => _libraryScreen(ctx, mine: false);
+
+/// The library (`/documents`), or the member's own uploads alone (`/documents?mine=1`, the menu's My Uploads: the
+/// documents they put in the library, each to edit or delete — the owner's document, 12 Nov 2026).
+Widget _libraryScreen(BuildContext ctx, {required bool mine}) => ChangeNotifierProvider<LibraryController>(
+  create: (c) => LibraryController(
+    AppConfig.demo ? DemoLibraryRepository() : ApiLibraryRepository(api: c.read<ApiClient>()),
+    initial: LibraryQuery(mine: mine),
+  ),
   child: LibraryScreen(
     onBack: () => Navigator.of(ctx).pop(),
     onBell: () => openNotifications(ctx),
     onOpenMember: (id) => openMemberProfile(ctx, id),
   ),
 );
+
+/// The member's own discussions and polls (`/community?mine=1`, the menu's My Forum): the forum on its My posts
+/// view with a controller of its own, so the Forums tab keeps its view; a post's page has Edit and Delete for its
+/// author. A pushed route cannot read the tabs' controllers, so the repository is built from the API client.
+Widget myForumScreen(BuildContext ctx) {
+  final viewerId = maybeAuth(ctx)?.user?.id ?? '';
+  return ChangeNotifierProvider<ForumsController>(
+    create: (c) => ForumsController(
+      AppConfig.demo ? DemoForumRepository() : ApiForumRepository(api: c.read<ApiClient>(), viewerId: viewerId),
+      initialView: ForumView.mine,
+    ),
+    child: SessionViewer(
+      builder: (c, v) => ForumsScreen(
+        viewer: v,
+        title: 'My Forum',
+        ownOnly: true,
+        controller: c.read<ForumsController>(),
+        onBack: () => Navigator.of(ctx).pop(),
+        callbacks: ForumCallbacks(onBell: () => openNotifications(c), onOpenMember: (id) => openMemberProfile(c, id)),
+      ),
+    ),
+  );
+}
 
 Widget getInvolvedScreen(BuildContext ctx, {String? chapter}) => ChangeNotifierProvider<VolunteerController>(
   create: (c) => VolunteerController(
@@ -217,7 +278,6 @@ Widget myProfileScreen(BuildContext ctx, {ProfileSection? section}) => MyProfile
   initialSection: section,
   onOpenPublicProfile: (userId) => openMemberProfile(ctx, userId),
   onOpenSettings: () => openSettings(ctx),
-  onOpenSecurity: () => openSettings(ctx),
 );
 
 Future<void> openSettings(BuildContext context) => AppShell.push<void>(context, settingsScreen);
@@ -291,6 +351,38 @@ SiteRouteOpener? inAppSiteRoute(Uri uri, {required FeedAuthor viewer, BuildConte
   }
   return (ctx) => AppShell.push<void>(ctx, screen);
 }
+
+/// The partner institute's Manage Courses (`/admin/learning/courses`, and `/admin/learning?course=` from a course's
+/// review decision).
+Future<void> openPartnerCourses(BuildContext ctx) =>
+    AppShell.push<void>(ctx, (c) => ManageCoursesScreen(onBack: () => Navigator.of(c).pop()));
+
+/// The partner institute's Manage Batches (`/admin/learning/batches`), narrowed to [courseId] when a link names one.
+Future<void> openPartnerBatches(BuildContext ctx, {String? courseId}) =>
+    AppShell.push<void>(ctx, (c) => ManageBatchesScreen(onBack: () => Navigator.of(c).pop(), courseId: courseId));
+
+/// The partner institute's Enrolment (`/admin/learning/enrolments`), narrowed to [courseId] when a link names one.
+Future<void> openPartnerEnrolments(BuildContext ctx, {String? courseId}) =>
+    AppShell.push<void>(ctx, (c) => EnrolmentsScreen(onBack: () => Navigator.of(c).pop(), courseId: courseId));
+
+/// The company the member acts for (`/company[?tab=]`, the website's company workspace): its details, verification and
+/// certificates. Its public page and its team open the app's own screens.
+Widget companyWorkspaceScreen(BuildContext ctx, {String? tab, VoidCallback? onBack}) => CompanyWorkspaceScreen(
+  onBack: onBack ?? () => Navigator.of(ctx).pop(),
+  tab: tab,
+  onOpenCompanyPage: (id) => openSitePage(ctx, '/companies/$id'),
+  onOpenTeam: () => AppShell.push<void>(ctx, (c) => teamScreen(c)),
+);
+
+/// One sourcing project's page (`/manage/projects/<id>`).
+Future<void> openProjectById(BuildContext ctx, String id) => AppShell.push<void>(
+  ctx,
+  (c) => ProjectScreen(
+    projectId: id,
+    onBack: () => Navigator.of(c).pop(),
+    onOpenJob: (jobId) => openSitePage(c, '/jobs/$jobId'),
+  ),
+);
 
 /// The partner institute's enquiries (`/admin/learning/enquiries`), on [focusId] when a notification names one.
 Future<void> openPartnerEnquiries(BuildContext ctx, {String? focusId}) =>
@@ -426,6 +518,9 @@ Map<String, WidgetBuilder> inAppScreens({required FeedAuthor viewer, bool? demo}
   return {
     '/chapters': chaptersScreen,
     '/documents': libraryScreen,
+    // The menu's My Uploads and My Forum (the owner's document, 12 Nov 2026).
+    '/documents?mine=1': (ctx) => _libraryScreen(ctx, mine: true),
+    '/community?mine=1': myForumScreen,
     '/get-involved': getInvolvedScreen,
     // Founding a company: the website's "Create a Company Page +" and "what brings you here" links (which it shows
     // only to someone acting for no company). The Discover sheet's Hire and Sell no longer come here: Hire is Post a
@@ -440,6 +535,34 @@ Map<String, WidgetBuilder> inAppScreens({required FeedAuthor viewer, bool? demo}
     '/manage/team?tab=requests': (ctx) => teamScreen(ctx, tab: TeamTab.requests),
     '/manage/team?tab=pending': (ctx) => teamScreen(ctx, tab: TeamTab.pending),
     '/support': supportScreen,
+    // The hiring team's sourcing projects (the Jobs row's Projects), the app's own since 12 Nov 2026. A job named on a
+    // project opens through the site route, so the shell's jobs source serves it wherever the list was pushed from.
+    // The company the member acts for (the Company row's Dashboard; "Verify your company" links), the app's own since
+    // 12 Nov 2026. A `?tab=` has its own key, as the team's do.
+    '/company': companyWorkspaceScreen,
+    for (final tab in const ['overview', 'identity', 'verification', 'certifications'])
+      '/company?tab=$tab': (ctx) => companyWorkspaceScreen(ctx, tab: tab),
+    // The website's old verification page, which it redirects to the company check.
+    '/manage/verification': (ctx) => companyWorkspaceScreen(ctx, tab: 'verification'),
+    // The seller's catalogue (the Marketplace and Company rows' My Products and My Services), the app's own since
+    // 12 Nov 2026.
+    '/manage/products': (ctx) => ProductsScreen(
+      onBack: () => Navigator.of(ctx).pop(),
+      onCreateCompany: () => AppShell.push<void>(ctx, (c) => CreateCompanyScreen.routed(c)),
+    ),
+    '/manage/services': (ctx) => ServicesScreen(
+      onBack: () => Navigator.of(ctx).pop(),
+      onCreateCompany: () => AppShell.push<void>(ctx, (c) => CreateCompanyScreen.routed(c)),
+    ),
+    // The Jobs row's Source Candidates (the website's talent search), the app's own since 12 Nov 2026. A public
+    // profile opens the app's member page.
+    '/talent': (ctx) =>
+        TalentScreen(onBack: () => Navigator.of(ctx).pop(), onOpenMember: (id) => openSitePage(ctx, '/members/$id')),
+    '/manage/projects': (ctx) => ProjectsScreen(
+      onBack: () => Navigator.of(ctx).pop(),
+      onOpenJob: (id) => openSitePage(ctx, '/jobs/$id'),
+      onCreateCompany: () => AppShell.push<void>(ctx, (c) => CreateCompanyScreen.routed(c)),
+    ),
     '/profile?tab=security': settingsScreen,
     '/career/saved': (ctx) => SavedItemsScreen(
       onBell: () => openNotifications(ctx),
@@ -453,7 +576,8 @@ Map<String, WidgetBuilder> inAppScreens({required FeedAuthor viewer, bool? demo}
     '/companies': (ctx) => CompaniesDirectoryScreen(
       onBack: () => Navigator.of(ctx).pop(),
       onBell: () => openNotifications(ctx),
-      onOpenCompany: (id) => openSitePage(ctx, '/companies/$id'),
+      // The company's page in the app (owner, 7 Nov 2026), read with the shell's jobs source.
+      onOpenCompany: (id) => openCompanyInsightsById(ctx, companyId: id, jobs: ctx.read<JobsController>().repository),
     ),
     '/membership/benefits': (ctx) => PlanBenefitsScreen(
       onBack: () => Navigator.of(ctx).pop(),
@@ -522,17 +646,27 @@ Map<String, WidgetBuilder> inAppScreens({required FeedAuthor viewer, bool? demo}
     '/councils': (ctx) => ChangeNotifierProvider<CouncilsController>(
       create: (c) =>
           CouncilsController(sample ? DemoCouncilsRepository() : ApiCouncilsRepository(api: c.read<ApiClient>())),
-      child: CouncilsScreen(onBack: () => Navigator.of(ctx).pop(), handoffs: appCouncilHandoffs(ctx)),
+      child: communityFrame(
+        CouncilsScreen(
+          onBack: () => Navigator.of(ctx).pop(),
+          handoffs: appCouncilHandoffs(ctx),
+          onManage: manageCouncilsDoor(ctx),
+        ),
+      ),
     ),
     '/events': (ctx) => ChangeNotifierProvider<EventsController>(
       create: (c) => EventsController(sample ? DemoEventsRepository() : ApiEventsRepository(api: c.read<ApiClient>())),
       // The Events design stands under the Home tab, with the bar showing.
       child: ShellPage(
         tab: AppTab.home,
-        child: EventsScreen(
-          viewer: viewer,
-          onBack: () => Navigator.of(ctx).pop(),
-          onAccount: () => AppShell.openDrawer(ctx),
+        child: EventManageScope(
+          onManage: manageEventDoor(ctx),
+          child: EventsScreen(
+            viewer: viewer,
+            onBack: () => Navigator.of(ctx).pop(),
+            onAccount: () => AppShell.openDrawer(ctx),
+            onManage: manageEventsDoor(ctx),
+          ),
         ),
       ),
     ),

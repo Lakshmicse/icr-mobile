@@ -21,22 +21,23 @@ String _short(double n) {
   return '₹${n.round()}';
 }
 
-/// "Posted 3d ago", as the website's board.
+/// "Posted 3 Days Ago", as the website's job page writes it.
 String? postedAgo(DateTime? at, [DateTime? now]) {
   if (at == null) return null;
   final days = (now ?? DateTime.now()).difference(at).inDays;
-  if (days <= 0) return 'Posted today';
-  if (days == 1) return 'Posted yesterday';
-  if (days < 30) return 'Posted ${days}d ago';
-  return 'Posted ${days ~/ 30}mo ago';
+  if (days <= 0) return 'Posted Today';
+  if (days == 1) return 'Posted Yesterday';
+  if (days < 30) return 'Posted $days Days Ago';
+  final months = days ~/ 30;
+  return 'Posted $months Month${months == 1 ? '' : 's'} Ago';
 }
 
-/// The count after "Posted 3d ago": "142 applicants" or "310 views" when the
-/// API tells (only the job's own team gets either), else "2 openings".
+/// The count after "Posted 3 Days Ago": "142 Applicants" or "310 Views" when the
+/// API tells (only the job's own team gets either), else "2 Openings".
 String? applicantsOrOpenings(Job job) {
-  if (job.applicants != null) return '${job.applicants} applicant${job.applicants == 1 ? '' : 's'}';
-  if (job.views != null) return '${job.views} view${job.views == 1 ? '' : 's'}';
-  if (job.openings != null && job.openings! > 0) return '${job.openings} opening${job.openings == 1 ? '' : 's'}';
+  if (job.applicants != null) return '${job.applicants} Applicant${job.applicants == 1 ? '' : 's'}';
+  if (job.views != null) return '${job.views} View${job.views == 1 ? '' : 's'}';
+  if (job.openings != null && job.openings! > 0) return '${job.openings} Opening${job.openings == 1 ? '' : 's'}';
   return null;
 }
 

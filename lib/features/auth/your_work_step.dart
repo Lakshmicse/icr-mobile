@@ -23,7 +23,7 @@ class WorkAnswer {
     this.readyNext = false,
   });
 
-  /// "I'm working" (false: between roles).
+  /// "I'm Working" (false: between roles).
   final bool working;
   final String title;
 
@@ -73,7 +73,7 @@ Future<String?> saveYourWork(AccountRepository account, WorkAnswer a) async {
       try {
         await account.requestToJoin(picked.id);
       } catch (e) {
-        return 'Your profile is saved, but the request to join ${picked.name} did not go through: '
+        return 'Your profile is saved. The request to join ${picked.name} was not sent. '
             '${ApiError.from(e).message}';
       }
     }
@@ -94,8 +94,10 @@ Future<String?> saveYourWork(AccountRepository account, WorkAnswer a) async {
 /// current role in career history (`PUT /profile/experience`), the headline
 /// (`PATCH /users/me {designation}`) and the résumé's title and place
 /// (`PATCH /users/me/resume`) — and, for a company already on ICR, can ask its
-/// admins to add the person. "Between roles" asks only for a last title, a
-/// place and whether recruiters may know they are ready. Skippable.
+/// admins to add the person. "Between Roles" asks only for a last title, a
+/// place and whether recruiters may know they are ready. The city is required
+/// in both (the client's note on the manual, 13 Nov 2026); "Skip for Now" still
+/// skips the whole screen.
 class YourWorkStep extends StatefulWidget {
   const YourWorkStep({super.key, required this.account, required this.onDone, this.searchDelay});
 
@@ -128,7 +130,12 @@ class _YourWorkStepState extends State<YourWorkStep> {
   Timer? _debounce;
   String _searched = '';
 
-  ({String? title, String? company, String? since}) _errors = (title: null, company: null, since: null);
+  ({String? title, String? company, String? since, String? city}) _errors = (
+    title: null,
+    company: null,
+    since: null,
+    city: null,
+  );
   String? _error;
   String? _warning;
   bool _busy = false;
@@ -202,12 +209,20 @@ class _YourWorkStepState extends State<YourWorkStep> {
   Future<void> _save() async {
     if (_busy) return;
     FocusScope.of(context).unfocus();
-    final problems = workProblems(working: _working, title: _title.text, company: _company.text, since: _since);
+    final problems = workProblems(
+      working: _working,
+      title: _title.text,
+      company: _company.text,
+      since: _since,
+      hasCity: _city != null,
+    );
     setState(() {
       _errors = problems;
       _error = null;
     });
-    if (problems.title != null || problems.company != null || problems.since != null) return;
+    if (problems.title != null || problems.company != null || problems.since != null || problems.city != null) {
+      return;
+    }
     setState(() => _busy = true);
     try {
       final warning = await saveYourWork(
@@ -239,11 +254,16 @@ class _YourWorkStepState extends State<YourWorkStep> {
   Future<void> _pickYear() async {
     final year = await showAuthPicker<int>(
       context,
-      title: 'Year you started',
+      title: 'Select Start Year',
       items: careerYears(),
       labelOf: (y) => '$y',
     );
-    if (year != null && mounted) setState(() => _since = year);
+    if (year != null && mounted) {
+      setState(() {
+        _since = year;
+        _errors = (title: _errors.title, company: _errors.company, since: null, city: _errors.city);
+      });
+    }
   }
 
   Future<void> _pickCity() async {
@@ -259,14 +279,19 @@ class _YourWorkStepState extends State<YourWorkStep> {
     if (!mounted) return;
     final city = await showAuthPicker<CityOption>(
       context,
-      title: 'Where you are based',
+      title: 'Select City',
       items: _cities,
       labelOf: (c) => c.name,
       subtitleOf: (c) => c.state ?? '',
       searchable: true,
       searchHint: 'Search cities',
     );
-    if (city != null && mounted) setState(() => _city = city);
+    if (city != null && mounted) {
+      setState(() {
+        _city = city;
+        _errors = (title: _errors.title, company: _errors.company, since: _errors.since, city: null);
+      });
+    }
   }
 
   @override
@@ -298,18 +323,18 @@ class _YourWorkStepState extends State<YourWorkStep> {
         AuthSegmented<bool>(
           value: _working,
           semanticLabel: 'What you do now',
-          options: const [(true, 'I’m working'), (false, 'Between roles')],
+          options: const [(true, 'I’m Working'), (false, 'Between Roles')],
           onChanged: _busy
               ? null
               : (v) => setState(() {
                   _working = v;
-                  _errors = (title: null, company: null, since: null);
+                  _errors = (title: null, company: null, since: null, city: null);
                 }),
         ),
         const SizedBox(height: 6),
         AuthField(
           fieldKey: const Key('work.title'),
-          label: _working ? 'Job title' : 'Most recent job title (optional)',
+          label: _working ? 'Job Title' : 'Most Recent Job Title (Optional)',
           controller: _title,
           focusNode: _titleFocus,
           icon: Icons.badge_outlined,
@@ -329,7 +354,9 @@ class _YourWorkStepState extends State<YourWorkStep> {
             onPick: (t) {
               _title.text = t;
               _title.selection = TextSelection.collapsed(offset: t.length);
-              setState(() => _errors = (title: null, company: _errors.company, since: _errors.since));
+              setState(
+                () => _errors = (title: null, company: _errors.company, since: _errors.since, city: _errors.city),
+              );
               if (_working) _companyFocus.requestFocus();
             },
           ),
@@ -362,13 +389,13 @@ class _YourWorkStepState extends State<YourWorkStep> {
                 setState(() {
                   _picked = c;
                   _askToJoin = true;
-                  _errors = (title: _errors.title, company: null, since: _errors.since);
+                  _errors = (title: _errors.title, company: null, since: _errors.since, city: _errors.city);
                 });
               },
             ),
           AuthHelperLine(
             error: _errors.company,
-            helper: picked == null ? 'Pick it from the list if it is already on ICR.' : null,
+            helper: picked == null ? 'Select it from the list if it is already on ICR.' : null,
           ),
           if (picked != null)
             Padding(
@@ -398,10 +425,11 @@ class _YourWorkStepState extends State<YourWorkStep> {
         const SizedBox(height: 6),
         AuthPickerField(
           key: const Key('work.city'),
-          label: 'City (optional)',
+          label: 'City',
           hint: 'Where you are based',
           value: _city?.label,
           icon: Icons.place_outlined,
+          error: _errors.city,
           onTap: _busy ? null : _pickCity,
           onClear: _busy ? null : () => setState(() => _city = null),
         ),
@@ -410,10 +438,10 @@ class _YourWorkStepState extends State<YourWorkStep> {
           AuthCheckLine(
             key: const Key('work.readyNext'),
             value: _readyNext,
-            label: 'Let recruiters know I’m ready for my next role',
+            label: 'Let recruiters know I’m ready for my next role.',
             onChanged: _busy ? null : (v) => setState(() => _readyNext = v),
             child: Text(
-              'Let recruiters know I’m ready for my next role',
+              'Let recruiters know I’m ready for my next role.',
               style: AuthType.small(p).copyWith(color: p.text, fontSize: 14),
             ),
           ),
@@ -430,7 +458,7 @@ class _YourWorkStepState extends State<YourWorkStep> {
         Center(
           child: AuthLink(
             key: const Key('work.skip'),
-            label: 'Skip for now',
+            label: 'Skip for Now',
             style: AuthType.link(p).copyWith(fontSize: 16),
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
             onTap: _busy ? () {} : widget.onDone,

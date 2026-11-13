@@ -55,7 +55,7 @@ class UpcomingTab extends StatelessWidget {
                       ),
                       const SizedBox(height: 18),
                       Text(
-                        '$title is coming to the app',
+                        '$title Is Coming to the App',
                         textAlign: TextAlign.center,
                         style: AppText.postTitle.copyWith(fontSize: 18, height: 1.3),
                       ),

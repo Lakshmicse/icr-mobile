@@ -404,7 +404,7 @@ class SupplierHeader extends StatelessWidget {
                 enabled: phone != null,
                 onTap: () => phone == null
                     ? showMessage(context, 'This supplier has not listed a phone number.')
-                    : links.chat(context, phone, text: 'Hello ${s.name}, I found you on ICR Supplier Mart.'),
+                    : links.chat(context, phone, text: 'Hello ${s.name}, I found you on ICR Marketplace.'),
               ),
               const SizedBox(width: 19),
               _HeaderButton(

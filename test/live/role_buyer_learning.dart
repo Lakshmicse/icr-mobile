@@ -69,7 +69,13 @@ void roleBuyerLearning() {
           var text = expectHealthy(tester, 'the Learning hub as ${w.email}');
           // The catalogue rail's four doors (the hub since the 27 Oct redesign) and the Catalogue heading, whose
           // View More opens the six doors as tiles (the categories; owner's call, 2 Nov 2026).
-          for (final door in ['Assess your knowledge', 'Mock Exams', 'Flash Cards', 'Knowledge Centre', 'Catalogue']) {
+          for (final door in [
+            'Knowledge Assessments',
+            'Mock Exams',
+            'Flashcards',
+            'Knowledge Centre',
+            'Explore Learning Resources',
+          ]) {
             expect(text, contains(door), reason: '${w.email}: the $door door');
           }
           // My courses, My attempts and Certificates are chips of ICR Courses since the 30 Oct hub (no strip).
@@ -88,16 +94,16 @@ void roleBuyerLearning() {
           );
           final hasPartners = partnerMore.evaluate().isNotEmpty;
           final doors = <String, Finder>{
-            'Assess Your Knowledge': find.byKey(const ValueKey('catalogue-assessment')),
+            'Knowledge Assessments': find.byKey(const ValueKey('catalogue-assessment')),
             'Mock Exams': find.byKey(const ValueKey('catalogue-mockTests')),
-            'Flash Cards': find.byKey(const ValueKey('catalogue-flashCards')),
-            'Knowledge Center': find.byKey(const ValueKey('catalogue-knowledgeCenter')),
-            'Catalogue': viewMoreOf(find.text('Catalogue'), byTitle: true),
-            if (hasPartners) 'Partner Courses': partnerMore,
+            'Flashcards': find.byKey(const ValueKey('catalogue-flashCards')),
+            'Knowledge Centre': find.byKey(const ValueKey('catalogue-knowledgeCenter')),
+            'Explore Learning Resources': viewMoreOf(find.text('Explore Learning Resources'), byTitle: true),
+            if (hasPartners) 'Partner Learning Programmes': partnerMore,
           };
           for (final entry in doors.entries) {
             // The sections load one by one; a Partner heading that was drawn a moment ago may have gone.
-            if (entry.key == 'Partner Courses' && entry.value.evaluate().isEmpty) continue;
+            if (entry.key == 'Partner Learning Programmes' && entry.value.evaluate().isEmpty) continue;
             expect(entry.value, findsOneWidget, reason: '${w.email}: ${entry.key} is on the hub');
             await tester.ensureVisible(entry.value);
             await tester.tap(entry.value, warnIfMissed: false);
@@ -144,13 +150,13 @@ void roleBuyerLearning() {
           expect(find.byKey(const ValueKey('hero-title')), findsOneWidget);
           const states = [
             'Start Assessment',
-            'Retake assessment',
+            'Retake Assessment',
             'Redeem',
             'Pay on the website',
-            'Open with my plan',
-            'See plans',
+            'Open with My Plan',
+            'See Plans',
             'Coming soon',
-            'No attempts left',
+            'No Attempts Left',
           ];
           final seen = [
             for (final s in states)
@@ -194,11 +200,11 @@ void roleBuyerLearning() {
             final lockTitle = find.byWidgetPredicate(
               (x) =>
                   x is Text &&
-                  (x.data == "This deck isn't open on your plan" || (x.data ?? '').startsWith('Opens with')),
+                  (x.data == "This Deck Is Not Open on Your Plan" || (x.data ?? '').startsWith('Opens with')),
             );
             await waitFor(tester, lockTitle);
             text = expectHealthy(tester, 'a locked deck as ${w.email}');
-            if (text.contains("This deck isn't open on your plan")) {
+            if (text.contains("This Deck Is Not Open on Your Plan")) {
               expect(text, contains('not included in your plan'), reason: '${w.email}: the API sentence is shown');
             } else {
               expect(text, contains('Opens with'), reason: '${w.email}: the deck follows its course');
@@ -206,7 +212,7 @@ void roleBuyerLearning() {
             await tester.drag(find.byType(Scrollable).first, const Offset(0, -3000), warnIfMissed: false);
             await tester.pump(const Duration(milliseconds: 400));
             text = expectHealthy(tester, 'a locked deck, scrolled, as ${w.email}');
-            expect(text, contains('See plans'));
+            expect(text, contains('See Plans'));
             deckNote = 'Locked: the deck page shows the API sentence';
           }
           await unmount(tester);
@@ -253,8 +259,8 @@ void roleBuyerLearning() {
           );
           // The hub has no course rail since the 27 Oct redesign: ICR Courses opens from the Catalogue heading's
           // View More, and the first card of that grid is the course.
-          await waitFor(tester, find.text('Catalogue'));
-          await tester.ensureVisible(find.text('Catalogue'));
+          await waitFor(tester, find.text('Explore Learning Resources'));
+          await tester.ensureVisible(find.text('Explore Learning Resources'));
           await tester.pumpAndSettle();
           await tester.tap(find.text('View More').first);
           await afterTap(tester);
@@ -267,7 +273,7 @@ void roleBuyerLearning() {
           expect(text.toLowerCase(), contains('overview'), reason: '${w.email}: the sheet shows the course overview');
           // The wide button, or — for a place the person holds — the bar's lower-case word (the sheet shows the
           // place's status and Withdraw instead of a button, as the website's panel does).
-          const holds = ['ADD TO CART', 'ENROLLED', 'PLACE REQUESTED', 'ON THE WAITLIST', 'ENROLMENT CLOSED'];
+          const holds = ['ENROL NOW', 'ENROLLED', 'PLACE REQUESTED', 'ON THE WAITLIST', 'ENROLMENT CLOSED'];
           final lower = text.toLowerCase();
           final button = [
             for (final h in holds)

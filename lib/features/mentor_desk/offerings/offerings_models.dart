@@ -7,10 +7,10 @@ import '../../mentorship_my/mentoring_models.dart' show asInt, asMaps, asStrings
 
 /// `MentorServiceType`.
 enum ServiceKind {
-  oneOnOne('ONE_ON_ONE', '1:1 session'),
+  oneOnOne('ONE_ON_ONE', '1:1 Session'),
   resource('RESOURCE', 'Resource'),
-  groupSeat('GROUP_SESSION', 'Group seat'),
-  query('QUERY', 'Written consultation');
+  groupSeat('GROUP_SESSION', 'Group Seat'),
+  query('QUERY', 'Written Consultation');
 
   const ServiceKind(this.api, this.label);
   final String api;
@@ -259,7 +259,7 @@ class RosterPerson {
     'REGISTERED' => 'Registered',
     'WAITLISTED' => 'Waitlisted',
     'ATTENDED' => 'Attended',
-    'NO_SHOW' => 'No-show',
+    'NO_SHOW' => 'No-Show',
     'CANCELLED' => 'Withdrew',
     _ => status,
   };
@@ -396,7 +396,7 @@ class HostedSession {
 
   String get statusLabel => switch (status) {
     'DRAFT' => 'Draft',
-    'SCHEDULED' => 'Open for registration',
+    'SCHEDULED' => 'Open for Registration',
     'COMPLETED' => 'Held',
     'CANCELLED' => 'Cancelled',
     _ => status,

@@ -28,6 +28,9 @@ class DemoFeedRepository implements FeedRepository {
   @override
   Future<FeedPostDetail?> detail(FeedPost post) async => null;
 
+  @override
+  Future<FeedPost?> quoted(String slug) async => _posts.where((p) => p.slug == slug).firstOrNull;
+
   /// The design's four posts: Sarah Jenkins's (its comments open, Arvind Swamy's reply first), David Chen's,
   /// Marcus Reed's poll and Elena Rostova's photos.
   List<FeedPost> get _posts => DemoForumContent(now: _now).designed;

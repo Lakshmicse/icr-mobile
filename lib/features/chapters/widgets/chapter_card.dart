@@ -240,7 +240,7 @@ class JoinedChapterCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 9),
               child: Row(
                 children: [
-                  Text('Open chapter', style: CommunityText.link),
+                  Text('Open Chapter', style: CommunityText.link),
                   const SizedBox(width: 3),
                   const Icon(LucideIcons.arrowRight, size: 11, color: AppColors.primary),
                 ],

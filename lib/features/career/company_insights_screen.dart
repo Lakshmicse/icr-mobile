@@ -1,7 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
 
+import '../../core/auth/auth_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart' show showMessage;
 import '../../core/widgets/buttons.dart';
@@ -88,6 +90,7 @@ class CompanyInsightsScreen extends StatefulWidget {
     this.navigation = JobsNavigation.none,
     this.tab = InsightsTab.reviews,
     this.onBack,
+    this.viewerCompanyId,
   });
 
   /// A company known only by its id: the header reads its name, logo and size from the API.
@@ -99,10 +102,15 @@ class CompanyInsightsScreen extends StatefulWidget {
     this.navigation = JobsNavigation.none,
     this.tab = InsightsTab.jobs,
     this.onBack,
+    this.viewerCompanyId,
   }) : company = JobCompany(id: companyId, name: '');
 
   final CareerRepository repository;
   final JobCompany company;
+
+  /// The company the viewer acts for; read from the session when null. A member of this company cannot review it
+  /// (bug sheet #45, 9 Nov 2026: a company's founder was asked to rate his own company).
+  final String? viewerCompanyId;
   final JobLinks links;
 
   /// Where a person or the company's own page opens.
@@ -156,7 +164,7 @@ class _CompanyInsightsScreenState extends State<CompanyInsightsScreen> {
         child: Stack(
           children: [
             Positioned.fill(
-              top: TitleBar.height,
+              top: TitleBar.reserved(context),
               child: RefreshIndicator(
                 color: AppColors.primary,
                 onRefresh: c.refresh,
@@ -205,8 +213,10 @@ class _CompanyInsightsScreenState extends State<CompanyInsightsScreen> {
     );
   }
 
+  bool _ownCompany(BuildContext context) => _ownCompanyFor(context, widget);
+
   Widget _body(CompanyInsightsController c) => switch (c.tab) {
-    InsightsTab.reviews => _ReviewsTab(controller: c),
+    InsightsTab.reviews => _ReviewsTab(controller: c, ownCompany: _ownCompany(context)),
     InsightsTab.salaries => _SalariesTab(controller: c),
     InsightsTab.interviews => _InterviewsTab(controller: c),
     InsightsTab.people => _PeopleTab(controller: c, links: widget.links, navigation: widget.navigation),
@@ -360,7 +370,7 @@ class _Paged<T> extends StatelessWidget {
       return _Notice(
         keyName: 'tab-error',
         icon: LucideIcons.cloudOff,
-        title: "Couldn't load this",
+        title: 'Unable to Load This Section',
         body: list.error!,
         action: 'Try again',
         onAction: onRetry,
@@ -393,6 +403,20 @@ class _Paged<T> extends StatelessWidget {
   }
 }
 
+/// Whether the viewer works for the company on this page: the id passed in, else the session's active company.
+bool _ownCompanyFor(BuildContext context, CompanyInsightsScreen widget) {
+  final id = widget.viewerCompanyId ?? _sessionOf(context)?.user?.companyId;
+  return id != null && id == widget.company.id;
+}
+
+AuthController? _sessionOf(BuildContext context) {
+  try {
+    return Provider.of<AuthController>(context, listen: false);
+  } on ProviderNotFoundException {
+    return null;
+  }
+}
+
 Widget _addButton(String label, IconData icon, VoidCallback onTap, {String? keyName}) => Padding(
   padding: const EdgeInsets.only(bottom: 14),
   child: PrimaryButton(
@@ -408,9 +432,12 @@ Widget _addButton(String label, IconData icon, VoidCallback onTap, {String? keyN
 // --- reviews -------------------------------------------------------------------
 
 class _ReviewsTab extends StatelessWidget {
-  const _ReviewsTab({required this.controller});
+  const _ReviewsTab({required this.controller, this.ownCompany = false});
 
   final CompanyInsightsController controller;
+
+  /// The viewer works for this company: no review of their own is offered.
+  final bool ownCompany;
 
   @override
   Widget build(BuildContext context) {
@@ -424,19 +451,29 @@ class _ReviewsTab extends StatelessWidget {
       empty: _Notice(
         keyName: 'reviews-empty',
         icon: LucideIcons.messageSquareText,
-        title: 'No reviews yet',
-        body: 'Be the first to say what it is like to work at ${c.company.name}.',
+        title: 'No Reviews Yet',
+        body: 'Share what it is like to work at ${c.company.name}.',
       ),
       lead: [
         if (summary != null && summary.count > 0) _RatingCard(summary: summary),
         if (summary != null && summary.count > 0) const SizedBox(height: 14),
         if (mine != null) _MyReviewNote(review: mine),
-        _addButton(
-          mine == null ? 'Write a review' : 'Update my review',
-          LucideIcons.pencilLine,
-          () => showReviewForm(context, c),
-          keyName: 'write-review',
-        ),
+        if (ownCompany)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 2, 10, 10),
+            child: Text(
+              'You work at ${c.company.name}, so its reviews are written by others.',
+              key: const ValueKey('own-company-review'),
+              style: CareerText.body,
+            ),
+          )
+        else
+          _addButton(
+            mine == null ? 'Write a Review' : 'Update My Review',
+            LucideIcons.pencilLine,
+            () => showReviewForm(context, c),
+            keyName: 'write-review',
+          ),
       ],
       builder: (r) => _ReviewCard(review: r),
     );
@@ -539,7 +576,7 @@ class _MyReviewNote extends StatelessWidget {
     final words = switch (review.status) {
       'APPROVED' => 'Your review is published.',
       'REJECTED' => 'ICR did not publish your review. You can write it again.',
-      _ => 'Your review is waiting for ICR to read it. It shows once it is approved.',
+      _ => 'Your review is awaiting ICR approval. It will appear once approved.',
     };
     return Container(
       key: const ValueKey('my-review'),
@@ -567,8 +604,8 @@ class _ReviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final who = [
       ?review.jobTitle,
-      if (review.employmentStatus == 'CURRENT') 'Current employee',
-      if (review.employmentStatus == 'FORMER') 'Former employee',
+      if (review.employmentStatus == 'CURRENT') 'Current Employee',
+      if (review.employmentStatus == 'FORMER') 'Former Employee',
     ].join(' • ');
     return Container(
       padding: const EdgeInsets.all(14),
@@ -584,7 +621,7 @@ class _ReviewCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(color: AppColors.successTint, borderRadius: BorderRadius.circular(6)),
-                  child: Text('Verified employee', style: CareerText.pill),
+                  child: Text('Verified Employee', style: CareerText.pill),
                 ),
               ],
               const Spacer(),
@@ -639,15 +676,15 @@ class _SalariesTab extends StatelessWidget {
       empty: _Notice(
         keyName: 'salaries-empty',
         icon: LucideIcons.banknote,
-        title: 'Not enough salary reports yet',
+        title: 'Not Enough Salary Reports Yet',
         body: info == null
-            ? 'Pay shows once enough people report it.'
-            : 'A role shows once ${info.minSample} people have reported it, so no one can be picked out. '
+            ? 'Pay data will appear once enough people report it.'
+            : 'A role appears once ${info.minSample} people have reported it, so no individual can be identified. '
                   '${info.totalReports == 0 ? 'None so far.' : '${info.totalReports} so far.'}',
       ),
       lead: [
         _addButton(
-          'Share your salary',
+          'Share Your Salary',
           LucideIcons.banknote,
           () => showSalaryForm(context, c),
           keyName: 'share-salary',
@@ -745,8 +782,8 @@ class _InterviewsTab extends StatelessWidget {
       empty: _Notice(
         keyName: 'interviews-empty',
         icon: LucideIcons.messagesSquare,
-        title: 'No interview experiences yet',
-        body: 'Sat an interview at ${c.company.name}? Tell the next person how it went.',
+        title: 'No Interview Experiences Yet',
+        body: 'Interviewed at ${c.company.name}? Share your experience to help other candidates.',
       ),
       lead: [
         if (averages.isNotEmpty) ...[
@@ -767,7 +804,7 @@ class _InterviewsTab extends StatelessWidget {
           const SizedBox(height: 14),
         ],
         _addButton(
-          'Share your interview',
+          'Share Your Interview',
           LucideIcons.messagesSquare,
           () => showInterviewForm(context, c),
           keyName: 'share-interview',
@@ -881,7 +918,7 @@ class _PeopleTab extends StatelessWidget {
       empty: _Notice(
         keyName: 'people-empty',
         icon: LucideIcons.users,
-        title: 'No one to show yet',
+        title: 'No People to Show Yet',
         body: 'No one at ${c.company.name} has a public profile on ICR yet.',
       ),
       lead: [
@@ -963,7 +1000,7 @@ class _JobsTab extends StatelessWidget {
       empty: _Notice(
         keyName: 'jobs-empty',
         icon: LucideIcons.briefcaseBusiness,
-        title: 'No open jobs',
+        title: 'No Open Jobs',
         body: '${c.company.name} has no open jobs right now.',
       ),
       builder: (job) => DecoratedBox(

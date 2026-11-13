@@ -23,8 +23,9 @@ class HeroActions {
   /// "Book Trial (₹0)".
   final String primaryLabel;
 
-  /// "Book Free Trial", on the pinned bar.
-  final String barLabel;
+  /// "Book Free Trial", on the pinned bar. Null draws no bar (the mentor's own profile: its one Edit My Profile is
+  /// in the hero — owner, 7 Nov 2026, "the edit profile is shown in two places").
+  final String? barLabel;
   final IconData primaryIcon;
 
   /// Null greys the button out (a request already in play).

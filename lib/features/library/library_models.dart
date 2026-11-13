@@ -327,6 +327,8 @@ class LibraryDocument {
   }
 
   LibraryDocument copyWith({
+    String? title,
+    String? description,
     List<LibraryFile>? files,
     int? fileCount,
     int? totalSizeBytes,
@@ -334,8 +336,8 @@ class LibraryDocument {
     int? viewCount,
   }) => LibraryDocument(
     id: id,
-    title: title,
-    description: description,
+    title: title ?? this.title,
+    description: description ?? this.description,
     category: category,
     subcategory: subcategory,
     specialization: specialization,
@@ -367,8 +369,8 @@ class FileTypeFacet {
 /// 5 Nov 2026); the website opens on downloads.
 enum LibrarySort {
   newest('Newest', 'createdAt', 'desc'),
-  downloads('Most downloaded', 'downloadCount', 'desc'),
-  views('Most viewed', 'viewCount', 'desc'),
+  downloads('Most Downloaded', 'downloadCount', 'desc'),
+  views('Most Viewed', 'viewCount', 'desc'),
   az('A to Z', 'title', 'asc'),
   largest('Largest', 'sizeBytes', 'desc');
 
@@ -467,12 +469,12 @@ const libraryKinds = <LibraryKind>[
 
 /// Why a member flags a document (`DocumentReportReason`).
 enum DocumentReportReason {
-  copyright('COPYRIGHT', 'Copyright or confidential material'),
-  inappropriate('INAPPROPRIATE', 'Inappropriate or offensive'),
-  misleading('MISLEADING', 'Misleading or out of date'),
-  spam('SPAM', 'Spam or advertising'),
-  brokenFile('BROKEN_FILE', 'File is broken or will not open'),
-  other('OTHER', 'Something else');
+  copyright('COPYRIGHT', 'Copyright or Confidential Material'),
+  inappropriate('INAPPROPRIATE', 'Inappropriate or Offensive'),
+  misleading('MISLEADING', 'Misleading or Out of Date'),
+  spam('SPAM', 'Spam or Advertising'),
+  brokenFile('BROKEN_FILE', 'Damaged or Unreadable File'),
+  other('OTHER', 'Something Else');
 
   const DocumentReportReason(this.api, this.label);
   final String api;

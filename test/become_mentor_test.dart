@@ -67,7 +67,7 @@ void main() {
       final api = w.api();
       final auth = await signedInOver(tester, api);
       await pumpBecomeMentor(tester, w, api: api, auth: auth);
-      expect(find.text('Access denied'), findsOneWidget);
+      expect(find.text('Access Denied'), findsOneWidget);
       expect(
         find.text(
           'Platform administrators run the mentorship programme rather than take part in it. The review queue is under Admin → Trust & review.',
@@ -85,7 +85,7 @@ void main() {
         final api = w.api();
         final auth = await signedInOver(tester, api);
         await pumpBecomeMentor(tester, w, api: api, auth: auth);
-        expect(find.text('Access denied'), findsNothing);
+        expect(find.text('Access Denied'), findsNothing);
         expect(find.byKey(const ValueKey('application')), findsOneWidget);
         expect(api.count('GET /mentorship/mentors/me'), 1);
       });
@@ -104,7 +104,7 @@ void main() {
       await enter(tester, 'bio-text', 'I help facilities leads move from running a site to owning a portfolio.');
       await tapSheetButton(tester, 'Save');
       expect(api.count('GET /auth/me'), 2);
-      expect(auth.user!.mentorStatus, 'DRAFT', reason: 'the drawer now leads to "My mentor profile"');
+      expect(auth.user!.mentorStatus, 'DRAFT', reason: 'the drawer now leads to "My Mentor Profile"');
     });
 
     testWidgets('a second save does not ask the session again', (tester) async {
@@ -139,7 +139,7 @@ void main() {
       final api = w.api();
       final auth = await signedInOver(tester, api);
       await pumpBecomeMentor(tester, w, api: api, auth: auth);
-      await tapText(tester, 'Withdraw my profile');
+      await tapText(tester, 'Withdraw My Profile');
       await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text('Withdraw')));
       await settle(tester);
       expect(api.count('DELETE /mentorship/mentors/me'), 1);
@@ -172,30 +172,30 @@ void main() {
   group('a member with no mentor profile yet', () {
     testWidgets('sees where to start: the draft banner, three steps, and every line still needed', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld());
-      expect(find.text('Become a mentor'), findsOneWidget);
+      expect(find.text('Become a Mentor'), findsOneWidget);
       expect(find.byKey(const ValueKey('banner-DRAFT')), findsOneWidget);
       expect(find.textContaining('Draft · not yet visible'), findsOneWidget);
-      expect(find.text('Not started'), findsOneWidget);
-      expect(find.text('0 of 3 steps done'), findsOneWidget);
+      expect(find.text('Not Started'), findsOneWidget);
+      expect(find.text('0 of 3 steps completed'), findsOneWidget);
       for (final line in [
         'Add your current role.',
         'Add your years in the profession.',
         'Add at least one language you mentor in.',
         'Add at least one role to your career history.',
-        'Tell mentees how you mentor — at least 100 characters.',
-        'Add at least one area of expertise — it is how mentees find you.',
+        'Describe how you mentor in at least 100 characters.',
+        'Add at least one area of expertise. This is how mentees find you.',
         'Choose who you want to mentor.',
       ]) {
         expect(find.text(line), findsOneWidget, reason: line);
       }
       expect(
-        find.text('Add a profile photo — it is the first thing a mentee sees.'),
+        find.text('Add a profile photo. It is the first thing a mentee sees.'),
         findsNothing,
         reason: 'there is a photo',
       );
-      expect(find.text('Still missing from your card'), findsNothing);
-      expect(find.text('Still needed to submit'), findsOneWidget);
-      expect(find.text('Finish the items above to submit.'), findsOneWidget);
+      expect(find.text('Missing from Your Card'), findsNothing);
+      expect(find.text('Required to Submit'), findsOneWidget);
+      expect(find.text('Complete the items above to submit.'), findsOneWidget);
       expect(tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed, isNull);
       // Nothing is read that needs a profile.
       expect(api.count('GET /mentorship/mentors/me/documents'), 0);
@@ -205,7 +205,7 @@ void main() {
 
     testWidgets('a missing photo is the first thing needed', (tester) async {
       await pumpBecomeMentor(tester, MentorWorld(avatar: null));
-      expect(find.text('Add a profile photo — it is the first thing a mentee sees.'), findsOneWidget);
+      expect(find.text('Add a profile photo. It is the first thing a mentee sees.'), findsOneWidget);
       expect(find.byKey(const ValueKey('photo-line')), findsOneWidget);
       expect(
         find.text('No photo yet. It is the first thing a mentee sees, and it is needed to submit.'),
@@ -215,7 +215,7 @@ void main() {
 
     testWidgets('a line of the checklist opens the sheet that fixes it', (tester) async {
       await pumpBecomeMentor(tester, MentorWorld());
-      await tapText(tester, 'Tell mentees how you mentor — at least 100 characters.');
+      await tapText(tester, 'Describe how you mentor in at least 100 characters.');
       expect(find.byKey(const ValueKey('bio-text')), findsOneWidget);
       await tester.tapAt(const Offset(20, 20));
       await settle(tester);
@@ -235,12 +235,12 @@ void main() {
         w,
         extra: {'GET /mentorship/mentors/me': (_) => fail ? refuse('The mentoring service is down.', status: 500) : ''},
       );
-      expect(find.text("Couldn't load your mentor profile"), findsOneWidget);
+      expect(find.text('Unable to Load Your Mentor Profile'), findsOneWidget);
       expect(find.text('The mentoring service is down.'), findsOneWidget);
       fail = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester);
-      expect(find.text('Become a mentor'), findsOneWidget);
+      expect(find.text('Become a Mentor'), findsOneWidget);
       expect(api.count('GET /mentorship/mentors/me'), 2);
     });
 
@@ -261,7 +261,7 @@ void main() {
     });
   });
 
-  group('How you mentor', () {
+  group('How You Mentor', () {
     testWidgets('the first save creates the draft, as paragraphs stored as HTML', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld());
       await openCard(tester, 'bio', 'Add');
@@ -274,7 +274,7 @@ void main() {
       await tapSheetButton(tester, 'Save');
       expect(api.bodyOf('PUT /mentorship/mentors/me'), {'bioHtml': '<p>Hello</p><p>World</p>'});
       expect(find.text('Saved.'), findsOneWidget);
-      expect(find.text('My mentor profile'), findsOneWidget, reason: 'there is a profile now');
+      expect(find.text('My Mentor Profile'), findsOneWidget, reason: 'there is a profile now');
       expect(find.text('Hello\n\nWorld'), findsOneWidget);
       expect(find.byKey(const ValueKey('card-documents')), findsOneWidget, reason: 'a profile can hold documents');
     });
@@ -303,7 +303,7 @@ void main() {
       await openCard(tester, 'bio', 'Add');
       await enter(tester, 'bio-text', 'a' * 20001);
       await tapSheetButton(tester, 'Save');
-      expect(find.text('“How you mentor” is too long — keep it under 20,000 characters.'), findsOneWidget);
+      expect(find.text('“How You Mentor” is too long. Keep it under 20,000 characters.'), findsOneWidget);
       expect(api.count('PUT /mentorship/mentors/me'), 0);
     });
 
@@ -325,13 +325,13 @@ void main() {
     testWidgets('areas are searched and chosen from the 24 domains, topics are typed', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld());
       await openCard(tester, 'expertise', 'Add');
-      expect(find.text('0 chosen, up to 12.'), findsOneWidget);
+      expect(find.text('0 selected, up to 12.'), findsOneWidget);
       await enter(tester, 'option-search', 'facil');
       expect(find.byKey(const ValueKey('option-Facility Management')), findsOneWidget);
       expect(find.byKey(const ValueKey('option-Vendor Management')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('option-Facility Management')));
       await tester.pump();
-      expect(find.text('1 chosen, up to 12.'), findsOneWidget);
+      expect(find.text('1 selected, up to 12.'), findsOneWidget);
       await enter(tester, 'topic-text', 'Managing your first team');
       await tester.tap(find.text('Add').last);
       await tester.pump();
@@ -362,19 +362,19 @@ void main() {
         await tester.tap(f);
         await tester.pump();
       }
-      expect(find.text('12 of 12 chosen: the most you can pick.'), findsOneWidget);
+      expect(find.text('12 of 12 selected. This is the maximum.'), findsOneWidget);
       final thirteenth = find.byKey(ValueKey('option-${competencyDomains[12]}'));
       await tester.ensureVisible(thirteenth);
       await tester.tap(thirteenth, warnIfMissed: false);
       await tester.pump();
-      expect(find.text('12 of 12 chosen: the most you can pick.'), findsOneWidget);
+      expect(find.text('12 of 12 selected. This is the maximum.'), findsOneWidget);
     });
 
     testWidgets('a topic can be taken away again, and at most twelve are held', (tester) async {
       final w = MentorWorld(withProfile: true)..profile!['topics'] = [for (var i = 0; i < 12; i++) 'Topic $i'];
       final (api, _) = await pumpBecomeMentor(tester, w);
       await openCard(tester, 'expertise', 'Edit');
-      expect(find.text('That is the most you can add (12)'), findsOneWidget);
+      expect(find.text('Maximum reached (12).'), findsOneWidget);
       await tester.ensureVisible(find.byTooltip('Remove Topic 3'));
       await tester.tap(find.byTooltip('Remove Topic 3'));
       await tester.pump();
@@ -385,7 +385,7 @@ void main() {
     });
   });
 
-  group('Who you mentor', () {
+  group('Who You Mentor', () {
     testWidgets('audiences are kept in the enum\'s order, and roles are picked from ICR\'s titles or typed', (
       tester,
     ) async {
@@ -408,8 +408,8 @@ void main() {
         'targetAudiences': ['EARLY_CAREER', 'PEOPLE_LEADER'],
         'targetRoles': ['Facility Manager', 'Portfolio Lead'],
       });
-      expect(find.text('Early career'), findsOneWidget);
-      expect(find.text('People leader'), findsOneWidget);
+      expect(find.text('Early Career'), findsOneWidget);
+      expect(find.text('People Leader'), findsOneWidget);
       expect(find.text('Portfolio Lead'), findsOneWidget);
     });
 
@@ -419,7 +419,7 @@ void main() {
         ..profile!['targetRoles'] = [for (var i = 0; i < 8; i++) 'Role $i'];
       final (api, _) = await pumpBecomeMentor(tester, w);
       await openCard(tester, 'audience', 'Edit');
-      expect(find.text('That is the most you can add (8)'), findsOneWidget);
+      expect(find.text('Maximum reached (8).'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('audience-EARLY_CAREER')));
       await tester.pump();
       await tapSheetButton(tester, 'Save');
@@ -428,7 +428,7 @@ void main() {
   });
 
   group('Availability', () {
-    testWidgets('opened to fix "Say when you are free", the page lands on the availability form', (tester) async {
+    testWidgets('opened to fix "Add your availability", the page lands on the availability form', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld(withProfile: true), fix: FixTarget.availability);
       expect(find.byKey(const ValueKey('availability-note')), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('cadence-WEEKLY')));
@@ -453,7 +453,7 @@ void main() {
       expect(body['preferredModes'], ['VIDEO', 'PHONE']);
       expect(body['cadence'], 'WEEKLY');
       expect(body['availabilityNote'], 'Weekday evenings after 7pm IST');
-      expect(find.text('Video call · Phone'), findsOneWidget);
+      expect(find.text('Video Call · Phone'), findsOneWidget);
       expect(find.text('Weekly'), findsOneWidget);
     });
 
@@ -479,29 +479,29 @@ void main() {
       await enter(tester, 'availability-note', 'a' * 281);
       expect(find.text('281 / 280'), findsOneWidget);
       await tapSheetButton(tester, 'Save');
-      expect(find.text('Keep “When you\'re free” to 280 characters.'), findsOneWidget);
+      expect(find.text('Keep “Availability Note” to 280 characters.'), findsOneWidget);
       expect(api.count('PUT /mentorship/mentors/me'), 0);
     });
   });
 
-  group('Weekly hours', () {
+  group('Weekly Hours', () {
     testWidgets('they cannot be set before there is a profile: they belong to it', (tester) async {
       await pumpBecomeMentor(tester, MentorWorld());
-      expect(find.text('Save any section above first: your hours belong to your mentor profile.'), findsOneWidget);
-      expect(inCard('hours', 'Set hours'), findsNothing, reason: 'there is no button to press yet');
+      expect(find.text('Save any section above first. Your hours belong to your mentor profile.'), findsOneWidget);
+      expect(inCard('hours', 'Set Hours'), findsNothing, reason: 'there is no button to press yet');
     });
 
     testWidgets('a window is added to a day, saved as minutes after midnight, and listed Monday first', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld(withProfile: true));
       expect(
-        find.text('No weekly hours set: a mentee asks you for a time instead of picking a free one.'),
+        find.text('No weekly hours set. A mentee asks you for a time instead of selecting a free one.'),
         findsOneWidget,
       );
-      await openCard(tester, 'hours', 'Set hours');
+      await openCard(tester, 'hours', 'Set Hours');
       await tapKey(tester, 'add-window-2');
       await tapKey(tester, 'add-window-0');
       expect(find.text('2 of 21 windows'), findsOneWidget);
-      await tapSheetButton(tester, 'Save hours');
+      await tapSheetButton(tester, 'Save Hours');
       expect(api.bodyOf('PUT /mentorship/mentors/me/availability'), {
         'blocks': [
           {'weekday': 2, 'startMin': 1080, 'endMin': 1170},
@@ -524,13 +524,13 @@ void main() {
         ];
       final (api, _) = await pumpBecomeMentor(tester, w);
       expect(find.text('Tuesday  6:00 PM – 8:30 PM'), findsOneWidget);
-      await openCard(tester, 'hours', 'Edit hours');
+      await openCard(tester, 'hours', 'Edit Hours');
       await tapKey(tester, 'add-window-2');
       await tester.tap(find.byKey(const ValueKey('start-1')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('8:00 PM').last);
       await tester.pumpAndSettle();
-      await tapSheetButton(tester, 'Save hours');
+      await tapSheetButton(tester, 'Save Hours');
       expect(find.text('Windows on the same day must not overlap.'), findsOneWidget);
       expect(api.count('PUT /mentorship/mentors/me/availability'), 0);
 
@@ -538,7 +538,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('5:00 PM').last);
       await tester.pumpAndSettle();
-      await tapSheetButton(tester, 'Save hours');
+      await tapSheetButton(tester, 'Save Hours');
       expect(find.text('Each window must end after it starts.'), findsOneWidget);
       expect(api.count('PUT /mentorship/mentors/me/availability'), 0);
     });
@@ -552,12 +552,12 @@ void main() {
           ]
           ..refusals['hours'] = refuse('Create a mentor profile first.', status: 404);
         final (api, _) = await pumpBecomeMentor(tester, w);
-        await openCard(tester, 'hours', 'Edit hours');
+        await openCard(tester, 'hours', 'Edit Hours');
         await tapKey(tester, 'remove-window-0');
         expect(find.text('0 of 21 windows'), findsOneWidget);
-        await tapSheetButton(tester, 'Save hours');
+        await tapSheetButton(tester, 'Save Hours');
         expect(find.text('Create a mentor profile first.'), findsOneWidget);
-        await tapSheetButton(tester, 'Save hours');
+        await tapSheetButton(tester, 'Save Hours');
         expect(api.bodyOf('PUT /mentorship/mentors/me/availability'), {'blocks': <Object?>[]});
       },
     );
@@ -577,7 +577,7 @@ void main() {
       (tester) async {
         final (api, rec) = await pumpBecomeMentor(tester, withCredentials());
         expect(
-          find.text('Optional. Show the certifications you hold — mentees working toward the same one look for them.'),
+          find.text('Optional. Show the certifications you hold. Mentees working toward the same ones look for them.'),
           findsOneWidget,
         );
         await openCard(tester, 'certifications', 'Choose');
@@ -599,7 +599,7 @@ void main() {
     testWidgets('Manage my credentials opens the profile\'s credentials page on the website', (tester) async {
       final (_, rec) = await pumpBecomeMentor(tester, withCredentials());
       await openCard(tester, 'certifications', 'Choose');
-      await tester.tap(find.text('Manage my credentials'));
+      await tester.tap(find.text('Manage My Credentials'));
       await tester.pump();
       expect(rec.sites, ['/profile?tab=credentials&code=1']);
     });
@@ -610,15 +610,15 @@ void main() {
       final w = withCredentials()..profile!['certifications'] = ['CFMP', 'GONE'];
       final (api, _) = await pumpBecomeMentor(tester, w);
       expect(
-        find.text('Remove GONE from your certifications — no longer on your profile.'),
+        find.text('Remove GONE from your certifications (no longer on your profile).'),
         findsOneWidget,
         reason: 'the checklist names it',
       );
-      expect(find.textContaining('GONE is no longer on your profile — remove it before you submit.'), findsOneWidget);
+      expect(find.textContaining('GONE is no longer on your profile. Remove it before you submit.'), findsOneWidget);
       await openCard(tester, 'certifications', 'Edit');
       expect(find.byKey(const ValueKey('stale-GONE')), findsOneWidget);
       await tapSheetButton(tester, 'Save');
-      expect(find.text('GONE is no longer on your profile — remove it to save.'), findsWidgets);
+      expect(find.text('GONE is no longer on your profile. Remove it to save.'), findsWidgets);
       expect(api.count('PUT /mentorship/mentors/me'), 0);
       await tester.tap(find.byTooltip('Remove GONE'));
       await tester.pump();
@@ -629,10 +629,10 @@ void main() {
     });
   });
 
-  group('Role and experience', () {
+  group('Role and Experience', () {
     testWidgets('are the person\'s own, written to PATCH /users/me, and read back', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld());
-      expect(find.text('Not added yet — needed to submit.'), findsNWidgets(2));
+      expect(find.text('Not added yet. Required to submit.'), findsNWidgets(2));
       await openCard(tester, 'intro', 'Add');
       await enter(tester, 'intro-role', 'facil');
       expect(find.byKey(const ValueKey('role-suggest-Facility Manager')), findsOneWidget);
@@ -714,7 +714,7 @@ void main() {
       );
       final (api, _) = await pumpBecomeMentor(tester, w);
       await openCard(tester, 'languages', 'Edit');
-      expect(find.text('That is the most you can add (8)'), findsOneWidget);
+      expect(find.text('Maximum reached (8).'), findsOneWidget);
       await tester.tap(find.byTooltip('Remove Odia'));
       await tester.pump();
       await tapSheetButton(tester, 'Save');
@@ -722,7 +722,7 @@ void main() {
     });
   });
 
-  group('Career history', () {
+  group('Career History', () {
     Future<void> fillRole(
       WidgetTester tester, {
       String title = 'Facility Manager',
@@ -737,14 +737,14 @@ void main() {
     testWidgets('a role is added, and the whole list is saved as the API wants it', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld());
       expect(find.text('Add at least one role to your career history to submit.'), findsOneWidget);
-      await openCard(tester, 'experience', 'Add a role');
+      await openCard(tester, 'experience', 'Add a Role');
       await fillRole(tester);
       await enter(tester, 'xp-city', 'Bengaluru');
       await tester.tap(find.byKey(const ValueKey('xp-start-month')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Apr').last);
       await tester.pumpAndSettle();
-      await tapSheetButton(tester, 'Save role');
+      await tapSheetButton(tester, 'Save Role');
       expect(api.bodyOf('PUT /profile/experience'), {
         'rows': [
           {
@@ -766,14 +766,14 @@ void main() {
 
     testWidgets('every rule shows its sentence under the form, and nothing is sent', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld());
-      await openCard(tester, 'experience', 'Add a role');
-      await tapSheetButton(tester, 'Save role');
+      await openCard(tester, 'experience', 'Add a Role');
+      await tapSheetButton(tester, 'Save Role');
       expect(find.text('Add your role.'), findsWidgets);
       expect(find.text('Add the organisation.'), findsWidgets);
       expect(find.text('Add the year you started.'), findsWidgets);
       await fillRole(tester, year: '2027');
       await tester.pump();
-      expect(find.text('The start date can’t be in the future.'), findsOneWidget);
+      expect(find.text('The start date cannot be in the future.'), findsOneWidget);
       await fillRole(tester, title: 'F', org: 'P');
       await tester.pump();
       expect(find.text('A role needs at least 2 characters.'), findsOneWidget);
@@ -781,17 +781,17 @@ void main() {
       await fillRole(tester);
       await tester.tap(find.byKey(const ValueKey('xp-current')));
       await tester.pump();
-      expect(find.text('Add when this role ended, or tick “I work here now”.'), findsOneWidget);
+      expect(find.text('Add when this role ended, or select “I Work Here Now”.'), findsOneWidget);
       await enter(tester, 'xp-end-year', '2017');
       await tester.pump();
       expect(find.text('The end date is before the start date.'), findsOneWidget);
       await enter(tester, 'xp-end-year', '2027');
       await tester.pump();
       expect(
-        find.text('The end date can’t be in the future. If you still work here, tick “I work here now”.'),
+        find.text('The end date cannot be in the future. If you still work here, select “I Work Here Now”.'),
         findsOneWidget,
       );
-      await tapSheetButton(tester, 'Save role');
+      await tapSheetButton(tester, 'Save Role');
       expect(api.count('PUT /profile/experience'), 0);
     });
 
@@ -837,9 +837,9 @@ void main() {
       final (api, _) = await pumpBecomeMentor(tester, w);
       expect(find.text('ACME · 2012 - Dec 2018'), findsOneWidget);
       await tapKey(tester, 'role-0');
-      expect(find.text('Edit this role'), findsOneWidget);
+      expect(find.text('Edit This Role'), findsOneWidget);
       await enter(tester, 'xp-title', 'Head of Facilities Strategy');
-      await tapSheetButton(tester, 'Save role');
+      await tapSheetButton(tester, 'Save Role');
       final rows = (api.bodyOf('PUT /profile/experience') as Map)['rows'] as List;
       expect(rows, hasLength(2));
       expect(rows[0]['title'], 'Head of Facilities Strategy');
@@ -873,10 +873,10 @@ void main() {
       final (api, _) = await pumpBecomeMentor(tester, w);
       await tapKey(tester, 'role-0');
       await enter(tester, 'xp-org', 'Brigade Group');
-      await tapSheetButton(tester, 'Save role');
+      await tapSheetButton(tester, 'Save Role');
       expect(((api.bodyOf('PUT /profile/experience') as Map)['rows'] as List).first.containsKey('companyId'), isFalse);
       await tapKey(tester, 'role-0');
-      await tapSheetButton(tester, 'Remove this role');
+      await tapSheetButton(tester, 'Remove This Role');
       expect(api.bodyOf('PUT /profile/experience'), {'rows': <Object?>[]});
       expect(find.text('Add at least one role to your career history to submit.'), findsOneWidget);
     });
@@ -885,12 +885,12 @@ void main() {
       final w = MentorWorld()
         ..refusals['PUT experience'] = refuse('title must be longer than or equal to 2 characters');
       final (api, _) = await pumpBecomeMentor(tester, w);
-      await openCard(tester, 'experience', 'Add a role');
+      await openCard(tester, 'experience', 'Add a Role');
       await fillRole(tester);
-      await tapSheetButton(tester, 'Save role');
+      await tapSheetButton(tester, 'Save Role');
       expect(find.text('title must be longer than or equal to 2 characters'), findsOneWidget);
       expect(tester.widget<TextField>(find.byKey(const ValueKey('xp-title'))).controller!.text, 'Facility Manager');
-      await tapSheetButton(tester, 'Save role');
+      await tapSheetButton(tester, 'Save Role');
       expect(api.count('PUT /profile/experience'), 2);
     });
   });
@@ -909,19 +909,19 @@ void main() {
         },
       );
       await openCard(tester, 'photo', 'Add');
-      await tapSheetButton(tester, 'Choose a photo');
+      await tapSheetButton(tester, 'Choose a Photo');
       expect(picked, 1);
       expect(api.queryOf('POST /uploads'), {'purpose': 'avatar'});
       expect(api.bodyOf('PATCH /users/me'), {'avatarUrl': '/uploads/abc123.pdf'});
       expect(find.text('Photo saved.'), findsOneWidget);
       expect(find.text('Mentees see this first.'), findsOneWidget);
-      expect(find.text('Add a profile photo — it is the first thing a mentee sees.'), findsNothing);
+      expect(find.text('Add a profile photo. It is the first thing a mentee sees.'), findsNothing);
     });
 
     testWidgets('backing out of the picker sends nothing', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld(avatar: null), pickPhoto: () async => null);
       await openCard(tester, 'photo', 'Add');
-      await tapSheetButton(tester, 'Choose a photo');
+      await tapSheetButton(tester, 'Choose a Photo');
       expect(api.count('POST /uploads'), 0);
       expect(api.count('PATCH /users/me'), 0);
     });
@@ -930,19 +930,19 @@ void main() {
       final big = PickedFile(bytes: List.filled(5 * 1024 * 1024 + 1, 0), name: 'big.jpg');
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld(avatar: null), pickPhoto: () async => big);
       await openCard(tester, 'photo', 'Add');
-      await tapSheetButton(tester, 'Choose a photo');
-      expect(find.text('That file is too big. Choose one under 5 MB.'), findsOneWidget);
+      await tapSheetButton(tester, 'Choose a Photo');
+      expect(find.text('The file is too large. Choose one under 5 MB.'), findsOneWidget);
       expect(api.count('POST /uploads'), 0);
     });
 
     testWidgets('a photo can be changed and removed (an empty address clears it)', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, MentorWorld(), pickPhoto: () async => small);
       await openCard(tester, 'photo', 'Change');
-      expect(find.text('Change photo'), findsOneWidget);
-      await tester.tap(find.text('Remove photo'));
+      expect(find.text('Change Photo'), findsOneWidget);
+      await tester.tap(find.text('Remove Photo'));
       await settle(tester);
       expect(api.bodyOf('PATCH /users/me'), {'avatarUrl': ''});
-      expect(find.text('Add a profile photo — it is the first thing a mentee sees.'), findsOneWidget);
+      expect(find.text('Add a profile photo. It is the first thing a mentee sees.'), findsOneWidget);
     });
 
     testWidgets('an upload the API refuses says why', (tester) async {
@@ -953,7 +953,7 @@ void main() {
         extra: {'POST /uploads': (_) => refuse('image/gif is not an accepted file type for this upload.')},
       );
       await openCard(tester, 'photo', 'Add');
-      await tapSheetButton(tester, 'Choose a photo');
+      await tapSheetButton(tester, 'Choose a Photo');
       expect(find.text('image/gif is not an accepted file type for this upload.'), findsOneWidget);
     });
   });
@@ -972,7 +972,7 @@ void main() {
         final (api, _) = await pumpBecomeMentor(tester, MentorWorld());
         expect(find.text(declaration), findsOneWidget);
         expect(box(tester).onChanged, isNull, reason: 'a role, a bio and more are still needed');
-        expect(find.text('Finish the items above to submit.'), findsOneWidget);
+        expect(find.text('Complete the items above to submit.'), findsOneWidget);
         await tapKey(tester, 'conduct-check');
         expect(box(tester).value, isFalse);
         expect(api.count('POST /mentorship/mentors/me/code-of-conduct'), 0);
@@ -986,15 +986,15 @@ void main() {
       final (api, _) = await pumpBecomeMentor(tester, completeWorld());
       expect(box(tester).onChanged, isNotNull);
       expect(box(tester).value, isFalse);
-      expect(find.text('Tick the declaration to submit.'), findsOneWidget);
+      expect(find.text('Select the declaration to submit.'), findsOneWidget);
       await tapKey(tester, 'conduct-check');
       expect(box(tester).value, isTrue);
-      expect(find.text('Your tick is recorded when you submit.'), findsOneWidget);
+      expect(find.text('Your acceptance is recorded when you submit.'), findsOneWidget);
       expect(api.count('POST /mentorship/mentors/me/code-of-conduct'), 0, reason: 'nothing is written until Submit');
       expect(api.count('PUT /mentorship/mentors/me'), 0);
       await tapKey(tester, 'conduct-check');
       expect(box(tester).value, isFalse, reason: 'it can be taken back before sending');
-      expect(find.text('Tick the declaration to submit.'), findsOneWidget);
+      expect(find.text('Select the declaration to submit.'), findsOneWidget);
     });
 
     testWidgets('the whole code can be read, and "I agree" ticks the same declaration (nothing is written)', (
@@ -1009,7 +1009,7 @@ void main() {
       expect(api.count('POST /mentorship/mentors/me/code-of-conduct'), 0);
       expect(box(tester).value, isTrue);
       expect(
-        find.text('1 of 3 steps done'),
+        find.text('1 of 3 steps completed'),
         findsOneWidget,
         reason: 'the declaration is given; the profile is not done',
       );
@@ -1076,16 +1076,16 @@ void main() {
       tester,
     ) async {
       final (api, _) = await pumpBecomeMentor(tester, completeWorld());
-      expect(find.text('Still needed to submit'), findsNothing);
+      expect(find.text('Required to Submit'), findsNothing);
       expect(
-        find.text('1 of 3 steps done'),
+        find.text('1 of 3 steps completed'),
         findsOneWidget,
         reason: 'the profile is done; the declaration and the review are not',
       );
-      expect(find.text('Tick the declaration to submit.'), findsOneWidget);
+      expect(find.text('Select the declaration to submit.'), findsOneWidget);
       expect(tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed, isNull);
       await tapKey(tester, 'conduct-check');
-      expect(find.text('2 of 3 steps done'), findsOneWidget);
+      expect(find.text('2 of 3 steps completed'), findsOneWidget);
       expect(tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed, isNotNull);
       await tapKey(tester, 'submit');
       expect(api.count('POST /mentorship/mentors/me/submit'), 1);
@@ -1093,15 +1093,12 @@ void main() {
         'conductVersion': '2026.1',
       }, reason: 'the declaration travels with the application');
       expect(api.count('POST /mentorship/mentors/me/code-of-conduct'), 0, reason: 'the acceptance is the same write');
-      expect(
-        find.text('Sent to the ICR review team — we will let you know when your profile is live.'),
-        findsOneWidget,
-      );
+      expect(find.text('Sent to the ICR review team. We will notify you when your profile is live.'), findsOneWidget);
       expect(find.byKey(const ValueKey('banner-PENDING')), findsOneWidget);
-      expect(find.textContaining('A member of the ICR team is reading your profile.'), findsOneWidget);
+      expect(find.textContaining('A member of the ICR team is reviewing your profile.'), findsOneWidget);
       expect(find.byKey(const ValueKey('submit')), findsNothing, reason: 'it is with the review team');
-      expect(find.text('Awaiting review'), findsOneWidget);
-      expect(find.text('ICR review — in progress'), findsOneWidget);
+      expect(find.text('Awaiting Review'), findsOneWidget);
+      expect(find.text('ICR Review (In Progress)'), findsOneWidget);
       expect(find.text('Accepted · 2026.1'), findsOneWidget, reason: 'the submission recorded the acceptance');
     });
 
@@ -1165,7 +1162,7 @@ void main() {
         ..conductAccepted = true
         ..conductVersion = '2026.1';
       final (api, _) = await pumpBecomeMentor(tester, w);
-      expect(find.text('Resubmit for review'), findsOneWidget);
+      expect(find.text('Resubmit for Review'), findsOneWidget);
       expect(tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed, isNull);
       await tapKey(tester, 'conduct-check');
       await tapKey(tester, 'submit');
@@ -1186,8 +1183,8 @@ void main() {
         find.textContaining('Please add a recent photo and say more about the sectors you know best.'),
         findsOneWidget,
       );
-      expect(find.text('Not approved'), findsWidgets);
-      expect(find.text('Resubmit for review'), findsOneWidget);
+      expect(find.text('Not Approved'), findsWidgets);
+      expect(find.text('Resubmit for Review'), findsOneWidget);
     });
 
     testWidgets('not approved with no note says changes were asked for', (tester) async {
@@ -1202,10 +1199,10 @@ void main() {
       final (_, rec) = await pumpBecomeMentor(tester, w);
       expect(find.byKey(const ValueKey('banner-APPROVED')), findsOneWidget);
       expect(find.textContaining('Members can find you in the directory.'), findsOneWidget);
-      expect(find.text('3 of 3 steps done'), findsOneWidget);
-      expect(find.text('Listed in the directory'), findsOneWidget);
+      expect(find.text('3 of 3 steps completed'), findsOneWidget);
+      expect(find.text('Listed in the Directory'), findsOneWidget);
       expect(find.byKey(const ValueKey('submit')), findsNothing);
-      await tapText(tester, 'View public profile');
+      await tapText(tester, 'View Public Profile');
       expect(rec.opened, ['mentor:mp-kiran']);
     });
 
@@ -1219,7 +1216,7 @@ void main() {
         find.textContaining('Your profile is hidden from the directory and is not taking new requests.'),
         findsOneWidget,
       );
-      expect(find.text('View public profile'), findsNothing, reason: 'it is not on the directory');
+      expect(find.text('View Public Profile'), findsNothing, reason: 'it is not on the directory');
     });
 
     testWidgets('a listing due for renewal says when it runs out', (tester) async {
@@ -1232,7 +1229,7 @@ void main() {
       expect(find.textContaining('Your listing is due for renewal'), findsOneWidget);
       expect(
         find.textContaining(
-          'Mentor approval runs for two years. Tick the code of conduct agreement in Your application to stay listed in the directory. It expires on 10 Nov 2026.',
+          'Mentor approval runs for two years. Select the code of conduct agreement in Your Application to stay listed in the directory. It expires on 10 Nov 2026.',
         ),
         findsOneWidget,
       );
@@ -1252,7 +1249,7 @@ void main() {
       );
       expect(
         find.textContaining(
-          'Mentor approval runs for two years. Tick the code of conduct agreement in Your application to stay on the directory.',
+          'Mentor approval runs for two years. Select the code of conduct agreement in Your Application to stay on the directory.',
         ),
         findsOneWidget,
       );
@@ -1260,7 +1257,7 @@ void main() {
     });
   });
 
-  group('Mentor training', () {
+  group('Mentor Training', () {
     List<Map<String, Object?>> courses() => [
       {
         'courseId': 'c1',
@@ -1297,14 +1294,14 @@ void main() {
         await pumpBecomeMentor(tester, completeWorld()..requiredCourses = courses());
         expect(find.byKey(const ValueKey('card-training')), findsOneWidget);
         expect(find.text('1 of 3 complete'), findsOneWidget);
-        expect(find.text('2 hours · Not started'), findsOneWidget);
-        expect(find.text('Enrolment confirmed'), findsOneWidget);
+        expect(find.text('2 hours · Not Started'), findsOneWidget);
+        expect(find.text('Enrolment Confirmed'), findsOneWidget);
         expect(find.text('Complete'), findsOneWidget);
-        expect(find.text('Mentor training'), findsWidgets);
+        expect(find.text('Mentor Training'), findsWidgets);
         expect(find.text('Finish mentor training (1 of 3 modules).'), findsOneWidget);
         expect(find.text('Enrol'), findsOneWidget);
         expect(find.text('Open'), findsOneWidget);
-        expect(find.text('1 of 4 steps done'), findsOneWidget);
+        expect(find.text('1 of 4 steps completed'), findsOneWidget);
       },
     );
 
@@ -1333,7 +1330,7 @@ void main() {
       await tapSheetButton(tester, 'I Agree');
       expect(tester.widget<CheckboxListTile>(find.byKey(const ValueKey('conduct-check'))).value, isTrue);
       expect(tester.widget<SolidButton>(find.byKey(const ValueKey('submit'))).onPressed, isNull);
-      expect(find.text('Finish the items above to submit.'), findsOneWidget);
+      expect(find.text('Complete the items above to submit.'), findsOneWidget);
     });
 
     testWidgets('finished training lets it through', (tester) async {
@@ -1348,7 +1345,7 @@ void main() {
     });
   });
 
-  group('Supporting documents', () {
+  group('Supporting Documents', () {
     final pdf = PickedFile(bytes: [37, 80, 68], name: 'cfmp.pdf');
     Map<String, Object?> doc(String id, String status, {String? note, String? label}) => {
       'id': id,
@@ -1384,7 +1381,7 @@ void main() {
         'fileSize': 3,
       });
       expect(find.text('Letter from Prestige'), findsOneWidget);
-      expect(find.text('Awaiting review'), findsWidgets);
+      expect(find.text('Awaiting Review'), findsWidgets);
     });
 
     testWidgets('a file over 10 MB is refused before it is sent', (tester) async {
@@ -1393,7 +1390,7 @@ void main() {
       await openCard(tester, 'documents', 'Add');
       await tester.tap(find.byKey(const ValueKey('doc-choose')));
       await tester.pump();
-      expect(find.text('That file is too big. Choose one under 10 MB.'), findsOneWidget);
+      expect(find.text('The file is too large. Choose one under 10 MB.'), findsOneWidget);
       await tapSheetButton(tester, 'Attach');
       expect(api.count('POST /uploads'), 0);
     });
@@ -1409,7 +1406,7 @@ void main() {
         ];
       final (api, _) = await pumpBecomeMentor(tester, w);
       expect(find.text('Verified'), findsOneWidget);
-      expect(find.text('Not accepted'), findsOneWidget);
+      expect(find.text('Not Accepted'), findsOneWidget);
       expect(find.text('The scan is cut off.'), findsOneWidget);
       expect(find.text('Remove'), findsOneWidget, reason: 'only the pending one');
       await tapText(tester, 'Remove');
@@ -1446,13 +1443,13 @@ void main() {
     });
   });
 
-  group('Your listing', () {
-    testWidgets('"Accepting new requests" is switched on its own', (tester) async {
+  group('Your Listing', () {
+    testWidgets('"Accepting New Requests" is switched on its own', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, completeWorld());
       expect(find.text('Mentees can find you and ask.'), findsOneWidget);
       await tapKey(tester, 'visibility');
       expect(api.bodyOf('PATCH /mentorship/mentors/me/visibility'), {'discoverable': false});
-      expect(find.text('Hidden: you are not taking new requests.'), findsOneWidget);
+      expect(find.text('Hidden. You are not taking new requests.'), findsOneWidget);
       expect(find.text('Your profile is hidden. Existing mentorships are unaffected.'), findsOneWidget);
       await tapKey(tester, 'visibility');
       expect(api.bodyOf('PATCH /mentorship/mentors/me/visibility'), {'discoverable': true});
@@ -1461,18 +1458,18 @@ void main() {
 
     testWidgets('withdrawing asks first, then the profile is gone and the page starts again', (tester) async {
       final (api, _) = await pumpBecomeMentor(tester, completeWorld());
-      await tapText(tester, 'Withdraw my profile');
-      await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text('Keep it')));
+      await tapText(tester, 'Withdraw My Profile');
+      await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text('Keep It')));
       await tester.pumpAndSettle();
       expect(api.count('DELETE /mentorship/mentors/me'), 0);
-      await tapText(tester, 'Withdraw my profile');
+      await tapText(tester, 'Withdraw My Profile');
       await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text('Withdraw')));
       await settle(tester);
       expect(api.count('DELETE /mentorship/mentors/me'), 1);
       expect(find.text('Withdrawn. You can start again any time.'), findsOneWidget);
-      expect(find.text('Become a mentor'), findsOneWidget);
+      expect(find.text('Become a Mentor'), findsOneWidget);
       expect(find.byKey(const ValueKey('card-listing')), findsNothing);
-      expect(find.text('Not started'), findsOneWidget);
+      expect(find.text('Not Started'), findsOneWidget);
     });
 
     testWidgets('mentorships under way stop a withdrawal, in the API\'s words, and the profile stays', (tester) async {
@@ -1480,11 +1477,11 @@ void main() {
         ..withdrawRefusal =
             'You have 2 mentorships under way. Complete them before withdrawing your profile — or pause it instead to stop new requests.';
       await pumpBecomeMentor(tester, w);
-      await tapText(tester, 'Withdraw my profile');
+      await tapText(tester, 'Withdraw My Profile');
       await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text('Withdraw')));
       await settle(tester);
       expect(find.textContaining('You have 2 mentorships under way.'), findsOneWidget);
-      expect(find.text('My mentor profile'), findsOneWidget);
+      expect(find.text('My Mentor Profile'), findsOneWidget);
     });
   });
 }

@@ -141,12 +141,12 @@ void main() {
     ) async {
       await pump(tester);
       expect(find.text('Today'), findsOneWidget);
-      expect(find.text('This week'), findsOneWidget);
+      expect(find.text('This Week'), findsOneWidget);
       expect(find.text('Earlier'), findsOneWidget);
       expect(find.byType(NotificationRow), findsNWidgets(5));
       // Heading order: Today above This week above Earlier.
-      expect(tester.getTopLeft(find.text('Today')).dy, lessThan(tester.getTopLeft(find.text('This week')).dy));
-      expect(tester.getTopLeft(find.text('This week')).dy, lessThan(tester.getTopLeft(find.text('Earlier')).dy));
+      expect(tester.getTopLeft(find.text('Today')).dy, lessThan(tester.getTopLeft(find.text('This Week')).dy));
+      expect(tester.getTopLeft(find.text('This Week')).dy, lessThan(tester.getTopLeft(find.text('Earlier')).dy));
       expect(find.text('Unread (3)'), findsOneWidget);
     });
 
@@ -180,22 +180,22 @@ void main() {
 
     testWidgets('an empty account says so, an empty Unread tab says everything is read', (tester) async {
       await pump(tester, repository: FakeNotificationsRepository());
-      expect(find.text('No notifications yet'), findsOneWidget);
+      expect(find.text('No Notifications Yet'), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('tab-unread')));
       await tester.pumpAndSettle();
-      expect(find.text('Nothing unread'), findsOneWidget);
+      expect(find.text('No Unread Notifications'), findsOneWidget);
     });
 
     testWidgets('a failed first load says why and Retry loads it', (tester) async {
       final failing = FakeNotificationsRepository(items: sample())..listError = ApiError('The server is busy.');
       await pump(tester, repository: failing);
-      expect(find.text('Your notifications could not be loaded.'), findsOneWidget);
+      expect(find.text('Unable to Load Notifications'), findsOneWidget);
       expect(find.text('The server is busy.'), findsOneWidget);
       expect(find.byType(NotificationRow), findsNothing);
 
       failing.listError = null;
-      await tester.tap(find.text('Retry'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byType(NotificationRow), findsNWidgets(5));
     });
@@ -227,7 +227,7 @@ void main() {
       expect(repo.calls.where((c) => c == 'unreadCount').length, greaterThanOrEqualTo(2));
     });
 
-    testWidgets('"Show older notifications" appends the next page and goes away at the end', (tester) async {
+    testWidgets('"View More" appends the next page and goes away at the end', (tester) async {
       final many = [
         for (var i = 0; i < 30; i++)
           note(
@@ -290,14 +290,14 @@ void main() {
       expect(opened, isEmpty, reason: 'the menu reads, it does not open the record');
     });
 
-    testWidgets('a read row has no "Mark as read"; "Turn off" switches that kind\'s in-app channel off', (
+    testWidgets('a read row has no "Mark as Read"; "Turn off" switches that kind\'s in-app channel off', (
       tester,
     ) async {
       await pump(tester);
       await tester.tap(find.byKey(const ValueKey('notification-menu-event')));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('note-menu-read')), findsNothing);
-      expect(find.text('Turn off Events notifications'), findsOneWidget);
+      expect(find.text('Turn Off Events Notifications'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('note-menu-off')));
       await tester.pumpAndSettle();
       final saved = repo.calls.where((c) => c.startsWith('savePreference')).toList();
@@ -314,14 +314,14 @@ void main() {
       expect(find.byKey(const ValueKey('note-menu-off')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('note-menu-settings')));
       await tester.pumpAndSettle();
-      expect(find.text('Notification preferences'), findsOneWidget);
+      expect(find.text('Notification Preferences'), findsOneWidget);
     });
 
     testWidgets('the gear opens the preferences and a second tap goes back to the list', (tester) async {
       await pump(tester);
       await tester.tap(find.byKey(const ValueKey('tab-preferences')));
       await tester.pumpAndSettle();
-      expect(find.text('Notification preferences'), findsOneWidget);
+      expect(find.text('Notification Preferences'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('tab-preferences')));
       await tester.pumpAndSettle();
       expect(find.byType(NotificationRow), findsNWidgets(5));
@@ -354,7 +354,7 @@ void main() {
       expect(find.text('Not allowed'), findsOneWidget);
     });
 
-    testWidgets('"Mark all read" reads every row and clears the bell; disabled when nothing is unread', (tester) async {
+    testWidgets('"Mark All Read" reads every row and clears the bell; disabled when nothing is unread', (tester) async {
       await pump(tester);
       final button = find.byKey(const ValueKey('mark-all-read'));
       expect(tester.widget<TextButton>(button).onPressed, isNotNull);
@@ -367,7 +367,7 @@ void main() {
       expect(tester.widget<TextButton>(button).onPressed, isNull);
     });
 
-    testWidgets('a refused "Mark all read" brings every dot back and shows the reason', (tester) async {
+    testWidgets('a refused "Mark All Read" brings every dot back and shows the reason', (tester) async {
       final refusing = FakeNotificationsRepository(items: sample())..markAllError = ApiError('Try again later');
       await pump(tester, repository: refusing);
       await tester.tap(find.byKey(const ValueKey('mark-all-read')));
@@ -387,7 +387,7 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('mark-all-read')));
       await tester.pumpAndSettle();
-      expect(find.text('Nothing unread'), findsOneWidget);
+      expect(find.text('No Unread Notifications'), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('tab-all')));
       await tester.pumpAndSettle();
@@ -532,7 +532,7 @@ void main() {
       await tester.tap(row('other'));
       await tester.pumpAndSettle();
       expect(repository.calls, contains('switchCompany co-2'));
-      expect(find.text('Now working as Acme'), findsOneWidget);
+      expect(find.text('Now working as Acme.'), findsOneWidget);
       expect(switched, ['co-2']);
       expect(opened.last, 'application.candidate {applicationId: app-9}');
     });
@@ -595,7 +595,7 @@ void main() {
       await pump(tester, repository: repository);
       await tester.tap(row('gone'));
       await tester.pumpAndSettle();
-      expect(find.textContaining("no longer part of Gone Ltd"), findsOneWidget);
+      expect(find.textContaining('no longer a member of Gone Ltd'), findsOneWidget);
       expect(opened, isEmpty);
     });
 
@@ -623,7 +623,7 @@ void main() {
 
     testWidgets('lists every category with its two switches; the mark-all button is not offered there', (tester) async {
       await openPreferences(tester);
-      expect(find.text('Notification preferences'), findsOneWidget);
+      expect(find.text('Notification Preferences'), findsOneWidget);
       expect(find.byKey(const ValueKey('mark-all-read')), findsNothing);
       expect(find.byType(Switch), findsNWidgets(30));
       expect(find.text('Messages'), findsOneWidget);
@@ -649,10 +649,10 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('pref-events-Email')));
       await tester.pumpAndSettle();
       expect(tester.widget<Switch>(find.byKey(const ValueKey('pref-events-Email'))).value, isTrue, reason: 'put back');
-      expect(find.text('Your change could not be saved. Try again.'), findsOneWidget);
+      expect(find.text('Unable to save your change. Try again.'), findsOneWidget);
       await tester.tap(find.byTooltip('Dismiss'));
       await tester.pumpAndSettle();
-      expect(find.text('Your change could not be saved. Try again.'), findsNothing);
+      expect(find.text('Unable to save your change. Try again.'), findsNothing);
     });
 
     testWidgets('the locked categories are on and cannot be switched', (tester) async {
@@ -668,9 +668,9 @@ void main() {
     testWidgets('preferences that cannot load can be retried', (tester) async {
       final failing = FakeNotificationsRepository(items: sample())..preferencesError = ApiError('x');
       await openPreferences(tester, repository: failing);
-      expect(find.text('Your notification preferences could not be loaded.'), findsOneWidget);
+      expect(find.text('Unable to Load Notification Preferences'), findsOneWidget);
       failing.preferencesError = null;
-      await tester.tap(find.text('Retry'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byType(Switch), findsNWidgets(30));
     });

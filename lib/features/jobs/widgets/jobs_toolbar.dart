@@ -46,7 +46,7 @@ class JobsToolbar extends StatelessWidget {
         ChipRow(
           children: [
             IcrChip(
-              label: 'Post a job',
+              label: 'Post a Job',
               tone: ChipTone.tinted,
               fill: AppColors.surfaceContainer,
               border: AppColors.outlineVariant,
@@ -59,7 +59,7 @@ class JobsToolbar extends StatelessWidget {
               onTap: () => openPostJob(context),
             ),
             IcrChip(
-              label: 'My jobs',
+              label: 'My Jobs',
               tone: ChipTone.outlined,
               icon: LucideIcons.bookmark,
               iconSize: 11.5,
@@ -76,12 +76,12 @@ class JobsToolbar extends StatelessWidget {
               iconSize: 12,
               padding: const EdgeInsets.only(left: 11.5, right: 12.5),
               gap: 5.5,
-              trailing: jobs.newAlerts > 0 ? _NewPill('${jobs.newAlerts} new') : null,
+              trailing: jobs.newAlerts > 0 ? _NewPill('${jobs.newAlerts} New') : null,
               trailingGap: 8,
               onTap: onAlerts,
             ),
             IcrChip(
-              label: 'Demonstrate skills',
+              label: 'Demonstrate Skills',
               tone: ChipTone.outlined,
               icon: LucideIcons.badgeCheck,
               iconSize: 12.5,
@@ -138,7 +138,7 @@ class JobsToolbar extends StatelessWidget {
               onTap: () => pickPosted(context),
             ),
             IcrChip(
-              label: 'In my network',
+              label: 'In My Network',
               tone: ChipTone.outlined,
               icon: LucideIcons.users,
               iconSize: 12.4,
@@ -164,11 +164,11 @@ class JobsToolbar extends StatelessWidget {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: const Text("Jobs at companies in your network aren't in the app yet."),
+          content: const Text('Jobs at companies in your network are not available in the app yet.'),
           persist: false, // an Undo snackbar would otherwise stay over every screen until dismissed
 
           action: SnackBarAction(
-            label: 'Open network',
+            label: 'Open Network',
             onPressed: () => links.openUri(context, AppConfig.sitePage('/network')),
           ),
         ),

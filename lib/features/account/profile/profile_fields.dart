@@ -149,7 +149,10 @@ class _SuggestFieldState<T> extends State<SuggestField<T>> {
                   InkWell(
                     onTap: () {
                       final text = widget.labelOf(item);
-                      widget.controller.value = TextEditingValue(text: text, selection: TextSelection.collapsed(offset: text.length));
+                      widget.controller.value = TextEditingValue(
+                        text: text,
+                        selection: TextSelection.collapsed(offset: text.length),
+                      );
                       setState(() {
                         _picked = text;
                         _found = const [];
@@ -228,7 +231,7 @@ class MonthYearField extends StatelessWidget {
   Future<void> _pickMonth(BuildContext context) async {
     final picked = await showAccountPicker<int>(
       context,
-      title: '$label: month',
+      title: '$label: Month',
       items: [for (var m = 1; m <= 12; m++) m],
       labelOf: (m) => _monthNames[m - 1],
       selected: month,
@@ -239,7 +242,7 @@ class MonthYearField extends StatelessWidget {
   Future<void> _pickYear(BuildContext context) async {
     final picked = await showAccountPicker<int>(
       context,
-      title: '$label: year',
+      title: '$label: Year',
       items: years,
       labelOf: (y) => '$y',
       searchable: true,
@@ -295,7 +298,15 @@ class MonthYearField extends StatelessWidget {
 }
 
 class _Cell extends StatelessWidget {
-  const _Cell({super.key, required this.text, required this.filled, required this.error, required this.onTap, this.onClear, required this.semantics});
+  const _Cell({
+    super.key,
+    required this.text,
+    required this.filled,
+    required this.error,
+    required this.onTap,
+    this.onClear,
+    required this.semantics,
+  });
 
   final String text;
   final bool filled;
@@ -325,7 +336,12 @@ class _Cell extends StatelessWidget {
               children: [
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: filled ? AccountText.input : AccountText.hint),
+                  child: Text(
+                    text,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: filled ? AccountText.input : AccountText.hint,
+                  ),
                 ),
                 if (onClear != null)
                   GestureDetector(
@@ -378,7 +394,7 @@ class DateSelectField extends StatelessWidget {
     return AccountSelectField(
       key: fieldKey,
       label: label,
-      hint: 'Choose a date',
+      hint: 'Select a date',
       value: value == null ? null : format(value!),
       error: error,
       helper: helper,
@@ -408,7 +424,7 @@ class CityPickerField extends StatelessWidget {
     required this.value,
     required this.loadCities,
     required this.onChanged,
-    this.hint = 'Choose a city',
+    this.hint = 'Select a city',
     this.helper,
     this.error,
     this.labelOfCity,
@@ -445,7 +461,9 @@ class CityPickerField extends StatelessWidget {
           if (!context.mounted) return;
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
-            ..showSnackBar(const SnackBar(content: Text("Couldn't load the cities. Check your connection and try again.")));
+            ..showSnackBar(
+              const SnackBar(content: Text('Unable to load the cities. Check your connection and try again.')),
+            );
           return;
         }
         if (!context.mounted) return;
@@ -557,7 +575,7 @@ class _ChipEditorState extends State<ChipEditor> {
           fieldKey: const Key('chips.input'),
           label: widget.label,
           controller: _text,
-          hint: full ? 'That is the most you can add' : widget.hint,
+          hint: full ? 'Maximum number added' : widget.hint,
           enabled: !full,
           maxLength: widget.maxLength,
           error: widget.error,

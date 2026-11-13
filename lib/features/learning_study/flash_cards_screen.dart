@@ -100,7 +100,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> with WidgetsBinding
             builder: (context, _) => Stack(
               children: [
                 Positioned.fill(
-                  top: TitleBar.height,
+                  top: TitleBar.reserved(context),
                   child: RefreshIndicator(
                     color: AppColors.primary,
                     onRefresh: _decks.refresh,
@@ -118,7 +118,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> with WidgetsBinding
                   left: 0,
                   right: 0,
                   child: TitleBar(
-                    title: 'Flash Cards',
+                    title: 'Flashcards',
                     onBack: widget.onBack,
                     unread: _decks.unread,
                     onBell: () => openNotifications(context),
@@ -143,7 +143,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> with WidgetsBinding
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: IcrSearchField(
             controller: _search,
-            hint: 'Search flash-card decks...',
+            hint: 'Search flashcard decks...',
             height: 40,
             onSubmitted: _decks.setSearch,
           ),
@@ -156,7 +156,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> with WidgetsBinding
             children: [
               IcrChip(
                 key: const ValueKey('study-starred-chip'),
-                label: 'Study starred ($starred)',
+                label: 'Study Starred ($starred)',
                 tone: ChipTone.outlined,
                 icon: Symbols.star,
                 iconColor: StudyColors.star,
@@ -196,9 +196,9 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> with WidgetsBinding
           hasScrollBody: false,
           child: StudyNotice(
             icon: LucideIcons.cloudOff,
-            title: "Couldn't load the decks",
+            title: 'Unable to Load the Decks',
             body: _decks.error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: _decks.refresh,
           ),
         ),
@@ -211,11 +211,12 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> with WidgetsBinding
           hasScrollBody: false,
           child: StudyNotice(
             icon: LucideIcons.layers,
-            title: _decks.narrowed ? 'No deck matches' : 'No flash-card decks yet',
+            title: _decks.narrowed ? 'No Deck Matches' : 'No Flashcards Available Yet',
             body: _decks.narrowed
                 ? 'Nothing matches "${_decks.search}". Try other words, or clear the search.'
-                : 'Decks show up here as ICR publishes them.',
-            action: _decks.narrowed ? 'Clear search' : null,
+                : 'Flashcards will appear here once published by the ICR Learning Administrator. Check back soon to explore '
+                      'key CRE and FM concepts, terminology and industry knowledge.',
+            action: _decks.narrowed ? 'Clear Search' : null,
             onAction: _decks.narrowed
                 ? () {
                     _search.clear();
@@ -278,7 +279,7 @@ class _PlanNote extends StatelessWidget {
                       padding: EdgeInsets.zero,
                       alignment: Alignment.centerLeft,
                     ),
-                    child: Text('See plans', style: StudyText.noteLink),
+                    child: Text('See Plans', style: StudyText.noteLink),
                   ),
                 ],
               ),

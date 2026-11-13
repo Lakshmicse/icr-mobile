@@ -141,7 +141,7 @@ const notificationCategories = <NotificationCategory>[
   ),
   NotificationCategory(
     id: 'jobs',
-    label: 'Jobs and applications',
+    label: 'Jobs and Applications',
     hint: 'Applications, interviews, offers, job alerts and profile views.',
     icon: LucideIcons.briefcase,
     tint: Color(0xFFFFF4D6),
@@ -149,7 +149,7 @@ const notificationCategories = <NotificationCategory>[
   ),
   NotificationCategory(
     id: 'procurement',
-    label: 'Requirements and bids',
+    label: 'Requirements and Bids',
     hint: 'Requirements, enquiries, bids and shortlists.',
     icon: LucideIcons.fileText,
     tint: Color(0xFFFDF0E4),
@@ -165,7 +165,7 @@ const notificationCategories = <NotificationCategory>[
   ),
   NotificationCategory(
     id: 'learning',
-    label: 'Courses and assignments',
+    label: 'Courses and Assignments',
     hint: 'Assignments, grades and course enquiries.',
     icon: LucideIcons.graduationCap,
     tint: Color(0xFFE6F4F1),
@@ -181,7 +181,7 @@ const notificationCategories = <NotificationCategory>[
   ),
   NotificationCategory(
     id: 'community',
-    label: 'Community and articles',
+    label: 'Community and Articles',
     hint: 'Replies to your posts, accepted answers, followers and articles.',
     icon: LucideIcons.messagesSquare,
     tint: Color(0xFFE8F1F8),
@@ -189,7 +189,7 @@ const notificationCategories = <NotificationCategory>[
   ),
   NotificationCategory(
     id: 'verification',
-    label: 'Verification and credentials',
+    label: 'Verification and Credentials',
     hint: 'Verification reviews, certificates and credentials.',
     icon: LucideIcons.badgeCheck,
     tint: Color(0xFFE4F6EC),
@@ -197,7 +197,7 @@ const notificationCategories = <NotificationCategory>[
   ),
   NotificationCategory(
     id: 'team',
-    label: 'Team and company',
+    label: 'Team and Company',
     hint: 'Invitations and requests to join a company team.',
     icon: LucideIcons.users,
     tint: Color(0xFFEEF0FB),
@@ -205,7 +205,7 @@ const notificationCategories = <NotificationCategory>[
   ),
   NotificationCategory(
     id: 'membership',
-    label: 'Membership and rewards',
+    label: 'Membership and Rewards',
     hint: 'Renewal reminders, expiry, price changes and referral rewards.',
     icon: LucideIcons.idCard,
     tint: Color(0xFFFFF4D6),
@@ -213,7 +213,7 @@ const notificationCategories = <NotificationCategory>[
   ),
   NotificationCategory(
     id: 'onboarding',
-    label: 'Getting started',
+    label: 'Getting Started',
     hint: 'Reminders to finish setting up your account.',
     icon: LucideIcons.rocket,
     tint: Color(0x1F1D63A3),
@@ -221,15 +221,15 @@ const notificationCategories = <NotificationCategory>[
   ),
   NotificationCategory(
     id: 'general',
-    label: 'Other updates',
-    hint: 'Anything else ICR tells you about.',
+    label: 'Other Updates',
+    hint: 'Other updates from ICR.',
     icon: LucideIcons.bell,
     tint: Color(0xFFEEF0F3),
     ink: Color(0xFF4A5563),
   ),
   NotificationCategory(
     id: 'payments',
-    label: 'Payments and receipts',
+    label: 'Payments and Receipts',
     hint: 'Receipts, purchases, refunds and payment problems.',
     icon: LucideIcons.receipt,
     tint: Color(0xFFE4F6EC),
@@ -238,7 +238,7 @@ const notificationCategories = <NotificationCategory>[
   ),
   NotificationCategory(
     id: 'support',
-    label: 'Support requests',
+    label: 'Support Requests',
     hint: 'Replies and updates on your support requests.',
     icon: LucideIcons.headset,
     tint: Color(0xFFFDE8EC),
@@ -247,7 +247,7 @@ const notificationCategories = <NotificationCategory>[
   ),
   NotificationCategory(
     id: 'security',
-    label: 'Account and security',
+    label: 'Account and Security',
     hint: 'Sign-in codes, password resets and email verification.',
     icon: LucideIcons.shield,
     tint: Color(0xFFFDE8EC),

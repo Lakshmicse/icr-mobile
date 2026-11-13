@@ -34,13 +34,13 @@ The three list sections (experience, education, career breaks) are saved **whole
 
 ### Settings: `SettingsScreen` (`settings/settings_screen.dart`)
 
-The person, then **Account** (Sign-in & security, My companies with "Acting for {company}" or "Acting as yourself", Saved items), **Preferences** (Language, Notifications), **Privacy & data** (Download my data, Delete my account), **About ICR** (About ICR — the website's About page drawn by the app, `AboutScreen`, since 7 Nov 2026 — Contact us, Terms of Service, Privacy Policy), **Sign out**.
+The person, then **Account** (Sign-In & Security, My Companies — a plain row since 13 Nov 2026, with no "Acting for {company}" / "Acting as yourself" line under it — and Saved Items), **Preferences** (Language — English, Hindi, Kannada, and since 9 Nov 2026 Spanish, Arabic and Chinese, the six the website offers; Notifications; and since 9 Nov 2026 **Background Activity & Permissions**, which opens the phone's own page for ICR — App info — where battery → unrestricted lets it keep running in the background and notifications and location are allowed; `Geolocator.openAppSettings()`, with a sentence saying where to find it when the page cannot open), **Privacy & Data** (Download My Data, Delete Account), **About ICR** (About ICR — the website's About page drawn by the app, `AboutScreen`, since 7 Nov 2026 — Contact Us, Terms of Service, Privacy Policy), **Sign Out** ("Sign Out of ICR?" asks first). The words are the client's standard since 13 Nov 2026 (the last section).
 
-- **Sign-in & security** (`SignInSecurityScreen`): the sign-in email with Confirmed / Not confirmed (**Confirm** opens the confirmation), **Change password** (sends the reset link to the account's own address), the **mobile number** with Verified / Not verified (only a number a code can reach is ever "not verified") and its sheet, **Edit contact info** (work email, a second number, the five links; the links go first because the API judges a web address, a refusal there writes nothing else; LinkedIn must be on LinkedIn only when it is being changed).
+- **Sign-In & Security** (`SignInSecurityScreen`): under **Sign-In**, the **Email** with Verified / Not Verified (**Verify** opens the verification) and **Password** with **Change** ("Reset your password using a secure email link."; it sends the reset link to the account's own address); under **Contact Information**, the **Mobile Number** with Verified / Not Verified (only a number a code can reach is ever "Not Verified") or "Not added" with **Add**, and its sheet, then **Work Email**, **Alternate Mobile Number** and the links when the profile has them; the pencil, **Edit Contact Information** (work email, a second number, the five links; the links go first because the API judges a web address, a refusal there writes nothing else; LinkedIn must be on LinkedIn only when it is being changed).
 - **The mobile number sheet** (`showPhoneSheet`): a +91 number is confirmed (**Send code**, the six digits, **Verify**; a non-production API hands the code back and the sheet shows "Test mode: your code is 123456" with **Use code**); any other country's number is kept as typed (**Save number**: codes only go to Indian numbers); **Remove number**. The field is two parts (country and the digits, like the website: pasting `+44 7700 900123` switches the country, a trunk 0 is dropped, "Other country" takes the number with its code).
 - **Language**: English, Hindi, Kannada, saved on the account (`PATCH /users/me {locale}`; English clears it). It sets the language of ICR's emails, notifications and replies; **the app's own screens stay in English for now**, and the sheet says so.
 - **Notifications** (`NotificationPreferencesScreen`): every kind of update with an In app and an Email switch, saved the moment it is touched (only that row is sent), rolled back with the API's sentence when refused; receipts, support and security notices are always sent, their switches are drawn on and disabled.
-- **Download my data**: `GET /users/me/export` shown as JSON with **Copy** and **Share**. **Delete my account**: says what happens, asks for the word DELETE, `DELETE /users/me` (anonymises and closes the account, ends every session), then the phone is signed out without a logout call.
+- **Download My Data**: `GET /users/me/export` shown as JSON with **Copy** and **Share**. **Delete Account**: says what happens, asks for the word DELETE, `DELETE /users/me` (anonymises and closes the account, ends every session), then the phone is signed out without a logout call.
 
 ### Companies (`companies/`): `MyCompaniesScreen`, `CreateCompanyScreen`
 
@@ -59,6 +59,8 @@ The list of companies the person belongs to with their role, place, size and wha
 - Not built, deliberately: the website's side rail (live page preview, "Ready to create" tick list, "After you create it" notes) on a phone's single column; the square-crop dialog before a logo uploads; opening an uploaded private document from its chip; the `?partner=1` tick ("Apply to add partner courses", then to the dashboard), because the app's partner application is its own screen (`PartnerApplyScreen`, which pushes a bare `CreateCompanyScreen`).
 - To wire (other files): `LookalikesCard` has no "Accept from Your companies" chip for a company that has already added the person (the website's `standing.invited`); every `CreateCompanyScreen()` push in `app.dart`, `app_screens.dart`, `app_search.dart`, `app_site_pages.dart`, `app_notifications.dart` and `marketplace_navigation.dart` passes no `onNextStep`/`onViewCompany`, so the welcome steps are plain notes and a suggestion has no View page; `MyCompaniesScreen` does pass them.
 
+**The owner's wording (12 Nov 2026, the annotated atlas "04-profile-account", pages 5–6).** On **My Companies** (the title, title case): the intro sentence and the three tips ("How it works": one company at a time, your profile stays yours, every company keeps an admin) are gone; "All workspaces" reads **All Companies** and its line **Switch between companies**. The website's "Currently acting as" card has no counterpart here (the active company wears **Active** in the list). On **Create a company page**: the intro reads "Create a company page to post your services, products, participate in RFQ’s, post jobs or courses."; the first block is **Company Details** with no subtitle (the second block keeps "Company details", without its "Used to match it…" line); **Company Name** with the helper **Company Brand Name / Legal Name**; **Company Size · No. of Employees**; **Organisation Type**; a new optional **Year Founded** (`CreateMyCompanyDto.foundedYear`, refused outside 1800 to this year with the shared rule's "Enter a year between 1800 and {year}.", its range said under the field) at the foot of Company details; **Logo and Tagline**, the tagline with no placeholder, helper or counter; the tick reads "I agree to the terms and policies of ICR and I am an authorised representative of {company} to create and manage this page on ICR." with no line under it; and the "You become the page’s admin…" line above the buttons is gone. Still as before, and why: the industry list is Master Data's (`GET /masters`), so staff already add and retire industries; company sizes (`COMPANY_SIZES`) and organisation types (`LegalStructure`) are fixed lists the API validates, so making them staff-managed is a portal change; the head office is a type-to-search over ICR's cities and `/locations/search`, not Google's suggestions; the website's side rail ("After you create it", the preview and its note) is not drawn on a phone, and the welcome page after creating carries the steps.
+
 ### Saved items (`saved/`): `SavedItemsScreen`
 
 One chip per kind (Jobs, Mentors, Suppliers, Councils, Discussions) each with its count, read at once and failing alone; a card per kind; the bookmark un-saves at once with **Undo**; a closed job shows as closed; "Show more" pages; every empty state points to where to save one.
@@ -74,7 +76,7 @@ The website's `/network` (the feed of the people the member follows, who to foll
 | Control | Does | Proved by |
 |---|---|---|
 | Profile: every section, loading, a failed section with its own Try again, pull to refresh, 320 x 568 | | P "the page" |
-| Share profile, Copy link, View public profile, the gear, the Sign-in & security row | the share sheet gets the public link; the link is copied; the lead's callbacks | P "Share profile…", "View public profile…" |
+| Share profile, Copy link, View public profile, the gear (the profile's own Sign-in & security row was removed on 12 Nov 2026, the owner's call: it is in Settings, behind the gear) | the share sheet gets the public link; the link is copied; the lead's callbacks | P "Share profile…", "View public profile…" |
 | Intro pencil | the sheet with what the profile says; saves name, headline, years, then the résumé; refusals before any call; the headline's suggestions; the API's refusal kept above the buttons; Cancel asks to discard; no change closes without a call; the city | P "the intro" (7 tests); L "the intro…" |
 | Photo / cover | upload then set; Remove asks first; a picture over 5 MB or a refused upload; a ready-made cover; your own; remove; the colour band stands in when the art cannot be fetched | P "the photo and the cover" (6 tests); L "the photo is uploaded and set, served back, then removed; the cover too" |
 | About, Skills, Languages | empty prompts, See more, add by suggestion / typing / Enter, once whatever the case, at most eight languages, save through the right endpoint | P "about, skills and languages" (7 tests); L "About, Skills and Languages" |
@@ -165,3 +167,131 @@ Idempotent, marked, removable (`--remove`, `--cleanup-live`). Run after `home.ts
 - Not built on the person's profile: the résumé library, the profile analytics card, "Open to / ready for my next role" and job preferences, the diversity declaration, the mentors card. (The sign-up's "ready for my next role" tick is written; nothing reads or edits it afterwards.)
 - No app translation yet: Language only sets what ICR's server sends.
 - Not exercised on a device: the platform pickers (`file_picker`), the share sheet (`share_plus`), the clipboard.
+
+## 7 Nov 2026
+
+A new company's "View page" (and a company picked in the companies directory) opens the company's page **in the app** (`openCompanyInsightsById` with the shell's jobs source), not the website's, where its own member was offered a review of it.
+
+## 9 Nov 2026
+
+**Background activity & permissions** (owner: "background running permissions also need to be enabled for the app"): a Settings row (key `settings.background`) under Preferences opens Android's App info page for ICR, where the person sets battery to unrestricted and allows notifications and location; `POST_NOTIFICATIONS` is in the manifest for Android 13+. The app still sends no push notifications (no FCM project yet), so "running in the background" today means the socket, the bell polling and the TTS reader keep going when the phone lets them; a real background notification needs push, which is a separate piece of work.
+
+**Languages** (bug sheet, 9 Nov 2026): the Language sheet offers the six the website has live (`ENABLED_LOCALES` on prod: en, hi, kn, es, ar, zh); the app's own screens stay English, as the sheet says.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client marked up the app's user manual (sections 1.5, 2.2, 4.1 and 4.2) with the words they want in Settings, on Sign-In & Security, in the sign-out confirmation and on the Discover sheet, and asked for the rest to follow the same style. Files: `settings/settings_screen.dart`, `security_screen.dart`, `contact_sheet.dart`, `settings_sheets.dart`, `notification_preferences_screen.dart`, and one label in `discover/discover_sheet.dart`. Layouts are unchanged; one row lost its second line.
+
+| Where | Old | New |
+|---|---|---|
+| Settings: the companies row (client) | My Companies, with "Acting as yourself" / "Acting for {company}" under it | My Companies, with no line under it (the screen no longer reads `GET /me/companies`) |
+| Settings rows (client) | Saved items · Delete my account · Sign out | Saved Items · Delete Account · Sign Out |
+| Settings: the security row and that screen's title (client) | Sign-In and Security | Sign-In & Security |
+| Settings: other rows and a group, to Title Case (6) | View profile · Background activity & permissions · Privacy & data · Download my data · Help & support · Contact us | View Profile · Background Activity & Permissions · Privacy & Data · Download My Data · Help & Support · Contact Us |
+| Settings: line under Background Activity | Let ICR run in the background; location and notifications | Background running, location and notifications |
+| Sign-out confirmation (client) | Sign out of ICR? · You will need to sign in again on this phone. · Cancel / Sign out | Sign Out of ICR? · You will need to sign in again to access your account on this device. · Cancel / Sign Out |
+| Security: sections (client) | Sign in · Contact Info | Sign-In · Contact Information |
+| Security: email state (client) | Confirmed · Not confirmed · Confirm | Verified · Not Verified · Verify |
+| Security: under Password (client) | Change it with a link sent to {email} | Reset your password using a secure email link. |
+| Security: labels (client) | Mobile number · Work email · Alternative number | Mobile Number · Work Email · Alternate Mobile Number |
+| Security: the mobile chip, pencil tooltip, snackbar | Not verified · Edit contact info · Contact info saved. | Not Verified · Edit Contact Information · Contact information saved. |
+| Security → Change (client) | Change your password | Change Password (the rest of that screen is in `signup.md`) |
+| Contact sheet | Contact Info · Work email · Alternative contact number · Your sign-in. Contact support to change it. · Optional. A second number; your main one is confirmed separately. | Contact Information · Work Email · Alternate Mobile Number · Your sign-in email. Contact support to change it. · Optional. A second number. Your main number is verified separately. |
+| Download sheet | Download my data · Get my data | Download My Data · Get My Data |
+| Delete sheet | Delete my account (title and button) · Type DELETE to confirm · This removes your name, photo, phone number and what you told ICR about your career, closes your account and signs you out everywhere. What you posted for others (discussions, reviews) stays, without your name. It cannot be undone. | Delete Account · Type DELETE to Confirm · This removes your name, photo, mobile number and career details. It closes your account and signs you out on all devices. Your discussions and reviews stay, without your name. This cannot be undone. |
+| Notification preferences | In app · Choose how ICR tells you about each kind of update: in the app, and by email. | In App · Select how ICR notifies you of each type of update, in the app and by email. |
+| Discover sheet (client) | Post requirement | Post Requirement |
+
+The Security screen only relabels what it already had. "Alternate Mobile Number" is the existing second number (`altPhone`), and it and Work Email still show only when the profile has them. The client's box shows **Verified** under Work Email: the app holds no verified state for a work email (`MyProfile` has only `workEmail`), so no chip was added there.
+
+Kept as they were: the group names Account, Preferences and About ICR, **Language**, **Notifications** ("In the app and by email"), "Email, mobile number, password, links", **Terms of Service**, **Privacy Policy**, **Add** / **Edit** / **Change**, "Not added", "Mobile number saved.", "Language saved.", the Language sheet's line, "Always sent", and the share subject "My ICR data" (it becomes the file's name). The mobile number's own sheet (`phone/phone_sheets.dart`) and the links' names (`ProfileLinks.labels`) belong to other folders and were not touched here.
+
+## 13 Nov 2026: copy refined to the client's standard (profile, mobile number, member page, Saved Items, companies)
+
+Wording only (the client's 13 Nov marked-up manual: Title Case for names, sentences with a full stop, plain verbs, no
+dash inside a sentence, "Unable to …" for a failure). Keys, layout and behaviour are unchanged. Settings and
+Sign-In & Security (`settings/`) were refined separately. **The 12 Nov wording is kept word for word**; where one of
+those strings is a title, button or label, only its capitals were brought into line (Create a company page →
+Create a Company Page).
+
+**Profile** (`profile/`, `widgets/account_kit.dart`)
+
+| Where | Old | New |
+|---|---|---|
+| Buttons, sheet titles, field labels, tooltips (about 75 strings, case only) | Add section · View public profile · Add profile section · Career break · Profile strength 85% · Finish your profile · Add a summary · Add education · Add credential · Add skills · Add languages · Your public profile · Copy link · Add a career break · Add a role · Edit intro · First name · Last name · Years of experience · Profile photo · Upload photo · Change photo · Remove photo · Remove cover · Upload your own · Replace your picture · Edit about · Edit skills · Edit languages · Add/Edit experience · Employment type · Start date · End date · Add/Edit education · School or institution · Field of study · Start year · End year · Add/Edit career break · Add/Edit credential · Short code · Issued by · Issue date · Expiry date · Verification link · Attach certificate · Share profile · Change cover · "Start date: month" | Add Section · View Public Profile · Add Profile Section · Career Break · Profile Strength 85% · Finish Your Profile · Add a Summary · Add Education · Add Credential · Add Skills · Add Languages · Your Public Profile · Copy Link · Add a Career Break · Add a Role · Edit Intro · First Name · Last Name · Years of Experience · Profile Photo · Upload Photo · Change Photo · Remove Photo · Remove Cover · Upload Your Own · Replace Your Picture · Edit About · Edit Skills · Edit Languages · Add/Edit Experience · Employment Type · Start Date · End Date · Add/Edit Education · School or Institution · Field of Study · Start Year · End Year · Add/Edit Career Break · Add/Edit Credential · Short Code · Issued By · Issue Date · Expiry Date · Verification Link · Attach Certificate · Share Profile · Change Cover · "Start Date: Month" |
+| Questions before a delete or a discard (case only) | Delete this role? · Delete this qualification? · Delete this career break? · Delete this credential? · Remove your profile photo? · Discard your changes? · Removed from your mentor profile | Delete This Role? · Delete This Qualification? · Delete This Career Break? · Delete This Credential? · Remove Your Profile Photo? · Discard Your Changes? · Removed from Your Mentor Profile |
+| A section that cannot be read | Couldn't load your education. / Try again | Unable to Load Your Education / Try Again |
+| The page that cannot be read | Something went wrong / Try again | Something Went Wrong / Try Again |
+| About, long text | See more · See less | View More · View Less |
+| Experience, full | That is the most roles a profile holds. | You have added the maximum number of roles. |
+| Chips field, full | That is the most you can add | Maximum number added |
+| Delete questions' line | … will be taken off your profile. · Its certificate is deleted with it. | … will be removed from your profile. · Its certificate will also be deleted. |
+| After a credential is deleted | … was also taken off your mentor profile, since it is no longer on your credentials. | … was also removed from your mentor profile because it is no longer in your credentials. |
+| Discard question | What you changed here has not been saved. | Your changes have not been saved. |
+| Photo | Couldn't open your photos. Check that ICR may read them and try again. · Your initials will show instead. · That file is too big. Choose one under 5 MB. | Unable to open your photos. Allow ICR to access them and try again. · Your initials will appear instead. · The file is too large. Choose one under 5 MB. |
+| Credential file | Couldn't open your files. Check that ICR may read them and try again. | Unable to open your files. Allow ICR to access them and try again. |
+| Credential sheet, lead | A certificate or licence you hold. ICR’s own are added for you. | A certificate or licence you hold. ICR certificates are added automatically. |
+| Intro, headline helper | Your current role. It shows under your name. | Your current role. It appears under your name. |
+| Placeholders | Choose a date · Choose a city · Choose one · Choose why you took this break | Select a date · Select a city · Select one · Select why you took this break |
+| Organisation helper | Pick it from the list if it is already on ICR. | Select it from the list if it is already on ICR. |
+| The sheets' refusals | Choose when you started. · Choose when the break started. · Choose why you took this break. · Choose a year from 1950 on. · Give the credential a name. · … or tick “I work here now”. · … or tick “I’m on this break now”. | Select when you started. · Select when the break started. · Select why you took this break. · Select a year from 1950 onwards. · Enter the credential name. · … or select “I work here now”. · … or select “I’m on this break now”. |
+| Cities | Couldn't load the cities. Check your connection and try again. | Unable to load the cities. Check your connection and try again. |
+| A picker's search with no match | Nothing matches “x”. | No results for “x”. |
+| A role's employment type | Full-time · Part-time | Full-Time · Part-Time (as the Jobs screens say it) |
+
+**Mobile number** (`phone/`, opened from Settings and from the actions that need a number)
+
+| Old | New |
+|---|---|
+| Mobile number · Add your mobile number · Remove your number? · Remove number · Save number · Send code · Send a new code · Use code · 6-digit code · Other country | Mobile Number · Add Your Mobile Number · Remove Your Number? · Remove Number · Save Number · Send Code · Send a New Code · Use Code · 6-Digit Code · Other Country |
+| We can only text codes to +91 numbers, so this one is saved as typed. | Codes can be sent only to +91 numbers, so this number is saved as entered. |
+
+**A member's page** (`members/`)
+
+| Old | New |
+|---|---|
+| Edit profile · Mentor profile · Share profile · Ready for a new role · Chapters & councils · Community activity | Edit Profile · Mentor Profile · Share Profile · Ready for a New Role · Chapters & Councils · Community Activity |
+| This profile is not available · Something went wrong | This Profile Is Not Available · Something Went Wrong |
+| Couldn't load their discussions. | Unable to load their discussions. |
+
+**Saved Items** (`saved/`)
+
+| Old | New |
+|---|---|
+| Saved items (title) · Show more · Try again · No longer open · Top mentor · Browse jobs · Find mentors · Open the Marketplace · See councils | Saved Items · View More · Try Again · No Longer Open · Top Mentor · Browse Jobs · Find Mentors · Open Marketplace · View Councils |
+| No saved jobs yet (and mentors, suppliers, councils, discussions) | No Saved Jobs Yet |
+| Tap the bookmark on a job on the Jobs board to keep it here. · Save a mentor from Find mentors to come back to them. · Save a supplier from the Marketplace to keep it here. · Bookmark a council on the Councils screen to find it here. | Tap the bookmark on a job to save it here. · Save a mentor from Find Mentors to view them here. · Save a supplier from the Marketplace to view it here. · Save a council from Councils to view it here. |
+| Removed “Title” from saved | Removed “Title” from Saved Items. |
+| Saving is not available here · Could not load saved jobs | Saving Is Not Available · Unable to Load Saved Jobs |
+| This job has closed. See what else Acme is hiring for, or remove it. | This job has closed. View other jobs at Acme, or remove it. |
+| On-site · Full-time · Part-time (a saved job's facts) | On-Site · Full-Time · Part-Time (as the Jobs screens say it) |
+
+**My Companies and Create a Company Page** (`companies/`; the 12 Nov words kept)
+
+| Where | Old | New |
+|---|---|---|
+| Buttons, headings, labels (case only) | Create a company page (title) · Create a company · Ask to join a company · Find your company · Personal account · Awaiting approval · Waiting for you · Switch to this company · Switch to personal account · View page · Leave company · Ask to join · Send request · Request sent · Company name · Registered legal name · Company website · Create page · Add logo · Start selling · Head office · Discard this company page? | Create a Company Page · Create a Company · Ask to Join a Company · Find Your Company · Personal Account · Awaiting Approval · Waiting for You · Switch to This Company · Switch to Personal Account · View Page · Leave Company · Ask to Join · Send Request · Request Sent · Company Name · Registered Legal Name · Company Website · Create Page · Add Logo · Start Selling · Head Office · Discard This Company Page? |
+| Documents (case only) | PAN card · GST certificate · Registration certificate · Partnership deed or registration certificate · Documents for a private limited company (and the six other headings) | PAN Card · GST Certificate · Registration Certificate · Partnership Deed or Registration Certificate · Documents for a Private Limited Company |
+| List, failed | Could not load your companies. (title and line) | Unable to Load Your Companies / "Unable to load your companies." |
+| List, empty | You are not part of a company yet / "… or find your organisation in the directory and request to join." | You Are Not Part of a Company Yet / "… or find your company in the directory and request to join." |
+| Staff, and a city search with no match | Staff accounts don’t create companies · No city by that name yet | Staff Accounts Don’t Create Companies · No city found with that name. |
+| Ask to join, lead | Find your organisation on ICR. An admin there decides; until then nothing changes for you… | Find your company on ICR. An admin there decides. Until then nothing changes for you… |
+| Ask to join, the note | Anything they should know (optional) | Note for the Admins (Optional) |
+| Invitations | Could not accept that invitation. · Could not decline that invitation. | Unable to accept that invitation. · Unable to decline that invitation. |
+| Leave, last point | You carry on as your next company, or as yourself if you have none. | You continue as your next company, or as yourself if you have none. |
+| A look-alike | Not yours? Carry on below. This is only a suggestion. | Not your company? Continue below. This is only a suggestion. |
+| Website helper | Optional — acme.com or https://acme.com | Optional. For example, acme.com or https://acme.com |
+| Logo | PNG, JPG or WEBP — up to 2MB · Upload failed. Please try again. | PNG, JPG or WEBP, up to 2MB. · Upload failed. Try again. |
+| Placeholders and helper | Choose a city · Choose how it is set up · Decides which documents verification asks for. | Select a city · Select how it is set up · Determines which documents verification requires. |
+| Refusals | Choose the industry it works in. · Choose where the head office is. · Choose how many people work there. · Choose how the organisation is set up. · Enter the registered legal name — it needs at least one letter. | Select the industry it works in. · Select where the head office is. · Select how many people work there. · Select how the organisation is set up. · Enter the registered legal name. It needs at least one letter. |
+| Create, failed | Could not create the company page. · … Try again a little later. | Unable to create the company page. · … Try again later. |
+| Discard question | What you entered has not been saved. | Your entries have not been saved. |
+| Welcome, Sell on ICR | Start selling to appear in Supplier Mart and answer buyers’ requirements. … | Start selling to appear in the Marketplace and answer buyers’ requirements. … |
+
+Kept as the client gave them on 12 Nov: My Companies, All Companies, "Switch between companies", the Create page's
+intro, Company Details, Company Name, "Company Brand Name / Legal Name", "Company Size · No. of Employees", Organisation
+Type, Year Founded, Logo and Tagline, the agreement sentence, the profile's empty-section sentences ("You can write about
+your years of professional experience…", "Add your work experience including career break if applicable.", "Your
+Education, field of study and year of passing.", "Add your professional certifications and licenses."), Add Experience,
+Licenses and Certifications and the four Profile Strength items. The second block's heading stays "Company details"
+(the client kept it; in Title Case it would repeat the first block's heading word for word).

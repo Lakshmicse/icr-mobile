@@ -40,5 +40,6 @@ AuthController? watchAuth(BuildContext context) {
 
 /// The account calls for this screen: the API through the app's client, or the
 /// sample member in demo mode (`FEED_SOURCE=demo`).
-AccountRepository accountRepositoryOf(BuildContext context) =>
-    AppConfig.demo ? DemoAccountRepository() : ApiAccountRepository(api: Provider.of<ApiClient>(context, listen: false));
+AccountRepository accountRepositoryOf(BuildContext context) => AppConfig.demo
+    ? DemoAccountRepository()
+    : ApiAccountRepository(api: Provider.of<ApiClient>(context, listen: false));

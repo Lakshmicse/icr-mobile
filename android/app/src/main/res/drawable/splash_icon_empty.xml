@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ draws the launcher icon (the eagle alone) on its own splash before the app's first frame; the app
+     then shows the ICR wordmark with the logo. The owner (9 Nov 2026): one logo, the second. So the system splash
+     carries no icon: a transparent drawable, over a white window. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@android:color/transparent" />
+</shape>

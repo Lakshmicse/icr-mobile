@@ -85,11 +85,11 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
     if (to == 'REJECTED') {
       note = await askStageNote(
         context,
-        title: 'Not selecting ${a.name}?',
-        body: 'They are told their application was not selected. You can move them back later.',
+        title: 'Reject ${a.name}?',
+        body: 'They will be notified that their application was not selected. You can move them back later.',
         confirm: 'Reject',
         destructive: true,
-        hint: 'Why (only your team sees this)',
+        hint: 'Reason (visible only to your team)',
       );
       if (note == null || !mounted) return;
     }
@@ -100,7 +100,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
   Future<void> _addNote() async {
     final text = _note.text.trim();
     if (text.isEmpty && _stars == 0) {
-      setState(() => _noteProblem = 'Write a note or give a rating.');
+      setState(() => _noteProblem = 'Add a note or a rating.');
       return;
     }
     setState(() => _noteProblem = null);
@@ -141,18 +141,18 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
         builder: (_) => AlertDialog(
           key: const ValueKey('cancel-interview-dialog'),
           title: Text('Cancel ${iv.name}?'),
-          content: Text('${_c.applicant.name} and the panel are told it is off.'),
+          content: Text('${_c.applicant.name} and the panel will be notified.'),
           actions: [
             TextButton(
               key: const ValueKey('cancel-interview-keep'),
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Keep it'),
+              child: const Text('Keep Interview'),
             ),
             TextButton(
               key: const ValueKey('cancel-interview-confirm'),
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(foregroundColor: AppColors.error),
-              child: const Text('Cancel interview'),
+              child: const Text('Cancel Interview'),
             ),
           ],
         ),
@@ -238,7 +238,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
         CareerNotice(
           key: const ValueKey('detail-error'),
           icon: LucideIcons.cloudOff,
-          title: "Couldn't open this application",
+          title: 'Unable to Open This Application',
           body: _c.error!,
           action: 'Try again',
           onAction: _c.start,
@@ -255,7 +255,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
         if (d.aiSummary != null && d.aiSummary!.trim().isNotEmpty)
           _card('summary', 'Summary', [Text(d.aiSummary!, style: CareerText.body)]),
         if (a.coverNote != null && a.coverNote!.trim().isNotEmpty)
-          _card('cover-note', 'Cover note', [Text(a.coverNote!, style: CareerText.body)]),
+          _card('cover-note', 'Cover Note', [Text(a.coverNote!, style: CareerText.body)]),
         if (d.answers.isNotEmpty) _answers(d.answers),
         _interviews(d.interviews),
         if (d.offers.isNotEmpty) _offers(d.offers),
@@ -269,7 +269,8 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
     final facts = [
       if (a.currentCompany != null && a.currentCompany!.isNotEmpty) a.currentCompany!,
       if (a.location != null && a.location!.isNotEmpty) a.location!,
-      if (a.experienceYears != null) '${_years(a.experienceYears!)} yrs experience',
+      if (a.experienceYears != null)
+        '${_years(a.experienceYears!)} ${a.experienceYears == 1 ? 'year' : 'years'} of experience',
       if (a.noticePeriodDays != null) '${a.noticePeriodDays} days notice',
     ];
     return Container(
@@ -300,10 +301,10 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
                           key: const ValueKey('detail-stage'),
                           child: StatusPill(stageWord(a.stage), tone: stageTone(a.stage)),
                         ),
-                        if (a.matchScore != null) StatusPill('${a.matchScore}% match', tone: PillTone.brand),
+                        if (a.matchScore != null) StatusPill('${a.matchScore}% Match', tone: PillTone.brand),
                         if (a.qualificationsTotal != null && a.qualificationsTotal! > 0)
                           StatusPill(
-                            '${a.qualificationsMet ?? 0} of ${a.qualificationsTotal} met',
+                            '${a.qualificationsMet ?? 0} of ${a.qualificationsTotal} Met',
                             tone: (a.qualificationsMet ?? 0) >= a.qualificationsTotal!
                                 ? PillTone.success
                                 : PillTone.neutral,
@@ -404,7 +405,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Next step', style: CareerText.heading),
+          Text('Next Step', style: CareerText.heading),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -427,14 +428,14 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
                   key: const ValueKey('detail-schedule'),
                   onPressed: busy ? null : () => _schedule(),
                   icon: const Icon(LucideIcons.calendarPlus, size: 15),
-                  label: const Text('Schedule interview'),
+                  label: const Text('Schedule Interview'),
                 ),
               if (canOffer)
                 OutlinedButton.icon(
                   key: const ValueKey('detail-offer'),
                   onPressed: busy ? null : () => _offer(),
                   icon: const Icon(LucideIcons.handshake, size: 15),
-                  label: const Text('Make an offer'),
+                  label: const Text('Make an Offer'),
                 ),
               OutlinedButton.icon(
                 key: const ValueKey('detail-message'),
@@ -479,7 +480,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
     ),
   );
 
-  Widget _answers(List<GradedAnswer> answers) => _card('answers', 'Screening answers', [
+  Widget _answers(List<GradedAnswer> answers) => _card('answers', 'Screening Answers', [
     for (final (i, g) in answers.indexed)
       Padding(
         key: ValueKey('answer-$i'),
@@ -508,7 +509,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
                   Text(g.display.isEmpty ? 'No answer' : g.display, style: CareerText.body),
                   if (g.meetsIdeal == false)
                     Text(
-                      g.mustHave ? 'Misses a must-have' : 'Below your bar',
+                      g.mustHave ? 'Does not meet a must-have' : 'Does not meet your preferred answer',
                       style: CareerText.meta.copyWith(color: AppColors.error),
                     ),
                 ],
@@ -520,7 +521,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
   ]);
 
   Widget _interviews(List<TeamInterview> list) => _card('interviews', 'Interviews', [
-    if (list.isEmpty) Text('No interview booked yet.', key: const ValueKey('no-interviews'), style: CareerText.meta),
+    if (list.isEmpty) Text('No interview scheduled yet.', key: const ValueKey('no-interviews'), style: CareerText.meta),
     for (final iv in list) _interviewCard(iv),
   ]);
 
@@ -559,7 +560,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
               ),
               onPressed: () => _open(iv.meetingLink),
               icon: const Icon(LucideIcons.video, size: 14),
-              label: Text('Open the meeting link', style: CareerText.link),
+              label: Text('Open Meeting Link', style: CareerText.link),
             ),
           if (iv.panel.isNotEmpty) Text('Panel: ${iv.panel.map((p) => p.name).join(', ')}', style: CareerText.meta),
           if (iv.notes != null && iv.notes!.isNotEmpty) Text('Notes: ${iv.notes}', style: CareerText.meta),
@@ -584,13 +585,13 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
                   TextButton(
                     key: ValueKey('interview-done-${iv.id}'),
                     onPressed: _c.busy ? null : () => _interviewStatus(iv, 'COMPLETED'),
-                    child: Text('Mark done', style: CareerText.link),
+                    child: Text('Mark as Done', style: CareerText.link),
                   ),
                 if (past)
                   TextButton(
                     key: ValueKey('interview-noshow-${iv.id}'),
                     onPressed: _c.busy ? null : () => _interviewStatus(iv, 'NO_SHOW'),
-                    child: Text('No-show', style: CareerText.link),
+                    child: Text('No-Show', style: CareerText.link),
                   ),
                 TextButton(
                   key: ValueKey('interview-cancel-${iv.id}'),
@@ -648,7 +649,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
                   FilledButton(
                     key: ValueKey('offer-send-draft-${o.id}'),
                     onPressed: _c.busy ? null : () => _sendDraft(o),
-                    child: const Text('Send offer'),
+                    child: const Text('Send Offer'),
                   ),
                 TextButton(
                   key: ValueKey('offer-edit-${o.id}'),
@@ -662,8 +663,8 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
     );
   }
 
-  Widget _notes() => _card('notes', 'Your notes and rating', [
-    Text('Only your hiring team sees these.', style: CareerText.meta),
+  Widget _notes() => _card('notes', 'Your Notes and Rating', [
+    Text('Visible only to your hiring team.', style: CareerText.meta),
     const SizedBox(height: 8),
     StarPicker(value: _stars, onChanged: (n) => setState(() => _stars = n), keyPrefix: 'note-star'),
     const SizedBox(height: 8),
@@ -681,13 +682,13 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
       child: FilledButton(
         key: const ValueKey('note-save'),
         onPressed: _c.busy ? null : _addNote,
-        child: const Text('Add note'),
+        child: const Text('Add Note'),
       ),
     ),
   ]);
 
   Widget _activity(List<ActivityEvent> events) => _card('activity', 'Activity', [
-    if (events.isEmpty) Text('Nothing yet.', style: CareerText.meta),
+    if (events.isEmpty) Text('No activity yet.', style: CareerText.meta),
     for (final (i, e) in events.indexed)
       Padding(
         key: ValueKey('activity-$i'),
@@ -730,7 +731,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
     'RESCHEDULED' => 'Rescheduled',
     'COMPLETED' => 'Done',
     'CANCELLED' => 'Cancelled',
-    'NO_SHOW' => 'No-show',
+    'NO_SHOW' => 'No-Show',
     _ => s,
   };
 
@@ -758,7 +759,7 @@ String activityWords(ActivityEvent e) {
     'VIEWED' => 'Opened by the hiring team',
     'SCREENING_GRADED' => 'Screening answers marked',
     'AUTO_ARCHIVED' => 'Not selected automatically: a must-have answer was missed',
-    'INTERVIEW_SCHEDULED' => 'Interview booked$note',
+    'INTERVIEW_SCHEDULED' => 'Interview scheduled$note',
     'INTERVIEW_UPDATED' => 'Interview changed$note',
     'FEEDBACK_SUBMITTED' => 'Interview feedback added',
     'OFFER_CREATED' => 'Offer drafted',

@@ -158,7 +158,7 @@ class CompanyWorkspaceRow extends StatelessWidget {
               if (!c.active)
                 AccountButton(
                   key: Key('company.switch.${c.companyId}'),
-                  label: switchingHere ? 'Switching…' : 'Switch to this company',
+                  label: switchingHere ? 'Switching…' : 'Switch to This Company',
                   busy: switchingHere,
                   outlined: true,
                   expand: false,
@@ -177,7 +177,7 @@ class CompanyWorkspaceRow extends StatelessWidget {
                   onPressed: disabled ? null : onLeave,
                 ),
               if (onOpen != null)
-                TextButton(key: Key('company.open.${c.companyId}'), onPressed: onOpen, child: const Text('View page')),
+                TextButton(key: Key('company.open.${c.companyId}'), onPressed: onOpen, child: const Text('View Page')),
             ],
           ),
         ],
@@ -253,7 +253,7 @@ class PersonalWorkspaceRow extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: AccountButton(
                 key: const Key('company.switch.personal'),
-                label: switchingHere ? 'Switching…' : 'Switch to personal account',
+                label: switchingHere ? 'Switching…' : 'Switch to Personal Account',
                 busy: switchingHere,
                 outlined: true,
                 expand: false,
@@ -434,35 +434,6 @@ class InvitationRow extends StatelessWidget {
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The three rules of acting for a company, said once at the foot.
-class PrinciplesCard extends StatelessWidget {
-  const PrinciplesCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return AccountCard(
-      title: 'How it works',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final (title, body) in CompanyWords.principles)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: AccountText.itemTitle),
-                  const SizedBox(height: 2),
-                  Text(body, style: AccountText.meta),
-                ],
-              ),
-            ),
         ],
       ),
     );

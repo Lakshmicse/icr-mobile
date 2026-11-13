@@ -38,7 +38,7 @@ class InterviewBriefController extends ChangeNotifier {
       error = switch (status) {
         404 => 'This interview no longer exists.',
         403 => "You are not on this interview's panel.",
-        _ => err.message.isEmpty ? 'Could not load this interview.' : err.message,
+        _ => err.message.isEmpty ? 'Unable to load this interview.' : err.message,
       };
       canRetry = status == null || status >= 500;
     }
@@ -63,7 +63,7 @@ class InterviewBriefController extends ChangeNotifier {
       return null;
     } catch (e) {
       final message = ApiError.from(e).message;
-      return message.isEmpty ? 'Could not submit feedback.' : message;
+      return message.isEmpty ? 'Unable to submit feedback.' : message;
     } finally {
       submitting = false;
       _notify();

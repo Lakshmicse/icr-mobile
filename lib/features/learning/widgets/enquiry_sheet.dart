@@ -45,21 +45,21 @@ class EnquiryWords {
   static EnquiryWords of(EnquiryKind kind) => switch (kind) {
     EnquiryKind.question => EnquiryWords(
       title: (i) => 'Ask $i',
-      help: (c, i) => 'About $c. Your name and email go with the message.',
-      label: 'Your question',
+      help: (c, i) => 'About $c. Your name and email are sent with the message.',
+      label: 'Your Question',
       hint: 'Dates, fees, what the course covers…',
     ),
     EnquiryKind.dateRequest => EnquiryWords(
-      title: (_) => 'Suggest a date & location',
-      help: (c, i) => 'Tell $i where and when you would like $c to run. Your name and email go with the message.',
-      label: 'Where and when',
+      title: (_) => 'Suggest a Date & Location',
+      help: (c, i) => 'Tell $i where and when you would like $c to run. Your name and email are sent with the message.',
+      label: 'Where and When',
       hint: 'The city and month that suit you…',
       prefix: 'Date and location request: ',
     ),
     EnquiryKind.inHouse => EnquiryWords(
-      title: (_) => 'Take this course in-house',
-      help: (c, i) => 'Ask $i to deliver $c for your team. Your name and email go with the message.',
-      label: 'What you need',
+      title: (_) => 'Request Corporate Training',
+      help: (c, i) => 'Ask $i to deliver $c for your team. Your name and email are sent with the message.',
+      label: 'What You Need',
       hint: 'Where, when and what you want covered…',
       prefix: 'In-house delivery request: ',
     ),
@@ -94,12 +94,12 @@ class _EnquiryFormState extends State<EnquiryForm> {
   Future<void> _submit() async {
     final words = EnquiryWords.of(widget.kind);
     if (_message.text.trim().length < 10) {
-      setState(() => _problem = 'Say a little more about what you would like to know.');
+      setState(() => _problem = 'Add more detail to your message.');
       return;
     }
     final headcount = int.tryParse(_headcount.text.trim());
     if (widget.kind == EnquiryKind.inHouse && _headcount.text.trim().isNotEmpty && (headcount ?? 0) < 1) {
-      setState(() => _problem = 'How many people? A whole number from 1.');
+      setState(() => _problem = 'Enter the number of people as a whole number, 1 or more.');
       return;
     }
     setState(() {
@@ -142,7 +142,7 @@ class _EnquiryFormState extends State<EnquiryForm> {
               Text(words.help(course.title, institute), style: LearningText.formHelp),
               const SizedBox(height: 16),
               if (inHouse) ...[
-                Text('Your company (optional)', style: LearningText.formLabel),
+                Text('Company (Optional)', style: LearningText.formLabel),
                 const SizedBox(height: 4),
                 TextField(
                   key: const ValueKey('enquiry-company'),
@@ -152,7 +152,7 @@ class _EnquiryFormState extends State<EnquiryForm> {
                   decoration: const InputDecoration(isDense: true, border: OutlineInputBorder(), counterText: ''),
                 ),
                 const SizedBox(height: 12),
-                Text('People to train (optional)', style: LearningText.formLabel),
+                Text('People to Train (Optional)', style: LearningText.formLabel),
                 const SizedBox(height: 4),
                 TextField(
                   key: const ValueKey('enquiry-headcount'),

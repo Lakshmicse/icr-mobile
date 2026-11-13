@@ -77,7 +77,7 @@ class JobsController extends ChangeNotifier {
       : _overview?.sections ?? const [];
 
   String get _resultsTitle =>
-      _filters.search.isNotEmpty ? 'Jobs matching "${_filters.search}"' : 'Jobs matching your filters';
+      _filters.search.isNotEmpty ? 'Jobs Matching "${_filters.search}"' : 'Jobs Matching Your Filters';
 
   /// How many rows a section shows before "View More".
   static const previewRows = 3;

@@ -189,7 +189,7 @@ class PostJobController extends HiringController {
     if (a == null || a.canPublish) return null;
     return a.publishNote?.trim().isNotEmpty == true
         ? a.publishNote
-        : 'Verify your company before publishing jobs. Your drafts are saved — finish verification and publish them in one click.';
+        : 'Verify your company before publishing jobs. Your drafts are saved and can be published once verification is complete.';
   }
 
   /// Why the questions cannot be saved, if any.
@@ -221,7 +221,7 @@ class PostJobController extends HiringController {
     final missing = blockers;
     if (missing.isNotEmpty) {
       return PostOutcome.refused(
-        missing.length == 1 ? missing.first.message : 'Finish ${missing.length} things before publishing.',
+        missing.length == 1 ? missing.first.message : 'Complete ${missing.length} items before publishing.',
       );
     }
     final gate = publishBlockedReason;
@@ -248,7 +248,7 @@ class PostJobController extends HiringController {
     final missing = blockers;
     if (missing.isNotEmpty) {
       return PostOutcome.refused(
-        missing.length == 1 ? missing.first.message : 'Finish ${missing.length} things before sending it to review.',
+        missing.length == 1 ? missing.first.message : 'Complete ${missing.length} items before sending for review.',
       );
     }
     return _run(() async {
