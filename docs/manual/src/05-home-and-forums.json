@@ -1,0 +1,20 @@
+{
+  "who": "Every member",
+  "overview": [
+    "Home is ICR's community: members asking, answering and sharing what worked on their sites. Everything you post is public to members, under your name."
+  ],
+  "flows": {
+    "post": {
+      "rules": [
+        "A first post from a new account may wait for a moderator before others see it; the app tells you when it does.",
+        "You can edit or delete your own discussion from the three dots on it."
+      ]
+    },
+    "react": {
+      "rules": [
+        "The author of a question can mark one reply as the accepted answer.",
+        "**Repost** shares a discussion with your followers, with or without your own words."
+      ]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "who": "Everyone",
+  "overview": [
+    "Messages on ICR are tied to what they are about. A conversation with a recruiter sits under the job, one with a supplier under the requirement, one with a mentor under your mentoring. A member of a company's team can also read and answer the messages sent to the company."
+  ],
+  "flows": {
+    "reply": {
+      "rules": [
+        "Press and hold one of your own messages to copy or delete it, and anyone's message to reply to it or report it.",
+        "New messages appear within a few seconds while the conversation is open."
+      ]
+    },
+    "new-message": {
+      "rules": ["You can also start a conversation from where the person is: **Message** on a member's profile, a mentor's page, a supplier's page or a job."]
+    }
+  }
+}

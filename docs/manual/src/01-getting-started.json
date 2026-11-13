@@ -1,0 +1,41 @@
+{
+  "who": "Everyone",
+  "overview": [
+    "The ICR app is on the App Store and Google Play as **ICR**. It uses the same account as the website icr.org.in: one email and password for both, and what you do in one shows in the other."
+  ],
+  "before": [
+    "A phone connected to the internet, with the ICR app installed.",
+    "To join: access to your email and your mobile phone, since ICR sends a code to each."
+  ],
+  "flows": {
+    "sign-in": {
+      "rules": [
+        "**Continue with LinkedIn** and **Continue with Google** open that account's own sign-in page. If you already have an ICR account with the same email, you are signed in to it.",
+        "After several wrong passwords in a row the account is locked for a few minutes. Wait, or reset the password."
+      ]
+    },
+    "forgot-password": {
+      "rules": [
+        "The link in the email works once and expires after an hour.",
+        "For your privacy the app gives the same answer whether or not the address has an account."
+      ]
+    },
+    "sign-up": {
+      "rules": [
+        "The mobile number step is in the app from version 1.0.0 build 14. If your app stops on this screen asking for a mobile number it has no box for, update the app, or join at icr.org.in and sign in here.",
+        "An address that already has an ICR account is told so, with **Sign in instead**.",
+        "Everyone joins as a professional. Hiring, buying and selling start later, from a company page."
+      ]
+    }
+  },
+  "faq": [
+    {
+      "q": "I signed up with Google or LinkedIn and never set a password. Can I sign in with email?",
+      "a": "Yes. Use **Forgot password?** with the email of that account; the link lets you set a password for the first time."
+    },
+    {
+      "q": "Do I stay signed in?",
+      "a": "Yes, when **Remember me** is ticked, until you sign out."
+    }
+  ]
+}

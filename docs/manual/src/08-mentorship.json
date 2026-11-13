@@ -1,0 +1,24 @@
+{
+  "who": "Every member",
+  "overview": [
+    "A mentor on ICR can take you on for regular free mentoring, hold one-off sessions with you, or run group sessions and programmes. All of it is followed from **My mentoring**."
+  ],
+  "flows": {
+    "request": {
+      "rules": [
+        "Your plan allows a number of open requests at a time; **Requests** shows how many you have used.",
+        "A request the mentor has not answered lapses after a while.",
+        "The app asks for your mobile number the first time, if your profile has none."
+      ]
+    },
+    "my-mentoring": {
+      "after": [
+        "A session your mentor proposed waits for your answer under **Needs you**: accept the new time or keep the one already booked."
+      ]
+    }
+  },
+  "website": [
+    "Paying for a mentor's paid session, plan or resource: the app opens your phone's browser for the payment.",
+    "The video room for a session opens from **Join**, in the browser or the meeting app its link belongs to."
+  ]
+}

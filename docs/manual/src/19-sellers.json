@@ -1,0 +1,37 @@
+{
+  "who": "Sellers and company admins of a company that sells",
+  "overview": [
+    "A seller works for a company with a supplier listing. You answer three things: **enquiries** and **RFQs** that buyers post, and **requests for a quote** sent to your company alone, which arrive in the company's messages."
+  ],
+  "can": [
+    "See the open requirements that match what your company sells, and the ones you were invited to.",
+    "Reply to an enquiry or bid on an RFQ, and change or withdraw a reply while it is open.",
+    "Follow each reply to shortlist, award or close.",
+    "Answer the company's sales messages.",
+    "Post requirements for your own company, as a buyer does."
+  ],
+  "flows": {
+    "find-work": {
+      "rules": [
+        "Your company's plan decides how many bids you can send a month; replies to enquiries are not counted.",
+        "A requirement marked invite-only can be answered only by the suppliers its buyer chose.",
+        "On a higher plan you see new requirements before others do."
+      ]
+    }
+  },
+  "website": [
+    "Your catalogue: products, services, prices and photos.",
+    "Certifications and the supplier verification levels.",
+    "Buying a placement to feature your listing."
+  ],
+  "menu": [
+    {
+      "row": "**Marketplace**",
+      "pages": "Post a requirement · Search suppliers"
+    },
+    {
+      "row": "**Company**",
+      "pages": "Add members · View enquiries & RFQs · Bid for enquiries & RFQs"
+    }
+  ]
+}

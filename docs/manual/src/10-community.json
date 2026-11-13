@@ -1,0 +1,24 @@
+{
+  "who": "Every member",
+  "overview": [
+    "Beyond the feed, ICR's community meets in **chapters** (your city), **councils** (your subject) and **events**, and shares its working documents in the **Digital Library**. All four are behind **Discover**."
+  ],
+  "flows": {
+    "events": {
+      "rules": [
+        "A free event is yours on **Register Now**. A paid ticket is bought in your phone's browser; the app hands you over.",
+        "A full event offers the waiting list, which is free."
+      ]
+    },
+    "library": {
+      "rules": [
+        "Some documents open only on a paid plan; the app says which plan.",
+        "You can delete a document you uploaded, from its page."
+      ]
+    }
+  },
+  "website": [
+    "Buying a ticket for a paid event.",
+    "Proposing a talk or a sponsorship for an event."
+  ]
+}

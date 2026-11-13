@@ -1,0 +1,15 @@
+{
+  "who": "Everyone",
+  "overview": ["Settings is at the bottom of your profile menu. Everything here is about your own account, whichever company you may be acting for."],
+  "flows": {
+    "mobile-number": {
+      "rules": [
+        "If you skip this, the app asks for your number the first time you apply for a job, ask for mentoring or send an enquiry.",
+        "To change the number later, select **Edit** on the same row."
+      ]
+    },
+    "your-data": {
+      "rules": ["What you posted for others, such as discussions and reviews, stays after you delete your account, without your name."]
+    }
+  }
+}
