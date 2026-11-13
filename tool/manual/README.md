@@ -21,6 +21,7 @@ tool/manual/people.json                    the seeded accounts flows sign in as
 tool/manual/touchups.sql                   what the private copy needs after the seeds (real-looking names, the personas the seeds lack)
 tool/manual/menus.mjs, words.py            each account's profile menu, read from the app, into the role chapters' tables
 tool/manual/retext.py                      changes one step's sentence without a new run
+tool/manual/addflow.py                     appends flows (read from stdin) to a chapter's file
 tool/manual/sheet.mjs, look.sh             contact sheets and a quick look at the simulator, for checking a run
 docs/manual/src/book.json                  the book: parts, chapters, appendices
 docs/manual/src/NN-chapter.json            the words round a chapter's steps

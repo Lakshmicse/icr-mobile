@@ -149,4 +149,47 @@ export default defineManual('06-jobs', 'Jobs', [
       await m.home();
     },
   ),
+
+  flow(
+    'company',
+    'Read about a company',
+    { who: 'Every member', as: 'member', intro: 'Before you apply, see what the company is like to work for: its open jobs, its people, and what members have said about it.' },
+    async (m) => {
+      await m.open('/companies/design-lj-co-global-infra');
+      await m.wait('tab-reviews');
+      await m.pause(1200);
+      await m.idle();
+      await m.shot('page', 'On a job, select the company’s name to open its page. **Jobs** lists its open roles, and **People** the members who work there.', { ring: 'tab-reviews' });
+      await m.tap('tab-reviews');
+      await m.pause(1500);
+      await m.idle();
+      await m.shot('reviews', '**Reviews** shows what members who worked there wrote, with their ratings.');
+      await m.tap('tab-salaries');
+      await m.pause(1500);
+      await m.idle();
+      await m.shot('salaries', '**Salaries** shows the pay members reported for each role, and **Interviews** what the company’s interviews were like.');
+      await m.home();
+    },
+  ),
+
+  flow(
+    'interviews',
+    'Your interviews and hidden jobs',
+    { who: 'Every member', as: 'member' },
+    async (m) => {
+      await m.open('/career');
+      await m.wait('snapshot');
+      await m.scrollTo({ text: 'Hidden jobs' }, { align: 0.5 });
+      await m.tap({ text: 'Interviews', last: true });
+      await m.pause(1500);
+      await m.idle();
+      await m.shot('interviews', 'On your career page, **Interviews** lists every round across all your applications. **Confirm** a time, **Ask for another time**, and join the call from here. **Past** holds the ones already held.');
+      await m.back();
+      await m.tap({ text: 'Hidden jobs' });
+      await m.pause(1500);
+      await m.idle();
+      await m.shot('hidden', '**Hidden jobs** are the ones you chose not to see on your board. **Show again** brings one back.');
+      await m.home();
+    },
+  ),
 ]);

@@ -80,4 +80,24 @@ export default defineManual('19-sellers', 'Sellers', [
       await m.home();
     },
   ),
+
+  flow(
+    'rfq-bid',
+    'Answer an RFQ',
+    { who: 'Sellers', as: 'seller', intro: 'An RFQ is a formal process. The buyer may first check that suppliers qualify, then ask the shortlisted ones for a detailed bid.' },
+    async (m) => {
+      await m.open('/manage/bids');
+      await m.wait({ text: 'Find work' });
+      await settle(m);
+      await m.scrollTo({ text: 'Sunrise Facilities: Integrated FM RFQ' }, { align: 0.4 });
+      await m.tap({ text: 'Sunrise Facilities: Integrated FM RFQ' });
+      await settle(m, 2000);
+      await m.shot('rfq', 'An RFQ’s page shows its stages and their dates, the items the buyer wants priced, and the criteria suppliers must meet.');
+      await m.swipe(-600);
+      await m.swipe(-400);
+      await m.idle();
+      await m.shot('respond', 'Further down is what the buyer asks of you at this stage: your company’s years in business, turnover, team size and compliances for pre-qualification, then your prices once you are shortlisted.');
+      await m.home();
+    },
+  ),
 ]);
