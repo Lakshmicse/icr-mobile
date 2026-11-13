@@ -400,6 +400,10 @@ void main() {
         expect(find.widgetWithText(TextFormField, 'Rao'), findsOneWidget);
         // The provider vouched for the address: no code is asked.
         expect(find.byKey(const Key('signup.code')), findsNothing);
+        // The mobile number is asked of everyone; another country's needs no texted code.
+        await tester.ensureVisible(find.byKey(const Key('signup.phone')));
+        await tester.enterText(find.byKey(const Key('signup.phone')), '+971501234567');
+        await tester.pump();
 
         await tester.ensureVisible(find.text('Agree & join'));
         await tester.tap(find.text('Agree & join'));
@@ -410,6 +414,7 @@ void main() {
         expect(register['socialVerifier'], 'secret');
         expect(register['firstName'], 'Sam');
         expect(register['lastName'], 'Rao');
+        expect(register['phone'], '+971501234567');
         expect(register['acceptTerms'], isTrue);
         expect(register.containsKey('password'), isFalse, reason: 'the provider is the credential');
         expect(h.auth.status, SessionStatus.signedIn);
@@ -449,6 +454,9 @@ void main() {
       expect(h.api.calls.any((c) => c.$1 == 'POST /auth/register'), isFalse);
 
       await tester.tap(find.text('Use code'));
+      await tester.pump();
+      await tester.ensureVisible(find.byKey(const Key('signup.phone')));
+      await tester.enterText(find.byKey(const Key('signup.phone')), '+971501234567');
       await tester.pump();
       await tester.ensureVisible(find.text('Agree & join'));
       await tester.tap(find.text('Agree & join'));

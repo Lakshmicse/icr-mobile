@@ -14,6 +14,7 @@ import '../account/api_account_repository.dart';
 import '../account/demo_account_repository.dart';
 import 'auth_palette.dart';
 import 'auth_widgets.dart';
+import 'signup_phone.dart';
 import 'signup_rules.dart';
 import 'signup_widgets.dart';
 import 'your_work_step.dart';
@@ -26,14 +27,18 @@ enum SignupStep { join, about, work }
 /// 1. **Join** — Google or LinkedIn, or an email and a password, and the tick
 ///    that accepts the Terms and Privacy Policy. "Join" emails a 6-digit code;
 ///    nothing is made yet.
-/// 2. **About you** — first and last name and the code (`/auth/email/verify-code`).
-///    "Continue" makes the account (`POST /auth/register`) and signs in.
+/// 2. **About you** — first and last name, a mobile number from any country
+///    ([SignupPhoneField]: a +91 one is confirmed with a texted code first, any
+///    other is kept after its format check) and the emailed code
+///    (`/auth/email/verify-code`). "Continue" makes the account
+///    (`POST /auth/register`, which refuses one without a number) and signs in.
 /// 3. **Your work** — job title and company, or between roles, written to the
 ///    profile the way the website writes it. Skippable.
 ///
 /// Someone new coming back from Google or LinkedIn starts on About you with
-/// [social]: the provider's name is prefilled, and the code is asked only when
-/// the provider would not vouch for the address.
+/// [social]: the provider's name is prefilled, the mobile number is asked all
+/// the same, and the emailed code only when the provider would not vouch for
+/// the address.
 ///
 /// Popping returns the email typed so far, so Sign in can fill it in ("That
 /// email already has an ICR account").
@@ -62,16 +67,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _code = TextEditingController();
   final _passwordFocus = FocusNode();
   final _lastFocus = FocusNode();
+  final _phoneFocus = FocusNode();
   final _codeFocus = FocusNode();
 
   late final AccountRepository _account;
+  late final SignupPhoneController _phone;
 
   SignupStep _step = SignupStep.join;
   bool _showPassword = false;
   bool _agreed = false;
   bool _agreeError = false;
   ({String? email, String? password}) _joinErrors = (email: null, password: null);
-  ({String? firstName, String? lastName, String? code}) _aboutErrors = (firstName: null, lastName: null, code: null);
+  ({String? firstName, String? lastName, String? phone, String? code}) _aboutErrors = (
+    firstName: null,
+    lastName: null,
+    phone: null,
+    code: null,
+  );
   bool _busy = false;
   String? _error;
   bool _duplicate = false;
@@ -99,6 +111,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void initState() {
     super.initState();
     _account = widget.account ?? _defaultAccount();
+    final auth = context.read<AuthController>();
+    _phone = SignupPhoneController(sendCode: auth.sendPhoneCode, verifyCode: auth.verifyPhoneCode)
+      ..addListener(_phoneChanged);
     _social = widget.social;
     _provider = widget.provider;
     if (_social != null) {
@@ -119,13 +134,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   void dispose() {
     _ticker?.cancel();
+    _phone
+      ..removeListener(_phoneChanged)
+      ..dispose();
     for (final c in [_email, _password, _first, _last, _code]) {
       c.dispose();
     }
-    for (final f in [_passwordFocus, _lastFocus, _codeFocus]) {
+    for (final f in [_passwordFocus, _lastFocus, _phoneFocus, _codeFocus]) {
       f.dispose();
     }
     super.dispose();
+  }
+
+  /// A number edited or confirmed no longer carries the screen's refusal.
+  void _phoneChanged() {
+    if (_aboutErrors.phone == null || !mounted) return;
+    setState(
+      () => _aboutErrors = (
+        firstName: _aboutErrors.firstName,
+        lastName: _aboutErrors.lastName,
+        phone: null,
+        code: _aboutErrors.code,
+      ),
+    );
   }
 
   void _startCooldown() {
@@ -253,9 +284,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (_busy) return;
     FocusScope.of(context).unfocus();
     final askCode = _needsCode && !_codeAccepted;
+    // A texted code typed but not yet checked is checked by Continue, so
+    // nobody is told to confirm a number whose code is already in the box.
+    final confirmPhone = _phone.codeTyped;
     final problems = aboutProblems(
       firstName: _first.text,
       lastName: _last.text,
+      phone: _phone.phone,
+      phoneVerified: _phone.verified || confirmPhone,
       code: _code.text.trim(),
       needsCode: askCode,
     );
@@ -264,23 +300,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _error = null;
       _duplicate = false;
     });
-    if (problems.firstName != null || problems.lastName != null || problems.code != null) return;
+    if (problems.firstName != null || problems.lastName != null || problems.phone != null || problems.code != null) {
+      return;
+    }
     final auth = context.read<AuthController>();
     setState(() => _busy = true);
     try {
+      // The refusal is drawn under the texted code by the field itself.
+      if (confirmPhone && !await _phone.verify()) return;
       if (askCode) {
         try {
           await auth.verifyEmailCode(_address, _code.text.trim());
           _codeAccepted = true;
         } on ApiError catch (e) {
-          if (mounted) setState(() => _aboutErrors = (firstName: null, lastName: null, code: e.message));
+          if (mounted) {
+            setState(() => _aboutErrors = (firstName: null, lastName: null, phone: null, code: e.message));
+          }
           return;
         }
       }
       if (_isSocial) {
-        await auth.completeSocialSignup(signup: _social!, firstName: _first.text, lastName: _last.text);
+        await auth.completeSocialSignup(
+          signup: _social!,
+          firstName: _first.text,
+          lastName: _last.text,
+          phone: _phone.number,
+        );
       } else {
-        await auth.register(email: _address, password: _password.text, firstName: _first.text, lastName: _last.text);
+        await auth.register(
+          email: _address,
+          password: _password.text,
+          firstName: _first.text,
+          lastName: _last.text,
+          phone: _phone.number,
+        );
       }
       TextInput.finishAutofillContext();
       if (mounted) setState(() => _step = SignupStep.work);
@@ -552,11 +605,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
             enabled: !_busy,
             maxLength: 80,
             textCapitalization: TextCapitalization.words,
-            textInputAction: askCode ? TextInputAction.next : TextInputAction.done,
+            textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.familyName],
-            onFieldSubmitted: (_) => askCode ? _codeFocus.requestFocus() : _submitAbout(),
+            onFieldSubmitted: (_) => _phoneFocus.requestFocus(),
           ),
           AuthHelperLine(error: _aboutErrors.lastName),
+          const SizedBox(height: 8),
+          SignupPhoneField(
+            controller: _phone,
+            error: _aboutErrors.phone,
+            enabled: !_busy,
+            focusNode: _phoneFocus,
+            onSubmitted: () => askCode ? _codeFocus.requestFocus() : _submitAbout(),
+          ),
           if (askCode) ...[
             const SizedBox(height: 8),
             AuthField(
@@ -591,7 +652,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
               onUse: (code) {
                 _code.text = code;
                 setState(
-                  () => _aboutErrors = (firstName: _aboutErrors.firstName, lastName: _aboutErrors.lastName, code: null),
+                  () => _aboutErrors = (
+                    firstName: _aboutErrors.firstName,
+                    lastName: _aboutErrors.lastName,
+                    phone: _aboutErrors.phone,
+                    code: null,
+                  ),
                 );
               },
             ),
