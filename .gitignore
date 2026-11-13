@@ -44,3 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 releases/
+
+# The user manual kit (tool/manual): its own Node packages and what it captures
+/tool/manual/node_modules/
+# The book itself is built, not kept: node tool/manual/build.mjs writes it (20 MB of pictures)
+/docs/manual/*.docx
