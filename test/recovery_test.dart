@@ -147,10 +147,13 @@ void main() {
     });
 
     for (final dark in [false, true]) {
-      testWidgets('the page is one plain colour, edge to edge: ${dark ? 'dark' : 'white in light'}', (tester) async {
+      testWidgets('the page is plain white, edge to edge, with the phone in ${dark ? 'dark' : 'light'} mode', (
+        tester,
+      ) async {
+        // Owner, 14 Nov 2026: light only, whatever the phone's setting.
         tester.platformDispatcher.platformBrightnessTestValue = dark ? Brightness.dark : Brightness.light;
         addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
-        final palette = dark ? AuthPalette.dark : AuthPalette.light;
+        const palette = AuthPalette.light;
         Color? pageOf(Type screen) => tester
             .widget<Scaffold>(find.descendant(of: find.byType(screen), matching: find.byType(Scaffold)))
             .backgroundColor;
@@ -158,7 +161,7 @@ void main() {
         // The form, then "Check Your Inbox", then the pasted link: no grey page behind any of them.
         await open(tester, email: 'sam@acme.com');
         expect(pageOf(ForgotPasswordScreen), palette.card);
-        if (!dark) expect(pageOf(ForgotPasswordScreen), const Color(0xFFFFFFFF));
+        expect(pageOf(ForgotPasswordScreen), const Color(0xFFFFFFFF));
         await tapKey(tester, 'forgot.send');
         await settle(tester);
         expect(pageOf(ForgotPasswordScreen), palette.card);

@@ -138,3 +138,8 @@ The client marked up the app's user manual (sections 1.1 and 1.4) with the words
 "Confirm" became "Verify" on these screens because the client's Sign-In & Security note names the email's state **Verified**.
 
 Kept as they were: **Join ICR**, **STEP 1 OF 3**, **Join**, **Continue**, **Company**, **Since**, **Enter Mobile OTP**, **Send OTP** / **Resend OTP**, "Number verified.", "OTP sent to …", the four meter rules (At least 8 characters, 12 or more characters, Upper and lower case, A number or symbol) and its Weak / Fair / Good / Strong, "I agree to ICR's Terms of Service and Privacy Policy.", the field hints (name@company.com, e.g. Facilities Manager, Where you work now, Year you started, Where you are based), "Ask to join {company}'s team on ICR. Its admins decide.", "Continuing with Google as …", the test-mode notes, and every sentence the API sends. The mobile number's own format problems come from `account_rules.dart` (`phoneError`), another folder.
+
+
+## 14 Nov 2026: light only, whatever the phone's setting
+
+The owner: "the sign in page and Sign up page still the dark theme is coming i didn't built the app for the dark mode yet keep all pages light mode only." `AuthPalette.of` and `LiColors.of` now always return their light set, so sign-in, the three sign-up screens, forgot and reset password and verify email stay white on a phone in dark mode (the splash was made white on 13 Nov). The dark sets stay in the code, unused, for when a dark theme is built. No other screen reads the phone's brightness. Tests: `sign_in_test.dart` ("light only"), `recovery_test.dart`; golden `sign_in_dark.png` is now identical to `sign_in_light.png`.

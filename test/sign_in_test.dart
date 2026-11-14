@@ -242,7 +242,11 @@ void main() {
       tester,
     ) async {
       var offered = <String>[];
-      final h = _harness(routes: {'GET /auth/social/providers': (_) => {'providers': offered}});
+      final h = _harness(
+        routes: {
+          'GET /auth/social/providers': (_) => {'providers': offered},
+        },
+      );
       await _pump(tester, h);
       expect(find.text('Sign In Using'), findsNothing);
       expect(find.byKey(const Key('signIn.google')), findsNothing);
@@ -349,15 +353,16 @@ void main() {
     });
   });
 
-  group('light and dark', () {
+  group('light only', () {
+    // Owner, 14 Nov 2026: the app is light only until a dark theme is built, whatever the phone's setting.
     for (final dark in [false, true]) {
-      testWidgets('the page follows the phone: ${dark ? 'dark' : 'light'}', (tester) async {
+      testWidgets('the page is light with the phone in ${dark ? 'dark' : 'light'} mode', (tester) async {
         tester.platformDispatcher.platformBrightnessTestValue = dark ? Brightness.dark : Brightness.light;
         addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
         final h = _harness();
         await _pump(tester, h);
 
-        final colors = dark ? LiColors.dark : LiColors.light;
+        const colors = LiColors.light;
         expect(tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor, colors.page);
         // LinkedIn's page has no card: nothing on it draws a filled, bordered box.
         final boxes = tester
@@ -372,7 +377,7 @@ void main() {
       });
     }
 
-    testWidgets('typed text is the page ink and labels the secondary grey, in dark', (tester) async {
+    testWidgets('typed text is the light page ink and labels its grey, with the phone in dark mode', (tester) async {
       tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
       addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
       final h = _harness();
@@ -383,12 +388,12 @@ void main() {
       final typed = tester.widget<EditableText>(
         find.descendant(of: find.byKey(const Key('signIn.email')), matching: find.byType(EditableText)),
       );
-      expect(typed.style.color, LiColors.dark.ink);
+      expect(typed.style.color, LiColors.light.ink);
       // The label floats inside the field's decoration rather than being a Text of its own.
       final field = tester.widget<TextField>(
         find.descendant(of: find.byKey(const Key('signIn.email')), matching: find.byType(TextField)),
       );
-      expect(field.decoration!.labelStyle!.color, LiColors.dark.secondary);
+      expect(field.decoration!.labelStyle!.color, LiColors.light.secondary);
     });
   });
 

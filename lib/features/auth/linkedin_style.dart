@@ -72,9 +72,9 @@ class LiColors {
     logo: 'assets/images/brand/icr-logo-white.png',
   );
 
-  /// The colours for the phone's current light or dark setting.
-  static LiColors of(BuildContext context) =>
-      MediaQuery.platformBrightnessOf(context) == Brightness.dark ? dark : light;
+  /// The colours the screens draw with: always [light], whatever the phone's setting (owner, 14 Nov 2026: the app
+  /// is light only until a dark theme is built; [dark] waits for that).
+  static LiColors of(BuildContext context) => light;
 
   SystemUiOverlayStyle get overlay => SystemUiOverlayStyle(
     statusBarColor: page,
