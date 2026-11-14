@@ -38,7 +38,7 @@ void main() {
   // The owner's table (6 Nov 2026): every user's four rows, Company (the one they run, and My companies for
   // everyone — owner, 7 Nov 2026), then Account.
   // Company second, under Jobs (owner, 12 Nov 2026).
-  const design = ['Jobs', 'Company', 'Learning', 'Mentorship', 'Marketplace', 'Account'];
+  const design = ['Company', 'Jobs', 'Learning', 'Mentorship', 'Marketplace', 'Account'];
 
   group('the rows, by role (every page the app could show)', () {
     test("every member gets the table's rows, each opening one set of tabs", () {
@@ -293,7 +293,7 @@ void main() {
 
     test("a partner institute's staff get the Learning Partner row", () {
       final w = workspacesFor(user('COMPANY_ADMIN', learningRoles: ['TRAINER']), opens: everything);
-      expect(labels(w), ['Jobs', 'Company', 'Learning', 'Mentorship', 'Marketplace', 'Learning Partner', 'Account']);
+      expect(labels(w), ['Company', 'Jobs', 'Learning', 'Mentorship', 'Marketplace', 'Learning Partner', 'Account']);
       expect(pages(w, 'Learning Partner'), [
         '/admin/learning/courses',
         '/manage/team',
@@ -325,10 +325,7 @@ void main() {
       expect(pages(admin, 'Company'), isNot(contains('/account/companies')), reason: 'staff join no company');
       // The catalogue is the Marketplace's for staff too (owner, 14 Nov 2026).
       expect(pages(admin, 'Company'), isNot(anyOf(contains('/manage/products'), contains('/manage/services'))));
-      expect(
-        pages(admin, 'Marketplace').take(3),
-        ['/manage/requirements', '/manage/products', '/manage/services'],
-      );
+      expect(pages(admin, 'Marketplace').take(3), ['/manage/requirements', '/manage/products', '/manage/services']);
       expect(pages(admin, 'Jobs'), isNot(contains('/career')), reason: 'staff are not job seekers');
       expect(labels(workspacesFor(user('LEARNING_ADMIN', companyId: null), opens: everything)), ['Learn']);
       final partner = workspacesFor(user('PARTNER_ADMIN', companyId: null), opens: everything);

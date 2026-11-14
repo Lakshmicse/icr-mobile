@@ -97,9 +97,10 @@ class AuthPalette {
     logo: 'assets/images/brand/icr-logo-white.png',
   );
 
-  /// The palette for the phone's current light or dark setting.
-  static AuthPalette of(BuildContext context) =>
-      MediaQuery.platformBrightnessOf(context) == Brightness.dark ? dark : light;
+  /// The palette the screens draw with: always [light]. The app is light only (owner, 14 Nov 2026: "i didn't built
+  /// the app for the dark mode yet keep all pages light mode only"), so a phone in dark mode still gets the white
+  /// page; [dark] is kept for when a dark theme is built.
+  static AuthPalette of(BuildContext context) => light;
 
   /// Status and navigation bars that sit on [page].
   SystemUiOverlayStyle get overlay => SystemUiOverlayStyle(
