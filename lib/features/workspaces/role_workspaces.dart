@@ -63,20 +63,8 @@ List<Workspace> workspacesFor(SessionUser user, {required bool Function(String p
   if (!staff) {
     // The rows' words are the owner's document "Mobile Profile Screen Text Changes" (12 Nov 2026), title case
     // throughout. The search pages (jobs, mentors, suppliers) left the rows: the tabs are those searches.
-    add('jobs', 'Jobs', LucideIcons500.briefcase, 'Your applications, saved jobs and the board', _orange, [
-      // The company's hiring, for the roles that hire: the jobs, the hiring team, candidates, projects.
-      if (hires) ...const [
-        WorkspaceItem('Manage Jobs', Icons.work_outline, '/manage/jobs'),
-        WorkspaceItem('Manage Hiring Team', Icons.groups_outlined, '/manage/team'),
-        WorkspaceItem('Source Candidates', Icons.person_search_outlined, '/talent'),
-        WorkspaceItem('Projects', Icons.folder_special_outlined, '/manage/projects'),
-      ],
-      if (role == 'HIRING_MANAGER' && forCompany) _interviews,
-      const WorkspaceItem('My Applications', Icons.assignment_ind_outlined, '/career/applications'),
-      const WorkspaceItem('My Saved Jobs', Icons.bookmark_border, '/career/saved'),
-    ]);
-
-    // The Company row, second, under Jobs (owner, 12 Nov 2026): "My companies" for everyone — where a member
+    // The Company row, first, above Jobs (owner, 14 Nov 2026: "First Company and then Jobs"; it sat second,
+    // under Jobs, from 12 Nov): "My companies" for everyone — where a member
     // switches to, joins or creates one (owner, 7 Nov 2026: it sat under Account) — then the company the member
     // runs: its dashboard and its team. Owner, 14 Nov 2026: Company is My Companies, Dashboard and Manage Team;
     // View Enquiries & RFQs and Bid for Enquiries & RFQs left it, since requirements are the Marketplace row's (My
@@ -88,6 +76,19 @@ List<Workspace> workspacesFor(SessionUser user, {required bool Function(String p
         const WorkspaceItem('Manage Team', Icons.groups_outlined, '/manage/team'),
         if (role == 'RECRUITER' || role == 'BRANCH_ADMIN') _myLocations,
       ],
+    ]);
+
+    add('jobs', 'Jobs', LucideIcons500.briefcase, 'Your applications, saved jobs and the board', _orange, [
+      // The company's hiring, for the roles that hire: the jobs, the hiring team, candidates, projects.
+      if (hires) ...const [
+        WorkspaceItem('Manage Jobs', Icons.work_outline, '/manage/jobs'),
+        WorkspaceItem('Manage Hiring Team', Icons.groups_outlined, '/manage/team'),
+        WorkspaceItem('Source Candidates', Icons.person_search_outlined, '/talent'),
+        WorkspaceItem('Projects', Icons.folder_special_outlined, '/manage/projects'),
+      ],
+      if (role == 'HIRING_MANAGER' && forCompany) _interviews,
+      const WorkspaceItem('My Applications', Icons.assignment_ind_outlined, '/career/applications'),
+      const WorkspaceItem('My Saved Jobs', Icons.bookmark_border, '/career/saved'),
     ]);
 
     add(

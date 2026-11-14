@@ -236,3 +236,8 @@ reaches Find Work & Bid (`/manage/bids`) from the Marketplace tab, Saathi's "Enq
 notifications. A recruiter or office admin keeps My Locations after Manage Team. The old (non-workspace) drawer's
 "Enquiries and RFQ's" link is untouched. Test: `role_workspaces_test.dart` (the company admin, buyer, seller and
 real-screens cases).
+
+
+## 14 Nov 2026: Company first, then Jobs
+
+The owner: "Change the Side drawer First Company and then Jobs." A member's rows now read Company, Jobs, Learning, Mentorship, Marketplace (Learning Partner for partner staff), Account (`role_workspaces.dart`; the Company row moved above Jobs, its contents unchanged). Staff rows are as they were. Tests: `role_workspaces_test.dart`; golden `profile_menu.png`.
