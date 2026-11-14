@@ -6,6 +6,7 @@ import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/account/account_models.dart';
 import 'package:icr_mobile/features/account/demo_account_repository.dart';
 import 'package:icr_mobile/features/account/profile/my_profile_screen.dart';
+import 'package:icr_mobile/features/account/profile/sheets/contact_info_sheet.dart';
 import 'package:icr_mobile/features/account/widgets/account_kit.dart' show CoverBand;
 import 'package:icr_mobile/features/account/widgets/photo_picker.dart';
 
@@ -83,7 +84,8 @@ void main() {
       expect(find.text('Profile'), findsOneWidget);
       expect(find.text('Nikhil Majjagi'), findsOneWidget);
       expect(find.text('Lead Operations Manager'), findsWidgets);
-      expect(find.textContaining('Bengaluru, Karnataka · TechCorp'), findsOneWidget);
+      expect(find.text('TechCorp · RV College of Engineering'), findsOneWidget);
+      expect(find.text('Bengaluru, Karnataka'), findsOneWidget);
       expect(find.text('12 years in the profession'), findsOneWidget);
       expect(find.text('Professional'), findsOneWidget);
       expect(find.text('About'), findsOneWidget);
@@ -206,6 +208,142 @@ void main() {
       await pump(tester, width: 320, height: 568);
       await tester.drag(find.byType(ListView).first, const Offset(0, -3000));
       await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('contact info', () {
+    Future<void> openContactInfo(WidgetTester tester) => tapKey(tester, 'profile.contactInfo');
+
+    testWidgets('"Contact Information" sits after the place and opens how to reach the person, read-only', (
+      tester,
+    ) async {
+      await pump(tester);
+      expect(find.text('Bengaluru, Karnataka'), findsOneWidget);
+      expect(find.text('Contact Information'), findsOneWidget);
+      await openContactInfo(tester);
+      final sheet = find.byType(ContactInfoSheet);
+      expect(sheet, findsOneWidget);
+      Finder inSheet(String text) => find.descendant(of: sheet, matching: find.text(text));
+      expect(inSheet('Nikhil’s Profile'), findsOneWidget);
+      expect(inSheet('Email'), findsOneWidget);
+      expect(inSheet('nikhil@techcorp.example'), findsOneWidget);
+      expect(inSheet('Mobile Number'), findsOneWidget);
+      expect(inSheet('+91 9876543210'), findsOneWidget);
+      expect(inSheet('Verified'), findsOneWidget);
+      expect(inSheet('Edit'), findsOneWidget, reason: 'a verified number is changed, not verified again');
+      expect(inSheet('Add Your Work Email'), findsOneWidget);
+      expect(inSheet('LinkedIn'), findsOneWidget);
+      expect(inSheet('linkedin.com/in/nikhil-majjagi'), findsOneWidget);
+      expect(find.descendant(of: sheet, matching: find.byType(TextField)), findsNothing);
+      await tapKey(tester, 'contactInfo.close');
+      expect(find.byType(ContactInfoSheet), findsNothing);
+    });
+
+    testWidgets('the pencil opens the edit sheet; a save comes back to the profile with what was saved', (
+      tester,
+    ) async {
+      final repo = await pump(tester);
+      await openContactInfo(tester);
+      await tapKey(tester, 'contactInfo.edit');
+      expect(find.byType(ContactInfoSheet), findsNothing);
+      expect(find.byKey(const Key('contact.workEmail')), findsOneWidget, reason: 'the edit sheet is open');
+      await type(tester, 'contact.workEmail', 'nikhil@work.example.com');
+      await save(tester);
+      expect(repo.sent['updateMe'], {'workEmail': 'nikhil@work.example.com'});
+      expect(find.text('Contact information saved.'), findsOneWidget);
+      await openContactInfo(tester);
+      expect(
+        find.descendant(of: find.byType(ContactInfoSheet), matching: find.text('nikhil@work.example.com')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: find.byType(ContactInfoSheet), matching: find.text('Not Verified')),
+        findsOneWidget,
+        reason: 'a newly typed work email is not confirmed',
+      );
+    });
+
+    testWidgets('"Add Your Work Email" opens the edit sheet; the profile address opens the public page', (
+      tester,
+    ) async {
+      final opened = <String>[];
+      await pump(tester, onOpenPublic: opened.add);
+      await openContactInfo(tester);
+      await tapKey(tester, 'contactInfo.addWorkEmail');
+      expect(find.byKey(const Key('contact.workEmail')), findsOneWidget, reason: 'the edit sheet is open');
+      await tapKey(tester, 'sheet.cancel');
+      await openContactInfo(tester);
+      await tester.tap(find.text('Nikhil’s Profile').last);
+      await tester.pumpAndSettle();
+      expect(opened, isEmpty, reason: 'the label is not the link');
+      await tester.tap(find.textContaining('/members/nikhil-majjagi'));
+      await tester.pumpAndSettle();
+      expect(opened, ['me']);
+      expect(find.byType(ContactInfoSheet), findsNothing);
+    });
+
+    testWidgets('with no number "Add Your Mobile Number" opens the number sheet', (tester) async {
+      final repo = DemoAccountRepository(
+        profile: MyProfile.fromJson({
+          'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'Anita', 'lastName': 'Rao', 'role': 'PROFESSIONAL'},
+          'resume': {'jobTitle': 'Analyst', 'location': 'Pune, Maharashtra'},
+        }),
+      );
+      await pump(tester, repo: repo);
+      await openContactInfo(tester);
+      expect(find.text('Anita’s Profile'), findsOneWidget);
+      await tapKey(tester, 'contactInfo.addPhone');
+      expect(find.byType(ContactInfoSheet), findsNothing);
+      expect(find.text('Mobile Number'), findsWidgets);
+      expect(find.byKey(const Key('phone.number')), findsOneWidget);
+    });
+
+    testWidgets('a confirmed work email, an unconfirmed +91 number, a second number and the birthday', (tester) async {
+      final repo = DemoAccountRepository(
+        profile: MyProfile.fromJson({
+          'user': {
+            'id': 'me',
+            'email': 'a@b.co',
+            'firstName': 'Anita',
+            'lastName': 'Rao',
+            'role': 'PROFESSIONAL',
+            'workEmail': 'anita@acme.example.com',
+            'workEmailVerified': true,
+            'phone': '+919812345678',
+            'phoneVerified': false,
+            'altPhone': '+919800000000',
+            'birthMonth': 10,
+            'birthDay': 26,
+          },
+        }),
+      );
+      await pump(tester, repo: repo);
+      await openContactInfo(tester);
+      final sheet = find.byType(ContactInfoSheet);
+      Finder inSheet(String text) => find.descendant(of: sheet, matching: find.text(text));
+      expect(inSheet('anita@acme.example.com'), findsOneWidget);
+      expect(inSheet('Verified'), findsOneWidget, reason: 'the work email');
+      expect(inSheet('Not Verified'), findsOneWidget, reason: 'the +91 number a code can reach');
+      expect(inSheet('Verify'), findsOneWidget);
+      expect(inSheet('Alternate Mobile Number'), findsOneWidget);
+      expect(inSheet('+91 9800000000'), findsOneWidget);
+      expect(inSheet('Birthday'), findsOneWidget);
+      expect(inSheet('26 October'), findsOneWidget);
+    });
+
+    testWidgets('a header with no place still offers Contact Information, and the sheet fits a 320 x 568 phone', (
+      tester,
+    ) async {
+      final repo = DemoAccountRepository(
+        profile: MyProfile.fromJson({
+          'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'Anita', 'lastName': 'Rao', 'role': 'PROFESSIONAL'},
+        }),
+      );
+      await pump(tester, repo: repo, width: 320, height: 568);
+      expect(find.byKey(const Key('profile.contactInfo')), findsOneWidget);
+      await openContactInfo(tester);
+      expect(find.byType(ContactInfoSheet), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });

@@ -206,7 +206,7 @@ void main() {
       expect(find.byKey(_k('jobs-error')), findsOneWidget);
       expect(find.text('We could not reach ICR.'), findsOneWidget);
       repo.failures.remove('jobs');
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byKey(_k('jobs-error')), findsNothing);
       expect(find.byKey(_k('job-job-open')), findsOneWidget);

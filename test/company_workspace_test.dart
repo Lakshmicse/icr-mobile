@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/account/account_models.dart' show PickedPhoto;
 import 'package:icr_mobile/features/account/widgets/account_kit.dart' show AccountSelectField, CoverBand;
+import 'package:icr_mobile/features/company/company_models.dart' show Completeness;
 import 'package:icr_mobile/features/company/company_repository.dart';
 import 'package:icr_mobile/features/company/company_workspace_screen.dart';
 import 'package:icr_mobile/features/site/site_kit.dart' show SiteButton;
@@ -87,6 +88,17 @@ void main() {
       expect(find.text('Pin the head office on the map'), findsOneWidget);
       await tapKey(tester, 'completeness-edit');
       expect(find.byKey(const ValueKey('identity-details')), findsOneWidget, reason: 'Edit Company Profile');
+    });
+
+    testWidgets('a complete company page has no completeness card; the trust card leads', (tester) async {
+      await pump(
+        tester,
+        repository: DemoCompanyRepository(completeness: const Completeness(score: 100, missing: [])),
+      );
+      expect(find.byKey(const ValueKey('completeness-card')), findsNothing);
+      expect(find.text('Company Profile Completeness'), findsNothing);
+      expect(find.text('100% Complete'), findsNothing);
+      expect(find.byKey(const ValueKey('trust-card')), findsOneWidget);
     });
 
     testWidgets('the trust card gives the company check and the supplier level apart', (tester) async {

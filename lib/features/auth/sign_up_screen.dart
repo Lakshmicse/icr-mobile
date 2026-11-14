@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -58,7 +59,7 @@ class SignUpScreen extends StatefulWidget {
   State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignUpScreenState extends State<SignUpScreen> with WidgetsBindingObserver {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _first = TextEditingController();
@@ -131,12 +132,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _step = SignupStep.about;
       _loadPending();
     } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
-        final available = await context.read<AuthController>().configuredProviders();
-        if (mounted) setState(() => _available = available);
+      WidgetsBinding.instance.addObserver(this);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _readProviders();
       });
     }
+  }
+
+  /// Which of Google and LinkedIn this server offers: only those are drawn. Asked when the page opens and again
+  /// each time the app comes back to the front, so a provider the server gains shows without a new build.
+  Future<void> _readProviders() async {
+    final available = await context.read<AuthController>().configuredProviders();
+    if (mounted && !setEquals(available, _available)) setState(() => _available = available);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && !_isSocial && _socialBusy == null) _readProviders();
   }
 
   AccountRepository _defaultAccount() =>
@@ -144,6 +156,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _ticker?.cancel();
     _otpTicker?.cancel();
     for (final c in [_email, _password, _first, _last, _code, _phone, _otp]) {
@@ -234,12 +247,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<void> _continueWith(SocialProvider provider) async {
-    if (!_available.contains(provider)) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('${provider.label} sign-in is not available yet.')));
-      return;
-    }
     FocusScope.of(context).unfocus();
     final auth = context.read<AuthController>();
     final navigator = Navigator.of(context);
@@ -589,10 +596,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
             busy: _busy,
             onPressed: _socialBusy == null ? _submitJoin : null,
           ),
-          const SizedBox(height: 20),
-          Divider(color: p.rule, thickness: 1, height: 1),
-          const SizedBox(height: 16),
           SocialProvidersBlock(
+            above: [
+              const SizedBox(height: 20),
+              Divider(color: p.rule, thickness: 1, height: 1),
+              const SizedBox(height: 16),
+            ],
             heading: 'Sign Up Using',
             headingStyle: AuthType.body(p).copyWith(color: p.text),
             keyPrefix: 'signup',

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/api/api_error.dart';
 import '../../core/auth/auth_controller.dart';
+import '../../core/config.dart';
 import 'auth_palette.dart';
 import 'auth_widgets.dart';
 import 'forgot_password_screen.dart';
@@ -183,7 +184,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               label: 'Reset Link',
               controller: _link,
               icon: Icons.link_rounded,
-              hint: 'https://icr.org.in/reset-password?token=…',
+              hint: '${AppConfig.siteUrl}/reset-password?token=…',
               keyboardType: TextInputType.url,
               textInputAction: TextInputAction.done,
               autocorrect: false,

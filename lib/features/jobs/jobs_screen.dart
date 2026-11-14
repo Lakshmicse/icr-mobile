@@ -151,7 +151,7 @@ class _JobsScreenState extends State<JobsScreen> {
       return [
         SliverFillRemaining(
           hasScrollBody: false,
-          child: _Notice(title: 'Unable to Load Jobs', body: jobs.error!, action: 'Try again', onAction: jobs.refresh),
+          child: _Notice(title: 'Unable to Load Jobs', body: jobs.error!, action: 'Try Again', onAction: jobs.refresh),
         ),
       ];
     }

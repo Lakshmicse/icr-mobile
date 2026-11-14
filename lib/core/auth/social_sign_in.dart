@@ -80,8 +80,19 @@ class SocialSignIn {
   static SocialFlow get flow => switch (_flowDefine) {
     'app' => SocialFlow.appRedirect,
     'website' => SocialFlow.website,
-    _ => AppConfig.apiBaseUrl.startsWith('https://') ? SocialFlow.website : SocialFlow.appRedirect,
+    _ => flowFor(api: AppConfig.apiBaseUrl, site: AppConfig.siteUrl),
   };
+
+  /// The website's https return reaches the app only on a host whose `assetlinks.json` vouches for it and that the
+  /// manifest names (`android:host="icr.org.in"`); any other server (dev.icr.org.in, a local API) uses the app's own
+  /// `in.org.icr://auth` return, which every ICR API supports.
+  static SocialFlow flowFor({required String api, required String site}) =>
+      api.startsWith('https://') && Uri.tryParse(site)?.host == websiteCallbackHost
+      ? SocialFlow.website
+      : SocialFlow.appRedirect;
+
+  /// The host the manifest's verified app link names.
+  static const websiteCallbackHost = 'icr.org.in';
 
   /// The website's sentences for the callback's error codes (`SOCIAL_ERRORS`).
   static const errors = {
@@ -103,7 +114,9 @@ class SocialSignIn {
   /// different page of the website, which stays open in the tab: the person
   /// finishes there, or closes it, which reads as [SocialCancelled].
   Future<SocialResult> _runWebsite(SocialProvider provider) async {
-    final start = Uri.parse('${AppConfig.apiBaseUrl}/auth/${provider.name}/start').replace(queryParameters: {'mode': 'login'});
+    final start = Uri.parse(
+      '${AppConfig.apiBaseUrl}/auth/${provider.name}/start',
+    ).replace(queryParameters: {'mode': 'login'});
     final String returned;
     try {
       returned = await FlutterWebAuth2.authenticate(

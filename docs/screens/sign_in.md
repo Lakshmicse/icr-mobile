@@ -57,3 +57,7 @@ The client marked up the app's user manual with the words they want on this scre
 | A provider with no keys (snackbar) | LinkedIn sign-in is not available yet | LinkedIn sign-in is not available yet. |
 
 Kept as they were: **Password**, **Show** / **Hide**, "Your session has ended. Sign in again to continue.", the API's own refusals, and the screen-reader name "Continue with LinkedIn / Google" of the two pills (heard, not drawn). The goldens `sign_in_light.png` and `sign_in_dark.png` were re-recorded: their diffs were these words and nothing else.
+
+## Google and LinkedIn are drawn only where the server offers them (13 Nov 2026, Build 35)
+
+Owner: "hide when the server offers no providers; if it provides, automatically it should come". Builds 31 to 34 point at dev.icr.org.in, which has no Google or LinkedIn keys (`GET /auth/social/providers` answers `[]`), and the app drew both buttons anyway, so a tap ended in "provider unavailable". `SocialProvidersBlock` (`auth_widgets.dart`) now draws a pill only for a provider the server names, and with none it draws nothing: no heading, no hairline (`above`). Sign In and Join ask the server when they open and again each time the app comes back to the front (`_readProviders`, `didChangeAppLifecycleState`), so a server that gains its keys shows the buttons with no new build. The "… sign-in is not available yet." message is gone with the faded buttons. Tests: `sign_in_test.dart` ("only the providers the server offers are drawn…", "a server that offers none…"), `signup_test.dart`.

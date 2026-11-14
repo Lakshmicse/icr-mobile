@@ -177,7 +177,7 @@ class _ManageCouncilsScreenState extends State<ManageCouncilsScreen> {
               controller: _list,
               searchText: _searchText,
               searchHint: 'Search councils by name or focus',
-              emptyTitle: 'No councils',
+              emptyTitle: 'No Councils',
               newLabel: widget.everywhere ? 'New Council' : null,
               onNew: widget.everywhere ? _new : null,
               rowBuilder: (c) => OrgRow(
@@ -193,7 +193,7 @@ class _ManageCouncilsScreenState extends State<ManageCouncilsScreen> {
               key: const ValueKey('proposals-tab'),
               controller: _requests,
               viewOf: RequestView.ofProposal,
-              emptyTitle: 'No council proposals here',
+              emptyTitle: 'No Council Proposals',
               focusId: widget.focusProposalId,
               onDecide: _decide,
               onFind: _find,

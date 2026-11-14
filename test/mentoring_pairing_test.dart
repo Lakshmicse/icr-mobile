@@ -785,7 +785,7 @@ void main() {
       expect(find.text('Mentorship Started'), findsNothing);
       await tapKey(tester, 'timeline-all');
       expect(find.text('Mentorship Started'), findsOneWidget);
-      expect(find.text('Show Less'), findsOneWidget);
+      expect(find.text('View Less'), findsOneWidget);
     });
   });
 

@@ -135,7 +135,7 @@ class _InterviewBriefScreenState extends State<InterviewBriefScreen> {
           icon: LucideIcons.calendarX,
           title: 'Unable to Open This Interview',
           body: _c.error!,
-          action: _c.canRetry ? 'Try again' : null,
+          action: _c.canRetry ? 'Try Again' : null,
           onAction: _c.canRetry ? _c.load : null,
         ),
       ];

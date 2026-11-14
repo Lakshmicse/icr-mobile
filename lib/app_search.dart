@@ -153,6 +153,7 @@ Future<void> _openCourse(BuildContext ctx, Course course) async {
   final controller = CourseSheetController(repository: _learning(ctx.read<ApiClient>()), seed: course)..load();
   await showDetailSheet<void>(
     ctx,
+    place: courseSitePath(course),
     body: (_) => ChangeNotifierProvider.value(value: controller, child: const CourseSheetBody()),
     bottomBar: (_) => ChangeNotifierProvider.value(value: controller, child: const CourseSheetBar()),
   );

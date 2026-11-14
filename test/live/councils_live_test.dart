@@ -529,7 +529,7 @@ void main() {
       expect(find.text('Corporate & Commercial Real Estate Council'), findsOneWidget);
       expect(find.text('IN-PERSON SUMMITS'), findsOneWidget);
       expect(find.text('Regional In-Person Chapters'), findsOneWidget);
-      expect(find.text('View Regional Chapters Directory'), findsOneWidget);
+      expect(find.text('View Chapters Directory'), findsOneWidget);
       // Each tile carries its chapter's next date.
       final controller = Provider.of<CouncilsController>(tester.element(find.byType(CouncilsScreen)), listen: false);
       for (final chapter in controller.chapters) {

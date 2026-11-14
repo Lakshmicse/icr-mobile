@@ -270,13 +270,41 @@ void main() {
       expect(find.text('LinkedIn'), findsOneWidget);
       expect(find.text('Google'), findsOneWidget);
       expect(tester.getRect(find.byKey(const Key('signup.signIn'))).top, greaterThan(google.bottom));
-      // Only Google has keys on this server: LinkedIn is drawn faded.
+      // Both have keys on this server, so both are drawn, neither faded.
       double opacityOf(String key) => tester
           .widget<Opacity>(find.descendant(of: find.byKey(Key(key)), matching: find.byType(Opacity)).first)
           .opacity;
       expect(opacityOf('signup.google'), 1);
-      expect(opacityOf('signup.linkedin'), 0.5);
+      expect(opacityOf('signup.linkedin'), 1);
       expect(h.api.count('GET /auth/social/providers'), 1);
+    });
+
+    testWidgets('a provider the server does not offer is not drawn', (tester) async {
+      // Owner, 13 Nov 2026: hide what the server has no keys for (the dev site has none).
+      final one = harness(
+        routes: {
+          'GET /auth/social/providers': (_) => {
+            'providers': ['GOOGLE'],
+          },
+        },
+      );
+      await pump(tester, one);
+      expect(find.text('Sign Up Using'), findsOneWidget);
+      expect(find.byKey(const Key('signup.google')), findsOneWidget);
+      expect(find.byKey(const Key('signup.linkedin')), findsNothing);
+    });
+
+    testWidgets('a server that offers no provider shows no provider row', (tester) async {
+      final none = harness(
+        routes: {
+          'GET /auth/social/providers': (_) => {'providers': <String>[]},
+        },
+      );
+      await pump(tester, none);
+      expect(find.text('Sign Up Using'), findsNothing);
+      expect(find.byKey(const Key('signup.google')), findsNothing);
+      expect(find.byKey(const Key('signup.linkedin')), findsNothing);
+      expect(find.byKey(const Key('signup.join')), findsOneWidget);
     });
   });
 

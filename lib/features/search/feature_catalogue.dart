@@ -287,7 +287,7 @@ const featureCatalogue = <AppFeature>[
   ),
   AppFeature(
     'chapters',
-    'Regional Chapters',
+    'Chapters',
     'ICR chapters in your city',
     Icons.public,
     'chapters chapter regional city local bengaluru mumbai delhi meetup',

@@ -92,7 +92,7 @@ void main() {
       expect(find.byKey(_k('composer-error')), findsOneWidget);
       expect(find.text('We could not reach ICR.'), findsOneWidget);
       repo.failures.remove('job');
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byKey(_k('composer-error')), findsNothing);
       expect(tester.widget<TextField>(find.byKey(_k('job-title'))).controller!.text, 'Facilities Operations Lead');

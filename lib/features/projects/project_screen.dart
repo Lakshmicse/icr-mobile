@@ -328,7 +328,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
             children: [
               Text(c.matchesError!, style: SiteText.secondary),
               const SizedBox(height: 10),
-              AccountButton(label: 'Try again', outlined: true, expand: false, height: 36, onPressed: c.refreshMatches),
+              AccountButton(label: 'Try Again', outlined: true, expand: false, height: 36, onPressed: c.refreshMatches),
             ],
           ),
         )

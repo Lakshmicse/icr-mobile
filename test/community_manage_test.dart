@@ -329,11 +329,11 @@ void main() {
       expect(announcementProblem(title: 'Hello', body: 'b' * 4001), isNotNull);
       expect(
         leadProblem(termStartsOn: '2026-06-01', termEndsOn: '2026-05-31'),
-        'A term can’t end before it starts.',
+        'A term cannot end before it starts.',
       );
       expect(leadProblem(termStartsOn: '2026-06-01', termEndsOn: ''), isNull);
       expect(leadProblem(title: 't' * 121), isNotNull);
-      expect(decisionProblem(declining: true, reason: '  '), 'Say why it isn’t approved. The member reads this.');
+      expect(decisionProblem(declining: true, reason: '  '), 'Give the reason it is not approved. The member will see it.');
       expect(decisionProblem(declining: false, reason: ''), isNull);
       expect(leadTermEnded('2026-11-12', '2026-11-13'), isTrue);
       expect(leadTermEnded('2026-11-13', '2026-11-13'), isFalse, reason: 'a term ending today is still in force');
@@ -490,7 +490,7 @@ void main() {
       final blr = find.byKey(const ValueKey('chapter-row-ch-blr'));
       expect(find.descendant(of: blr, matching: find.text('Bengaluru Chapter')), findsOneWidget);
       expect(
-        find.descendant(of: blr, matching: find.text('Regional chapter · Bengaluru · Karnataka · India')),
+        find.descendant(of: blr, matching: find.text('Regional Chapter · Bengaluru · Karnataka · India')),
         findsOneWidget,
       );
       expect(find.descendant(of: blr, matching: find.text('128 members · 3 upcoming events')), findsOneWidget);
@@ -499,7 +499,7 @@ void main() {
       expect(find.descendant(of: mumbai, matching: find.text('Hidden')), findsOneWidget);
       final uae = find.byKey(const ValueKey('chapter-row-ch-uae'));
       expect(
-        find.descendant(of: uae, matching: find.text('Country chapter · United Arab Emirates')),
+        find.descendant(of: uae, matching: find.text('Country Chapter · United Arab Emirates')),
         findsOneWidget,
       );
       expect(find.descendant(of: uae, matching: find.text('41 members · 1 upcoming event')), findsOneWidget);
@@ -515,7 +515,7 @@ void main() {
 
       await tester.enterText(find.byKey(const ValueKey('manage-search')), 'nowhere');
       await settle(tester);
-      expect(find.text('No chapters'), findsOneWidget);
+      expect(find.text('No Chapters'), findsOneWidget);
     });
 
     testWidgets('pages by twenty', (tester) async {
@@ -578,8 +578,8 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('manage-new')));
       await settle(tester);
       expect(find.text('Create Chapter'), findsWidgets);
-      expect(find.text('Country-wise chapter'), findsOneWidget);
-      expect(find.text('Regional chapter (a city)'), findsOneWidget);
+      expect(find.text('Country Chapter'), findsOneWidget);
+      expect(find.text('Regional Chapter (City)'), findsOneWidget);
 
       await save(tester);
       expect(sheetError(tester), 'Give the chapter a name.');
@@ -609,7 +609,7 @@ void main() {
       await type(tester, 'about.mission', 'Bring Pune’s facility leaders together.');
       await type(tester, 'about.activities', 'Monthly meetups\nSite visits');
       await tapInSheet(tester, find.byKey(const Key('chapter.published')));
-      expect(find.text('Unpublished (hidden)'), findsOneWidget);
+      expect(find.text('Unpublished (Hidden)'), findsOneWidget);
 
       await save(tester);
       expect(repo.sent.last['action'], 'createChapter');
@@ -711,7 +711,7 @@ void main() {
       await pumpChapter(tester);
       expect(find.text('Manage Chapter'), findsOneWidget);
       expect(find.text('Bengaluru Chapter'), findsOneWidget);
-      expect(find.text('Regional chapter · Bengaluru · Karnataka · India'), findsOneWidget);
+      expect(find.text('Regional Chapter · Bengaluru · Karnataka · India'), findsOneWidget);
       expect(find.text('128 members · 3 upcoming events'), findsOneWidget);
       expect(find.text('bengaluru@icr.org.in'), findsOneWidget);
       expect(find.text('Mission, What we do'), findsOneWidget, reason: 'the About, by the headings that hold words');
@@ -755,7 +755,7 @@ void main() {
       ]) {
         expect(inSheet(label), findsOneWidget, reason: label);
       }
-      expect(find.text('Published (listed publicly)'), findsOneWidget);
+      expect(find.text('Published (Listed Publicly)'), findsOneWidget);
       expect(
         tester.widget<TextField>(find.byKey(const Key('about.activities'))).controller!.text,
         'Monthly meetups\nSite visits',
@@ -883,11 +883,11 @@ void main() {
       await pumpChapter(tester);
       await tapOnPage(tester, find.byKey(const ValueKey('leader-add')));
       expect(find.text('Add a Leader'), findsOneWidget);
-      expect(find.text('Type at least 2 letters of a name or email'), findsOneWidget);
+      expect(find.text('Type at least 2 letters of a name or email.'), findsOneWidget);
       await type(tester, 'leader.search', 'zo');
       await tapInSheet(tester, find.byKey(const ValueKey('leader-option-u-zoya')));
       expect(
-        find.text('Zoya is not a member of this chapter yet; adding them as a leader joins them.'),
+        find.text('Zoya is not a member of this chapter yet. Adding them as a leader also makes them a member.'),
         findsOneWidget,
       );
       await type(tester, 'leader.title', 'Vice President');
@@ -904,11 +904,11 @@ void main() {
       final pickers = FakePickers(day: DateTime(2025, 12, 31));
       await pumpChapter(tester, pickers: pickers);
       await tapOnPage(tester, find.byKey(const ValueKey('lead-u-asha')));
-      expect(find.text('Leave empty for an open term'), findsOneWidget);
+      expect(find.text('Leave empty for an open term.'), findsOneWidget);
       await openSelect(tester, 'lead.termEnds');
       expect(find.text('31 Dec 2025'), findsOneWidget);
       await save(tester);
-      expect(sheetError(tester), 'A term can’t end before it starts.');
+      expect(sheetError(tester), 'A term cannot end before it starts.');
       expect(repo.sent, isEmpty);
 
       pickers.day = DateTime(2026, 12, 31);
@@ -957,7 +957,7 @@ void main() {
       );
       await pumpChapter(tester, repository: repository);
       await reveal(tester, find.byKey(const ValueKey('lead-u-old')));
-      expect(find.text('Term ended'), findsOneWidget);
+      expect(find.text('Term Ended'), findsOneWidget);
       expect(find.text('Term ends 12 Nov 2026'), findsOneWidget);
     });
 
@@ -965,7 +965,7 @@ void main() {
       await pumpChapter(tester);
       await tapOnPage(tester, find.byKey(const ValueKey('record-retire')));
       expect(find.text('Retire “Bengaluru Chapter”?'), findsOneWidget);
-      expect(find.text('It disappears from the public directory.'), findsOneWidget);
+      expect(find.text('It will be removed from the public directory.'), findsOneWidget);
       await confirm(tester);
       expect(repo.sent.last, {'action': 'retire', 'kind': 'chapter', 'id': 'ch-blr'});
       expect(backs, 1);
@@ -1000,20 +1000,20 @@ void main() {
       tester,
     ) async {
       await pumpChapters(tester, initialTab: 'applications');
-      expect(find.text('To review'), findsOneWidget);
-      expect(find.text('New chapter: Hyderabad Chapter'), findsOneWidget);
-      expect(find.text('Start a new chapter'), findsOneWidget);
+      expect(find.text('To Review'), findsOneWidget);
+      expect(find.text('New Chapter: Hyderabad Chapter'), findsOneWidget);
+      expect(find.text('Start a New Chapter'), findsOneWidget);
       expect(find.text('Kiran Reddy · kiran@estate.in'), findsOneWidget);
       expect(find.text('Hyderabad, India · sent 2 Nov 2026'), findsOneWidget);
-      expect(find.text('Why, and what the chapter would do'), findsOneWidget);
+      expect(find.text('Why, and What the Chapter Would Do'), findsOneWidget);
       expect(find.text('Experience'), findsOneWidget);
       expect(find.text('Lead Mumbai Chapter'), findsNothing, reason: 'declined already');
 
       await tapOnPage(tester, find.byKey(const ValueKey('request-decline-app-1')));
-      expect(find.text('The member reads this reason in their notifications and on their application.'), findsOneWidget);
-      expect(find.text('Reason (required)'), findsOneWidget);
+      expect(find.text('The member will see this reason in their notifications and on their application.'), findsOneWidget);
+      expect(find.text('Reason (Required)'), findsOneWidget);
       await save(tester);
-      expect(sheetError(tester), 'Say why it isn’t approved. The member reads this.');
+      expect(sheetError(tester), 'Give the reason it is not approved. The member will see it.');
       expect(repo.sent, isEmpty);
       await type(tester, 'decide.reason', 'Hyderabad is covered by the Telangana chapter.');
       await save(tester);
@@ -1024,11 +1024,11 @@ void main() {
         'decision': 'DECLINED',
         'reason': 'Hyderabad is covered by the Telangana chapter.',
       });
-      expect(find.text('No chapter applications here'), findsOneWidget);
+      expect(find.text('No Chapter Applications'), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('request-filter-DECLINED')));
       await settle(tester);
-      expect(find.text('New chapter: Hyderabad Chapter'), findsOneWidget);
+      expect(find.text('New Chapter: Hyderabad Chapter'), findsOneWidget);
       expect(find.text('Lead Mumbai Chapter'), findsOneWidget);
       expect(find.text('The chapter already has a lead in place.'), findsOneWidget);
       expect(find.text('Declined 20 Oct 2026'), findsOneWidget);
@@ -1038,10 +1038,10 @@ void main() {
     testWidgets('approving sets the chapter up; Find It shows it in the Chapters tab', (tester) async {
       await pumpChapters(tester, initialTab: 'applications');
       await tapOnPage(tester, find.byKey(const ValueKey('request-approve-app-1')));
-      expect(find.text('Note to the Member (optional)'), findsOneWidget);
+      expect(find.text('Note to the Member (Optional)'), findsOneWidget);
       expect(
         find.text(
-          'Approving makes the member lead from today. A new chapter is created unpublished: finish its page in '
+          'Approving makes the member lead from today. A new chapter is created unpublished. Finish its page in '
           'the Chapters tab, then publish it.',
         ),
         findsOneWidget,
@@ -1075,9 +1075,9 @@ void main() {
     testWidgets('a notification\'s application opens on its tab, marked', (tester) async {
       await pumpChapters(tester, focusApplicationId: 'app-1');
       expect(find.byKey(const ValueKey('applications-tab')), findsOneWidget);
-      expect(find.text('New chapter: Hyderabad Chapter'), findsOneWidget);
+      expect(find.text('New Chapter: Hyderabad Chapter'), findsOneWidget);
       final tinted = find.ancestor(
-        of: find.text('New chapter: Hyderabad Chapter'),
+        of: find.text('New Chapter: Hyderabad Chapter'),
         matching: find.byWidgetPredicate((w) => w is ColoredBox && w.color == WsColors.tint),
       );
       expect(tinted, findsOneWidget);
@@ -1231,7 +1231,7 @@ void main() {
       expect(find.byKey(const ValueKey('proposals-tab')), findsOneWidget);
       expect(find.text('Data Centre Operations Council'), findsOneWidget);
       expect(find.text('Omar Sheikh · omar@gridline.in'), findsOneWidget);
-      for (final label in ['Focus', 'Objectives', 'Why ICR needs it']) {
+      for (final label in ['Focus', 'Objectives', 'Why ICR Needs It']) {
         expect(find.text(label), findsOneWidget);
       }
       expect(find.text('Colocation'), findsOneWidget);
@@ -1239,7 +1239,7 @@ void main() {
       await tapOnPage(tester, find.byKey(const ValueKey('request-approve-prop-1')));
       expect(
         find.text(
-          'Approving creates the council unpublished with the member as lead: finish its page in the Councils '
+          'Approving creates the council unpublished with the member as lead. Finish its page in the Councils '
           'tab, then publish it.',
         ),
         findsOneWidget,
@@ -1254,7 +1254,7 @@ void main() {
         'reason': 'Welcome aboard.',
       });
       expect(find.text('Proposal approved.'), findsOneWidget);
-      expect(find.text('No council proposals here'), findsOneWidget);
+      expect(find.text('No Council Proposals'), findsOneWidget);
     });
   });
 }

@@ -15,7 +15,7 @@ ChangeNotifierProvider<VolunteerController>(
     onBack: () => Navigator.of(ctx).pop(),
     onBell: () => ...,            // optional; the website's /notifications page when null
     onBecomeMentor: () => ...,    // optional; the button is left out when null (the mentor application)
-    onOpenChapters: () => ...,    // optional; the button is left out when null (Regional Chapters)
+    onOpenChapters: () => ...,    // optional; the button is left out when null (Chapters)
     intent: VolunteerIntent.chapter('ICR Bengaluru Chapter'),  // optional: opens the form at once
   ),
 )

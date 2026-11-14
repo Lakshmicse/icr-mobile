@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/api/api_client.dart';
 
@@ -52,6 +53,9 @@ class UnreadCounts extends ChangeNotifier with WidgetsBindingObserver {
 
   final UnreadSource source;
   final Duration interval;
+
+  /// The signed-in app's counts, for a bell on a route pushed beside the provider (set by `InboxHost`).
+  static UnreadCounts? current;
 
   int _notifications = 0;
   int _messages = 0;
@@ -144,5 +148,23 @@ class UnreadCounts extends ChangeNotifier with WidgetsBindingObserver {
     _disposed = true;
     stop();
     super.dispose();
+  }
+}
+
+/// The number a bell shows. A screen reads its own count once, when it loads, so that number goes stale the moment
+/// the person reads their notifications and the red dot stayed with nothing unread (owner, 13 Nov 2026). Where the
+/// app-wide [UnreadCounts] exists the bell follows it instead, and moves when it does; [fallback] (the screen's own
+/// count) is only for a screen drawn without one, in a test or the demo.
+class LiveUnread extends StatelessWidget {
+  const LiveUnread({super.key, required this.fallback, required this.builder});
+
+  final int fallback;
+  final Widget Function(BuildContext context, int unread) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    final counts = Provider.of<UnreadCounts?>(context, listen: false) ?? UnreadCounts.current;
+    if (counts == null) return builder(context, fallback);
+    return ListenableBuilder(listenable: counts, builder: (context, _) => builder(context, counts.notifications));
   }
 }

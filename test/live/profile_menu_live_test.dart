@@ -220,7 +220,7 @@ void main() {
       expect(find.text(grouped), findsOneWidget, reason: "the API's own sum, grouped");
       expect(find.text('Post Impressions'), findsOneWidget);
       expect(find.text('View Full Profile'), findsNothing, reason: 'the photo and the name open the profile');
-      expect(find.text('Regional Chapters'), findsOneWidget);
+      expect(find.text('Chapters'), findsOneWidget);
       expect(find.text('Bengaluru, Pune, New Jersey'), findsOneWidget);
       expect(find.text('BLR'), findsOneWidget);
       expect(find.text('Working Councils'), findsOneWidget);

@@ -85,6 +85,45 @@ void main() {
     expect(find.text('Note saved.'), findsOneWidget);
   });
 
+  testWidgets('Save Note shows once the note is typed in, saves it with the keyboard still open, then goes', (
+    tester,
+  ) async {
+    // Owner, 14 Nov 2026: "no submit button visible while responding to enquiries". The field is several lines,
+    // so the keyboard's action key is a new line; the note needs a button of its own.
+    await pump(tester);
+    expect(find.byKey(const ValueKey('note-save-lead-1')), findsNothing, reason: 'nothing typed, nothing to save');
+    expect(
+      find.byKey(const ValueKey('note-help-lead-1')),
+      findsOneWidget,
+      reason: 'it says the note is private and how to reply',
+    );
+    expect(find.text('Only your team sees this note. To reply, email or call the enquirer.'), findsWidgets);
+
+    await tester.tap(find.byKey(const ValueKey('note-lead-1')));
+    await tester.enterText(find.byKey(const ValueKey('note-lead-1')), 'Please share a time to call.');
+    await tester.pump();
+    expect(find.byKey(const ValueKey('note-save-lead-1')), findsOneWidget);
+    expect(find.text('Save Note'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('note-save-lead-1')));
+    await tester.pumpAndSettle();
+    expect(repo.sent, [
+      {'id': 'lead-1', 'note': 'Please share a time to call.'},
+    ], reason: 'sent once, not again when the field lost focus');
+    expect(find.text('Note saved.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('note-save-lead-1')), findsNothing, reason: 'saved: nothing left to save');
+  });
+
+  testWidgets('an enquiry with open details offers Reply by Email and Call; a masked one offers neither', (
+    tester,
+  ) async {
+    await pump(tester);
+    expect(find.byKey(const ValueKey('reply-email-lead-1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('reply-call-lead-1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('reply-email-lead-3')), findsNothing);
+    expect(find.byKey(const ValueKey('reply-call-lead-3')), findsNothing);
+  });
+
   testWidgets('the filter chips ask the API for one status; none of that status says so', (tester) async {
     await pump(tester);
     await tester.tap(find.byKey(const ValueKey('filter-CONVERTED')));

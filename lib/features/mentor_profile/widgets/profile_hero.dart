@@ -4,6 +4,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/util/links.dart';
+import '../../account/widgets/account_kit.dart' show CoverBand;
 import '../mentor_profile_format.dart';
 import '../mentor_profile_models.dart';
 import '../mentor_profile_styles.dart';
@@ -62,7 +63,13 @@ class ProfileHero extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  MentorPicture(picture: p.cover, alignment: Alignment.bottomCenter, fallback: const NavyFallback()),
+                  // The mentor's own picture, else the ready-made cover they chose (drawn as their profile draws
+                  // it), else the navy band.
+                  MentorPicture(
+                    picture: p.cover,
+                    alignment: Alignment.bottomCenter,
+                    fallback: p.coverPreset == null ? const NavyFallback() : CoverBand(cover: p.coverPreset),
+                  ),
                   if (p.verified) Positioned(right: 37.5, top: 5.4, child: _VerifiedPill(firstName: p.firstName)),
                 ],
               ),

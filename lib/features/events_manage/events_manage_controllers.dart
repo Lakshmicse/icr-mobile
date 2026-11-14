@@ -365,7 +365,7 @@ class ManageEventController extends _Safe {
       if (found == null) {
         gone = event == null;
         // A row handed in by the list stays on screen if the lookup cannot find it again.
-        if (gone) error = 'Event not found';
+        if (gone) error = 'Event not found.';
       } else {
         event = found;
         gone = false;

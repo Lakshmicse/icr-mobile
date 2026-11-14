@@ -71,7 +71,7 @@ class _AboutFields extends StatelessWidget {
           ),
         if (hasExtra)
           const ManageNote(
-            'This about also has text outside these fields (added earlier). It is kept as it is and still shows on '
+            'This About section also has text outside these fields (added earlier). It is kept as it is and still shows on '
             'the public page.',
           ),
       ],
@@ -235,8 +235,8 @@ class _ChapterSheetState extends State<ChapterSheet> {
         ChoiceField(
           label: 'Chapter Type',
           options: const {
-            ChapterScope.country: 'Country-wise chapter',
-            ChapterScope.regional: 'Regional chapter (a city)',
+            ChapterScope.country: 'Country Chapter',
+            ChapterScope.regional: 'Regional Chapter (City)',
           },
           value: _d.scope,
           onChanged: (scope) => _touch(() {
@@ -265,7 +265,7 @@ class _ChapterSheetState extends State<ChapterSheet> {
             required: true,
             hint: 'Search a city anywhere',
             value: _d.city.isEmpty ? null : [_d.city, if (place.isNotEmpty) place].join(' · '),
-            helper: 'Pick the city from the list; its state and country are filled in.',
+            helper: 'Select the city from the list. Its state and country are filled in.',
             error: _problems['city'],
             onTap: _pickCity,
           ),
@@ -298,7 +298,7 @@ class _ChapterSheetState extends State<ChapterSheet> {
         ),
         PictureField(
           label: 'Banner',
-          helper: 'PNG, JPG or WEBP, up to 5 MB. Drawn wide across the top of the chapter page.',
+          helper: 'PNG, JPG or WEBP, up to 5 MB. Shown across the top of the chapter page.',
           value: _d.coverUrl,
           uploading: _uploading == 'cover',
           error: _uploadErrors['cover'],
@@ -307,7 +307,7 @@ class _ChapterSheetState extends State<ChapterSheet> {
         ),
         PictureField(
           label: 'Chapter Picture',
-          helper: 'PNG, JPG or WEBP, up to 5 MB. Shown round; the city’s initial is drawn when there is none.',
+          helper: 'PNG, JPG or WEBP, up to 5 MB. Shown as a circle. The city’s initial is shown when there is none.',
           round: true,
           value: _d.logoUrl,
           uploading: _uploading == 'logo',
@@ -338,7 +338,7 @@ class _ChapterSheetState extends State<ChapterSheet> {
         ),
         SwitchField(
           switchKey: const Key('chapter.published'),
-          label: _d.published ? 'Published (listed publicly)' : 'Unpublished (hidden)',
+          label: _d.published ? 'Published (Listed Publicly)' : 'Unpublished (Hidden)',
           value: _d.published,
           onChanged: (v) => _touch(() => _d.published = v),
         ),
@@ -507,7 +507,7 @@ class _CouncilSheetState extends State<CouncilSheet> {
           controller: _slug,
           maxLength: ManageLimits.slug,
           textCapitalization: TextCapitalization.none,
-          helper: 'Lower-case words joined by hyphens: the council’s address on ICR.',
+          helper: 'Lower-case words joined by hyphens. This is the council’s address on ICR.',
           error: _problems['slug'],
           onChanged: (_) => _touch(() => _slugFollowsName = false),
         ),
@@ -521,7 +521,7 @@ class _CouncilSheetState extends State<CouncilSheet> {
           label: 'Focus Line',
           controller: _focus,
           maxLength: ManageLimits.councilFocus,
-          helper: 'Optional: defaults to the segments.',
+          helper: 'Optional. Defaults to the segments.',
           error: _problems['focus'],
           onChanged: (_) => _touch(),
         ),
@@ -545,7 +545,7 @@ class _CouncilSheetState extends State<CouncilSheet> {
         ),
         PictureField(
           label: 'Cover',
-          helper: 'PNG, JPG or WEBP, up to 5 MB. Drawn behind the council’s card and page heading.',
+          helper: 'PNG, JPG or WEBP, up to 5 MB. Shown behind the council’s card and page heading.',
           value: _d.coverUrl,
           uploading: _uploading == 'cover',
           error: _uploadErrors['cover'],
@@ -575,7 +575,7 @@ class _CouncilSheetState extends State<CouncilSheet> {
         ),
         SwitchField(
           switchKey: const Key('council.published'),
-          label: _d.published ? 'Published (listed publicly)' : 'Unpublished (hidden)',
+          label: _d.published ? 'Published (Listed Publicly)' : 'Unpublished (Hidden)',
           value: _d.published,
           onChanged: (v) => _touch(() => _d.published = v),
         ),

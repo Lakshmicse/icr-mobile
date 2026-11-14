@@ -95,7 +95,7 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
     final ok = await confirmAction(
       context,
       title: 'Remove This Event?',
-      message: 'Cancel & remove "${e.title}" from the public calendar?',
+      message: 'Cancel and remove "${e.title}" from the public calendar?',
       confirm: 'Remove',
     );
     if (!ok || !mounted) return;
@@ -131,7 +131,7 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
     final ok = await confirmAction(
       context,
       title: 'Revoke This Invite?',
-      message: '${invite.name} is taken off the guest list.',
+      message: '${invite.name} will be removed from the guest list.',
       confirm: 'Revoke',
     );
     if (!ok) return;
@@ -142,7 +142,7 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
 
   Future<void> _openProposal(EventProposal p) async {
     final decided = await showProposalSheet(context, controller: _c, proposal: p);
-    if (decided && mounted) showMessage(context, 'Decision saved. The speaker has been told.');
+    if (decided && mounted) showMessage(context, 'Decision saved. The speaker has been notified.');
   }
 
   Future<void> _openPackage([SponsorPackage? p]) async {
@@ -152,7 +152,7 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
 
   Future<void> _openSponsorship(SponsorshipRequest r) async {
     final decided = await showSponsorshipSheet(context, controller: _c, request: r);
-    if (decided && mounted) showMessage(context, 'Decision saved. The company has been told.');
+    if (decided && mounted) showMessage(context, 'Decision saved. The company has been notified.');
   }
 
   Future<void> _refund(TicketRow t) async {
@@ -197,7 +197,7 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
       return ListView(
         children: [
           _c.gone
-              ? const EmEmpty(key: ValueKey('event.gone'), title: 'Event not found', body: 'It may have been removed.')
+              ? const EmEmpty(key: ValueKey('event.gone'), title: 'Event Not Found', body: 'It may have been removed.')
               : EmError(key: const ValueKey('event.error'), message: _c.error ?? '', onRetry: _c.refresh),
         ],
       );
@@ -299,14 +299,14 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
             EmDetail(label: 'Time', value: timeRangeLabel(e)),
             EmDetail(label: 'Location', value: e.location ?? '—'),
             EmDetail(
-              label: 'Hosted by',
+              label: 'Hosted By',
               value: e.hostCompany != null ? '${e.hostCompany!.name} (partner)' : (e.host ?? 'ICR'),
             ),
             EmDetail(label: 'Attendance', value: attendanceLine(e)),
             EmDetail(label: 'Price', value: e.priced ? '${eventPriceLabel(e)} (GST added at checkout)' : 'Free'),
-            EmDetail(label: 'Who can join', value: e.inviteOnly ? 'Invited members only' : 'Any member'),
+            EmDetail(label: 'Who Can Join', value: e.inviteOnly ? 'Invited members only' : 'Any member'),
             EmDetail(
-              label: 'Call for speakers',
+              label: 'Call for Speakers',
               value: e.callForSpeakersUntil != null
                   ? 'Open until ${dayLabel(e.callForSpeakersUntil!)}'
                   : 'Not taking talks',
@@ -314,7 +314,7 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
             EmDetail(label: 'Visibility', value: e.published ? 'Listed publicly' : 'Hidden from the calendar'),
             if (e.slug != null)
               EmDetail(
-                label: 'Public page',
+                label: 'Public Page',
                 child: opens
                     ? InkWell(
                         key: const ValueKey('event.publicPage'),
@@ -411,8 +411,8 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
       if (!e.inviteOnly)
         const EmNote(
           text:
-              'This event is open to everyone. Invites still work as a guest list and a nudge; switch on “Invite '
-              'only” in the event to restrict RSVPs to it.',
+              'This event is open to everyone. Invites still work as a guest list and a reminder. Switch on “Invite '
+              'Only” in the event to restrict RSVPs to the guest list.',
         ),
       if (_c.inviteNotice != null)
         EmNote(
@@ -443,10 +443,10 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
           ],
         ),
       ),
-      EmHeading(title: '${p.invites.length} invited'),
+      EmHeading(title: '${p.invites.length} Invited'),
       const EmHairline(),
       if (p.invites.isEmpty)
-        const EmEmpty(title: 'Nobody is on the guest list yet', body: 'Invite members by email, or a whole tier.')
+        const EmEmpty(title: 'No One on the Guest List Yet', body: 'Invite members by email, or invite a whole tier.')
       else
         for (final i in p.invites) ...[
           Padding(
@@ -495,7 +495,7 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
       if (p.proposals.isEmpty)
         const EmEmpty(
           key: ValueKey('proposals.empty'),
-          title: 'No talk proposals yet',
+          title: 'No Talk Proposals Yet',
           body: 'Set a call-for-speakers date on the event to open the call.',
         )
       else
@@ -559,7 +559,7 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
       ),
       const EmHairline(),
       if (p.packages.isEmpty)
-        const EmEmpty(title: 'No packages yet', body: 'Add one for companies to ask for.')
+        const EmEmpty(title: 'No Packages Yet', body: 'Add one for companies to ask for.')
       else
         for (final k in p.packages) ...[
           InkWell(
@@ -601,7 +601,7 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
       const EmHeading(title: 'Requests'),
       const EmHairline(),
       if (p.sponsorships.isEmpty)
-        const EmEmpty(key: ValueKey('sponsorships.empty'), title: 'No sponsorship requests yet')
+        const EmEmpty(key: ValueKey('sponsorships.empty'), title: 'No Sponsorship Requests Yet')
       else
         for (final r in p.sponsorships) ...[
           InkWell(
@@ -667,7 +667,7 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
       else if (_c.tickets.isEmpty)
         EmEmpty(
           key: const ValueKey('tickets.empty'),
-          title: 'No tickets sold yet',
+          title: 'No Tickets Sold Yet',
           body: e.priced ? null : 'This event is free, so it sells no tickets.',
         )
       else ...[
@@ -755,7 +755,7 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
             Text(attendanceLine(e), key: const ValueKey('attendance.line'), style: EmText.rowTitle),
             const SizedBox(height: 6),
             Text(
-              'Record who actually turned up. An RSVP is an intention; only attendance earns CPD hours, credited '
+              'Record who attended. An RSVP is only an intention. Attendance earns CPD hours, credited '
               'from the event’s length.',
               style: EmText.secondary,
             ),
@@ -764,9 +764,9 @@ class _ManageEventScreenState extends State<ManageEventScreen> {
               !started
                   ? 'Attendance can be marked once the event has started.'
                   : !ready
-                  ? 'Reading the guest list and the tickets…'
+                  ? 'Loading the guest list and the tickets…'
                   : people.isEmpty
-                  ? 'Nobody to mark yet: the guest list and the paid tickets are who can be marked here.'
+                  ? 'No one to mark yet. People on the guest list and paid ticket holders can be marked here.'
                   : 'The guest list and the paid ticket holders can be marked here (${people.length}).',
               key: const ValueKey('attendance.hint'),
               style: EmText.meta,

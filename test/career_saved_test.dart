@@ -122,7 +122,7 @@ void main() {
       expect(find.byKey(const ValueKey('saved-error')), findsOneWidget);
       expect(find.text('The jobs are down.'), findsOneWidget);
       repo.savedError = null;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byType(JobRow), findsNWidgets(2));
     });
@@ -203,7 +203,7 @@ void main() {
       expect(find.byKey(const ValueKey('hidden-error')), findsOneWidget);
       expect(find.text('Hidden jobs are down.'), findsOneWidget);
       repo.hiddenError = null;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byType(HiddenJobRow), findsOneWidget);
     });

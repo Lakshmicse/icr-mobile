@@ -22,6 +22,7 @@ import 'career_repository.dart';
 import 'career_styles.dart';
 import 'company_insights_controller.dart';
 import 'insight_forms.dart';
+import '../../core/util/screen_trail.dart';
 
 /// Opens a company's reviews, salaries, interviews, people and jobs over
 /// whatever is showing: the job sheet's "Reviews, salaries and interviews",
@@ -155,7 +156,10 @@ class _CompanyInsightsScreenState extends State<CompanyInsightsScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      SitePlace(path: widget.company.id.isEmpty ? null : '/companies/${widget.company.id}', child: _buildPage(context));
+
+  Widget _buildPage(BuildContext context) {
     final c = _controller;
     return Scaffold(
       backgroundColor: Colors.white,
@@ -372,7 +376,7 @@ class _Paged<T> extends StatelessWidget {
         icon: LucideIcons.cloudOff,
         title: 'Unable to Load This Section',
         body: list.error!,
-        action: 'Try again',
+        action: 'Try Again',
         onAction: onRetry,
       );
     }

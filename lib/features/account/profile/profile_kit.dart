@@ -15,8 +15,8 @@ const double _coverHeight = 108;
 const double _avatarSize = 84;
 
 /// The head of a profile: a cover, the photo across its edge, then the name
-/// with the tick of a confirmed address, the headline, where they are, and the
-/// buttons the page puts under it.
+/// with the tick of a confirmed address, the headline, the company and school,
+/// where they are, and the buttons the page puts under it.
 ///
 /// The edit callbacks draw their own controls (a camera on the cover, a camera
 /// badge on a photo-less avatar, a pencil beside the name); a member's page
@@ -31,12 +31,14 @@ class ProfileHeader extends StatelessWidget {
     this.verified = false,
     this.roleLabel,
     this.headline,
+    this.affiliation,
     this.place,
     this.facts = const [],
     this.onEditCover,
     this.onEditPhoto,
     this.onEditIntro,
     this.onAvatarTap,
+    this.onContactInfo,
     this.chips = const [],
     this.actions = const [],
   });
@@ -51,7 +53,11 @@ class ProfileHeader extends StatelessWidget {
   final String? roleLabel;
   final String? headline;
 
-  /// "Bengaluru, Karnataka · TechCorp".
+  /// Where they work and studied, under the headline as LinkedIn has it:
+  /// "TechCorp · RV College of Engineering" (`introLine`).
+  final String? affiliation;
+
+  /// Where they are: "Bengaluru, Karnataka".
   final String? place;
 
   /// "12 years in the profession", "Joined Oct 2026".
@@ -62,6 +68,9 @@ class ProfileHeader extends StatelessWidget {
 
   /// The photo opens bigger on a member's page.
   final VoidCallback? onAvatarTap;
+
+  /// "Contact Information" after where they are, as LinkedIn and the website have it: opens how to reach them.
+  final VoidCallback? onContactInfo;
 
   /// Extra chips (mentor, ready for my next role) under the facts.
   final List<Widget> chips;
@@ -185,16 +194,35 @@ class ProfileHeader extends StatelessWidget {
                   ],
                 ),
                 if (headline != null) ...[const SizedBox(height: 4), Text(headline!, style: AccountText.headline)],
-                if (place != null) ...[
+                if (affiliation != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    affiliation!,
+                    key: const Key('profile.affiliation'),
+                    style: AccountText.body.copyWith(color: AppColors.onSurface),
+                  ),
+                ],
+                if (place != null || onContactInfo != null) ...[
                   const SizedBox(height: 6),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(top: 2, right: 3),
-                        child: Icon(Symbols.location_on, fill: 1, size: 14, color: AppColors.slate400),
+                      if (place != null)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 2, right: 3),
+                          child: Icon(Symbols.location_on, fill: 1, size: 14, color: AppColors.slate400),
+                        ),
+                      Expanded(
+                        child: Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            if (place != null) Text(place!, style: AccountText.meta),
+                            if (place != null && onContactInfo != null)
+                              Text(' · ', style: AccountText.meta, semanticsLabel: ''),
+                            if (onContactInfo != null) _ContactInfoLink(onTap: onContactInfo!),
+                          ],
+                        ),
                       ),
-                      Expanded(child: Text(place!, style: AccountText.meta)),
                     ],
                   ),
                 ],
@@ -208,6 +236,32 @@ class ProfileHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The blue, bold "Contact Information" beside the place, the website's "Contact Info" link.
+class _ContactInfoLink extends StatelessWidget {
+  const _ContactInfoLink({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      child: InkWell(
+        key: const Key('profile.contactInfo'),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(4),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Text(
+            'Contact Information',
+            style: AccountText.meta.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
+          ),
+        ),
       ),
     );
   }

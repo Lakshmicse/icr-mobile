@@ -59,7 +59,7 @@ Every read fails on its own: the drawer keeps what the others returned, and a li
 | header photo (Home) | opens this menu | W (feed_screen_test) "inside the shell the header photo opens the real profile menu over the feed; Back closes it" |
 | the photo, name, headline and place (one block; there is no "View Full Profile" button since 27 Oct 2026) | the member's own profile: the app's `/profile` screen, else the website's `/members/<slug>`; the menu closes behind it | W "there is no View Full Profile button; the photo and the name open…", "the line … under the name opens the profile too", "the photo opens the profile too", "the two counts … are plain" |
 | YOUR COMPANIES (up to 3 of `GET /me/companies`, the company acted for first with an Active pill) | tap the active one: its page in the app (`ProfileDrawer.onOpenCompany`, app.dart → `openCompanyInsightsById`); tap another: it becomes the one acted for (`POST /me/companies/switch`, fresh session adopted through `CompaniesController`), the menu closes and "Now working as X." shows; "See all" (only with more than 3) opens My companies; no company: the whole block is left out, with no "Create a company" row (owner's call, 28 Oct 2026; a company is created from the account screens); a failed read, a staff account, or no account repository draws nothing; the last list shows at once on reopening (`ProfileDrawerController.cachedCompanies`) while it is read again | W group "My companies" |
-| Regional Chapters | `/chapters` on the website (the app has no chapters screen) | W the same test |
+| Chapters | `/chapters` on the website (the app has no chapters screen) | W the same test |
 | Working Councils | the app's own Councils screen; with no screen it falls back to `/councils` | W "a row the app has a screen for opens it, and the others still open the website"; W the rows test |
 | Get Involved & Volunteer | `/get-involved` on the website | W rows test |
 | Saved Jobs ("Saved Items & Jobs" until 5 Nov 2026, the owner's rename) | `/career/saved` | W rows test |
@@ -102,7 +102,7 @@ The design's four association doors in two rows (each door its whole box), then 
 
 | Door | Opens |
 |---|---|
-| Regional Chapters | `/chapters` on the website |
+| Chapters | `/chapters` on the website |
 | Working Councils | the app's Councils screen (`/councils` in `doors`) |
 | Digital Library | `/documents` on the website |
 | Events | the app's Events board (`/events` in `doors`) |
@@ -147,7 +147,7 @@ Band check against `docs/designs/discover-sheet.png`: **6 of 6 within 1 dp** (me
 | | Company | My Companies (`/account/companies`), first |
 | + a mentor (approved or paused) | Mentorship adds, first | Mentor Dashboard (`/mentorship/mentor`) |
 | + acting for a company, hiring role (company admin, recruiter, office admin) | Jobs adds, first | Manage Jobs, Manage Hiring Team (`/manage/team`), Source Candidates (`/talent`), Projects (`/manage/projects`) |
-| + acting for a company, a role that runs it | Company adds | Dashboard (`/company`), Manage Team; recruiter/office admin also My Locations; buyer (admin, VENDOR, BUYER): View Enquiries & RFQs (`/manage/requirements`); seller (admin, VENDOR): Bid for Enquiries & RFQs (`/manage/bids`) |
+| + acting for a company, a role that runs it | Company adds | Dashboard (`/company`), Manage Team; recruiter/office admin also My Locations (View Enquiries & RFQs and Bid for Enquiries & RFQs left this row on 14 Nov 2026) |
 | + a seller | Marketplace adds | My Products (`/manage/products`), My Services (`/manage/services`) — moved here from Company |
 | + a partner institute's staff (`SessionUser.learningRoles` non-empty, or the admin of a company ICR approved as a partner — `UserDto.learningPartner`) | Learning Partner | Manage Courses, Manage Team, Manage Batches, Enrolment, Enquiries |
 | every member | Account | Membership, My membership, What my plans include, Refer a friend, Credits & redemptions, My companies |
@@ -197,3 +197,42 @@ Also refined here, for want of a screen document of their own:
 
 Saathi's greeting, its input hint, the topic answers and the suggestion chips are the website's catalogue and are
 untouched.
+
+
+## 14 Nov 2026: the banner shows wherever the person appears
+
+The owner, on the profile's banner: "banner has the upload options but its not in the app." The banner a person
+sets on their profile (a ready-made cover such as "Skyline at dusk", or their own uploaded picture) showed on the
+profile page only. The side menu read the stored value as a web address, so a ready-made cover ("skyline") became
+`https://…/skyline`, failed, and the menu fell back to its own gradient; the mentor profile's hero dropped a
+ready-made cover for its navy band; the mentor card drew the cover's colours without its picture.
+
+All three now draw it through the profile's own `CoverBand` (`account/widgets/account_kit.dart`), with
+`isProfileCover` deciding what counts as a cover (a `PROFILE_COVERS` id or an own `/uploads/...` picture, never an
+outside address): `ProfileDrawerData.cover`, `MentorProfile.coverPreset` beside `cover`, and the mentor card's band.
+Uploading is unchanged: the camera on the profile's banner opens the cover sheet (ready-made covers and "Upload Your
+Own"). Tests: `profile_drawer_test.dart` ("the banner is the one the person set…"), `mentor_profile_test.dart`.
+
+## 14 Nov 2026: My Products and My Services under Marketplace for staff too
+
+The owner, on a Super Admin's menu (Company: My Company, My Products, My Services, Team): "My Products and My
+Services should be under Marketplace." A member's menu already had them there since 12 Nov; the Super Admin's
+Company row still carried them. Now the Super Admin's Company row is My Company, My Locations, My Certifications, Team
+and the operations consoles (only the native ones show), and Marketplace opens My Requirements, My Products, My
+Services, then the boards. Both menus read the one list (`_myCatalogue` in `role_workspaces.dart`). Test:
+`role_workspaces_test.dart` ("ICR staff get their consoles…").
+
+## 14 Nov 2026: Company is My Companies, Dashboard and Manage Team
+
+The owner, on a company admin's menu (Praveen Kumar at RideBob, an older build that still showed "Add members, View
+enquiries & RFQs, Bid for enquiries & RFQs, My companies"), with the rows marked: **Company** = My Companies,
+Dashboard, Manage Team; *remove* View Enquiries & RFQs and Bid for Enquiries & RFQs. **Marketplace** = My
+Requirements, My Products, My Services, Enquiries and RFQ — what the menu already held for a seller since 12 Nov
+(the phone ran a build from before then, with "Post a requirement" and "Search suppliers").
+
+So the Company row no longer lists `/manage/requirements` or `/manage/bids` for anyone: a buyer's requirements are
+Marketplace's My Requirements, and everything posted is Marketplace's Enquiries and RFQ (`/rfq`). A seller still
+reaches Find Work & Bid (`/manage/bids`) from the Marketplace tab, Saathi's "Enquiries & RFQs" chip and its
+notifications. A recruiter or office admin keeps My Locations after Manage Team. The old (non-workspace) drawer's
+"Enquiries and RFQ's" link is untouched. Test: `role_workspaces_test.dart` (the company admin, buyer, seller and
+real-screens cases).

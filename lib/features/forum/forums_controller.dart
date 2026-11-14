@@ -11,7 +11,18 @@ import 'forum_repository.dart';
 /// discussions that came back a page at a time, the topics along the top and the reader's standing. Every action on
 /// a card shows at once and is put back when the API refuses; each returns the refusal's sentence, or null.
 class ForumsController extends ChangeNotifier {
-  ForumsController(this.repository, {ForumView initialView = ForumView.all}) : _query = ForumQuery(view: initialView);
+  ForumsController(this.repository, {ForumView initialView = ForumView.all, this.ownTopics = false})
+    : _query = ForumQuery(view: initialView);
+
+  /// My Forum: [topics] is only the topics the reader has posted in, each with the number of their own posts there,
+  /// never the whole forum's list and counts (owner, 13 Nov 2026).
+  final bool ownTopics;
+
+  /// The reader's own discussions per topic key; null until read.
+  Map<String, int>? _ownCounts;
+
+  /// How many of the reader's discussions [_readOwnTopics] reads to count them (pages of the list).
+  static const _ownPages = 10;
 
   final ForumRepository repository;
 
@@ -47,8 +58,20 @@ class ForumsController extends ChangeNotifier {
 
   /// How many discussions match, when the forum counted them.
   int? get total => _total;
-  List<ForumTopic> get topics => _topics;
-  bool get topicsRead => _topicsRead;
+  List<ForumTopic> get topics {
+    if (!ownTopics) return _topics;
+    final counts = _ownCounts;
+    if (counts == null || counts.isEmpty) return const [];
+    // A discussion names its topic by key and the forum's topic list by slug: the taxonomy joins the two.
+    final keyOf = {for (final node in _taxonomy) node.slug: node.key};
+    return [
+      for (final t in _topics)
+        if ((counts[keyOf[t.slug]] ?? 0) > 0)
+          ForumTopic(id: t.id, name: t.name, slug: t.slug, threadCount: counts[keyOf[t.slug]]!, blurb: t.blurb),
+    ];
+  }
+
+  bool get topicsRead => _topicsRead && (!ownTopics || _ownCounts != null);
   String? get topicsError => _topicsError;
   ForumAccess get access => _access;
 
@@ -80,7 +103,7 @@ class ForumsController extends ChangeNotifier {
   Future<void> start() async {
     if (_started) return;
     _started = true;
-    await Future.wait([refresh(), _readTopics(), _readAccess(), _readUnread()]);
+    await Future.wait([refresh(), _readTopics(), _readOwnTopics(), _readAccess(), _readUnread()]);
   }
 
   Future<void> _readTopics() async {
@@ -93,6 +116,27 @@ class ForumsController extends ChangeNotifier {
       _topicsRead = true;
       notifyListeners();
     }
+  }
+
+  /// Counts the reader's own discussions by topic, whatever the list is narrowed to at the moment.
+  Future<void> _readOwnTopics() async {
+    if (!ownTopics) return;
+    final counts = <String, int>{};
+    try {
+      await readTaxonomy();
+      for (var page = 1; page <= _ownPages; page++) {
+        final read = await repository.threads(const ForumQuery(view: ForumView.mine), page: page);
+        for (final post in read.posts) {
+          final key = post.categoryKey;
+          if (key != null) counts[key] = (counts[key] ?? 0) + 1;
+        }
+        if (!read.hasMore) break;
+      }
+    } catch (_) {
+      // What was counted so far stands; the next refresh counts again.
+    }
+    _ownCounts = counts;
+    notifyListeners();
   }
 
   Future<void> _readAccess() async {
@@ -124,7 +168,7 @@ class ForumsController extends ChangeNotifier {
   }
 
   Future<void> pullToRefresh() async {
-    await Future.wait([refresh(), _readTopics(), _readAccess(), _readUnread()]);
+    await Future.wait([refresh(), _readTopics(), _readOwnTopics(), _readAccess(), _readUnread()]);
   }
 
   Future<void> refresh() async {
@@ -375,6 +419,12 @@ class ForumsController extends ChangeNotifier {
 
   /// A discussion the reader deleted, or let go of on the Saved view, leaves the list.
   void removePost(String id) {
+    final gone = _posts.where((p) => p.id == id).firstOrNull;
+    final key = gone?.categoryKey;
+    final counts = _ownCounts;
+    if (ownTopics && key != null && counts != null && (counts[key] ?? 0) > 0) {
+      _ownCounts = {...counts, key: counts[key]! - 1};
+    }
     _posts = [
       for (final p in _posts)
         if (p.id != id) p,
@@ -389,6 +439,9 @@ class ForumsController extends ChangeNotifier {
     if (_posts.any((p) => p.id == post.id)) return;
     _posts = [post, ..._posts];
     if (_total != null) _total = _total! + 1;
+    final key = post.categoryKey;
+    final counts = _ownCounts;
+    if (ownTopics && key != null && counts != null) _ownCounts = {...counts, key: (counts[key] ?? 0) + 1};
     notifyListeners();
   }
 }

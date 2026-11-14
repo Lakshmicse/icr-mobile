@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'app_screens.dart';
@@ -13,6 +14,7 @@ import 'app_search.dart' show appSearchEnvironment;
 import 'app_workspaces.dart';
 import 'core/util/app_actions.dart';
 import 'core/util/links.dart' show SiteRoutes, openSitePage;
+import 'core/util/screen_trail.dart';
 import 'core/widgets/tablet_frame.dart';
 import 'features/auth/auth_palette.dart';
 import 'features/auth/sign_in_screen.dart';
@@ -82,6 +84,10 @@ class IcrApp extends StatelessWidget {
         title: 'ICR',
         debugShowCheckedModeBanner: false,
         theme: buildAppTheme(),
+        // Android ends an app in the background when another needs the memory; with a saved state the app comes back
+        // on the tab and screen the person left (`AppShell.restorationId`), not on Home. `ScreenTrail` knows the screen.
+        restorationScopeId: 'icr',
+        navigatorObservers: [ScreenTrail.instance],
         // A wide window (a tablet sideways) gets the website's centred page frame around everything, dialogs and
         // sheets included, since the frame sits around the navigator.
         builder: (context, child) => TabletFrame(child: child!),
@@ -240,6 +246,9 @@ class _Home extends StatelessWidget {
           api: context.read<ApiClient>(),
           router: NotificationRouter(openers: _wireShell(shellContext)),
           child: AppShell(
+            // One person acting for one company: a saved tab and screen never come back for another (a company
+            // switch builds the shell again under a new id, as `_SessionGate` keys `_Home`).
+            restorationId: 'shell-${user?.id}-${user?.companyId}',
             drawer: ProfileDrawer(
               screens: screens,
               // The owner's drawer design (6 Nov 2026): Company, Marketplace, Mentorship, Learning, Jobs, each holding the
@@ -347,11 +356,19 @@ class _Splash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The card that follows is light or dark with the phone, so this is too.
-    final palette = AuthPalette.of(context);
-    return Scaffold(
-      backgroundColor: palette.isDark ? palette.page : Colors.white,
-      body: Center(child: Image.asset(palette.logo, width: 180)),
+    // Always the light splash: white, with the ICR logo in its own colours. The app has no dark theme yet (owner,
+    // 13 Nov 2026), so a phone in dark mode no longer gets a dark splash before a light app.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.white,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        key: const ValueKey('splash'),
+        backgroundColor: Colors.white,
+        body: Center(child: Image.asset(AuthPalette.light.logo, width: 180)),
+      ),
     );
   }
 }

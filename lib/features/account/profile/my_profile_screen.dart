@@ -14,14 +14,17 @@ import '../account_rules.dart';
 import '../api_account_repository.dart';
 import '../demo_account_repository.dart';
 import '../phone/phone_sheets.dart';
+import '../settings/contact_sheet.dart';
 import '../settings/settings_screen.dart';
 import '../widgets/account_kit.dart';
 import '../widgets/account_session.dart';
 import '../widgets/photo_picker.dart';
+import 'intro_line.dart';
 import 'profile_controller.dart';
 import 'profile_kit.dart';
 import 'sheets/basic_sheets.dart';
 import 'sheets/career_sheets.dart';
+import 'sheets/contact_info_sheet.dart';
 import 'sheets/credential_sheet.dart';
 
 /// Hands a profile link to the phone's share sheet.
@@ -118,6 +121,8 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               widget.onProfileChanged?.call();
             },
             clock: widget.now == null ? null : () => widget.now!,
+            // Edit Intro's Organisation and Education are kept on the phone (the API has no field for them).
+            introStore: widget.repository == null && !AppConfig.demo ? SecureIntroChoiceStore() : null,
           )
           ..load().then((_) {
             final section = widget.initialSection;
@@ -205,6 +210,26 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     if (me == null) return;
     final changed = await showPhoneSheet(context, repository: _repository, phone: me.phone, verified: me.phoneVerified);
     if (changed) await _c.refresh();
+  }
+
+  void _editContact() {
+    if (_needs(_c.links, 'links')) _afterSave(showContactSheet(context, _c), 'Contact information saved.');
+  }
+
+  /// "Contact Information" in the header: the read-only sheet, then whatever was chosen in it.
+  Future<void> _contactInfo() async {
+    final me = _c.profile.value;
+    if (me == null) return;
+    final choice = await showContactInfoSheet(context, _c);
+    if (choice == null || !mounted) return;
+    switch (choice) {
+      case ContactInfoChoice.edit:
+        _editContact();
+      case ContactInfoChoice.phone:
+        await _editPhone();
+      case ContactInfoChoice.publicProfile:
+        _openPublic(me);
+    }
   }
 
   // --- the completeness checklist ------------------------------------------------------------------------------
@@ -353,8 +378,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   // --- sections ------------------------------------------------------------------------------------------------
 
   Widget _header(MyProfile me) {
-    final current = _c.experience.value?.where((r) => r.isCurrent).firstOrNull;
-    final place = [if (me.hasResume) ?me.location, ?(current?.organisation ?? me.companyName)].join(' · ');
+    final place = me.hasResume ? me.location?.trim() ?? '' : '';
     final years = me.yearsExperience;
     return ProfileHeader(
       name: me.fullName,
@@ -364,11 +388,13 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       verified: emailConfirmed(context),
       roleLabel: roleLabel(me.role),
       headline: me.headline,
+      affiliation: _c.introAffiliation,
       place: place.isEmpty ? null : place,
       facts: [if (years != null) '$years ${years == 1 ? 'year' : 'years'} in the profession'],
       onEditCover: () => showCoverSheet(context, _c, pick: widget.pickPhoto),
       onEditPhoto: () => showPhotoSheet(context, _c, pick: widget.pickPhoto),
       onEditIntro: _editIntro,
+      onContactInfo: _contactInfo,
       actions: [
         PillAction(
           key: const Key('profile.addSection'),

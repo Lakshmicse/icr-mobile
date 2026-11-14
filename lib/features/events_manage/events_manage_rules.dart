@@ -540,12 +540,12 @@ String? refundRefProblem(String ref) {
 }
 
 /// The website's `ApprovalSentNotice` (`common.ApprovalSent`).
-const approvalSentTitle = 'Sent for approval';
+const approvalSentTitle = 'Sent for Approval';
 String approvalSentBody(int amountPaisa) =>
-    '${moneyLabel(amountPaisa)} is more than one person may move alone, so someone else who approves finance actions '
-    'must approve it. Nothing has been recorded yet.';
+    '${moneyLabel(amountPaisa)} is above the limit one person can approve alone. Another finance approver must '
+    'approve it. Nothing has been recorded yet.';
 const approvalReferenceHelp =
-    'Above the approval limit you may leave this empty: the approver adds it once the money is sent.';
+    'Above the approval limit, you may leave this empty. The approver adds it once the money is sent.';
 
 // --- attendance ------------------------------------------------------------------------------------------------------
 

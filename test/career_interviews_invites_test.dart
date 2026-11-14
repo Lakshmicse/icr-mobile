@@ -240,7 +240,7 @@ void main() {
       await pumpInterviews(tester, repo: repo);
       expect(find.byKey(const ValueKey('interviews-error')), findsOneWidget);
       repo.applicationsError = null;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('interview-r2')), findsOneWidget);
     });
@@ -395,7 +395,7 @@ void main() {
       await pumpInvites(tester, repo: broken);
       expect(find.byKey(const ValueKey('invites-error')), findsOneWidget);
       broken.invitesError = null;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('invite-inv-1')), findsOneWidget);
     });

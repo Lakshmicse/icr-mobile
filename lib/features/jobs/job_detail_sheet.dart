@@ -67,6 +67,7 @@ Future<void> showJobDetail(
   )..load();
   await showDetailSheet<void>(
     context,
+    place: '/jobs/${job.id}',
     body: (_) => ChangeNotifierProvider.value(value: controller, child: const JobSheetBody()),
     bottomBar: (_) => ChangeNotifierProvider.value(value: controller, child: const JobSheetBar()),
   );
@@ -85,10 +86,10 @@ class JobSheetBody extends StatelessWidget {
     final intro = blocks.takeWhile((b) => b.kind == BlockKind.paragraph).toList();
     final rest = blocks.skip(intro.length).toList();
     final skills = [...job.skills, ...job.preferredSkills.where((s) => !job.skills.contains(s))];
-    // A match against your own company's job means nothing to the person posting it (the website hides it too).
-    final postsHere = controller.postsHere;
-    final match = postsHere ? null : controller.match;
-    final matchScore = postsHere ? null : job.matchScore;
+    // A match against your own company's job means nothing to its hiring team (the website hides it too).
+    final onTeam = controller.onHiringTeam;
+    final match = onTeam ? null : controller.match;
+    final matchScore = onTeam ? null : job.matchScore;
     final people = controller.people;
     final posted = postedAgo(job.postedAt);
     final count = applicantsOrOpenings(job);
@@ -247,9 +248,9 @@ class JobSheetBody extends StatelessWidget {
             const SizedBox(height: 10),
             const Hairline(color: AppColors.blockRule),
           ],
-          // Someone who posts this company's jobs has no hiring contact to message (the website hides the card, and the
-          // API refuses the message): "Meet the hiring team" is for the people applying.
-          if (job.contact != null && !postsHere)
+          // The company's hiring team has no hiring contact to message as a candidate (the website hides the card, and
+          // the API refuses the message): "Meet the hiring team" is for the people applying.
+          if (job.contact != null && !onTeam)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 19.5, 16, 0),
               child: _HiringTeam(
@@ -361,14 +362,16 @@ class JobSheetBar extends StatelessWidget {
           onPressed: () => JobSheetBody._run(context, controller.toggleSave()),
         ),
         Expanded(
-          // Someone who posts this company's jobs manages them and never applies to one: the website says so in
-          // place of its Apply button, and the API refuses the application anyway.
-          child: controller.postsHere
+          // The company's hiring team never applies to one of its jobs: the website says why in place of its Apply
+          // button (a poster manages the job, a hiring manager sits on its panels), and the API refuses anyway.
+          child: controller.onHiringTeam
               ? Padding(
-                  key: const ValueKey('posts-here'),
+                  key: ValueKey(controller.postsHere ? 'posts-here' : 'hiring-manager-here'),
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Text(
-                    'You post jobs for ${job.company.name}, so you manage this one rather than apply to it.',
+                    controller.postsHere
+                        ? 'You post jobs for ${job.company.name}, so you manage this one rather than apply to it.'
+                        : "You're a hiring manager at ${job.company.name}, so you can't apply to its jobs.",
                     style: JobsText.meta,
                   ),
                 )

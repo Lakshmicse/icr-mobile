@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../features/notifications/unread_counts.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
 import 'workspace_embed.dart';
@@ -130,7 +131,9 @@ class BellButton extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LiveUnread(fallback: unread, builder: _bell);
+
+  Widget _bell(BuildContext context, int unread) {
     return Semantics(
       button: true,
       label: unread > 0 ? 'Notifications, $unread unread' : 'Notifications',

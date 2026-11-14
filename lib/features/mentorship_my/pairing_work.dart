@@ -488,7 +488,7 @@ class _TimelineSectionState extends State<TimelineSection> {
             onTap: () => setState(() => _all = !_all),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Text(_all ? 'Show Less' : 'View All ${rows.length} Entries', style: MentoringText.buttonQuiet),
+              child: Text(_all ? 'View Less' : 'View All ${rows.length} Entries', style: MentoringText.buttonQuiet),
             ),
           ),
       ],

@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/workspace_embed.dart';
 import '../../feed/feed_models.dart';
 import '../../feed/widgets/feed_avatar.dart';
+import '../../notifications/unread_counts.dart';
 import '../events_styles.dart';
 
 /// The bar pinned above the Events board, as the design: the reader's photo
@@ -61,30 +62,34 @@ class EventsHeader extends StatelessWidget {
             child: Text(title, style: EventsText.title, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
           ...actions,
-          Semantics(
-            button: true,
-            label: unread > 0 ? 'Notifications, $unread unread' : 'Notifications',
-            child: InkResponse(
-              onTap: onBellTap,
-              radius: 22,
-              child: SizedBox(
-                width: 36,
-                height: height,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    const Icon(LucideIcons.bell, size: 22, color: AppColors.onSurfaceVariant),
-                    if (unread > 0)
-                      Positioned(
-                        left: 23.5,
-                        top: 11,
-                        child: Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
+          // The app's live count, not the one this board read when it loaded.
+          LiveUnread(
+            fallback: unread,
+            builder: (context, unread) => Semantics(
+              button: true,
+              label: unread > 0 ? 'Notifications, $unread unread' : 'Notifications',
+              child: InkResponse(
+                onTap: onBellTap,
+                radius: 22,
+                child: SizedBox(
+                  width: 36,
+                  height: height,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      const Icon(LucideIcons.bell, size: 22, color: AppColors.onSurfaceVariant),
+                      if (unread > 0)
+                        Positioned(
+                          left: 23.5,
+                          top: 11,
+                          child: Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
+                          ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

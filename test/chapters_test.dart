@@ -641,10 +641,10 @@ void main() {
     });
   });
 
-  group('the Regional Chapters screen', () {
+  group('the Chapters screen', () {
     testWidgets('draws my chapters, the next meetup and the directory, with no count tiles above them', (tester) async {
       await _pumpBoard(tester);
-      expect(find.text('Regional Chapters'), findsOneWidget);
+      expect(find.text('Chapters'), findsOneWidget);
       // The four count tiles went (owner, 12 Nov 2026).
       expect(find.text('Countries'), findsNothing);
       expect(find.text('237'), findsNothing);

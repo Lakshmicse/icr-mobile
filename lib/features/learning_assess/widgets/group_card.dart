@@ -111,7 +111,7 @@ class _Foot extends StatelessWidget {
     } else if (summary.allOpen) {
       pills.add(const StatusPill(label: 'Open', tone: PillTone.success, icon: LucideIcons.lockOpen));
     } else if (summary.planWouldOpen) {
-      pills.add(const StatusPill(label: 'In your plan', tone: PillTone.info, icon: LucideIcons.award));
+      pills.add(const StatusPill(label: 'In Your Plan', tone: PillTone.info, icon: LucideIcons.award));
     } else if (summary.noneOpen) {
       pills.add(const StatusPill(label: 'Locked', icon: LucideIcons.lock));
     } else {

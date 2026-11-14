@@ -21,7 +21,7 @@ import '../account/companies/companies_controller.dart';
 import '../account/companies/company_words.dart';
 import '../account/companies/my_companies_screen.dart';
 import '../account/demo_account_repository.dart';
-import '../account/widgets/account_kit.dart' show CompanyLogo;
+import '../account/widgets/account_kit.dart' show CompanyLogo, CoverBand;
 import '../shell/app_shell.dart';
 import '../shell/icr_bottom_nav.dart';
 import '../workspaces/role_workspaces.dart';
@@ -384,7 +384,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                   ),
                                 _AssociationRow(
                                   icon: Image.asset('assets/images/icons/chapters.png', width: 48, height: 48),
-                                  title: 'Regional Chapters',
+                                  title: 'Chapters',
                                   subtitle: data.chaptersLine ?? 'Bengaluru, Mumbai, Delhi & more',
                                   trailing: data.chapterCode != null
                                       ? _Badge(text: data.chapterCode!)
@@ -506,7 +506,7 @@ class _Header extends StatelessWidget {
                           height: 52,
                           child: ClipRRect(
                             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                            child: _Cover(url: data.coverUrl, asset: data.coverAsset),
+                            child: _Cover(url: data.coverUrl, asset: data.coverAsset, cover: data.cover),
                           ),
                         ),
                         Positioned(left: 20, top: 26, child: _Avatar(data: data)),
@@ -773,10 +773,13 @@ class _SkeletonRow extends StatelessWidget {
 }
 
 class _Cover extends StatelessWidget {
-  const _Cover({this.url, this.asset});
+  const _Cover({this.url, this.asset, this.cover});
 
   final String? url;
   final String? asset;
+
+  /// The person's own banner, drawn as their profile draws it.
+  final String? cover;
 
   @override
   Widget build(BuildContext context) {
@@ -792,6 +795,7 @@ class _Cover extends StatelessWidget {
       ),
     );
     if (asset != null) return Image.asset(asset!, fit: BoxFit.cover);
+    if (cover != null) return CoverBand(cover: cover);
     if (url != null) {
       return CachedNetworkImage(
         imageUrl: url!,

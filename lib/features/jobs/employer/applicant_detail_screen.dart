@@ -240,7 +240,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
           icon: LucideIcons.cloudOff,
           title: 'Unable to Open This Application',
           body: _c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.start,
         ),
       ];

@@ -161,38 +161,38 @@ const _askWhatIcrDoes = AssistantSuggestion.ask('What can I do on ICR?', 'What c
 
 /// The doors a company opens, for a member acting as themselves (the website's `UNDECIDED_MEMBER_SUGGESTIONS`).
 const _undecidedMember = [
-  AssistantSuggestion.ask('Start selling', 'How do I list my business?'),
-  AssistantSuggestion.ask('Hire for a team', 'How do I post a job?'),
-  AssistantSuggestion.ask('Find a mentor', 'How do I find a mentor?'),
-  AssistantSuggestion.ask('Post a requirement', 'How do I post a requirement?'),
+  AssistantSuggestion.ask('Start Selling', 'How do I list my business?'),
+  AssistantSuggestion.ask('Hire for a Team', 'How do I post a job?'),
+  AssistantSuggestion.ask('Find a Mentor', 'How do I find a mentor?'),
+  AssistantSuggestion.ask('Post a Requirement', 'How do I post a requirement?'),
 ];
 
 /// Each module's own chips (the website's `MODULE_SUGGESTIONS`).
 const _moduleSuggestions = <IcrModule, List<AssistantSuggestion>>{
   IcrModule.supplierMart: [
-    AssistantSuggestion.page('Request a quote', '/rfq/new'),
+    AssistantSuggestion.page('Request a Quote', '/rfq/new'),
     AssistantSuggestion.ask('Sell on ICR', 'How do I list my business on Supplier Mart?'),
-    AssistantSuggestion.ask('Supplier verification', 'How does supplier verification work?'),
-    AssistantSuggestion.page('Market Place plans', '/pricing/supplier'),
+    AssistantSuggestion.ask('Supplier Verification', 'How does supplier verification work?'),
+    AssistantSuggestion.page('Marketplace Plans', '/pricing/supplier'),
   ],
   IcrModule.jobs: [
-    AssistantSuggestion.page('Browse jobs', '/jobs'),
-    AssistantSuggestion.page('Job alerts', '/career/alerts'),
-    AssistantSuggestion.ask('Post a job', 'How do I post a job?'),
+    AssistantSuggestion.page('Browse Jobs', '/jobs'),
+    AssistantSuggestion.page('Job Alerts', '/career/alerts'),
+    AssistantSuggestion.ask('Post a Job', 'How do I post a job?'),
   ],
   IcrModule.mentorship: [
-    AssistantSuggestion.page('Find a mentor', '/mentorship/mentors'),
-    AssistantSuggestion.page('Group sessions', '/mentorship/groups'),
-    AssistantSuggestion.ask('Become a mentor', 'How do I become a mentor?'),
+    AssistantSuggestion.page('Find a Mentor', '/mentorship/mentors'),
+    AssistantSuggestion.page('Group Sessions', '/mentorship/groups'),
+    AssistantSuggestion.ask('Become a Mentor', 'How do I become a mentor?'),
   ],
   IcrModule.learning: [
     AssistantSuggestion.ask('What can I learn?', 'What courses and certifications are there?'),
-    AssistantSuggestion.page('Flash cards', '/learning/flash-cards'),
-    AssistantSuggestion.page('Verify a certificate', '/learning/verify'),
+    AssistantSuggestion.page('Flash Cards', '/learning/flash-cards'),
+    AssistantSuggestion.page('Verify a Certificate', '/learning/verify'),
   ],
   IcrModule.forum: [
-    AssistantSuggestion.page('Start a discussion', '/community/new'),
-    AssistantSuggestion.ask('Write an article', 'How do I write an article?'),
+    AssistantSuggestion.page('Start a Discussion', '/community/new'),
+    AssistantSuggestion.ask('Write an Article', 'How do I write an article?'),
   ],
   IcrModule.library: [
     AssistantSuggestion.page('Resources', '/resources'),
@@ -201,15 +201,15 @@ const _moduleSuggestions = <IcrModule, List<AssistantSuggestion>>{
   IcrModule.chaptersCouncils: [
     AssistantSuggestion.page('Chapters', '/chapters'),
     AssistantSuggestion.page('Councils', '/councils'),
-    AssistantSuggestion.ask('Join a chapter', 'How do I join a chapter?'),
+    AssistantSuggestion.ask('Join a Chapter', 'How do I join a chapter?'),
   ],
   IcrModule.events: [
-    AssistantSuggestion.page('Browse events', '/events'),
+    AssistantSuggestion.page('Browse Events', '/events'),
     AssistantSuggestion.ask('Tickets and RSVPs', 'How do event tickets work?'),
   ],
   IcrModule.getInvolved: [
-    AssistantSuggestion.ask('Become a mentor', 'How do I become a mentor?'),
-    AssistantSuggestion.ask('Ways to contribute', 'How can I volunteer or contribute?'),
+    AssistantSuggestion.ask('Become a Mentor', 'How do I become a mentor?'),
+    AssistantSuggestion.ask('Ways to Contribute', 'How can I volunteer or contribute?'),
   ],
 };
 
@@ -221,7 +221,7 @@ List<AssistantSuggestion> suggestionsFor(AssistantContext ctx) {
   if (module != null) return _moduleSuggestions[module]!;
   if (ctx.signedIn == true && ctx.hasCompany == false) {
     return [
-      if (ctx.mentor == true) const AssistantSuggestion.page('Mentor dashboard', '/mentorship/mentor'),
+      if (ctx.mentor == true) const AssistantSuggestion.page('Mentor Dashboard', '/mentorship/mentor'),
       ..._undecidedMember,
     ];
   }
@@ -234,23 +234,23 @@ List<AssistantSuggestion> suggestionsFor(AssistantContext ctx) {
     final chips = <AssistantSuggestion>[
       _askWhatIcrDoes,
       if (ctx.mentor == true) ...const [
-        AssistantSuggestion.page('Mentor dashboard', '/mentorship/mentor'),
-        AssistantSuggestion.page('My offerings', '/mentorship/mentor?tab=services'),
+        AssistantSuggestion.page('Mentor Dashboard', '/mentorship/mentor'),
+        AssistantSuggestion.page('My Offerings', '/mentorship/mentor?tab=services'),
       ] else
-        const AssistantSuggestion.ask('Find a mentor', 'How do I find a mentor?'),
-      if (hires) const AssistantSuggestion.page('Post a job', '/manage/jobs'),
+        const AssistantSuggestion.ask('Find a Mentor', 'How do I find a mentor?'),
+      if (hires) const AssistantSuggestion.page('Post a Job', '/manage/jobs'),
       if (sells) const AssistantSuggestion.page('Enquiries & RFQs', '/manage/bids'),
-      if (buys) const AssistantSuggestion.page('Post a requirement', '/rfq/new'),
+      if (buys) const AssistantSuggestion.page('Post a Requirement', '/rfq/new'),
     ];
     // At least four chips with Get help: a member whose role brings nothing gets their Dashboard.
     if (chips.length < 3) chips.add(const AssistantSuggestion.page('Dashboard', '/dashboard'));
-    chips.add(const AssistantSuggestion.page('Get help', '/support'));
+    chips.add(const AssistantSuggestion.page('Get Help', '/support'));
     return chips;
   }
   return const [
     _askWhatIcrDoes,
-    AssistantSuggestion.ask('Find a job', 'How do I find a job?'),
-    AssistantSuggestion.page('Request a quote', '/rfq/new'),
-    AssistantSuggestion.page('Join free', '/register'),
+    AssistantSuggestion.ask('Find a Job', 'How do I find a job?'),
+    AssistantSuggestion.page('Request a Quote', '/rfq/new'),
+    AssistantSuggestion.page('Join Free', '/register'),
   ];
 }

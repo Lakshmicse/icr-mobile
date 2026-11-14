@@ -27,6 +27,7 @@ import 'widgets/conversation_tile.dart' show kindIcon;
 import 'widgets/message_bubble.dart';
 import 'widgets/record_picker.dart';
 import 'widgets/states.dart';
+import '../../core/util/screen_trail.dart';
 
 /// Hands a downloaded attachment to the person: the share sheet by default
 /// (save it, or open it in another app); a recorder in tests.
@@ -523,7 +524,10 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      SitePlace(path: '/messaging?c=${widget.conversationId}', child: _buildPage(context));
+
+  Widget _buildPage(BuildContext context) {
     final bell = Provider.of<UnreadCounts?>(context)?.notifications ?? 0;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.white),

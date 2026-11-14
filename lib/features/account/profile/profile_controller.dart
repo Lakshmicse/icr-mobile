@@ -4,6 +4,7 @@ import '../../../core/api/api_error.dart';
 import '../account_models.dart';
 import '../account_repository.dart';
 import '../account_rules.dart';
+import 'intro_line.dart';
 
 /// One part of the profile page: what was read, whether a read is running, and
 /// why it failed. Each section reads and fails on its own, so one list that
@@ -28,10 +29,22 @@ class Section<T> {
 /// one item and the controller merges it into the list it holds; the buttons
 /// wait for the list to load, since saving against nothing would wipe it.
 class MyProfileController extends ChangeNotifier {
-  MyProfileController(this.repository, {this.onIdentityChanged, DateTime Function()? clock})
-    : clock = clock ?? DateTime.now;
+  MyProfileController(
+    this.repository, {
+    this.onIdentityChanged,
+    DateTime Function()? clock,
+    IntroChoiceStore? introStore,
+  }) : clock = clock ?? DateTime.now,
+       introStore = introStore ?? MemoryIntroChoiceStore();
 
   final AccountRepository repository;
+
+  /// Where Edit Intro's Organisation and Education choice is kept (see `intro_line.dart`).
+  final IntroChoiceStore introStore;
+
+  /// The company and school Edit Intro chose for the line under the headline.
+  IntroChoice introChoice = IntroChoice.automatic;
+  String? _choiceReadFor;
 
   /// The name, photo or headline changed: the app's header and menus read them
   /// from the session, so it is read again (`AuthController.refreshUser`).
@@ -63,7 +76,7 @@ class MyProfileController extends ChangeNotifier {
 
   /// Reads every section at once.
   Future<void> load() => Future.wait([
-    _read(profile, repository.myProfile),
+    _readProfile(),
     _read(experience, repository.experience),
     _read(education, repository.education),
     _read(breaks, repository.careerBreaks),
@@ -83,7 +96,7 @@ class MyProfileController extends ChangeNotifier {
 
   /// A section's "Try again".
   Future<void> retry(Section<Object?> section) {
-    if (identical(section, profile)) return _read(profile, repository.myProfile);
+    if (identical(section, profile)) return _readProfile();
     if (identical(section, experience)) return _read(experience, repository.experience);
     if (identical(section, education)) return _read(education, repository.education);
     if (identical(section, breaks)) return _read(breaks, repository.careerBreaks);
@@ -108,6 +121,16 @@ class MyProfileController extends ChangeNotifier {
       s.loading = false;
       _notify();
     }
+  }
+
+  /// The account row, then this account's intro choice from the phone.
+  Future<void> _readProfile() async {
+    await _read(profile, repository.myProfile);
+    final id = profile.value?.id;
+    if (id == null || id == _choiceReadFor) return;
+    _choiceReadFor = id;
+    introChoice = await introStore.load(id);
+    _notify();
   }
 
   /// Reads the account row again after a write that changes what it shows (the
@@ -197,6 +220,28 @@ class MyProfileController extends ChangeNotifier {
     }
     await _reloadProfile();
     await _identity();
+  }
+
+  /// What Edit Intro's Organisation offers: the current roles, one per organisation.
+  List<Experience> get introRoleOptions => introRoles(experience.value ?? const []);
+
+  /// What Edit Intro's Education offers: the qualifications, one per school.
+  List<Education> get introSchoolOptions => introSchools(educationOrdered);
+
+  /// "Company · School" under the headline, as LinkedIn has it; null when there is neither.
+  String? get introAffiliation => introLine(
+    roles: experience.value ?? const [],
+    education: educationOrdered,
+    choice: introChoice,
+    actingFor: profile.value?.companyName,
+  );
+
+  /// Keeps Edit Intro's Organisation and Education choice for this account.
+  Future<void> saveIntroChoice(IntroChoice choice) async {
+    introChoice = choice;
+    _notify();
+    final id = profile.value?.id;
+    if (id != null) await introStore.save(id, choice);
   }
 
   // --- photo and cover ---------------------------------------------------------------------------------------

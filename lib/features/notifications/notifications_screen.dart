@@ -26,6 +26,7 @@ import 'notifications_repository.dart';
 import 'unread_counts.dart';
 import 'widgets/notification_row.dart';
 import 'widgets/preferences_view.dart';
+import '../../core/util/screen_trail.dart';
 
 /// Opens a notification's record. Given to [NotificationsScreen] it replaces
 /// the app's [NotificationRouter] for taps on a row.
@@ -258,7 +259,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => SitePlace(path: '/notifications', child: _buildPage(context));
+
+  Widget _buildPage(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.white),
       child: Scaffold(

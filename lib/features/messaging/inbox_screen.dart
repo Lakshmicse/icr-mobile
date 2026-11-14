@@ -18,6 +18,7 @@ import 'messaging_styles.dart';
 import 'widgets/conversation_tile.dart';
 import 'widgets/new_message_sheet.dart';
 import 'widgets/states.dart';
+import '../../core/util/screen_trail.dart';
 
 /// The person's messages, as the designed inbox (docs/designs/messaging-inbox.png): "Messages" (the
 /// design's "Messaging"; owner, 12 Nov 2026) with its
@@ -190,7 +191,9 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => SitePlace(path: '/messaging', child: _buildPage(context));
+
+  Widget _buildPage(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.white),
       child: Scaffold(

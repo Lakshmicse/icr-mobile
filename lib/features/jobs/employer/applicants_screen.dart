@@ -261,7 +261,7 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
           icon: LucideIcons.cloudOff,
           title: 'Unable to Load Applicants',
           body: _c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         )
       else if (!_c.loaded)

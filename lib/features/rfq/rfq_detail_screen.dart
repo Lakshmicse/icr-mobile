@@ -17,6 +17,7 @@ import 'widgets/requirement_parts.dart';
 import 'widgets/rfq_widgets.dart';
 import 'widgets/supplier_parts.dart' show RfqSmallButton;
 import 'widgets/supplier_picker.dart';
+import '../../core/util/screen_trail.dart';
 
 /// The parts of the owner's page, each a pill under the header.
 enum OwnerTab {
@@ -276,7 +277,10 @@ class _RfqDetailScreenState extends State<RfqDetailScreen> {
   // ---- The page ---------------------------------------------------------------------------------------------
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      SitePlace(path: '/manage/requirements/${widget.rfqId}', child: _buildPage(context));
+
+  Widget _buildPage(BuildContext context) {
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) => RfqScaffold(

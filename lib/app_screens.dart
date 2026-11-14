@@ -7,6 +7,7 @@ import 'core/config.dart';
 import 'app_community_manage.dart';
 import 'app_site_pages.dart';
 import 'core/util/links.dart' show SiteRouteOpener, openSitePage;
+import 'core/util/screen_trail.dart' show SitePlace;
 import 'app_workspaces.dart' show workspaceRouteFor;
 import 'features/directory/companies_directory_screen.dart';
 import 'features/career/company_insights_screen.dart';
@@ -114,9 +115,12 @@ Future<void> openEventBySlug(BuildContext context, String slugOrId) {
   return Navigator.of(context).push<void>(
     PageRouteBuilder<void>(
       opaque: false,
-      pageBuilder: (_, _, _) => ChangeNotifierProvider<EventsController>.value(
-        value: events,
-        child: EventManageScope(onManage: manageEventDoor(context), child: _EventSheetLauncher(slugOrId)),
+      pageBuilder: (_, _, _) => SitePlace(
+        path: '/events/$slugOrId',
+        child: ChangeNotifierProvider<EventsController>.value(
+          value: events,
+          child: EventManageScope(onManage: manageEventDoor(context), child: _EventSheetLauncher(slugOrId)),
+        ),
       ),
     ),
   );
@@ -209,6 +213,7 @@ Widget myForumScreen(BuildContext ctx) {
     create: (c) => ForumsController(
       AppConfig.demo ? DemoForumRepository() : ApiForumRepository(api: c.read<ApiClient>(), viewerId: viewerId),
       initialView: ForumView.mine,
+      ownTopics: true,
     ),
     child: SessionViewer(
       builder: (c, v) => ForumsScreen(

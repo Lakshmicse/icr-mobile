@@ -21,6 +21,7 @@ import 'widgets/plan_card.dart';
 import 'widgets/profile_bottom_bar.dart';
 import 'widgets/profile_hero.dart';
 import 'widgets/profile_tabs.dart';
+import '../../core/util/screen_trail.dart';
 
 /// The Mentor Profile for one mentor, with its own controller: the API, or
 /// the design's sample content under `--dart-define=FEED_SOURCE=demo`.
@@ -66,7 +67,10 @@ class _MentorProfileScreenState extends State<MentorProfileScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      SitePlace(path: '/mentorship/mentors/${widget.mentorId}', child: _buildPage(context));
+
+  Widget _buildPage(BuildContext context) {
     final c = context.watch<MentorProfileController>();
     final profile = c.profile;
     final actions = profile == null ? null : heroActionsFor(context, c);

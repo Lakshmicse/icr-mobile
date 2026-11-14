@@ -262,7 +262,7 @@ class _InterviewsScreenState extends State<InterviewsScreen> {
           icon: LucideIcons.cloudOff,
           title: 'Unable to Load Your Interviews',
           body: _c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         ),
       ];
@@ -277,7 +277,7 @@ class _InterviewsScreenState extends State<InterviewsScreen> {
             icon: LucideIcons.cloudOff,
             title: 'Unable to Load Your Past Interviews',
             body: _c.pastError!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: _c.refresh,
           ),
         ];

@@ -195,7 +195,7 @@ void main() {
         }
         // A row's pages are not listed until it is tapped.
         expect(find.byKey(const ValueKey('workspace-learning-0')), findsNothing);
-        expect(find.text('Regional Chapters'), findsNothing, reason: 'the old rows are replaced');
+        expect(find.text('Chapters'), findsNothing, reason: 'the old rows are replaced');
         expect(find.text('Cohort programmes'), findsNothing, reason: 'a row\'s pages are tabs, not menu rows');
       },
     );

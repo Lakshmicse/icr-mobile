@@ -229,7 +229,7 @@ void main() {
       expect(find.byKey(_k('applicants-error')), findsOneWidget);
       expect(find.text('We could not reach ICR.'), findsOneWidget);
       repo.failures.remove('applicants');
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byKey(_k('applicants-error')), findsNothing);
       expect(find.byKey(_k('applicant-app-aarav')), findsOneWidget);
@@ -478,7 +478,7 @@ void main() {
       expect(find.byKey(_k('detail-error')), findsOneWidget);
       expect(find.text('We could not reach ICR.'), findsOneWidget);
       repo.failures.remove('applicant');
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byKey(_k('detail-error')), findsNothing);
       expect(find.byKey(_k('section-answers')), findsOneWidget);

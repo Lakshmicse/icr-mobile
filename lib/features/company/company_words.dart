@@ -29,7 +29,6 @@ class CompanyWords {
   // --- the overview --------------------------------------------------------------------------------------------
   static const completenessTitle = 'Company Profile Completeness';
   static const completenessCaption = 'See how much of your company profile is visible to buyers and candidates.';
-  static const completenessComplete = 'Your company profile is complete.';
   static String percentComplete(int score) => '$score% Complete';
   static const completenessNoCompany = 'Add the company’s details to start its page.';
   static const addDetails = 'Add Details';

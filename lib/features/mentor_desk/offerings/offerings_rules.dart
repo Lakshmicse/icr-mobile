@@ -10,8 +10,8 @@ import '../../mentorship_my/mentoring_format.dart' show inr, linkProblem, normal
 const minSessionMinutes = 15;
 const maxSessionMinutes = 480;
 
-/// `MENTOR_SERVICE_LIMITS`: what a service may be priced at.
-const minServicePricePaisa = 49900;
+/// `MENTOR_SERVICE_LIMITS`: the most a service may be priced at. The app sets no floor of its own
+/// (owner, 7 and 14 Nov 2026: no ₹499 criteria on any price).
 const maxServicePricePaisa = 5000000;
 
 /// The API's sentence for a resource that has no file behind it.
@@ -278,12 +278,12 @@ String? daysProblem(List<(DateTime, int)> days, DateTime now, {bool requireFutur
   return null;
 }
 
-/// A seat price (free when empty): at least ₹499 and at most ₹50,000, and a paid session needs a number of seats.
+/// A seat price (free when empty): at most ₹50,000, and a paid session needs a number of seats. No floor of the
+/// app's own (owner, 14 Nov 2026: "why are we setting criteria for price set minimum").
 String? seatPriceProblem({required String price, required String capacity}) {
   if (price.trim().isEmpty) return null;
   final p = paisaOf(price);
   if (p == null) return 'Enter the seat price in rupees, or leave it empty for a free session.';
-  if (p < minServicePricePaisa) return 'Priced seats start at ${inr(minServicePricePaisa)}.';
   if (p > maxServicePricePaisa) return 'Prices go up to ${inr(maxServicePricePaisa)}.';
   if (capacity.trim().isEmpty) return 'A paid session needs a number of seats.';
   return null;

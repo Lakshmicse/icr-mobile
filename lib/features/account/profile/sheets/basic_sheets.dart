@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../core/api/api_error.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../account_labels.dart';
 import '../../account_models.dart';
 import '../../account_rules.dart';
+import '../../settings/contact_sheet.dart';
 import '../../widgets/account_kit.dart';
 import '../../widgets/photo_picker.dart';
+import '../intro_line.dart';
 import '../profile_controller.dart';
 import '../profile_fields.dart';
+import '../profile_kit.dart' show PillAction;
+import 'career_sheets.dart';
 
 /// The sheets that edit the person themselves: the intro, the photo, the cover,
 /// About, Skills and Languages. Each is opened the way the website opens a
@@ -17,7 +22,9 @@ import '../profile_fields.dart';
 
 // --- intro ---------------------------------------------------------------------------------------------------
 
-/// Name, headline, years in the profession and where they are. True when saved.
+/// Name, headline, years in the profession, where they are, and — as LinkedIn's
+/// Edit intro has them — the Organisation and Education shown under the
+/// headline, then a way into Contact Info. True when saved.
 Future<bool> showIntroSheet(BuildContext context, MyProfileController controller) async =>
     await showEditSheet<bool>(context, builder: (_) => IntroSheet(controller: controller)) ?? false;
 
@@ -38,12 +45,86 @@ class _IntroSheetState extends State<IntroSheet> {
   late final _years = TextEditingController(text: _me.yearsExperience?.toString() ?? '');
   late String _location = _me.location ?? '';
   late final String _initial = _snapshot();
+  late final IntroChoice _saved = widget.controller.introChoice;
+
+  /// What Organisation and Education showed when the sheet opened ('' for none).
+  late final String _initialOrg;
+  late final String _initialSchool;
+
+  /// What was picked from the two lists; null while untouched, '' for "Please Select".
+  String? _pickedOrg;
+  String? _pickedSchool;
   List<String>? _titles;
   bool _saving = false;
   bool _tried = false;
   String? _error;
 
+  @override
+  void initState() {
+    super.initState();
+    _initialOrg = _org;
+    _initialSchool = _school;
+  }
+
   String _snapshot() => [_first.text, _last.text, _headline.text, _years.text, _location].join('\u0001');
+
+  /// The organisation the field shows: the pick, else the saved choice, else LinkedIn's default.
+  String get _org =>
+      introRoleFor(widget.controller.introRoleOptions, _pickedOrg ?? _saved.organisation)?.organisation.trim() ?? '';
+
+  String get _school =>
+      introSchoolFor(widget.controller.introSchoolOptions, _pickedSchool ?? _saved.school)?.institution.trim() ?? '';
+
+  bool get _orgChanged => _pickedOrg != null && _org != _initialOrg;
+  bool get _schoolChanged => _pickedSchool != null && _school != _initialSchool;
+  bool get _dirty => _snapshot() != _initial || _orgChanged || _schoolChanged;
+
+  Future<void> _pickOrganisation() async {
+    final options = widget.controller.introRoleOptions;
+    final picked = await showAccountPicker<String>(
+      context,
+      title: 'Organisation',
+      items: ['', for (final r in options) r.organisation.trim()],
+      labelOf: (o) => o.isEmpty ? 'Please Select' : o,
+      subtitleOf: (o) => o.isEmpty ? '' : options.firstWhere((r) => r.organisation.trim() == o).title,
+      selected: _org,
+    );
+    if (picked != null && mounted) setState(() => _pickedOrg = picked);
+  }
+
+  Future<void> _pickSchool() async {
+    final options = widget.controller.introSchoolOptions;
+    final picked = await showAccountPicker<String>(
+      context,
+      title: 'Education',
+      items: ['', for (final e in options) e.institution.trim()],
+      labelOf: (s) => s.isEmpty ? 'Please Select' : s,
+      subtitleOf: (s) {
+        if (s.isEmpty) return '';
+        final e = options.firstWhere((e) => e.institution.trim() == s);
+        return [?e.degree, ?e.fieldOfStudy].join(', ');
+      },
+      selected: _school,
+    );
+    if (picked != null && mounted) setState(() => _pickedSchool = picked);
+  }
+
+  /// "Add New Position" / "Add New Education": the career sheet over this one;
+  /// the new row is in the list when it closes.
+  Future<void> _addRole() async {
+    await showExperienceSheet(context, widget.controller);
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _addSchool() async {
+    await showEducationSheet(context, widget.controller);
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _editContact() async {
+    await showContactSheet(context, widget.controller);
+    if (mounted) setState(() {});
+  }
 
   @override
   void dispose() {
@@ -70,7 +151,7 @@ class _IntroSheetState extends State<IntroSheet> {
     setState(() => _tried = true);
     final p = _problems;
     if (p.firstName != null || p.headline != null || p.years != null) return;
-    if (_snapshot() == _initial) {
+    if (!_dirty) {
       Navigator.of(context).pop(false);
       return;
     }
@@ -79,14 +160,24 @@ class _IntroSheetState extends State<IntroSheet> {
       _error = null;
     });
     try {
-      final years = _years.text.trim();
-      await widget.controller.saveIntro(
-        firstName: _first.text,
-        lastName: _last.text,
-        headline: _headline.text,
-        years: years.isEmpty ? null : int.parse(years),
-        location: _location,
-      );
+      if (_snapshot() != _initial) {
+        final years = _years.text.trim();
+        await widget.controller.saveIntro(
+          firstName: _first.text,
+          lastName: _last.text,
+          headline: _headline.text,
+          years: years.isEmpty ? null : int.parse(years),
+          location: _location,
+        );
+      }
+      if (_orgChanged || _schoolChanged) {
+        await widget.controller.saveIntroChoice(
+          IntroChoice(
+            organisation: _orgChanged ? _org : _saved.organisation,
+            school: _schoolChanged ? _school : _saved.school,
+          ),
+        );
+      }
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) setState(() => _error = ApiError.from(e).message);
@@ -98,11 +189,14 @@ class _IntroSheetState extends State<IntroSheet> {
   @override
   Widget build(BuildContext context) {
     final p = _problems;
+    final c = widget.controller;
+    final roles = c.introRoleOptions;
+    final schools = c.introSchoolOptions;
     return EditSheet(
       title: 'Edit Intro',
       saving: _saving,
       error: _error,
-      dirty: _snapshot() != _initial,
+      dirty: _dirty,
       onSave: _save,
       children: [
         Text('* Required', style: AccountText.meta),
@@ -155,7 +249,84 @@ class _IntroSheetState extends State<IntroSheet> {
             helper: 'The city you work from.',
             onChanged: (c) => setState(() => _location = c?.label ?? ''),
           ),
+        AccountSelectField(
+          key: const Key('intro.organisation'),
+          label: 'Organisation',
+          hint: 'Please Select',
+          value: _org.isEmpty ? null : _org,
+          onTap: roles.isEmpty ? null : _pickOrganisation,
+          helper: roles.isEmpty
+              ? 'Add your current role to show your company under your headline.'
+              : 'Your current company. It appears under your headline.',
+        ),
+        if (c.experience.ready)
+          _AddLink(linkKey: const Key('intro.addPosition'), label: 'Add New Position', onTap: _addRole),
+        AccountSelectField(
+          key: const Key('intro.education'),
+          label: 'Education',
+          hint: 'Please Select',
+          value: _school.isEmpty ? null : _school,
+          onTap: schools.isEmpty ? null : _pickSchool,
+          helper: schools.isEmpty
+              ? 'Add your education to show your school under your headline.'
+              : 'Your school. It appears under your headline.',
+        ),
+        if (c.education.ready)
+          _AddLink(linkKey: const Key('intro.addEducation'), label: 'Add New Education', onTap: _addSchool),
+        const SizedBox(height: 6),
+        Text('Contact Information', style: AccountText.itemTitle),
+        const SizedBox(height: 2),
+        Text('Add or edit your profile links, email and more.', style: AccountText.meta),
+        const SizedBox(height: 10),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: PillAction(
+            key: const Key('intro.contactInfo'),
+            label: 'Edit Contact Information',
+            icon: Symbols.edit,
+            onPressed: _editContact,
+          ),
+        ),
       ],
+    );
+  }
+}
+
+/// "+ Add New Position" under its list, as LinkedIn's Edit intro has it.
+class _AddLink extends StatelessWidget {
+  const _AddLink({required this.linkKey, required this.label, required this.onTap});
+
+  /// On the words themselves, which are all that can be tapped.
+  final Key linkKey;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Semantics(
+          button: true,
+          child: InkWell(
+            key: linkKey,
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(6),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.add_rounded, size: 18, color: AppColors.primary),
+                  const SizedBox(width: 4),
+                  Text(label, style: AccountText.link),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

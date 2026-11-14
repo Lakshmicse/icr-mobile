@@ -104,7 +104,7 @@ void main() {
       expect(find.text('Asha Rao'), findsOneWidget);
       expect(find.text('asha@techcorp.example'), findsOneWidget);
       expect(find.text('Company Admin'), findsOneWidget);
-      expect(find.text('Inbox Permissions: All topics'), findsOneWidget);
+      expect(find.text('Inbox Permissions: All Topics'), findsOneWidget);
       expect(find.byKey(const Key('team.member.inbox.u-hema')), findsOneWidget);
       expect(tester.widget<Text>(find.byKey(const Key('team.member.inbox.u-hema'))).data, 'Inbox Permissions: None');
       expect(tester.widget<Text>(find.byKey(const Key('team.member.inbox.u-bina'))).data, 'Inbox Permissions: Careers');

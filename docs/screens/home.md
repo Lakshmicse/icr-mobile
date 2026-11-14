@@ -225,3 +225,7 @@ The owner, with LinkedIn's comment sheet beside it: "Redesign the Comment like t
 ## 13 Nov 2026: the Like button is the reaction picked
 
 The owner: "The like button long press shows the options same to same should show the button selected by the user not the blue colored icon." Once the reader has reacted, the Like button draws that reaction's round badge (`ReactionBadge`, the same widget the long-press picker shows) with the count in `reactionInk(kind)`; unreacted it is the grey outlined thumb. The discussion page's Like does the same. Tests: `forum_home_test.dart` and `forum_thread_test.dart` (the long-press picks).
+
+## The comments sheet is as tall as its content; the reactions list is complete (13 Nov 2026)
+
+Owner: with no comments the sheet should sit low, grow to the set height, then scroll; and the likes should show everyone. `showCommentsSheet` keeps 94% of the screen as the most the sheet may be, but the sheet itself (`comments-sheet`) is now only as tall as what it holds: handle, order, the comments (or "No Comments Yet"), the box. At 94% the comments scroll. The space above it is see-through and a tap there (`comments-scrim`) closes the sheet. `ApiForumRepository.reactors` reads every page of `GET /forum/threads/:id/reactions` (50 at a time, up to 2,000 people) instead of the first 50, so the reactions sheet's tabs count everyone and its list scrolls through all of them. Proved by `test/comments_sheet_height_test.dart`.

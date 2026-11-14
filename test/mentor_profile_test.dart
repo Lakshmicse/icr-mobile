@@ -425,6 +425,17 @@ void main() {
       final api = _Api(_routes(profile: {..._profileJson, 'coverImage': 'preset-3'}));
       final profile = await ApiMentorProfileRepository(api: _client(api)).profile('m1');
       expect(profile.cover, isNull);
+      expect(profile.coverPreset, isNull, reason: 'not one of the site\'s covers');
+    });
+
+    test('a ready-made cover the mentor chose is kept, so the hero draws it as their profile does', () async {
+      final api = _Api(_routes(profile: {..._profileJson, 'coverImage': 'skyline'}));
+      final profile = await ApiMentorProfileRepository(api: _client(api)).profile('m1');
+      expect(profile.cover, isNull);
+      expect(profile.coverPreset, 'skyline');
+      final uploaded = await ApiMentorProfileRepository(api: _client(_Api(_routes()))).profile('m1');
+      expect(uploaded.cover, isNotNull, reason: 'their own picture');
+      expect(uploaded.coverPreset, isNull);
     });
 
     test('lists what the mentor sells, 1:1 first, and drops what a buyer never sees', () async {

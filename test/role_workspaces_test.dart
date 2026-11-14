@@ -202,22 +202,15 @@ void main() {
       expect(pages(applicant, 'Mentorship').last, '/mentorship/become-a-mentor');
     });
 
-    test('a company admin: the Company row (My Companies, Dashboard, team, enquiries, bids), the catalogue under '
-        'Marketplace, and hiring under Jobs', () {
+    test('a company admin: the Company row (My Companies, Dashboard, Manage Team), requirements and the catalogue '
+        'under Marketplace, and hiring under Jobs', () {
       final w = workspacesFor(user('COMPANY_ADMIN'), opens: everything);
-      expect(pages(w, 'Company'), [
-        '/account/companies',
-        '/company',
-        '/manage/team',
-        '/manage/requirements',
-        '/manage/bids',
-      ]);
+      // Owner, 14 Nov 2026: the enquiries and bids left the Company row; requirements are Marketplace's.
+      expect(pages(w, 'Company'), ['/account/companies', '/company', '/manage/team']);
       expect(w.firstWhere((x) => x.label == 'Company').sections.single.items.map((i) => i.label), [
         'My Companies',
         'Dashboard',
         'Manage Team',
-        'View Enquiries & RFQs',
-        'Bid for Enquiries & RFQs',
       ]);
       expect(pages(w, 'Jobs'), [
         '/manage/jobs',
@@ -245,17 +238,16 @@ void main() {
       expect(pages(w, 'Account'), isNot(contains('/account/companies')));
     });
 
-    test('a buyer edits its organisation and views enquiries; it does not sell or hire', () {
+    test('a buyer edits its organisation and finds its requirements under Marketplace; it does not sell or hire', () {
       final w = workspacesFor(user('BUYER'), opens: everything);
-      expect(pages(w, 'Company'), ['/account/companies', '/company', '/manage/team', '/manage/requirements']);
-      expect(pages(w, 'Company'), isNot(contains('/manage/bids')));
+      expect(pages(w, 'Company'), ['/account/companies', '/company', '/manage/team']);
       expect(pages(w, 'Jobs'), isNot(contains('/manage/jobs')));
       expect(pages(w, 'Marketplace'), ['/manage/requirements', '/rfq']);
     });
 
-    test('a seller adds services and products and bids; it does not hire', () {
+    test('a seller adds services and products under Marketplace; it does not hire', () {
       final w = workspacesFor(user('VENDOR'), opens: everything);
-      expect(pages(w, 'Company'), contains('/manage/bids'));
+      expect(pages(w, 'Company'), ['/account/companies', '/company', '/manage/team']);
       expect(pages(w, 'Jobs'), isNot(contains('/manage/jobs')));
       // The catalogue moved from Company to Marketplace (the owner's document, 12 Nov 2026).
       expect(pages(w, 'Company'), isNot(contains('/manage/products')));
@@ -331,6 +323,12 @@ void main() {
       final admin = workspacesFor(user('SUPER_ADMIN', companyId: null), opens: everything);
       expect(labels(admin), ['Company', 'Marketplace', 'Jobs', 'Engage', 'Learn', 'Content', 'Admin']);
       expect(pages(admin, 'Company'), isNot(contains('/account/companies')), reason: 'staff join no company');
+      // The catalogue is the Marketplace's for staff too (owner, 14 Nov 2026).
+      expect(pages(admin, 'Company'), isNot(anyOf(contains('/manage/products'), contains('/manage/services'))));
+      expect(
+        pages(admin, 'Marketplace').take(3),
+        ['/manage/requirements', '/manage/products', '/manage/services'],
+      );
       expect(pages(admin, 'Jobs'), isNot(contains('/career')), reason: 'staff are not job seekers');
       expect(labels(workspacesFor(user('LEARNING_ADMIN', companyId: null), opens: everything)), ['Learn']);
       final partner = workspacesFor(user('PARTNER_ADMIN', companyId: null), opens: everything);
@@ -372,10 +370,7 @@ void main() {
       bool opens(String p) => workspaceOpens(p, screens);
       final admin = workspacesFor(user('COMPANY_ADMIN'), opens: opens);
       expect(labels(admin), design);
-      expect(
-        pages(admin, 'Company'),
-        containsAll(['/manage/team', '/manage/requirements', '/manage/bids', '/account/companies', '/company']),
-      );
+      expect(pages(admin, 'Company'), ['/account/companies', '/company', '/manage/team']);
       expect(pages(admin, 'Account'), isNot(contains('/account/companies')));
       expect(
         pages(admin, 'Marketplace'),

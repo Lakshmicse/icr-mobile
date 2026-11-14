@@ -166,7 +166,7 @@ void main() {
       section = jobs.sections.firstWhere((s) => s.key == 'alert');
     }
     expect(jobs.isExpanded(section), isTrue);
-    expect(jobs.actionLabel(section), 'Show Less');
+    expect(jobs.actionLabel(section), 'View Less');
 
     final all = await getMap(api, '/jobs', {'city': 'Bengaluru,Mumbai', 'country': 'India', 'limit': 50});
     final expected = (all['data'] as List).map((j) => (j as Map)['id']).toSet();
@@ -174,7 +174,7 @@ void main() {
     expect(section.jobs.length, expected.length);
 
     await jobs.act(section);
-    expect(jobs.visible(jobs.sections.firstWhere((s) => s.key == 'alert')), hasLength(3), reason: 'Show Less');
+    expect(jobs.visible(jobs.sections.firstWhere((s) => s.key == 'alert')), hasLength(3), reason: 'View Less');
   });
 
   liveTest('View More pages the latest jobs too, and a search\'s results as the list scrolls', () async {

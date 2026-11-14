@@ -406,6 +406,7 @@ class SocialPillStyle {
 /// [SocialPillButton] keyed `<keyPrefix>.<provider>` (owner, 12 Nov 2026: the
 /// marks moved under the form, headed, with larger logos). On a page too narrow
 /// for two pills with their names (under 280 dp: a 320 dp phone) they stack.
+/// Only the providers the server offers are drawn; with none, nothing is.
 ///
 /// The choice is made from [width], the page's content width, not with a
 /// `LayoutBuilder`: the sign-in page measures its column's intrinsic height
@@ -422,12 +423,16 @@ class SocialProvidersBlock extends StatelessWidget {
     required this.busy,
     required this.enabled,
     required this.onPressed,
+    this.above = const [],
   });
 
   final String heading;
   final TextStyle headingStyle;
   final String keyPrefix;
   final SocialPillStyle style;
+
+  /// What separates the block from the form over it (the gap and the hairline): drawn only with the block.
+  final List<Widget> above;
 
   /// The width the block is laid out in: `LiScaffold.contentWidth` on the
   /// sign-in page, [AuthScaffold.contentWidth] on the card.
@@ -447,20 +452,25 @@ class SocialProvidersBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Only what this server offers (owner, 13 Nov 2026): a provider with no keys here is not drawn, and with
+    // none the whole block goes, its hairline with it. They come back by themselves once the server has keys.
     final pills = [
       for (final provider in SocialProvider.values)
-        SocialPillButton(
-          key: Key('$keyPrefix.${provider.name}'),
-          provider: provider,
-          style: style,
-          available: available.contains(provider),
-          busy: busy == provider,
-          onPressed: enabled ? () => onPressed(provider) : null,
-        ),
+        if (available.contains(provider))
+          SocialPillButton(
+            key: Key('$keyPrefix.${provider.name}'),
+            provider: provider,
+            style: style,
+            available: true,
+            busy: busy == provider,
+            onPressed: enabled ? () => onPressed(provider) : null,
+          ),
     ];
+    if (pills.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        ...above,
         Text(heading, key: Key('$keyPrefix.using'), style: headingStyle),
         const SizedBox(height: 12),
         if (width < sideBySideMinWidth)

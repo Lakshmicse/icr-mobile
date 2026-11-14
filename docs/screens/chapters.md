@@ -1,6 +1,6 @@
-# Regional Chapters
+# Chapters
 
-The Regional Chapters board (`ChaptersScreen`), a chapter's quick-look sheet (`ChapterPreviewSheet`) and a chapter's own page (`ChapterScreen`). There is **no design** for these: they are built in the language of the Councils and Events designs (cover cards, pill chips, 10 dp corners, Work Sans headings, IBM Plex Sans body in Medium), from the website's `/chapters` board and `/chapters/[slug]` page (`frontend/src/components/association/chapters/**` and `chapter/**`) and the portal's `association` module.
+The Chapters board (`ChaptersScreen`), a chapter's quick-look sheet (`ChapterPreviewSheet`) and a chapter's own page (`ChapterScreen`). There is **no design** for these: they are built in the language of the Councils and Events designs (cover cards, pill chips, 10 dp corners, Work Sans headings, IBM Plex Sans body in Medium), from the website's `/chapters` board and `/chapters/[slug]` page (`frontend/src/components/association/chapters/**` and `chapter/**`) and the portal's `association` module.
 
 Status (26 Oct 2026): **audited against the live API; board, page, preview, join/leave and meetup RSVP built and proved** by `test/chapters_test.dart` (82 tests) and `test/live/chapters_live_test.dart` (13 live tests). Goldens are postponed (owner's call).
 
@@ -142,7 +142,7 @@ Nothing else leaves the app.
 ## Left
 
 - Goldens (postponed).
-- The Discover sheet's "Regional Chapters" door, the profile drawer's "BLR" chip and the wiring of the callbacks above are the lead's.
+- The Discover sheet's "Chapters" door, the profile drawer's "BLR" chip and the wiring of the callbacks above are the lead's.
 - `GET /chapters/:slug` lists invite-only events to anyone (backend request 5 in `docs/backend-requests/community.md`).
 
 
@@ -173,3 +173,8 @@ The client marked up the user manual with the wording wanted on a dozen screens 
 For the staff who hold `chapters:manage` (a Super Admin, or a member given the Chapters Admin or Community Manager role on the website),
 a pencil left of the bell on the board opens Manage Chapters, and on a chapter's page that chapter's manage page. Nobody else sees a pencil. The pages stand over the app's bottom bar, as Home does. See
 `docs/screens/community_manage.md` and `docs/FLOW_PARITY.md` → "Managing Chapters, Councils and Events from the app".
+
+
+## 13 Nov 2026: "Chapters", not "Regional Chapters"
+
+The owner: "change the name Regional Chapters ----> Chapters." The board's title, the drawer's row, the search catalogue's entry and the Councils footer's button ("View Chapters Directory") all say Chapters. Left as they are: the chapter kinds in the manage console ("Regional chapter" against "Country chapter") and the Councils footer's heading "Regional In-Person Chapters".

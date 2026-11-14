@@ -269,7 +269,7 @@ void main() {
     testWidgets('someone not on the panel is told so, with nothing to retry', (tester) async {
       await open(tester, repo: _Refusing(ApiError('Forbidden', statusCode: 403)));
       expect(find.text("You are not on this interview's panel."), findsOneWidget);
-      expect(find.text('Try again'), findsNothing);
+      expect(find.text('Try Again'), findsNothing);
     });
 
     testWidgets('a round that is gone says so', (tester) async {
@@ -279,7 +279,7 @@ void main() {
 
     testWidgets('a dropped connection offers to try again', (tester) async {
       await open(tester, repo: _Refusing(ApiError('You appear to be offline.')));
-      expect(find.text('Try again'), findsOneWidget);
+      expect(find.text('Try Again'), findsOneWidget);
     });
 
     testWidgets('opening the page tells the app it was seen', (tester) async {

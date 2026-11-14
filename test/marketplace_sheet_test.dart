@@ -276,7 +276,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('charter')));
       await tester.pumpAndSettle();
       expect(tester.getSize(find.byKey(const ValueKey('about'))).height, greaterThan(collapsed * 2));
-      expect(find.text('Show Less'), findsOneWidget);
+      expect(find.text('View Less'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('charter')));
       await tester.pumpAndSettle();
       expect(tester.getSize(find.byKey(const ValueKey('about'))).height, collapsed);

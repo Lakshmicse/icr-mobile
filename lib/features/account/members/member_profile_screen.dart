@@ -13,10 +13,12 @@ import '../account_repository.dart';
 import '../account_rules.dart' show displayLink;
 import '../api_account_repository.dart';
 import '../demo_account_repository.dart';
+import '../profile/intro_line.dart' show introLine;
 import '../profile/my_profile_screen.dart' show ShareText, shareWithPhone;
 import '../profile/profile_kit.dart';
 import '../widgets/account_kit.dart';
 import 'member_profile_controller.dart';
+import '../../../core/util/screen_trail.dart';
 
 /// Another member's public page (`/members/<id or slug>`): their cover and
 /// photo, headline and place, who follows them, and what they chose to show:
@@ -111,7 +113,9 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       widget.share('${m.fullName} on ICR\n${AppConfig.sitePage(m.sitePath)}', '${m.fullName} on ICR');
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => SitePlace(path: '/members/${widget.userId}', child: _buildPage(context));
+
+  Widget _buildPage(BuildContext context) {
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) {
@@ -173,7 +177,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   }
 
   Widget _header(MemberProfile m) {
-    final place = [?m.city, ?m.companyName].join(' · ');
+    final place = m.city?.trim() ?? '';
     final since = monthYear(m.memberSince);
     return ProfileHeader(
       name: m.fullName,
@@ -181,6 +185,9 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       avatarUrl: m.avatarUrl,
       coverImage: m.coverImage,
       headline: m.headline,
+      // LinkedIn's line: their current company and their newest school. A choice
+      // made in their own Edit Intro stays on their phone, so others see the default.
+      affiliation: introLine(roles: m.experience, education: m.education, actingFor: m.companyName),
       place: place.isEmpty ? null : place,
       facts: [
         '${_count(m.follow.followers)} ${m.follow.followers == 1 ? 'follower' : 'followers'}',

@@ -29,6 +29,9 @@ import 'widgets/place_status.dart';
 import 'widgets/run_tile.dart';
 import 'course_checkout.dart';
 
+/// The website's page for [course] (`/learning/professional-development/<code>`), which the app opens as this sheet.
+String courseSitePath(Course course) => '/learning/professional-development/${course.code}';
+
 /// Opens a course over the list, as the Course page design.
 Future<void> showCourseSheet(BuildContext context, Course course) async {
   final learning = context.read<LearningController>();
@@ -36,6 +39,7 @@ Future<void> showCourseSheet(BuildContext context, Course course) async {
     ..load();
   await showDetailSheet<void>(
     context,
+    place: courseSitePath(course),
     body: (_) => ChangeNotifierProvider.value(value: controller, child: const CourseSheetBody()),
     bottomBar: (_) => ChangeNotifierProvider.value(value: controller, child: const CourseSheetBar()),
   );

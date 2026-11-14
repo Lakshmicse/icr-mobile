@@ -7,6 +7,7 @@ import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
 import '../../core/util/links.dart';
+import '../../core/util/screen_trail.dart';
 import '../../core/widgets/manage_pencil.dart';
 import '../shell/app_shell.dart';
 import 'chapter_controller.dart';
@@ -117,14 +118,17 @@ Future<void> openChapterPage(
   // Through the shell, so the bottom bar under the page (the handoffs' frame) still reaches its tabs.
   return AppShell.push<void>(
     context,
-    (route) => handoffs.pageWrap(
-      chapterPage(
-        repository: repository,
-        idOrSlug: idOrSlug,
-        handoffs: handoffs,
-        onChanged: onChanged,
-        clock: clock,
-        onBack: () => Navigator.of(route).pop(),
+    (route) => SitePlace(
+      path: '/chapters/$idOrSlug',
+      child: handoffs.pageWrap(
+        chapterPage(
+          repository: repository,
+          idOrSlug: idOrSlug,
+          handoffs: handoffs,
+          onChanged: onChanged,
+          clock: clock,
+          onBack: () => Navigator.of(route).pop(),
+        ),
       ),
     ),
   );

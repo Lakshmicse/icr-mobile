@@ -92,7 +92,7 @@ class _Harness {
 _Harness _harness({Map<String, Object Function(Map<String, dynamic>? body)> routes = const {}}) {
   final api = _Api({
     'GET /auth/social/providers': (_) => {
-      'providers': ['GOOGLE'],
+      'providers': ['GOOGLE', 'LINKEDIN'],
     },
     ...routes,
   });
@@ -220,18 +220,48 @@ void main() {
       expect(password().obscureText, isTrue);
     });
 
-    testWidgets('a provider the server has no keys for says so; one it has starts the round trip', (tester) async {
-      final h = _harness();
+    testWidgets('only the providers the server offers are drawn; one it has starts the round trip', (tester) async {
+      // Owner, 13 Nov 2026: a provider with no keys on this server is hidden, not drawn faded.
+      final h = _harness(
+        routes: {
+          'GET /auth/social/providers': (_) => {
+            'providers': ['GOOGLE'],
+          },
+        },
+      );
       await _pump(tester, h);
-
-      await tester.tap(find.byKey(const Key('signIn.linkedin')));
-      await tester.pump();
-      expect(find.text('LinkedIn sign-in is not available yet.'), findsOneWidget);
-      expect(h.social.started, isEmpty);
+      expect(find.text('Sign In Using'), findsOneWidget);
+      expect(find.byKey(const Key('signIn.linkedin')), findsNothing);
 
       await tester.tap(find.byKey(const Key('signIn.google')));
       await tester.pumpAndSettle();
       expect(h.social.started, [SocialProvider.google]);
+    });
+
+    testWidgets('a server that offers none shows no provider row; it comes by itself once the server offers one', (
+      tester,
+    ) async {
+      var offered = <String>[];
+      final h = _harness(routes: {'GET /auth/social/providers': (_) => {'providers': offered}});
+      await _pump(tester, h);
+      expect(find.text('Sign In Using'), findsNothing);
+      expect(find.byKey(const Key('signIn.google')), findsNothing);
+      expect(find.byKey(const Key('signIn.linkedin')), findsNothing);
+      expect(find.byType(Divider), findsNothing, reason: 'the hairline over the row goes with it');
+      expect(find.byKey(const Key('signIn.submit')), findsOneWidget);
+
+      // The server gains its keys. The app comes back to the front and asks again: no new build is needed.
+      offered = ['GOOGLE', 'LINKEDIN'];
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(find.text('Sign In Using'), findsOneWidget);
+      expect(find.byKey(const Key('signIn.google')), findsOneWidget);
+      expect(find.byKey(const Key('signIn.linkedin')), findsOneWidget);
     });
 
     testWidgets('the marks and the links have names a screen reader can read', (tester) async {

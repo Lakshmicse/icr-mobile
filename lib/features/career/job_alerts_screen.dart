@@ -196,7 +196,7 @@ class _JobAlertsScreenState extends State<JobAlertsScreen> {
           icon: LucideIcons.cloudOff,
           title: 'Unable to Load Your Alerts',
           body: _c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         ),
       ];

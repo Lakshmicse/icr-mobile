@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config.dart';
+import 'screen_trail.dart';
 import 'site_policy.dart';
 
 /// Opens a page of the app for a page of the website, given the page's URI;
@@ -34,11 +35,13 @@ class SiteRoutes {
     final resolve = resolver;
     if (resolve == null) return null;
     if (!SitePolicy.isSite(uri)) return null;
+    // The screen it opens stands for this page, so the app can open it again after Android ends it (`ScreenTrail`).
+    final place = sitePlaceOf(uri)!;
     final native = resolve(uri);
-    if (native != null) return native;
+    if (native != null) return (context) => ScreenTrail.instance.opening(place, () => native(context));
     final web = webView;
     if (web == null || SitePolicy.staysExternal(uri)) return null;
-    return (context) => web(context, uri);
+    return (context) => ScreenTrail.instance.opening(place, () => web(context, uri));
   }
 
   /// Whether the app has a screen of its own for [uri] — never the web view. Null while no [resolver] is set (a
@@ -65,7 +68,7 @@ Future<void> openUrl(BuildContext context, Uri uri, {bool inApp = true}) async {
   final messenger = ScaffoldMessenger.of(context);
   final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
   if (!opened) {
-    messenger.showSnackBar(SnackBar(content: Text("Couldn't open ${uri.host}${uri.path}")));
+    messenger.showSnackBar(SnackBar(content: Text('Unable to open ${uri.host}${uri.path}')));
   }
 }
 

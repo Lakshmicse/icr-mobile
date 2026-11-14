@@ -410,9 +410,9 @@ void main() {
       await submit(tester, 'Save Draft');
       expect(find.textContaining('Enter seats as a number from 2 to 50'), findsOneWidget);
       await typeKey(tester, 'group-capacity', '25');
-      await typeKey(tester, 'group-price', '100');
+      await typeKey(tester, 'group-price', '50001');
       await submit(tester, 'Save Draft');
-      expect(find.text('Priced seats start at ₹499.'), findsOneWidget);
+      expect(find.text('Prices go up to ₹50,000.'), findsOneWidget);
       await typeKey(tester, 'group-price', '');
       expect(api.count('POST /mentorship/group-sessions'), 0, reason: 'nothing was sent while a field was wrong');
 

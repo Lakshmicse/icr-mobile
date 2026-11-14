@@ -166,7 +166,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> with Widget
           icon: LucideIcons.cloudOff,
           title: 'Unable to Load Your Applications',
           body: _c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         ),
       ];

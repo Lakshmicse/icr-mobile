@@ -17,7 +17,7 @@ import 'widgets/chapter_card.dart';
 import 'widgets/chapter_preview_sheet.dart';
 import 'widgets/meetup_row.dart';
 
-/// The Regional Chapters board: the numbers, the member's own chapters, the
+/// The Chapters board: the numbers, the member's own chapters, the
 /// next meetups, and the searchable directory of every city chapter.
 ///
 /// Reads a [ChaptersController] from Provider and starts it on first build.
@@ -159,7 +159,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
   Widget build(BuildContext context) {
     final board = context.watch<ChaptersController>();
     return CommunityPage(
-      title: 'Regional Chapters',
+      title: 'Chapters',
       onBack: widget.onBack,
       onBell: _bell,
       actions: [if (widget.onManage != null) BarEditButton(label: 'Manage chapters', onTap: widget.onManage!)],

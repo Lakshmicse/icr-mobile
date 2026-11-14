@@ -233,7 +233,7 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
           icon: LucideIcons.cloudOff,
           title: 'Unable to Load Your Jobs',
           body: _c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         ),
       ];
@@ -395,7 +395,7 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
           icon: LucideIcons.cloudOff,
           title: 'Unable to Load Your Jobs',
           body: _c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         )
       else if (_c.jobs.isEmpty)

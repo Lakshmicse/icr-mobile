@@ -188,3 +188,7 @@ The client asked for the on-screen text to be refined "crisp, for global standar
 | Minutes it actually ran (optional) | Actual Minutes (Optional) |
 | A note (optional) | Note (Optional) |
 | Buttons, headings, tabs, chips, field labels and status names to Title Case: 54 strings | e.g. "In person" → "In Person"; "Edit group session" → "Edit Group Session"; "Host a group session" → "Host a Group Session" |
+
+## 14 Nov 2026: no price floor on a group seat
+
+* The owner, on a screenshot of "Priced seats start at ₹499." under a ₹250 seat: "why are we setting criteria for price set minimum, please remove the validation". `seatPriceProblem` no longer checks a floor (the ₹50,000 ceiling and "A paid session needs a number of seats" stay), and `minServicePricePaisa` is gone. The portal drops its ₹499 floor too (group seats, 1:1 sessions, services and programmes; branch `fix/no-mentor-price-floor`); until that is deployed the API still answers a seat under ₹499 with its own refusal. Ongoing plans keep their ₹500 floor.

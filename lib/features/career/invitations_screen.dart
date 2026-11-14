@@ -227,7 +227,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
           icon: LucideIcons.cloudOff,
           title: 'Unable to Load Your Invitations',
           body: _c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         ),
       ];

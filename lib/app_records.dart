@@ -99,6 +99,7 @@ void openCourseByCode(BuildContext ctx, String code) {
         final controller = CourseSheetController(repository: repository, seed: course)..load();
         await showDetailSheet<void>(
           ctx,
+          place: courseSitePath(course),
           body: (_) => ChangeNotifierProvider.value(value: controller, child: const CourseSheetBody()),
           bottomBar: (_) => ChangeNotifierProvider.value(value: controller, child: const CourseSheetBar()),
         );

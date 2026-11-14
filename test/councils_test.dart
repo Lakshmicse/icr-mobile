@@ -1302,9 +1302,9 @@ void main() {
       await tester.scrollUntilVisible(find.text('Mumbai'), 200, scrollable: scrollable);
       await tester.tap(find.text('Mumbai'));
       expect(screen.lastOpened, _site('/chapters/mumbai'));
-      await tester.scrollUntilVisible(find.text('View Regional Chapters Directory'), 200, scrollable: scrollable);
+      await tester.scrollUntilVisible(find.text('View Chapters Directory'), 200, scrollable: scrollable);
       await tester.pump();
-      await tester.tap(find.text('View Regional Chapters Directory'));
+      await tester.tap(find.text('View Chapters Directory'));
       expect(screen.lastOpened, _site('/chapters'));
     });
 

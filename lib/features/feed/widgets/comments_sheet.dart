@@ -63,6 +63,10 @@ class CommentsHost {
 
 /// Opens a post's comments as LinkedIn does: a sheet over the feed with the order at its top, the comments and
 /// their answers, and the box to add one pinned at its foot.
+///
+/// The sheet is as tall as what it holds (owner, 13 Nov 2026): with no comments it sits low, it grows with them,
+/// and at 94% of the screen it stops growing and the comments scroll. The space above it is the feed's scrim:
+/// a tap there closes the sheet.
 Future<void> showCommentsSheet(BuildContext context, {required CommentsHost host}) {
   return showModalBottomSheet<void>(
     context: context,
@@ -70,13 +74,7 @@ Future<void> showCommentsSheet(BuildContext context, {required CommentsHost host
     useRootNavigator: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => FractionallySizedBox(
-      heightFactor: 0.94,
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-        child: CommentsSheet(host: host),
-      ),
-    ),
+    builder: (_) => FractionallySizedBox(heightFactor: 0.94, child: CommentsSheet(host: host)),
   );
 }
 
@@ -95,6 +93,9 @@ class _CommentsSheetState extends State<CommentsSheet> {
   late final MentionController _mentions = MentionController(
     search: (q) => widget.host.searchPeople?.call(q) ?? Future.value(const <MentionPerson>[]),
   );
+  /// The room the sheet keeps for "No Comments Yet" and for the spinner, so it does not jump between the two.
+  static const _restHeight = 148.0;
+
   CommentSort _sort = CommentSort.relevant;
   FeedReply? _replyingTo;
   bool _sending = false;
@@ -150,13 +151,35 @@ class _CommentsSheetState extends State<CommentsSheet> {
   @override
   Widget build(BuildContext context) {
     final host = widget.host;
+    // The Scaffold is the most the sheet may be and is see-through; the sheet itself sits at its foot, as tall as
+    // its content. It stays a Scaffold so a message shows over the sheet and the keyboard lifts the box.
     return ScaffoldMessenger(
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         body: Builder(
-          builder: (inner) => ListenableBuilder(
-            listenable: Listenable.merge([host.listenable, ?host.follows]),
-            builder: (context, _) => _body(inner),
+          builder: (inner) => Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  key: const ValueKey('comments-scrim'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => Navigator.of(context).maybePop(),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Material(
+                  key: const ValueKey('comments-sheet'),
+                  color: Colors.white,
+                  clipBehavior: Clip.antiAlias,
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(14))),
+                  child: ListenableBuilder(
+                    listenable: Listenable.merge([host.listenable, ?host.follows]),
+                    builder: (context, _) => _body(inner),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -206,6 +229,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
     return SafeArea(
       top: false,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Center(
@@ -223,28 +247,37 @@ class _CommentsSheetState extends State<CommentsSheet> {
               child: CommentSortButton(sort: _sort, onChanged: (s) => setState(() => _sort = s)),
             ),
           ),
-          Expanded(
+          // Loose, so the sheet is only as tall as its comments; at the Scaffold's height the list scrolls.
+          Flexible(
             child: loading
-                ? const Center(child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)))
+                ? const SizedBox(
+                    height: _restHeight,
+                    child: Center(
+                      child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+                    ),
+                  )
                 : comments.isEmpty
-                ? Center(
+                ? SingleChildScrollView(
                     key: const ValueKey('comments-empty'),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(LucideIcons.messageSquareText, size: 28, color: HomeLook.soft),
-                          const SizedBox(height: 10),
-                          Text('No Comments Yet', style: CommentDesign.name),
-                          const SizedBox(height: 4),
-                          Text('Be the first to comment.', style: CommentDesign.headline),
-                        ],
+                    child: SizedBox(
+                      height: _restHeight,
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(LucideIcons.messageSquareText, size: 28, color: HomeLook.soft),
+                            const SizedBox(height: 10),
+                            Text('No Comments Yet', style: CommentDesign.name),
+                            const SizedBox(height: 4),
+                            Text('Be the first to comment.', style: CommentDesign.headline),
+                          ],
+                        ),
                       ),
                     ),
                   )
                 : ListView(
                     key: const ValueKey('comments-list'),
+                    shrinkWrap: true,
                     padding: const EdgeInsets.fromLTRB(CommentDesign.pad, 0, CommentDesign.pad, 12),
                     children: rows,
                   ),

@@ -311,10 +311,9 @@ class _ReactorsSheetState extends State<_ReactorsSheet> {
       for (final r in items ?? const <ForumReactor>[])
         if (_kind == null || r.reaction == _kind) r,
     ];
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.75),
+    return SizedBox(
+      height: _peopleSheetHeight(context),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SheetHandle(top: 11, height: 28, rule: false),
@@ -347,10 +346,10 @@ class _ReactorsSheetState extends State<_ReactorsSheet> {
               ),
             ),
             const Divider(height: 1, thickness: 1, color: AppColors.outlineVariant),
-            Flexible(
+            Expanded(
               child: ListView.separated(
-                shrinkWrap: true,
-                padding: const EdgeInsets.only(bottom: 16),
+                key: const ValueKey('reactors-list'),
+                padding: EdgeInsets.only(bottom: _bottomRoom(context)),
                 itemCount: shown.length,
                 separatorBuilder: (_, _) =>
                     const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20, color: AppColors.outlineVariant),
@@ -541,10 +540,9 @@ class _PeopleSheetState<T> extends State<_PeopleSheet<T>> {
   @override
   Widget build(BuildContext context) {
     final items = _items;
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.7),
+    return SizedBox(
+      height: _peopleSheetHeight(context),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SheetHandle(top: 11, height: 28, rule: false),
@@ -568,10 +566,9 @@ class _PeopleSheetState<T> extends State<_PeopleSheet<T>> {
               child: Text(widget.emptyText, style: ForumDesign.sheetHint),
             )
           else
-            Flexible(
+            Expanded(
               child: ListView(
-                shrinkWrap: true,
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: EdgeInsets.only(bottom: _bottomRoom(context)),
                 children: [for (final item in items) widget.rowOf(item)],
               ),
             ),
@@ -617,10 +614,9 @@ class _ViewersSheetState extends State<_ViewersSheet> {
   @override
   Widget build(BuildContext context) {
     final page = _page;
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.7),
+    return SizedBox(
+      height: _peopleSheetHeight(context),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SheetHandle(top: 11, height: 28, rule: false),
@@ -638,41 +634,47 @@ class _ViewersSheetState extends State<_ViewersSheet> {
             )
           else if (page == null)
             const Padding(padding: EdgeInsets.all(32), child: ForumSpinner())
-          else ...[
-            if (page.viewers.isEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-                child: Text('No members visible to you have viewed this yet.', style: ForumDesign.sheetHint),
-              ),
-            Flexible(
+          else
+            Expanded(
               child: ListView(
-                shrinkWrap: true,
+                padding: EdgeInsets.only(bottom: _bottomRoom(context)),
                 children: [
+                  if (page.viewers.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                      child: Text('No members visible to you have viewed this yet.', style: ForumDesign.sheetHint),
+                    ),
                   for (final v in page.viewers)
                     _PersonRow(
                       person: v.person,
                       caption: timeAgo(v.viewedAt),
                       onTap: widget.onOpenMember == null ? null : () => widget.onOpenMember!(v.person.id),
                     ),
+                  if (page.hidden > 0)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+                      child: Text(
+                        '${page.hidden} ${page.hidden == 1 ? 'other member' : 'other members'} viewed it with a private profile.',
+                        key: const ValueKey('viewers-hidden'),
+                        style: ForumDesign.sheetHint,
+                      ),
+                    ),
                 ],
               ),
             ),
-            if (page.hidden > 0)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-                child: Text(
-                  '${page.hidden} ${page.hidden == 1 ? 'other member' : 'other members'} viewed it with a private profile.',
-                  key: const ValueKey('viewers-hidden'),
-                  style: ForumDesign.sheetHint,
-                ),
-              ),
-            const SizedBox(height: 16),
-          ],
         ],
       ),
     );
   }
 }
+
+/// The people sheets (who reacted, voted, viewed) open at three quarters of the screen whatever the count, as
+/// LinkedIn's do: sized to their rows, two people made a sliver of a sheet (owner, 14 Nov 2026).
+double _peopleSheetHeight(BuildContext context) => MediaQuery.sizeOf(context).height * 0.75;
+
+/// Room under a people sheet's last row: the phone's navigation bar, which the sheet's white runs behind, and a gap
+/// above it, so the last person sits clear of the bar instead of under it.
+double _bottomRoom(BuildContext context) => MediaQuery.viewPaddingOf(context).bottom + 24;
 
 String _sentence(Object e) {
   final text = e.toString();

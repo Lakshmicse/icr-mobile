@@ -120,7 +120,8 @@ void main() {
       await pump(tester, repoWith(mentor));
       expect(find.text('Asha Verma'), findsWidgets);
       expect(find.text('Director · Workplace · DLF'), findsOneWidget);
-      expect(find.text('Gurugram · DLF'), findsOneWidget);
+      expect(find.text('DLF · IIT Delhi'), findsOneWidget, reason: 'the current company and the school, as LinkedIn');
+      expect(find.text('Gurugram'), findsOneWidget);
       expect(find.text('41 followers · 12 following · Member since Mar 2026'), findsOneWidget);
       expect(find.text('Mentor'), findsOneWidget);
       expect(find.text('Ready for a New Role'), findsOneWidget);

@@ -605,7 +605,7 @@ void main() {
       expect(find.byType(JobRow), findsNWidgets(6));
       expect(find.text('Page 2'), findsOneWidget);
 
-      await tester.tap(find.text('Show Less'));
+      await tester.tap(find.text('View Less'));
       await tester.pumpAndSettle();
       expect(find.byType(JobRow), findsNWidgets(3));
       expect(find.text('View More'), findsOneWidget);
@@ -661,7 +661,7 @@ void main() {
       await pumpBoard(tester, repo: repo);
       expect(find.text('Unable to Load Jobs'), findsOneWidget);
       fail = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('Job a'), findsOneWidget);
     });

@@ -247,7 +247,7 @@ class _EventsTabState extends State<_EventsTab> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
                 child: Text(
-                  'Create and run the events calendar — ICR and partner events, programme, invitations, sponsorships '
+                  'Create and run the events calendar: ICR and partner events, programme, invitations, sponsorships '
                   'and tickets.',
                   style: EmText.secondary,
                 ),
@@ -315,7 +315,7 @@ class _EventsTabState extends State<_EventsTab> {
               else if (c.rows.isEmpty)
                 EmEmpty(
                   key: const ValueKey('events.empty'),
-                  title: c.filtered ? 'No events match' : 'No events yet',
+                  title: c.filtered ? 'No Events Match' : 'No Events Yet',
                   body: c.filtered ? 'Try another search, or clear the filters.' : 'Create one with New Event.',
                   action: c.filtered ? 'Clear Search and Filters' : null,
                   onAction: c.filtered ? _clear : null,
@@ -510,7 +510,7 @@ class _HostRequestsTabState extends State<_HostRequestsTab> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
                   child: Text(
-                    'Companies asking to host events on ICR. Approved partners publish straight to Partner events.',
+                    'Companies asking to host events on ICR. Approved partners publish directly to Partner Events.',
                     style: EmText.secondary,
                   ),
                 ),
@@ -542,8 +542,8 @@ class _HostRequestsTabState extends State<_HostRequestsTab> {
                 else if (c.rows.isEmpty)
                   EmEmpty(
                     key: const ValueKey('hosts.empty'),
-                    title: c.status == 'PENDING' && c.search.isEmpty ? 'No requests waiting' : 'No requests match',
-                    body: 'Companies ask from the Host an event button on the events page.',
+                    title: c.status == 'PENDING' && c.search.isEmpty ? 'No Requests Waiting' : 'No Requests Match',
+                    body: 'Companies send a request from the Host an Event button on the Events page.',
                   )
                 else ...[
                   if (c.error != null)

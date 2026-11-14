@@ -384,7 +384,7 @@ class EmMore extends StatelessWidget {
         child: Center(
           child: busy
               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text('Show More', style: EmText.link),
+              : Text('View More', style: EmText.link),
         ),
       ),
     );

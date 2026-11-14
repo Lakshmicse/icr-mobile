@@ -462,7 +462,7 @@ void main() {
       expect(find.byKey(const ValueKey('tab-error')), findsOneWidget);
       expect(find.text('Reviews are down.'), findsOneWidget);
       repo.failReviews = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('A place that lets facilities people lead'), findsOneWidget);
     });

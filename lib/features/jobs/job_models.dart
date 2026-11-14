@@ -122,6 +122,21 @@ class JobCompany {
         );
 }
 
+/// Where the member sits on a company's hiring team, by any of their memberships (`HIRING_TEAM_ROLES`). Nobody on
+/// it applies to the company's jobs: the website hides Apply and the API refuses the application.
+enum HiringTeamSeat {
+  /// Not on it: the job is one to apply to.
+  none,
+
+  /// Posts its jobs (an admin, office admin or recruiter of it): manages the job rather than applies to it.
+  poster,
+
+  /// One of its hiring managers (since 14 Nov 2026): sits on its interview panels.
+  hiringManager;
+
+  bool get onTeam => this != none;
+}
+
 /// The person a job names as its contact.
 class JobContact {
   const JobContact({

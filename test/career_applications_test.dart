@@ -596,7 +596,7 @@ void main() {
       expect(find.byKey(const ValueKey('applications-error')), findsOneWidget);
       expect(find.text('The tracker is down.'), findsOneWidget);
       repo.applicationsError = null;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(row('app-1'), findsOneWidget);
     });

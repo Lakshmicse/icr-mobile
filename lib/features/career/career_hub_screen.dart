@@ -205,7 +205,7 @@ class _CareerHubScreenState extends State<CareerHubScreen> {
           icon: LucideIcons.cloudOff,
           title: 'Unable to Load Your Career Hub',
           body: _c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         ),
       ];

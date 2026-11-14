@@ -34,7 +34,7 @@ class TeamWords {
   static const deactivated = 'Deactivated';
   static const edit = 'Edit Access';
   static const remove = 'Remove';
-  static const allInboxTopics = 'All topics';
+  static const allInboxTopics = 'All Topics';
   static const noInboxTopics = 'None';
 
   // Requests
@@ -47,7 +47,7 @@ class TeamWords {
   static const officeOptional = 'Office (Optional)';
   static const officeHelp =
       'The office they cover. Recruiters, hiring managers and office admins at a company with offices need one.';
-  static const noOffice = 'No office';
+  static const noOffice = 'No Office';
 
   // Pending
   static String waitingToAccept(int n) => 'Waiting to Accept ($n)';

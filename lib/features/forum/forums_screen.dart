@@ -501,10 +501,11 @@ class _Header extends StatelessWidget {
     final q = forums.query;
     final topics = forums.topics;
     final subtopics = forums.subtopics;
+    final hideTopics = ownOnly && forums.topicsRead && topics.isEmpty && forums.topicsError == null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 10),
+        const SizedBox(height: _gap),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: IcrSearchField(
@@ -515,8 +516,9 @@ class _Header extends StatelessWidget {
             trailing: FilterButton(count: q.refinements, onTap: onFilters),
           ),
         ),
-        const SizedBox(height: 10),
-        ComposerBar(onTap: onCompose, label: 'Start a discussion...'),
+        const SizedBox(height: _gap),
+        // The same 16 dp margin as the search box above it and the chips below.
+        ComposerBar(onTap: onCompose, label: 'Start a discussion...', inset: 16),
         if (forums.access.requiresApproval) ...[
           const SizedBox(height: 10),
           const Padding(
@@ -530,8 +532,9 @@ class _Header extends StatelessWidget {
             ),
           ),
         ],
-        const SizedBox(height: 14),
-        if (!ownOnly)
+        // My Forum has no view chips, and no gap where they would be.
+        if (!ownOnly) ...[
+          const SizedBox(height: _gap),
           SizedBox(
             height: 28,
             child: ListView.separated(
@@ -552,10 +555,16 @@ class _Header extends StatelessWidget {
               },
             ),
           ),
-        const SizedBox(height: 14),
-        const SectionHeading(title: 'Topics', padding: EdgeInsets.symmetric(horizontal: 16)),
-        const SizedBox(height: 8),
-        if (!forums.topicsRead)
+        ],
+        // My Forum lists only the topics the reader posted in; with none there is no Topics block at all.
+        if (!hideTopics) ...[
+          const SizedBox(height: _gap),
+          const SectionHeading(title: 'Topics', padding: EdgeInsets.symmetric(horizontal: 16)),
+          const SizedBox(height: 8),
+        ],
+        if (hideTopics)
+          const SizedBox.shrink()
+        else if (!forums.topicsRead)
           const SizedBox(height: 28)
         else if (forums.topicsError != null && topics.isEmpty)
           Padding(
@@ -623,16 +632,23 @@ class _Header extends StatelessWidget {
             ),
           ),
         ],
-        _ActiveFilters(forums: forums, search: search),
+        _ActiveFilters(forums: forums, search: search, hideEmptyTotal: ownOnly),
         const SizedBox(height: 10),
       ],
     );
   }
+
+  /// One gap between the header's blocks (the search, the composer, the views, the topics), so they read as evenly
+  /// spaced (owner, 13 Nov 2026: "the gaps is more looks uneven").
+  static const _gap = 12.0;
 }
 
 /// What is narrowing the list, each with an x, and how many discussions are left.
 class _ActiveFilters extends StatelessWidget {
-  const _ActiveFilters({required this.forums, required this.search});
+  const _ActiveFilters({required this.forums, required this.search, this.hideEmptyTotal = false});
+
+  /// My Forum with nothing posted says so in its empty state, not as "0 discussions" over it.
+  final bool hideEmptyTotal;
 
   final ForumsController forums;
   final TextEditingController search;
@@ -656,7 +672,7 @@ class _ActiveFilters extends StatelessWidget {
       if (q.sortable && q.sort != ForumSort.latest) ('sort', q.sort.label, () => forums.setSort(ForumSort.latest)),
     ];
     final total = forums.total;
-    final summary = total == null || forums.loading
+    final summary = total == null || forums.loading || (hideEmptyTotal && total == 0 && pills.isEmpty)
         ? null
         : '${groupedCount(total)} ${total == 1 ? 'discussion' : 'discussions'}';
     if (pills.isEmpty && summary == null) return const SizedBox.shrink();

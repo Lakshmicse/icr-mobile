@@ -53,7 +53,7 @@ class DiscoverSheet extends StatelessWidget {
   static const community = [
     DiscoverRow(
       42,
-      // Short names on the doors (owner, 5 Nov 2026); the screens keep "Regional Chapters" and "Working Councils".
+      // Short names on the doors (owner, 5 Nov 2026); the Chapters screen is "Chapters" too since 13 Nov 2026; Councils keeps "Working Councils".
       DiscoverDoor('Chapters', icon: 'discover_chapters.png', iconLeft: 9, textLeft: 43.5, sitePath: '/chapters'),
       DiscoverDoor('Councils', icon: 'discover_councils.png', iconLeft: 8.5, textLeft: 44, sitePath: '/councils'),
     ),

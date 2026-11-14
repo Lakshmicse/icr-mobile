@@ -198,7 +198,7 @@ String introText(ConversationContext? context) {
     case 'MENTORSHIP_STARTED':
       final m = context?.mentorship;
       return (
-        title: 'Mentorship started',
+        title: 'Mentorship Started',
         action: m == null ? null : 'Open Mentorship',
         href: m == null ? null : mentorshipHref(m.id),
       );

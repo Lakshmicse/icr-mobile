@@ -45,8 +45,9 @@ Against production (`API_BASE_URL=https://icr.org.in/api/v1`) both providers alr
 
 | Name | Default | What it does |
 |---|---|---|
-| `API_BASE_URL` | local backend (see above) | The API, `/api/v1` included. Production: `https://icr.org.in/api/v1`. |
-| `SITE_URL` | `https://icr.org.in` | Where "Join ICR", "Forgot password?", notifications and other website pages open. |
+| `API_BASE_URL` | local backend (see above) | The API, `/api/v1` included. Production: `https://icr.org.in/api/v1`; dev: `https://dev.icr.org.in/api/v1`. The only address a build needs: the two below follow it. |
+| `SITE_URL` | the API's own origin when it is `https`, else `https://icr.org.in` | Where "Join ICR", "Forgot password?", notifications, share links and other website pages open. A dev build links to dev.icr.org.in, a production build to icr.org.in (owner, 14 Nov 2026). Set it only to point at a website on another host. |
+| `SOCIAL_FLOW` | `website` against icr.org.in, `app` anywhere else | How Google and LinkedIn return to the app: through the website's verified `https://icr.org.in/auth/callback` link, or the API's `in.org.icr://auth` return (every other server, dev included). |
 | `FEED_SOURCE` | `live` | Set it to `demo` to show the designs' sample content (the Home posts, the profile menu, and every section screen), bundled with the app, instead of the API's. Useful for design review, because a fresh local database has little in it. |
 
 To compare a screen with its PNG on the Android emulator, give it the designs' 390 dp width: `adb shell wm density 443` on the 1080 x 2400 `Medium_Phone_API_36.0` (put it back with `adb shell wm density reset`). At the default density the screen is 411 dp wide and everything sits about 5% wider than the PNGs.

@@ -56,7 +56,7 @@ void main() {
           expectNoRawErrors(tester, 'Home');
           expect(find.text('All Feed'), findsWidgets, reason: 'the feed is the forum\'s, the same for staff');
           await retryWhileFailed(tester, what: 'Home');
-          expect(find.text('Try again'), findsNothing);
+          expect(find.text('Try Again'), findsNothing);
 
           // Each tab, in the bottom bar's order.
           final probes = {
@@ -72,7 +72,7 @@ void main() {
             expectNoRawErrors(tester, entry.key);
             await retryWhileFailed(tester, what: entry.key);
             expect(find.text(entry.value), findsWidgets, reason: '${entry.key} shows "${entry.value}"');
-            expect(find.text('Try again'), findsNothing, reason: '${entry.key} is not in its error state');
+            expect(find.text('Try Again'), findsNothing, reason: '${entry.key} is not in its error state');
           }
 
           // The menu from Home's photo: the person's name, and Settings opens.
@@ -161,7 +161,7 @@ void main() {
             expectNoSpinner(c.name);
             if (limit == null) {
               expect(find.textContaining(c.probe), findsWidgets, reason: '${c.name} shows "${c.probe}"');
-              expect(find.text('Try again'), findsNothing, reason: '${c.name} is not in its error state');
+              expect(find.text('Try Again'), findsNothing, reason: '${c.name} is not in its error state');
               expect(find.textContaining("Couldn't load"), findsNothing);
             } else {
               for (final words in limit) {

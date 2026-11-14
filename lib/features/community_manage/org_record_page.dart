@@ -111,7 +111,7 @@ class _OrgRecordPageState extends State<OrgRecordPage> {
     final ok = await confirmAction(
       context,
       title: 'Retire “${_c.name}”?',
-      message: 'It disappears from the public directory.',
+      message: 'It will be removed from the public directory.',
       confirm: 'Retire',
     );
     if (!ok || !mounted) return;
@@ -129,7 +129,7 @@ class _OrgRecordPageState extends State<OrgRecordPage> {
     final ok = await confirmAction(
       context,
       title: 'Remove “$name”?',
-      message: 'This $what is taken off the ${_noun.toLowerCase()}’s page.',
+      message: 'This $what will be removed from the ${_noun.toLowerCase()}’s page.',
       confirm: 'Remove',
     );
     if (!ok || !mounted) return;
@@ -221,7 +221,7 @@ class _OrgRecordPageState extends State<OrgRecordPage> {
       return WsScroll(
         onRefresh: c.refresh,
         loading: c.loading,
-        error: c.error ?? (c.loaded ? '$_noun not found' : null),
+        error: c.error ?? (c.loaded ? '$_noun not found.' : null),
         children: const [],
       );
     }
@@ -476,7 +476,7 @@ class _OrgRecordPageState extends State<OrgRecordPage> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (leadTermEnded(l.termEndsOn, today)) const WsChip('Term ended', tone: WsTone.warn),
+                      if (leadTermEnded(l.termEndsOn, today)) const WsChip('Term Ended', tone: WsTone.warn),
                       const SizedBox(width: 4),
                       const Icon(LucideIcons.chevronRight, size: 18, color: AppColors.outline),
                     ],
@@ -502,7 +502,7 @@ class _OrgRecordPageState extends State<OrgRecordPage> {
         _empty(
           members.isEmpty
               ? 'No members to choose from yet.'
-              : 'Make a member a lead: choose who, and the term they serve.',
+              : 'Make a member a lead. Select the member and the term they serve.',
           key: const ValueKey('members-note'),
         ),
       ],
@@ -514,7 +514,7 @@ class _OrgRecordPageState extends State<OrgRecordPage> {
       key: const ValueKey('section-retire'),
       children: [
         Text(
-          'Retiring takes the ${_noun.toLowerCase()} out of the public directory. Its members and history are kept.',
+          'Retiring removes the ${_noun.toLowerCase()} from the public directory. Its members and history are kept.',
           style: WsText.body,
         ),
         Align(

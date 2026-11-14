@@ -36,7 +36,7 @@ The export is 283 × 2000 px, a phone frame drawn with a 1 px border at x = 5 an
 | `POST /councils/:id/join`, `DELETE /councils/:id/join` | Join Council; leave through a long press on "Open Member Lounge", or from the Your councils sheet (Manage →, a joined card's seat pill) |
 | `GET /notifications/unread-count` | the bell's dot |
 
-Pages the screen hands to the browser (`SITE_URL`): `/events/<slug>` (a roundtable row, and Room Link / Meeting link when the council has an upcoming session; with none the card says so and opens nothing), `/events` (the caption at the right of Upcoming Roundtables), `/chapters/<slug>` (a city tile), `/chapters` (View Regional Chapters Directory), `/notifications` (the bell). A council's own page (`/councils/<slug>`, `?tab=updates` for Open Member Lounge and the "N unread" pill) is **not** one of them any more: it is the app's `CouncilScreen` since 2 Nov 2026, below. The calendar glyph on a row opens a Google Calendar "new event" page (`calendar.google.com/calendar/render?action=TEMPLATE…`) with the event's own title, start, end and venue and a link back to its page: the API has no .ics file for an event (the website builds one in the browser).
+Pages the screen hands to the browser (`SITE_URL`): `/events/<slug>` (a roundtable row, and Room Link / Meeting link when the council has an upcoming session; with none the card says so and opens nothing), `/events` (the caption at the right of Upcoming Roundtables), `/chapters/<slug>` (a city tile), `/chapters` (View Chapters Directory), `/notifications` (the bell). A council's own page (`/councils/<slug>`, `?tab=updates` for Open Member Lounge and the "N unread" pill) is **not** one of them any more: it is the app's `CouncilScreen` since 2 Nov 2026, below. The calendar glyph on a row opens a Google Calendar "new event" page (`calendar.google.com/calendar/render?action=TEMPLATE…`) with the event's own title, start, end and venue and a link back to its page: the API has no .ics file for an event (the website builds one in the browser).
 
 ## What the API cannot give, and what is shown instead
 
@@ -138,7 +138,7 @@ Tests: `test/council_page_test.dart` (the sections and `?tab=` ids; the API mapp
 | Open Member Lounge | opens the council's page on Updates | W "Open Member Lounge opens the council's updates…" |
 | long press on Open Member Lounge | offers "Leave <council>"; leaving is `DELETE /councils/:id/join`, rolled back on a refusal | W the same; W "a refused leave puts the seat back"; L "the controller takes a seat at once…" |
 | Preview Chapter | opens the council's own page in the app | W "Preview Chapter opens the council's page"; W "without hand-offs … a council opens on the website" |
-| city tile / View Regional Chapters Directory | open the chapter / `/chapters` | W "a city tile opens its chapter and the directory button the chapters page"; L "the In-Person Summits tiles are the four chapters…" |
+| city tile / View Chapters Directory | open the chapter / `/chapters` | W "a city tile opens its chapter and the directory button the chapters page"; L "the In-Person Summits tiles are the four chapters…" |
 | pull to refresh | reads everything again, the bell too | W "pulling down reads the councils again"; W "a refresh reads the councils again, and the bell with them"; L "pulling down reads what the server holds now" |
 | a failed read | "Couldn't load councils" + Try again | W "a failed read offers Try again, which reads again" |
 

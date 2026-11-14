@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../account/widgets/account_kit.dart' show CoverBand, profileCovers;
 import '../../feed/widgets/feed_avatar.dart';
 import '../mentorship_models.dart';
 import '../mentorship_styles.dart';
@@ -135,7 +136,8 @@ class _Cover extends StatelessWidget {
   }
 }
 
-/// A ready-made cover's gradient (or the brand blue) when there is no photo.
+/// A ready-made cover as the mentor's profile draws it (its picture over its colours), or the brand blue when
+/// there is none.
 class _Band extends StatelessWidget {
   const _Band({this.preset});
 
@@ -143,6 +145,7 @@ class _Band extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (preset != null && profileCovers.containsKey(preset)) return CoverBand(cover: preset);
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: MentorshipColors.covers[preset] ?? MentorshipColors.coverFallback),

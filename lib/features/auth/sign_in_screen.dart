@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -5,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../../core/api/api_error.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/auth/social_sign_in.dart';
-import '../../core/util/links.dart';
 import 'auth_widgets.dart';
 import 'forgot_password_screen.dart';
 import 'linkedin_style.dart';
@@ -31,7 +31,7 @@ class SignInScreen extends StatefulWidget {
   State<SignInScreen> createState() => _SignInScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class _SignInScreenState extends State<SignInScreen> with WidgetsBindingObserver {
   final _form = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
@@ -48,19 +48,32 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final auth = context.read<AuthController>();
       if (auth.takeExpiredNotice()) {
         setState(() => _error = 'Your session has ended. Sign in again to continue.');
       }
-      final available = await auth.configuredProviders();
-      if (mounted) setState(() => _available = available);
+      await _readProviders();
     });
+  }
+
+  /// Which of Google and LinkedIn this server offers: only those are drawn. Asked when the page opens and again
+  /// each time the app comes back to the front, so a provider the server gains shows without a new build.
+  Future<void> _readProviders() async {
+    final available = await context.read<AuthController>().configuredProviders();
+    if (mounted && !setEquals(available, _available)) setState(() => _available = available);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _socialBusy == null) _readProviders();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _email.dispose();
     _password.dispose();
     _passwordFocus.dispose();
@@ -89,10 +102,6 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _continueWith(SocialProvider provider) async {
-    if (!_available.contains(provider)) {
-      showMessage(context, '${provider.label} sign-in is not available yet.');
-      return;
-    }
     FocusScope.of(context).unfocus();
     setState(() {
       _socialBusy = provider;
@@ -223,10 +232,12 @@ class _SignInScreenState extends State<SignInScreen> {
               busy: _submitting,
               onPressed: _socialBusy == null ? _submit : null,
             ),
-            const SizedBox(height: 24),
-            Divider(color: c.hairline, thickness: 1, height: 1),
-            const SizedBox(height: 20),
             SocialProvidersBlock(
+              above: [
+                const SizedBox(height: 24),
+                Divider(color: c.hairline, thickness: 1, height: 1),
+                const SizedBox(height: 20),
+              ],
               heading: 'Sign In Using',
               headingStyle: LiType.subtitle(c),
               keyPrefix: 'signIn',

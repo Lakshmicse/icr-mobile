@@ -239,6 +239,11 @@ const profileCovers = <String, (String, List<Color>)>{
 
 const _svgCovers = {'blueprint', 'skyline', 'campus', 'brand'};
 
+/// Whether [value] (a `User.coverImage`) is something [CoverBand] draws: a ready-made cover's id or the person's
+/// own `/uploads/...` picture. Anything else (null, '', a value the site no longer knows) is no cover.
+bool isProfileCover(String? value) =>
+    value != null && (profileCovers.containsKey(value) || RegExp(r'^/uploads/[A-Za-z0-9._-]+$').hasMatch(value));
+
 /// A profile's banner: an uploaded picture, a ready-made cover (the website's
 /// file over its colour band), or the default band.
 class CoverBand extends StatelessWidget {

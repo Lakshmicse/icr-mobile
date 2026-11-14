@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
+import '../../core/util/screen_trail.dart';
 import '../../core/widgets/title_bar.dart';
 import '../feed/feed_models.dart';
 import '../feed/forum_json.dart';
@@ -53,11 +54,14 @@ Future<ThreadResult?> openThreadPage(
         )..start(),
         // The editor opens over the page, from the same forum.
         child: Builder(
-          builder: (page) => ThreadScreen(
-            unread: unread,
-            callbacks: callbacks,
-            scrollToReplies: scrollToReplies,
-            onEdit: (thread) => openComposer(page, repository: repository, editing: thread),
+          builder: (page) => SitePlace(
+            path: '/community/$slug',
+            child: ThreadScreen(
+              unread: unread,
+              callbacks: callbacks,
+              scrollToReplies: scrollToReplies,
+              onEdit: (thread) => openComposer(page, repository: repository, editing: thread),
+            ),
           ),
         ),
       ),

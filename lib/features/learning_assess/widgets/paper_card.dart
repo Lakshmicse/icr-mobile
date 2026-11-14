@@ -143,7 +143,7 @@ class PaperCard extends StatelessWidget {
   Widget _status() => switch (entry.access) {
     PaperAccess.open when entry.progress.passed => const StatusPill(label: 'Passed', tone: PillTone.success),
     PaperAccess.open => const StatusPill(label: 'Open', tone: PillTone.success, icon: LucideIcons.lockOpen),
-    PaperAccess.planPlace => const StatusPill(label: 'In your plan', tone: PillTone.info),
+    PaperAccess.planPlace => const StatusPill(label: 'In Your Plan', tone: PillTone.info),
     PaperAccess.closed => const StatusPill(label: 'Locked', icon: LucideIcons.lock),
   };
 

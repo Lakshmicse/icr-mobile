@@ -168,7 +168,7 @@ class _BidResponseCardState extends State<BidResponseCard> {
                   onTap: () => setState(() => _expanded = !_expanded),
                   child: Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(_expanded ? 'Show Less' : 'Show More', style: RfqText.link),
+                    child: Text(_expanded ? 'View Less' : 'View More', style: RfqText.link),
                   ),
                 ),
             ],

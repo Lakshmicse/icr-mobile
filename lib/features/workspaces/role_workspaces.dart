@@ -8,11 +8,10 @@ import 'workspaces.dart';
 /// Mentorship, Learning and Jobs, each opening its pages as tabs. What each row holds follows the website's sidebar for
 /// the role (`personasFor` in `personas.ts`, overrides included; owner, 5 Nov 2026: "as per the user access"):
 ///
-/// * **Company** — the company's own pages (My Company, its products, services, offices and certifications, Team, the
-///   operations consoles) for the roles that run them, and "My companies" for every member, where they switch,
-///   join or create one.
-/// * **Marketplace** — the website's Buy, Sell and Find companies: My Requirements for a company that buys, Find Work
-///   & Bid and Advertise for one that sells, and the public boards for everyone.
+/// * **Company** — the company's own pages (My Company, its offices and certifications, Team, the operations consoles)
+///   for the roles that run them, and "My companies" for every member, where they switch, join or create one.
+/// * **Marketplace** — the website's Buy, Sell and Find companies: My Requirements for a company that buys, My
+///   Products and My Services for one that sells, and the public boards for everyone.
 /// * **Mentorship**, **Learning** — the member's own.
 /// * **Jobs** — the hiring team's pages for the roles that hire (Interviews alone for a hiring manager), the job board,
 ///   and the member's own career pages.
@@ -52,7 +51,6 @@ List<Workspace> workspacesFor(SessionUser user, {required bool Function(String p
   final forCompany = user.companyId != null;
   final hires = forCompany && const ['RECRUITER', 'BRANCH_ADMIN', 'COMPANY_ADMIN'].contains(role);
   final sells = forCompany && const ['VENDOR', 'COMPANY_ADMIN'].contains(role);
-  final buys = forCompany && const ['BUYER', 'VENDOR', 'COMPANY_ADMIN'].contains(role);
   final runsCompany =
       forCompany && const ['COMPANY_ADMIN', 'VENDOR', 'BUYER', 'RECRUITER', 'BRANCH_ADMIN'].contains(role);
   // Staff of a partner institute: anyone given a learning role there, and the admin of a company ICR approved as a
@@ -78,19 +76,17 @@ List<Workspace> workspacesFor(SessionUser user, {required bool Function(String p
       const WorkspaceItem('My Saved Jobs', Icons.bookmark_border, '/career/saved'),
     ]);
 
-    // The Company row, second, under Jobs (owner, 12 Nov 2026): the company the member runs (its team, catalogue,
-    // enquiries and bids), and "My companies" for everyone — where a member switches to, joins or creates one
-    // (owner, 7 Nov 2026: it sat under Account).
+    // The Company row, second, under Jobs (owner, 12 Nov 2026): "My companies" for everyone — where a member
+    // switches to, joins or creates one (owner, 7 Nov 2026: it sat under Account) — then the company the member
+    // runs: its dashboard and its team. Owner, 14 Nov 2026: Company is My Companies, Dashboard and Manage Team;
+    // View Enquiries & RFQs and Bid for Enquiries & RFQs left it, since requirements are the Marketplace row's (My
+    // Requirements, Enquiries and RFQ), as are the products and services.
     add('company', 'Company', LucideIcons500.building, 'Your company, and the companies you belong to', _blue, [
       _yourCompanies,
-      // The company the member runs: its page, its team, its enquiries and bids. Its products and services sit
-      // under Marketplace (the owner's document moved them there).
       if (runsCompany) ...[
         const WorkspaceItem('Dashboard', Icons.dashboard_outlined, '/company'),
         const WorkspaceItem('Manage Team', Icons.groups_outlined, '/manage/team'),
         if (role == 'RECRUITER' || role == 'BRANCH_ADMIN') _myLocations,
-        if (buys) const WorkspaceItem('View Enquiries & RFQs', Icons.request_quote_outlined, '/manage/requirements'),
-        if (sells) const WorkspaceItem('Bid for Enquiries & RFQs', Icons.gavel_outlined, '/manage/bids'),
       ],
     ]);
 
@@ -125,10 +121,7 @@ List<Workspace> workspacesFor(SessionUser user, {required bool Function(String p
     add('marketplace', 'Marketplace', LucideIcons500.shoppingBag, 'Requirements and suppliers', _teal, [
       // The member's own requirements (posted from that page), a seller's catalogue, and everything posted on ICR.
       const WorkspaceItem('My Requirements', Icons.request_quote_outlined, '/manage/requirements'),
-      if (sells) ...const [
-        WorkspaceItem('My Products', Icons.inventory_2_outlined, '/manage/products'),
-        WorkspaceItem('My Services', Icons.handyman_outlined, '/manage/services'),
-      ],
+      if (sells) ..._myCatalogue,
       const WorkspaceItem('Enquiries and RFQ', Icons.list_alt_outlined, '/rfq'),
     ]);
 
@@ -157,15 +150,18 @@ List<Workspace> workspacesFor(SessionUser user, {required bool Function(String p
     ]);
   }
 
-  // ICR's own operator keeps the company and market consoles.
+  // ICR's own operator keeps the company and market consoles. The catalogue (My Products, My Services) is the
+  // Marketplace's, as it is for a member (owner, 14 Nov 2026: "My Products and My Services should be under
+  // Marketplace").
   if (role == 'SUPER_ADMIN') {
-    add('company', 'Company', LucideIcons500.building, 'Companies, catalogues and operations', _blue, [
+    add('company', 'Company', LucideIcons500.building, 'Companies, offices and operations', _blue, [
       ..._myBusiness,
       _team,
       ..._operations,
     ]);
     add('marketplace', 'Marketplace', LucideIcons500.shoppingBag, 'Requirements, suppliers and products', _teal, const [
       WorkspaceItem('My Requirements', Icons.request_quote_outlined, '/manage/requirements'),
+      ..._myCatalogue,
       WorkspaceItem('Browse RFQs', Icons.request_quote_outlined, '/rfq'),
       WorkspaceItem('Tenders', Icons.gavel_outlined, '/tenders'),
       WorkspaceItem("Enquiries and RFQ's", Icons.gavel_outlined, '/manage/bids'),
@@ -311,10 +307,14 @@ const _interviews = WorkspaceItem('Interviews', Icons.event_note_outlined, '/man
 
 const _myBusiness = [
   WorkspaceItem('My Company', Icons.storefront_outlined, '/company'),
-  WorkspaceItem('My Products', Icons.inventory_2_outlined, '/manage/products'),
-  WorkspaceItem('My Services', Icons.handyman_outlined, '/manage/services'),
   _myLocations,
   WorkspaceItem('My Certifications', Icons.workspace_premium_outlined, '/manage/certifications'),
+];
+
+/// A seller's catalogue: the Marketplace row's, never the Company row's (owner, 12 and 14 Nov 2026).
+const _myCatalogue = [
+  WorkspaceItem('My Products', Icons.inventory_2_outlined, '/manage/products'),
+  WorkspaceItem('My Services', Icons.handyman_outlined, '/manage/services'),
 ];
 
 const _operations = [

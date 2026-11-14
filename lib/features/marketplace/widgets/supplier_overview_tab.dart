@@ -204,7 +204,7 @@ class _About extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(expanded ? 'Show Less' : 'Read Full Company Charter', style: MartText.readMore),
+                      Text(expanded ? 'View Less' : 'Read Full Company Charter', style: MartText.readMore),
                       const SizedBox(width: 6),
                       Icon(
                         expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,

@@ -191,6 +191,7 @@ class MentorProfile {
     this.bioHtml,
     this.photo,
     this.cover,
+    this.coverPreset,
     this.verified = true,
     this.yearsExperience,
     this.city,
@@ -228,6 +229,10 @@ class MentorProfile {
   final String? bioHtml;
   final FeedPicture? photo;
   final FeedPicture? cover;
+
+  /// The ready-made cover the mentor chose on their profile (`PROFILE_COVERS` id), when [cover] is not their own
+  /// picture: the hero draws it as their profile does.
+  final String? coverPreset;
 
   /// A listed mentor is one ICR approved; the directory never shows another.
   final bool verified;
@@ -294,6 +299,7 @@ class MentorProfile {
     bioHtml: bioHtml,
     photo: photo ?? this.photo,
     cover: cover ?? this.cover,
+    coverPreset: coverPreset,
     verified: verified,
     yearsExperience: yearsExperience,
     city: city,

@@ -6,7 +6,7 @@ import '../../core/api/api_client.dart';
 import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
-import '../../core/util/links.dart' show showMessage;
+import '../../core/util/links.dart' show openExternal, showMessage;
 import '../../core/widgets/chips.dart';
 import '../../core/widgets/title_bar.dart';
 import '../learning_exam/exam_format.dart' show dateTimeLabel;
@@ -270,7 +270,9 @@ class EnquiryRow extends StatefulWidget {
   final bool focused;
   final bool busy;
   final VoidCallback onStatus;
-  final ValueChanged<String> onSaveNote;
+
+  /// Saves the institute's note; finishes when the API has answered.
+  final Future<void> Function(String note) onSaveNote;
 
   @override
   State<EnquiryRow> createState() => _EnquiryRowState();
@@ -279,15 +281,46 @@ class EnquiryRow extends StatefulWidget {
 class _EnquiryRowState extends State<EnquiryRow> {
   late final TextEditingController _note = TextEditingController(text: widget.enquiry.note ?? '');
   final _noteFocus = FocusNode();
+  bool _saving = false;
+
+  /// The text differs from the note as saved: Save Note shows.
+  bool get _dirty => _note.text.trim() != (widget.enquiry.note ?? '');
 
   @override
   void initState() {
     super.initState();
-    // Saved when the person leaves the field, as the website's note is.
+    // Saved when the person leaves the field, as the website's note is, and with Save Note (owner, 14 Nov 2026:
+    // "no submit button visible while responding to enquiries"; the field is several lines, so the keyboard's
+    // action key is a new line, never a send).
     _noteFocus.addListener(() {
-      if (!_noteFocus.hasFocus) widget.onSaveNote(_note.text);
+      if (!_noteFocus.hasFocus) _save();
+    });
+    _note.addListener(() {
+      if (mounted) setState(() {});
     });
   }
+
+  Future<void> _save() async {
+    if (_saving || !_dirty) return;
+    setState(() => _saving = true);
+    try {
+      await widget.onSaveNote(_note.text);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  /// Save Note: closing the keyboard saves (the listener above); with the keyboard already closed, it saves itself.
+  void _saveNow() {
+    if (_noteFocus.hasFocus) {
+      _noteFocus.unfocus();
+    } else {
+      _save();
+    }
+  }
+
+  /// The enquirer is answered by email or phone: the note is the institute's own record and never reaches them.
+  void _reply(Uri uri) => openExternal(context, uri);
 
   @override
   void didUpdateWidget(covariant EnquiryRow old) {
@@ -341,6 +374,34 @@ class _EnquiryRowState extends State<EnquiryRow> {
           const SizedBox(height: 10),
           _Contact(enquiry: e),
           if (e.message != null) ...[const SizedBox(height: 10), Text(e.message!, style: SiteText.body)],
+          if (e.revealed) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _ReplyButton(
+                  key: ValueKey('reply-email-${e.id}'),
+                  icon: LucideIcons.mail,
+                  label: 'Reply by Email',
+                  onTap: () => _reply(
+                    Uri(
+                      scheme: 'mailto',
+                      path: e.email,
+                      query: 'subject=${Uri.encodeComponent(_subject(e))}',
+                    ),
+                  ),
+                ),
+                if (e.phone != null && e.phone!.trim().isNotEmpty)
+                  _ReplyButton(
+                    key: ValueKey('reply-call-${e.id}'),
+                    icon: LucideIcons.phone,
+                    label: 'Call',
+                    onTap: () => _reply(Uri(scheme: 'tel', path: e.phone!.replaceAll(' ', ''))),
+                  ),
+              ],
+            ),
+          ],
           const SizedBox(height: 12),
           Row(
             children: [
@@ -366,8 +427,10 @@ class _EnquiryRowState extends State<EnquiryRow> {
             maxLines: null,
             maxLength: 4000,
             style: SiteText.body,
+            // Room under the field for Save Note when the keyboard lifts it.
+            scrollPadding: const EdgeInsets.fromLTRB(20, 20, 20, 96),
             decoration: InputDecoration(
-              hintText: 'Your note',
+              hintText: 'Add a note for your team',
               hintStyle: SiteText.secondary,
               counterText: '',
               isDense: true,
@@ -376,18 +439,77 @@ class _EnquiryRowState extends State<EnquiryRow> {
               enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: SiteColors.hairline)),
               focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
             ),
-            onSubmitted: widget.onSaveNote,
+          ),
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  'Only your team sees this note. To reply, email or call the enquirer.',
+                  key: ValueKey('note-help-${e.id}'),
+                  style: SiteText.meta,
+                ),
+              ),
+              if (_dirty || _saving) ...[
+                const SizedBox(width: 12),
+                FilledButton(
+                  key: ValueKey('note-save-${e.id}'),
+                  onPressed: _saving ? null : _saveNow,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    minimumSize: const Size(0, 36),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    shape: const StadiumBorder(),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: _saving
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : Text('Save Note', style: SiteText.button),
+                ),
+              ],
+            ],
           ),
         ],
       ),
     );
   }
 
+  static String _subject(Enquiry e) =>
+      e.courseTitle != null ? 'Your enquiry about ${e.courseTitle}' : 'Your enquiry on ICR';
+
   static ChipTone _tone(String status) => switch (status) {
     'NEW' => ChipTone.primary,
     'CONVERTED' => ChipTone.tinted,
     _ => ChipTone.outlined,
   };
+}
+
+/// A small outlined pill under the message: Reply by Email, Call.
+class _ReplyButton extends StatelessWidget {
+  const _ReplyButton({super.key, required this.icon, required this.label, required this.onTap});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton.icon(
+    onPressed: onTap,
+    icon: Icon(icon, size: 16, color: AppColors.primary),
+    label: Text(label, style: SiteText.link),
+    style: OutlinedButton.styleFrom(
+      minimumSize: const Size(0, 34),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      side: const BorderSide(color: AppColors.primary),
+      shape: const StadiumBorder(),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    ),
+  );
 }
 
 /// The email and phone: open, or greyed with a lock and the website's reason when the plan's number is past.

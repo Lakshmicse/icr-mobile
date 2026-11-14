@@ -799,7 +799,7 @@ class _CitySheetState extends State<_CitySheet> {
                       child: Text(
                         _error ??
                             (q.length < 2
-                                ? 'Pick the city from the list; its state and country are filled in.'
+                                ? 'Select the city from the list. Its state and country are filled in.'
                                 : (_searching ? 'Searching…' : 'No city found for “${_q.trim()}”.')),
                         style: AccountText.meta,
                         textAlign: TextAlign.center,

@@ -449,9 +449,12 @@ class MyProfile {
     this.yearsExperience,
     this.languages = const [],
     this.workEmail,
+    this.workEmailVerified = false,
     this.phone,
     this.phoneVerified = false,
     this.altPhone,
+    this.birthMonth,
+    this.birthDay,
     this.avatarUrl,
     this.coverImage,
     this.companyName,
@@ -476,10 +479,17 @@ class MyProfile {
   final List<String> languages;
   final String? workEmail;
 
+  /// The work email was confirmed by a code.
+  final bool workEmailVerified;
+
   /// E.164 ("+919876543210").
   final String? phone;
   final bool phoneVerified;
   final String? altPhone;
+
+  /// The birthday, month (1–12) and day, no year; only the person sees it.
+  final int? birthMonth;
+  final int? birthDay;
   final String? avatarUrl;
 
   /// A ready-made cover's id or an uploaded `/uploads/...` image.
@@ -528,9 +538,12 @@ class MyProfile {
       yearsExperience: _int(user['yearsExperience']),
       languages: _strings(user['languages']),
       workEmail: _str(user['workEmail']),
+      workEmailVerified: user['workEmailVerified'] == true,
       phone: _str(user['phone']),
       phoneVerified: user['phoneVerified'] == true,
       altPhone: _str(user['altPhone']),
+      birthMonth: _int(user['birthMonth']),
+      birthDay: _int(user['birthDay']),
       avatarUrl: _str(user['avatarUrl']),
       coverImage: _str(user['coverImage']),
       companyName: _str(_map(json['company'])['name']),

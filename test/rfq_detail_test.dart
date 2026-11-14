@@ -265,7 +265,7 @@ void main() {
       expect(tester.widget<Text>(key('bid-message-text-long-bid')).maxLines, 4);
       await tapKey(tester, 'bid-more-long-bid');
       expect(tester.widget<Text>(key('bid-message-text-long-bid')).maxLines, isNull);
-      expect(find.text('Show Less'), findsOneWidget);
+      expect(find.text('View Less'), findsOneWidget);
     });
   });
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
 import '../../core/util/links.dart';
@@ -74,7 +75,7 @@ class UpcomingTab extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
                           textStyle: AppText.button,
                         ),
-                        child: Text('Open $title on icr.org.in', style: AppText.button),
+                        child: Text('Open $title on ${Uri.parse(AppConfig.siteUrl).host}', style: AppText.button),
                       ),
                     ],
                   ),

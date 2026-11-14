@@ -176,7 +176,7 @@ class _ManageChaptersScreenState extends State<ManageChaptersScreen> {
               controller: _list,
               searchText: _searchText,
               searchHint: 'Search chapters by name or city',
-              emptyTitle: 'No chapters',
+              emptyTitle: 'No Chapters',
               newLabel: widget.everywhere ? 'New Chapter' : null,
               onNew: widget.everywhere ? _new : null,
               rowBuilder: (c) => OrgRow(
@@ -192,7 +192,7 @@ class _ManageChaptersScreenState extends State<ManageChaptersScreen> {
               key: const ValueKey('applications-tab'),
               controller: _requests,
               viewOf: RequestView.ofApplication,
-              emptyTitle: 'No chapter applications here',
+              emptyTitle: 'No Chapter Applications',
               focusId: widget.focusApplicationId,
               onDecide: _decide,
               onFind: _find,

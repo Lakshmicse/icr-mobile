@@ -476,8 +476,8 @@ class _AddLeaderSheetState extends State<_AddLeaderSheet> with _Submits {
             helper: _searching
                 ? 'Searching…'
                 : (q.length < 2
-                      ? 'Type at least 2 letters of a name or email'
-                      : (_found.isEmpty && _searchError == null ? 'No one found' : null)),
+                      ? 'Type at least 2 letters of a name or email.'
+                      : (_found.isEmpty && _searchError == null ? 'No one found.' : null)),
             error: _searchError,
             onChanged: _typed,
           ),
@@ -509,8 +509,8 @@ class _AddLeaderSheetState extends State<_AddLeaderSheet> with _Submits {
           ),
           if (!picked.isMember)
             ManageNote(
-              '${picked.firstName.isEmpty ? picked.name : picked.firstName} is not a member of this chapter yet; '
-              'adding them as a leader joins them.',
+              '${picked.firstName.isEmpty ? picked.name : picked.firstName} is not a member of this chapter yet. '
+              'Adding them as a leader also makes them a member.',
             ),
         ],
         AccountField(
@@ -524,7 +524,7 @@ class _AddLeaderSheetState extends State<_AddLeaderSheet> with _Submits {
         ),
         AccountField(
           fieldKey: const Key('leader.linkedin'),
-          label: 'LinkedIn URL (optional)',
+          label: 'LinkedIn URL (Optional)',
           controller: _linkedin,
           maxLength: ManageLimits.linkedinUrl,
           keyboardType: TextInputType.url,
@@ -676,7 +676,7 @@ class _LeadSheetState extends State<_LeadSheet> {
           label: 'Term Ends',
           value: _ends,
           hint: 'Open',
-          helper: 'Leave empty for an open term',
+          helper: 'Leave empty for an open term.',
           pickers: widget.pickers,
           onChanged: (v) => _touch(() => _ends = v),
         ),
@@ -765,7 +765,7 @@ class _MakeLeadSheetState extends State<_MakeLeadSheet> with _Submits {
           label: 'Term Ends',
           value: _ends,
           hint: 'Open',
-          helper: 'Leave empty for an open term',
+          helper: 'Leave empty for an open term.',
           pickers: widget.pickers,
           onChanged: (v) => touch(() => _ends = v),
         ),
@@ -816,11 +816,11 @@ class _DecideSheetState extends State<_DecideSheet> with _Submits {
   Widget build(BuildContext context) {
     final declining = widget.declining;
     final lead = declining
-        ? 'The member reads this reason in their notifications and on their application.'
+        ? 'The member will see this reason in their notifications and on their application.'
         : widget.kind == OrgKind.chapter
-        ? 'Approving makes the member lead from today. A new chapter is created unpublished: finish its page in '
+        ? 'Approving makes the member lead from today. A new chapter is created unpublished. Finish its page in '
               'the Chapters tab, then publish it.'
-        : 'Approving creates the council unpublished with the member as lead: finish its page in the Councils '
+        : 'Approving creates the council unpublished with the member as lead. Finish its page in the Councils '
               'tab, then publish it.';
     return EditSheet(
       title: declining ? 'Decline' : 'Approve',
@@ -843,7 +843,7 @@ class _DecideSheetState extends State<_DecideSheet> with _Submits {
         ),
         AccountField(
           fieldKey: const Key('decide.reason'),
-          label: declining ? 'Reason (required)' : 'Note to the Member (optional)',
+          label: declining ? 'Reason (Required)' : 'Note to the Member (Optional)',
           controller: _reason,
           maxLines: 6,
           minLines: 3,

@@ -18,6 +18,7 @@ import 'career_models.dart';
 import 'career_repository.dart';
 import 'career_styles.dart';
 import 'career_widgets.dart';
+import '../../core/util/screen_trail.dart';
 import 'my_applications_screen.dart' show LockedTimelineNotice;
 
 /// One application, as the person who made it reads it (the website's
@@ -128,7 +129,10 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> with 
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      SitePlace(path: '/career/applications/${widget.application.id}', child: _buildPage(context));
+
+  Widget _buildPage(BuildContext context) {
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) => CareerScaffold(
@@ -150,7 +154,7 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> with 
             icon: LucideIcons.cloudOff,
             title: 'Unable to Open This Application',
             body: _c.error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: _c.start,
           ),
         ],

@@ -210,3 +210,18 @@ The client asked for the on-screen text to be refined "crisp, for global standar
 | Education & Academic | Education |
 | You can't message this mentor yet. | You cannot message this mentor yet. |
 | Buttons, headings, tabs, chips, field labels and status names to Title Case: 28 strings | e.g. "Added to your purchases. Find it in My mentoring, under Purchases." → "Added to your purchases. Find it in My Mentoring, under Purchases."; "accepts, you pay from My mentoring, under Purchases." → "accepts, you pay from My Mentoring, under Purchases."; "1:1 {modeWord} call" → "1:1 {modeWord} Call" |
+
+
+## 14 Nov 2026: the banner shows wherever the person appears
+
+The owner, on the profile's banner: "banner has the upload options but its not in the app." The banner a person
+sets on their profile (a ready-made cover such as "Skyline at dusk", or their own uploaded picture) showed on the
+profile page only. The side menu read the stored value as a web address, so a ready-made cover ("skyline") became
+`https://…/skyline`, failed, and the menu fell back to its own gradient; the mentor profile's hero dropped a
+ready-made cover for its navy band; the mentor card drew the cover's colours without its picture.
+
+All three now draw it through the profile's own `CoverBand` (`account/widgets/account_kit.dart`), with
+`isProfileCover` deciding what counts as a cover (a `PROFILE_COVERS` id or an own `/uploads/...` picture, never an
+outside address): `ProfileDrawerData.cover`, `MentorProfile.coverPreset` beside `cover`, and the mentor card's band.
+Uploading is unchanged: the camera on the profile's banner opens the cover sheet (ready-made covers and "Upload Your
+Own"). Tests: `profile_drawer_test.dart` ("the banner is the one the person set…"), `mentor_profile_test.dart`.

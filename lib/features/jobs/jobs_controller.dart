@@ -107,7 +107,7 @@ class JobsController extends ChangeNotifier {
   String? actionLabel(JobSection section) => showsMore(section)
       ? 'View More'
       : canCollapse(section)
-      ? 'Show Less'
+      ? 'View Less'
       : null;
 
   Future<void> start() async {

@@ -251,7 +251,7 @@ class _MyJobsSheetState extends State<MyJobsSheet> {
             Text(_error ?? 'Unable to load your jobs.', textAlign: TextAlign.center, style: AppText.small),
             TextButton(
               onPressed: _load,
-              child: Text('Try again', style: AppText.link),
+              child: Text('Try Again', style: AppText.link),
             ),
           ],
         ),

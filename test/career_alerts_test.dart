@@ -101,7 +101,7 @@ void main() {
       expect(find.byKey(const ValueKey('alerts-error')), findsOneWidget);
       expect(find.text('The alerts are down.'), findsOneWidget);
       broken.down = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('Facilities & Real Estate'), findsOneWidget);
     });

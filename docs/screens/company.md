@@ -62,7 +62,9 @@ never a second copy). `?tab=verification` is not a tab but a place: it opens Com
 `?tab=team` opens the team page.
 
 **Overview** — Company Profile Completeness (score, the first four missing items each with Add — the map pin opens
-`/manage/locations`, the rest Company Details — and Edit Company Profile); Trust & Verification (Company Verification
+`/manage/locations`, the rest Company Details — and Edit Company Profile), shown only while something is missing: a
+complete page has no card and opens on Trust & Verification (owner, 14 Nov 2026: the 100% card was fixed space with
+nothing to act on); Trust & Verification (Company Verification
 with its status, sentence and View Details / Verify / Respond / Resubmit, only View for someone who cannot file;
 Supplier Trust Level "Verified – Level 2", trust score, the five-rung ladder, Upgrade Trust Level or Respond, or Start
 selling for a company that does not sell); Company Overview (Members, Office Locations, Active Job Listings, Products
@@ -187,7 +189,7 @@ marketplace pages are other screens. "Supplier Mart" reads "the Marketplace", th
 ## Tests
 
 `test/company_workspace_test.dart`, against `DemoCompanyRepository`: the header and its facts; the completeness card
-and where Add goes; the trust card's two answers; the overview panel, plans and public profile; a section's sheet
+and where Add goes, and no card at all on a complete page; the trust card's two answers; the overview panel, plans and public profile; a section's sheet
 sending only the field that changed, and nothing when nothing changed; the verified locks with their sentences; an
 unverified PAN checked before anything is sent; the verified company check; filing the check from the profile; the
 checklist's missing items opening their sections; the level request with its evidence; Pending Upload and Add Details;

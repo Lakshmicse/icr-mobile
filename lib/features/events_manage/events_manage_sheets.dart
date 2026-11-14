@@ -57,7 +57,7 @@ class _InviteByEmailSheetState extends State<_InviteByEmailSheet> {
     }
     setState(() {
       _saving = false;
-      _error = out.refusal ?? 'Could not invite.';
+      _error = out.refusal ?? 'Unable to send the invite.';
     });
   }
 
@@ -79,7 +79,7 @@ class _InviteByEmailSheetState extends State<_InviteByEmailSheet> {
           minLines: 3,
           textCapitalization: TextCapitalization.none,
           hint: 'one@x.com, two@y.com',
-          helper: 'ICR members only; others are reported back.',
+          helper: 'ICR members only. Other addresses are reported back.',
           onChanged: (_) => setState(() {}),
         ),
       ],
@@ -110,7 +110,7 @@ class _InviteByTierSheetState extends State<_InviteByTierSheet> {
       context,
       title: 'Invite by Tier',
       items: inviteTiers,
-      labelOf: (t) => '${tierLabel(t)} and above',
+      labelOf: (t) => '${tierLabel(t)} and Above',
       selected: _tier,
     );
     if (picked != null) setState(() => _tier = picked);
@@ -129,7 +129,7 @@ class _InviteByTierSheetState extends State<_InviteByTierSheet> {
     }
     setState(() {
       _saving = false;
-      _error = out.refusal ?? 'Could not invite.';
+      _error = out.refusal ?? 'Unable to send the invite.';
     });
   }
 
@@ -146,12 +146,12 @@ class _InviteByTierSheetState extends State<_InviteByTierSheet> {
           key: const Key('invite.tier'),
           label: 'Tier',
           hint: 'Select a tier',
-          value: '${tierLabel(_tier)} and above',
+          value: '${tierLabel(_tier)} and Above',
           onTap: _pick,
         ),
         Text(
           'A tier sweep reaches personal plans and every member of a company on the plan. It writes one invite per '
-          'person and tells only the new ones; run it again after plans change.',
+          'person and notifies only the new ones. Run it again after plans change.',
           style: AccountText.meta,
         ),
         const SizedBox(height: 8),
@@ -171,7 +171,7 @@ Future<bool> showProposalSheet(
     await showEditSheet<bool>(
       context,
       builder: (_) => _DecisionSheet(
-        kicker: 'Talk proposal',
+        kicker: 'Talk Proposal',
         title: proposal.title,
         statusLabel: proposalStatusLabel(proposal.status),
         statusTone: proposalTone(proposal.status),
@@ -182,7 +182,7 @@ Future<bool> showProposalSheet(
         decidedNote: proposal.reviewNote,
         open: proposal.pending,
         noteLabel: 'Note to the Speaker',
-        noteHint: 'Required to decline; they read it',
+        noteHint: 'Required to decline. They will see it.',
         acceptLabel: 'Accept',
         onAccept: (note) => controller.decideProposal(proposal, 'ACCEPTED', note: note),
         onDecline: (note) => controller.decideProposal(proposal, 'DECLINED', note: note),
@@ -207,7 +207,7 @@ Future<bool> showSponsorshipSheet(
     await showEditSheet<bool>(
       context,
       builder: (_) => _DecisionSheet(
-        kicker: 'Sponsorship request',
+        kicker: 'Sponsorship Request',
         title: '${request.company} — ${request.package}',
         statusLabel: sponsorshipStatusLabel(request.status),
         statusTone: sponsorshipTone(request.status),
@@ -216,7 +216,7 @@ Future<bool> showSponsorshipSheet(
         decidedNote: request.decisionNote,
         open: request.open,
         noteLabel: 'Note to the Sponsor',
-        noteHint: 'Required to decline; they read it',
+        noteHint: 'Required to decline. They will see it.',
         acceptLabel: 'Confirm',
         onAccept: (note) => controller.decideSponsorship(request, 'CONFIRMED', note: note),
         onDecline: (note) => controller.decideSponsorship(request, 'DECLINED', note: note),
@@ -283,7 +283,7 @@ class _DecisionSheetState extends State<_DecisionSheet> {
   Future<void> _decide(Future<String?> Function(String? note) send, {required bool needsNote}) async {
     final note = _note.text.trim();
     if (needsNote && note.isEmpty) {
-      setState(() => _error = 'Write the reason first.');
+      setState(() => _error = 'Enter the reason first.');
       return;
     }
     setState(() {
@@ -480,7 +480,7 @@ class _PackageSheetState extends State<_PackageSheet> {
           required: true,
           controller: _name,
           maxLength: packageNameMax,
-          hint: 'Gold partner',
+          hint: 'Gold Partner',
           error: problems['name'],
           onChanged: (v) => _touch(() => _d.name = v),
         ),
@@ -505,7 +505,7 @@ class _PackageSheetState extends State<_PackageSheet> {
                 label: 'Slots',
                 controller: _slots,
                 keyboardType: TextInputType.number,
-                helper: 'Blank: no cap',
+                helper: 'Leave blank for no limit.',
                 error: problems['slots'],
                 onChanged: (v) => _touch(() => _d.slots = v),
               ),
@@ -572,7 +572,7 @@ class _RefundSheetState extends State<_RefundSheet> {
     }
     setState(() {
       _saving = false;
-      _error = out.refusal ?? 'Could not record the refund.';
+      _error = out.refusal ?? 'Unable to record the refund.';
     });
   }
 
@@ -593,7 +593,7 @@ class _RefundSheetState extends State<_RefundSheet> {
           padding: const EdgeInsets.only(bottom: 14),
           child: Text(
             'Refund ${moneyLabel(t.totalPaisa)} to ${t.firstName.isEmpty ? t.name : t.firstName} in the PayU '
-            'dashboard first, then record it. Their seat is given up.',
+            'dashboard first, then record it here. Their seat is released.',
             style: AccountText.body,
           ),
         ),
@@ -650,7 +650,7 @@ class _AttendanceSheetState extends State<_AttendanceSheet> {
     }
     setState(() {
       _saving = false;
-      _error = out.refusal ?? 'Could not mark attendance.';
+      _error = out.refusal ?? 'Unable to mark attendance.';
     });
   }
 
@@ -659,7 +659,7 @@ class _AttendanceSheetState extends State<_AttendanceSheet> {
     final all = _picked.length == _people.length && _people.isNotEmpty;
     return EditSheet(
       title: 'Mark Attendance',
-      subtitle: 'Tick everyone who was present.',
+      subtitle: 'Select everyone who was present.',
       saving: _saving,
       error: _error,
       dirty: _picked.isNotEmpty,
@@ -732,7 +732,7 @@ class _HostRequestSheetState extends State<_HostRequestSheet> {
   Future<void> _act(String action) async {
     final note = _note.text.trim();
     if (action != 'approve' && note.isEmpty) {
-      setState(() => _error = 'Give the company a reason — they will see it.');
+      setState(() => _error = 'Give the company a reason. They will see it.');
       return;
     }
     setState(() {
@@ -757,7 +757,7 @@ class _HostRequestSheetState extends State<_HostRequestSheet> {
     final pending = r.status == 'PENDING';
     final approved = r.status == 'APPROVED';
     return EmSheet(
-      kicker: 'Request to host events',
+      kicker: 'Request to Host Events',
       title: r.company,
       error: _error,
       actions: [
@@ -796,9 +796,9 @@ class _HostRequestSheetState extends State<_HostRequestSheet> {
             child: EmStatus(label: hostStatusLabel(r.status), tone: hostTone(r.status)),
           ),
         ),
-        EmDetail(label: 'What they plan', value: r.about),
-        EmDetail(label: 'Kinds of event', value: r.kindsLabel ?? '—'),
-        EmDetail(label: 'How often', value: r.frequency ?? '—'),
+        EmDetail(label: 'What They Plan', value: r.about),
+        EmDetail(label: 'Kinds of Event', value: r.kindsLabel ?? '—'),
+        EmDetail(label: 'How Often', value: r.frequency ?? '—'),
         EmDetail(
           label: 'Website',
           child: r.website == null
@@ -817,8 +817,8 @@ class _HostRequestSheetState extends State<_HostRequestSheet> {
           label: 'Contact',
           value: [r.contactName, r.contactEmail, if (r.contactPhone != null) r.contactPhone!].join(' · '),
         ),
-        EmDetail(label: 'Asked by', value: '${r.appliedBy} on ${dayLabel(r.createdAt)}'),
-        if (r.hostedEventCount != null) EmDetail(label: 'Events hosted', value: '${r.hostedEventCount}'),
+        EmDetail(label: 'Asked By', value: '${r.appliedBy} on ${dayLabel(r.createdAt)}'),
+        if (r.hostedEventCount != null) EmDetail(label: 'Events Hosted', value: '${r.hostedEventCount}'),
         if (r.reviewedAt != null)
           EmDetail(
             label: 'Decided',

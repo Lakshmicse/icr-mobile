@@ -67,4 +67,54 @@ void main() {
     expect(find.text('Devvrat Rajgopal'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  // Owner, 14 Nov 2026: with two people the sheet opened as a sliver and its last row sat under the phone's
+  // navigation bar. It opens at three quarters of the screen whatever the count, and the list ends above the bar.
+  testWidgets('opens tall with a short list; the last row stays clear of the navigation bar', (tester) async {
+    tester.view.physicalSize = const Size(780, 1500); // 390 x 750 dp
+    tester.view.devicePixelRatio = 2;
+    tester.view.viewPadding = const FakeViewPadding(bottom: 96); // a 48 dp three-button bar
+    tester.view.padding = const FakeViewPadding(bottom: 96);
+    addTearDown(tester.view.reset);
+    List<ForumReactor> people(int n) => [
+      for (var i = 0; i < n; i++)
+        ForumReactor(
+          person: FeedAuthor(id: 'p$i', name: 'Person $i', headline: 'Facility Manager'),
+          reaction: i.isEven ? ReactionKind.like : ReactionKind.celebrate,
+          at: DateTime(2026, 11, 14),
+        ),
+    ];
+    var shown = people(2);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(),
+        home: Scaffold(
+          body: Builder(
+            builder: (c) => Center(
+              child: TextButton(
+                onPressed: () => showReactorsSheet(c, load: () async => shown),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    final list = tester.getRect(find.byKey(const ValueKey('reactors-list')));
+    expect(tester.getTopLeft(find.text('All 2')).dy, lessThan(750 * 0.35), reason: 'three quarters of the screen');
+    expect(list.bottom, closeTo(750, 1), reason: 'the sheet runs to the foot of the screen');
+
+    Navigator.of(tester.element(find.text('All 2'))).pop();
+    await tester.pumpAndSettle();
+    shown = people(30);
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.fling(find.byKey(const ValueKey('reactors-list')), const Offset(0, -4000), 3000);
+    await tester.pumpAndSettle();
+    final last = tester.getRect(find.ancestor(of: find.text('Person 29'), matching: find.byType(InkWell)).first);
+    expect(last.bottom, lessThanOrEqualTo(750 - 48 - 24 + 0.5), reason: 'the bar and a gap under the last row');
+    expect(tester.takeException(), isNull);
+  });
 }

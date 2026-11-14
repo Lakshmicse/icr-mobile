@@ -232,15 +232,26 @@ class ApiForumRepository implements ForumRepository {
 
   @override
   Future<List<ForumReactor>> reactors(String threadId) async {
-    final res = await _get('/forum/threads/$threadId/reactions', {'page': 1, 'limit': 50});
-    return [
-      for (final r in (res['data'] as List).cast<Map<String, dynamic>>())
-        ForumReactor(
-          person: _json.author(r['user'] as Map<String, dynamic>),
-          reaction: reactionKindFromApi(r['reaction'] as String?) ?? ReactionKind.like,
-          at: DateTime.tryParse(r['reactedAt'] as String? ?? '') ?? DateTime.now(),
-        ),
-    ];
+    // Every page, not the first 50: the sheet's tabs count each reaction, and a discussion with more likes than one
+    // page showed only the newest of them (owner, 13 Nov 2026). Stops at 2,000 people.
+    final out = <ForumReactor>[];
+    for (var page = 1; page <= 40; page++) {
+      final res = await _get('/forum/threads/$threadId/reactions', {'page': page, 'limit': 50});
+      final rows = ((res['data'] as List?) ?? const []).cast<Map<String, dynamic>>();
+      for (final r in rows) {
+        out.add(
+          ForumReactor(
+            person: _json.author(r['user'] as Map<String, dynamic>),
+            reaction: reactionKindFromApi(r['reaction'] as String?) ?? ReactionKind.like,
+            at: DateTime.tryParse(r['reactedAt'] as String? ?? '') ?? DateTime.now(),
+          ),
+        );
+      }
+      final meta = res['meta'];
+      final more = meta is Map && (meta['hasNext'] == true || ((meta['totalPages'] as num?) ?? 1) > page);
+      if (rows.isEmpty || !more) break;
+    }
+    return out;
   }
 
   @override

@@ -43,15 +43,20 @@ class OverviewTab extends StatelessWidget {
     final c = controller;
     final company = c.company;
     final hasCompany = c.hasCompany;
+    final completeness = hasCompany ? c.profile?.companyCompleteness : null;
+    // A complete page needs nothing from anyone, so the card goes (owner, 14 Nov 2026: "no use to see it again and
+    // again"); it is back the moment something is missing, which is when it has something to say.
+    final complete = completeness != null && completeness.missing.isEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _CompletenessCard(
-          completeness: hasCompany ? c.profile?.companyCompleteness : null,
-          company: company?.name ?? '',
-          onJump: onJump,
-          onOpenSitePage: onOpenSitePage,
-        ),
+        if (!complete)
+          _CompletenessCard(
+            completeness: completeness,
+            company: company?.name ?? '',
+            onJump: onJump,
+            onOpenSitePage: onOpenSitePage,
+          ),
         if (hasCompany) ...[
           _TrustCard(controller: c, onJump: onJump, onStartSelling: onStartSelling),
           _GlancePanel(
@@ -68,7 +73,8 @@ class OverviewTab extends StatelessWidget {
   }
 }
 
-/// How much of the company's page is filled in, and each missing item with the way to where it is filled.
+/// How much of the company's page is filled in, and each missing item with the way to where it is filled. Shown only
+/// while something is missing (or the person acts for no company yet); a complete page has no card.
 class _CompletenessCard extends StatelessWidget {
   const _CompletenessCard({
     required this.completeness,
@@ -131,16 +137,6 @@ class _CompletenessCard extends StatelessWidget {
                 Expanded(child: Text(CompanyWords.completenessNoCompany, style: SiteText.secondary)),
                 const SizedBox(width: 8),
                 PillAction(label: CompanyWords.addDetails, filled: true, onPressed: () => onJump(CompanyJump.details)),
-              ],
-            ),
-          )
-        else if (missing.isEmpty)
-          CompanyRow(
-            child: Row(
-              children: [
-                const Icon(Symbols.task_alt, size: 20, color: AppColors.success),
-                const SizedBox(width: 10),
-                Expanded(child: Text(CompanyWords.completenessComplete, style: SiteText.secondary)),
               ],
             ),
           )

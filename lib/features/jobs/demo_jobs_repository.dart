@@ -5,7 +5,7 @@ import 'jobs_repository.dart';
 /// The Jobs designs' sample content, bundled for design review.
 class DemoJobsRepository implements JobsRepository {
   @override
-  Future<bool> postsJobsFor(JobCompany company) async => false;
+  Future<HiringTeamSeat> hiringTeamSeatAt(JobCompany company) async => HiringTeamSeat.none;
 
   DemoJobsRepository();
 

@@ -92,7 +92,7 @@ class AdminChapter {
   bool get countryWide => scope == ChapterScope.country;
 
   /// "Regional chapter" or "Country chapter", as the website's list names it.
-  String get scopeLabel => countryWide ? 'Country chapter' : 'Regional chapter';
+  String get scopeLabel => countryWide ? 'Country Chapter' : 'Regional Chapter';
 
   /// City, region and country, each once ("Bengaluru · Karnataka · India").
   String get place {
@@ -429,7 +429,7 @@ class ChapterApplication {
   bool get pending => status == RequestStatus.pending;
 
   /// The row's heading, as the website words it.
-  String get title => newChapter ? 'New chapter: ${proposedName ?? city}' : 'Lead ${chapterName ?? 'a chapter'}';
+  String get title => newChapter ? 'New Chapter: ${proposedName ?? city}' : 'Lead ${chapterName ?? 'a chapter'}';
 
   factory ChapterApplication.fromJson(Map<String, dynamic> j) => ChapterApplication(
     id: _s(j['id']),

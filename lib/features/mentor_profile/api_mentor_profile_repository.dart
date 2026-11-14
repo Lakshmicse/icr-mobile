@@ -1,3 +1,4 @@
+import '../account/widgets/account_kit.dart' show isProfileCover;
 import 'package:dio/dio.dart' show Options;
 
 import '../../core/api/api_client.dart';
@@ -217,6 +218,9 @@ class ApiMentorProfileRepository implements MentorProfileRepository {
       bioHtml: json['bioHtml'] as String?,
       photo: _picture(user['avatarUrl'] as String?),
       cover: _cover(json['coverImage'] as String?),
+      coverPreset: _cover(json['coverImage'] as String?) == null && isProfileCover(json['coverImage'] as String?)
+          ? json['coverImage'] as String
+          : null,
       verified: json['status'] == 'APPROVED',
       yearsExperience: (json['yearsExperience'] as num?)?.toInt(),
       city: json['city'] as String?,

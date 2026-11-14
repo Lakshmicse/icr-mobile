@@ -160,7 +160,8 @@ void main() {
       expect(capacityProblem('51'), startsWith('Enter seats as a number from 2 to 50'));
       expect(capacityProblem('50'), isNull);
       expect(seatPriceProblem(price: '', capacity: ''), isNull);
-      expect(seatPriceProblem(price: '100', capacity: '25'), 'Priced seats start at ₹499.');
+      expect(seatPriceProblem(price: '100', capacity: '25'), isNull, reason: 'no price floor');
+      expect(seatPriceProblem(price: '100', capacity: ''), 'A paid session needs a number of seats.');
       expect(seatPriceProblem(price: '499', capacity: ''), 'A paid session needs a number of seats.');
       expect(seatPriceProblem(price: '499', capacity: '25'), isNull);
       expect(seatPriceProblem(price: '50001', capacity: '25'), 'Prices go up to ₹50,000.');

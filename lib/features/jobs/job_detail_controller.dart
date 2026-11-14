@@ -69,7 +69,7 @@ class JobDetailController extends ChangeNotifier {
   Job _job;
   JobMatch? _match;
   CompanyPeople? _people;
-  bool _postsHere = false;
+  HiringTeamSeat _seat = HiringTeamSeat.none;
   bool _loading = true;
   bool _applying = false;
   String? _error;
@@ -92,8 +92,15 @@ class JobDetailController extends ChangeNotifier {
   JobMatch? get match => _match;
   CompanyPeople? get people => _people;
 
-  /// The member posts this company's jobs, so they manage this one rather than apply to it: no Apply, no match.
-  bool get postsHere => _postsHere;
+  /// Where the member sits on this company's hiring team.
+  HiringTeamSeat get seat => _seat;
+
+  /// The member is on this company's hiring team, so never applies to its jobs: no Apply, no match, no hiring
+  /// contact to write to as a candidate.
+  bool get onHiringTeam => _seat.onTeam;
+
+  /// The member posts this company's jobs, so they manage this one rather than apply to it.
+  bool get postsHere => _seat == HiringTeamSeat.poster;
   bool get loading => _loading;
   bool get applying => _applying;
   String? get error => _error;
@@ -117,11 +124,11 @@ class JobDetailController extends ChangeNotifier {
       final results = await Future.wait([
         _aside(() => repository.match(_job)),
         _aside(() => repository.peopleAt(_job.company)),
-        _aside(() => repository.postsJobsFor(_job.company)),
+        _aside(() => repository.hiringTeamSeatAt(_job.company)),
       ]);
       _match = results[0] as JobMatch?;
       _people = results[1] as CompanyPeople?;
-      _postsHere = results[2] as bool? ?? false;
+      _seat = results[2] as HiringTeamSeat? ?? HiringTeamSeat.none;
       if (_match?.score != null) _job = _job.copyWith(matchScore: _match!.score);
     } catch (e) {
       _error = ApiError.from(e).message;

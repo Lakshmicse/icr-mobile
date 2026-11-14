@@ -288,7 +288,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
             icon: LucideIcons.cloudOff,
             title: 'Unable to Open This Posting',
             body: _c.error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: () {
               _filled = false;
               _c.start();

@@ -57,7 +57,7 @@ Each row has the design's circle (filled when met, empty when not) and the detai
 - the month's application allowance, when the plan has one ("3 of 10 applications left this month", or all used), with **See plans**;
 - a job that takes applications on the employer's own site reads "Apply on company site" and opens that link (the API refuses an application for it); no form;
 - once sent the bar reads "Applied" and the board's "My jobs" count grows; an application the API refuses (already applied, plan quota…) shows its sentence in the form.
-- **your own company's job**: someone who posts the company's jobs (an admin, office admin or recruiter of it by any membership — `GET /me/companies`, `JobsRepository.postsJobsFor`, read as an aside of the sheet) gets no Apply button and no match: the bar says "You post jobs for {company}, so you manage this one rather than apply to it." (the website's sentence; the API refuses the application too).
+- **your own company's job**: the company's hiring team (`HIRING_TEAM_ROLES`, by any membership — `GET /me/companies`, `JobsRepository.hiringTeamSeatAt`, read as an aside of the sheet) gets no Apply button, no match and no "Meet the hiring team". Someone who posts its jobs (an admin, office admin or recruiter) reads "You post jobs for {company}, so you manage this one rather than apply to it."; a hiring manager of it (since 14 Nov 2026) reads "You're a hiring manager at {company}, so you can't apply to its jobs." — the website's sentences (`postsForCompany`, `hiringManagerForCompany`); the API refuses the application too (`ownCompanyJob`, `hiringManagerOwnJob`).
 
 ## Controls and the tests that prove them
 

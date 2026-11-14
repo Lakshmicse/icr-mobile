@@ -670,7 +670,7 @@ void main() {
       });
       expect(pending, isA<RefundPending>());
       expect((pending as RefundPending).amountPaisa, 1500000);
-      expect(approvalSentBody(1500000), startsWith('₹15,000 is more than one person may move alone'));
+      expect(approvalSentBody(1500000), startsWith('₹15,000 is above the limit one person can approve alone'));
     });
   });
 
@@ -697,7 +697,7 @@ void main() {
       expect(find.text('1 event'), findsOneWidget);
 
       await search(tester, 'events.search', 'nothing like this');
-      expect(find.text('No events match'), findsOneWidget);
+      expect(find.text('No Events Match'), findsOneWidget);
       await tapOn(tester, find.text('Clear Search and Filters'));
       expect(find.text('3 events'), findsOneWidget);
     });
@@ -721,14 +721,14 @@ void main() {
       await tester.tap(find.descendant(of: find.byType(ListTile), matching: find.text('Conference')));
       await tester.pumpAndSettle();
       expect(repo.queries.last.kind, 'CONFERENCE');
-      expect(find.text('No events match'), findsOneWidget);
+      expect(find.text('No Events Match'), findsOneWidget);
     });
 
     testWidgets('a search under a filter also offers the matches the filter leaves out', (tester) async {
       await pumpConsole(tester);
       await tapOn(tester, find.byKey(const ValueKey('events.when.past')));
       await search(tester, 'events.search', 'summit');
-      expect(find.text('No events match'), findsOneWidget);
+      expect(find.text('No Events Match'), findsOneWidget);
       expect(find.text('Other Matches'), findsOneWidget);
       expect(find.byKey(const ValueKey('event-match-e1')), findsOneWidget);
     });
@@ -870,7 +870,7 @@ void main() {
       var left = 0;
       await pumpEvent(tester, 'e2', onBack: () => left += 1);
       await tapOn(tester, find.byKey(const ValueKey('event.remove')));
-      expect(find.text('Cancel & remove "Energy Audits Webinar" from the public calendar?'), findsOneWidget);
+      expect(find.text('Cancel and remove "Energy Audits Webinar" from the public calendar?'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
       expect(repo.deleted, isEmpty);
@@ -889,7 +889,7 @@ void main() {
     ) async {
       await pumpEvent(tester, 'e1');
       await openTab(tester, 1);
-      expect(find.text('1 invited'), findsOneWidget);
+      expect(find.text('1 Invited'), findsOneWidget);
       expect(find.text('Asha Menon'), findsOneWidget);
       expect(find.textContaining('This event is open to everyone.'), findsOneWidget);
 
@@ -903,7 +903,7 @@ void main() {
       await save(tester);
       expect(repo.invitedEmails.single, ['zoya@acme.com', 'nobody@x.com']);
       expect(find.text('1 invited · not members: nobody@x.com'), findsOneWidget);
-      expect(find.text('2 invited'), findsOneWidget);
+      expect(find.text('2 Invited'), findsOneWidget);
       expect(find.text('Zoya Khan'), findsOneWidget);
     });
 
@@ -911,7 +911,7 @@ void main() {
       await pumpEvent(tester, 'e1');
       await openTab(tester, 1);
       await tapOn(tester, find.byKey(const ValueKey('invite.byTier')));
-      expect(find.text('Gold and above'), findsOneWidget);
+      expect(find.text('Gold and Above'), findsOneWidget);
       await save(tester);
       expect(repo.tierSweeps, ['GOLD']);
       expect(find.text('3 new invites from 40 members on Gold or above.'), findsOneWidget);
@@ -924,7 +924,7 @@ void main() {
       await tester.tap(find.byKey(const Key('confirm.ok')));
       await tester.pumpAndSettle();
       expect(find.text('Asha Menon'), findsNothing);
-      expect(find.text('0 invited'), findsOneWidget);
+      expect(find.text('0 Invited'), findsOneWidget);
     });
   });
 
@@ -934,9 +934,9 @@ void main() {
       expect(find.text('Speakers (2 to review)'), findsOneWidget);
       await openTab(tester, 2);
       await tapOn(tester, find.byKey(const ValueKey('proposal-p1')));
-      expect(find.text('Talk proposal'), findsOneWidget);
+      expect(find.text('Talk Proposal'), findsOneWidget);
       await tapOn(tester, find.byKey(const Key('decision.decline')));
-      expect(find.text('Write the reason first.'), findsOneWidget);
+      expect(find.text('Enter the reason first.'), findsOneWidget);
       expect(repo.proposalDecisions, isEmpty);
 
       await type(tester, 'decision.note', 'Too close to last year’s keynote.');
@@ -958,7 +958,7 @@ void main() {
       expect(find.text('Silver partner · ₹25,000'), findsOneWidget);
 
       await tapOn(tester, find.byKey(const ValueKey('package.add')));
-      await type(tester, 'package.name', 'Gold partner');
+      await type(tester, 'package.name', 'Gold Partner');
       await type(tester, 'package.price', '50000');
       await type(tester, 'package.slots', '0');
       await save(tester);
@@ -969,12 +969,12 @@ void main() {
       await type(tester, 'package.benefits', 'Logo on stage\nA booth');
       await save(tester);
       expect(repo.packageBodies.single, {
-        'name': 'Gold partner',
+        'name': 'Gold Partner',
         'priceAmount': 5000000,
         'benefits': ['Logo on stage', 'A booth'],
         'slots': 2,
       });
-      expect(find.text('Gold partner · ₹50,000 · 0/2 taken'), findsOneWidget);
+      expect(find.text('Gold Partner · ₹50,000 · 0/2 taken'), findsOneWidget);
       expect(find.text('Logo on stage · A booth'), findsOneWidget);
 
       await tapOn(tester, find.byKey(const ValueKey('package-k1')));
@@ -990,7 +990,7 @@ void main() {
       await pumpEvent(tester, 'e1');
       await openTab(tester, 3);
       await tapOn(tester, find.byKey(const ValueKey('sponsorship-s1')));
-      expect(find.text('Sponsorship request'), findsOneWidget);
+      expect(find.text('Sponsorship Request'), findsOneWidget);
       await tapOn(tester, find.byKey(const Key('decision.accept')));
       expect(repo.sponsorshipDecisions.single, ('s1', 'CONFIRMED', null));
       expect(find.text('Confirmed'), findsOneWidget);
@@ -1007,7 +1007,7 @@ void main() {
 
       await tapOn(tester, find.byKey(const ValueKey('ticket-t1')));
       expect(
-        find.text('Refund ₹1,770 to Kiran in the PayU dashboard first, then record it. Their seat is given up.'),
+        find.text('Refund ₹1,770 to Kiran in the PayU dashboard first, then record it here. Their seat is released.'),
         findsOneWidget,
       );
       // Without a reference the API refuses a refund it would carry out now; its sentence stays in the sheet.
@@ -1032,10 +1032,10 @@ void main() {
       // The reference may be left for the approver.
       await save(tester);
       expect(repo.refunds.single, ('t2', null));
-      expect(find.text('Sent for approval'), findsOneWidget);
+      expect(find.text('Sent for Approval'), findsOneWidget);
       expect(
         find.text(
-          '₹15,000 is more than one person may move alone, so someone else who approves finance actions must '
+          '₹15,000 is above the limit one person can approve alone. Another finance approver must '
           'approve it. Nothing has been recorded yet.',
         ),
         findsOneWidget,
@@ -1048,7 +1048,7 @@ void main() {
     testWidgets('a free event says it sells no tickets', (tester) async {
       await pumpEvent(tester, 'e3');
       await openTab(tester, 4);
-      expect(find.text('No tickets sold yet'), findsOneWidget);
+      expect(find.text('No Tickets Sold Yet'), findsOneWidget);
       expect(find.text('This event is free, so it sells no tickets.'), findsOneWidget);
     });
   });
@@ -1085,9 +1085,9 @@ void main() {
       expect(find.text('Roundtable, Webinar · Quarterly'), findsNWidgets(2));
 
       await tapOn(tester, find.byKey(const ValueKey('host-h1')));
-      expect(find.text('Request to host events'), findsOneWidget);
+      expect(find.text('Request to Host Events'), findsOneWidget);
       await tapOn(tester, find.byKey(const Key('host.reject')));
-      expect(find.text('Give the company a reason — they will see it.'), findsOneWidget);
+      expect(find.text('Give the company a reason. They will see it.'), findsOneWidget);
       expect(repo.hostDecisions, isEmpty);
 
       await type(tester, 'host.note', 'Please apply again once your company page is verified.');
@@ -1111,20 +1111,20 @@ void main() {
       await pumpConsole(tester, initialTab: 'event-hosts');
       await tapOn(tester, find.byKey(const ValueKey('hosts.status.APPROVED')));
       await tapOn(tester, find.byKey(const ValueKey('host-h3')));
-      expect(find.text('Events hosted'), findsOneWidget);
+      expect(find.text('Events Hosted'), findsOneWidget);
       await tapOn(tester, find.byKey(const Key('host.revoke')));
-      expect(find.text('Give the company a reason — they will see it.'), findsOneWidget);
+      expect(find.text('Give the company a reason. They will see it.'), findsOneWidget);
       await type(tester, 'host.note', 'Two events were cancelled without notice.');
       await tapOn(tester, find.byKey(const Key('host.revoke')));
       expect(repo.hostDecisions.single, ('h3', 'revoke', 'Two events were cancelled without notice.'));
       expect(find.text('Hosting revoked.'), findsOneWidget);
-      expect(find.text('No requests match'), findsOneWidget);
+      expect(find.text('No Requests Match'), findsOneWidget);
     });
 
     testWidgets('a notification’s request opens on its own, whatever its standing', (tester) async {
       await pumpConsole(tester, focus: 'h3');
       // Every standing is listed, so an approved request is there to open.
-      expect(find.text('Request to host events'), findsOneWidget);
+      expect(find.text('Request to Host Events'), findsOneWidget);
       expect(find.descendant(of: find.byType(EmSheet), matching: find.text('Urban Estates')), findsOneWidget);
       expect(find.byKey(const Key('host.revoke')), findsOneWidget);
     });

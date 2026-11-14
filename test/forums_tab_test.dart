@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
+import 'package:icr_mobile/core/widgets/search_field.dart';
 import 'package:icr_mobile/features/feed/feed_models.dart';
 import 'package:icr_mobile/features/forum/forum_callbacks.dart';
+import 'package:icr_mobile/features/forum/forum_models.dart';
 import 'package:icr_mobile/features/forum/forums_controller.dart';
 import 'package:icr_mobile/features/forum/forums_screen.dart';
 import 'package:icr_mobile/features/forum/thread_screen.dart';
@@ -892,6 +894,81 @@ void main() {
       await writeAndPost(tester);
       expect(find.byType(ThreadScreen), findsNothing);
       expect(snack('A moderator will review it before it is published.'), findsOneWidget);
+    });
+  });
+  group('My Forum: the reader\'s own discussions', () {
+    // Owner, 13 Nov 2026: "there is no posts still the counts showing and the categories posted only should show
+    // not the whole backend data and the Spacing is not used the gaps is more looks uneven".
+    Future<void> pumpMine(WidgetTester tester, {_Board? custom}) async {
+      tester.view.physicalSize = const Size(780, 3200);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+      board = custom ?? _Board();
+      api = FakeForum(board.routes());
+      forums = ForumsController(forumOn(api), initialView: ForumView.mine, ownTopics: true);
+      addTearDown(forums.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: buildAppTheme(),
+          home: ForumsScreen(viewer: reader, title: 'My Forum', ownOnly: true, controller: forums, onBack: () {}),
+        ),
+      );
+      await settle(tester);
+    }
+
+    testWidgets('lists only the topics the reader posted in, with the number of their own posts there', (tester) async {
+      await pumpMine(tester);
+      // One discussion of the reader's, in Technology; the forum as a whole holds three there.
+      expect(find.text('Topics'), findsOneWidget);
+      expect(key('topic:technology'), findsOneWidget);
+      expect(find.text('Technology (1)'), findsOneWidget);
+      expect(find.text('Technology (3)'), findsNothing);
+      expect(key('topic:esg-sustainability'), findsNothing, reason: 'nothing of the reader\'s there');
+      expect(key('topic:procurement-supply-chain'), findsNothing);
+      expect(key('forum-views'), findsNothing, reason: 'My Forum has no view chips');
+    });
+
+    testWidgets('with nothing posted there is no Topics block and no "0 discussions", only the empty state', (
+      tester,
+    ) async {
+      final b = _Board();
+      b.threads.removeWhere((t) => (t['author'] as Map)['id'] == 'me');
+      await pumpMine(tester, custom: b);
+      expect(find.text('Topics'), findsNothing);
+      expect(key('forum-topics'), findsNothing);
+      expect(key('topic:all'), findsNothing);
+      expect(find.textContaining('Technology ('), findsNothing);
+      expect(find.text('0 discussions'), findsNothing);
+      expect(find.text('No Posts Yet'), findsOneWidget);
+    });
+
+    testWidgets('the search, the composer and the topics stand the same distance apart, on one margin', (tester) async {
+      await pumpMine(tester);
+      final search = tester.getRect(find.byType(IcrSearchField));
+      final composer = tester.getRect(key('home-composer'));
+      final heading = tester.getRect(find.text('Topics'));
+      expect(composer.top - search.bottom, closeTo(12, 0.6));
+      expect(heading.top - composer.bottom, closeTo(12, 1.5));
+      expect(composer.left, closeTo(search.left, 0.6), reason: 'one left margin');
+      expect(composer.right, closeTo(search.right, 0.6), reason: 'one right margin');
+    });
+
+    testWidgets('a discussion just posted adds its topic; one taken back drops it', (tester) async {
+      final b = _Board();
+      b.threads.removeWhere((t) => (t['author'] as Map)['id'] == 'me');
+      await pumpMine(tester, custom: b);
+      expect(find.text('Topics'), findsNothing);
+      final mine = forumOn(api);
+      final page = await tester.runAsync(() => mine.threads(const ForumQuery()));
+      final posted = page!.posts.first;
+      forums.addPosted(posted);
+      await tester.pump();
+      expect(find.text('Topics'), findsOneWidget);
+      expect(find.text('Technology (1)'), findsOneWidget);
+      forums.removePost(posted.id);
+      await tester.pump();
+      expect(find.text('Topics'), findsNothing);
     });
   });
 }

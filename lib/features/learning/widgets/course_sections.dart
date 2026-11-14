@@ -78,7 +78,7 @@ class _CourseOverviewState extends State<CourseOverview> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(_open ? 'Show Less' : 'Show More', style: LearningText.showMore),
+                          Text(_open ? 'View Less' : 'View More', style: LearningText.showMore),
                           const SizedBox(width: 1),
                           SizedBox(width: 12, height: 12, child: _Chevron(up: _open)),
                         ],

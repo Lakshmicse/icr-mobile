@@ -326,7 +326,7 @@ String? leadProblem({String title = '', String linkedinUrl = '', String? termSta
   }
   final start = termStartsOn ?? '';
   final end = termEndsOn ?? '';
-  if (start.isNotEmpty && end.isNotEmpty && end.compareTo(start) < 0) return 'A term can’t end before it starts.';
+  if (start.isNotEmpty && end.isNotEmpty && end.compareTo(start) < 0) return 'A term cannot end before it starts.';
   return null;
 }
 
@@ -340,7 +340,7 @@ bool leadTermEnded(String? termEndsOn, String today) {
 
 /// A decision: a decline needs its reason (the member reads it); either keeps within 1,000 characters.
 String? decisionProblem({required bool declining, required String reason}) {
-  if (declining && reason.trim().isEmpty) return 'Say why it isn’t approved. The member reads this.';
+  if (declining && reason.trim().isEmpty) return 'Give the reason it is not approved. The member will see it.';
   if (reason.trim().length > ManageLimits.decisionReason) return 'Keep it within 1,000 characters.';
   return null;
 }
@@ -361,7 +361,7 @@ String resourceKindLabel(String kind) => switch (kind) {
 
 /// `ASSOCIATION_REQUEST_STATUS_LABELS`.
 String requestStatusLabel(String status) => switch (status) {
-  RequestStatus.pending => 'Waiting for review',
+  RequestStatus.pending => 'Waiting for Review',
   RequestStatus.approved => 'Approved',
   RequestStatus.declined => 'Declined',
   RequestStatus.withdrawn => 'Withdrawn',
@@ -369,12 +369,12 @@ String requestStatusLabel(String status) => switch (status) {
 };
 
 /// The status filter's words: the website calls the pending ones "To review".
-String requestFilterLabel(String status) => status == RequestStatus.pending ? 'To review' : requestStatusLabel(status);
+String requestFilterLabel(String status) => status == RequestStatus.pending ? 'To Review' : requestStatusLabel(status);
 
 /// `CHAPTER_APPLICATION_KIND_LABELS`.
 String applicationKindLabel(String kind) => switch (kind) {
-  'NEW_CHAPTER' => 'Start a new chapter',
-  'LEAD_EXISTING' => 'Lead an existing chapter',
+  'NEW_CHAPTER' => 'Start a New Chapter',
+  'LEAD_EXISTING' => 'Lead an Existing Chapter',
   _ => kind,
 };
 

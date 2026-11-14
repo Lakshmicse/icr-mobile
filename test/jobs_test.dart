@@ -938,7 +938,7 @@ void main() {
       section = jobs.sections.single;
       expect(repo.calls.where((c) => c.startsWith('more')), ['more alert 2']);
       expect(jobs.visible(section), hasLength(7));
-      expect(jobs.actionLabel(section), 'Show Less', reason: 'everything is on show');
+      expect(jobs.actionLabel(section), 'View Less', reason: 'everything is on show');
 
       await jobs.act(section);
       section = jobs.sections.single;
@@ -1234,6 +1234,44 @@ void main() {
       });
       expect((open.genderPreference, open.diversityOnly), ('ANY', false));
       expect(open.diversityCategories, isEmpty);
+    });
+  });
+
+  group('where the member sits on a company\'s hiring team (GET /me/companies)', () {
+    // Acting for BrightCore as its admin, and a hiring manager at Moon Studio: the seat is read per company, from
+    // every membership, not from the company being acted for.
+    _Api memberships() => _Api({
+      'GET /me/companies': (_) => {
+        'companies': [
+          {'companyId': 'bright', 'name': 'BrightCore', 'role': 'COMPANY_ADMIN'},
+          {'companyId': 'moon', 'name': 'Moon studio', 'role': 'HIRING_MANAGER'},
+          {'companyId': 'acme', 'name': 'Acme', 'role': 'PROFESSIONAL'},
+          {'companyId': 'rec', 'name': 'Rec Co', 'role': 'RECRUITER'},
+        ],
+      },
+    });
+
+    test('a hiring manager there sits on it, though they post nothing', () async {
+      final seat = await _repo(memberships()).hiringTeamSeatAt(const JobCompany(id: 'moon', name: 'Moon studio'));
+      expect(seat, HiringTeamSeat.hiringManager);
+      expect(seat.onTeam, isTrue);
+    });
+
+    test('an admin or recruiter there posts its jobs', () async {
+      final repo = _repo(memberships());
+      expect(await repo.hiringTeamSeatAt(const JobCompany(id: 'bright', name: 'BrightCore')), HiringTeamSeat.poster);
+      expect(await repo.hiringTeamSeatAt(const JobCompany(id: 'rec', name: 'Rec Co')), HiringTeamSeat.poster);
+    });
+
+    test('any other member, or a company they do not belong to, is not on it', () async {
+      final repo = _repo(memberships());
+      expect(await repo.hiringTeamSeatAt(const JobCompany(id: 'acme', name: 'Acme')), HiringTeamSeat.none);
+      expect(await repo.hiringTeamSeatAt(const JobCompany(id: 'other', name: 'Other')), HiringTeamSeat.none);
+    });
+
+    test('memberships that cannot be read leave the job open (the API still refuses)', () async {
+      final seat = await _repo(_Api({})).hiringTeamSeatAt(const JobCompany(id: 'moon', name: 'Moon studio'));
+      expect(seat, HiringTeamSeat.none);
     });
   });
 }

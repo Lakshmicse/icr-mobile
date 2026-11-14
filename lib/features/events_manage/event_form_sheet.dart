@@ -334,7 +334,7 @@ class _EventFormSheetState extends State<EventFormSheet> {
                 label: 'Capacity',
                 controller: _capacity,
                 keyboardType: TextInputType.number,
-                helper: 'Blank = unlimited',
+                helper: 'Leave blank for unlimited.',
                 error: problems['capacity'],
                 onChanged: (v) => _touch(() => _d.capacity = v),
               ),
@@ -346,7 +346,7 @@ class _EventFormSheetState extends State<EventFormSheet> {
                 label: 'Ticket Price (₹)',
                 controller: _price,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                helper: 'Blank = free. GST is added at checkout.',
+                helper: 'Leave blank for a free event. GST is added at checkout.',
                 error: problems['price'],
                 onChanged: (v) => _touch(() => _d.price = v),
               ),
@@ -373,7 +373,7 @@ class _EventFormSheetState extends State<EventFormSheet> {
           controller: _location,
           maxLength: eventLocationMax,
           hint: 'Search a venue or address, or type Online',
-          helper: _suggestions.isEmpty ? 'Pick a suggestion, or type any place.' : null,
+          helper: _suggestions.isEmpty ? 'Select a suggestion, or type any place.' : null,
           error: problems['location'],
           onChanged: _locationTyped,
         ),
@@ -446,13 +446,13 @@ class _EventFormSheetState extends State<EventFormSheet> {
         AccountCheck(
           key: const Key('event.published'),
           value: _d.published,
-          label: _d.published ? 'Published (listed publicly)' : 'Unpublished (hidden)',
+          label: _d.published ? 'Published (Listed Publicly)' : 'Unpublished (Hidden)',
           onChanged: (on) => _touch(() => _d.published = on),
         ),
         AccountCheck(
           key: const Key('event.inviteOnly'),
           value: _d.inviteOnly,
-          label: 'Invite only — on the board and open to RSVP only for members on the guest list',
+          label: 'Invite Only (Guest List Members Only)',
           onChanged: (on) => _touch(() => _d.inviteOnly = on),
         ),
         const SizedBox(height: 6),
@@ -462,7 +462,7 @@ class _EventFormSheetState extends State<EventFormSheet> {
           hint: 'Not taking talk proposals',
           value: _d.callForSpeakersUntil == null ? null : dayTimeLabel(_d.callForSpeakersUntil!),
           helper:
-              'Leave blank when not taking talk proposals. Members offer a talk from the event page; review them '
+              'Leave blank when not taking talk proposals. Members offer a talk from the event page. Review them '
               'under Speakers.',
           onTap: _pickCall,
           onClear: _d.callForSpeakersUntil == null ? null : () => _touch(() => _d.callForSpeakersUntil = null),

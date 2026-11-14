@@ -122,3 +122,7 @@ stays as the Settings screen's preferences have it.
 | A company the person has left | You're no longer part of Acme, so this can't open as it. | You are no longer a member of Acme, so this notification cannot be opened. |
 | A record that is gone | This is no longer available. | This item is no longer available. |
 | A row for a staff console (the "staff tools" sentence) | That one is for ICR's staff tools, which aren't in the app. | This notification is for ICR staff tools, which are not available in the app. |
+
+## The bell follows the live count (13 Nov 2026)
+
+Owner: "Notification red dot even if no unread count, it stays". Each screen read its own unread count once, when it loaded, and handed that number to its bell, so the dot stayed after the notifications were read. Every bell (`BellButton` in every `TitleBar`, the Home header's, the Events header's) is now drawn through `LiveUnread` (`notifications/unread_counts.dart`): it shows the app-wide `UnreadCounts` (the provider, or `UnreadCounts.current` for a route pushed beside it, set by `InboxHost`) and uses the screen's own number only where there is none (a test, the demo). A new bell goes through `LiveUnread` or `bellUnread(context)`, never a screen's own count. Proved by `test/bell_live_count_test.dart`.

@@ -1201,7 +1201,7 @@ void main() {
         member: assessMember(open: {}, courses: const PlanPlaces(limit: 1)),
       );
       await _landing(tester, fake: fake);
-      expect(find.text('In your plan'), findsNWidgets(4));
+      expect(find.text('In Your Plan'), findsNWidgets(4));
       expect(find.text('Locked'), findsNothing);
     });
 

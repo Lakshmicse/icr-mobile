@@ -562,7 +562,7 @@ void main() {
       expect(find.byKey(const ValueKey('audience-institution')), findsOneWidget);
       expect(find.text('Showcase. Connect. Grow.'), findsOneWidget);
       expect(find.byKey(const ValueKey('membership-your-plan')), findsOneWidget);
-      expect(find.text('YOUR MARKET PLACE PLAN'), findsOneWidget);
+      expect(find.text('YOUR MARKETPLACE PLAN'), findsOneWidget);
       expect(find.text('₹4,999'), findsOneWidget);
       expect(find.text('/year + GST'), findsNWidgets(2));
       expect(find.text('₹14,999'), findsOneWidget, reason: 'the compare-at price, struck through');

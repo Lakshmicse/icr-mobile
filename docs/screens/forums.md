@@ -75,7 +75,7 @@ await startDiscussion(context, repository: repo, viewer: viewer, topicSlug: 'tec
 | a link to one reply (`focusReplyId`) | reads pages until it is there (ten at most) and scrolls to it, ringed | W; L |
 | Like | reacts at once, again takes it back, a refusal puts it back with the forum's sentence; one's own is refused by the page without asking, in the API's words | W (3); U; L "a reaction is kept, changed and taken back", "what the page refuses..." |
 | holding Like | the five reactions (Like, Celebrate, Support, Insightful, Sustainable); the same again takes it back | W |
-| "N reactions" / the views count | sheets: who reacted (signed in), who viewed (+ "N others read it with a private profile") | W; L |
+| "N reactions" / the views count | sheets: who reacted (signed in), who viewed (+ "N others read it with a private profile"); like who voted in a poll, each opens at three quarters of the screen whatever the count, and its list ends above the phone's navigation bar with a 24 dp gap (owner, 14 Nov 2026: two reactors made a sliver of a sheet with the last row under the bar) | W; L; U `forum_reactors_sheet_test` |
 | Reply | focuses the box; the box is pinned under the page, Enter writes a new line, the arrow sends | W |
 | reply to a reply | "Replying to X" with an x; sent under that reply, stepped in | W; L |
 | sending | escaped paragraphs; empty or over 20,000 characters refused before asking; a refusal reads above the box and **what was typed stays**; a reply waiting for a moderator is marked and not counted | W (3); U (3); L |
@@ -338,3 +338,22 @@ answer and Awaiting review chips, a reply's file and the tint on the reply a lin
 ## 13 Nov 2026: photos go as the forum's own list
 
 The portal's `main` keeps a post's photos in `imageIds` (ten at most) and returns them as `images` on every card. The composer now sends its photos there (`ForumDraft.imageIds`, `ComposerController.photoIds`; an edit sends the list only when it changed) and no longer writes `<img>` into the body; videos are still written inline. Reading goes through `ForumJson.photoPaths`: the forum's list, a pictured attachment, then any picture in the body, once each. `forumMaxPhotos` caps the composer at ten.
+
+
+## 13 Nov 2026: My Forum shows only the reader's own topics, evenly spaced
+
+The owner, on My Forum with nothing posted: "there is no posts still the counts showing and the categories posted
+only should show not the whole backend data and the Spacing is not used the gaps is more looks uneven."
+
+- **Topics are the reader's own.** `ForumsController(ownTopics: true)` (set by `myForumScreen`) counts the reader's
+  discussions by topic (`_readOwnTopics`: the `mineOnly` list, up to ten pages, joined to the forum's topic list
+  through the taxonomy's key and slug). `topics` is then only the topics they posted in, each with the number of
+  their own posts: "Technology (1)", never the forum's "Technology (16)". A post just made or taken back moves the
+  count at once.
+- **Nothing posted, nothing shown.** With no topic of the reader's there is no "Topics" heading, no chip row and no
+  "0 discussions"; the empty state ("No Posts Yet") says it.
+- **Spacing.** The header's blocks stand one gap apart (`_Header._gap`, 12 dp); the gap of the view chips went with
+  the chips, which My Forum does not draw; the composer pill takes the same 16 dp margin as the search box
+  (`ComposerBar.inset`), where it had sat 4 dp wider on each side.
+
+Tests: `test/forums_tab_test.dart`, group "My Forum: the reader's own discussions".

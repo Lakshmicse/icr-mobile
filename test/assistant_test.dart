@@ -26,11 +26,11 @@ void main() {
   group('suggestionsFor: the chips for where the person is (the website\'s suggestionsEn)', () {
     test('a module page gets the module\'s own chips', () {
       expect(suggestionsFor(const AssistantContext(path: '/jobs')).map((s) => s.label), [
-        'Browse jobs',
-        'Job alerts',
-        'Post a job',
+        'Browse Jobs',
+        'Job Alerts',
+        'Post a Job',
       ]);
-      expect(suggestionsFor(const AssistantContext(path: '/vendors')).map((s) => s.label).first, 'Request a quote');
+      expect(suggestionsFor(const AssistantContext(path: '/vendors')).map((s) => s.label).first, 'Request a Quote');
       expect(suggestionsFor(const AssistantContext(path: '/community')).first.href, '/community/new');
       expect(suggestionsFor(const AssistantContext(path: '/mentorship/mentors/abc')).first.href, '/mentorship/mentors');
       expect(suggestionsFor(const AssistantContext(path: '/learning')).first.ask, isNotNull);
@@ -38,10 +38,10 @@ void main() {
 
     test('a member with no company is offered the doors a company opens', () {
       expect(suggestionsFor(const AssistantContext(path: '/', signedIn: true, hasCompany: false)).map((s) => s.label), [
-        'Start selling',
-        'Hire for a team',
-        'Find a mentor',
-        'Post a requirement',
+        'Start Selling',
+        'Hire for a Team',
+        'Find a Mentor',
+        'Post a Requirement',
       ]);
     });
 
@@ -50,10 +50,10 @@ void main() {
       expect(
         {for (final c in chips) c.label: c.ask},
         {
-          'Start selling': 'How do I list my business?',
-          'Hire for a team': 'How do I post a job?',
-          'Find a mentor': 'How do I find a mentor?',
-          'Post a requirement': 'How do I post a requirement?',
+          'Start Selling': 'How do I list my business?',
+          'Hire for a Team': 'How do I post a job?',
+          'Find a Mentor': 'How do I find a mentor?',
+          'Post a Requirement': 'How do I post a requirement?',
         },
       );
       expect(chips.every((c) => !c.isPage), isTrue, reason: 'the reply explains the step; it is not a link');
@@ -63,7 +63,7 @@ void main() {
           suggestionsFor(
             AssistantContext(path: '/', signedIn: true, role: role, hasCompany: false),
           ).map((s) => s.label),
-          ['Start selling', 'Hire for a team', 'Find a mentor', 'Post a requirement'],
+          ['Start Selling', 'Hire for a Team', 'Find a Mentor', 'Post a Requirement'],
           reason: role,
         );
       }
@@ -72,15 +72,15 @@ void main() {
     test('a member with a company, and a visitor', () {
       expect(suggestionsFor(const AssistantContext(path: '/', signedIn: true, hasCompany: true)).map((s) => s.label), [
         'What can I do on ICR?',
-        'Find a mentor',
+        'Find a Mentor',
         'Dashboard',
-        'Get help',
+        'Get Help',
       ]);
       expect(suggestionsFor(const AssistantContext(path: '/', signedIn: false)).map((s) => s.label), [
         'What can I do on ICR?',
-        'Find a job',
-        'Request a quote',
-        'Join free',
+        'Find a Job',
+        'Request a Quote',
+        'Join Free',
       ]);
     });
 
@@ -90,45 +90,45 @@ void main() {
         List<String> labels(AssistantContext c) => suggestionsFor(c).map((s) => s.label).toList();
         expect(labels(const AssistantContext(path: '/', signedIn: true, hasCompany: true, mentor: true)), [
           'What can I do on ICR?',
-          'Mentor dashboard',
-          'My offerings',
-          'Get help',
+          'Mentor Dashboard',
+          'My Offerings',
+          'Get Help',
         ]);
         expect(labels(const AssistantContext(path: '/', signedIn: true, hasCompany: true, role: 'COMPANY_ADMIN')), [
           'What can I do on ICR?',
-          'Find a mentor',
-          'Post a job',
+          'Find a Mentor',
+          'Post a Job',
           'Enquiries & RFQs',
-          'Post a requirement',
-          'Get help',
+          'Post a Requirement',
+          'Get Help',
         ]);
         expect(labels(const AssistantContext(path: '/', signedIn: true, hasCompany: true, role: 'VENDOR')), [
           'What can I do on ICR?',
-          'Find a mentor',
+          'Find a Mentor',
           'Enquiries & RFQs',
-          'Post a requirement',
-          'Get help',
+          'Post a Requirement',
+          'Get Help',
         ]);
         expect(labels(const AssistantContext(path: '/', signedIn: true, hasCompany: true, role: 'BUYER')), [
           'What can I do on ICR?',
-          'Find a mentor',
-          'Post a requirement',
-          'Get help',
+          'Find a Mentor',
+          'Post a Requirement',
+          'Get Help',
         ]);
         expect(
           labels(const AssistantContext(path: '/', signedIn: true, hasCompany: true, role: 'RECRUITER')),
-          contains('Post a job'),
+          contains('Post a Job'),
         );
         // A mentor acting as themselves: the desk, then the doors a company opens.
         expect(
           labels(const AssistantContext(path: '/', signedIn: true, hasCompany: false, mentor: true)).first,
-          'Mentor dashboard',
+          'Mentor Dashboard',
         );
         // A page a chip opens is the app's own screen.
         expect(
           suggestionsFor(
             const AssistantContext(path: '/', signedIn: true, hasCompany: true, mentor: true),
-          ).firstWhere((s) => s.label == 'My offerings').href,
+          ).firstWhere((s) => s.label == 'My Offerings').href,
           '/mentorship/mentor?tab=services',
         );
       },
@@ -326,8 +326,8 @@ void main() {
       expect(find.text(assistantName), findsWidgets);
       expect(find.text(AssistantCopy.online), findsOneWidget);
       expect(find.textContaining("I'm Saathi"), findsOneWidget);
-      expect(find.byKey(const ValueKey('suggestion-Browse jobs')), findsOneWidget);
-      expect(find.byKey(const ValueKey('suggestion-Post a job')), findsOneWidget);
+      expect(find.byKey(const ValueKey('suggestion-Browse Jobs')), findsOneWidget);
+      expect(find.byKey(const ValueKey('suggestion-Post a Job')), findsOneWidget);
       expect(tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor, Colors.white);
       expect(find.byType(Card), findsNothing);
     });
@@ -352,9 +352,9 @@ void main() {
       tester,
     ) async {
       final (c, opened) = await pump(tester, opens: (href) => href == '/jobs');
-      expect(find.byKey(const ValueKey('suggestion-Browse jobs')), findsOneWidget);
-      expect(find.byKey(const ValueKey('suggestion-Post a job')), findsOneWidget, reason: 'a question, not a page');
-      expect(find.byKey(const ValueKey('suggestion-Job alerts')), findsNothing);
+      expect(find.byKey(const ValueKey('suggestion-Browse Jobs')), findsOneWidget);
+      expect(find.byKey(const ValueKey('suggestion-Post a Job')), findsOneWidget, reason: 'a question, not a page');
+      expect(find.byKey(const ValueKey('suggestion-Job Alerts')), findsNothing);
       await tester.enterText(find.byKey(const ValueKey('assistant-input')), 'How do I find a mentor?');
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('assistant-send')));
@@ -369,9 +369,9 @@ void main() {
     testWidgets('a page chip opens the page; a question chip asks on the person\'s behalf', (tester) async {
       final (c, opened) = await pump(tester);
       // The chips sit under the latest reply (the greeting, to begin with).
-      await tester.tap(find.byKey(const ValueKey('suggestion-Browse jobs')));
+      await tester.tap(find.byKey(const ValueKey('suggestion-Browse Jobs')));
       expect(opened, ['/jobs']);
-      await tester.tap(find.byKey(const ValueKey('suggestion-Post a job')));
+      await tester.tap(find.byKey(const ValueKey('suggestion-Post a Job')));
       await tester.pumpAndSettle();
       expect(c.messages[1].content, 'How do I post a job?');
       expect(c.messages, hasLength(3));
@@ -427,7 +427,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('You'), findsOneWidget);
       expect(find.text('PP'), findsNothing);
-      expect(find.byKey(const ValueKey('suggestion-Join free')), findsOneWidget);
+      expect(find.byKey(const ValueKey('suggestion-Join Free')), findsOneWidget);
     });
   });
 }

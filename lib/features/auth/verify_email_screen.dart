@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/api/api_error.dart';
 import '../../core/auth/auth_controller.dart';
+import '../../core/config.dart';
 import 'auth_palette.dart';
 import 'auth_widgets.dart';
 import 'recovery_repository.dart';
@@ -179,7 +180,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 label: 'Verification Link',
                 controller: _link,
                 icon: Icons.link_rounded,
-                hint: 'https://icr.org.in/verify-email?token=…',
+                hint: '${AppConfig.siteUrl}/verify-email?token=…',
                 keyboardType: TextInputType.url,
                 textInputAction: TextInputAction.done,
                 autocorrect: false,

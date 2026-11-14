@@ -169,7 +169,7 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
           icon: LucideIcons.cloudOff,
           title: 'Unable to Load Your Saved Jobs',
           body: _c.savedError!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         ),
       ];
@@ -210,7 +210,7 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
           icon: LucideIcons.cloudOff,
           title: 'Unable to Load Your Hidden Jobs',
           body: _c.hiddenError!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         ),
       ];

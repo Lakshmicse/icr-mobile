@@ -1900,13 +1900,13 @@ void main() {
 
     testWidgets('the overview folds after four lines and "show more" unfolds it', (tester) async {
       await pumpSheet(tester, _Fake(catalogue: [_rich()]));
-      expect(find.text('Show More'), findsOneWidget);
-      await tester.tap(find.text('Show More'));
+      expect(find.text('View More'), findsOneWidget);
+      await tester.tap(find.text('View More'));
       await tester.pump();
-      expect(find.text('Show Less'), findsOneWidget);
-      await tester.tap(find.text('Show Less'));
+      expect(find.text('View Less'), findsOneWidget);
+      await tester.tap(find.text('View Less'));
       await tester.pump();
-      expect(find.text('Show More'), findsOneWidget);
+      expect(find.text('View More'), findsOneWidget);
     });
 
     testWidgets('"view full outline" opens every module; each module folds on its own', (tester) async {
