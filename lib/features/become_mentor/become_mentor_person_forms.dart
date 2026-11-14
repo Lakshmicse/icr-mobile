@@ -37,7 +37,7 @@ Future<PickedFile?> pickEvidenceFromDevice() async {
 
 /// The sentence for a file that is too heavy, or null when it is fine.
 String? fileProblem(PickedFile f, {required int max}) =>
-    f.bytes.length <= max ? null : 'That file is too big. Choose one under ${max ~/ (1024 * 1024)} MB.';
+    f.bytes.length <= max ? null : 'The file is too large. Choose one under ${max ~/ (1024 * 1024)} MB.';
 
 // ---------------------------------------------------------------------------
 // The photo
@@ -80,16 +80,16 @@ class _PhotoSheetState extends State<PhotoSheet> with SheetState<PhotoSheet> {
   @override
   Widget build(BuildContext context) {
     return frame(
-      title: 'Profile photo',
+      title: 'Profile Photo',
       subtitle: 'A clear photo of your face. Mentees see it first.',
-      submitLabel: widget.hasPhoto ? 'Change photo' : 'Choose a photo',
+      submitLabel: widget.hasPhoto ? 'Change Photo' : 'Choose a Photo',
       onSubmit: busy ? null : _choose,
       children: [
         if (widget.hasPhoto)
           Align(
             alignment: Alignment.centerLeft,
             child: QuietButton(
-              label: 'Remove photo',
+              label: 'Remove Photo',
               danger: true,
               icon: LucideIcons.trash2,
               onPressed: busy ? null : () => send(() => null, widget.onRemove),
@@ -148,8 +148,8 @@ class _IntroFormState extends State<IntroForm> with SheetState<IntroForm> {
               if (t.toLowerCase().contains(typed) && t.toLowerCase() != typed) t,
           ].take(5).toList();
     return frame(
-      title: 'Your role and experience',
-      subtitle: 'Shared with your profile: a change here is reflected there too.',
+      title: 'Your Role and Experience',
+      subtitle: 'This is shared with your ICR profile, so any change you make here also appears there.',
       submitLabel: 'Save',
       onSubmit: busy
           ? null
@@ -163,8 +163,8 @@ class _IntroFormState extends State<IntroForm> with SheetState<IntroForm> {
             ),
       children: [
         FieldBlock(
-          label: 'Current role',
-          help: 'Just the job title.',
+          label: 'Current Role',
+          help: 'Job title only.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -196,7 +196,7 @@ class _IntroFormState extends State<IntroForm> with SheetState<IntroForm> {
           ),
         ),
         FieldBlock(
-          label: 'Years in the profession',
+          label: 'Years in the Profession',
           help: 'Whole years, ${MentorLimits.yearsMin}–${MentorLimits.yearsMax}.',
           child: TextField(
             key: const ValueKey('intro-years'),
@@ -248,7 +248,7 @@ class _LanguagesFormState extends State<LanguagesForm> with SheetState<Languages
             max: MentorLimits.languagesMax,
             itemMax: MentorLimits.languageMax,
             suggestions: spokenLanguages,
-            hint: 'Type a language',
+            hint: 'Enter a language',
             onChanged: (v) => setState(() => _languages = v),
           ),
         ),
@@ -338,8 +338,8 @@ class _ExperienceFormState extends State<ExperienceForm> with SheetState<Experie
     final problems = _problems();
     final prior = widget.row;
     return frame(
-      title: prior == null ? 'Add a role' : 'Edit this role',
-      submitLabel: 'Save role',
+      title: prior == null ? 'Add a Role' : 'Edit This Role',
+      submitLabel: 'Save Role',
       onSubmit: busy
           ? null
           : () => send(
@@ -386,7 +386,7 @@ class _ExperienceFormState extends State<ExperienceForm> with SheetState<Experie
           ),
         ),
         FieldBlock(
-          label: 'City (optional)',
+          label: 'City (Optional)',
           child: TextField(
             key: const ValueKey('xp-city'),
             controller: _city,
@@ -420,7 +420,7 @@ class _ExperienceFormState extends State<ExperienceForm> with SheetState<Experie
           contentPadding: EdgeInsets.zero,
           value: _current,
           onChanged: (v) => setState(() => _current = v),
-          title: Text('I work here now', style: MentoringText.formLabel),
+          title: Text('I Work Here Now', style: MentoringText.formLabel),
         ),
         if (!_current)
           FieldBlock(
@@ -443,7 +443,7 @@ class _ExperienceFormState extends State<ExperienceForm> with SheetState<Experie
             ),
           ),
         FieldBlock(
-          label: 'What you did (optional)',
+          label: 'Description (Optional)',
           child: TextField(
             key: const ValueKey('xp-desc'),
             controller: _desc,
@@ -464,7 +464,7 @@ class _ExperienceFormState extends State<ExperienceForm> with SheetState<Experie
           Align(
             alignment: Alignment.centerLeft,
             child: QuietButton(
-              label: 'Remove this role',
+              label: 'Remove This Role',
               danger: true,
               icon: LucideIcons.trash2,
               onPressed: busy ? null : () => send(() => null, widget.onRemove!),
@@ -514,9 +514,9 @@ class _DocumentFormState extends State<DocumentForm> with SheetState<DocumentFor
   @override
   Widget build(BuildContext context) {
     return frame(
-      title: 'Add a document',
+      title: 'Add a Document',
       subtitle:
-          'Evidence for ICR\'s review team: a certificate, proof of where you work, a reference. A PDF or a picture, under 10 MB.',
+          'Evidence for ICR\'s review team, such as a certificate, proof of employment or a reference. A PDF or an image, under 10 MB.',
       submitLabel: 'Attach',
       onSubmit: busy
           ? null
@@ -526,7 +526,7 @@ class _DocumentFormState extends State<DocumentForm> with SheetState<DocumentFor
             ),
       children: [
         FieldBlock(
-          label: 'What it is',
+          label: 'Document Type',
           child: Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -542,7 +542,7 @@ class _DocumentFormState extends State<DocumentForm> with SheetState<DocumentFor
           ),
         ),
         FieldBlock(
-          label: 'A label (optional)',
+          label: 'Label (Optional)',
           child: TextField(
             key: const ValueKey('doc-label'),
             controller: _label,
@@ -552,12 +552,12 @@ class _DocumentFormState extends State<DocumentForm> with SheetState<DocumentFor
           ),
         ),
         FieldBlock(
-          label: 'The file',
+          label: 'File',
           child: Row(
             children: [
               QuietButton(
                 key: const ValueKey('doc-choose'),
-                label: _file == null ? 'Choose a file' : 'Choose another',
+                label: _file == null ? 'Choose a File' : 'Choose Another',
                 icon: LucideIcons.paperclip,
                 onPressed: busy ? null : _choose,
               ),

@@ -93,7 +93,7 @@ class _MembershipScreenState extends State<MembershipScreen> {
       action: gateway.gatewayAction,
       fields: gateway.fields ?? const {},
     );
-    final outcome = await runCheckout(context, start, title: 'Pay for your plan');
+    final outcome = await runCheckout(context, start, title: 'Pay for Your Plan');
     if (!mounted) return;
     await _c.refresh();
     if (mounted) showMessage(context, paymentMessage(outcome, what: 'Your plan'));
@@ -183,10 +183,10 @@ class _MembershipScreenState extends State<MembershipScreen> {
       if (_c.loading && _c.plans.isEmpty)
         for (var i = 0; i < 3; i++) const _PlanSkeleton()
       else if (_c.error != null && _c.plans.isEmpty)
-        _Empty(title: "Couldn't load the plans", body: _c.error!, action: 'Try again', onAction: _c.refresh)
+        _Empty(title: 'Unable to Load the Plans', body: _c.error!, action: 'Try Again', onAction: _c.refresh)
       else if (_c.plans.isEmpty)
         _Empty(
-          title: 'No plans on sale yet',
+          title: 'No Plans on Sale Yet',
           body: '${_c.audience.label} plans will appear here when ICR puts them on sale.',
         )
       else
@@ -299,7 +299,7 @@ class _YourPlanCard extends StatelessWidget {
             children: [
               Expanded(child: Text(sub?.planName ?? 'Free', style: MembershipText.yourPlanName)),
               if (sub != null && sub.cancelAtPeriodEnd && mine.nextTermPlanName == null)
-                const IcrChip(label: 'Not renewing', height: 22, tone: ChipTone.filled),
+                const IcrChip(label: 'Not Renewing', height: 22, tone: ChipTone.filled),
             ],
           ),
           if (sub?.currentPeriodEnd != null)
@@ -319,7 +319,7 @@ class _YourPlanCard extends StatelessWidget {
             Text('The plan\'s price has changed since you bought it.', style: MembershipText.yourPlanWarning),
           if (sub != null && mine.planRetired)
             Text(
-              '${sub.planName} is no longer sold: choose another plan below before this term ends.',
+              '${sub.planName} is no longer sold. Select another plan below before this term ends.',
               style: MembershipText.yourPlanWarning,
             ),
           if (sub != null) ...[
@@ -343,7 +343,7 @@ class _YourPlanCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-                    child: Text('Plan history & receipts', style: MembershipText.link),
+                    child: Text('Plan History & Receipts', style: MembershipText.link),
                   ),
                 ),
               ],
@@ -425,7 +425,7 @@ class _PlanCard extends StatelessWidget {
   }
 
   Widget _price(PlanPrice? term) {
-    if (term == null) return Text('Custom pricing', style: MembershipText.planName);
+    if (term == null) return Text('Custom Pricing', style: MembershipText.planName);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -475,7 +475,7 @@ class _PlanCard extends StatelessWidget {
         const SizedBox(height: 12),
         PrimaryButton(
           key: key,
-          label: current ? 'Current plan' : 'Talk to us',
+          label: current ? 'Current Plan' : 'Contact Us',
           height: 42,
           radius: 10,
           color: current ? AppColors.surfaceContainer : AppColors.primary,
@@ -488,15 +488,15 @@ class _PlanCard extends StatelessWidget {
     final String label;
     VoidCallback? onPressed;
     if (current) {
-      label = 'Current plan';
+      label = 'Current Plan';
     } else if (plan.isFree) {
       label = 'Free';
     } else if (term == null) {
-      label = 'Custom pricing';
+      label = 'Custom Pricing';
     } else if (busy) {
       label = 'Starting checkout…';
     } else {
-      label = 'Choose ${plan.name}';
+      label = 'Select ${plan.name}';
       onPressed = anyBusy ? null : onChoose;
     }
     final quiet = current || plan.isFree || term == null;
@@ -608,7 +608,7 @@ class _MembershipHistoryScreenState extends State<MembershipHistoryScreen> {
         child: Column(
           children: [
             TitleBar(
-              title: 'Plan history',
+              title: 'Plan History',
               onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
               unread: bellUnread(context),
               onBell: () => openNotifications(context),
@@ -623,17 +623,17 @@ class _MembershipHistoryScreenState extends State<MembershipHistoryScreen> {
   Widget _body() {
     final history = _history;
     if (_error != null) {
-      return _Empty(title: "Couldn't load the history", body: _error!, action: 'Try again', onAction: _load);
+      return _Empty(title: 'Unable to Load the History', body: _error!, action: 'Try Again', onAction: _load);
     }
     if (history == null) {
       return const Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.4)));
     }
     if (history.reason != null && history.terms.isEmpty) {
-      return _Empty(title: 'No plan here', body: history.reason!);
+      return _Empty(title: 'No Plan Here', body: history.reason!);
     }
     if (history.terms.isEmpty) {
       return _Empty(
-        title: 'No terms yet',
+        title: 'No Terms Yet',
         body: 'Your ${widget.audience.label} plans will be listed here, with their receipts.',
       );
     }

@@ -56,7 +56,7 @@ class ApiLearningHubRepository implements LearningHubRepository {
   @override
   Future<void> enquireInstitute(Institute institute, {required String message}) async {
     final slug = institute.slug;
-    if (slug == null || slug.isEmpty) throw ApiError('This institute cannot be written to from the app.');
+    if (slug == null || slug.isEmpty) throw ApiError('This institute cannot be contacted from the app.');
     final me = await _get('/auth/me');
     final user = (me['user'] as Map<String, dynamic>?) ?? me;
     final name = '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim();

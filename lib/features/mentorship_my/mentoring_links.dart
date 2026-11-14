@@ -145,7 +145,7 @@ class MentorshipLinks {
   /// Opens the thread [conversationId]; says so when the API gave none.
   Future<void> conversation(BuildContext context, String? conversationId) async {
     if (conversationId == null || conversationId.isEmpty) {
-      showMessage(context, "Couldn't open the conversation. Try again.");
+      showMessage(context, "Unable to open the conversation. Try again.");
       return;
     }
     if (openConversation != null) return openConversation!(context, conversationId);

@@ -17,7 +17,7 @@ import 'package:icr_mobile/core/widgets/buttons.dart' show PrimaryButton;
 import 'helpers/fonts.dart';
 import 'rfq_fakes.dart';
 
-/// Every control of the composer ("Post your requirement", the website's `/rfq/new` since 3 Nov 2026), tapped: the
+/// Every control of the composer ("Post Requirement", the website's `/rfq/new` since 3 Nov 2026), tapped: the
 /// kind, "Posting for", the details, the places, the service, the description and its checklist, the files, the
 /// supplier criteria, the dates, the progress card, the review, the send, the refusal that keeps what was typed, the
 /// edit (where a draft, a title and a budget still show) and the copy. What the API does with the body is proved in
@@ -110,7 +110,7 @@ void main() {
 
   testWidgets('opens on an enquiry, for the company, with the account\'s details filled in', (tester) async {
     await open(tester);
-    expect(find.text('Post your requirement'), findsOneWidget, reason: "the website's heading");
+    expect(find.text('Post Requirement'), findsOneWidget, reason: "the owner's heading");
     expect(find.text('Bharat Facilities'), findsOneWidget);
     expect(tester.widget<TextField>(key('contact-name')).controller!.text, 'Bharat Buyer');
     expect(tester.widget<TextField>(key('contact-phone')).controller!.text, '+919879879898');
@@ -124,12 +124,15 @@ void main() {
     );
     expect(find.text('ENQUIRY'), findsOneWidget);
     expect(find.text('RFQ'), findsOneWidget);
-    expect(find.text('Quick supplier matching'), findsOneWidget);
-    expect(find.text('Formal quotation process'), findsOneWidget);
+    expect(find.text('Quickly connect with relevant suppliers and receive responses.'), findsOneWidget);
+    expect(
+      find.text('Initiate a structured quotation process with defined requirements and specifications.'),
+      findsOneWidget,
+    );
     expect(find.text('What kind of request'), findsNothing, reason: 'the kind card has no heading or number');
     expect(find.text('12/80'), findsNothing, reason: 'the contact fields show no counter');
     expect(
-      find.text('Supplier criteria'),
+      find.text('Supplier Criteria'),
       findsNothing,
       reason: 'the RFQ\'s own sections join only when RFQ is chosen',
     );
@@ -137,11 +140,11 @@ void main() {
     for (final gone in ['title', 'budget']) {
       expect(key(gone), findsNothing, reason: gone);
     }
-    expect(find.text('Line items'), findsNothing);
+    expect(find.text('Line Items'), findsNothing);
     expect(find.text('Who can reply'), findsNothing);
-    expect(find.text('Reply by'), findsNothing);
-    expect(find.text('Save draft'), findsNothing, reason: 'a new requirement is posted at once');
-    expect(find.text('Send enquiry'), findsOneWidget);
+    expect(find.text('Reply By'), findsNothing);
+    expect(find.text('Save Draft'), findsNothing, reason: 'a new requirement is posted at once');
+    expect(find.text('Submit Enquiry'), findsOneWidget);
     expect(find.text('You will see a summary to check before anything is sent.'), findsOneWidget);
     // The website's rail, after the form.
     expect(key('composer-progress'), findsOneWidget);
@@ -149,20 +152,23 @@ void main() {
     expect(key('why-icr'), findsOneWidget);
   });
 
-  testWidgets('the sections are numbered from Your details, each ticked once complete, as on the website', (
+  testWidgets('the sections are numbered from Buyer details, each ticked once complete, as on the website', (
     tester,
   ) async {
     // A phone's height, so the progress card's rows have somewhere to scroll to.
     await open(tester, height: 844);
-    final details = find.ancestor(of: find.text('Your details'), matching: find.byType(SectionCard)).first;
+    final details = find.ancestor(of: find.text('Buyer Details'), matching: find.byType(SectionCard)).first;
     expect(tester.widget<SectionCard>(details).step, 1);
     expect(tester.widget<SectionCard>(details).done, isTrue, reason: 'the account fills it');
-    final location = find.ancestor(of: find.text('Service location'), matching: find.byType(SectionCard)).first;
+    final location = find.ancestor(of: find.text('Location Details'), matching: find.byType(SectionCard)).first;
     expect(tester.widget<SectionCard>(location).step, 2);
+    // The kind cards' longer descriptions leave the facility field under the bottom bar: bring it up first.
+    await Scrollable.ensureVisible(tester.element(key('facility-field')), alignment: 0.5);
+    await tester.pump();
     await pickFrom(tester, 'facility-field', 'IT & ITES');
     await addPlace(tester, 'pun', 'Pune');
     expect(tester.widget<SectionCard>(location).done, isTrue);
-    // The progress card follows the form: Your details and the location of four.
+    // The progress card follows the form: Buyer details and the service location of four.
     final form = find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first;
     await tester.scrollUntilVisible(key('progress-describe'), 300, scrollable: form);
     await settle(tester, 6);
@@ -175,7 +181,7 @@ void main() {
         of: find.text('Include scope, quantity, frequency, timelines and any specific requirements.'),
         matching: find.byType(SectionCard),
       ),
-      matching: find.text('Tell suppliers what you need'),
+      matching: find.text('Requirement Specifications'),
     );
     final top = tester.getTopLeft(heading).dy;
     expect(top, inInclusiveRange(0, 400), reason: 'the section is brought to the top of the screen');
@@ -185,20 +191,20 @@ void main() {
     await open(tester);
     await type(tester, 'text', 'Housekeeping for a 12-acre campus, daily, from 1 December.');
     await tapKey(tester, 'kind-rfq');
-    expect(find.text('Supplier criteria'), findsWidgets);
-    expect(find.text('Pre-qualification deadline'), findsWidgets);
-    expect(find.text('Quote deadline'), findsOneWidget);
-    expect(find.text('Create RFQ'), findsOneWidget);
-    expect(find.text('Scope of services'), findsOneWidget);
+    expect(find.text('Supplier Criteria'), findsWidgets);
+    expect(find.text('Pre-Qualification Deadline'), findsWidgets);
+    expect(find.text('Quote Deadline'), findsOneWidget);
+    expect(find.text('Publish RFQ'), findsOneWidget);
+    expect(find.text('Scope of Services'), findsOneWidget);
     expect(tester.widget<TextField>(key('text')).controller!.text, startsWith('Housekeeping'));
     expect(find.text('5 of 5'), findsNothing);
     expect(find.textContaining('of 5'), findsOneWidget, reason: 'the RFQ adds Timeline to the progress');
     await tapKey(tester, 'kind-enquiry');
-    expect(find.text('Send enquiry'), findsOneWidget);
+    expect(find.text('Submit Enquiry'), findsOneWidget);
     expect(
-      find.text('Your requirement'),
+      find.text('Detailed Requirement Description'),
       findsOneWidget,
-      reason: "an enquiry's text is the website's \"Your requirement\"",
+      reason: "an enquiry's text is the owner's \"Detailed requirement description\"",
     );
     expect(tester.widget<TextField>(key('text')).controller!.text, startsWith('Housekeeping'));
   });
@@ -207,12 +213,12 @@ void main() {
     await open(tester);
     await send(tester);
     expect(find.byKey(const ValueKey('problems')), findsOneWidget);
-    expect(find.text('3 things to fix before sending'), findsNothing, reason: 'more than three are missing');
+    expect(find.text('3 items to fix before sending'), findsNothing, reason: 'more than three are missing');
     for (final field in ['facilityType', 'locations', 'category', 'text']) {
       expect(key('problem-$field'), findsOneWidget, reason: field);
     }
     expect(find.text('Select a facility type'), findsWidgets);
-    expect(find.text('Pick at least one place'), findsWidgets);
+    expect(find.text('Select at least one place'), findsWidgets);
     expect(find.text('Select a service category'), findsWidgets);
     expect(find.text('Describe what you need'), findsWidgets);
     expect(repo.created, isEmpty);
@@ -229,11 +235,11 @@ void main() {
       await open(tester);
       await type(tester, 'contact-phone', '12345');
       await send(tester);
-      expect(find.text('Enter a phone number of 10 to 15 digits'), findsWidgets);
+      expect(find.text('Enter a mobile number of 10 to 15 digits'), findsWidgets);
       await type(tester, 'contact-phone', '');
       await type(tester, 'contact-name', '');
       await send(tester);
-      expect(find.text('Enter a phone number'), findsWidgets);
+      expect(find.text('Enter a mobile number'), findsWidgets);
       expect(find.text('Enter the contact person'), findsWidgets);
     });
   });
@@ -345,14 +351,14 @@ void main() {
       await open(tester);
       expect(find.text('0 of 6 covered'), findsOneWidget);
       await tapKey(tester, 'check-add-frequency');
-      expect(tester.widget<TextField>(key('text')).controller!.text, 'Frequency: ');
+      expect(tester.widget<TextField>(key('text')).controller!.text, 'Service frequency: ');
       expect(find.text('0 of 6 covered'), findsOneWidget, reason: 'an empty prompt line does not tick its own item');
       await type(tester, 'text', 'Frequency: daily, 24x7 across 3 sites');
       expect(find.text('3 of 6 covered'), findsOneWidget);
       await tapKey(tester, 'check-add-start');
       expect(
         tester.widget<TextField>(key('text')).controller!.text,
-        'Frequency: daily, 24x7 across 3 sites\nStart date: ',
+        'Frequency: daily, 24x7 across 3 sites\nExpected start date: ',
       );
     });
 
@@ -363,7 +369,7 @@ void main() {
       await send(tester);
       await tester.tap(key('review-confirm'));
       await settle(tester, 12);
-      expect(repo.created.single['description'], isNot(contains('Start date')));
+      expect(repo.created.single['description'], isNot(contains('Expected start date')));
     });
 
     testWidgets('too short a description is refused with the count, and the API\'s limit is shown', (tester) async {
@@ -404,9 +410,9 @@ void main() {
       await type(tester, 'file-title-0', 'Site layout, ground floor');
       expect(repo.created, isEmpty);
       await type(tester, 'file-title-0', '');
-      expect(find.text('Give this file a title'), findsOneWidget);
+      expect(find.text('Enter a title for this file'), findsOneWidget);
       await send(tester);
-      expect(find.text('Give every file a title'), findsWidgets);
+      expect(find.text('Enter a title for every file'), findsWidgets);
     });
 
     testWidgets('a wrong type and a file over 10 MB are turned away with the reason, without a trip to the API', (
@@ -451,7 +457,7 @@ void main() {
       expect(c.draft.attachments, hasLength(10));
       expect(c.uploadNotice, contains('Only 10 more files fit'));
       await c.addFiles([pdf('one-more.pdf')]);
-      expect(c.uploadNotice, contains('the most (10) files'));
+      expect(c.uploadNotice, contains('the maximum of 10 files'));
     });
 
     testWidgets('the files are sent with the post as titled uploads', (tester) async {
@@ -497,7 +503,7 @@ void main() {
   group('an RFQ', () {
     testWidgets('its criteria open, are counted, and a compliance item toggles', (tester) async {
       await open(tester, kind: RfqKind.rfq);
-      expect(find.text('Add supplier criteria'), findsOneWidget);
+      expect(find.text('Add Supplier Criteria'), findsOneWidget);
       await tapKey(tester, 'criteria-toggle');
       await type(tester, 'min-years', '5');
       await type(tester, 'min-turnover', '5000000');
@@ -545,7 +551,7 @@ void main() {
       await tester.tap(find.text('OK'));
       await settle(tester, 10);
       expect(find.text('31 Oct 2026'), findsOneWidget);
-      expect(find.text('Pick a date'), findsOneWidget, reason: 'the quote deadline went with it');
+      expect(find.text('Select a date'), findsOneWidget, reason: 'the quote deadline went with it');
     });
 
     testWidgets('a complete RFQ is sent with its scope, criteria and deadlines as the API takes them', (tester) async {
@@ -563,7 +569,7 @@ void main() {
       await tester.tap(find.text('OK'));
       await settle(tester, 10);
       await send(tester);
-      expect(find.text('Review your RFQ'), findsOneWidget);
+      expect(find.text('Review Your RFQ'), findsOneWidget);
       expect(find.text('Pre-qualification until 28 Oct 2026 · quotes by 31 Oct 2026'), findsOneWidget);
       await tester.tap(key('review-confirm'));
       await settle(tester, 12);
@@ -586,9 +592,9 @@ void main() {
       await open(tester);
       await fillEnquiry(tester);
       await send(tester);
-      expect(find.text('Review your enquiry'), findsOneWidget);
+      expect(find.text('Review Your Enquiry'), findsOneWidget);
       // The website's rows, and no others.
-      expect(find.descendant(of: key('review-type-Request type'), matching: find.text('Enquiry')), findsOneWidget);
+      expect(find.descendant(of: key('review-type-Request Type'), matching: find.text('Enquiry')), findsOneWidget);
       expect(find.descendant(of: key('review-location-Locations'), matching: find.text('Pune')), findsOneWidget);
       expect(find.descendant(of: key('review-describe-Attachments'), matching: find.text('None')), findsOneWidget);
       expect(find.text('Bharat Facilities · Bharat Buyer · +919879879898'), findsOneWidget);
@@ -598,7 +604,7 @@ void main() {
       expect(repo.created, isEmpty, reason: 'nothing is sent before the review is confirmed');
       await tester.tap(key('review-edit-service'));
       await settle(tester, 12);
-      expect(find.text('Review your enquiry'), findsNothing);
+      expect(find.text('Review Your Enquiry'), findsNothing);
       expect(key('category-field'), findsOneWidget);
       await tester.tap(key('send'));
       await settle(tester, 12);
@@ -638,7 +644,7 @@ void main() {
       expect(body['locations'], ['Pune']);
       expect(body['state'], 'Maharashtra');
       expect(body['country'], 'India');
-      expect(find.text('Enquiry posted'), findsOneWidget);
+      expect(find.text('Enquiry Posted'), findsOneWidget);
       expect(find.text('Shared with 6 matched suppliers.'), findsOneWidget);
       expect(posted.single.kind, RfqKind.enquiry);
     });
@@ -684,8 +690,8 @@ void main() {
       await tester.tap(key('review-confirm'));
       await settle(tester, 12);
       expect(find.text('The deadline for responses has already passed.'), findsWidgets);
-      expect(find.text('Review your enquiry'), findsOneWidget, reason: 'the review stays open so it can be sent again');
-      expect(find.text('Enquiry posted'), findsNothing);
+      expect(find.text('Review Your Enquiry'), findsOneWidget, reason: 'the review stays open so it can be sent again');
+      expect(find.text('Enquiry Posted'), findsNothing);
       await tester.tap(key('review-keep'));
       await settle(tester, 12);
       expect(tester.widget<TextField>(key('text')).controller!.text, startsWith('Round-the-clock'));
@@ -698,7 +704,7 @@ void main() {
       await send(tester);
       await tester.tap(key('review-confirm'));
       await settle(tester, 12);
-      expect(find.text('Enquiry posted'), findsOneWidget);
+      expect(find.text('Enquiry Posted'), findsOneWidget);
       expect(repo.created, hasLength(1), reason: "the refused attempt never reached the API's create");
     });
 
@@ -726,7 +732,7 @@ void main() {
       final body = repo.created.single;
       expect(body['kind'], 'ENQUIRY');
       expect(body['companyName'], 'Zenith Hospitals');
-      expect(find.text('Enquiry posted'), findsOneWidget);
+      expect(find.text('Enquiry Posted'), findsOneWidget);
     });
 
     testWidgets('with several employers "Posting for" is a choice, and a company to post for switches the account', (
@@ -805,7 +811,7 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(tester.widget<PrimaryButton>(key('send')).onPressed, isNull, reason: 'Create RFQ is disabled');
+      expect(tester.widget<PrimaryButton>(key('send')).onPressed, isNull, reason: 'Publish RFQ is disabled');
       expect(key('rfq-switch-company'), findsNothing, reason: 'no company of theirs posts requirements');
       await tester.tap(key('rfq-create-company'));
       expect(created, 1);
@@ -828,12 +834,12 @@ void main() {
       repo.failReads = true;
       repo.failMe = true;
       await open(tester);
-      expect(find.text("Couldn't open the form"), findsOneWidget);
+      expect(find.text("Unable to Open the Form"), findsOneWidget);
       repo.failMe = false;
       repo.failReads = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester, 10);
-      expect(find.text('Send enquiry'), findsOneWidget);
+      expect(find.text('Submit Enquiry'), findsOneWidget);
     });
   });
 
@@ -845,7 +851,7 @@ void main() {
       await tapKey(tester, 'save-draft');
       expect(repo.patched.single.$1, DemoRfqRepository.homeId);
       expect(repo.calls, isNot(contains('act')), reason: 'saved, not published');
-      expect(find.text('Changes saved'), findsOneWidget);
+      expect(find.text('Changes Saved'), findsOneWidget);
     });
 
     testWidgets('a draft still refuses what the API refuses at any status', (tester) async {
@@ -884,14 +890,14 @@ void main() {
   group('edit and copy', () {
     testWidgets('editing a draft starts from it and Publish saves, then publishes', (tester) async {
       await open(tester, editId: DemoRfqRepository.homeId);
-      expect(find.text('Edit requirement'), findsOneWidget);
+      expect(find.text('Edit Requirement'), findsOneWidget);
       expect(find.text('Requirement of'), findsOneWidget);
       expect(tester.widget<TextField>(key('text')).controller!.text, startsWith('Alarm systems'));
       expect(find.text('Residential Communities'), findsWidgets);
       expect(find.text('Pune'), findsWidgets);
       expect(key('kind-enquiry'), findsOneWidget);
       expect(find.text('Publish'), findsOneWidget);
-      expect(find.text('Save draft'), findsOneWidget);
+      expect(find.text('Save Draft'), findsOneWidget);
       await type(tester, 'budget', '9,00,000');
       await tester.tap(key('send'));
       await settle(tester, 12);
@@ -901,17 +907,17 @@ void main() {
       expect(patch.containsKey('attachments'), isFalse, reason: 'the files are left alone unless they were changed');
       expect(patch.containsKey('items'), isFalse);
       expect(repo.calls, contains('act'));
-      expect(find.text('Changes saved'), findsOneWidget);
+      expect(find.text('Changes Saved'), findsOneWidget);
       expect(posted.single.status, RfqStatus.published);
     });
 
     testWidgets('editing a live requirement offers Save changes only, and cannot change its kind', (tester) async {
       await open(tester, editId: DemoRfqRepository.securityId);
-      expect(find.text('Save changes'), findsOneWidget);
-      expect(find.text('Save draft'), findsNothing);
+      expect(find.text('Save Changes'), findsOneWidget);
+      expect(find.text('Save Draft'), findsNothing);
       await tester.tap(key('kind-rfq'));
       await settle(tester);
-      expect(find.text('Scope of services'), findsNothing, reason: 'a requirement keeps its kind');
+      expect(find.text('Scope of Services'), findsNothing, reason: 'a requirement keeps its kind');
       await type(tester, 'budget', '13,00,000');
       await tester.tap(key('send'));
       await settle(tester, 12);
@@ -931,21 +937,21 @@ void main() {
       expect(files.single['url'], '/uploads/demo-floor-plan.pdf');
     });
 
-    testWidgets('"Post a similar requirement" starts from the old one with its dates and files left out', (
+    testWidgets('"Post a Similar Requirement" starts from the old one with its dates and files left out', (
       tester,
     ) async {
       await open(tester, copyFrom: DemoRfqRepository.ifmId);
-      expect(find.text('Post your requirement'), findsOneWidget);
-      expect(find.text('Scope of services'), findsOneWidget);
+      expect(find.text('Post Requirement'), findsOneWidget);
+      expect(find.text('Scope of Services'), findsOneWidget);
       expect(tester.widget<TextField>(key('text')).controller!.text, startsWith('Integrated facility management'));
-      expect(find.text('Pick a date'), findsNWidgets(2), reason: 'dates are picked anew');
+      expect(find.text('Select a date'), findsNWidgets(2), reason: 'dates are picked anew');
       expect(
-        find.text('Hide supplier criteria'),
+        find.text('Hide Supplier Criteria'),
         findsOneWidget,
         reason: "a copy's criteria are shown, so they are not sent unseen",
       );
       expect(tester.widget<TextField>(key('min-years')).controller!.text, '5');
-      expect(find.text('Create RFQ'), findsOneWidget);
+      expect(find.text('Publish RFQ'), findsOneWidget);
       expect(key('title'), findsNothing, reason: 'a copy is titled anew, from what it asks for');
     });
   });
@@ -956,8 +962,8 @@ void main() {
       await type(tester, 'text', 'Round-the-clock guarding for the campus.');
       await tester.tap(find.bySemanticsLabel('Back'));
       await settle(tester, 10);
-      expect(find.text('Leave without sending?'), findsOneWidget);
-      await tester.tap(find.text('Keep editing').last);
+      expect(find.text('Leave Without Sending?'), findsOneWidget);
+      await tester.tap(find.text('Keep Editing').last);
       await settle(tester, 10);
       expect(find.byType(PostRfqScreen), findsOneWidget);
     });
@@ -1001,7 +1007,7 @@ void main() {
       await settle(tester, 12);
     }
 
-    testWidgets('"View requirement" opens it, in place of the composer', (tester) async {
+    testWidgets('"View Requirement" opens it, in place of the composer', (tester) async {
       await postEnquiry(tester);
       await tester.tap(key('posted-view'));
       await settle(tester, 14);
@@ -1009,11 +1015,11 @@ void main() {
       expect(find.byType(PostRfqScreen), findsNothing);
     });
 
-    testWidgets('"Post another" is a blank form for the same kind', (tester) async {
+    testWidgets('"Post Another" is a blank form for the same kind', (tester) async {
       await postEnquiry(tester);
       await tester.tap(key('posted-another'));
       await settle(tester, 10);
-      expect(find.text('Send enquiry'), findsOneWidget);
+      expect(find.text('Submit Enquiry'), findsOneWidget);
       expect(tester.widget<TextField>(key('text')).controller!.text, isEmpty);
       expect(tester.widget<TextField>(key('contact-name')).controller!.text, 'Bharat Buyer');
       expect(key('place-chip-Pune'), findsNothing);
@@ -1033,7 +1039,7 @@ void main() {
       await send(tester);
       await tester.tap(key('review-confirm'));
       await settle(tester, 12);
-      expect(find.text('RFQ created'), findsOneWidget);
+      expect(find.text('RFQ Created'), findsOneWidget);
       expect(find.text('Suppliers send pre-qualification responses until 28 Oct 2026.'), findsOneWidget);
     });
   });

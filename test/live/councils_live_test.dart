@@ -109,7 +109,7 @@ void main() {
     }
   });
 
-  liveTest('the stat tiles are read from the data', () async {
+  liveTest('the overview stats are read from the data (no longer drawn since 12 Nov 2026)', () async {
     final controller = await _controller();
     final api = await liveClient();
     final raw = await _rows(api, '/councils');
@@ -179,7 +179,7 @@ void main() {
         expect(r.detail, 'Lead: ${leads[i]} • ${event['attendeeCount']} seats claimed');
         expect(event['attendeeCount'], greaterThan(0));
       }
-      expect(controller.overview!.roundtablesCaption, 'All events');
+      expect(controller.overview!.roundtablesCaption, 'All Events');
     },
   );
 
@@ -488,12 +488,8 @@ void main() {
       await pumpLive(tester, shot: 'councils_live');
       expect(tester.takeException(), isNull);
 
-      // The tiles, the rail and the roundtables, in the design's words.
-      expect(find.text('Active Councils'), findsOneWidget);
-      expect(find.text('Peer Members'), findsOneWidget);
-      expect(find.text('Domains Covered'), findsOneWidget);
-      expect(find.text('Active Roundtables'), findsOneWidget);
-      expect(find.textContaining(RegExp(r'^\+\d+ Q[1-4]$')), findsOneWidget);
+      // The rail and the roundtables, in the design's words (the stat tiles went on 12 Nov 2026).
+      expect(find.text('Peer Members'), findsNothing);
       expect(find.text('Your Joined Councils'), findsOneWidget);
       expect(find.text('3 Active'), findsOneWidget);
       expect(find.text('Executive Seat'), findsOneWidget);
@@ -533,7 +529,7 @@ void main() {
       expect(find.text('Corporate & Commercial Real Estate Council'), findsOneWidget);
       expect(find.text('IN-PERSON SUMMITS'), findsOneWidget);
       expect(find.text('Regional In-Person Chapters'), findsOneWidget);
-      expect(find.text('View Regional Chapters Directory'), findsOneWidget);
+      expect(find.text('View Chapters Directory'), findsOneWidget);
       // Each tile carries its chapter's next date.
       final controller = Provider.of<CouncilsController>(tester.element(find.byType(CouncilsScreen)), listen: false);
       for (final chapter in controller.chapters) {

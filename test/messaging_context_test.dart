@@ -329,7 +329,7 @@ void main() {
           now: now,
         )!;
         expect((room.title, room.href), ('BMS Clinic', '/mentorship/groups/G1'));
-        expect(room.facts, ['Group session', 'Next session Fri, 30 Oct, 6:30 pm']);
+        expect(room.facts, ['Group Session', 'Next session Fri, 30 Oct, 6:30 pm']);
         final consult = contextStripModel(
           const ConversationContext(
             kind: ConversationKind.consultation,
@@ -381,7 +381,7 @@ void main() {
     );
 
     test('the introduction says what the thread is for', () {
-      expect(introText(null), 'No messages yet — say hello.');
+      expect(introText(null), 'No messages yet. Say hello.');
       expect(
         introText(const ConversationContext(kind: ConversationKind.mentorship)),
         contains('agree how you would like to work together'),
@@ -415,10 +415,10 @@ void main() {
       final reply = eventLine(ThreadEvent(id: '1', type: 'BID_SUBMITTED', at: now, amount: 485000), enquiry);
       expect(
         (reply.title, reply.action, reply.href),
-        ('They replied · ₹4,85,000', 'View reply', '/manage/requirements/R1'),
+        ('They replied · ₹4,85,000', 'View Reply', '/manage/requirements/R1'),
       );
       final mine = eventLine(ThreadEvent(id: '1', type: 'BID_SUBMITTED', at: now, mine: true), rfq);
-      expect((mine.title, mine.action, mine.href), ('Your bid submitted', 'View bid', '/manage/bids/R1'));
+      expect((mine.title, mine.action, mine.href), ('Your bid submitted', 'View Bid', '/manage/bids/R1'));
     });
 
     test('a purchase order, a mentorship and its sessions, a consultation', () {

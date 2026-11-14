@@ -61,6 +61,14 @@ class RfqSmallButton extends StatelessWidget {
   }
 }
 
+/// A phrase as a heading reads it: "find work" is "Find Work", "bid on requirements" is "Bid on Requirements".
+String _titled(String phrase) {
+  const small = {'a', 'an', 'the', 'and', 'or', 'of', 'to', 'in', 'on', 'for', 'with', 'by', 'at'};
+  return [
+    for (final w in phrase.split(' ')) small.contains(w) || w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}',
+  ].join(' ');
+}
+
 /// Why a supplier screen cannot show its list yet: the account is not a
 /// supplier's, or the company has no supplier listing (one tap starts it).
 class SupplierGateView extends StatelessWidget {
@@ -80,15 +88,15 @@ class SupplierGateView extends StatelessWidget {
     return switch (gate) {
       SupplierGate.role => RfqNotice(
         icon: LucideIcons.building2,
-        title: 'This is for supplier accounts',
+        title: 'This Is for Supplier Accounts',
         body:
             'Your account is not a supplier\'s, so it cannot $what. A company that sells on ICR has supplier accounts; ask your company admin to add you as one.',
       ),
       SupplierGate.noListing => RfqNotice(
         icon: LucideIcons.store,
-        title: 'Start selling to $what',
+        title: 'Start Selling to ${_titled(what)}',
         body: note ?? 'Your company has no supplier listing yet. One tap creates it from your company profile.',
-        action: 'Start selling',
+        action: 'Start Selling',
         onAction: onStartSelling,
       ),
     };
@@ -98,13 +106,13 @@ class SupplierGateView extends StatelessWidget {
 /// What a supplier's bid reads as on their own list.
 String myBidStatusLabel(MyBid b) {
   final enquiry = b.requirement?.isEnquiry ?? false;
-  if (b.isAwarded) return enquiry ? 'Selected' : 'Won';
+  if (b.isAwarded) return enquiry ? 'Selected' : 'Awarded';
   final ended = b.requirement?.status == RfqStatus.closed || b.requirement?.status == RfqStatus.cancelled;
   return switch (b.status) {
-    BidStatus.pending => ended ? 'Closed' : (enquiry ? 'Replied' : 'Submitted'),
+    BidStatus.pending => ended ? 'Closed' : (enquiry ? 'Replied' : 'Bid Submitted'),
     BidStatus.shortlisted => 'Shortlisted',
-    BidStatus.rejected => 'Not selected',
-    BidStatus.awarded => enquiry ? 'Selected' : 'Won',
+    BidStatus.rejected => 'Not Selected',
+    BidStatus.awarded => enquiry ? 'Selected' : 'Awarded',
   };
 }
 
@@ -160,7 +168,12 @@ class MyBidCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(rfq?.title ?? 'Requirement', style: RfqText.cardTitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    Text(
+                      rfq?.title ?? 'Requirement',
+                      style: RfqText.cardTitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     if (where.isNotEmpty) ...[const SizedBox(height: 2), Text(where, style: RfqText.small)],
                   ],
                 ),
@@ -213,9 +226,7 @@ class MyBidCard extends StatelessWidget {
                 const SizedBox(width: 5),
                 Text(
                   '${deadline.label} ${deadline.relative}',
-                  style: RfqText.small.copyWith(
-                    color: deadline.urgency == Urgency.urgent ? AppColors.error : null,
-                  ),
+                  style: RfqText.small.copyWith(color: deadline.urgency == Urgency.urgent ? AppColors.error : null),
                 ),
               ],
             ),
@@ -223,9 +234,9 @@ class MyBidCard extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              RfqSmallButton(label: 'View requirement', icon: LucideIcons.fileText, onTap: onOpen),
+              RfqSmallButton(label: 'View Requirement', icon: LucideIcons.fileText, onTap: onOpen),
               const SizedBox(width: 8),
-              RfqSmallButton(label: 'Message buyer', icon: LucideIcons.messageSquare, onTap: onMessage, busy: busy),
+              RfqSmallButton(label: 'Message Buyer', icon: LucideIcons.messageSquare, onTap: onMessage, busy: busy),
             ],
           ),
         ],

@@ -114,7 +114,8 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
   void initState() {
     super.initState();
     _c = NotificationPreferencesController(
-      widget.repository ?? (AppConfig.demo ? DemoAccountRepository() : ApiAccountRepository(api: context.read<ApiClient>())),
+      widget.repository ??
+          (AppConfig.demo ? DemoAccountRepository() : ApiAccountRepository(api: context.read<ApiClient>())),
     )..load();
   }
 
@@ -148,10 +149,7 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
                     key: const Key('prefs.error'),
                     margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                     padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF1F2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    decoration: BoxDecoration(color: const Color(0xFFFFF1F2), borderRadius: BorderRadius.circular(10)),
                     child: Row(
                       children: [
                         Expanded(child: Text(_c.actionError!, style: AccountText.error.copyWith(fontSize: 14))),
@@ -166,7 +164,7 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                   child: Text(
-                    'Choose how ICR tells you about each kind of update: in the app, and by email.',
+                    'Select how ICR notifies you of each type of update, in the app and by email.',
                     style: AccountText.meta,
                   ),
                 ),
@@ -180,8 +178,18 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
                         child: Row(
                           children: [
                             const Spacer(),
-                            SizedBox(width: 64, child: Center(child: Text('In app', style: AccountText.meta.copyWith(fontWeight: FontWeight.w600)))),
-                            SizedBox(width: 64, child: Center(child: Text('Email', style: AccountText.meta.copyWith(fontWeight: FontWeight.w600)))),
+                            SizedBox(
+                              width: 64,
+                              child: Center(
+                                child: Text('In App', style: AccountText.meta.copyWith(fontWeight: FontWeight.w600)),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 64,
+                              child: Center(
+                                child: Text('Email', style: AccountText.meta.copyWith(fontWeight: FontWeight.w600)),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -214,7 +222,8 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
                   children: [
                     Text(words?.$1 ?? r.category, style: AccountText.itemTitle),
                     if (words != null) Text(words.$2, style: AccountText.meta.copyWith(fontSize: 13)),
-                    if (r.locked) Text('Always sent', style: AccountText.meta.copyWith(fontSize: 13, color: AppColors.slate400)),
+                    if (r.locked)
+                      Text('Always sent', style: AccountText.meta.copyWith(fontSize: 13, color: AppColors.slate400)),
                   ],
                 ),
               ),

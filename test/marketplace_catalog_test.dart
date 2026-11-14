@@ -92,7 +92,7 @@ void main() {
       expect(find.text('Housekeeping'), findsOneWidget);
       expect(find.text('₹18,000 per inspection'), findsWidgets);
       expect(find.text('SLA: 24h Setup'), findsOneWidget);
-      expect(find.text('About this service'), findsOneWidget);
+      expect(find.text('About This Service'), findsOneWidget);
       expect(find.byKey(const ValueKey('item-about')), findsOneWidget);
       expect(find.text('Vikasha Aero Tech'), findsWidgets);
       expect(mart.repo.calls, containsAll(['service', 'supplierOfCompany']));
@@ -105,7 +105,7 @@ void main() {
       expect(find.text('On request, ask for a quote'), findsOneWidget);
     });
 
-    testWidgets('"Sold by" opens the supplier\'s profile over the page', (tester) async {
+    testWidgets('"Sold By" opens the supplier\'s profile over the page', (tester) async {
       await openService(tester);
       await tester.tap(find.byKey(const ValueKey('sold-by')));
       await tester.pumpAndSettle();
@@ -116,7 +116,7 @@ void main() {
       final mart = await openService(tester);
       await tester.tap(find.byKey(const ValueKey('item-quote')));
       await tester.pumpAndSettle();
-      expect(find.text('Request a quote'), findsWidgets);
+      expect(find.text('Request a Quote'), findsWidgets);
       await tester.tap(find.byKey(const ValueKey('quote-send')));
       await tester.pumpAndSettle();
       expect(mart.repo.quotes.single.service?.id, 'sv1');
@@ -156,7 +156,7 @@ void main() {
       (tester) async {
         final r = repo()..supplierOfCompanyAnswer = ((id) => null);
         final mart = await openService(tester, repo_: r);
-        expect(find.text('Sold by'), findsOneWidget);
+        expect(find.text('Sold By'), findsOneWidget);
         await tester.tap(find.byKey(const ValueKey('sold-by')));
         await tester.pumpAndSettle();
         expect(find.text('Request for Quote (RFQ)'), findsNothing);
@@ -191,14 +191,14 @@ void main() {
       expect(find.text('Biometric Access Terminal'), findsWidgets);
       expect(find.byKey(const ValueKey('product-price')), findsOneWidget);
       expect(find.text('₹18,500 / piece'), findsWidgets);
-      expect(find.text('In stock'), findsWidgets);
+      expect(find.text('In Stock'), findsWidgets);
       expect(find.text('Access Control'), findsOneWidget);
-      expect(find.text('Supplier terms'), findsOneWidget);
+      expect(find.text('Supplier Terms'), findsOneWidget);
       expect(find.text('2-year warranty'), findsOneWidget);
       expect(find.text('7-day returns'), findsOneWidget);
       expect(find.text('Free delivery over ₹25,000'), findsOneWidget);
       expect(find.text('Bulk pricing from 10 piece'), findsOneWidget);
-      expect(find.text('About this product'), findsOneWidget);
+      expect(find.text('About This Product'), findsOneWidget);
       // The supplier is read by its listing id (the product carries it).
       expect(mart.repo.calls, contains('product'));
     });
@@ -207,7 +207,7 @@ void main() {
       final r = repo()
         ..productAnswer = ((id) => const CatalogProduct(id: 'p1', companyId: 'co-v1', name: 'Bare', price: 100));
       await openProduct(tester, repo_: r);
-      expect(find.text('Supplier terms'), findsNothing);
+      expect(find.text('Supplier Terms'), findsNothing);
       expect(find.text('₹100'), findsWidgets);
     });
 
@@ -227,7 +227,7 @@ void main() {
       final mart = await openProduct(tester);
       await tester.tap(find.byKey(const ValueKey('item-share')));
       await tester.pump();
-      expect(mart.links.shared.single, contains('Biometric Access Terminal on ICR Supplier Mart'));
+      expect(mart.links.shared.single, contains('Biometric Access Terminal on ICR Marketplace'));
       expect(mart.links.shared.single, contains('https://icr.org.in/products/p1'));
     });
 
@@ -268,7 +268,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('browse-categories')));
       await tester.pumpAndSettle();
-      expect(find.text('Categories'), findsOneWidget);
+      expect(find.text('Explore Supplier Categories'), findsOneWidget);
       return mart;
     }
 
@@ -280,8 +280,8 @@ void main() {
       expect(find.text('Guarding, CCTV and access control.'), findsOneWidget);
       expect(find.text('62 suppliers • 2 sub-categories'), findsOneWidget);
       expect(find.text('1 supplier • 1 sub-categories'), findsOneWidget);
-      expect(find.text('All products'), findsOneWidget);
-      expect(find.text('All services'), findsOneWidget);
+      expect(find.text('All Products'), findsOneWidget);
+      expect(find.text('All Services'), findsOneWidget);
     });
 
     testWidgets('the search narrows by a category\'s own name or a sub-category\'s', (tester) async {
@@ -292,23 +292,23 @@ void main() {
       expect(find.text('Security Services'), findsNothing);
       await tester.enterText(find.byType(TextField).last, 'zzz');
       await tester.pump();
-      expect(find.text('No category matches'), findsOneWidget);
+      expect(find.text('No Category Matches'), findsOneWidget);
     });
 
-    testWidgets('a category\'s page: "Show 62 suppliers" goes back to the Marketplace filtered to it', (tester) async {
+    testWidgets('a category\'s page: "Show 62 Suppliers" goes back to the Marketplace filtered to it', (tester) async {
       final mart = await openBrowser(tester);
       await tester.tap(find.byKey(const ValueKey('category-card-SECURITY')));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('category-page')), findsOneWidget);
-      expect(find.text('Sub-categories'), findsOneWidget);
-      expect(find.text('Show 62 suppliers'), findsOneWidget);
+      expect(find.text('Sub-Categories'), findsOneWidget);
+      expect(find.text('Show 62 Suppliers'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('show-suppliers')));
       await tester.pumpAndSettle();
       expect(mart.market.filters.categories, {'SECURITY'});
       expect(mart.repo.searches.last.filters.categories, {'SECURITY'});
       // Back on the Marketplace: no sheet, no browser.
-      expect(find.text('Sort Top rated'), findsOneWidget);
-      expect(find.text('Categories'), findsNothing);
+      expect(find.text('Sort Top Rated'), findsOneWidget);
+      expect(find.text('Explore Supplier Categories'), findsNothing);
     });
 
     testWidgets('a sub-category shows its own suppliers', (tester) async {
@@ -351,7 +351,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('board-product-p1')));
       await tester.pumpAndSettle();
-      expect(find.text('Supplier terms'), findsOneWidget);
+      expect(find.text('Supplier Terms'), findsOneWidget);
     });
 
     testWidgets('a category with nothing listed says so', (tester) async {
@@ -360,7 +360,7 @@ void main() {
       await openBrowser(tester, r: r);
       await tester.tap(find.byKey(const ValueKey('category-card-MEP')));
       await tester.pumpAndSettle();
-      expect(find.text('No products in Engineering Services yet'), findsOneWidget);
+      expect(find.text('No Products in Engineering Services Yet'), findsOneWidget);
     });
   });
 
@@ -377,7 +377,7 @@ void main() {
       return mart;
     }
 
-    testWidgets('All products: the count, a search, "Load more products", and a row opens its page', (tester) async {
+    testWidgets('All products: the count, a search, "View More", and a row opens its page', (tester) async {
       final r = repo()
         ..boardProducts = ((page, search) {
           final rows = [
@@ -392,8 +392,8 @@ void main() {
           ];
           return CatalogPage(items: rows, total: 6, page: page, hasMore: page == 1);
         });
-      final mart = await openBoard(tester, 'All products', r: r);
-      expect(find.text('Products'), findsOneWidget);
+      final mart = await openBoard(tester, 'All Products', r: r);
+      expect(find.text('Products Marketplace'), findsOneWidget);
       expect(find.text('6 products'), findsOneWidget);
       expect(find.text('Item 1-0'), findsOneWidget);
       expect(find.text('Acme'), findsWidgets);
@@ -411,7 +411,7 @@ void main() {
       expect(mart.repo.boardReads.last.page, 1);
     });
 
-    testWidgets('All services lists services with their rate, or "Price on request"', (tester) async {
+    testWidgets('All services lists services with their rate, or "Price on Request"', (tester) async {
       final r = repo()
         ..boardServices = ((page, search) => CatalogPage(
           items: const [
@@ -422,21 +422,21 @@ void main() {
           page: 1,
           hasMore: false,
         ));
-      await openBoard(tester, 'All services', r: r);
-      expect(find.text('Services'), findsOneWidget);
+      await openBoard(tester, 'All Services', r: r);
+      expect(find.text('Services Marketplace'), findsOneWidget);
       expect(find.text('₹18,000 per inspection'), findsOneWidget);
-      expect(find.text('Price on request'), findsOneWidget);
+      expect(find.text('Price on Request'), findsOneWidget);
     });
 
     testWidgets('a search that finds nothing says so; a failed read says why and Try again reads it', (tester) async {
       final r = repo()
         ..boardServices = ((page, search) => const CatalogPage(items: [], total: 0, page: 1, hasMore: false));
-      final mart = await openBoard(tester, 'All services', r: r);
-      expect(find.text('No services listed yet'), findsOneWidget);
+      final mart = await openBoard(tester, 'All Services', r: r);
+      expect(find.text('No Services Listed Yet'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('market-search')), 'zzz');
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pumpAndSettle();
-      expect(find.textContaining('No services match "zzz"'), findsOneWidget);
+      expect(find.textContaining('No Services Match "zzz"'), findsOneWidget);
 
       r.failing['services'] = ApiError('The catalogue is down.');
       await tester.enterText(find.byKey(const ValueKey('market-search')), 'duct');

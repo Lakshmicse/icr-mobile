@@ -20,23 +20,23 @@ const schedulableStages = {'APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER'};
 /// The stage as the hiring team words it.
 String stageWord(String stage) => switch (stage) {
   'APPLIED' => 'Applied',
-  'SCREENING' => 'In review',
+  'SCREENING' => 'In Review',
   'INTERVIEW' => 'Interview',
   'OFFER' => 'Offer',
   'HIRED' => 'Hired',
-  'REJECTED' => 'Not selected',
+  'REJECTED' => 'Not Selected',
   'WITHDRAWN' => 'Withdrawn',
   _ => stage,
 };
 
 /// The verb on the button that moves an application to [stage].
 String moveVerb(String stage) => switch (stage) {
-  'SCREENING' => 'Move to review',
-  'INTERVIEW' => 'Move to interview',
-  'OFFER' => 'Move to offer',
-  'HIRED' => 'Mark as hired',
+  'SCREENING' => 'Move to Review',
+  'INTERVIEW' => 'Move to Interview',
+  'OFFER' => 'Move to Offer',
+  'HIRED' => 'Mark as Hired',
   'REJECTED' => 'Reject',
-  _ => 'Move to ${stageWord(stage).toLowerCase()}',
+  _ => 'Move to ${stageWord(stage)}',
 };
 
 /// The stages the pipeline shows, in order.
@@ -44,9 +44,9 @@ const pipelineStages = ['APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER', 'HIRED', '
 
 /// How the applicants are ordered (`GET /jobs/:id/applications?sort=`).
 enum ApplicantSort {
-  recent('recent', 'Most recent'),
-  match('match', 'Best match'),
-  qualifications('qualifications', 'Most qualified');
+  recent('recent', 'Most Recent'),
+  match('match', 'Best Match'),
+  qualifications('qualifications', 'Most Qualified');
 
   const ApplicantSort(this.api, this.label);
   final String api;
@@ -274,7 +274,7 @@ class ApplicantDetailController extends HiringController {
   Future<String?> move(String to, {String? note}) => _run(() => repository.moveStage(_seed.id, to, note: note));
 
   Future<String?> addNote({String? note, int? rating}) {
-    if ((note ?? '').trim().isEmpty && rating == null) return Future.value('Write a note or give a rating.');
+    if ((note ?? '').trim().isEmpty && rating == null) return Future.value('Add a note or a rating.');
     return _run(() => repository.addNote(_seed.id, note: note, rating: rating));
   }
 

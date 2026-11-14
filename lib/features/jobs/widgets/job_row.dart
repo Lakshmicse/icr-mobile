@@ -67,7 +67,7 @@ class JobRow extends StatelessWidget {
                 top: 2.75,
                 child: Semantics(
                   button: true,
-                  label: job.saved ? 'Remove bookmark' : 'Save job',
+                  label: job.saved ? 'Remove bookmark' : 'Save Job',
                   child: InkResponse(
                     onTap: onSave,
                     radius: 20,

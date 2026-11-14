@@ -151,7 +151,7 @@ class MentorProfileController extends ChangeNotifier {
       viewer: (before ?? const MentorViewer()).copyWith(
         canRequest: false,
         blocker: AskBlocker.requestPending,
-        blockedReason: 'Your request is with this mentor, awaiting a reply.',
+        blockedReason: 'Your request is awaiting this mentor\'s reply.',
         pendingRequestId: 'pending',
       ),
     );

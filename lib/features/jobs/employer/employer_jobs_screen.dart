@@ -108,17 +108,19 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
         builder: (_) => AlertDialog(
           key: const ValueKey('close-dialog'),
           title: Text('Close “${job.title}”?'),
-          content: const Text('It stops taking applications and leaves the job board. You can reopen it later.'),
+          content: const Text(
+            'The job will stop accepting applications and be removed from the job board. You can reopen it later.',
+          ),
           actions: [
             TextButton(
               key: const ValueKey('close-keep'),
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Keep open'),
+              child: const Text('Keep Open'),
             ),
             TextButton(
               key: const ValueKey('close-confirm'),
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Close job'),
+              child: const Text('Close Job'),
             ),
           ],
         ),
@@ -145,7 +147,7 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
         key: const ValueKey('delete-dialog'),
         title: Text('Delete “${job.title}”?'),
         content: const Text(
-          'It leaves your list and the job board. Applications already sent are kept for your records.',
+          'The job will be removed from your list and the job board. Applications already received are kept for your records.',
         ),
         actions: [
           TextButton(
@@ -175,7 +177,7 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
       showMessage(context, copy.error!);
       return;
     }
-    showMessage(context, 'A draft copy of “${job.title}” was made.');
+    showMessage(context, 'A draft copy of “${job.title}” was created.');
     if (copy.id != null) await _post(editId: copy.id);
   }
 
@@ -184,14 +186,14 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) => CareerScaffold(
-        title: 'Jobs you posted',
+        title: 'Jobs You Posted',
         onBack: widget.onBack,
         unread: _c.unread,
         onBell: () => widget.navigation.openNotifications(context, widget.links),
         actions: [
           IconButton(
             key: const ValueKey('post-job'),
-            tooltip: 'Post a job',
+            tooltip: 'Post a Job',
             onPressed: () => _post(),
             icon: const Icon(LucideIcons.circlePlus, size: 22, color: AppColors.primary),
           ),
@@ -216,10 +218,10 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
         CareerNotice(
           key: const ValueKey('no-role'),
           icon: LucideIcons.lock,
-          title: 'Posting jobs is for hiring teams',
+          title: 'Job Posting Is for Hiring Teams',
           body:
-              'Your account does not post jobs for a company. Ask your company\'s admin to make you a recruiter, or set up a company.',
-          action: 'Set up a company',
+              'Your account cannot post jobs for a company. Ask your company admin to make you a recruiter, or create a company.',
+          action: 'Create a Company',
           onAction: () => widget.navigation.createCompany(context, widget.links),
         ),
       ];
@@ -229,9 +231,9 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
         CareerNotice(
           key: const ValueKey('jobs-error'),
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load your jobs",
+          title: 'Unable to Load Your Jobs',
           body: _c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         ),
       ];
@@ -242,9 +244,9 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
         CareerNotice(
           key: const ValueKey('first-job'),
           icon: LucideIcons.briefcaseBusiness,
-          title: 'Post your first job',
-          body: 'Describe the role, add a few questions, and it goes live once your company is verified.',
-          action: 'Post a job',
+          title: 'Post Your First Job',
+          body: 'Describe the role and add screening questions. The job goes live once your company is verified.',
+          action: 'Post a Job',
           onAction: () => _post(),
         ),
       ];
@@ -337,7 +339,7 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
                     if (_c.search.isNotEmpty)
                       IconButton(
                         key: const ValueKey('jobs-search-clear'),
-                        tooltip: 'Clear search',
+                        tooltip: 'Clear Search',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
                         iconSize: 15,
@@ -356,7 +358,7 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
             const SizedBox(width: 8),
             PopupMenuButton<JobsSort>(
               key: const ValueKey('jobs-sort'),
-              tooltip: 'Sort by',
+              tooltip: 'Sort By',
               onSelected: _c.setSort,
               itemBuilder: (_) => [
                 for (final s in JobsSort.values)
@@ -382,19 +384,8 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
           ],
         ),
       ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(10, 6, 10, 0),
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: FilterChip(
-            key: const ValueKey('jobs-mine'),
-            label: const Text('Only jobs I started'),
-            selected: _c.mine,
-            onSelected: _c.setMine,
-          ),
-        ),
-      ),
-      const SizedBox(height: 4),
+      // The "Only jobs I started" chip sat here (owner, 13 Nov 2026: removed).
+      const SizedBox(height: 8),
       const Divider(height: 1, color: AppColors.blockRule),
       if (_c.loading && _c.jobs.isEmpty)
         const CareerLoading()
@@ -402,23 +393,22 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
         CareerNotice(
           key: const ValueKey('jobs-error'),
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load your jobs",
+          title: 'Unable to Load Your Jobs',
           body: _c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         )
       else if (_c.jobs.isEmpty)
         CareerNotice(
           key: const ValueKey('jobs-empty'),
           icon: LucideIcons.briefcaseBusiness,
-          title: _c.search.isNotEmpty || _c.mine ? 'No jobs match' : 'No jobs here',
-          body: _c.search.isNotEmpty || _c.mine
-              ? 'Try other words, or clear the filters.'
-              : 'Postings in this status show up here.',
-          action: _c.search.isNotEmpty || _c.mine || _c.status != null ? 'Clear filters' : null,
+          title: _c.search.isNotEmpty ? 'No Matching Jobs' : 'No Jobs',
+          body: _c.search.isNotEmpty
+              ? 'Try different keywords or clear the filters.'
+              : 'Jobs with this status will appear here.',
+          action: _c.search.isNotEmpty || _c.status != null ? 'Clear Filters' : null,
           onAction: () {
             _search.clear();
-            _c.setMine(false);
             _c.setSearch('');
             _c.selectTab(null);
           },
@@ -441,7 +431,7 @@ class _EmployerJobsScreenState extends State<EmployerJobsScreen> {
   }
 
   static String _tabLabel(PostingStatus s) => switch (s) {
-    PostingStatus.draft => 'Drafts',
+    PostingStatus.draft => 'Draft',
     _ => s.label,
   };
 }
@@ -512,13 +502,13 @@ class _Figures extends StatelessWidget {
               overview.closingSoon == 0 ? 'None closing soon' : '${overview.closingSoon} closing soon',
               onTap: () => onTab(PostingStatus.open),
             ),
-            tile('figure-unviewed', 'Not viewed', overview.unviewed, 'Applicants nobody opened'),
+            tile('figure-unviewed', 'Not Viewed', overview.unviewed, 'Applicants not yet viewed'),
             tile(
               'figure-interviewing',
               'Interviewing',
               overview.interviewing,
               overview.interviewingJobs == 0
-                  ? 'No rounds on'
+                  ? 'No active rounds'
                   : 'across ${overview.interviewingJobs} ${overview.interviewingJobs == 1 ? 'job' : 'jobs'}',
             ),
             tile('figure-hired', 'Hired', overview.hired, 'From these jobs'),
@@ -658,7 +648,7 @@ class _JobCard extends StatelessWidget {
                     _JobAction.delete => onDelete(),
                   },
                   itemBuilder: (_) => [
-                    const PopupMenuItem(value: _JobAction.edit, child: Text('Edit job')),
+                    const PopupMenuItem(value: _JobAction.edit, child: Text('Edit Job')),
                     if (job.status == PostingStatus.open && !job.promoted)
                       const PopupMenuItem(value: _JobAction.promote, child: Text('Promote')),
                     if (job.status == PostingStatus.open)
@@ -669,7 +659,7 @@ class _JobCard extends StatelessWidget {
                       const PopupMenuItem(value: _JobAction.close, child: Text('Close')),
                     if (job.status == PostingStatus.closed)
                       const PopupMenuItem(value: _JobAction.reopen, child: Text('Reopen')),
-                    const PopupMenuItem(value: _JobAction.duplicate, child: Text('Duplicate as draft')),
+                    const PopupMenuItem(value: _JobAction.duplicate, child: Text('Duplicate as Draft')),
                     const PopupMenuItem(
                       value: _JobAction.delete,
                       child: Text('Delete', style: TextStyle(color: AppColors.error)),
@@ -687,7 +677,7 @@ class _JobCard extends StatelessWidget {
                 icon: LucideIcons.undo2,
                 color: AppColors.amber500,
                 child: Text(
-                  'ICR sent this back: ${job.reviewNote}',
+                  'Returned by ICR: ${job.reviewNote}',
                   style: CareerText.body.copyWith(color: AppColors.onSurface),
                 ),
               ),
@@ -738,7 +728,7 @@ class _JobCard extends StatelessWidget {
                     side: const BorderSide(color: AppColors.outlineVariant),
                     shape: const StadiumBorder(),
                   ),
-                  child: Text('Continue editing', style: CareerText.link),
+                  child: Text('Continue Editing', style: CareerText.link),
                 ),
               ),
             ),

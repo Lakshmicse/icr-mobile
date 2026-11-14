@@ -109,7 +109,7 @@ class EnquiryReveal {
     final n = monthly;
     if (n == null) return null;
     final s =
-        '$revealedThisMonth of $receivedThisMonth enquiries this month came with contact details — your plan '
+        '$revealedThisMonth of $receivedThisMonth enquiries this month came with contact details. Your plan '
         'includes $n a month.';
     return receivedThisMonth > n ? '$s The rest are here, with the details masked.' : s;
   }

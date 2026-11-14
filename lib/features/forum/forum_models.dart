@@ -53,6 +53,8 @@ class ForumThread {
     this.subcategory,
     this.attachment,
     this.images = const [],
+    this.imageIds = const [],
+    this.videos = const [],
     this.subscribed = false,
     this.canEdit = false,
     this.canModerate = false,
@@ -62,6 +64,10 @@ class ForumThread {
     this.status = 'OPEN',
     this.moderation = 'APPROVED',
   });
+
+  /// The photos the forum keeps on the discussion (`imageIds`: upload file names, in order), which an edit starts
+  /// from. Empty on a server that predates them.
+  final List<String> imageIds;
 
   /// The discussion as a card: author, title, tags, reactions, poll, saved...
   final FeedPost card;
@@ -75,6 +81,9 @@ class ForumThread {
 
   /// Every photo: the attachment when it is one, then the images in the body.
   final List<FeedPicture> images;
+
+  /// Every video in the body, each a URL the player opens.
+  final List<String> videos;
 
   /// The reader follows the discussion (hears about new replies).
   final bool subscribed;
@@ -118,6 +127,7 @@ class ForumThread {
     subcategory: subcategory,
     attachment: attachment,
     images: images,
+    videos: videos,
     subscribed: subscribed ?? this.subscribed,
     canEdit: canEdit,
     canModerate: canModerate,
@@ -179,8 +189,8 @@ class ForumAccess {
     'CONTRIBUTOR' => 'Contributor',
     'TRUSTED' => 'Trusted',
     'EXPERT' => 'Expert',
-    'LEADER' => 'Community leader',
-    _ => 'New member',
+    'LEADER' => 'Community Leader',
+    _ => 'New Member',
   };
 }
 
@@ -191,12 +201,12 @@ enum ForumView { all, trending, following, unanswered, polls, saved, mine }
 extension ForumViewLabel on ForumView {
   String get label => switch (this) {
     ForumView.all => 'All Feed',
-    ForumView.trending => 'Trending',
+    ForumView.trending => 'Trending Discussions',
     ForumView.following => 'Following',
     ForumView.unanswered => 'Unanswered',
     ForumView.polls => 'Polls',
     ForumView.saved => 'Saved',
-    ForumView.mine => 'My posts',
+    ForumView.mine => 'My Contributions',
   };
 }
 
@@ -206,10 +216,10 @@ enum ForumSort { latest, newest, top, unanswered }
 
 extension ForumSortLabel on ForumSort {
   String get label => switch (this) {
-    ForumSort.latest => 'Recent activity',
+    ForumSort.latest => 'Recent Activity',
     ForumSort.newest => 'Newest',
-    ForumSort.top => 'Most upvoted',
-    ForumSort.unanswered => 'Unanswered questions',
+    ForumSort.top => 'Most Upvoted',
+    ForumSort.unanswered => 'Unanswered Questions',
   };
 
   String get api => name;
@@ -220,7 +230,7 @@ enum ForumKindFilter { any, questions, discussions }
 
 extension ForumKindFilterLabel on ForumKindFilter {
   String get label => switch (this) {
-    ForumKindFilter.any => 'Any type',
+    ForumKindFilter.any => 'Any Type',
     ForumKindFilter.questions => 'Questions',
     ForumKindFilter.discussions => 'Discussions',
   };
@@ -308,7 +318,12 @@ class ForumDraft {
     this.pollOptions,
     this.mentions = const [],
     this.repostOfId,
+    this.imageIds,
   });
+
+  /// The post's photos, in order: upload file names (`imageIds`, ten at most). Null on an edit that leaves the
+  /// photos alone.
+  final List<String>? imageIds;
 
   /// The people tagged in [body] (a plain-text body; [bodyHtml] already carries its own links): each "@Name" of
   /// theirs is sent as a link to their profile.
@@ -368,11 +383,11 @@ extension ReportReasonApi on ReportReason {
 
   String get label => switch (this) {
     ReportReason.spam => 'Spam',
-    ReportReason.abuse => 'Abuse or harassment',
-    ReportReason.offTopic => 'Off topic',
-    ReportReason.selfPromotion => 'Undisclosed self-promotion',
-    ReportReason.misinformation => 'Misleading or incorrect',
-    ReportReason.other => 'Something else',
+    ReportReason.abuse => 'Abuse or Harassment',
+    ReportReason.offTopic => 'Off Topic',
+    ReportReason.selfPromotion => 'Undisclosed Self-Promotion',
+    ReportReason.misinformation => 'Misleading or Incorrect',
+    ReportReason.other => 'Something Else',
   };
 }
 
@@ -425,6 +440,24 @@ class ForumPage {
 }
 
 /// A file picked to attach: its bytes and name. The app hands the composer a picker (`NewThreadScreen.pickFile`).
+/// A photo or video the composer holds for a discussion's body: its upload, and the bytes it was picked with (a
+/// thumbnail before the forum serves it). Sent inline — `<img src>` / `<video src>` on the body — so a discussion
+/// carries any number of them (owner, 11 Nov 2026), beside its one file attachment.
+class ForumMediaItem {
+  const ForumMediaItem({required this.attachment, required this.isVideo, this.bytes});
+
+  final ForumAttachment attachment;
+  final bool isVideo;
+  final List<int>? bytes;
+
+  /// How the body names it: the relative upload path the forum serves.
+  String get src => '/uploads/${attachment.uploadId}';
+
+  /// The body's tag for a video. A photo is not written into the body: it is sent in the post's `imageIds`, which
+  /// is where the forum keeps photos (portal main, Nov 2026).
+  String get html => isVideo ? '<p><video src="$src" controls></video></p>' : '';
+}
+
 class ForumFile {
   const ForumFile({required this.bytes, required this.name});
 

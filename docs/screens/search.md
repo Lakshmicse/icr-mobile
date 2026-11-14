@@ -50,3 +50,18 @@ Forums and Marketplace, which have no slot on the bottom bar, are reachable from
 - **Products and services** of a supplier (`/products`, `/services`): the supplier's listing is found; its catalogue is inside its sheet.
 - **Companies that hire but do not sell**: a company is found as a supplier only; there is no company-name endpoint without a listing.
 - **Anything the caller may not read** is the API's call, not the app's: people with private profiles, drafts, other companies' data never come back.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+Wording only (the client's 13 Nov marked-up manual). The catalogue's keywords and subtitles are what matching runs on
+and are untouched; a place's name is matched in lower case, so its capitals change nothing a search finds.
+
+| Where | Old | New |
+|---|---|---|
+| Headings and links (case only) | Recent searches · Clear all · Suggested for you · Search everything · In the app · More in the app · Companies & suppliers · Try again | Recent Searches · Clear All · Suggested for You · Search Everything · In the App · More in the App · Companies & Suppliers · Try Again |
+| The app's places (21 names, case only) | My exam attempts · Saved jobs · My applications · Job alerts · Your career · Jobs you posted · Find mentors · Become a mentor · My mentoring · Mentor desk · Mentoring programmes · Group sessions · Post a requirement · My requirements · Requirement alerts · Create a company · My profile · Settings & security · Saved items · Membership & plans · Plan history & receipts | My Exam Attempts · Saved Jobs · My Applications · Job Alerts · Your Career · Jobs You Posted · Find Mentors · Become a Mentor · My Mentoring · Mentor Desk · Mentoring Programmes · Group Sessions · Post a Requirement · My Requirements · Requirement Alerts · Create a Company · My Profile · Settings & Security · Saved Items · Membership & Plans · Plan History & Receipts |
+| A group's link to its chip | See all people (jobs, mentors…) | View All People (Jobs, Mentors…) |
+| More of a chip's results | Show more results | View More |
+| Nothing found | No results for “zzz” / "… You can also go straight to a place in ICR:" | No Results for “zzz” / "… You can also open a section of ICR:" |
+| Nothing found under a chip | No jobs for “zzz” | No Jobs for “zzz” |
+| Offline | Can't reach ICR | Unable to Reach ICR |

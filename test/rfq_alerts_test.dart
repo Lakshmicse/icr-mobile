@@ -34,7 +34,7 @@ void main() {
     expect(find.byType(AlertTile), findsNWidgets(4));
     expect(find.byKey(const ValueKey('alert-unread-dot')), findsNWidgets(2));
     expect(find.textContaining('New bid on'), findsOneWidget);
-    expect(find.text('Mark all read'), findsOneWidget);
+    expect(find.text('Mark All Read'), findsOneWidget);
   });
 
   testWidgets('the Unread tab keeps the unread ones, and says so when there are none', (tester) async {
@@ -43,12 +43,12 @@ void main() {
     await settle(tester);
     expect(find.byType(AlertTile), findsNWidgets(2));
 
-    await tester.tap(find.text('Mark all read'));
+    await tester.tap(find.text('Mark All Read'));
     await settle(tester);
-    expect(find.text('No new alerts'), findsOneWidget);
+    expect(find.text('No New Alerts'), findsOneWidget);
     expect(repo.calls.where((c) => c == 'markAlertRead'), hasLength(2));
 
-    await tester.tap(find.text('Show all alerts'));
+    await tester.tap(find.text('Show All Alerts'));
     await settle(tester);
     expect(find.byType(AlertTile), findsNWidgets(4));
     expect(find.byKey(const ValueKey('alert-unread-dot')), findsNothing);
@@ -72,7 +72,7 @@ void main() {
   testWidgets('an alert the API refuses to mark read goes back to unread, and says why', (tester) async {
     await open(tester);
     repo.refuseNextWrite = 'Not yours to read.';
-    await tester.tap(find.text('Mark all read'));
+    await tester.tap(find.text('Mark All Read'));
     await settle(tester);
     expect(find.text('Not yours to read.'), findsOneWidget);
     // The first alert stayed unread; the second went through.
@@ -82,11 +82,11 @@ void main() {
   testWidgets('a failed load says so and Try again reads it again', (tester) async {
     repo.failReads = true;
     await open(tester);
-    expect(find.text("Couldn't load your alerts"), findsOneWidget);
+    expect(find.text("Unable to Load Your Alerts"), findsOneWidget);
     expect(find.text('The server said no.'), findsOneWidget);
 
     repo.failReads = false;
-    await tester.tap(find.text('Try again'));
+    await tester.tap(find.text('Try Again'));
     await settle(tester);
     expect(find.byType(AlertTile), findsNWidgets(4));
   });

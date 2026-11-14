@@ -59,7 +59,7 @@ Every read fails on its own: the drawer keeps what the others returned, and a li
 | header photo (Home) | opens this menu | W (feed_screen_test) "inside the shell the header photo opens the real profile menu over the feed; Back closes it" |
 | the photo, name, headline and place (one block; there is no "View Full Profile" button since 27 Oct 2026) | the member's own profile: the app's `/profile` screen, else the website's `/members/<slug>`; the menu closes behind it | W "there is no View Full Profile button; the photo and the name open…", "the line … under the name opens the profile too", "the photo opens the profile too", "the two counts … are plain" |
 | YOUR COMPANIES (up to 3 of `GET /me/companies`, the company acted for first with an Active pill) | tap the active one: its page in the app (`ProfileDrawer.onOpenCompany`, app.dart → `openCompanyInsightsById`); tap another: it becomes the one acted for (`POST /me/companies/switch`, fresh session adopted through `CompaniesController`), the menu closes and "Now working as X." shows; "See all" (only with more than 3) opens My companies; no company: the whole block is left out, with no "Create a company" row (owner's call, 28 Oct 2026; a company is created from the account screens); a failed read, a staff account, or no account repository draws nothing; the last list shows at once on reopening (`ProfileDrawerController.cachedCompanies`) while it is read again | W group "My companies" |
-| Regional Chapters | `/chapters` on the website (the app has no chapters screen) | W the same test |
+| Chapters | `/chapters` on the website (the app has no chapters screen) | W the same test |
 | Working Councils | the app's own Councils screen; with no screen it falls back to `/councils` | W "a row the app has a screen for opens it, and the others still open the website"; W the rows test |
 | Get Involved & Volunteer | `/get-involved` on the website | W rows test |
 | Saved Jobs ("Saved Items & Jobs" until 5 Nov 2026, the owner's rename) | `/career/saved` | W rows test |
@@ -102,13 +102,13 @@ The design's four association doors in two rows (each door its whole box), then 
 
 | Door | Opens |
 |---|---|
-| Regional Chapters | `/chapters` on the website |
+| Chapters | `/chapters` on the website |
 | Working Councils | the app's Councils screen (`/councils` in `doors`) |
 | Digital Library | `/documents` on the website |
 | Events | the app's Events board (`/events` in `doors`) |
 | Hire | `/account/companies/new?role=COMPANY_ADMIN` |
 | Sell | `/account/companies/new?role=VENDOR` |
-| Post requirement | `/rfq/new` |
+| Post Requirement | `/rfq/new` |
 | Advertise | `/advertise` |
 
 Tapping a door closes the sheet first; Back from an in-app screen returns to the shell. The sheet closes on a tap on the page behind it, on a long drag down (a short one springs back), on the Discover tab again or another tab, and on Back.
@@ -132,20 +132,24 @@ Band check against `docs/designs/discover-sheet.png`: **6 of 6 within 1 dp** (me
 
 **6 Nov 2026 (evening):** the Company row shows only for a member acting for a company (`user.companyId != null`) or staff; a member acting as themselves gets the website's "Do more on ICR" block instead (`startDoorsFor`: Create a company, Hire people, Sell to FM buyers, Find suppliers, Become a mentor — the last only for someone who may, `canOfferToMentor`), and "My companies" is the last tab of the Account row for everyone. Account is a main row (Membership, My membership, What my plans include, Refer a friend, Credits & redemptions, My companies). The menu is drawn LinkedIn-like: white, plain icons, no tiles, no fill on the current row (its words in ICR blue), a thin line between rows and a small-caps heading over each block; the two counts under the name have no box.
 
+**12 Nov 2026 (the owner's document "Mobile Profile Screen Text Changes"):** every row's pages are worded as the document lists them, in title case (the table below); the search pages (Search jobs, Search mentors, Search suppliers) left the rows, since the tabs are those searches; the Partner Institute row is **Learning Partner**; a seller's products and services moved from Company to Marketplace. Under the rows the block is now **My Uploads** (`/documents?mine=1`: the library on the member's own documents, each opening to Edit — title and description, `PATCH /documents/:id` — or Delete), **My Forum** (`/community?mine=1`: the forum on its My posts view with its own controller, so the Forums tab keeps its view; a post's page has Edit and Delete for its author) and **Settings**; Saved Items left the block (saved jobs are the Jobs row's). The rows' pages and the block read one size smaller (13 sp) in dark grey, as the document asks. Pages the app has no screen for yet (Source Candidates, Projects, My Products, My Services, Dashboard, Manage Courses, Manage Batches, Enrolment) stay hidden by `workspaceOpens` until their native screens land.
+
 **6 Nov 2026 (night):** each row is a dropdown: its tap lists its pages under it (one row open at a time, chevron down), and a page opens the module on that tab (`onOpenSection(section, index)`). Under the rows only Saved Items and Settings remain; the plans and Refer & Earn are the Account row's pages (its pill reads "Earn credits"). Learning lists the hub, My courses (the hub on its My-courses chip, `/learning?mine=1`), My attempts, Certificates & Badges, then the catalogues; Mentorship adds, for a mentor, the website's Mentor workspace rows (Mentor dashboard, Offerings, Engagements, Availability) or, for an applicant, My mentor profile.
 
 **6 Nov 2026 (late) — the owner's role table.** The rows and their pages now follow the table the owner sent, in its order, instead of the website's sidebar (`workspacesFor` in `lib/features/workspaces/role_workspaces.dart`; `test/role_workspaces_test.dart`):
 
 | Who | Row | Pages (in order) |
 |---|---|---|
-| every member | Jobs | My applications, My saved jobs, Search jobs |
-| | Learning | My courses (`/learning?mine=1`), My attempts, My certificates |
-| | Mentorship | My sessions (`/mentorship/my?tab=calendar`), Search mentors |
-| | Marketplace | Post a requirement (`/rfq/new`), Search suppliers (`/vendors`) |
-| + a mentor (approved or paused) | Mentorship adds | Mentor dashboard, Mentor offerings (`/mentorship/mentor?tab=services`); an applicant sees My mentor profile instead |
-| + acting for a company, hiring role (company admin, recruiter, office admin) | Jobs adds, first | Post & manage jobs, Assign team & add members (`/manage/team`), Create a project |
-| + acting for a company, a role that runs it | Company | Add members; seller (admin, VENDOR): Add services, Add products, Bid for enquiries & RFQs (`/manage/bids`); buyer (admin, VENDOR, BUYER): View enquiries & RFQs (`/manage/requirements`); BUYER also My Organization, recruiter/office admin also My Locations |
-| + a partner institute's staff (`SessionUser.learningRoles` non-empty — `UserDto.learningRoles`, given only while the company is a partner) | Partner Institute | Publish a course, Publish a batch, Enquiries, Add a team member, Add a trainer, Add a programme specialist |
+| every member | Jobs | My Applications, My Saved Jobs |
+| | Learning | My Courses (`/learning?mine=1`), My Attempts, My Certificates |
+| | Mentorship | Mentor Engagements (`/mentorship/my`), Mentoring Sessions (`/mentorship/my?tab=calendar`); an applicant adds My Mentor Profile, someone acting for a company who may apply adds Become a Mentor |
+| | Marketplace | My Requirements (`/manage/requirements`), Enquiries and RFQ (`/rfq`, everything posted) |
+| | Company | My Companies (`/account/companies`), first |
+| + a mentor (approved or paused) | Mentorship adds, first | Mentor Dashboard (`/mentorship/mentor`) |
+| + acting for a company, hiring role (company admin, recruiter, office admin) | Jobs adds, first | Manage Jobs, Manage Hiring Team (`/manage/team`), Source Candidates (`/talent`), Projects (`/manage/projects`) |
+| + acting for a company, a role that runs it | Company adds | Dashboard (`/company`), Manage Team; recruiter/office admin also My Locations (View Enquiries & RFQs and Bid for Enquiries & RFQs left this row on 14 Nov 2026) |
+| + a seller | Marketplace adds | My Products (`/manage/products`), My Services (`/manage/services`) — moved here from Company |
+| + a partner institute's staff (`SessionUser.learningRoles` non-empty, or the admin of a company ICR approved as a partner — `UserDto.learningPartner`) | Learning Partner | Manage Courses, Manage Team, Manage Batches, Enrolment, Enquiries |
 | every member | Account | Membership, My membership, What my plans include, Refer a friend, Credits & redemptions, My companies |
 
 A hiring manager keeps Interviews alone under Jobs and no Company row; a plain PROFESSIONAL at a company gets no Company row. Rows list only pages the app has a screen for (`workspaceOpens`), so today **Add services, Add products, Create a project and every Partner Institute page but Enquiries (native since 7 Nov 2026, `partner_enquiries.md`) and the team rows are hidden** until their native screens exist (they would open the website otherwise). Staff rows (SUPER_ADMIN, LEARNING_ADMIN, PARTNER_ADMIN) are unchanged. Saathi's chips on a page without a module follow the same role (`suggestionsFor`, `AssistantContext.mentor`): a mentor's Mentor dashboard + My offerings, Post a job for a hirer, Enquiries & RFQs for a seller, Post a requirement for a buyer; a member whose role brings nothing gets Dashboard, so there are always at least four.
@@ -154,3 +158,81 @@ A hiring manager keeps Interviews alone under Jobs and no Company row; a plain P
 
 
 **6 Nov 2026 (the doors against the website):** checked the drawer's "Do more on ICR" block, the Discover sheet's business doors and Saathi's chips against `DIRECTION_INTENTS` / `isUndecidedPerson` (`features/onboarding/intents.ts`), `WelcomeCard` / `ExploreServicesCard`, `DISCOVER_BUSINESS` (`lib/nav.ts`) and `UNDECIDED_MEMBER_SUGGESTIONS` (`packages/shared/src/assistant.ts`). Who sees the doors already matched (`startDoorsFor`: no staff role, no company in use; a member acting for a company has its workspace instead); what changed is the words: each door's caption is now the website's own line (Hire people "Create your company page, then post a job.", Sell to FM buyers "Create your company page, then list your services.", Find suppliers "Search verified suppliers and ask for quotes.", Become a mentor "Share your expertise with the next generation."). The set stays Create a company (the app's own first door), Hire, Sell, Find suppliers and Become a mentor (only when `canOfferToMentor`: never applied, mentors no one, not SUPER_ADMIN); the website's other three doors (Find work, Learn and get certified, Find a mentor) are the menu's Jobs, Learning and Mentorship rows. Hire and Sell open the create-company screen (`?role=COMPANY_ADMIN` / `?role=VENDOR`, a query the website's page itself ignores), Find suppliers the Supplier Mart. Nothing offers to register for a role only a team invite gives (recruiter, hiring manager, office admin, partner administrator; `INVITE_ONLY_ROLES`): the job composer's gate already says "ask its admin to make you a recruiter". The Discover sheet gates nothing itself, as the website's menu does: Hire = Post a Job (`/manage/jobs/new`), Sell = Sell on Supplier Mart (`/vendors`), Post requirement (`/rfq/new`), Advertise (`/advertise`); each page asks for a company or a role itself. Saathi's chips for a member with no company already ask the website's four questions. Open: an admin of an approved partner company sees no Partner Institute row until `SessionUser` carries `learningPartner` (see `learning_hub.md`, "Partner application").
+
+## 7 Nov 2026: My companies sits under Company
+
+"My companies" is a tab of the **Company** row for every member (the row exists for everyone now; the company a member runs adds its own tabs before it), not of Account — owner: "Company is displayed under account. Should be under Company". The Account row keeps the membership pages and Refer & Earn.
+
+## 9 Nov 2026: no page title inside a workspace tab
+
+The owner, on My courses, My attempts and My certificates inside the Learning workspace: "the tab is telling the title, there would be no use of the title again; wherever it is, remove it." Inside a workspace tab (`WorkspaceEmbed.of(context)`), `TitleBar` draws nothing — or only its `middle`, a search box — and `AccountBar` draws only its actions (nothing at all when it has none); the page's own back arrow, bell and title are the workspace's. The same page pushed on its own still draws its title bar. Proved by `test/workspaces_test.dart` ("…a page's own bar stepping aside").
+
+
+## 13 Nov 2026: copy refined to the client's standard
+
+Wording only (the client's 13 Nov marked-up manual). **Every row name stays as the owner's table has it**, and the
+pages under each row. The doors under "Explore more on ICR" are door labels, not rows of that table, so they take Title
+Case with the rest of the app. Keys, layout and behaviour are unchanged.
+
+| Where | Old | New |
+|---|---|---|
+| Explore more on ICR, three doors' names | Create a company · Sell to FM buyers · Become a mentor | Create a Company · Sell to FM Buyers · Become a Mentor (Hire Talent and Marketplace already were) |
+| Explore more on ICR, the first door's caption | Buying, selling and hiring start with a company page | Buying, selling and hiring start with a company page. |
+| The Account row's pill | Earn credits | Earn Credits |
+| A company switch that fails | Could not switch company. | Unable to switch company. |
+| The older menu's companies block | See all | View All |
+| A workspace page that cannot be read (`WsScroll`) | Couldn't load this / Try again | Unable to Load This Page / Try Again |
+| The older personal menu's Learning pages (`workspaces.dart`) | My courses · My attempts · Flash cards | My Courses · My Attempts · Flashcards |
+| The shared search box (`IcrSearchField`), its clear button's tooltip | Clear search | Clear Search |
+| A workspace page with no app screen (`WorkspaceScreen`) | Open my courses | Open My Courses (the row's name as written) |
+
+Also refined here, for want of a screen document of their own:
+
+| Where | Old | New |
+|---|---|---|
+| The web view (`lib/features/web/`) | This page didn't load. / Try again · Couldn't open www.payu.in/… | Unable to Load This Page / Try Again · Unable to open www.payu.in/…. |
+| A tab with no app screen (`UpcomingTab`, shown only when the lead hands a tab no screen) | Jobs is coming to the app / "… on the website for now." (five sentences, one naming Supplier Mart) | Jobs Is Coming to the App / "… are currently available on the website." (Suppliers, never Supplier Mart) |
+| Saathi, a reply that failed | Sorry, I had trouble responding. Please try again in a moment. | I was unable to respond. Try again in a moment. |
+| Saathi, too many questions (429) | I'm getting a lot of questions at once. Please try again in a minute. | I am receiving many questions right now. Try again in a minute. |
+
+Saathi's greeting, its input hint, the topic answers and the suggestion chips are the website's catalogue and are
+untouched.
+
+
+## 14 Nov 2026: the banner shows wherever the person appears
+
+The owner, on the profile's banner: "banner has the upload options but its not in the app." The banner a person
+sets on their profile (a ready-made cover such as "Skyline at dusk", or their own uploaded picture) showed on the
+profile page only. The side menu read the stored value as a web address, so a ready-made cover ("skyline") became
+`https://…/skyline`, failed, and the menu fell back to its own gradient; the mentor profile's hero dropped a
+ready-made cover for its navy band; the mentor card drew the cover's colours without its picture.
+
+All three now draw it through the profile's own `CoverBand` (`account/widgets/account_kit.dart`), with
+`isProfileCover` deciding what counts as a cover (a `PROFILE_COVERS` id or an own `/uploads/...` picture, never an
+outside address): `ProfileDrawerData.cover`, `MentorProfile.coverPreset` beside `cover`, and the mentor card's band.
+Uploading is unchanged: the camera on the profile's banner opens the cover sheet (ready-made covers and "Upload Your
+Own"). Tests: `profile_drawer_test.dart` ("the banner is the one the person set…"), `mentor_profile_test.dart`.
+
+## 14 Nov 2026: My Products and My Services under Marketplace for staff too
+
+The owner, on a Super Admin's menu (Company: My Company, My Products, My Services, Team): "My Products and My
+Services should be under Marketplace." A member's menu already had them there since 12 Nov; the Super Admin's
+Company row still carried them. Now the Super Admin's Company row is My Company, My Locations, My Certifications, Team
+and the operations consoles (only the native ones show), and Marketplace opens My Requirements, My Products, My
+Services, then the boards. Both menus read the one list (`_myCatalogue` in `role_workspaces.dart`). Test:
+`role_workspaces_test.dart` ("ICR staff get their consoles…").
+
+## 14 Nov 2026: Company is My Companies, Dashboard and Manage Team
+
+The owner, on a company admin's menu (Praveen Kumar at RideBob, an older build that still showed "Add members, View
+enquiries & RFQs, Bid for enquiries & RFQs, My companies"), with the rows marked: **Company** = My Companies,
+Dashboard, Manage Team; *remove* View Enquiries & RFQs and Bid for Enquiries & RFQs. **Marketplace** = My
+Requirements, My Products, My Services, Enquiries and RFQ — what the menu already held for a seller since 12 Nov
+(the phone ran a build from before then, with "Post a requirement" and "Search suppliers").
+
+So the Company row no longer lists `/manage/requirements` or `/manage/bids` for anyone: a buyer's requirements are
+Marketplace's My Requirements, and everything posted is Marketplace's Enquiries and RFQ (`/rfq`). A seller still
+reaches Find Work & Bid (`/manage/bids`) from the Marketplace tab, Saathi's "Enquiries & RFQs" chip and its
+notifications. A recruiter or office admin keeps My Locations after Manage Team. The old (non-workspace) drawer's
+"Enquiries and RFQ's" link is untouched. Test: `role_workspaces_test.dart` (the company admin, buyer, seller and
+real-screens cases).

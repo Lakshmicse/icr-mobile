@@ -89,7 +89,7 @@ class ServicePage extends StatelessWidget {
             bottom: service == null
                 ? null
                 : ItemBar(
-                    label: 'Request a quote',
+                    label: 'Request a Quote',
                     sublabel: service.bookable ? service.rateLabel : null,
                     onPressed: () {
                       final supplier = c.supplier;
@@ -101,7 +101,7 @@ class ServicePage extends StatelessWidget {
                     },
                     onShare: () => links.share(
                       text:
-                          '${service.name}${service.supplierName == null ? '' : ' by ${service.supplierName}'} on ICR Supplier Mart\n'
+                          '${service.name}${service.supplierName == null ? '' : ' by ${service.supplierName}'} on ICR Marketplace\n'
                           '${c.supplier == null ? AppConfig.sitePage('/services') : supplierPageUri(c.supplier!)}',
                       subject: service.name,
                     ),
@@ -127,7 +127,7 @@ class ServicePage extends StatelessWidget {
                     ),
                     SoldBy(supplier: c.supplier, fallbackName: service.supplierName, loading: c.loadingSupplier),
                     if ((service.description ?? '').isNotEmpty)
-                      ItemAbout(title: 'About this service', text: service.description!),
+                      ItemAbout(title: 'About This Service', text: service.description!),
                   ],
           );
         },
@@ -160,7 +160,7 @@ class ProductPage extends StatelessWidget {
             bottom: product == null
                 ? null
                 : ItemBar(
-                    label: 'Request a quote',
+                    label: 'Request a Quote',
                     sublabel: product.priceLabel,
                     onPressed: () {
                       final supplier = c.supplier;
@@ -172,7 +172,7 @@ class ProductPage extends StatelessWidget {
                     },
                     onShare: () => links.share(
                       text:
-                          '${product.name} on ICR Supplier Mart\n${AppConfig.sitePage('/products/${Uri.encodeComponent(product.id)}')}',
+                          '${product.name} on ICR Marketplace\n${AppConfig.sitePage('/products/${Uri.encodeComponent(product.id)}')}',
                       subject: product.name,
                     ),
                   ),
@@ -197,7 +197,7 @@ class ProductPage extends StatelessWidget {
                     if (product.terms.isNotEmpty) ItemTerms(terms: product.terms),
                     SoldBy(supplier: c.supplier, fallbackName: product.supplierName, loading: c.loadingSupplier),
                     if ((product.description ?? '').isNotEmpty)
-                      ItemAbout(title: 'About this product', text: product.description!),
+                      ItemAbout(title: 'About This Product', text: product.description!),
                   ],
           );
         },
@@ -275,14 +275,14 @@ class ItemPageFrame extends StatelessWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text("Couldn't load this page", style: MartText.heading),
+                            Text('Unable to Load This Page', style: MartText.heading),
                             const SizedBox(height: 6),
                             Text(error!, textAlign: TextAlign.center, style: MartText.body),
                             const SizedBox(height: 12),
                             OutlinedButton(
                               key: const ValueKey('retry'),
                               onPressed: onRetry,
-                              child: Text('Try again', style: MartText.sheetLink),
+                              child: Text('Try Again', style: MartText.sheetLink),
                             ),
                           ],
                         ),
@@ -433,7 +433,7 @@ class ItemTerms extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Supplier terms', style: MartText.heading),
+          Text('Supplier Terms', style: MartText.heading),
           const SizedBox(height: 8),
           for (final t in terms)
             Padding(
@@ -488,7 +488,7 @@ class SoldBy extends StatelessWidget {
     final name = s?.name ?? fallbackName;
     if (name == null) return const SizedBox.shrink();
     final detail = s == null
-        ? (loading ? 'Reading the supplier...' : null)
+        ? (loading ? 'Loading supplier…' : null)
         : [
             if (s.ratingCount > 0) '★ ${s.ratingLabel} (${s.ratingCount})',
             ?s.level.tier,
@@ -529,7 +529,7 @@ class SoldBy extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Sold by', style: MartText.sheetRowMuted),
+                      Text('Sold By', style: MartText.sheetRowMuted),
                       Row(
                         children: [
                           Flexible(

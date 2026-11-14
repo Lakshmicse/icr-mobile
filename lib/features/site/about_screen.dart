@@ -36,9 +36,9 @@ const aboutModules = [
     Icons.work_outline,
   ),
   AboutModule(
-    'Supplier Mart',
+    'Marketplace',
     'Connect with Trusted Solutions.',
-    'Discover suppliers and solutions, submit requirements and connect with qualified providers — or showcase your '
+    'Discover suppliers and solutions, submit requirements and connect with qualified providers, or showcase your '
         'services and generate business leads.',
     '/vendors',
     Icons.storefront_outlined,
@@ -165,7 +165,7 @@ class _AboutScreenState extends State<AboutScreen> {
                       Expanded(
                         child: SiteButton(
                           key: const ValueKey('about-explore'),
-                          label: 'Explore the ecosystem',
+                          label: 'Explore the Ecosystem',
                           onPressed: _explore,
                           outlined: true,
                         ),
@@ -177,8 +177,8 @@ class _AboutScreenState extends State<AboutScreen> {
             ),
             const _Stats(),
             const _Section(
-              eyebrow: 'Who we are',
-              title: 'A global professional association for the built workplace',
+              eyebrow: 'Who We Are',
+              title: 'A Global Professional Association for the Built Workplace',
               paragraphs: [
                 'The Institute for Corporate Real Estate (ICR) is a global professional association dedicated to '
                     'advancing the Corporate Real Estate (CRE), Workplace, Facility Management (FM), and Corporate '
@@ -191,8 +191,8 @@ class _AboutScreenState extends State<AboutScreen> {
               ],
             ),
             _Section(
-              eyebrow: 'Why it matters',
-              title: 'From cost centre to strategic business function',
+              eyebrow: 'Why It Matters',
+              title: 'From Cost Centre to Strategic Business Function',
               paragraphs: const [
                 'As workplaces continue to evolve with digital transformation, hybrid work, sustainability, artificial '
                     'intelligence, employee experience, and changing business priorities, Corporate Real Estate and '
@@ -204,19 +204,19 @@ class _AboutScreenState extends State<AboutScreen> {
                 runSpacing: 8,
                 children: [
                   for (final trend in const [
-                    'Digital transformation',
-                    'Hybrid work',
+                    'Digital Transformation',
+                    'Hybrid Work',
                     'Sustainability',
-                    'Artificial intelligence',
-                    'Employee experience',
+                    'Artificial Intelligence',
+                    'Employee Experience',
                   ])
                     IcrChip(label: trend, tone: ChipTone.outlined, height: 30),
                 ],
               ),
             ),
             _Section(
-              eyebrow: 'Our role',
-              title: 'A trusted platform to learn, connect, collaborate, innovate, and lead',
+              eyebrow: 'Our Role',
+              title: 'A Trusted Platform to Learn, Connect, Collaborate, Innovate, and Lead',
               paragraphs: const [
                 'ICR serves as a trusted platform where professionals can learn, connect, collaborate, innovate, and '
                     'lead. Through globally relevant certifications, continuous professional development, research, '
@@ -238,9 +238,9 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
             ),
             _Section(
-              title: 'Join the ecosystem',
+              title: 'Join the Ecosystem',
               paragraphs: const [
-                "Whether you buy services, provide them, hire, or build your career — there's a place for you at ICR.",
+                'Whether you buy services, provide them, hire, or build your career, there is a place for you at ICR.',
               ],
               child: Row(
                 children: [
@@ -248,7 +248,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     Expanded(
                       child: SiteButton(
                         key: const ValueKey('about-create-account'),
-                        label: 'Create your account',
+                        label: 'Create Your Account',
                         onPressed: () => _open('/register'),
                       ),
                     ),
@@ -257,7 +257,7 @@ class _AboutScreenState extends State<AboutScreen> {
                   Expanded(
                     child: SiteButton(
                       key: const ValueKey('about-talk'),
-                      label: 'Talk to us',
+                      label: 'Talk to Us',
                       onPressed: () => _open('/contact'),
                       outlined: !widget.signedIn,
                     ),

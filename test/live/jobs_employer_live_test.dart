@@ -980,7 +980,7 @@ void main() {
 
         // The API's refusals are the sheet's sentences.
         final inPerson = InterviewDraft(scheduledAt: at(5), mode: 'IN_PERSON', interviewerIds: [me]);
-        expect(inPerson.problem(DateTime.now()), 'Give the address for an in-person interview.');
+        expect(inPerson.problem(DateTime.now()), 'Enter the address for an in-person interview.');
         await expectLater(
           repo.scheduleInterview(id, inPerson),
           throwsA(
@@ -991,7 +991,7 @@ void main() {
           scheduledAt: DateTime.now().subtract(const Duration(days: 1)),
           interviewerIds: [me],
         );
-        expect(past.problem(DateTime.now()), 'Pick a time in the future.');
+        expect(past.problem(DateTime.now()), 'Select a time in the future.');
         await expectLater(
           repo.scheduleInterview(id, past),
           throwsA(isA<ApiError>().having((e) => e.statusCode, 'status', 400)),
@@ -1036,7 +1036,7 @@ void main() {
         await controller.schedule(
           InterviewDraft(scheduledAt: DateTime.now().subtract(const Duration(hours: 1)), interviewerIds: [me]),
         ),
-        'Pick a time in the future.',
+        'Select a time in the future.',
       );
       final d = DateTime.now().add(const Duration(days: 6));
       final when = DateTime(d.year, d.month, d.day, 10);
@@ -1163,7 +1163,7 @@ void main() {
         size: const Size(390, 3600),
       );
       await settleLive(tester);
-      expect(find.text('Jobs you posted'), findsOneWidget);
+      expect(find.text('Jobs You Posted'), findsOneWidget);
       expect(find.byKey(const ValueKey('figures')), findsOneWidget);
       expect(find.byKey(const ValueKey('job-$pipelineJob')), findsOneWidget);
       expect(find.text('Security Operations Manager'), findsWidgets);
@@ -1211,7 +1211,7 @@ void main() {
         await settleLive(tester);
         expect(find.text('All 9'), findsOneWidget);
         expect(find.text('Applied 3'), findsOneWidget);
-        expect(find.text('In review 2'), findsOneWidget);
+        expect(find.text('In Review 2'), findsOneWidget);
         expect(find.text('Interview 2'), findsOneWidget);
         expect(find.text('Offer 1'), findsOneWidget);
         for (final name in [
@@ -1225,7 +1225,7 @@ void main() {
         ]) {
           expect(find.text(name), findsWidgets, reason: name);
         }
-        expect(find.text('93% match'), findsOneWidget);
+        expect(find.text('93% Match'), findsOneWidget);
         expect(find.text('Offer sent, awaiting reply'), findsOneWidget);
 
         await tester.tap(find.byKey(const ValueKey('stage-INTERVIEW')));
@@ -1258,7 +1258,7 @@ void main() {
         size: const Size(390, 6000),
       );
       await settleLive(tester);
-      expect(find.text('Before you publish'), findsOneWidget);
+      expect(find.text('Before You Publish'), findsOneWidget);
       expect(find.byKey(const ValueKey('gate-note')), findsNothing, reason: 'Northwind is verified');
       await tester.enterText(find.byKey(const ValueKey('job-title')), title);
       await tester.pump();
@@ -1296,7 +1296,7 @@ void main() {
       await pumpLive(tester, EmployerJobsScreen(key: UniqueKey(), repository: repo, links: RecordingLinks()));
       await settleLive(tester);
       expect(find.byKey(const ValueKey('no-role')), findsOneWidget);
-      expect(find.text('Posting jobs is for hiring teams'), findsOneWidget);
+      expect(find.text('Job Posting Is for Hiring Teams'), findsOneWidget);
       expect(find.byKey(const ValueKey('jobs-error')), findsNothing);
       await finishLive(tester);
     });

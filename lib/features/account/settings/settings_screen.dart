@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 
@@ -7,7 +8,6 @@ import '../../../core/config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/util/links.dart';
 import '../../contact/contact_screen.dart';
-import '../account_models.dart';
 import '../account_repository.dart';
 import '../api_account_repository.dart';
 import '../companies/my_companies_screen.dart';
@@ -23,15 +23,16 @@ import 'settings_sheets.dart';
 /// Settings: the account's own controls in one list, as the profile menu's
 /// "Settings" row opens it.
 ///
-/// * **Account**: Sign-in & security (email, mobile number, password, links),
-///   My companies (which one the person acts for, switching, leaving, creating),
-///   Saved items;
+/// * **Account**: Sign-In & Security (email, mobile number, password, links),
+///   My Companies (which one the person acts for, switching, leaving, creating;
+///   the row has no line under it, the client's note of 13 Nov 2026),
+///   Saved Items;
 /// * **Preferences**: Language (of ICR's emails, notifications and replies),
 ///   Notifications (per kind of update, in the app and by email);
-/// * **Privacy & data**: Download my data, Delete my account;
-/// * **About ICR**: Contact us, the Terms of Service and the Privacy Policy
+/// * **Privacy & Data**: Download My Data, Delete Account;
+/// * **About ICR**: Contact Us, the Terms of Service and the Privacy Policy
 ///   (the only pages that open the website);
-/// * **Sign out**.
+/// * **Sign Out**.
 ///
 /// Every row opens one of this feature's own screens unless the lead passes a
 /// callback to take the person somewhere else in the app.
@@ -56,14 +57,14 @@ class SettingsScreen extends StatefulWidget {
   /// The person's own profile (`MyProfileScreen`).
   final VoidCallback? onOpenProfile;
 
-  /// "My companies": the app's own screen when left out.
+  /// "My Companies": the app's own screen when left out.
   final VoidCallback? onOpenCompanies;
   final VoidCallback? onOpenSaved;
 
-  /// "Contact us".
+  /// "Contact Us".
   final VoidCallback? onContact;
 
-  /// "Help & support": the member's requests to ICR (the website's `/support`). The row shows only when given.
+  /// "Help & Support": the member's requests to ICR (the website's `/support`). The row shows only when given.
   final VoidCallback? onSupport;
 
   /// The company being acted for changed (see `MyCompaniesScreen.onSessionChanged`).
@@ -78,7 +79,6 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late final AccountRepository _repository;
   String? _locale;
-  MyCompanies? _companies;
 
   @override
   void initState() {
@@ -89,15 +89,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _read();
   }
 
-  /// What the rows summarise; a failure leaves the row without its summary.
+  /// What the Language row summarises; a failure leaves the row without its summary.
   Future<void> _read() async {
     try {
       final locale = await _repository.accountLocale();
       if (mounted) setState(() => _locale = locale);
-    } catch (_) {}
-    try {
-      final companies = await _repository.myCompanies();
-      if (mounted) setState(() => _companies = companies);
     } catch (_) {}
   }
 
@@ -112,19 +108,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _openCompanies() async {
+  void _openCompanies() {
     final open = widget.onOpenCompanies;
     if (open != null) {
       open();
     } else {
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => MyCompaniesScreen(repository: _repository, onSessionChanged: widget.onSessionChanged),
-        ),
-      );
+      _push(MyCompaniesScreen(repository: _repository, onSessionChanged: widget.onSessionChanged));
     }
-    // A switch, a leave or a create changed what the row says.
-    _read();
+  }
+
+  /// The phone's settings page for ICR (Android's App info), where background activity, battery, notifications
+  /// and location are allowed.
+  Future<void> _openAppSettings() async {
+    try {
+      await Geolocator.openAppSettings();
+    } catch (_) {
+      if (mounted) showMessage(context, "Open the phone's Settings, then Apps, then ICR to allow background activity.");
+    }
   }
 
   void _openSaved() {
@@ -156,9 +156,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _signOut() async {
     final ok = await confirmAction(
       context,
-      title: 'Sign out of ICR?',
-      message: 'You will need to sign in again on this phone.',
-      confirm: 'Sign out',
+      title: 'Sign Out of ICR?',
+      message: 'You will need to sign in again to access your account on this device.',
+      confirm: 'Sign Out',
       danger: false,
     );
     if (!ok || !mounted) return;
@@ -181,7 +181,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final session = watchAuth(context)?.user;
     final name = session?.fullName ?? 'Your account';
-    final active = _companies?.active;
     return Scaffold(
       backgroundColor: AppColors.slate50,
       appBar: AccountBar(title: 'Settings', onBack: widget.onBack),
@@ -208,7 +207,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           minimumSize: const Size(0, 32),
                           alignment: Alignment.centerLeft,
                         ),
-                        child: Text('View profile', style: AccountText.link),
+                        child: Text('View Profile', style: AccountText.link),
                       ),
                     ],
                   ),
@@ -222,18 +221,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _Row(
                 key: const Key('settings.security'),
                 icon: Symbols.shield_lock,
-                title: 'Sign-in & security',
+                title: 'Sign-In & Security',
                 subtitle: 'Email, mobile number, password, links',
                 onTap: () => _push(SignInSecurityScreen(repository: widget.repository)),
               ),
               _Row(
                 key: const Key('settings.companies'),
                 icon: Symbols.apartment,
-                title: 'My companies',
-                subtitle: active == null ? 'Acting as yourself' : 'Acting for ${active.name}',
+                title: 'My Companies',
                 onTap: _openCompanies,
               ),
-              _Row(key: const Key('settings.saved'), icon: Symbols.bookmark, title: 'Saved items', onTap: _openSaved),
+              _Row(key: const Key('settings.saved'), icon: Symbols.bookmark, title: 'Saved Items', onTap: _openSaved),
             ],
           ),
           _Group(
@@ -253,21 +251,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: 'In the app and by email',
                 onTap: () => _push(NotificationPreferencesScreen(repository: widget.repository)),
               ),
+              // The phone's own page for ICR: battery → unrestricted lets it keep running in the background, and
+              // its notifications and location are allowed there (owner, 9 Nov 2026).
+              _Row(
+                key: const Key('settings.background'),
+                icon: Symbols.battery_charging_full,
+                title: 'Background Activity & Permissions',
+                subtitle: 'Background running, location and notifications',
+                onTap: _openAppSettings,
+              ),
             ],
           ),
           _Group(
-            title: 'Privacy & data',
+            title: 'Privacy & Data',
             rows: [
               _Row(
                 key: const Key('settings.export'),
                 icon: Symbols.download,
-                title: 'Download my data',
+                title: 'Download My Data',
                 onTap: () => showExportSheet(context, repository: _repository, share: widget.share),
               ),
               _Row(
                 key: const Key('settings.delete'),
                 icon: Symbols.delete_forever,
-                title: 'Delete my account',
+                title: 'Delete Account',
                 danger: true,
                 onTap: _delete,
               ),
@@ -287,10 +294,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _Row(
                   key: const Key('settings.support'),
                   icon: Symbols.support_agent,
-                  title: 'Help & support',
+                  title: 'Help & Support',
                   onTap: widget.onSupport!,
                 ),
-              _Row(key: const Key('settings.contact'), icon: Symbols.mail, title: 'Contact us', onTap: _contact),
+              _Row(key: const Key('settings.contact'), icon: Symbols.mail, title: 'Contact Us', onTap: _contact),
               _Row(
                 key: const Key('settings.terms'),
                 icon: Symbols.description,
@@ -309,7 +316,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
             child: AccountButton(
               key: const Key('settings.signOut'),
-              label: 'Sign out',
+              label: 'Sign Out',
               icon: Symbols.logout,
               outlined: true,
               danger: true,

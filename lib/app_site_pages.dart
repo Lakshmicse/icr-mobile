@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app_notifications.dart' show appJobsNavigation;
+import 'app_community_manage.dart';
 import 'app_records.dart';
 import 'app_screens.dart';
 import 'core/api/api_client.dart';
 import 'core/config.dart';
-import 'core/util/links.dart' show SiteRouteOpener;
+import 'core/util/links.dart' show SiteRouteOpener, showMessage;
 import 'features/account/companies/create_company_screen.dart';
 import 'features/account/companies/my_companies_screen.dart';
 import 'features/career/application_logic.dart' show ApplicationsTab;
@@ -87,8 +88,22 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
       (c) => AboutScreen(onBack: () => Navigator.of(c).pop(), signedIn: maybeAuth(c)?.user != null),
     );
   }
+  // The website's community console (a staff notification's page: a chapter application, a council proposal, a
+  // company asking to host events): the app's own manage pages for the staff who run chapters, councils or
+  // events, on the tab and the request the link names.
+  if (path == '/admin/community') {
+    return (ctx) async {
+      final open = communityConsoleRoute(ctx, q);
+      if (open == null) return showMessage(ctx, 'This page is for the ICR staff who run chapters, councils or events.');
+      await open(ctx);
+    };
+  }
   // The partner institute's enquiries (`?lead=` opens on one), the app's own since 7 Nov 2026.
   if (path == '/admin/learning/enquiries') return (ctx) => openPartnerEnquiries(ctx, focusId: q['lead']);
+  // The partner institute's console (the Learning Partner row), the app's own since 12 Nov 2026.
+  if (path == '/admin/learning/courses') return (ctx) => openPartnerCourses(ctx);
+  if (path == '/admin/learning/batches') return (ctx) => openPartnerBatches(ctx, courseId: q['course']);
+  if (path == '/admin/learning/enrolments') return (ctx) => openPartnerEnrolments(ctx, courseId: q['course']);
   // The partner institutes (the Learning hub's door) and the learner's own courses (`/learning/courses` is the
   // website's My courses), so a link to either stays in the app.
   if (path == '/learning/partners' && q['apply'] != '1') {
@@ -282,6 +297,10 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
         return (ctx) async => openRfqRecord(ctx, parts[1], owner: false, section: q['section']);
     }
   }
+  // A sourcing project's page (`/manage/projects/<id>`), the app's own since 12 Nov 2026.
+  if (parts.length == 3 && parts[0] == 'manage' && parts[1] == 'projects') {
+    return (ctx) => openProjectById(ctx, parts[2]);
+  }
   if (parts.length >= 2 && parts[0] == 'manage' && parts[1] == 'requirements' && parts.length == 3) {
     return (ctx) async => openRfqRecord(ctx, parts[2], owner: true, section: q['section'], bidId: q['bid']);
   }
@@ -337,6 +356,8 @@ Future<void> _openChapter(BuildContext ctx, String idOrSlug) => openChapterPage(
     onBell: () => openNotifications(ctx),
     onOpenMember: (id) => openMemberProfile(ctx, id),
     onMessage: (id) => MessagingLauncher.withPerson(ctx, id),
+    manage: chapterManageDoor(ctx),
+    pageWrap: communityFrame,
   ),
 );
 

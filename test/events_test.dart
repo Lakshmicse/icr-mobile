@@ -207,7 +207,7 @@ void main() {
       expect(kickerFor(DemoEventsRepository.spotlight), 'FLAGSHIP GLOBAL GATHERING', reason: 'the demo keeps its own');
       expect(priceNote(at('Pune')), 'Free for members');
       expect(priceNote(at('Pune', price: 1500000)), '₹15,000 per pass');
-      expect(priceNote(at('Pune', invite: true)), 'Invite only');
+      expect(priceNote(at('Pune', invite: true)), 'Invite Only');
     });
 
     test('a card\'s second line: the speaker first, then who it is for, then where, then who hosts it', () {
@@ -347,7 +347,7 @@ void main() {
       expect(passReference('ab'), 'ICR-EVT-AB');
     });
 
-    test('"Add to calendar" opens Google Calendar with the event filled in', () {
+    test('"Add to Calendar" opens Google Calendar with the event filled in', () {
       final event = EventSummary(
         id: 'fbis',
         title: 'Future of Business & Innovation Summit 2024',
@@ -646,7 +646,7 @@ void main() {
         'Webinars',
         'Roundtables',
         'Workshops',
-        'Chapter meetups',
+        'Chapter Meetups',
       ]);
       events.chips.firstWhere((c) => c.label == 'Conferences').select();
       expect(events.agenda.map((e) => e.id), ['summit'], reason: 'the flagship is a conference and shows above');

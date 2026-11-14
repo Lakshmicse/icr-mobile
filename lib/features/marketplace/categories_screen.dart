@@ -97,7 +97,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         child: Column(
           children: [
             TitleBar(
-              title: 'Categories',
+              title: 'Explore Supplier Categories',
               onBack: () => Navigator.maybePop(context),
               unread: market.unread,
               onBell: () => nav.notifications(context, links),
@@ -106,7 +106,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
               child: MartSearchField(
                 controller: _search,
-                hint: 'Search categories',
+                hint: 'Search Categories',
                 onSubmitted: (v) => setState(() => _query = v),
                 onChanged: (v) => setState(() => _query = v),
               ),
@@ -124,7 +124,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               Expanded(
                                 child: _QuickCard(
                                   icon: LucideIcons.package,
-                                  label: 'All products',
+                                  label: 'All Products',
                                   onTap: () => showCatalogBoard(context, CatalogKind.products),
                                 ),
                               ),
@@ -132,7 +132,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               Expanded(
                                 child: _QuickCard(
                                   icon: LucideIcons.wrench,
-                                  label: 'All services',
+                                  label: 'All Services',
                                   onTap: () => showCatalogBoard(context, CatalogKind.services),
                                 ),
                               ),
@@ -140,7 +140,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           ),
                         const SizedBox(height: 10),
                         if (shown.isEmpty)
-                          const EmptyPart(title: 'No category matches', body: 'Try other words.')
+                          const EmptyPart(title: 'No Category Matches', body: 'Try different words.')
                         else
                           for (final top in shown) _TopCard(node: top, onTap: () => showCategoryPage(context, top)),
                       ],
@@ -345,8 +345,8 @@ class _CategoryPageState extends State<CategoryPage> {
                         icon: const Icon(LucideIcons.store, size: 16),
                         label: Text(
                           suppliers > 0
-                              ? 'Show $suppliers ${suppliers == 1 ? 'supplier' : 'suppliers'}'
-                              : 'Show suppliers',
+                              ? 'Show $suppliers ${suppliers == 1 ? 'Supplier' : 'Suppliers'}'
+                              : 'Show Suppliers',
                           style: MartText.sheetButton,
                         ),
                       ),
@@ -355,7 +355,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   if (node.children.isNotEmpty) ...[
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
-                      child: Text('Sub-categories', style: MartText.heading),
+                      child: Text('Sub-Categories', style: MartText.heading),
                     ),
                     for (final child in node.children)
                       InkWell(
@@ -402,7 +402,7 @@ class _CategoryPageState extends State<CategoryPage> {
                     key: ValueKey('board-${_kind.name}'),
                     value: board,
                     child: CatalogBoardList(
-                      emptyTitle: 'No ${_kind.label.toLowerCase()} in ${node.name} yet',
+                      emptyTitle: 'No ${_kind.label} in ${node.name} Yet',
                       emptyBody: 'Suppliers add what they sell as they join.',
                     ),
                   ),
@@ -488,7 +488,7 @@ class _CatalogBoardScreenState extends State<CatalogBoardScreen> {
           child: Column(
             children: [
               TitleBar(
-                title: widget.kind.label,
+                title: widget.kind.title,
                 onBack: () => Navigator.maybePop(context),
                 unread: market.unread,
                 onBell: () => nav.notifications(context, links),
@@ -497,7 +497,7 @@ class _CatalogBoardScreenState extends State<CatalogBoardScreen> {
                 padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
                 child: MartSearchField(
                   controller: _search,
-                  hint: 'Search ${widget.kind.label.toLowerCase()}',
+                  hint: widget.kind.searchHint,
                   onSubmitted: _board.setSearch,
                 ),
               ),
@@ -521,7 +521,7 @@ class _CatalogBoardScreenState extends State<CatalogBoardScreen> {
                               )
                             : const SizedBox.shrink(),
                       ),
-                      CatalogBoardList(emptyTitle: 'No ${widget.kind.label.toLowerCase()} listed yet'),
+                      CatalogBoardList(emptyTitle: 'No ${widget.kind.label} Listed Yet'),
                     ],
                   ),
                 ),

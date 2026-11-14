@@ -6,7 +6,6 @@ import 'dart:ui' as ui;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/api/api_client.dart';
 import 'package:icr_mobile/core/api/api_error.dart';
@@ -224,14 +223,17 @@ Future<void> _tapSend(WidgetTester tester) async {
   await tester.pump();
 }
 
+/// The four fields a send needs (the phone included, since it is required — owner, 12 Nov 2026).
 Future<void> _fill(
   WidgetTester tester, {
   String name = 'Sam Rao',
   String email = 'sam@acme.com',
+  String phone = '+91 98765 43210',
   String? message,
 }) async {
   await _type(tester, 'name', name);
   await _type(tester, 'email', email);
+  await _type(tester, 'phone', phone);
   await _type(tester, 'message', message ?? 'We would like to know more about chapter membership.');
 }
 
@@ -349,13 +351,17 @@ void main() {
       expect(ContactRules.email('sam@acme'), 'Enter a valid email address.');
       expect(ContactRules.email('  sam@acme.com  '), isNull, reason: 'it is sent trimmed');
 
-      expect(ContactRules.phone(''), isNull, reason: 'the phone is optional');
+      expect(
+        ContactRules.phone(''),
+        'Enter your mobile number.',
+        reason: 'the form requires a phone (owner, 12 Nov 2026); the API still takes it as optional',
+      );
       expect(ContactRules.phone('not a number but short'), isNull, reason: 'the DTO checks the length, not the shape');
       expect(ContactRules.phone('1' * 30), isNull);
-      expect(ContactRules.phone('1' * 31), 'Use 30 characters or fewer for the phone number.');
+      expect(ContactRules.phone('1' * 31), 'Use 30 characters or fewer for the mobile number.');
 
-      expect(ContactRules.message(''), 'Write your message.');
-      expect(ContactRules.message(' \n '), 'Write your message.');
+      expect(ContactRules.message(''), 'Enter your message.');
+      expect(ContactRules.message(' \n '), 'Enter your message.');
       expect(ContactRules.message('a' * 4000), isNull);
       expect(ContactRules.message('a' * 4001), 'Use 4,000 characters or fewer for your message.');
     });
@@ -370,13 +376,13 @@ void main() {
       expect(
         [for (final t in ContactTopic.values) (t.api, t.label)],
         [
-          ('MEMBERSHIP', 'Membership & chapters'),
-          ('VENDOR', 'Becoming a supplier'),
+          ('MEMBERSHIP', 'Membership & Chapters'),
+          ('VENDOR', 'Becoming a Supplier'),
           ('VOLUNTEER', 'Volunteering with ICR'),
-          ('PARTNERSHIP', 'Partnerships & sponsorship'),
-          ('PRESS', 'Press & media'),
-          ('SUPPORT', 'Product support'),
-          ('OTHER', 'Something else'),
+          ('PARTNERSHIP', 'Partnerships & Sponsorship'),
+          ('PRESS', 'Press & Media'),
+          ('SUPPORT', 'Product Support'),
+          ('OTHER', 'Something Else'),
         ],
       );
       expect(ContactTopic.fromApi('PRESS'), ContactTopic.press);
@@ -510,8 +516,8 @@ void main() {
       expect(_key('contact-raise'), findsNothing, reason: 'only a signed-in member is pointed to a support request');
       expect(_key('contact-identity-failed'), findsNothing, reason: 'a 401 is "nobody is signed in", not a failure');
       expect(_key('contact-checking'), findsNothing);
-      expect(find.text('Talk to the ICR team'), findsOneWidget);
-      expect(find.text('Send message'), findsOneWidget);
+      expect(find.text('Talk to the ICR team'), findsNothing, reason: 'the heading went (owner, 12 Nov 2026)');
+      expect(find.text('Send'), findsOneWidget);
     });
 
     testWidgets('sends the DTO\'s body: trimmed, no website, phone only when typed', (tester) async {
@@ -537,20 +543,26 @@ void main() {
       expect(h.api.lastBody('POST /contact')!.containsKey('website'), isFalse);
     });
 
-    testWidgets('leaves the phone out of the body when it was not typed, and the topic starts on Membership', (
+    testWidgets('refuses a send with no phone (owner, 12 Nov 2026), and the topic starts on Membership', (
       tester,
     ) async {
       final h = _harness(signedIn: false);
       await _pump(tester, h);
       expect(_tone(tester, ContactTopic.membership), ChipTone.primary);
 
-      await _fill(tester);
+      await _fill(tester, phone: '');
       await _tapSend(tester);
       await tester.pumpAndSettle();
+      expect(find.text('Enter your mobile number.'), findsOneWidget);
+      expect(h.api.count('POST /contact'), 0);
 
+      await _type(tester, 'phone', '+91 98765 43210');
+      await _tapSend(tester);
+      await tester.pumpAndSettle();
       expect(h.api.lastBody('POST /contact'), {
         'name': 'Sam Rao',
         'email': 'sam@acme.com',
+        'phone': '+91 98765 43210',
         'topic': 'MEMBERSHIP',
         'message': 'We would like to know more about chapter membership.',
       });
@@ -578,7 +590,7 @@ void main() {
       await _pump(tester, h);
 
       await _type(tester, 'name', 'B. Buyer');
-      await _type(tester, 'phone', '');
+      await _type(tester, 'phone', '+91 99999 00000');
       await _type(tester, 'message', 'A question');
       await _tapSend(tester);
       await tester.pumpAndSettle();
@@ -586,6 +598,7 @@ void main() {
       expect(h.api.lastBody('POST /contact'), {
         'name': 'B. Buyer',
         'email': 'buyer@icr.dev',
+        'phone': '+91 99999 00000',
         'topic': 'MEMBERSHIP',
         'message': 'A question',
       });
@@ -598,7 +611,7 @@ void main() {
       final h = _harness();
       await _pump(tester, h, onRaise: () => raised++);
 
-      expect(find.textContaining('raising a request gives you a reference number'), findsOneWidget);
+      expect(find.textContaining('A support request gives you a reference number'), findsOneWidget);
       await _see(tester, _key('contact-raise'));
       await tester.tap(_key('contact-raise'));
       expect(raised, 1);
@@ -656,7 +669,7 @@ void main() {
       await _pump(tester, h);
 
       expect(_key('contact-identity-failed'), findsOneWidget);
-      expect(find.textContaining("We couldn't check whether you are signed in"), findsOneWidget);
+      expect(find.textContaining('Unable to check whether you are signed in'), findsOneWidget);
       expect(_text(tester, 'name'), '');
       expect(h.controller.signedIn, isFalse);
 
@@ -733,6 +746,7 @@ void main() {
       await _pump(tester, h);
       await _type(tester, 'name', 'Sam');
       await _type(tester, 'email', 'sam@acme.com');
+      await _type(tester, 'phone', '+91 98765 43210');
       await _type(tester, 'message', 'Host or propose an event\n\nA summit in Pune in March.');
       await _tapSend(tester);
       await tester.pumpAndSettle();
@@ -786,7 +800,7 @@ void main() {
 
       expect(find.text('Enter your name.'), findsOneWidget);
       expect(find.text('Enter your email address.'), findsOneWidget);
-      expect(find.text('Write your message.'), findsOneWidget);
+      expect(find.text('Enter your message.'), findsOneWidget);
       expect(h.api.count('POST /contact'), 0);
     });
 
@@ -806,10 +820,10 @@ void main() {
 
       await _type(tester, 'name', 'Sam');
       expect(find.text('Enter your name.'), findsNothing);
-      expect(find.text('Write your message.'), findsOneWidget, reason: 'the fields not touched keep their reason');
+      expect(find.text('Enter your message.'), findsOneWidget, reason: 'the fields not touched keep their reason');
 
       await _type(tester, 'message', 'Hello');
-      expect(find.text('Write your message.'), findsNothing);
+      expect(find.text('Enter your message.'), findsNothing);
       expect(h.api.count('POST /contact'), 0, reason: 'fixing the fields does not send by itself');
     });
 
@@ -833,7 +847,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Use 120 characters or fewer for your name.'), findsOneWidget);
-      expect(find.text('Use 30 characters or fewer for the phone number.'), findsOneWidget);
+      expect(find.text('Use 30 characters or fewer for the mobile number.'), findsOneWidget);
       expect(h.api.count('POST /contact'), 0);
 
       await _type(tester, 'name', 'n' * 120);
@@ -865,7 +879,7 @@ void main() {
       await _fill(tester, message: '   \n  ');
       await _tapSend(tester);
       await tester.pumpAndSettle();
-      expect(find.text('Write your message.'), findsOneWidget);
+      expect(find.text('Enter your message.'), findsOneWidget);
       expect(h.api.count('POST /contact'), 0);
     });
   });
@@ -889,7 +903,7 @@ void main() {
       expect(_tone(tester, ContactTopic.vendor), ChipTone.primary);
       expect(_key('contact-sent'), findsNothing);
       // The button is usable again.
-      expect(find.text('Send message'), findsOneWidget);
+      expect(find.text('Send'), findsOneWidget);
       expect(h.controller.sending, isFalse);
     });
 
@@ -902,7 +916,7 @@ void main() {
 
       expect(
         _error(tester),
-        'You have sent a few messages in a short while. Wait a minute, then send again: what you wrote is kept.',
+        'You have sent several messages in a short time. Wait a minute, then send again. Your message is kept.',
       );
       expect(_text(tester, 'message'), 'We would like to know more about chapter membership.');
 
@@ -1003,10 +1017,10 @@ void main() {
       await _tapSend(tester);
       await tester.pumpAndSettle();
 
-      expect(find.text('Message sent'), findsOneWidget);
-      expect(find.textContaining('your message is in'), findsOneWidget);
+      expect(find.text('Message Sent'), findsOneWidget);
+      expect(find.textContaining('We have received your message'), findsOneWidget);
       expect(find.text('We will reply to sam@acme.com.'), findsOneWidget);
-      expect(find.text('Send another'), findsOneWidget);
+      expect(find.text('Send Another'), findsOneWidget);
       expect(find.text('Done'), findsOneWidget);
       expect(_key('contact-send'), findsNothing);
       expect(h.controller.sentId, 'lead-1');
@@ -1030,7 +1044,7 @@ void main() {
       expect(_text(tester, 'email'), 'buyer@icr.dev');
       expect(_text(tester, 'message'), '');
       expect(_tone(tester, ContactTopic.press), ChipTone.primary);
-      expect(find.text('Write your message.'), findsNothing, reason: 'a fresh form does not scold');
+      expect(find.text('Enter your message.'), findsNothing, reason: 'a fresh form does not scold');
 
       await _type(tester, 'message', 'Second message');
       await _tapSend(tester);
@@ -1068,10 +1082,17 @@ void main() {
       await _type(tester, 'name', 'Changed Name');
       expect(find.bySemanticsLabel('Notifications, 2 unread'), findsOneWidget);
 
-      // Back at the very top: a pull only refreshes when the gesture starts at offset 0.
-      await tester.drag(find.byType(ListView).first, const Offset(0, 2000));
+      // Back at the very top, without a pull (the form is short enough to sit at the top already, where a
+      // drag would refresh): a pull only refreshes when the gesture starts at offset 0. The pull starts on the
+      // Topic label: the list's middle is the message box, whose own scrolling would take the gesture.
+      tester
+          .state<ScrollableState>(
+            find.descendant(of: find.byType(ListView).first, matching: find.byType(Scrollable)).first,
+          )
+          .position
+          .jumpTo(0);
       await tester.pumpAndSettle();
-      await tester.fling(find.byType(ListView).first, const Offset(0, 400), 1000);
+      await tester.fling(find.text('Topic'), const Offset(0, 400), 1000);
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
       await tester.pumpAndSettle();
@@ -1090,7 +1111,7 @@ void main() {
       await _pump(tester, h);
       expect(_key('contact-identity-failed'), findsOneWidget);
 
-      await tester.fling(find.byType(ListView).first, const Offset(0, 400), 1000);
+      await tester.fling(find.text('Topic'), const Offset(0, 400), 1000);
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
       await tester.pumpAndSettle();
@@ -1102,65 +1123,20 @@ void main() {
 
   // -------------------------------------------------------------------------
   group('reaching the team directly', () {
-    testWidgets('shows the address and the hours as the website does', (tester) async {
-      final h = _harness(signedIn: false);
-      await _pump(tester, h);
-      await _see(tester, find.text('Reach us directly'));
-      expect(find.text('hello@icr.network'), findsOneWidget);
-      expect(find.text('Mon–Fri, 9:30–18:30 IST'), findsOneWidget);
-    });
-
-    testWidgets('the address opens a mailto: link', (tester) async {
-      final opened = <Uri>[];
-      final h = _harness(signedIn: false);
-      await _pump(tester, h, opener: (_, uri) async => opened.add(uri));
-
-      await _see(tester, _key('contact-mail'));
-      await tester.tap(_key('contact-mail'));
-      await tester.pump();
-      expect(opened.map((u) => u.toString()), ['mailto:hello@icr.network']);
-    });
-
-    testWidgets('a phone with no mail app is told so, with the address to copy', (tester) async {
-      final h = _harness(signedIn: false);
-      await _pump(tester, h, opener: (_, _) async => throw PlatformException(code: 'ACTIVITY_NOT_FOUND'));
-
-      await _see(tester, _key('contact-mail'));
-      await tester.tap(_key('contact-mail'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('No email app found. Write to hello@icr.network.'), findsOneWidget);
-    });
-
-    testWidgets('the copy button puts the address on the clipboard', (tester) async {
-      final copied = <String>[];
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
-        if (call.method == 'Clipboard.setData') copied.add((call.arguments as Map)['text'] as String);
-        return null;
-      });
-      addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
-      final h = _harness(signedIn: false);
-      await _pump(tester, h);
-
-      await _see(tester, _key('contact-copy'));
-      await tester.tap(_key('contact-copy'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(copied, ['hello@icr.network']);
-      expect(find.text('Email address copied'), findsOneWidget);
-    });
-
-    testWidgets('the quote line shows only when the lead wires it, and calls it', (tester) async {
-      final none = _harness(signedIn: false);
-      await _pump(tester, none);
-      expect(_key('contact-quote'), findsNothing);
-
+    testWidgets('has no card any more: no address, no hours, no quote line, even when the lead wires one', (
+      tester,
+    ) async {
+      // The website's "Reach us directly" card was removed (owner, 12 Nov 2026).
       var quotes = 0;
       final h = _harness(signedIn: false);
       await _pump(tester, h, onQuote: () => quotes++);
-      await _see(tester, _key('contact-quote'));
-      await tester.tap(_key('contact-quote'));
-      expect(quotes, 1);
+      expect(find.text('Reach us directly'), findsNothing);
+      expect(find.text('hello@icr.network'), findsNothing);
+      expect(find.text('Mon–Fri, 9:30–18:30 IST'), findsNothing);
+      expect(_key('contact-mail'), findsNothing);
+      expect(_key('contact-copy'), findsNothing);
+      expect(_key('contact-quote'), findsNothing);
+      expect(quotes, 0);
     });
   });
 
@@ -1233,7 +1209,7 @@ void main() {
       final h = _harness();
       await openRoute(tester, h, subject: 'Host or propose an event', onRaise: () => raised++);
 
-      expect(find.text('Contact us'), findsOneWidget);
+      expect(find.text('Contact Us'), findsOneWidget);
       expect(_text(tester, 'name'), 'Bharat Buyer');
       expect(_text(tester, 'message'), 'Host or propose an event\n\n');
       expect(_tone(tester, ContactTopic.partnership), ChipTone.primary);
@@ -1298,10 +1274,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(tester.getRect(_key('contact-send')).bottom, lessThanOrEqualTo(568 - 260 + 1));
-
-      await _see(tester, _key('contact-quote'));
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
     });
 
     testWidgets('a send that is refused brings the first problem into view', (tester) async {
@@ -1346,9 +1318,6 @@ void main() {
     testWidgets('a large text size still fits 320 wide with no overflow', (tester) async {
       final h = _harness(signedIn: false);
       await _pump(tester, h, size: _small, textScale: 1.6, onQuote: () {});
-      expect(tester.takeException(), isNull);
-      await _see(tester, _key('contact-quote'));
-      await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
 

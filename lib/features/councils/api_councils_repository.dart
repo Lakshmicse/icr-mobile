@@ -108,7 +108,7 @@ class ApiCouncilsRepository implements CouncilsRepository, CouncilPageRepository
       councils: councils,
       joined: sortJoined(councils.where((c) => c.joined)),
       roundtables: roundtables.take(3).toList(),
-      roundtablesCaption: roundtables.isEmpty ? null : 'All events',
+      roundtablesCaption: roundtables.isEmpty ? null : 'All Events',
       chapters: chapters.take(4).toList(),
     );
   }

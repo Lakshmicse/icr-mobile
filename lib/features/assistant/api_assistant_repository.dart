@@ -25,7 +25,10 @@ class ApiAssistantRepository implements AssistantRepository {
   @override
   Stream<AssistantEvent> ask(List<AssistantMessage> history, AssistantContext context) async* {
     final sent = history.length > maxSent ? history.sublist(history.length - maxSent) : history;
-    final body = {'messages': [for (final m in sent) m.toJson()], 'context': context.toJson()};
+    final body = {
+      'messages': [for (final m in sent) m.toJson()],
+      'context': context.toJson(),
+    };
 
     Response<ResponseBody> res;
     try {

@@ -81,7 +81,7 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: const Text('Bookmark removed'),
+          content: const Text('Bookmark removed.'),
           persist: false, // an Undo snackbar would otherwise stay over every screen until dismissed
 
           action: SnackBarAction(
@@ -106,7 +106,7 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: const Text('Back on your board'),
+          content: const Text('Job restored to your board.'),
           persist: false, // an Undo snackbar would otherwise stay over every screen until dismissed
 
           action: SnackBarAction(
@@ -125,7 +125,7 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) => CareerScaffold(
-        title: 'Saved jobs',
+        title: 'Saved Jobs',
         onBack: widget.onBack,
         unread: _c.unread,
         onBell: () => widget.navigation.openNotifications(context, widget.links),
@@ -167,9 +167,9 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
         CareerNotice(
           key: const ValueKey('saved-error'),
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load your saved jobs",
+          title: 'Unable to Load Your Saved Jobs',
           body: _c.savedError!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         ),
       ];
@@ -180,9 +180,9 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
         CareerNotice(
           key: const ValueKey('saved-empty'),
           icon: LucideIcons.bookmark,
-          title: 'No saved jobs yet',
-          body: 'Tap the bookmark on a job to keep it here.',
-          action: 'Browse jobs',
+          title: 'No Saved Jobs Yet',
+          body: 'Tap the bookmark on a job to save it here.',
+          action: 'Browse Jobs',
           onAction: widget.onBack ?? () => Navigator.maybePop(context),
         ),
       ];
@@ -193,7 +193,7 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
         JobRow(
           key: ValueKey('saved-${job.id}'),
           job: job,
-          caption: job.isOpen ? null : 'No longer accepting applications',
+          caption: job.isOpen ? null : 'No Longer Accepting Applications',
           onTap: () => _open(job),
           onSave: () => _unsave(job),
         ),
@@ -208,9 +208,9 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
         CareerNotice(
           key: const ValueKey('hidden-error'),
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load your hidden jobs",
+          title: 'Unable to Load Your Hidden Jobs',
           body: _c.hiddenError!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         ),
       ];
@@ -221,8 +221,8 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
         CareerNotice(
           key: ValueKey('hidden-empty'),
           icon: LucideIcons.eyeOff,
-          title: 'No hidden jobs',
-          body: 'A job you mark "Not interested" leaves your board and waits here, in case you change your mind.',
+          title: 'No Hidden Jobs',
+          body: 'Jobs you mark "Not Interested" are removed from your board and kept here.',
         ),
       ];
     }
@@ -280,7 +280,7 @@ class HiddenJobRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            OutlinePillButton(label: 'Show again', onPressed: onShowAgain, height: 28),
+            OutlinePillButton(label: 'Show Again', onPressed: onShowAgain, height: 28),
           ],
         ),
       ),

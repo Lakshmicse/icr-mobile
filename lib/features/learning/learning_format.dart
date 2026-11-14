@@ -39,9 +39,9 @@ String placeStatusLine(Course course) {
   final at = on == null ? '' : ' on $on';
   return switch (course.enrolment?.status) {
     EnrolmentStatus.confirmed => 'You are confirmed$at.',
-    EnrolmentStatus.waitlisted => 'You are waitlisted$at — we will be in touch if a seat frees up.',
+    EnrolmentStatus.waitlisted => 'You are waitlisted$at. We will contact you if a seat becomes available.',
     EnrolmentStatus.completed => 'You have completed this course.',
-    _ => 'You are pending$at — the ICR team will confirm your place.',
+    _ => 'You are pending$at. The ICR team will confirm your place.',
   };
 }
 
@@ -106,6 +106,17 @@ String? coverBadge(String? level, CourseKind kind, {bool certificateEnabled = fa
 /// The design prints the enrolment specialist's own address under their name;
 /// the API never publishes a trainer's contact, so a live course shows this.
 const icrEnquiryEmail = 'info@icr.org.in';
+
+/// A label in Title Case, whatever case it arrives in: "ENROL NOW" and "On the waitlist" read "Enrol Now" and
+/// "On the Waitlist". The small words of a title stay lower-case after the first word.
+String titleCase(String words) {
+  const small = {'a', 'an', 'the', 'and', 'or', 'of', 'to', 'in', 'on', 'for', 'with', 'by', 'at'};
+  final parts = words.toLowerCase().split(' ');
+  return [
+    for (final (i, w) in parts.indexed)
+      w.isEmpty || (i > 0 && small.contains(w)) ? w : '${w[0].toUpperCase()}${w.substring(1)}',
+  ].join(' ');
+}
 
 String _lowerFirst(String text) =>
     text.length > 1 && text[0] == text[0].toUpperCase() && text[1] == text[1].toLowerCase()

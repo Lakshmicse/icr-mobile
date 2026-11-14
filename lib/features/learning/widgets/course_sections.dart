@@ -78,7 +78,7 @@ class _CourseOverviewState extends State<CourseOverview> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(_open ? 'show less' : 'show more', style: LearningText.showMore),
+                          Text(_open ? 'View Less' : 'View More', style: LearningText.showMore),
                           const SizedBox(width: 1),
                           SizedBox(width: 12, height: 12, child: _Chevron(up: _open)),
                         ],
@@ -238,7 +238,7 @@ class _CourseOutlineState extends State<CourseOutline> {
                         height: 28,
                         child: Center(
                           child: Text(
-                            _full ? 'collapse outline' : 'view full outline',
+                            _full ? 'Collapse Outline' : 'View Full Outline',
                             style: LearningText.outlineToggle,
                           ),
                         ),
@@ -284,7 +284,7 @@ class _CourseOutlineState extends State<CourseOutline> {
                             Text(lesson, style: LearningText.lesson),
                           ],
                           if (module.summary == null && module.lessons.isEmpty)
-                            Text('Detail for this module is on its way.', style: LearningText.lesson),
+                            Text('Details for this module will be available soon.', style: LearningText.lesson),
                         ],
                       ),
                     ),
@@ -356,7 +356,7 @@ class WhoShouldAttend extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Who Should Attend', style: LearningText.section),
+          Text('Who Should Attend?', style: LearningText.section),
           const SizedBox(height: 11.9),
           Wrap(
             spacing: 28.2,
@@ -392,7 +392,7 @@ class ContactBlock extends StatelessWidget {
     required this.onTalk,
     required this.onInHouse,
     required this.onEmail,
-    this.talkLabel = "let's talk on whatsapp",
+    this.talkLabel = "Let's Talk on WhatsApp",
   });
 
   final CourseContact contact;
@@ -469,7 +469,7 @@ class ContactBlock extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               child: SizedBox(
                 height: 42,
-                child: Center(child: Text('take this course as in-house', style: LearningText.inHouse)),
+                child: Center(child: Text('Request Corporate Training', style: LearningText.inHouse)),
               ),
             ),
           ),
@@ -627,7 +627,7 @@ class Testimonials extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(expanded ? 'show fewer reviews' : 'see all $total reviews', style: LearningText.showMore),
+                  Text(expanded ? 'Show Fewer Reviews' : 'See All $total Reviews', style: LearningText.showMore),
                   const SizedBox(width: 1),
                   SizedBox(width: 12, height: 12, child: _Chevron(up: expanded)),
                 ],

@@ -190,7 +190,7 @@ void roleBuyerLibrary() {
         await waitFor(tester, find.textContaining('Documents'));
         var text = expectHealthy(tester, 'the Library as ${w.email}');
         expect(text, contains('Your uploads'));
-        expect(text, contains('Browse by kind'));
+        expect(text, contains('Browse by Kind'));
         await unmount(tester);
 
         final volunteer = VolunteerController(volunteerOf(w));

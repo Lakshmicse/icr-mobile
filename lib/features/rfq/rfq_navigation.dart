@@ -39,7 +39,9 @@ Widget opportunityFor(String rfqId, RfqHooks hooks, {String? section}) => Opport
 /// a "Screen" button lands: the page opens on that part and rings that bid.
 Future<void> pushRfqDetail(BuildContext context, RfqHooks hooks, String rfqId, {String? section, String? focusBid}) =>
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => rfqDetailFor(rfqId, hooks, section: section, focusBid: focusBid)),
+      MaterialPageRoute<void>(
+        builder: (_) => rfqDetailFor(rfqId, hooks, section: section, focusBid: focusBid),
+      ),
     );
 
 /// The supplier's page of a requirement ([section] `response` lands on the quote form).

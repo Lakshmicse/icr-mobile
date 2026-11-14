@@ -97,11 +97,11 @@ class _SessionTimeFormState extends State<SessionTimeForm> {
     }
     final at = _at ?? (_moving ? widget.session!.scheduledAt : null);
     if (at == null) {
-      setState(() => _problem = 'Pick a time first.');
+      setState(() => _problem = 'Select a time first.');
       return;
     }
     if (!at.isAfter(mentoringNow())) {
-      setState(() => _problem = 'Pick a time in the future.');
+      setState(() => _problem = 'Select a time in the future.');
       return;
     }
     setState(() {
@@ -149,29 +149,29 @@ class _SessionTimeFormState extends State<SessionTimeForm> {
         final steps = widget.controller.openSteps;
         return MentoringForm(
           title: answering
-              ? 'Offer another time'
+              ? 'Offer Another Time'
               : _moving
-              ? 'Move this session'
-              : (mentor ? 'Book a session' : 'Ask for a time'),
+              ? 'Move This Session'
+              : (mentor ? 'Book a Session' : 'Request a Time'),
           subtitle: answering
-              ? '${widget.pairing.mentee.firstName} is told, and the session is booked at the time you pick.'
+              ? '${widget.pairing.mentee.firstName} is notified, and the session is booked at the time you select.'
               : _moving
-              ? 'The other person is told. It stays booked at the new time.'
+              ? 'The other person is notified. The session stays booked at the new time.'
               : mentor
-              ? 'It goes straight on both calendars.'
+              ? 'It is added to both calendars immediately.'
               : '${widget.pairing.mentor.firstName} confirms it before it is booked.',
           submitLabel: answering
-              ? 'Book this time'
+              ? 'Book This Time'
               : _moving
-              ? 'Move session'
-              : (mentor ? 'Book session' : 'Send request'),
+              ? 'Move Session'
+              : (mentor ? 'Book Session' : 'Send Request'),
           busy: _busy,
           problem: _problem,
           onSubmit: () => _submit(modes),
           children: [
             if (!_moving && widget.controller.isProgramme && steps.isNotEmpty)
               FieldBlock(
-                label: 'Which session of the programme?',
+                label: 'Programme Session',
                 child: Wrap(
                   spacing: 6,
                   runSpacing: 6,
@@ -192,7 +192,7 @@ class _SessionTimeFormState extends State<SessionTimeForm> {
                 ),
               ),
             FieldBlock(
-              label: 'Length',
+              label: 'Duration',
               child: Wrap(
                 spacing: 6,
                 runSpacing: 6,
@@ -235,7 +235,7 @@ class _SessionTimeFormState extends State<SessionTimeForm> {
                 ),
               ),
             FieldBlock(
-              label: 'How',
+              label: 'Meeting Mode',
               child: Wrap(
                 spacing: 6,
                 children: [
@@ -262,10 +262,10 @@ class _SessionTimeFormState extends State<SessionTimeForm> {
                 final slots = snap.data ?? const <Slot>[];
                 final own = _at != null && !slots.any((s) => s.at.isAtSameMomentAs(_at!));
                 return FieldBlock(
-                  label: slots.isEmpty ? 'When?' : 'Free times in ${mentor ? 'your' : 'their'} hours',
+                  label: slots.isEmpty ? 'Date and Time' : 'Free Times in ${mentor ? 'Your' : 'Their'} Hours',
                   help: slots.isEmpty
-                      ? 'No open times in the next two weeks; pick a day and time.'
-                      : 'On your phone\'s clock. The API refuses a time outside the mentor\'s hours or on top of another session.',
+                      ? 'No open times in the next two weeks. Select a day and time.'
+                      : 'Times are shown in your phone\'s time zone. A time outside the mentor\'s hours or overlapping another session is not accepted.',
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -278,7 +278,7 @@ class _SessionTimeFormState extends State<SessionTimeForm> {
                         SlotPicker(slots: slots, selected: _at, onSelect: (at) => setState(() => _at = at)),
                       const SizedBox(height: 8),
                       QuietButton(
-                        label: own ? whenLabel(_at!) : (slots.isEmpty ? 'Pick a day and time' : 'Another time'),
+                        label: own ? whenLabel(_at!) : (slots.isEmpty ? 'Select a Day and Time' : 'Another Time'),
                         icon: LucideIcons.calendarClock,
                         onPressed: () async {
                           final at = await pickDateTime(context, initial: _at);
@@ -291,7 +291,7 @@ class _SessionTimeFormState extends State<SessionTimeForm> {
               },
             ),
             FieldBlock(
-              label: 'Agenda (optional)',
+              label: 'Agenda (Optional)',
               child: TextField(
                 key: const ValueKey('session-agenda'),
                 controller: _agenda,
@@ -342,7 +342,7 @@ class _CompleteSessionFormState extends State<CompleteSessionForm> {
   Future<void> _submit() async {
     final m = int.tryParse(_minutes.text.trim());
     if (m == null || m < minSessionMinutes || m > maxSessionMinutes) {
-      setState(() => _problem = 'Enter the minutes it ran: $minSessionMinutes to $maxSessionMinutes.');
+      setState(() => _problem = 'Enter the minutes it ran, from $minSessionMinutes to $maxSessionMinutes.');
       return;
     }
     setState(() {
@@ -368,17 +368,17 @@ class _CompleteSessionFormState extends State<CompleteSessionForm> {
   @override
   Widget build(BuildContext context) {
     return MentoringForm(
-      title: 'Mark the session held',
+      title: 'Mark Session as Held',
       subtitle:
-          'This is what gets counted: ${minutesLabel(widget.session.durationMin)} was booked. '
+          'This duration is counted. ${minutesLabel(widget.session.durationMin)} was booked. '
           'Change it if the session ran shorter or longer.',
-      submitLabel: 'Mark held',
+      submitLabel: 'Mark as Held',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
       children: [
         FieldBlock(
-          label: 'Minutes it actually ran',
+          label: 'Actual Minutes',
           child: TextField(
             key: const ValueKey('held-minutes'),
             controller: _minutes,
@@ -388,7 +388,7 @@ class _CompleteSessionFormState extends State<CompleteSessionForm> {
           ),
         ),
         FieldBlock(
-          label: 'A note for the timeline (optional)',
+          label: 'Timeline Note (Optional)',
           child: TextField(
             key: const ValueKey('held-note'),
             controller: _note,
@@ -478,7 +478,7 @@ class _SessionRecordFormState extends State<SessionRecordForm> {
       setState(() {
         _summarising = false;
         _summary = r.summary;
-        if (r.unavailable) _note = 'Summaries are not switched on here yet.';
+        if (r.unavailable) _note = 'Summaries are not available yet.';
       });
     } catch (e) {
       if (!mounted) return;
@@ -493,14 +493,14 @@ class _SessionRecordFormState extends State<SessionRecordForm> {
   Widget build(BuildContext context) {
     return MentoringForm(
       title: 'Notes for ${dayLabel(widget.session.scheduledAt)}',
-      subtitle: 'Either of you can write these up. They are private to the two of you.',
-      submitLabel: 'Save notes',
+      subtitle: 'Either of you can write these notes. They are private to you both.',
+      submitLabel: 'Save Notes',
       busy: _busy,
       problem: _problem,
       onSubmit: _dirty ? _save : null,
       children: [
         FieldBlock(
-          label: 'What happened',
+          label: 'What Happened',
           help: '${_notes.text.length} of $maxSessionNotes characters',
           child: TextField(
             key: const ValueKey('record-notes'),
@@ -515,7 +515,7 @@ class _SessionRecordFormState extends State<SessionRecordForm> {
           ),
         ),
         FieldBlock(
-          label: 'Recording link (optional)',
+          label: 'Recording Link (Optional)',
           help: 'ICR does not record calls. Keep a link to a recording you made yourselves.',
           child: TextField(
             key: const ValueKey('record-link'),
@@ -527,7 +527,7 @@ class _SessionRecordFormState extends State<SessionRecordForm> {
           ),
         ),
         QuietButton(
-          label: _summarising ? 'Summarising…' : 'Summarise these notes',
+          label: _summarising ? 'Summarising…' : 'Summarise Notes',
           icon: LucideIcons.sparkles,
           onPressed: _summarising || _dirty || _tooShort ? null : _summarise,
         ),
@@ -535,10 +535,10 @@ class _SessionRecordFormState extends State<SessionRecordForm> {
           padding: const EdgeInsets.only(top: 4, bottom: 8),
           child: Text(
             _dirty
-                ? 'Save your changes first: a summary is made from the saved notes.'
+                ? 'Save your changes first. A summary is made from the saved notes.'
                 : _tooShort
                 ? 'A summary needs at least $minNotesForSummary characters of notes.'
-                : 'Asked for only when you press it: the notes go to a model to be summarised.',
+                : 'Runs only when you select it. The notes are sent to an AI model to be summarised.',
             style: MentoringText.meta,
           ),
         ),
@@ -597,11 +597,11 @@ class _MeetingLinkFormState extends State<MeetingLinkForm> {
   @override
   Widget build(BuildContext context) {
     return MentoringForm(
-      title: 'Meeting link',
+      title: 'Meeting Link',
       subtitle:
-          '${whenLabel(widget.session.scheduledAt)}. ${widget.controller.pairing?.mentee.firstName ?? 'The mentee'} is told when it changes. '
+          '${whenLabel(widget.session.scheduledAt)}. ${widget.controller.pairing?.mentee.firstName ?? 'The mentee'} is notified when it changes. '
           'Leave it empty to clear it.',
-      submitLabel: 'Save link',
+      submitLabel: 'Save Link',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
@@ -650,7 +650,7 @@ class _GoalFormState extends State<GoalForm> {
 
   Future<void> _submit() async {
     if (_title.text.trim().length < 3) {
-      setState(() => _problem = 'Name the goal: at least 3 characters.');
+      setState(() => _problem = 'Enter a goal of at least 3 characters.');
       return;
     }
     setState(() {
@@ -672,9 +672,9 @@ class _GoalFormState extends State<GoalForm> {
   @override
   Widget build(BuildContext context) {
     return MentoringForm(
-      title: 'Add a goal',
-      subtitle: 'Something the two of you agree to work towards. Both of you can update it.',
-      submitLabel: 'Add goal',
+      title: 'Add a Goal',
+      subtitle: 'A goal you both agree to work towards. Either of you can update it.',
+      submitLabel: 'Add Goal',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
@@ -690,7 +690,7 @@ class _GoalFormState extends State<GoalForm> {
           ),
         ),
         FieldBlock(
-          label: 'Detail (optional)',
+          label: 'Details (Optional)',
           child: TextField(
             key: const ValueKey('goal-detail'),
             controller: _detail,
@@ -698,13 +698,13 @@ class _GoalFormState extends State<GoalForm> {
             maxLines: 4,
             maxLength: 2000,
             style: MentoringText.formInput,
-            decoration: fieldDecoration('What done looks like'),
+            decoration: fieldDecoration('What success looks like'),
           ),
         ),
         FieldBlock(
-          label: 'Target date (optional)',
+          label: 'Target Date (Optional)',
           child: QuietButton(
-            label: _target == null ? 'Pick a date' : dayLabel(_target!),
+            label: _target == null ? 'Select a Date' : dayLabel(_target!),
             icon: LucideIcons.calendar,
             onPressed: () async {
               final now = mentoringNow();
@@ -746,7 +746,7 @@ class _TaskFormState extends State<TaskForm> {
 
   Future<void> _submit() async {
     if (_title.text.trim().length < 2) {
-      setState(() => _problem = 'Name the task: at least 2 characters.');
+      setState(() => _problem = 'Enter a task of at least 2 characters.');
       return;
     }
     setState(() {
@@ -768,8 +768,8 @@ class _TaskFormState extends State<TaskForm> {
   @override
   Widget build(BuildContext context) {
     return MentoringForm(
-      title: 'Add a task',
-      submitLabel: 'Add task',
+      title: 'Add a Task',
+      submitLabel: 'Add Task',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
@@ -785,9 +785,9 @@ class _TaskFormState extends State<TaskForm> {
           ),
         ),
         FieldBlock(
-          label: 'Due (optional)',
+          label: 'Due Date (Optional)',
           child: QuietButton(
-            label: _due == null ? 'Pick a date' : dayLabel(_due!),
+            label: _due == null ? 'Select a Date' : dayLabel(_due!),
             icon: LucideIcons.calendar,
             onPressed: () async {
               final now = mentoringNow();
@@ -842,8 +842,8 @@ class _ProgressFormState extends State<ProgressForm> {
   Widget build(BuildContext context) {
     return MentoringForm(
       title: widget.goal.title,
-      subtitle: 'How far along is it? 100% marks it achieved.',
-      submitLabel: 'Save progress',
+      subtitle: 'Set the progress. 100% marks the goal as achieved.',
+      submitLabel: 'Save Progress',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
@@ -889,7 +889,7 @@ class _NoteFormState extends State<NoteForm> {
 
   Future<void> _submit() async {
     if (_note.text.trim().isEmpty) {
-      setState(() => _problem = 'Write the note first.');
+      setState(() => _problem = 'Enter a note first.');
       return;
     }
     setState(() {
@@ -911,9 +911,9 @@ class _NoteFormState extends State<NoteForm> {
   @override
   Widget build(BuildContext context) {
     return MentoringForm(
-      title: 'Add a note',
-      subtitle: 'A line on the timeline: what happened, what is next.',
-      submitLabel: 'Add note',
+      title: 'Add a Note',
+      subtitle: 'A timeline entry. Describe what happened and what is next.',
+      submitLabel: 'Add Note',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
@@ -935,7 +935,7 @@ class _NoteFormState extends State<NoteForm> {
           contentPadding: EdgeInsets.zero,
           value: _private,
           onChanged: (v) => setState(() => _private = v),
-          title: Text('Private: only you can see it', style: MentoringText.formLabel),
+          title: Text('Private. Only you can see it.', style: MentoringText.formLabel),
         ),
       ],
     );
@@ -973,7 +973,7 @@ String? shareFileProblem(PickedShare f) {
   final dot = f.name.lastIndexOf('.');
   final ext = dot < 0 ? '' : f.name.substring(dot + 1).toLowerCase();
   if (!shareExtensions.contains(ext)) return 'Share a PDF or an image (PNG, JPG or WebP).';
-  if (f.bytes.length > maxShareBytes) return 'That file is over 10 MB.';
+  if (f.bytes.length > maxShareBytes) return 'The file is larger than 10 MB.';
   return null;
 }
 
@@ -1023,7 +1023,7 @@ class _ResourceLinkFormState extends State<ResourceLinkForm> {
 
   Future<void> _submit() async {
     if (_title.text.trim().length < 2) {
-      setState(() => _problem = 'Give it a title: at least 2 characters.');
+      setState(() => _problem = 'Enter a title of at least 2 characters.');
       return;
     }
     if (_file) {
@@ -1068,7 +1068,7 @@ class _ResourceLinkFormState extends State<ResourceLinkForm> {
   @override
   Widget build(BuildContext context) {
     return MentoringForm(
-      title: _file ? 'Share a file' : 'Share a link',
+      title: _file ? 'Share a File' : 'Share a Link',
       subtitle: 'The other person sees it on this page.',
       submitLabel: 'Share',
       busy: _busy,
@@ -1076,7 +1076,7 @@ class _ResourceLinkFormState extends State<ResourceLinkForm> {
       onSubmit: _submit,
       children: [
         FieldBlock(
-          label: 'A link or a file',
+          label: 'Link or File',
           child: Wrap(
             spacing: 6,
             children: [
@@ -1113,7 +1113,7 @@ class _ResourceLinkFormState extends State<ResourceLinkForm> {
               children: [
                 QuietButton(
                   key: const ValueKey('choose-file'),
-                  label: _picked == null ? 'Choose a file' : 'Choose another',
+                  label: _picked == null ? 'Choose a File' : 'Choose Another',
                   icon: LucideIcons.paperclip,
                   onPressed: _busy ? null : _choose,
                 ),
@@ -1144,7 +1144,7 @@ class _ResourceLinkFormState extends State<ResourceLinkForm> {
             ),
           ),
         FieldBlock(
-          label: 'What it is',
+          label: 'Resource Type',
           child: Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -1155,7 +1155,7 @@ class _ResourceLinkFormState extends State<ResourceLinkForm> {
           ),
         ),
         FieldBlock(
-          label: 'Why it is worth opening (optional)',
+          label: 'Why It Is Useful (Optional)',
           child: TextField(
             key: const ValueKey('resource-note'),
             controller: _note,
@@ -1195,7 +1195,7 @@ class _ConcernFormState extends State<ConcernForm> {
 
   Future<void> _submit() async {
     if (_detail.text.trim().length < 10) {
-      setState(() => _problem = 'Tell ICR what happened: at least 10 characters.');
+      setState(() => _problem = 'Describe what happened in at least 10 characters.');
       return;
     }
     setState(() {
@@ -1221,15 +1221,15 @@ class _ConcernFormState extends State<ConcernForm> {
   @override
   Widget build(BuildContext context) {
     return MentoringForm(
-      title: 'Report a concern',
-      subtitle: 'Goes to ICR\'s safeguarding team, not to the other person.',
+      title: 'Report a Concern',
+      subtitle: 'This goes to ICR\'s safeguarding team, not to the other person.',
       submitLabel: 'Send to ICR',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
       children: [
         FieldBlock(
-          label: 'What is it about?',
+          label: 'Concern Type',
           help: _category.hint,
           child: Wrap(
             spacing: 6,
@@ -1245,7 +1245,7 @@ class _ConcernFormState extends State<ConcernForm> {
           ),
         ),
         FieldBlock(
-          label: 'What happened',
+          label: 'What Happened',
           child: TextField(
             key: const ValueKey('concern-detail'),
             controller: _detail,
@@ -1260,14 +1260,14 @@ class _ConcernFormState extends State<ConcernForm> {
           contentPadding: EdgeInsets.zero,
           value: _urgent || _category == ConcernCategory.safety,
           onChanged: _category == ConcernCategory.safety ? null : (v) => setState(() => _urgent = v),
-          title: Text('This is urgent', style: MentoringText.formLabel),
+          title: Text('Mark as Urgent', style: MentoringText.formLabel),
         ),
       ],
     );
   }
 }
 
-/// "Contact ICR support": an ordinary request about a record (not a conduct concern, which is confidential).
+/// "Contact ICR Support": an ordinary request about a record (not a conduct concern, which is confidential).
 class SupportForm extends StatefulWidget {
   const SupportForm({super.key, required this.onSend, this.about = 'this mentorship'});
 
@@ -1293,11 +1293,11 @@ class _SupportFormState extends State<SupportForm> {
 
   Future<void> _submit() async {
     if (_subject.text.trim().length < 5) {
-      setState(() => _problem = 'Give it a subject: at least 5 characters.');
+      setState(() => _problem = 'Enter a subject of at least 5 characters.');
       return;
     }
     if (_body.text.trim().length < 10) {
-      setState(() => _problem = 'Tell us what went wrong: at least 10 characters.');
+      setState(() => _problem = 'Describe what went wrong in at least 10 characters.');
       return;
     }
     setState(() {
@@ -1319,8 +1319,8 @@ class _SupportFormState extends State<SupportForm> {
   @override
   Widget build(BuildContext context) {
     return MentoringForm(
-      title: 'Contact ICR support',
-      subtitle: 'About ${widget.about}. For conduct, use "Report a concern": that stays private.',
+      title: 'Contact ICR Support',
+      subtitle: 'About ${widget.about}. For conduct issues, use "Report a Concern". It stays private.',
       submitLabel: 'Send',
       busy: _busy,
       problem: _problem,
@@ -1337,7 +1337,7 @@ class _SupportFormState extends State<SupportForm> {
           ),
         ),
         FieldBlock(
-          label: 'What happened',
+          label: 'What Happened',
           child: TextField(
             key: const ValueKey('support-body'),
             controller: _body,

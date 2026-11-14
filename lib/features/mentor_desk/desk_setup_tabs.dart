@@ -123,8 +123,8 @@ class _DeskHoursTabState extends State<DeskHoursTab> {
         Callout(
           tone: PillTone.blue,
           text:
-              'Members book calls with you inside these windows, in ${s.timezone}. '
-              'Your phone may be in another timezone: the times here are yours, as you set them.',
+              'Members book calls with you within these windows, in ${s.timezone}. '
+              'Your phone may be in another time zone. The times here are shown as you set them.',
         ),
         const SizedBox(height: 4),
         for (final day in _order)
@@ -146,7 +146,7 @@ class _DeskHoursTabState extends State<DeskHoursTab> {
           Padding(
             padding: const EdgeInsets.only(top: 6),
             child: Text(
-              'No hours set. Without them members can still ask you for a time, and you pick it.',
+              'No hours set. Members can still ask you for a time, and you select it.',
               style: MentoringText.body,
             ),
           ),
@@ -160,11 +160,11 @@ class _DeskHoursTabState extends State<DeskHoursTab> {
           children: [
             QuietButton(
               key: const ValueKey('add-window'),
-              label: 'Add a window',
+              label: 'Add a Window',
               icon: LucideIcons.plus,
               onPressed: _addWindows,
             ),
-            SolidButton(label: 'Save hours', busy: _busy, onPressed: _dirty ? _save : null),
+            SolidButton(label: 'Save Hours', busy: _busy, onPressed: _dirty ? _save : null),
             if (_dirty) QuietButton(label: 'Discard', onPressed: () => setState(() => _blocks = null)),
           ],
         ),
@@ -173,7 +173,7 @@ class _DeskHoursTabState extends State<DeskHoursTab> {
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your hours",
+      errorTitle: 'Unable to Load Your Hours',
       onRefresh: () async {
         setState(() => _blocks = null);
         await c.refreshTab(DeskTab.hours);
@@ -264,7 +264,7 @@ class _WindowFormState extends State<_WindowForm> {
 
   void _add() {
     if (_days.isEmpty) {
-      setState(() => _problem = 'Pick at least one day.');
+      setState(() => _problem = 'Select at least one day.');
       return;
     }
     final added = [for (final d in _days) WeeklyBlock(weekday: d, startMin: _start, endMin: _end)];
@@ -279,9 +279,9 @@ class _WindowFormState extends State<_WindowForm> {
   @override
   Widget build(BuildContext context) {
     return MentoringForm(
-      title: 'Add a window',
-      subtitle: 'The hours you take calls, on the days you pick.',
-      submitLabel: 'Add window',
+      title: 'Add a Window',
+      subtitle: 'The hours you take calls, on the days you select.',
+      submitLabel: 'Add Window',
       problem: _problem,
       onSubmit: _add,
       children: [
@@ -305,7 +305,7 @@ class _WindowFormState extends State<_WindowForm> {
           ),
         ),
         FieldBlock(
-          label: 'From and to',
+          label: 'From and To',
           child: Row(
             children: [
               Expanded(
@@ -403,11 +403,11 @@ class _DeskSettingsTabState extends State<DeskSettingsTab> {
     final changes = _changes(s);
     if (changes.isEmpty) return;
     if (_modes.isEmpty) {
-      setState(() => _problem = 'Pick at least one way you meet.');
+      setState(() => _problem = 'Select at least one meeting mode.');
       return;
     }
     if (_timezone.text.trim().isEmpty || _timezone.text.trim().length > maxTimezone) {
-      setState(() => _problem = 'Give your timezone, for example Asia/Kolkata.');
+      setState(() => _problem = 'Enter your time zone, for example Asia/Kolkata.');
       return;
     }
     final bad = linkProblem(_link.text);
@@ -420,7 +420,7 @@ class _DeskSettingsTabState extends State<DeskSettingsTab> {
       return;
     }
     if (bioToHtml(_bio.text).length > maxBio) {
-      setState(() => _problem = 'Your bio is too long: keep it under $maxBio characters.');
+      setState(() => _problem = 'Your bio is too long. Keep it under $maxBio characters.');
       return;
     }
     setState(() {
@@ -446,7 +446,7 @@ class _DeskSettingsTabState extends State<DeskSettingsTab> {
     final children = <Widget>[
       if (s != null) ...[
         FieldBlock(
-          label: 'How you meet',
+          label: 'Meeting Modes',
           child: Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -465,7 +465,7 @@ class _DeskSettingsTabState extends State<DeskSettingsTab> {
           ),
         ),
         FieldBlock(
-          label: 'How often you usually meet',
+          label: 'Usual Meeting Frequency',
           child: Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -481,8 +481,8 @@ class _DeskSettingsTabState extends State<DeskSettingsTab> {
           ),
         ),
         FieldBlock(
-          label: 'Your timezone',
-          help: 'Your weekly hours are read in it.',
+          label: 'Your Time Zone',
+          help: 'Your weekly hours use this time zone.',
           child: TextField(
             key: const ValueKey('timezone'),
             controller: _timezone,
@@ -492,8 +492,8 @@ class _DeskSettingsTabState extends State<DeskSettingsTab> {
           ),
         ),
         FieldBlock(
-          label: 'Your standing meeting link',
-          help: 'Used for sessions where you set no link of your own. Leave it empty to clear it.',
+          label: 'Your Standing Meeting Link',
+          help: 'Used for sessions that have no link of their own. Leave it empty to clear it.',
           child: TextField(
             key: const ValueKey('standing-link'),
             controller: _link,
@@ -503,7 +503,7 @@ class _DeskSettingsTabState extends State<DeskSettingsTab> {
           ),
         ),
         FieldBlock(
-          label: 'A note on your availability',
+          label: 'Availability Note',
           child: TextField(
             key: const ValueKey('availability-note'),
             controller: _note,
@@ -511,11 +511,11 @@ class _DeskSettingsTabState extends State<DeskSettingsTab> {
             maxLines: 3,
             maxLength: maxAvailabilityNote,
             style: MentoringText.formInput,
-            decoration: fieldDecoration('Weekday evenings after 7pm IST'),
+            decoration: fieldDecoration('Weekday evenings after 7 pm IST'),
           ),
         ),
         FieldBlock(
-          label: 'How you mentor',
+          label: 'How You Mentor',
           help: 'Shown on your profile. A blank line starts a new paragraph.',
           child: TextField(
             key: const ValueKey('bio'),
@@ -531,13 +531,13 @@ class _DeskSettingsTabState extends State<DeskSettingsTab> {
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(_problem!, style: MentoringText.error),
           ),
-        SolidButton(label: 'Save settings', busy: _busy, onPressed: () => _save(s)),
+        SolidButton(label: 'Save Settings', busy: _busy, onPressed: () => _save(s)),
       ],
     ];
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your settings",
+      errorTitle: 'Unable to Load Your Settings',
       onRefresh: () async {
         _loadedFor = null;
         await c.refreshTab(DeskTab.settings);

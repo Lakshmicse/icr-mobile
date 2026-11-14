@@ -21,6 +21,7 @@ import 'widgets/plan_card.dart';
 import 'widgets/profile_bottom_bar.dart';
 import 'widgets/profile_hero.dart';
 import 'widgets/profile_tabs.dart';
+import '../../core/util/screen_trail.dart';
 
 /// The Mentor Profile for one mentor, with its own controller: the API, or
 /// the design's sample content under `--dart-define=FEED_SOURCE=demo`.
@@ -66,7 +67,10 @@ class _MentorProfileScreenState extends State<MentorProfileScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      SitePlace(path: '/mentorship/mentors/${widget.mentorId}', child: _buildPage(context));
+
+  Widget _buildPage(BuildContext context) {
     final c = context.watch<MentorProfileController>();
     final profile = c.profile;
     final actions = profile == null ? null : heroActionsFor(context, c);
@@ -80,7 +84,7 @@ class _MentorProfileScreenState extends State<MentorProfileScreen> {
           child: Stack(
             children: [
               Positioned.fill(
-                top: TitleBar.height,
+                top: TitleBar.reserved(context),
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: c.load,
@@ -100,7 +104,8 @@ class _MentorProfileScreenState extends State<MentorProfileScreen> {
                   onBell: () => c.navigation.notifications(context),
                 ),
               ),
-              if (actions != null) Positioned(bottom: 0, left: 0, right: 0, child: ProfileBottomBar(actions: actions)),
+              if (actions != null && actions.barLabel != null)
+                Positioned(bottom: 0, left: 0, right: 0, child: ProfileBottomBar(actions: actions)),
             ],
           ),
         ),
@@ -194,7 +199,7 @@ class _Placeholder extends StatelessWidget {
                       const Icon(LucideIcons.userRound, size: 36, color: AppColors.outline),
                       const SizedBox(height: 12),
                       Text(
-                        "Couldn't load this mentor",
+                        'Unable to Load This Mentor',
                         textAlign: TextAlign.center,
                         style: AppText.postTitle.copyWith(fontSize: 16, height: 1.3),
                       ),
@@ -208,7 +213,7 @@ class _Placeholder extends StatelessWidget {
                           side: const BorderSide(color: AppColors.outlineVariant),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
-                        child: Text('Try again', style: AppText.link),
+                        child: Text('Try Again', style: AppText.link),
                       ),
                     ],
                   ),

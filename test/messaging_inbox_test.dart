@@ -118,7 +118,7 @@ void main() {
   Finder inTile(String id, Finder f) => find.descendant(of: tile(id), matching: f);
   Finder chip(String key) => find.byKey(ValueKey(key));
 
-  /// Opens the sliders menu: "Mark all as read" and, for a company's people, the inbox switcher.
+  /// Opens the sliders menu: "Mark All as Read" and, for a company's people, the inbox switcher.
   Future<void> openOptions(WidgetTester tester) async {
     await tester.tap(find.byKey(const ValueKey('inbox-options')));
     await tester.pumpAndSettle();
@@ -378,18 +378,18 @@ void main() {
       final repository = FakeMessagingRepository(rows: sample())
         ..errors['conversations'] = ApiError('The server is busy.', statusCode: 503);
       await pump(tester, repository: repository);
-      expect(find.text('Your messages could not be loaded.'), findsOneWidget);
+      expect(find.text('Unable to Load Messages'), findsOneWidget);
       expect(find.text('The server is busy.'), findsOneWidget);
       repository.errors.remove('conversations');
-      await tester.tap(find.text('Retry'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byType(ConversationTile), findsWidgets);
     });
 
-    testWidgets('no messages at all: the empty state offers "New message"', (tester) async {
+    testWidgets('no messages at all: the empty state offers "New Message"', (tester) async {
       await pump(tester, repository: FakeMessagingRepository());
-      expect(find.text('No messages yet'), findsOneWidget);
-      expect(find.text('New message'), findsOneWidget);
+      expect(find.text('No Messages Yet'), findsOneWidget);
+      expect(find.text('New Message'), findsOneWidget);
     });
 
     testWidgets('nothing unread, nothing starred, nothing of a kind: each says so', (tester) async {
@@ -399,15 +399,15 @@ void main() {
       );
       await tester.tap(chip('filter-unread'));
       await tester.pumpAndSettle();
-      expect(find.text("You're all caught up"), findsOneWidget);
+      expect(find.text('No Unread Messages'), findsOneWidget);
       await tester.tap(chip('filter-starred'));
       await tester.pumpAndSettle();
-      expect(find.text('Nothing starred'), findsOneWidget);
+      expect(find.text('No Starred Conversations'), findsOneWidget);
       await tester.tap(chip('filter-all'));
       await tester.pumpAndSettle();
       await tester.tap(chip('kind-requirement'));
       await tester.pumpAndSettle();
-      expect(find.text('Nothing here'), findsOneWidget);
+      expect(find.text('No Conversations'), findsOneWidget);
       expect(find.text('No requirements and bids conversations.'), findsOneWidget);
     });
 
@@ -567,7 +567,7 @@ void main() {
       await tester.enterText(find.byType(TextField).first, 'zzzz');
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pumpAndSettle();
-      expect(find.text('No matches'), findsOneWidget);
+      expect(find.text('No Matches Found'), findsOneWidget);
       expect(find.textContaining('"zzzz"'), findsOneWidget);
     });
 
@@ -577,7 +577,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pumpAndSettle();
       expect(find.byType(ConversationTile), findsOneWidget);
-      await tester.tap(find.byTooltip('Clear search'));
+      await tester.tap(find.byTooltip('Clear Search'));
       await tester.pumpAndSettle();
       expect(find.byType(ConversationTile), findsNWidgets(7));
       expect(lastList(), contains('search=""'));
@@ -667,7 +667,7 @@ void main() {
       expect(find.byIcon(LucideIcons.pin), findsNWidgets(2));
 
       await hold(tester, 'sarah');
-      expect(find.text('Unpin from top'), findsOneWidget);
+      expect(find.text('Unpin from Top'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('menu-pin')));
       await tester.pumpAndSettle();
       expect(repo.calls, contains('setPreference sarah starred=null pinned=false'));
@@ -687,8 +687,8 @@ void main() {
     testWidgets('the menu says Remove star / Unpin for what already is', (tester) async {
       await pump(tester);
       await hold(tester, 'david');
-      expect(find.text('Remove star'), findsOneWidget);
-      expect(find.text('Unpin from top'), findsOneWidget);
+      expect(find.text('Remove Star'), findsOneWidget);
+      expect(find.text('Unpin from Top'), findsOneWidget);
     });
   });
 
@@ -707,7 +707,7 @@ void main() {
       await tester.tap(item);
       await tester.pumpAndSettle();
       expect(repo.calls, contains('markAllRead inbox=personal'));
-      expect(find.text('All marked as read'), findsOneWidget);
+      expect(find.text('All messages marked as read.'), findsOneWidget);
       expect(inTile('sarah', find.text('2')), findsNothing);
       await openOptions(tester);
       expect(tester.widget<PopupMenuItem<String>>(item).enabled, isFalse, reason: 'nothing left to read');
@@ -826,7 +826,7 @@ void main() {
   });
 
   group('paging', () {
-    testWidgets('"Show more conversations" appends the next page without repeating a row', (tester) async {
+    testWidgets('"View More" appends the next page without repeating a row', (tester) async {
       final many = [
         for (var i = 0; i < 30; i++)
           convo(
@@ -894,7 +894,7 @@ void main() {
       await tester.pump(const Duration(seconds: 31));
       await tester.pumpAndSettle();
       expect(find.byType(ConversationTile), findsWidgets);
-      expect(find.text('Your messages could not be loaded.'), findsNothing);
+      expect(find.text('Unable to Load Messages'), findsNothing);
     });
   });
 
@@ -961,7 +961,7 @@ void main() {
       await openOptions(tester);
       expect(chip('inbox-personal'), findsOneWidget);
       expect(chip('inbox-co-acme'), findsOneWidget);
-      expect(find.text('My messages'), findsOneWidget);
+      expect(find.text('My Messages'), findsOneWidget);
       expect(find.text('Acme FM'), findsOneWidget);
       expect(find.descendant(of: chip('inbox-co-acme'), matching: find.text('2')), findsOneWidget);
       expect(
@@ -998,14 +998,14 @@ void main() {
 
       await tester.tap(chip('view-mine'));
       await tester.pumpAndSettle();
-      expect(find.text('Nothing assigned to you'), findsOneWidget);
+      expect(find.text('No Conversations Assigned to You'), findsOneWidget);
 
       await tester.tap(chip('view-open'));
       await tester.pumpAndSettle();
       await tester.tap(chip('topic-PROCUREMENT'));
       await tester.pumpAndSettle();
       expect(lastList(), contains('topic=PROCUREMENT'));
-      expect(find.text('Nothing waiting in this inbox'), findsOneWidget);
+      expect(find.text('No Conversations Waiting in This Inbox'), findsOneWidget);
       await tester.tap(chip('topic-all'));
       await tester.pumpAndSettle();
       expect(lastList(), contains('topic=null'));

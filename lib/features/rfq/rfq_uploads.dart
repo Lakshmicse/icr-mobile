@@ -46,7 +46,11 @@ class AttachmentUploader extends ChangeNotifier {
     final accepted = <PendingUpload>[];
     for (final file in picked) {
       if (accepted.length >= room) {
-        problems.add(room <= 0 ? 'You have attached the most ($max) files.' : 'Only $room more file${room == 1 ? '' : 's'} fit.');
+        problems.add(
+          room <= 0
+              ? 'You have attached the maximum of $max files.'
+              : 'Only $room more file${room == 1 ? '' : 's'} fit.',
+        );
         break;
       }
       if (mimeTypeFor(file.name) == null) {
@@ -96,7 +100,8 @@ class AttachmentUploader extends ChangeNotifier {
   void setTitle(int index, String title) {
     final f = files[index];
     final cut = title.length > RfqLimits.attachmentTitle ? title.substring(0, RfqLimits.attachmentTitle) : title;
-    files = [...files]..[index] = RfqFile(id: f.id, title: cut, url: f.url, name: f.name, mimeType: f.mimeType, size: f.size);
+    files = [...files]
+      ..[index] = RfqFile(id: f.id, title: cut, url: f.url, name: f.name, mimeType: f.mimeType, size: f.size);
     notifyListeners();
   }
 

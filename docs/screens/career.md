@@ -86,7 +86,7 @@ Fixed then: the live test wrote a salary report and an interview experience to G
 Opened from the job sheet (company name, logo, + Follow, faces, "Reviews, salaries and interviews"), from any career row, or by id.
 
 - Header: logo tile, name, "kind • size • city", the rating (average, stars, count) once there are approved reviews, and "See the company page" (`onOpenCompany`). Read from `GET /companies/:id` when the opener knew only the id.
-- Tabs (each reads on first show, pages with "View More", pull to refresh reads the open tab again, a failure says why with "Try again", an empty tab says so): **Jobs** (the open jobs; a row opens the job sheet), **People** (members with a public profile; a row opens the member), **Reviews** (rating card, the member's own review's state, "Write a review" / "Update my review", approved reviews), **Salaries** (each role with typical pay and the middle half as a bar, or "not enough reports yet"; "Share your salary"), **Interviews** (average difficulty and experience; "Share your interview").
+- Tabs (each reads on first show, pages with "View More", pull to refresh reads the open tab again, a failure says why with "Try again", an empty tab says so): **Jobs** (the open jobs; a row opens the job sheet), **People** (members with a public profile; a row opens the member), **Reviews** (rating card, the member's own review's state, "Write a review" / "Update my review" — not offered to someone who works at the company, who reads "You work at …, so its reviews are written by others." instead (bug sheet #45, 9 Nov 2026; `viewerCompanyId`, else the session's active company), approved reviews), **Salaries** (each role with typical pay and the middle half as a bar, or "not enough reports yet"; "Share your salary"), **Interviews** (average difficulty and experience; "Share your interview").
 - Forms (`insight_forms.dart`) validate exactly as the DTOs do (headline 140, texts 4000, job title 120, city 80, ratings 1-5, amount 0 or more), show the API's own refusal and keep what was typed.
 
 Proved by: `test/career_insights_test.dart`, `test/live/career_live_test.dart`, `test/live/career_screens_live_test.dart`.
@@ -124,7 +124,7 @@ The snapshot (Active with how many employers viewed, Interviews with the next on
 The company's postings from `GET /jobs/company` (statuses and their counts), with `GET /jobs/company/overview` above them.
 
 - **Figures**: Open (and how many close soon, a tap opens the Open tab), Not viewed, Interviewing (across how many jobs), Hired. **Attention** lines ("No applicants yet after 17 days. Promote it or refresh the posting.") each open that job's applicants.
-- **Tabs** All, Open, Drafts, In review, Paused, Closed with counts; **search** (submit), **sort** (newest, closing soonest, most applicants, title A to Z), **Only jobs I started**, *View More* paging, pull to refresh, a failure says why with *Try again*; a company that never posted is asked to post its first.
+- **Tabs** All, Open, Drafts, In review, Paused, Closed with counts; **search** (submit), **sort** (newest, closing soonest, most applicants, title A to Z), *View More* paging, pull to refresh, a failure says why with *Try again*; a company that never posted is asked to post its first.
 - **A row**: status, the deadline in words ("Closes in 2 days", "Closes today", "Deadline passed 25 Oct"; only while open), *Promoted*, the pipeline as a bar with "9 applicants • 2 not viewed" (those who withdrew are not counted), and **Applicants**. A draft shows **Continue editing**; a draft that ICR's review sent back shows the reviewer's note.
 - **The menu**: **Edit job**, **Promote** (a live posting that is not promoted; buying a boost is a payment, so it opens the website's list, where each live posting has Promote), **Pause** / **Resume**, **Close** (asks first) / **Reopen**, **Duplicate as draft** (copies the questions and opens the copy in the composer), **Delete** (asks first). Each is applied and the counts follow; the API's refusal (the plan's live-post room, a job that no longer passes the checklist) is shown as worded and the posting stays as it was.
 - The **+** in the title bar opens the composer; a posting saved there is on the list when it closes.
@@ -203,3 +203,183 @@ Run after `learning-jobs.ts`. Idempotent; `--remove` takes it all out and puts b
 **Left (for the lead):** wire `JobsNavigation` in `lib/app.dart` (the table above); decide whether the demo should show the employer side (`hiringRepositoryFor(DemoJobsRepository)` returns a non-hirer so the board reads as designed; a showcase builds `DemoHiringRepository()` itself, which is a recruiter); the backend requests; pixel matching of the new screens, postponed as asked.
 
 **6 Nov 2026 (owner's phone batch).** My applications' summary is no longer a boxed 2×2: four figures on one line (Active, Viewed — the lock when the plan hides it, still opening the plans — Interviews, Offers; keys `summary-*` unchanged), their notes on one line under them ("1 sent this week · Opened by a recruiter · None scheduled · 1 awaiting your reply"), and a hairline — the Career Hub's `_Snapshot` look ("these designs should not have the background colour and efficiently use the space"). `ApplicationProgress` top-aligns its step columns (`CrossAxisAlignment.start`): a step with no date under it (Offer, still to come) is shorter, and the default centring dropped its dot and line below the others' ("there is no line alignment"). The pull-to-refresh test pulls 600 px because `RefreshIndicator` arms at a quarter of its 1600 px test viewport.
+
+
+## 13 Nov 2026: no "Only jobs I started"
+
+The owner circled the chip under the search on Manage Jobs: "Remove this." The chip and the controller's `mine` filter are gone; the list is always the company's. The repository's `jobs(mine: true)` query stays, read by the live tests and available to a later screen.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The member's career screens (`lib/features/career/`) and the hiring team's (`lib/features/jobs/employer/`). Wording only: no layout, colour or behaviour changed. The rules are the client's marked-up manual of 13 Nov ("refine text and make it crisp for global standard"): Title Case for what is tapped or read as a label, sentence case with a full stop for sentences, plain international English, no dash inside a sentence, one term for one thing.
+
+| Where | Was | Now |
+|---|---|---|
+| `applicant_detail_screen.dart` | Not selecting …? | Reject …? |
+| `applicant_detail_screen.dart` | They are told their application was not selected. You can move them back later. | They will be notified that their application was not selected. You can move them back later. |
+| `applicant_detail_screen.dart` | Why (only your team sees this) | Reason (visible only to your team) |
+| `applicant_detail_screen.dart` | Write a note or give a rating. | Add a note or a rating. |
+| `applicant_detail_screen.dart` | and the panel are told it is off. | and the panel will be notified. |
+| `applicant_detail_screen.dart` | Keep it | Keep Interview |
+| `applicant_detail_screen.dart` | Couldn't open this application | Unable to Open This Application |
+| `applicant_detail_screen.dart` | Misses a must-have | Does not meet a must-have |
+| `applicant_detail_screen.dart` | Below your bar | Does not meet your preferred answer |
+| `applicant_detail_screen.dart` | No interview booked yet. | No interview scheduled yet. |
+| `applicant_detail_screen.dart` | Open the meeting link | Open Meeting Link |
+| `applicant_detail_screen.dart` | Mark done | Mark as Done |
+| `applicant_detail_screen.dart` | Only your hiring team sees these. | Visible only to your hiring team. |
+| `applicant_detail_screen.dart` | Nothing yet. | No activity yet. |
+| `applicant_detail_screen.dart` | Interview booked… | Interview scheduled… |
+| `applicants_screen.dart` | Interview booked with …. | Interview scheduled with …. |
+| `applicants_screen.dart` | Couldn't load the applicants | Unable to Load Applicants |
+| `applicants_screen.dart` | No one matches / No applicants yet | No Matching Applicants / No Applicants Yet |
+| `applicants_screen.dart` | Try another stage, or clear the filters. | Try another stage or clear the filters. |
+| `applicants_screen.dart` | People who apply show up here, best match first if you sort that way. | People who apply will appear here. |
+| `applicants_screen.dart` | Show everyone | Show All Applicants |
+| `employer_jobs_screen.dart` | It stops taking applications and leaves the job board. You can reopen it later. | The job will stop accepting applications and be removed from the job board. You can reopen it later. |
+| `employer_jobs_screen.dart` | It leaves your list and the job board. Applications already sent are kept for your records. | The job will be removed from your list and the job board. Applications already received are kept for your records. |
+| `employer_jobs_screen.dart` | A draft copy of “…” was made. | A draft copy of “…” was created. |
+| `employer_jobs_screen.dart` | Posting jobs is for hiring teams | Job Posting Is for Hiring Teams |
+| `employer_jobs_screen.dart` | Your account does not post jobs for a company. Ask your company's admin to make you a recruiter, or set up a company. | Your account cannot post jobs for a company. Ask your company admin to make you a recruiter, or create a company. |
+| `employer_jobs_screen.dart` | Set up a company | Create a Company |
+| `employer_jobs_screen.dart` | Couldn't load your jobs | Unable to Load Your Jobs |
+| `employer_jobs_screen.dart` | Describe the role, add a few questions, and it goes live once your company is verified. | Describe the role and add screening questions. The job goes live once your company is verified. |
+| `employer_jobs_screen.dart` | No jobs match / No jobs here | No Matching Jobs / No Jobs |
+| `employer_jobs_screen.dart` | Try other words, or clear the filters. | Try different keywords or clear the filters. |
+| `employer_jobs_screen.dart` | Postings in this status show up here. | Jobs with this status will appear here. |
+| `employer_jobs_screen.dart` | Not viewed / Applicants nobody opened | Not Viewed / Applicants not yet viewed |
+| `employer_jobs_screen.dart` | No rounds on | No active rounds |
+| `employer_jobs_screen.dart` | ICR sent this back: … | Returned by ICR: … |
+| `hiring_routes.dart` | Couldn't check your account. Try again in a moment. | Unable to check your account. Try again in a moment. |
+| `hiring_routes.dart` | Your role at this company does not post jobs. Ask its admin to make you a recruiter, and you can post | Your role at this company cannot post jobs. Ask its admin to make you a recruiter to post |
+| `hiring_routes.dart` | jobs, run applicants and make offers here. | jobs, manage applicants and make offers. |
+| `hiring_routes.dart` | You're using your personal account | You Are Using Your Personal Account |
+| `hiring_routes.dart` | Set up your company on ICR and you can post jobs, run applicants and make offers. | Create your company on ICR to post jobs, manage applicants and make offers. |
+| `hiring_routes.dart` | If your company is already here, ask its admin to make you a recruiter. | If your company is already on ICR, ask its admin to make you a recruiter. |
+| `hiring_sheets.dart` | Save the new time | Save New Time |
+| `hiring_sheets.dart` | They are told by email and in the app, with the link or the address. | They will be notified by email and in the app, with the link or the address. |
+| `hiring_sheets.dart` | When | Date and Time |
+| `hiring_sheets.dart` | Pick a date | Select a Date |
+| `hiring_sheets.dart` | Pick a time | Select a Time |
+| `hiring_sheets.dart` | How long | Duration |
+| `hiring_sheets.dart` | How | Interview Mode |
+| `hiring_sheets.dart` | A change is sent to them. | Any change will be sent to them. |
+| `hiring_sheets.dart` | Paid | Pay Period |
+| `hiring_sheets.dart` | Clear the joining date | Clear Joining Date |
+| `hiring_sheets.dart` | Clear the reply-by date | Clear Reply-By Date |
+| `hiring_sheets.dart` | A note for your team (optional) | Note for your team (Optional) |
+| `hiring_models.dart` | Needs a look. | Needs attention. |
+| `hiring_models.dart` | A number | Number |
+| `hiring_models.dart` | Pick one | Single Choice |
+| `hiring_models.dart` | Pick several | Multiple Choice |
+| `hiring_models.dart` | A rating | Rating |
+| `hiring_models.dart` | A date | Date |
+| `hiring_models.dart` | Give "…" at least two options. | Add at least two options to "…". |
+| `hiring_models.dart` | Give the posting a title to save it. | Enter a job title to save the posting. |
+| `hiring_models.dart` | Pick a date and time. | Select a date and time. |
+| `hiring_models.dart` | Pick a time in the future. | Select a time in the future. |
+| `hiring_models.dart` | An interview is at least 5 minutes. | An interview must be at least 5 minutes. |
+| `hiring_models.dart` | Give the address for an in-person interview. | Enter the address for an in-person interview. |
+| `hiring_models.dart` | Choose at least one person for the panel. | Select at least one panel member. |
+| `interview_brief_controller.dart` | Could not load this interview. | Unable to load this interview. |
+| `interview_brief_controller.dart` | Could not submit feedback. | Unable to submit feedback. |
+| `interview_brief_models.dart` | No show | No-Show |
+| `interview_brief_screen.dart` | Couldn't open this interview | Unable to Open This Interview |
+| `interview_brief_screen.dart` | The rest of the panel | Rest of the Panel |
+| `interview_brief_screen.dart` | This interview was cancelled — no scorecard needed. | This interview was cancelled. No scorecard is needed. |
+| `post_job_controller.dart` | Verify your company before publishing jobs. Your drafts are saved — finish verification and publish them in one click. | Verify your company before publishing jobs. Your drafts are saved and can be published once verification is complete. |
+| `post_job_controller.dart` | Finish … things before publishing. | Complete … items before publishing. |
+| `post_job_controller.dart` | Finish … things before sending it to review. | Complete … items before sending for review. |
+| `post_job_screen.dart` | What you changed on this posting is not saved yet. | Your changes to this posting have not been saved. |
+| `post_job_screen.dart` | Couldn't open this posting | Unable to Open This Posting |
+| `post_job_screen.dart` | The role | Role |
+| `post_job_screen.dart` | Where | Location |
+| `post_job_screen.dart` | Pick a country | Select a country |
+| `post_job_screen.dart` | openings in all | openings in total |
+| `post_job_screen.dart` | The description | Description |
+| `post_job_screen.dart` | Nice-to-have skills (optional) | Preferred Skills (Optional) |
+| `post_job_screen.dart` | Show the salary on the posting | Show Salary on the Posting |
+| `post_job_screen.dart` | Link where candidates apply | Application Link |
+| `post_job_screen.dart` | This posting is live: changes show at once. | This posting is live. Changes appear immediately. |
+| `post_job_screen.dart` | Send to ICR for review instead | Send to ICR for Review |
+| `job_rules.dart` | Pick the country this role is based in. | Select the country this role is based in. |
+| `resume_viewer.dart` | Couldn't open the résumé. Try again. | Unable to open the résumé. Try again. |
+| `resume_viewer.dart` | This résumé's file type can't be shown in the app. | This résumé's file type cannot be displayed in the app. |
+| `screening_editor.dart` | Must have | Must-Have |
+| `application_detail_screen.dart` | Offer accepted. Congratulations! | Offer accepted. |
+| `application_detail_screen.dart` | Where it stands | Application Status |
+| `application_detail_screen.dart` | What you told the employer when you applied. | The answers you gave the employer when you applied. |
+| `application_detail_screen.dart` | Check back soon. | Check again later. |
+| `application_detail_screen.dart` | The breakdown behind your match is part of Career Plus. | The match breakdown is part of Career Plus. |
+| `application_detail_screen.dart` | See plans | View Plans |
+| `application_detail_screen.dart` | Confirm I will attend | Confirm Attendance |
+| `application_detail_screen.dart` | Nothing has happened to this application yet. | No activity on this application yet. |
+| `application_dialogs.dart` | The employer is told straight away and the application moves to Hired. This cannot be undone here. | The employer is notified immediately and the application moves to Hired. This cannot be undone in the app. |
+| `application_dialogs.dart` | The employer is told, and the application moves to Archived. This cannot be undone here. | The employer is notified and the application moves to Archived. This cannot be undone in the app. |
+| `application_dialogs.dart` | A note for the employer (optional) | Note for the employer (Optional) |
+| `application_dialogs.dart` | Why you are declining (optional) | Reason for declining (Optional) |
+| `application_dialogs.dart` | Say when you could do instead. | Enter the times you are available. |
+| `application_widgets.dart` | . The employer moved ahead with other candidates. | . The employer selected other candidates. |
+| `career_hub_screen.dart` | Couldn't load your career hub | Unable to Load Your Career Hub |
+| `career_hub_screen.dart` | Go unlimited | View Plans |
+| `career_hub_screen.dart` | A fuller résumé gets more from recruiters. | A complete résumé attracts more recruiters. |
+| `career_hub_screen.dart` | You're all caught up | No Pending Actions |
+| `career_hub_screen.dart` | Nothing is waiting on you right now. | Nothing needs your attention right now. |
+| `career_hub_screen.dart` | How visible you are | Your Visibility |
+| `career_hub_screen.dart` | Nothing to show yet. | No data yet. |
+| `career_hub_screen.dart` | Jobs you apply to show up here, with where each one stands. | Jobs you apply to will appear here with their status. |
+| `company_insights_screen.dart` | Couldn't load this | Unable to Load This Section |
+| `company_insights_screen.dart` | Be the first to say what it is like to work at …. | Share what it is like to work at …. |
+| `company_insights_screen.dart` | Your review is waiting for ICR to read it. It shows once it is approved. | Your review is awaiting ICR approval. It will appear once approved. |
+| `company_insights_screen.dart` | Pay shows once enough people report it. | Pay data will appear once enough people report it. |
+| `company_insights_screen.dart` | A role shows once … people have reported it, so no one can be picked out. | A role appears once … people have reported it, so no individual can be identified. |
+| `company_insights_screen.dart` | Sat an interview at …? Tell the next person how it went. | Interviewed at …? Share your experience to help other candidates. |
+| `company_insights_screen.dart` | No one to show yet | No People to Show Yet |
+| `insight_forms.dart` | Thanks. Your review is anonymous and appears once ICR has read it. | Thank you. Your review is anonymous and will appear once ICR has reviewed it. |
+| `insight_forms.dart` | Thanks. Salaries are anonymous and only ever shown as an average. | Thank you. Salaries are anonymous and shown only as an average. |
+| `insight_forms.dart` | Thanks. Your interview experience appears once ICR has read it. | Thank you. Your interview experience will appear once ICR has reviewed it. |
+| `insight_forms.dart` | Reviews are published anonymously and are read by ICR before they show. | Reviews are published anonymously after ICR has reviewed them. |
+| `insight_forms.dart` | Anonymous. It only ever shows as an average, once at least five people report the same role. | Anonymous. It is shown only as an average, once at least five people report the same role. |
+| `insight_forms.dart` | Anonymous. It helps the next person who sits there. | Anonymous. It helps other candidates prepare. |
+| `interviews_screen.dart` | Couldn't load your interviews | Unable to Load Your Interviews |
+| `interviews_screen.dart` | Couldn't load your past interviews | Unable to Load Your Past Interviews |
+| `interviews_screen.dart` | No interviews coming up | No Upcoming Interviews |
+| `interviews_screen.dart` | When an employer schedules an interview, it appears here with the time and how to join. | When an employer schedules an interview, it will appear here with the time and joining details. |
+| `interviews_screen.dart` | Rounds you have been to appear here. | Interviews you have attended will appear here. |
+| `invitations_screen.dart` | will be told you are not interested in …. | will be notified that you are not interested in …. |
+| `invitations_screen.dart` | Couldn't load your invitations | Unable to Load Your Invitations |
+| `job_alerts_screen.dart` | Alert saved. We will tell you when new jobs match. | Alert saved. We will notify you when new jobs match. |
+| `job_alerts_screen.dart` | You will stop hearing about new jobs for this search. You can make it again any time. | You will no longer be notified about new jobs for this search. You can create it again at any time. |
+| `job_alerts_screen.dart` | Couldn't load your alerts | Unable to Load Your Alerts |
+| `job_alerts_screen.dart` | Save a search and we will tell you when new jobs match it. | Save a search and we will notify you when new jobs match. |
+| `job_alerts_screen.dart` | Your saved searches. We'll tell you when new jobs match. | Your saved searches. We will notify you when new jobs match. |
+| `job_alerts_screen.dart` | Telling you weekly | Notifying you weekly |
+| `job_alerts_screen.dart` | Telling you daily | Notifying you daily |
+| `job_alerts_screen.dart` | See … new | View … New |
+| `job_alerts_screen.dart` | See matches | View Matches |
+| `job_alerts_screen.dart` | Save a search and we tell you when new jobs match it. | Save a search and we will notify you when new jobs match. |
+| `job_alerts_screen.dart` | Minimum salary (a year, in rupees) | Minimum Salary (Yearly, in Rupees) |
+| `job_alerts_screen.dart` | Tell me when new jobs match | Notify Me When New Jobs Match |
+| `my_applications_screen.dart` | Offer accepted. Congratulations! It is now under Offers. | Offer accepted. It is now under Offers. |
+| `my_applications_screen.dart` | Couldn't load your applications | Unable to Load Your Applications |
+| `my_applications_screen.dart` | Start tracking your job search | Track Your Job Search |
+| `my_applications_screen.dart` | Every job you apply to appears here with its status, interviews and offers. | Every job you apply to will appear here with its status, interviews and offers. |
+| `my_applications_screen.dart` | Set up a job alert | Create a Job Alert |
+| `my_applications_screen.dart` | Nothing in progress | No Applications in Progress |
+| `my_applications_screen.dart` | Applications you send appear here until they close. | Applications you send will appear here until they close. |
+| `my_applications_screen.dart` | Offers you receive appear here, ready to accept or decline. | Offers you receive will appear here for you to accept or decline. |
+| `my_applications_screen.dart` | Nothing archived | No Archived Applications |
+| `my_applications_screen.dart` | whose offers you declined appear here. | whose offers you declined will appear here. |
+| `my_applications_screen.dart` | Find a job you like and apply. You can follow it here. | Find a job and apply. You can track it here. |
+| `my_applications_screen.dart` | See plans to know when recruiters open yours | View plans to see when recruiters open your application |
+| `my_applications_screen.dart` | Things waiting on you | Actions waiting for you |
+| `saved_jobs_screen.dart` | Bookmark removed | Bookmark removed. |
+| `saved_jobs_screen.dart` | Back on your board | Job restored to your board. |
+| `saved_jobs_screen.dart` | Couldn't load your saved jobs | Unable to Load Your Saved Jobs |
+| `saved_jobs_screen.dart` | Tap the bookmark on a job to keep it here. | Tap the bookmark on a job to save it here. |
+| `saved_jobs_screen.dart` | Couldn't load your hidden jobs | Unable to Load Your Hidden Jobs |
+| `saved_jobs_screen.dart` | A job you mark "Not interested" leaves your board and waits here, in case you change your mind. | Jobs you mark "Not Interested" are removed from your board and kept here. |
+
+**To Title Case, words unchanged (218 strings):** Cancel interview → Cancel Interview; Cover note → Cover Note; …% match → …% Match; … of … met → … of … Met; Next step → Next Step; Schedule interview → Schedule Interview; Make an offer → Make an Offer; Screening answers → Screening Answers; No-show → No-Show; Send offer → Send Offer; Your notes and rating → Your Notes and Rating; Add note → Add Note; In review → In Review; Not selected → Not Selected; Move to review → Move to Review; Move to interview → Move to Interview; Move to offer → Move to Offer; Mark as hired → Mark as Hired; Move to … → Move to …; Most recent → Most Recent; Best match → Best Match; Most qualified → Most Qualified; Sort by → Sort By; Filter by rating → Filter by Rating; Any rating → Any Rating; … stars and up → … Stars and Up; …+ stars → …+ Stars; Newest first → Newest First; Closing soonest → Closing Soonest; Most applicants → Most Applicants; Keep open → Keep Open; Close job → Close Job; Jobs you posted → Jobs You Posted; Post a job → Post a Job; Post your first job → Post Your First Job; Clear search → Clear Search; Clear filters → Clear Filters; Edit job → Edit Job; Duplicate as draft → Duplicate as Draft; Continue editing → Continue Editing; Jobs are posted by the hiring team → Jobs Are Posted by the Hiring Team; Jobs are posted for a company → Jobs Are Posted for a Company; Not now → Not Now; Switch company → Switch Company; Create a company → Create a Company; Schedule an interview → Schedule an Interview; Round name (optional) → Round Name (Optional); Video call / In person / Phone call → Video Call / In Person / Phone Call; Meeting link (optional) → Meeting Link (Optional); Map link (optional) → Map Link (Optional); Notes for the panel (optional) → Notes for the Panel (Optional); … (you) → … (You); Add me to the panel → Add Me to the Panel; Company admin → Company Admin; Office admin → Office Admin; Hiring manager → Hiring Manager; Make an offer / Change the offer → Make an Offer / Change the Offer; Save changes → Save Changes; Save draft → Save Draft; Salary offered → Salary Offered; Per year / Per month / Per hour → Per Year / Per Month / Per Hour; Job title on the offer (optional) → Job Title on the Offer (Optional); Joining date (optional) → Joining Date (Optional); Reply by (optional) → Reply By (Optional); Note to the applicant (optional) → Note to the Applicant (Optional); Yes or no → Yes or No; Years of experience → Years of Experience; Free text → Free Text; In person → In Person; Phone call → Phone Call; Video call → Video Call; Strong yes → Strong Yes; Strong no → Strong No; This interview → This Interview; From screening → From Screening; Hiring team notes → Hiring Team Notes; Earlier rounds → Earlier Rounds; Your scorecard → Your Scorecard; Panel scorecards → Panel Scorecards; Feedback submitted → Feedback Submitted; Submit scorecard → Submit Scorecard; Open résumé → Open Résumé; Notes for the panel → Notes for the Panel; Join meeting → Join Meeting; AI screening → AI Screening; Employer questions → Employer Questions; Must-have → Must-Have; Not met → Not Met; Leave without saving? → Leave Without Saving?; Keep editing → Keep Editing; Job title → Job Title; Department (optional) → Department (Optional); Mid-level → Mid-Level; Job type → Job Type; Full-time → Full-Time; Part-time → Part-Time; Work mode → Work Mode; On-site → On-Site; State (optional) → State (Optional); Add city → Add City; Openings in each city → Openings in Each City; Required skills → Required Skills; Experience (years) → Experience (Years); Per year → Per Year; Per month → Per Month; Per hour → Per Hour; Salary is negotiable → Salary Is Negotiable; How candidates apply → How Candidates Apply; On your own site → On Your Own Site; Apply by (optional) → Apply By (Optional); No deadline → No Deadline; Ask for a résumé → Ask for a Résumé; Show me as the contact → Show Me as the Contact; Questions for applicants → Questions for Applicants; Add skill → Add Skill; Ready to publish → Ready to Publish; Before you publish → Before You Publish; Publish again → Publish Again; Update posting → Update Posting; Move up → Move Up; Remove question → Remove Question; Add a question → Add a Question; Edit question → Edit Question; Save question → Save Question; Your application → Your Application; View job → View Job; Message hiring team → Message Hiring Team; Your answers → Your Answers; Your match → Your Match; Ask for another time → Ask for Another Time; What you sent → What You Sent; Withdraw your application? → Withdraw Your Application?; Keep application → Keep Application; Accept this offer? → Accept This Offer?; Decline this offer? → Decline This Offer?; Not yet → Not Yet; Accept offer → Accept Offer; Decline offer → Decline Offer; Send message → Send Message; Offer declined → Offer Declined; Recent activity → Recent Activity; Date applied → Date Applied; Find similar jobs → Find Similar Jobs; View application → View Application; Withdraw application → Withdraw Application; Your career → Your Career; Next steps → Next Steps; Open tracker → Open Tracker; Search appearances → Search Appearances; Recruiter views → Recruiter Views; Recruiter actions → Recruiter Actions; Résumé strength → Résumé Strength; Your applications → Your Applications; My applications → My Applications; Hidden jobs → Hidden Jobs; Job alerts → Job Alerts; Join call → Join Call; No reviews yet → No Reviews Yet; Write a review → Write a Review; Update my review → Update My Review; Current employee → Current Employee; Former employee → Former Employee; Verified employee → Verified Employee; Not enough salary reports yet → Not Enough Salary Reports Yet; Share your salary → Share Your Salary; No interview experiences yet → No Interview Experiences Yet; Share your interview → Share Your Interview; No open jobs → No Open Jobs; Offer accepted → Offer Accepted; No offer → No Offer; Still in progress → Still in Progress; Update your review of … → Update Your Review of …; Submit review → Submit Review; Replace my review → Replace My Review; Overall rating → Overall Rating; Advice to management (optional) → Advice to Management (Optional); Your job title (optional) → Your Job Title (Optional); Employment status → Employment Status; Share a salary at … → Share a Salary at …; Share salary → Share Salary; City (optional) → City (Optional); Years of experience (optional) → Years of Experience (Optional); Your interview at … → Your Interview at …; Share interview → Share Interview; Role you interviewed for (optional) → Role You Interviewed For (Optional); Difficulty (1 easy, 5 hard) → Difficulty (1 Easy, 5 Hard); Overall experience → Overall Experience; Questions you were asked (optional) → Questions You Were Asked (Optional); Process length in days (optional) → Process Length in Days (Optional); Work-life balance → Work-Life Balance; Pay and benefits → Pay and Benefits; No past interviews → No Past Interviews; Decline this invitation? → Decline This Invitation?; No invitations yet → No Invitations Yet; Open to opportunities → Open to Opportunities; View & apply → View & Apply; New alert → New Alert; No job alerts yet → No Job Alerts Yet; Create an alert → Create an Alert; … new → … New; Edit search → Edit Search; Delete alert → Delete Alert; Hide matches → Hide Matches; New job alert → New Job Alert; Save alert → Save Alert; Find jobs → Find Jobs; No applications match “…” → No Applications Match “…”; No interviews yet → No Interviews Yet; No offers yet → No Offers Yet; No applications yet → No Applications Yet; View all applications → View All Applications; Up next → Up Next; Review offer → Review Offer; No saved jobs yet → No Saved Jobs Yet; Browse jobs → Browse Jobs; No longer accepting applications → No Longer Accepting Applications; No hidden jobs → No Hidden Jobs; Show again → Show Again.
+
+**Left as they were.** "Try again"; the facts line of an interview experience ("Got an offer and accepted", "Negative experience", "Average difficulty"), which reads as the website words it and is pinned by `career_insights_test.dart`; the timeline and activity lines ("You applied", "Offer sent", "Opened by the hiring team"); the fact lines on rows ("12 applicants • 3 not viewed", "Offer sent, awaiting reply", "Closes today"); the messages Confirm and Ask for Another Time send to the hiring team (they are sent, so they are data); the "(copy)" suffix of a duplicated job (a stored title); the country and currency lists; placeholders that are examples ("Technical round", "FM manager, Bengaluru"); `demo_career_repository.dart` and `demo_hiring_repository.dart` (so the demo's review sub-ratings still read "Work-life balance" and "Pay and benefits" where the API's now read "Work-Life Balance" and "Pay and Benefits"). The sentence the API returns for an unverified company ("… Your drafts are saved — finish verification and publish them in one click.") is the portal's and still carries its dash; only the app's own fallback was reworded.

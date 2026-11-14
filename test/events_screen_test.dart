@@ -130,7 +130,7 @@ void main() {
   }
 
   group('the board at rest', () {
-    testWidgets('draws the flagship, the two tiles, the tracks and the agenda from the API', (tester) async {
+    testWidgets('draws the flagship, the tracks and the agenda from the API, with no tiles between', (tester) async {
       await pumpBoard(tester);
       expect(find.text('Events'), findsOneWidget);
       expect(find.text('SPOTLIGHT EVENT'), findsOneWidget);
@@ -138,11 +138,9 @@ void main() {
       expect(find.text('Free for members'), findsOneWidget);
       expect(find.text('500 Attendees Registered'), findsOneWidget);
       expect(find.text('RSVP Free'), findsOneWidget);
-      expect(find.text('My Schedule (1)'), findsOneWidget);
-      expect(find.textContaining('Future of AI in Facility Management'), findsWidgets);
-      expect(find.text('CPD Earned'), findsOneWidget);
-      expect(find.text('8.5 / 15'), findsOneWidget);
-      expect(find.text('6.5 credits needed by Dec 31'), findsOneWidget);
+      // The "My Schedule" and "CPD Earned" tiles went (owner, 12 Nov 2026).
+      expect(find.textContaining('My Schedule'), findsNothing);
+      expect(find.text('CPD Earned'), findsNothing);
       expect(find.text('Explore by Category'), findsOneWidget);
       expect(find.text('3 Tracks'), findsOneWidget);
       expect(find.text('Smart Buildings'), findsOneWidget);
@@ -167,17 +165,6 @@ void main() {
       }
     });
 
-    testWidgets('"Next:" keeps the day and hour when the title is long', (tester) async {
-      world = EventsWorld();
-      world.byId('ai')['title'] = 'A very long title that cannot possibly fit on the one line of the tile';
-      await pumpBoard(tester, custom: world);
-      expect(find.textContaining(' • ', findRichText: true), findsWidgets);
-      expect(
-        find.byWidgetPredicate((w) => w is Text && (w.data ?? '').startsWith(' • ') && (w.data ?? '').contains(',')),
-        findsOneWidget,
-      );
-    });
-
     testWidgets('a board that cannot load says so, offers a retry, and Back to Home', (tester) async {
       tester.view.physicalSize = const Size(780, 4000);
       tester.view.devicePixelRatio = 2;
@@ -200,14 +187,14 @@ void main() {
         ),
       );
       await settle(tester);
-      expect(find.text("Couldn't load events"), findsOneWidget);
+      expect(find.text("Unable to Load Events"), findsOneWidget);
       expect(find.text('The API is down.'), findsOneWidget);
 
       await tester.tap(find.text('Back to Home'));
       expect(homeTapped, 1);
 
       down = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester);
       expect(find.text('Explore by Category'), findsOneWidget);
     });
@@ -258,7 +245,7 @@ void main() {
       await tester.enterText(find.byType(TextField), 'zzz');
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await settle(tester);
-      expect(find.text('No events match'), findsOneWidget);
+      expect(find.text('No Events Match'), findsOneWidget);
       expect(find.text('Try other words, or clear the filters.'), findsOneWidget);
     });
 
@@ -282,7 +269,7 @@ void main() {
       expect(find.text('Format'), findsOneWidget);
       await tester.tap(find.text('Past'));
       await tester.pump();
-      await tester.tap(find.text('Show events'));
+      await tester.tap(find.text('Show Events'));
       await settle(tester);
       expect(api.queries.last['when'], 'past');
       expect(find.text('Past Events'), findsOneWidget);
@@ -295,21 +282,21 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Online'));
       await tester.pump();
-      await tester.tap(find.text('Show events'));
+      await tester.tap(find.text('Show Events'));
       await settle(tester);
       expect(shown(), {'flag', 'ai', 'esg', 'zoom'});
 
       await tester.tap(find.byIcon(LucideIcons.slidersHorizontal));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('In person'));
+      await tester.tap(find.text('In Person'));
       await tester.pump();
-      await tester.tap(find.text('Show events'));
+      await tester.tap(find.text('Show Events'));
       await settle(tester);
       expect(shown(), {'flag', 'bms', 'summit', 'gcc', 'far'});
 
       await tester.tap(find.byIcon(LucideIcons.slidersHorizontal));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Clear all'));
+      await tester.tap(find.text('Clear All'));
       await settle(tester);
       expect(find.text('Upcoming Agenda'), findsOneWidget);
       expect(cards(), 7);
@@ -329,7 +316,7 @@ void main() {
       expect(shown(), {'gcc'});
       await tapChip(tester, 'Workshops');
       expect(shown(), {'zoom', 'bms'});
-      await tapChip(tester, 'Chapter meetups');
+      await tapChip(tester, 'Chapter Meetups');
       expect(shown(), {'far'});
 
       await tapChip(tester, 'All Events');
@@ -397,7 +384,6 @@ void main() {
       expect(find.text('You are registered.'), findsOneWidget);
       expect(find.text('Registered'), findsWidgets);
       expect(find.text('501 Attendees Registered'), findsOneWidget);
-      expect(find.text('My Schedule (2)'), findsOneWidget);
     });
 
     testWidgets('a refusal puts the card back and shows the API\'s words', (tester) async {
@@ -408,7 +394,6 @@ void main() {
       expect(find.text('Something the API said.'), findsOneWidget);
       expect(find.text('RSVP Free'), findsOneWidget);
       expect(find.text('500 Attendees Registered'), findsOneWidget);
-      expect(find.text('My Schedule (1)'), findsOneWidget);
     });
 
     testWidgets('the card opens the sheet', (tester) async {
@@ -430,7 +415,6 @@ void main() {
       expect(find.text('You are registered.'), findsOneWidget);
       expect(inCard('esg', find.text('Registered')), findsOneWidget);
       expect(inCard('esg', find.text('View')), findsOneWidget);
-      expect(find.text('My Schedule (2)'), findsOneWidget);
     });
 
     testWidgets('Reserve Pass does the same for a workshop', (tester) async {
@@ -459,12 +443,12 @@ void main() {
       world.events.add(eventRow('full', 'Sold-out clinic', capacity: 5, going: 5, at: const Duration(days: 6)));
       world.waitlisted.add('full');
       await pumpBoard(tester, custom: world);
-      expect(inCard('full', find.text('Waitlist open')), findsOneWidget);
+      expect(inCard('full', find.text('Waitlist Open')), findsOneWidget);
       await tester.tap(inCard('full', find.text('Join Waitlist')));
       await settle(tester);
       expect(world.places['full'], 'WAITLISTED');
       expect(find.text('Added to the waitlist.'), findsOneWidget);
-      expect(inCard('full', find.text('On the waitlist')), findsOneWidget);
+      expect(inCard('full', find.text('On the Waitlist')), findsOneWidget);
     });
 
     testWidgets('Get Tickets buys the ticket and pays in the app; the website is never opened', (tester) async {
@@ -536,15 +520,7 @@ void main() {
     });
   });
 
-  group('the tiles and the host card', () {
-    testWidgets('Manage & View opens the next booked event\'s sheet, where its pass and Cancel are', (tester) async {
-      await pumpBoard(tester);
-      await tester.tap(find.text('Manage & View'));
-      await settle(tester);
-      expect(find.byType(EventSheetBar), findsOneWidget);
-      expect(launched, isEmpty, reason: 'the website\'s events page is this screen');
-    });
-
+  group('the host card', () {
     testWidgets('Submit Topic opens the website\'s contact page', (tester) async {
       await pumpBoard(tester);
       expect(find.text("Engage ICR's community of CRE & PropTech leaders"), findsOneWidget);
@@ -582,7 +558,7 @@ void main() {
       expect(find.text('Active Pass'), findsOneWidget);
       expect(find.text('Member • Bharat Buyer (TechCorp)'), findsOneWidget);
       expect(find.text('Show Pass'), findsOneWidget);
-      expect(find.text('Add to calendar'), findsOneWidget);
+      expect(find.text('Add to Calendar'), findsOneWidget);
       expect(find.text('180 Attendees Registered'), findsOneWidget);
       expect(find.text('Open to every ICR member'), findsOneWidget);
       expect(find.text('Your Booking is Active'), findsOneWidget);
@@ -626,7 +602,7 @@ void main() {
     testWidgets('Add to calendar opens Google Calendar with the event filled in', (tester) async {
       await pumpBoard(tester);
       await openSheet(tester, 'ai');
-      await tester.tap(find.text('Add to calendar'));
+      await tester.tap(find.text('Add to Calendar'));
       await tester.pump();
       final url = launched.single;
       expect(url.host, 'calendar.google.com');
@@ -672,7 +648,7 @@ void main() {
       expect(find.text('Registration Open'), findsOneWidget);
       expect(find.text('Show Pass'), findsNothing);
       expect(find.text('Register Now'), findsOneWidget);
-      expect(find.text('Seats available'), findsOneWidget);
+      expect(find.text('Seats Available'), findsOneWidget);
       expect(find.text('179 Attendees Registered'), findsOneWidget);
       expect(events.schedule, isNull, reason: 'the board\'s tile follows');
     });
@@ -740,7 +716,7 @@ void main() {
       final w = EventsWorld()..notInvited.add('gcc');
       await pumpBoard(tester, custom: w);
       await openSheet(tester, 'gcc');
-      expect(find.text('By invitation'), findsOneWidget);
+      expect(find.text('By Invitation'), findsOneWidget);
       expect(find.text('This event is invite-only'), findsOneWidget);
       expect(find.descendant(of: find.byType(EventSheetBody), matching: find.text('INVITE ONLY')), findsOneWidget);
       expect(find.text('Event page'), findsNothing, reason: 'it only opened this sheet again');
@@ -751,10 +727,11 @@ void main() {
       world = EventsWorld()..places['gcc'] = 'WAITLISTED';
       await pumpBoard(tester, custom: world);
       await openSheet(tester, 'gcc');
-      expect(find.text('On the Waitlist'), findsOneWidget);
+      // The sheet's badge, and the card's footer behind it (the same words since 13 Nov 2026).
+      expect(find.text('On the Waitlist'), findsNWidgets(2));
       expect(find.text('Waitlisted'), findsOneWidget);
-      expect(find.text("You're on the waitlist"), findsOneWidget);
-      expect(find.text('Your place'), findsOneWidget);
+      expect(find.text("You're on the Waitlist"), findsOneWidget);
+      expect(find.text('Your Place'), findsOneWidget);
       expect(find.text('Event page'), findsNothing);
       expect(find.text('Show Pass'), findsNothing);
       expect(find.text('View Pass & QR'), findsNothing);
@@ -769,11 +746,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Past'));
       await tester.pump();
-      await tester.tap(find.text('Show events'));
+      await tester.tap(find.text('Show Events'));
       await settle(tester);
       await openSheet(tester, 'old');
-      expect(find.text('Event Ended'), findsOneWidget);
-      expect(find.text('This event has ended'), findsOneWidget);
+      // The sheet's badge, and the card's footer behind it (the same words since 13 Nov 2026).
+      expect(find.text('Event Ended'), findsNWidgets(2));
+      expect(find.text('This Event Has Ended'), findsOneWidget);
       expect(find.text('Event page'), findsNothing);
       expect(find.text('It happened.'), findsOneWidget);
     });

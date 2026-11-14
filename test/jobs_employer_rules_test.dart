@@ -124,7 +124,7 @@ void main() {
       expect(_keys(_ready(country: null)), ['country']);
       expect(_keys(_ready(country: 'Narnia')), ['country']);
       expect(_keys(_ready(country: 'Qatar')), isEmpty);
-      expect(jobPublishBlockers(_ready(country: null)).single.message, 'Pick the country this role is based in.');
+      expect(jobPublishBlockers(_ready(country: null)).single.message, 'Select the country this role is based in.');
     });
 
     test('salary is optional, but a maximum below the minimum is refused', () {
@@ -231,7 +231,7 @@ void main() {
     });
 
     test('a draft may be saved half-filled, but not without a title or over the limits', () {
-      expect(const JobDraft().saveProblem, 'Give the posting a title to save it.');
+      expect(const JobDraft().saveProblem, 'Enter a job title to save the posting.');
       expect(const JobDraft(title: 'Supervisor').saveProblem, isNull);
       expect(JobDraft(title: 'x' * 121).saveProblem, 'Keep the title under 120 characters.');
       expect(JobDraft(title: 'Supervisor', skills: List.filled(31, 'a')).saveProblem, 'List at most 30 skills.');
@@ -381,7 +381,7 @@ void main() {
     test('a pick-one question needs two different options, at most ten', () {
       expect(
         const ScreeningDraft(type: 'SINGLE_SELECT', prompt: 'Which shift?', options: ['Day']).problem,
-        'Give "Which shift?" at least two options.',
+        'Add at least two options to "Which shift?".',
       );
       expect(
         const ScreeningDraft(type: 'SINGLE_SELECT', prompt: 'Which shift?', options: ['Day', 'day']).problem,
@@ -449,16 +449,19 @@ void main() {
     );
 
     test('needs a future time, a panel, and a place for an in-person round', () {
-      expect(interview().problem(now), 'Pick a date and time.');
-      expect(interview(at: now).problem(now), 'Pick a time in the future.');
+      expect(interview().problem(now), 'Select a date and time.');
+      expect(interview(at: now).problem(now), 'Select a time in the future.');
       expect(
         interview(at: DateTime(2026, 10, 27, 10), panel: const []).problem(now),
-        'Choose at least one person for the panel.',
+        'Select at least one panel member.',
       );
-      expect(interview(at: DateTime(2026, 10, 27, 10), mins: 4).problem(now), 'An interview is at least 5 minutes.');
+      expect(
+        interview(at: DateTime(2026, 10, 27, 10), mins: 4).problem(now),
+        'An interview must be at least 5 minutes.',
+      );
       expect(
         interview(at: DateTime(2026, 10, 27, 10), mode: 'IN_PERSON').problem(now),
-        'Give the address for an in-person interview.',
+        'Enter the address for an in-person interview.',
       );
       expect(interview(at: DateTime(2026, 10, 27, 10), mode: 'IN_PERSON', location: 'Floor 3').problem(now), isNull);
       expect(
@@ -542,11 +545,11 @@ void main() {
     });
 
     test('the stages and moves are worded for the hiring team', () {
-      expect(stageWord('SCREENING'), 'In review');
-      expect(stageWord('REJECTED'), 'Not selected');
-      expect(moveVerb('HIRED'), 'Mark as hired');
+      expect(stageWord('SCREENING'), 'In Review');
+      expect(stageWord('REJECTED'), 'Not Selected');
+      expect(moveVerb('HIRED'), 'Mark as Hired');
       expect(moveVerb('REJECTED'), 'Reject');
-      expect(moveVerb('SCREENING'), 'Move to review');
+      expect(moveVerb('SCREENING'), 'Move to Review');
       expect(pipelineStages, ['APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJECTED']);
     });
 
@@ -675,7 +678,7 @@ void main() {
       );
       expect(const AttentionItem(kind: 'closing', jobId: 'J', title: 'x', days: 0).words, 'Closes today.');
       expect(const AttentionItem(kind: 'closing', jobId: 'J', title: 'x', days: 3).words, 'Closes in 3 days.');
-      expect(const AttentionItem(kind: 'other', jobId: 'J', title: 'x').words, 'Needs a look.');
+      expect(const AttentionItem(kind: 'other', jobId: 'J', title: 'x').words, 'Needs attention.');
     });
 
     test('only the hiring roles, with a company, may post', () {

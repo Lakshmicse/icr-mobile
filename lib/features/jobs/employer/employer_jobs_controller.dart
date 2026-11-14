@@ -4,9 +4,9 @@ import 'post_job_controller.dart';
 
 /// The ways the company's list can be ordered.
 enum JobsSort {
-  recent('recent', 'Newest first'),
-  closing('closing', 'Closing soonest'),
-  applicants('applicants', 'Most applicants'),
+  recent('recent', 'Newest First'),
+  closing('closing', 'Closing Soonest'),
+  applicants('applicants', 'Most Applicants'),
   title('title', 'Title A to Z');
 
   const JobsSort(this.api, this.label);
@@ -26,7 +26,6 @@ class EmployerJobsController extends HiringController {
   Map<PostingStatus, int> _counts = const {};
   PostingStatus? _status;
   String _search = '';
-  bool _mine = false;
   JobsSort _sort = JobsSort.recent;
   int _page = 0;
   bool _hasMore = false;
@@ -42,7 +41,6 @@ class EmployerJobsController extends HiringController {
   Map<PostingStatus, int> get counts => _counts;
   PostingStatus? get status => _status;
   String get search => _search;
-  bool get mine => _mine;
   JobsSort get sort => _sort;
   bool get hasMore => _hasMore;
   bool get loading => _loading;
@@ -51,7 +49,7 @@ class EmployerJobsController extends HiringController {
   String? get error => _error;
 
   /// Nothing was ever posted (not just nothing matching the filters).
-  bool get noJobsAtAll => _loaded && _counts.values.fold(0, (a, b) => a + b) == 0 && _search.isEmpty && !_mine;
+  bool get noJobsAtAll => _loaded && _counts.values.fold(0, (a, b) => a + b) == 0 && _search.isEmpty;
 
   bool busy(String id) => _busy.contains(id);
 
@@ -89,7 +87,7 @@ class EmployerJobsController extends HiringController {
     _error = null;
     notifyListeners();
     try {
-      final page = await repository.jobs(status: _status, search: _search, mine: _mine, sort: _sort.api);
+      final page = await repository.jobs(status: _status, search: _search, sort: _sort.api);
       _jobs = page.jobs;
       _counts = page.statusCounts;
       _hasMore = page.hasMore;
@@ -108,13 +106,7 @@ class EmployerJobsController extends HiringController {
     _loadingMore = true;
     notifyListeners();
     try {
-      final page = await repository.jobs(
-        status: _status,
-        search: _search,
-        mine: _mine,
-        sort: _sort.api,
-        page: _page + 1,
-      );
+      final page = await repository.jobs(status: _status, search: _search, sort: _sort.api, page: _page + 1);
       final seen = {for (final j in _jobs) j.id};
       _jobs = [..._jobs, ...page.jobs.where((j) => !seen.contains(j.id))];
       _hasMore = page.hasMore;
@@ -142,12 +134,6 @@ class EmployerJobsController extends HiringController {
   Future<void> setSort(JobsSort sort) {
     if (sort == _sort) return Future.value();
     _sort = sort;
-    return _load();
-  }
-
-  Future<void> setMine(bool on) {
-    if (on == _mine) return Future.value();
-    _mine = on;
     return _load();
   }
 

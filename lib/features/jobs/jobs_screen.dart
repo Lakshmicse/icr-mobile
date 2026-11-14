@@ -101,7 +101,7 @@ class _JobsScreenState extends State<JobsScreen> {
           child: Stack(
             children: [
               Positioned.fill(
-                top: TitleBar.height,
+                top: TitleBar.reserved(context),
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: jobs.refresh,
@@ -151,7 +151,7 @@ class _JobsScreenState extends State<JobsScreen> {
       return [
         SliverFillRemaining(
           hasScrollBody: false,
-          child: _Notice(title: "Couldn't load jobs", body: jobs.error!, action: 'Try again', onAction: jobs.refresh),
+          child: _Notice(title: 'Unable to Load Jobs', body: jobs.error!, action: 'Try Again', onAction: jobs.refresh),
         ),
       ];
     }
@@ -163,17 +163,17 @@ class _JobsScreenState extends State<JobsScreen> {
           hasScrollBody: false,
           child: hidden
               ? _Notice(
-                  title: 'No Easy Apply jobs here',
+                  title: 'No Easy Apply Jobs',
                   body: "These jobs take applications on the employer's own site.",
-                  action: 'Show all jobs',
+                  action: 'Show All Jobs',
                   onAction: jobs.toggleEasyApply,
                 )
               : _Notice(
-                  title: jobs.narrowed ? 'No jobs match' : 'No open jobs right now',
+                  title: jobs.narrowed ? 'No Matching Jobs' : 'No Open Jobs',
                   body: jobs.narrowed
-                      ? 'Try other words, or clear the filters.'
-                      : 'New roles show up here as employers post them.',
-                  action: jobs.narrowed ? 'Clear filters' : null,
+                      ? 'Try different keywords or clear the filters.'
+                      : 'New roles will appear here as employers post them.',
+                  action: jobs.narrowed ? 'Clear Filters' : null,
                   onAction: jobs.narrowed ? () => jobs.clearFilters() : null,
                 ),
         ),

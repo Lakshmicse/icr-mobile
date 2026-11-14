@@ -225,7 +225,7 @@ void main() {
       expect(find.byType(SupportScreen), findsOneWidget);
       expect(find.byType(InAppWebScreen), findsNothing);
       expect(sites, isEmpty);
-      expect(find.text('Help & support'), findsOneWidget);
+      expect(find.text('Help & Support'), findsOneWidget);
     });
 
     testWidgets('"X added you to a company" opens My companies on the invitation, ready to accept or decline', (
@@ -235,7 +235,7 @@ void main() {
       expect(find.byType(MyCompaniesScreen), findsOneWidget);
       expect(find.byType(InAppWebScreen), findsNothing);
       expect(sites, isEmpty);
-      expect(find.text('Waiting for you'), findsOneWidget);
+      expect(find.text('Waiting for You'), findsOneWidget);
       expect(find.byKey(const Key('invitation.accept.co-2')), findsOneWidget);
       expect(find.byKey(const Key('invitation.decline.co-2')), findsOneWidget);
     });
@@ -267,7 +267,7 @@ void main() {
       final row = find.byKey(const Key('settings.support'));
       await tester.ensureVisible(row);
       await tester.pump();
-      expect(find.text('Help & support'), findsOneWidget);
+      expect(find.descendant(of: row, matching: find.text('Help & Support')), findsOneWidget);
       expect(find.byKey(const Key('settings.contact')), findsOneWidget);
       await tester.tap(row);
       await tester.pump();

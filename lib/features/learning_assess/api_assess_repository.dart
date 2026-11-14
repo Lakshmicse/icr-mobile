@@ -101,7 +101,9 @@ class ApiAssessRepository implements AssessRepository {
       subtitle: _text(json['subtitle']),
       description: _text(json['description']),
       level: _text(json['level']),
-      free: json['access'] != 'PAID',
+      // Paid when the editor set a price, whatever `access` says — the website's own "priced" badge reads
+      // `!!p.priceAmount` (owner, 7 Nov 2026: priced mock sets all sat under Free, none under Paid).
+      free: json['access'] != 'PAID' && ((json['priceAmount'] as num?) ?? 0) <= 0,
       priceAmount: (json['priceAmount'] as num?)?.toInt(),
       priceCurrency: json['priceCurrency'] as String? ?? 'INR',
       creditCost: (json['creditCost'] as num?)?.toInt(),

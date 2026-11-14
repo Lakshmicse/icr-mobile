@@ -92,9 +92,9 @@ class CatalogService {
 
 /// What a supplier says about a product's stock.
 enum ProductStock {
-  inStock('IN_STOCK', 'In stock'),
-  madeToOrder('MADE_TO_ORDER', 'Made to order'),
-  outOfStock('OUT_OF_STOCK', 'Out of stock');
+  inStock('IN_STOCK', 'In Stock'),
+  madeToOrder('MADE_TO_ORDER', 'Made to Order'),
+  outOfStock('OUT_OF_STOCK', 'Out of Stock');
 
   const ProductStock(this.api, this.label);
 

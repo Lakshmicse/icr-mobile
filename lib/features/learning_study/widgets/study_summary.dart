@@ -42,7 +42,7 @@ class StudySummary extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                c.isStarredSession ? 'Starred cards done' : 'Deck complete',
+                c.isStarredSession ? 'Starred Cards Done' : 'Deck Complete',
                 textAlign: TextAlign.center,
                 style: StudyText.summaryTitle,
               ),
@@ -60,7 +60,7 @@ class StudySummary extends StatelessWidget {
                     child: _Stat(
                       key: const ValueKey('study-stat-known'),
                       value: c.knownCount,
-                      label: 'Got it',
+                      label: 'Known',
                       fill: StudyColors.greenFill,
                       ink: StudyColors.greenInk,
                     ),
@@ -70,7 +70,7 @@ class StudySummary extends StatelessWidget {
                     child: _Stat(
                       key: const ValueKey('study-stat-learning'),
                       value: c.learningCount,
-                      label: 'Still learning',
+                      label: 'Still Learning',
                       fill: StudyColors.amberFill,
                       ink: StudyColors.amberInk,
                     ),
@@ -80,7 +80,7 @@ class StudySummary extends StatelessWidget {
                     child: _Stat(
                       key: const ValueKey('study-stat-unmarked'),
                       value: c.unmarkedCount,
-                      label: 'Not marked',
+                      label: 'Not Marked',
                       fill: AppColors.slate100,
                       ink: AppColors.slate600,
                     ),
@@ -114,8 +114,8 @@ class StudySummary extends StatelessWidget {
                   ),
                   child: Text(
                     knowAll
-                        ? 'Study them again'
-                        : (rest == 1 ? 'Study the 1 you have not got' : 'Study the $rest you have not got'),
+                        ? 'Study Them Again'
+                        : (rest == 1 ? 'Study the 1 Not Yet Known' : 'Study the $rest Not Yet Known'),
                     style: AppText.button.copyWith(fontSize: 16),
                   ),
                 ),
@@ -132,7 +132,7 @@ class StudySummary extends StatelessWidget {
                       side: const BorderSide(color: StudyColors.border),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: Text('Start over', style: AppText.button.copyWith(fontSize: 16, color: AppColors.onSurface)),
+                    child: Text('Start Over', style: AppText.button.copyWith(fontSize: 16, color: AppColors.onSurface)),
                   ),
                 ),
               ],
@@ -144,13 +144,13 @@ class StudySummary extends StatelessWidget {
                     key: const ValueKey('study-summary-last'),
                     onPressed: c.previous,
                     style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-                    child: Text('Back to the last card', style: AppText.link.copyWith(fontSize: 14)),
+                    child: Text('Back to the Last Card', style: AppText.link.copyWith(fontSize: 14)),
                   ),
                   TextButton(
                     key: const ValueKey('study-summary-back'),
                     onPressed: onBack,
                     style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-                    child: Text('All decks', style: AppText.link.copyWith(fontSize: 14)),
+                    child: Text('All Decks', style: AppText.link.copyWith(fontSize: 14)),
                   ),
                 ],
               ),

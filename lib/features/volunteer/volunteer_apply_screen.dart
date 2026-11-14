@@ -58,10 +58,10 @@ class _VolunteerApplyScreenState extends State<VolunteerApplyScreen> {
   }
 
   Future<void> _pickRole() async {
-    const none = 'Not sure yet: any role';
+    const none = 'Any Role';
     final picked = await pickFromSheet<String>(
       context,
-      title: 'Which role?',
+      title: 'Select a Role',
       options: [none, for (final r in _c.roles) r.title],
       label: (o) => o,
       selected: _c.role?.title ?? none,
@@ -71,13 +71,13 @@ class _VolunteerApplyScreenState extends State<VolunteerApplyScreen> {
   }
 
   Future<void> _pickChapter() async {
-    const none = 'No chapter in particular';
+    const none = 'No Specific Chapter';
     final names = [for (final c in _c.chapters) c.name];
     final current = _c.chapter;
     final options = [none, if (current != null && !names.contains(current)) current, ...names];
     final picked = await pickFromSheet<String>(
       context,
-      title: 'Which chapter?',
+      title: 'Select a Chapter',
       options: options,
       label: (o) => o,
       selected: current ?? none,
@@ -111,7 +111,7 @@ class _VolunteerApplyScreenState extends State<VolunteerApplyScreen> {
     ),
     padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
     child: CommunityButton(
-      label: 'Send to the ICR team',
+      label: 'Send to the ICR Team',
       icon: LucideIcons.send,
       expand: true,
       height: 42,
@@ -137,7 +137,7 @@ class _VolunteerApplyScreenState extends State<VolunteerApplyScreen> {
             _Picker(
               label: 'Role',
               value: c.role?.title,
-              hint: 'Not sure yet: any role',
+              hint: 'Any Role',
               icon: LucideIcons.heartHandshake,
               enabled: !c.busy,
               onTap: _pickRole,
@@ -156,14 +156,14 @@ class _VolunteerApplyScreenState extends State<VolunteerApplyScreen> {
             _Picker(
               label: 'Chapter',
               value: c.chapter,
-              hint: 'No chapter in particular',
+              hint: 'No Specific Chapter',
               icon: LucideIcons.mapPin,
               enabled: !c.busy,
               onTap: _pickChapter,
             ),
             const SizedBox(height: 14),
             CommunityField(
-              label: 'Your name *',
+              label: 'Your Name *',
               controller: _name,
               maxLength: ContactLimits.name,
               error: c.problemFor(ContactField.name),
@@ -186,10 +186,9 @@ class _VolunteerApplyScreenState extends State<VolunteerApplyScreen> {
             ),
             const SizedBox(height: 14),
             CommunityField(
-              label: 'Phone',
+              label: 'Mobile Number (Optional)',
               controller: _phone,
               keyboardType: TextInputType.phone,
-              hint: 'Optional',
               maxLength: ContactLimits.phone,
               error: c.problemFor(ContactField.phone),
               enabled: !c.busy,
@@ -198,7 +197,7 @@ class _VolunteerApplyScreenState extends State<VolunteerApplyScreen> {
             ),
             const SizedBox(height: 10),
             CommunityField(
-              label: 'About you *',
+              label: 'About You *',
               controller: _message,
               minLines: 5,
               maxLines: 10,
@@ -254,8 +253,8 @@ class _VolunteerApplyScreenState extends State<VolunteerApplyScreen> {
               const SizedBox(height: 8),
               Text(
                 '${c.role == null ? 'Your interest in volunteering' : 'Your interest in ${c.role!.title}'}'
-                '${c.chapter == null ? '' : ' with ${c.chapter}'} reached the ICR team. '
-                'They will write to ${c.email.trim()}.',
+                '${c.chapter == null ? '' : ' with ${c.chapter}'} has been sent to the ICR team. '
+                'They will reply to ${c.email.trim()}.',
                 textAlign: TextAlign.center,
                 style: CommunityText.body,
               ),

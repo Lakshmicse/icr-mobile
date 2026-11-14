@@ -273,7 +273,7 @@ class JoinStripButton extends StatelessWidget {
     super.key,
     required this.interview,
     required this.onJoin,
-    this.label = 'Join call',
+    this.label = 'Join Call',
     this.clock = systemClock,
   });
 

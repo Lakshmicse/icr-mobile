@@ -71,7 +71,7 @@ class TeamViewer {
           if (givesLearningRoles) 'PROFESSIONAL',
         ];
 
-  /// The role choices of "Add someone on ICR": never Company Admin (that needs an invite they accept); Member only
+  /// The role choices of "Add Existing ICR Member": never Company Admin (that needs an invite they accept); Member only
   /// where learning roles can be given with it (the API refuses a Member without one).
   List<String> get addRoles => isSupplier
       ? const ['VENDOR']

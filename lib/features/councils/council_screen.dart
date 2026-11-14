@@ -6,9 +6,12 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
+import '../../core/util/screen_trail.dart';
+import '../../core/widgets/manage_pencil.dart';
 import '../chapters/community_kit.dart';
 import '../chapters/resource_download.dart';
 import '../chapters/widgets/chapter_sections.dart' show ChapterSectionFrame, GallerySection;
+import '../shell/app_shell.dart';
 import 'council_controller.dart';
 import 'council_models.dart';
 import 'councils_repository.dart';
@@ -33,7 +36,15 @@ class CouncilHandoffs {
     this.opener = openUrl,
     this.share = shareCouncilLink,
     this.downloader = const SystemResourceDownloader(),
+    this.manage,
+    this.pageWrap = plainPage,
   });
+
+  /// The pencil beside the bell, for the staff who may manage the council; no pencil without it.
+  final RecordManage? manage;
+
+  /// Frames a council's page pushed from the board or a link (the app's bottom bar under it).
+  final PageWrap pageWrap;
 
   /// A session was tapped: the Events sheet, by the event's slug (else its id).
   final ValueChanged<String> onOpenEvent;
@@ -64,6 +75,8 @@ class CouncilHandoffs {
     opener: opener,
     share: share,
     downloader: downloader,
+    manage: manage,
+    pageWrap: pageWrap,
   );
 }
 
@@ -100,16 +113,21 @@ Future<void> openCouncilPage(
   ValueChanged<Council>? onChanged,
   DateTime Function()? clock,
 }) {
-  return Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (route) => councilPage(
-        repository: repository,
-        idOrSlug: idOrSlug,
-        handoffs: handoffs,
-        tab: tab,
-        onChanged: onChanged,
-        clock: clock,
-        onBack: () => Navigator.of(route).pop(),
+  // Through the shell, so the bottom bar under the page (the handoffs' frame) still reaches its tabs.
+  return AppShell.push<void>(
+    context,
+    (route) => SitePlace(
+      path: '/councils/$idOrSlug',
+      child: handoffs.pageWrap(
+        councilPage(
+          repository: repository,
+          idOrSlug: idOrSlug,
+          handoffs: handoffs,
+          tab: tab,
+          onChanged: onChanged,
+          clock: clock,
+          onBack: () => Navigator.of(route).pop(),
+        ),
       ),
     ),
   );
@@ -209,6 +227,10 @@ class _CouncilScreenState extends State<CouncilScreen> {
       title: 'Council',
       onBack: widget.onBack,
       onBell: _bell,
+      actions: [
+        if (_h.manage != null && page.council != null)
+          ManagePencil(manage: _h.manage!, id: page.council!.id, label: 'Manage council'),
+      ],
       unread: page.unread,
       onRefresh: page.refresh,
       controller: _scroll,
@@ -223,9 +245,9 @@ class _CouncilScreenState extends State<CouncilScreen> {
       return [
         CommunityNotice(
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load this council",
+          title: 'Unable to Load This Council',
           body: page.error ?? 'Something went wrong.',
-          action: 'Try again',
+          action: 'Try Again',
           onAction: page.refresh,
         ),
       ];
@@ -286,7 +308,7 @@ class _CouncilScreenState extends State<CouncilScreen> {
           const SizedBox(height: 16),
           ChapterSectionFrame(
             sectionKey: _keys[CouncilSection.overview],
-            title: 'About this council',
+            title: 'About This Council',
             child: CouncilOverviewSection(blocks: detail.about, segments: c.segments),
           ),
           ChapterSectionFrame(
@@ -297,7 +319,7 @@ class _CouncilScreenState extends State<CouncilScreen> {
           ),
           ChapterSectionFrame(
             sectionKey: _keys[CouncilSection.leadership],
-            title: 'Council leadership',
+            title: 'Council Leadership',
             count: detail.leads.length,
             child: CouncilLeadershipSection(
               leads: detail.leads,
@@ -314,13 +336,13 @@ class _CouncilScreenState extends State<CouncilScreen> {
           ),
           ChapterSectionFrame(
             sectionKey: _keys[CouncilSection.knowledge],
-            title: 'Knowledge library',
+            title: 'Knowledge Library',
             count: page.resources.items.length,
             child: CouncilKnowledgeSection(downloader: _h.downloader, opener: _h.opener),
           ),
           ChapterSectionFrame(
             sectionKey: _keys[CouncilSection.updates],
-            title: 'News & updates',
+            title: 'News & Updates',
             count: page.updates.items.length,
             child: const CouncilUpdatesSection(),
           ),
@@ -418,7 +440,7 @@ class _Hero extends StatelessWidget {
                   Flexible(child: Text(c.name, style: CommunityText.cardTitleLarge)),
                   const SizedBox(width: 6),
                   const Tooltip(
-                    message: 'Official ICR council',
+                    message: 'Official ICR Council',
                     child: Icon(LucideIcons.badgeCheck, size: 18, color: AppColors.primary),
                   ),
                 ],
@@ -455,7 +477,7 @@ class _Hero extends StatelessWidget {
                         ? Row(
                             children: [
                               CommunityPill(
-                                label: lead ? 'Council lead' : 'Joined',
+                                label: lead ? 'Council Lead' : 'Joined',
                                 icon: LucideIcons.check,
                                 fill: CommunityColors.green50,
                                 style: CommunityText.pill.copyWith(color: CommunityColors.green700),

@@ -29,6 +29,9 @@ import 'widgets/place_status.dart';
 import 'widgets/run_tile.dart';
 import 'course_checkout.dart';
 
+/// The website's page for [course] (`/learning/professional-development/<code>`), which the app opens as this sheet.
+String courseSitePath(Course course) => '/learning/professional-development/${course.code}';
+
 /// Opens a course over the list, as the Course page design.
 Future<void> showCourseSheet(BuildContext context, Course course) async {
   final learning = context.read<LearningController>();
@@ -36,6 +39,7 @@ Future<void> showCourseSheet(BuildContext context, Course course) async {
     ..load();
   await showDetailSheet<void>(
     context,
+    place: courseSitePath(course),
     body: (_) => ChangeNotifierProvider.value(value: controller, child: const CourseSheetBody()),
     bottomBar: (_) => ChangeNotifierProvider.value(value: controller, child: const CourseSheetBar()),
   );
@@ -177,7 +181,7 @@ class CourseSheetBody extends StatelessWidget {
             ContactBlock(
               contact: contact,
               email: contact.email ?? icrEnquiryEmail,
-              talkLabel: contact.whatsapp != null ? "let's talk on whatsapp" : 'ask the institute',
+              talkLabel: contact.whatsapp != null ? "Let's Talk on WhatsApp" : 'Ask the Institute',
               onTalk: () =>
                   contact.whatsapp != null ? openUrl(context, contact.whatsapp!) : askInstitute(context, controller),
               onEmail: () => openUrl(context, mailTo(contact.email ?? icrEnquiryEmail, course)),
@@ -307,7 +311,7 @@ class CourseSheetBody extends StatelessWidget {
       _write(context, controller, EnquiryKind.inHouse, 'In-house delivery: ');
 }
 
-/// The bar under the sheet: the brochure glyph and the short "add to cart".
+/// The bar under the sheet: the brochure glyph and the short button, in Title Case ("Enrol Now").
 class CourseSheetBar extends StatelessWidget {
   const CourseSheetBar({super.key});
 
@@ -316,9 +320,11 @@ class CourseSheetBar extends StatelessWidget {
     final controller = context.watch<CourseSheetController>();
     final course = controller.course;
     return CourseBottomBar(
-      label: course.enrolled ? course.enrolment!.status.label.toLowerCase() : controller.ctaLabel.toLowerCase(),
+      label: titleCase(course.enrolled ? course.enrolment!.status.label : controller.ctaLabel),
       icon: course.enrolled ? LucideIcons.check : Symbols.shopping_bag,
-      enabled: controller.canAct,
+      // A place already held is no button (bug sheet #15, 9 Nov 2026: "Place requested" answered a tap with
+      // nothing it could do); Withdraw sits in the body.
+      enabled: controller.canAct && !course.enrolled,
       held: course.enrolled,
       onAction: () => CourseSheetBody.addToCart(context, controller),
       onBrochure: () => CourseSheetBody.openBrochure(context, controller),
@@ -480,7 +486,7 @@ class _SelectDateRow extends StatelessWidget {
       // No fixed height: the row is as tall as its text (17 dp at 12 sp, not the design's 16).
       child: Row(
         children: [
-          Text('Select Date', style: LearningText.selectDate),
+          Text('Select Batch', style: LearningText.selectDate),
           const Spacer(),
           if (schedule != null)
             Row(

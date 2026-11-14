@@ -10,7 +10,7 @@ export '../feed/feed_models.dart' show FeedPicture;
 export 'screening.dart' show ScreeningQuestion, ScreeningType;
 
 enum WorkMode {
-  onsite('On-site'),
+  onsite('On-Site'),
   remote('Remote'),
   hybrid('Hybrid');
 
@@ -26,8 +26,8 @@ enum WorkMode {
 }
 
 enum EmploymentType {
-  fullTime('Full-time'),
-  partTime('Part-time'),
+  fullTime('Full-Time'),
+  partTime('Part-Time'),
   contract('Contract'),
   internship('Internship'),
   temporary('Temporary'),
@@ -120,6 +120,21 @@ class JobCompany {
           cover: cover ?? more.cover,
           legalName: legalName ?? more.legalName,
         );
+}
+
+/// Where the member sits on a company's hiring team, by any of their memberships (`HIRING_TEAM_ROLES`). Nobody on
+/// it applies to the company's jobs: the website hides Apply and the API refuses the application.
+enum HiringTeamSeat {
+  /// Not on it: the job is one to apply to.
+  none,
+
+  /// Posts its jobs (an admin, office admin or recruiter of it): manages the job rather than applies to it.
+  poster,
+
+  /// One of its hiring managers (since 14 Nov 2026): sits on its interview panels.
+  hiringManager;
+
+  bool get onTeam => this != none;
 }
 
 /// The person a job names as its contact.
@@ -398,8 +413,8 @@ class CompanyPeople {
   String? get sentence {
     if (names.isEmpty) return null;
     return others <= 0
-        ? '${names.first} from ICR works at this organization.'
-        : '${names.first} and $others other${others == 1 ? '' : 's'} from ICR work at this organization.';
+        ? '${names.first} from ICR works at this company.'
+        : '${names.first} and $others other${others == 1 ? '' : 's'} from ICR work at this company.';
   }
 }
 
@@ -536,11 +551,11 @@ class JobApplication {
   /// "In screening", as the member reads it.
   String get stageLabel => switch (stage) {
     'APPLIED' => 'Applied',
-    'SCREENING' => 'In screening',
+    'SCREENING' => 'In Screening',
     'INTERVIEW' => 'Interview',
-    'OFFER' => 'Offer made',
+    'OFFER' => 'Offer Made',
     'HIRED' => 'Hired',
-    'REJECTED' => 'Not selected',
+    'REJECTED' => 'Not Selected',
     'WITHDRAWN' => 'Withdrawn',
     _ => stage,
   };

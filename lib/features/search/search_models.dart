@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 /// What a search hit is. Each kind is one source the global search asks and one
 /// chip on the results page.
 enum SearchKind {
-  feature('In the app', 'In the app', Icons.apps_rounded),
+  feature('In the App', 'In the App', Icons.apps_rounded),
   person('People', 'Person', Icons.person_outline),
   job('Jobs', 'Job', Icons.work_outline),
   mentor('Mentors', 'Mentor', Icons.school_outlined),
   course('Courses', 'Course', Icons.menu_book_outlined),
-  supplier('Companies & suppliers', 'Supplier', Icons.storefront_outlined),
+  supplier('Companies & Suppliers', 'Supplier', Icons.storefront_outlined),
   event('Events', 'Event', Icons.event_outlined),
   discussion('Discussions', 'Discussion', Icons.forum_outlined),
   document('Documents', 'Document', Icons.description_outlined);
@@ -23,7 +23,7 @@ enum SearchKind {
   final IconData icon;
 
   /// "See all people", and for the app's own places "More in the app".
-  String get seeAll => this == feature ? 'More in the app' : 'See all ${plural.toLowerCase()}';
+  String get seeAll => this == feature ? 'More in the App' : 'View All $plural';
 
   /// The chip row's order, after "All".
   static const chips = [person, job, course, mentor, supplier, event, discussion, document, feature];

@@ -8,7 +8,7 @@ No Figma design exists for this screen. Since 27 Oct 2026 it is drawn like **the
   - **Chips** (LinkedIn's): **All**, **Unread (n)**, then one short chip for each kind of notification that has a row among those loaded (Messages, Jobs, Requirements, Mentoring, Learning, Events, Community, Membership… `chipLabelOf`, in the preferences' order). The API has no category filter, so a kind's chip filters what is loaded and reads further pages while fewer than 8 of its rows are in view (`NotificationsController.selectCategory`). Unread asks `unread=true`.
   - **Rows** grouped **Today · This week · Earlier** (sentence case, 16 sp) by the reader's own midnight, newest first, a page of 20 at a time (`GET /notifications?page&limit=20[&unread=true]`), more by scrolling near the end or "Show older notifications". Pull to refresh reads the list and the count again.
   - **A row** (`NotificationRow`): a **48 dp** photo (initials without one) with the category's glyph on its corner when a person is behind it; the company's **logo** when the message was sent as a company's inbox (`actorCompany`); the category's tinted glyph alone for a platform notice. The sentence at 14 sp with the person or company in bold (the API stores the sentence with the name already in it, so the bold is the name found inside it), the body under it (12 sp, two lines), "For <Company>" only for someone who works for more than one; at the right the **short age** (`compactAge`: now, 42m, 3h, 2d, 1w, 4mo) with a blue dot while unread, and a **⋮**.
-  - **The ⋮ sheet**: **Mark as read** (only on an unread row; the API has no "unread" and no delete, so neither is offered), **Turn off <kind> notifications** (that kind's in-app switch through `PUT /notifications/preferences`, one category; not offered for the always-sent kinds: payments, support, security), and **Notification settings**.
+  - **The ⋮ sheet**: **Mark as read** (only on an unread row; the API has no "unread" and no delete, so neither is offered), **Turn off <kind> notifications** (that kind's in-app switch through `PUT /notifications/preferences`, one category; not offered for the always-sent kinds: payments, support, security) — or **Turn on <kind> notifications** when the kind is already off (since 9 Nov 2026, bug sheet #17: the sheet kept offering Turn off; the preferences are read before the sheet opens so it knows which way the switch stands) — and **Notification settings**.
   - **The gear** (and "Notification settings") opens the **Preferences** view: every category with an in-app and an e-mail switch; a switch moves at once and saves alone, a refusal puts it back and shows why with Dismiss. Payments, Support and Security are "Always sent": on, disabled, never sent to the API. The gear again goes back to the list.
   - **Grouped by the API**: a thread with several unread messages is one row, "Sarah Jenkins sent you 3 messages" (`count`); the app shows the sentence the API worded.
   - **Preferences** tab: every category (`GET /notifications/preferences`), an in-app and an e-mail switch each; a switch moves at once and saves alone (`PUT /notifications/preferences`, one category), a refusal puts it back and shows why with Dismiss. Payments, Support and Security are "Always sent": on, disabled, never sent to the API.
@@ -92,3 +92,37 @@ None to the phone's browser. An ICR page the app has no screen for (13 kinds: th
 
 - **No push.** The website's bell is pushed `notifications:changed` over a socket; the app has no socket.io client (not in `pubspec.yaml`, which is the lead's), so the bell is read every 60 s and after any read. A phone push (FCM) needs a Firebase project and server side: not built.
 - **The list sends only the page**, not the target's kind and id; the app reads them back from the page (`NotificationTarget.parse`, tested against every kind the API can send). If the API ever adds `target` to `NotificationDto` the parse can go.
+
+## 9 Nov 2026 (bug sheet)
+
+* **#17** The ⋮ sheet offers **Turn on <kind> notifications** (key `note-menu-on`, `turnOnCategory`) for a kind whose in-app switch is off, in place of Turn off; the preferences are read before the sheet opens (`categoryOff`).
+* **#23** A notice a company sent names the company first: `NotificationRow` draws "<Company> · Application update" when the title does not already carry the company's name (`actorCompany`).
+* **#11, #24, #26** were fixed on 7 Nov (the web view's `/robots.txt` priming page never shows; an institute's enquiry notification opens the app's Partner enquiries; Saathi's About ICR is the app's own page).
+
+## 13 Nov 2026: copy refined to the client's standard
+
+Wording only (the client's 13 Nov marked-up manual). A notification's own title and body come from the API and are not
+touched; keys and behaviour are unchanged (the switches' keys still read `pref-<id>-In-app`). The **Always sent** badge
+stays as the Settings screen's preferences have it.
+
+| Where | Old | New |
+|---|---|---|
+| Bar, sheet rows, headings (8 strings, case only but the column) | Mark all read · Mark as read · Turn on/off <kind> notifications · Notification settings · Notification preferences · This week · In-app (column heading) · Getting started (chip) | Mark All Read · Mark as Read · Turn On/Off <Kind> Notifications · Notification Settings · Notification Preferences · This Week · In App (as the Settings screen's preferences say it) · Getting Started |
+| The kinds' names in the preferences (12, case only; the same list in `account_labels.dart` for Settings) | Jobs and applications · Requirements and bids · Courses and assignments · Community and articles · Verification and credentials · Team and company · Membership and rewards · Getting started · Other updates · Payments and receipts · Support requests · Account and security | Jobs and Applications · Requirements and Bids · Courses and Assignments · Community and Articles · Verification and Credentials · Team and Company · Membership and Rewards · Getting Started · Other Updates · Payments and Receipts · Support Requests · Account and Security |
+| "Other Updates" hint | Anything else ICR tells you about. | Other updates from ICR. |
+| List, failed | Your notifications could not be loaded. / Retry | Unable to Load Notifications / Try Again |
+| List, empty | No notifications yet / "Replies, applications, bookings and rewards will show up here." | No Notifications Yet / "… will appear here." |
+| Unread, empty | Nothing unread / "You have read everything. Older notifications are under All." | No Unread Notifications / "You have read all notifications. Older notifications are under All." |
+| A kind, empty | Nothing under <kind> yet / "Notifications of this kind will show up here." | No <Kind> Notifications Yet / "Notifications of this type will appear here." |
+| More to load | Show older notifications | View More |
+| ⋮ sheet hints | They are off in the app at the moment. · You can turn them back on in the settings. | They are currently off in the app. · You can turn them on again in Notification Settings. |
+| Preferences, intro | Choose what reaches you in the app and by email. … | Select the notifications you receive in the app and by email. … |
+| Preferences, failed | Your notification preferences could not be loaded. · That setting could not be found. · Your change could not be saved. Try again. | Unable to Load Notification Preferences (the title; the snackbar keeps the sentence "Unable to load your notification preferences.") · Unable to find that setting. · Unable to save your change. Try again. |
+| After a company switch | Now working as Acme | Now working as Acme. |
+| A company the person has left | You're no longer part of Acme, so this can't open as it. | You are no longer a member of Acme, so this notification cannot be opened. |
+| A record that is gone | This is no longer available. | This item is no longer available. |
+| A row for a staff console (the "staff tools" sentence) | That one is for ICR's staff tools, which aren't in the app. | This notification is for ICR staff tools, which are not available in the app. |
+
+## The bell follows the live count (13 Nov 2026)
+
+Owner: "Notification red dot even if no unread count, it stays". Each screen read its own unread count once, when it loaded, and handed that number to its bell, so the dot stayed after the notifications were read. Every bell (`BellButton` in every `TitleBar`, the Home header's, the Events header's) is now drawn through `LiveUnread` (`notifications/unread_counts.dart`): it shows the app-wide `UnreadCounts` (the provider, or `UnreadCounts.current` for a route pushed beside it, set by `InboxHost`) and uses the screen's own number only where there is none (a test, the demo). A new bell goes through `LiveUnread` or `bellUnread(context)`, never a screen's own count. Proved by `test/bell_live_count_test.dart`.

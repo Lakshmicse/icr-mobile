@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -5,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../../core/api/api_error.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/auth/social_sign_in.dart';
-import '../../core/util/links.dart';
 import 'auth_widgets.dart';
 import 'forgot_password_screen.dart';
 import 'linkedin_style.dart';
@@ -16,12 +16,13 @@ final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
 /// Sign-in, laid out as LinkedIn's own sign-in page is (`linkedin_style.dart`),
 /// in ICR's colours and following the phone's light or dark setting: the logo,
-/// a big "Sign in" with a line under it, email and password
+/// a big "Sign In" with a line under it, email and password
 /// (`POST /auth/login`) with "Show" inside the password field, "Forgot
-/// password?", one pill button, "or", then "Continue with LinkedIn" and
-/// "Continue with Google" through the API's own OAuth flow, and "New to ICR?
-/// Join now" at the foot. "Join now" opens the three sign-up screens and "Forgot
-/// password?" asks for the reset email, both in the app; someone new arriving
+/// Password?", one pill button, then under a hairline "Sign In Using" over the
+/// LinkedIn and Google pills (owner, 12 Nov 2026: moved under the form, headed,
+/// with larger marks) through the API's own OAuth flow, and "New to ICR?
+/// Join Now" at the foot. "Join Now" opens the three sign-up screens and "Forgot
+/// Password?" asks for the reset email, both in the app; someone new arriving
 /// through Google or LinkedIn finishes joining in the app too.
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -30,7 +31,7 @@ class SignInScreen extends StatefulWidget {
   State<SignInScreen> createState() => _SignInScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class _SignInScreenState extends State<SignInScreen> with WidgetsBindingObserver {
   final _form = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
@@ -47,19 +48,32 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final auth = context.read<AuthController>();
       if (auth.takeExpiredNotice()) {
         setState(() => _error = 'Your session has ended. Sign in again to continue.');
       }
-      final available = await auth.configuredProviders();
-      if (mounted) setState(() => _available = available);
+      await _readProviders();
     });
+  }
+
+  /// Which of Google and LinkedIn this server offers: only those are drawn. Asked when the page opens and again
+  /// each time the app comes back to the front, so a provider the server gains shows without a new build.
+  Future<void> _readProviders() async {
+    final available = await context.read<AuthController>().configuredProviders();
+    if (mounted && !setEquals(available, _available)) setState(() => _available = available);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _socialBusy == null) _readProviders();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _email.dispose();
     _password.dispose();
     _passwordFocus.dispose();
@@ -88,10 +102,6 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _continueWith(SocialProvider provider) async {
-    if (!_available.contains(provider)) {
-      showMessage(context, '${provider.label} sign-in is not available yet');
-      return;
-    }
     FocusScope.of(context).unfocus();
     setState(() {
       _socialBusy = provider;
@@ -153,20 +163,20 @@ class _SignInScreenState extends State<SignInScreen> {
               Text('New to ICR? ', style: LiType.body(c)),
               LiLink(
                 key: const Key('signIn.create'),
-                label: 'Join now',
+                label: 'Join Now',
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
                 onTap: _join,
               ),
             ],
           ),
           children: [
-            Text('Sign in', style: LiType.title(c)),
+            Text('Sign In', style: LiType.title(c)),
             const SizedBox(height: 6),
-            Text('Stay updated on your professional world.', style: LiType.subtitle(c)),
+            Text('Stay connected with the CRE & FM community.', style: LiType.subtitle(c)),
             const SizedBox(height: 28),
             LiTextField(
               fieldKey: const Key('signIn.email'),
-              label: 'Email',
+              label: 'Email Address',
               controller: _email,
               enabled: !_busy,
               keyboardType: TextInputType.emailAddress,
@@ -176,8 +186,8 @@ class _SignInScreenState extends State<SignInScreen> {
               onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
               validator: (value) {
                 final email = value?.trim() ?? '';
-                if (email.isEmpty) return 'Please enter your email address.';
-                if (!_emailPattern.hasMatch(email)) return 'Please enter a valid email address.';
+                if (email.isEmpty) return 'Enter your email address.';
+                if (!_emailPattern.hasMatch(email)) return 'Enter a valid email address.';
                 return null;
               },
             ),
@@ -192,20 +202,23 @@ class _SignInScreenState extends State<SignInScreen> {
               textInputAction: TextInputAction.done,
               autofillHints: const [AutofillHints.password],
               autocorrect: false,
-              suffix: LiShowButton(shown: _showPassword, onPressed: () => setState(() => _showPassword = !_showPassword)),
+              suffix: LiShowButton(
+                shown: _showPassword,
+                onPressed: () => setState(() => _showPassword = !_showPassword),
+              ),
               onFieldSubmitted: (_) => _submit(),
-              validator: (value) => (value ?? '').isEmpty ? 'Please enter your password.' : null,
+              validator: (value) => (value ?? '').isEmpty ? 'Enter your password.' : null,
             ),
             const SizedBox(height: 4),
             Align(
               alignment: Alignment.centerLeft,
-              child: LiLink(key: const Key('signIn.forgot'), label: 'Forgot password?', onTap: _forgot),
+              child: LiLink(key: const Key('signIn.forgot'), label: 'Forgot Password?', onTap: _forgot),
             ),
             Align(
               alignment: Alignment.centerLeft,
               child: AuthCheckbox(
                 key: const Key('signIn.remember'),
-                label: 'Remember me',
+                label: 'Remember Me',
                 value: _rememberMe,
                 onChanged: _busy ? null : (v) => setState(() => _rememberMe = v),
               ),
@@ -214,24 +227,27 @@ class _SignInScreenState extends State<SignInScreen> {
             SizedBox(height: _error == null ? 16 : 14),
             LiPrimaryButton(
               key: const Key('signIn.submit'),
-              label: 'Sign in',
-              busyLabel: 'Signing in…',
+              label: 'Sign In',
+              busyLabel: 'Signing In…',
               busy: _submitting,
               onPressed: _socialBusy == null ? _submit : null,
             ),
-            const SizedBox(height: 22),
-            const LiOrDivider(),
-            const SizedBox(height: 22),
-            for (final (i, provider) in SocialProvider.values.indexed) ...[
-              if (i > 0) const SizedBox(height: 12),
-              LiSocialButton(
-                key: Key('signIn.${provider.name}'),
-                provider: provider,
-                available: _available.contains(provider),
-                busy: _socialBusy == provider,
-                onPressed: _busy ? null : () => _continueWith(provider),
-              ),
-            ],
+            SocialProvidersBlock(
+              above: [
+                const SizedBox(height: 24),
+                Divider(color: c.hairline, thickness: 1, height: 1),
+                const SizedBox(height: 20),
+              ],
+              heading: 'Sign In Using',
+              headingStyle: LiType.subtitle(c),
+              keyPrefix: 'signIn',
+              style: SocialPillStyle(border: c.fieldBorder, text: c.ink, spinner: c.link, isDark: c.isDark),
+              width: LiScaffold.contentWidth(context),
+              available: _available,
+              busy: _socialBusy,
+              enabled: !_busy,
+              onPressed: _continueWith,
+            ),
           ],
         ),
       ),

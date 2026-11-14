@@ -138,8 +138,8 @@ class _ReviewAnswersScreenState extends State<ReviewAnswersScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Notice(
                         text: result.missing == 1
-                            ? '1 question from this sitting has since been removed from the bank, so it is not shown here. Your score still counts it.'
-                            : '${result.missing} questions from this sitting have since been removed from the bank, so they are not shown here. Your score still counts them.',
+                            ? '1 question from this attempt has since been removed from the bank, so it is not shown here. Your score still counts it.'
+                            : '${result.missing} questions from this attempt have since been removed from the bank, so they are not shown here. Your score still counts them.',
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -149,7 +149,7 @@ class _ReviewAnswersScreenState extends State<ReviewAnswersScreen> {
                     child: result.review.isEmpty || shown.isEmpty
                         ? Padding(
                             padding: const EdgeInsets.all(24),
-                            child: Center(child: Text('Nothing here.', style: ExamText.body)),
+                            child: Center(child: Text('No questions to show.', style: ExamText.body)),
                           )
                         : ReviewCard(
                             item: result.review[index],

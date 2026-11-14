@@ -56,7 +56,7 @@ Widget tests are in `test/learning_test.dart` (a recording fake repository; brow
 | Suggest A Date & Location | the enquiry form (a date and location request, sent as "Date and location request: …"); ICR's own course (no institute) opens `/contact?subject=…` | *"Suggest A Date & Location" sends a date and location request…*, *ICR's own course has no institute…*; live *Suggest A Date, ask the institute and in-house reach the institute as leads, read back as staff*, and *ICR's own certification programmes have no institute: the API refuses…* |
 | ADD TO CART (free) | `POST …/enroll` with the selected run; the list is told; the button gives way to the place's status line and Withdraw | *ADD TO CART on a free course takes the selected run…*, *a refused place is put back…*; live *ADD TO CART on a free course takes the selected run as Pooja…* (reads it back through a fresh repository, checks My courses and a re-opened sheet, then withdraws it and checks the button is "ADD TO CART" again) |
 | ADD TO CART (paid) | opens the website enrolment panel; takes nothing | *ADD TO CART on a paid course goes to the website…* |
-| A place already held | the big button is replaced by the place itself, as the website's enrolment panel shows it: a tinted banner with the website's sentence (**pending** — blue, "You are pending on London, UK, Sep 14 - 18, 2027 — the ICR team will confirm your place."; **waitlisted** — amber, "… we will be in touch if a seat frees up."; **confirmed** — green, "You are confirmed on …."; **completed** — "You have completed this course.") and a red **Withdraw** under it. The pinned bar keeps its solid "place requested" / "enrolled" button, which says the same in a snackbar | *a held place reads CONFIRMED on its tile and the status line says so…*; live *holding two places on one course is refused by the API* |
+| A place already held | the big button is replaced by the place itself, as the website's enrolment panel shows it: a tinted banner with the website's sentence (**pending** — blue, "You are pending on London, UK, Sep 14 - 18, 2027 — the ICR team will confirm your place."; **waitlisted** — amber, "… we will be in touch if a seat frees up."; **confirmed** — green, "You are confirmed on …."; **completed** — "You have completed this course.") and a red **Withdraw** under it. The pinned bar keeps its solid "place requested" / "enrolled" button, **disabled** since 9 Nov 2026 (bug sheet #15: a tap on PLACE REQUESTED answered with nothing it could do; until then it repeated the status in a snackbar) | *a held place reads CONFIRMED on its tile and the status line says so…*; live *holding two places on one course is refused by the API* |
 | Withdraw | asks once ("Withdraw your request?" for a request or a waitlist place, "Withdraw your place?" for a confirmed one; "Keep it" sends nothing), then `DELETE …/enroll`; the held state clears at once, the course is read again so the run's seats are right, the date tile loses REQUESTED and ADD TO CART returns so the member can ask again, here or on another date. A paid place is refused and stays held, the API's sentence shown in the sheet | *a request is taken back after one question…*, *"Keep it" sends nothing*, *a confirmed place says it is given up*, *a paid place is refused in the API's own words and stays held*, *a waitlist place is told what happens next…*, *a completed course has nothing to withdraw*, *a place on no run names none*; the repository's *a place is taken back through the withdraw endpoint, by the course id* and *a paid place is refused by the API…* |
 | DOWNLOAD BROCHURE · the bar glyph | open **Get the brochure** (`widgets/brochure_sheet.dart`): name, email and phone prefilled from the account (`GET /auth/me`, six seconds at most; a read that fails leaves the fields blank and the buttons live — until 2 Nov 2026 it held the buttons for good), company optional; **View brochure** sends the lead and opens the PDF in the app's own viewer (`DocumentViewerScreen`, the library's; the bytes are read with the session and never saved), **Download instead** sends the lead and hands the file to the phone's browser. The lead is the institute's (`POST /learning/courses/:code/enquire`, name, email, phone, company, a message naming the course and how it was read) or, for a course ICR runs itself (no institute; the API refuses the course enquiry), ICR's contact desk (`POST /contact`, topic OTHER). A refusal is shown in the API's words and nothing opens; the form comes back prefilled with what was sent, and the same details go only once while the sheet is open. The viewer is opened with `secure: false`: a brochure is made to be passed around, so it is not screenshot-locked the way a library document is. With no brochure, a snackbar says so. (The owner's rule, 30 Oct 2026: no file without a lead, and a View that does not download — the plain link had the phone download the PDF with its own "Open in Notes / Download" popup.) | *DOWNLOAD BROCHURE asks who is reading, prefilled; Download sends the lead…*, *View brochure sends the lead and opens the PDF in the app…*, *the brochure form wants a name, a real email and a phone…*, *a course with no brochure says so…* |
 | show more / show less | unfolds the overview | *the overview folds after four lines…* |
@@ -145,3 +145,73 @@ Compared with the flattened design at 780 px (`python tool/design/compare.py fla
 Remaining differences: the kit's sheet handle (40 × 4 dp) is where the design has a 50 × 7 dp one; the quote's italic is synthesised (no italic Plex bundled); one certificate badge, not two, and a shorter paragraph on a live course (nothing true to fill the second); the live specialist's email line is ICR's, not the specialist's.
 
 Also found on the way: the pinned bar's fixed 123 dp button overflowed by 3 dp for a longer word ("enrolment closed"), which every certification programme shows; it now keeps 123 × 35 dp for "add to cart" and widens for longer labels (*the pinned bar's button is the design's 123 × 35 dp…*). Certification programmes have no runs, so their sheet reads "ENROLMENT CLOSED" although the API would take a course-level place (`POST …/enroll` without a run): that behaviour predates the grid and is unchanged.
+
+## 7 Nov 2026: no chip row
+
+The row of chips under the search (My courses, Mock exams, Certificates, My attempts, Flash cards, Knowledge center) is gone — owner: "remove this bar, let it be navigation through top 3 categories". The hub's tabs are the way around; the hub still turns My courses on and off through `setMineOnly`.
+
+## 9 Nov 2026 (bug sheet)
+
+* **#15** The course sheet's pinned bar is disabled once a place is held (`enabled: canAct && !enrolled`); the body's place banner and Withdraw stay.
+* **#2, #20, #34–#37** were done earlier: the brochure behind a lead form with View (30 Oct), the partner Apply banner only for someone it is for (`offerPartnerApplication`, 6 Nov), mock sets' Free/Paid chips only when both kinds exist, flash-card read-aloud, no chip row inside My courses, Share on a formula (8 Nov).
+
+## 12 Nov 2026: My Courses chips, the cards' share disc and the Credits label
+
+- **Chips under My Courses' search** (owner: "add the chips like Mock Exams, and other so that clicks will show those
+  course enrolled"): All, Mock Exams, Knowledge Assessments, Flashcards, ICR Programmes, Partner Programmes
+  (`MyCourseChips`, `myCourseGroups` in `learning_screen.dart`). A chip shows that group alone; one with nothing under it
+  says so ("No mock exams yet" …) with Show all. The same six always show, whatever the member holds.
+- **The share disc on every learning card works** (it had no action anywhere): the phone's share sheet with the card's
+  name and its website page (`learning/learning_links.dart`: `LearningLinks.course|group|paper|deck`,
+  `shareLearningLink`), and a 36 dp target around the 19 dp disc. A card with nothing to share draws no disc.
+- **"Credits" is a small white corner label** (`LearnCard.tag`, `HubText.tag`, 11 dp); the hanging tab in 18 dp type
+  stays the "ICR" mark of a certification (`LearnCard.badge`).
+
+## 13 Nov 2026: copy refined to the client's standard
+
+Wording only, to the client's 13 Nov standard (Title Case for the names of things, sentence case with a full stop for
+sentences, plain international English, no dash inside a sentence). The My Courses chips, the shelf and section titles
+they filter by and the catalogue's headings keep the client's 12 Nov words; the chips and `myCourseGroupNotices` still
+match.
+
+State titles are headings (the lead's decision the same day): an empty-state, locked-state or error title is in Title Case with no full stop, and the line under it stays a sentence.
+
+| Where | Old | New |
+| --- | --- | --- |
+| Load error (title) | Couldn't load courses | Unable to Load Courses |
+| A My Courses chip with nothing, while searching | Nothing here matches | No Matches Found |
+| Empty-state titles to Title Case: 8 strings | No courses match · No courses yet · No mock exams yet … | No Courses Match · No Courses Yet · No Mock Exams Yet … |
+| Empty-state bodies: 7 strings | … show up here. | … will appear here. |
+| The Flashcards chip's body | Flashcard decks that come with your plan or your courses show up here. | Flashcard decks included with your plan or your courses will appear here. |
+| Buttons to Title Case: 4 strings | Show all · Clear search · Browse courses · Try again | Show All · Clear Search · Browse Courses · Try Again |
+| A certification's second section | Related courses from our partners | Related Courses from Our Partners |
+| Course sheet, links and buttons to Title Case: 9 strings | show more · view full outline · let's talk on whatsapp · request corporate training · see all 41 reviews … | Show More · View Full Outline · Let's Talk on WhatsApp · Request Corporate Training · See All 41 Reviews … |
+| Course sheet, the pinned bar (it lower-cased its words) | enrol now · enrolled · on the waitlist | Enrol Now · Enrolled · On the Waitlist (`titleCase` in `learning_format.dart`) |
+| The Suggest tile | Suggest A Date & Location | Suggest a Date & Location |
+| A module with no lessons | Detail for this module is on its way. | Details for this module will be available soon. |
+| Place banner, waitlisted | You are waitlisted on … — we will be in touch if a seat frees up. | You are waitlisted on …. We will contact you if a seat becomes available. |
+| Place banner, pending | You are pending on … — the ICR team will confirm your place. | You are pending on …. The ICR team will confirm your place. |
+| Withdraw dialog, titles | Withdraw your place? · Withdraw your request? | Withdraw Your Place? · Withdraw Your Request? |
+| Withdraw dialog, a held place | You will give up your place on X. You can ask for one again afterwards, if seats remain. | You will lose your place on X. You can request a place again if seats remain. |
+| Withdraw dialog, a request | Your request for X will be taken back. You can ask for a place again afterwards. | Your request for X will be withdrawn. You can request a place again later. |
+| Withdraw dialog, the button that keeps it | Keep it | Keep It |
+| After a failed payment | The payment didn't go through. Nothing was charged. | The payment failed. No amount was charged. |
+| After an unfinished payment | The payment wasn't completed. If you did pay, your place is confirmed within a minute. | The payment was not completed. If you paid, your place will be confirmed within a minute. |
+| Brochure form, title and buttons | Get the brochure · View brochure · Download instead | Get the Brochure · View Brochure · Download Instead |
+| Brochure form, lead | Tell us who you are and the brochure is yours to read here or keep on your phone. | Enter your details to view the brochure here or save it to your phone. |
+| Brochure form, fields | Your name · Phone · Company (optional) | Name · Mobile Number · Company (Optional) |
+| Brochure form, what is missing | Your name, please. · Enter the email address the brochure goes to. · Your phone number, so the institute can call you back. | Enter your name. · Enter the email address to send the brochure to. · Enter your mobile number so the institute can call you. |
+| Enquiry forms, title and labels | Suggest a date & location · Your question · Where and when · What you need · Your company (optional) · People to train (optional) | Suggest a Date & Location · Your Question · Where and When · What You Need · Company (Optional) · People to Train (Optional) |
+| Enquiry forms, help line (3) | … Your name and email go with the message. | … Your name and email are sent with the message. |
+| Enquiry forms, what is missing | Say a little more about what you would like to know. · How many people? A whole number from 1. | Add more detail to your message. · Enter the number of people as a whole number, 1 or more. |
+
+Left as they were: the ALL-CAPS labels of the design (ENROL NOW, DOWNLOAD BROCHURE, CONFIRMED, PREMIUM CERTIFICATION), which
+are a type treatment, not wording; status words on tiles and pills (Open, Limited, Place requested), in sentence case as
+the client's "Not added"; the enquiry prefixes and the brochure request's message, which are sent to the API; the
+"About the Certificate" paragraph.
+
+Tests: the widget tests that quote these words were updated with them (`test/learning_test.dart`,
+`test/learning_opened_test.dart`, the live files by edit only), and *the pinned bar's words are in Title Case, small
+words kept lower-case* was added. The enquiry test now expects "Request Corporate Training" twice once the form is open
+(the button and the form's title read the same). Goldens `learning_grid`, `course_sheet`, `course_sheet_live`,
+`learning_hub_my_courses` and `partner_courses` were re-recorded for the wording.

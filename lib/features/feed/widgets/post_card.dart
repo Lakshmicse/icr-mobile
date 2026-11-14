@@ -12,6 +12,7 @@ import '../../forum/mentions/mention_text.dart';
 import '../../forum/mentions/mention_widgets.dart';
 import '../feed_models.dart';
 import '../feed_styles.dart';
+import '../repost_quote.dart';
 import 'feed_avatar.dart';
 import 'poll_view.dart';
 
@@ -42,7 +43,24 @@ class PostCard extends StatelessWidget {
     this.onOpenMention,
     this.isOwn = false,
     this.onVoters,
+    this.quotedLoader,
+    this.onQuotedVote,
+    this.onOpenQuoted,
+    this.onOpenVideo,
   });
+
+  /// A video tile, tapped: gets the video's URL to play.
+  final ValueChanged<String>? onOpenVideo;
+
+  /// Reads the discussion a repost quotes (by slug), so the original is drawn inside the repost with its photos
+  /// and poll (owner, 11 Nov 2026); absent, the repost's words show the quote as text.
+  final Future<FeedPost?> Function(String slug)? quotedLoader;
+
+  /// A vote on the quoted original's poll.
+  final void Function(FeedPost original, String optionId)? onQuotedVote;
+
+  /// The quoted original, tapped: its discussion.
+  final ValueChanged<FeedPost>? onOpenQuoted;
 
   /// A member tagged in the words ("@Name") was tapped: gets their id. Absent, the names are plain.
   final ValueChanged<String>? onOpenMention;
@@ -88,6 +106,10 @@ class PostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final poll = post.poll;
+    // A repost's quote lines are drawn as the original itself when the screen can read it; the words left are
+    // the reposter's own.
+    final quote = quotedLoader == null ? null : RepostQuote.of(post.body);
+    final body = quote == null ? post.body : quote.rest;
     return ColoredBox(
       color: HomeLook.card,
       child: Column(
@@ -106,14 +128,9 @@ class PostCard extends StatelessWidget {
                   child: MentionText(text: post.title, style: poll != null ? HomeType.pollQuestion : HomeType.title),
                 ),
                 if (poll != null) ...[
-                  if (post.body.isNotEmpty) ...[
+                  if (body.isNotEmpty) ...[
                     const SizedBox(height: 2),
-                    MentionText(
-                      text: post.body,
-                      style: HomeType.pollHint,
-                      mentions: post.mentions,
-                      onOpen: onOpenMention,
-                    ),
+                    MentionText(text: body, style: HomeType.pollHint, mentions: post.mentions, onOpen: onOpenMention),
                   ],
                   const SizedBox(height: 10),
                   PollView(
@@ -124,13 +141,13 @@ class PostCard extends StatelessWidget {
                     onViewDiscussion: onOpen ?? onComments,
                   ),
                 ] else ...[
-                  if (post.body.isNotEmpty) ...[
+                  if (body.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     _Openable(
                       id: '${post.id}-body',
                       onOpen: onOpen,
                       child: _ClampedText(
-                        text: post.body,
+                        text: body,
                         style: HomeType.body,
                         moreStyle: HomeType.more,
                         mentions: post.mentions,
@@ -138,12 +155,26 @@ class PostCard extends StatelessWidget {
                       ),
                     ),
                   ],
+                  if (quote != null) ...[
+                    const SizedBox(height: 8),
+                    _QuotedPost(
+                      quote: quote,
+                      loader: quotedLoader!,
+                      onVote: onQuotedVote,
+                      onOpen: onOpenQuoted,
+                      onOpenVideo: onOpenVideo,
+                    ),
+                  ],
                   if (post.tags.isNotEmpty) ...[const SizedBox(height: 4), _Tags(tags: post.tags, onTag: onTag)],
                 ],
               ],
             ),
           ),
-          if (poll == null && post.images.isNotEmpty) ...[const SizedBox(height: 10), _PostImages(post: post)],
+          // The quoted original carries its own photos; a repost's copy of them is not drawn twice.
+          if (poll == null && quote == null && (post.images.isNotEmpty || post.videos.isNotEmpty)) ...[
+            const SizedBox(height: 10),
+            _PostImages(post: post, onOpenVideo: onOpenVideo),
+          ],
           _Footer(
             post: post,
             commentsOpen: commentsOpen,
@@ -157,6 +188,115 @@ class PostCard extends StatelessWidget {
           ?replies,
         ],
       ),
+    );
+  }
+}
+
+/// The discussion a repost quotes, drawn inside the repost as LinkedIn draws a shared post: a hairline box with the
+/// original's author, title, words, photos and poll, read by [loader]; a tap opens the original, and a vote on its
+/// poll is cast on the original. Until it is read, or when it is gone, the box carries the quote's author and title.
+class _QuotedPost extends StatelessWidget {
+  const _QuotedPost({required this.quote, required this.loader, this.onVote, this.onOpen, this.onOpenVideo});
+
+  final RepostQuote quote;
+  final Future<FeedPost?> Function(String slug) loader;
+  final void Function(FeedPost original, String optionId)? onVote;
+  final ValueChanged<FeedPost>? onOpen;
+  final ValueChanged<String>? onOpenVideo;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<FeedPost?>(
+      future: loader(quote.slug),
+      builder: (context, snap) {
+        final original = snap.data;
+        return Semantics(
+          button: original != null && onOpen != null,
+          label: 'Reposted from ${quote.author}: ${quote.title}',
+          // No box around the original (owner, 12 Nov 2026: "Remove the border like this?"): a hairline above it
+          // marks where the repost's own words end, as the rest of the feed draws its rules.
+          child: Material(
+            color: HomeLook.card,
+            shape: const Border(top: BorderSide(color: HomeLook.hairline)),
+            child: InkWell(
+              key: ValueKey('quoted:${quote.slug}'),
+              onTap: original == null || onOpen == null ? null : () => onOpen!(original),
+              child: original == null ? _quoteOnly() : _original(original),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _quoteOnly() => Padding(
+    padding: const EdgeInsets.all(12),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Reposted from ${quote.author}', style: HomeType.meta),
+        const SizedBox(height: 4),
+        Text(quote.title, style: HomeType.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+      ],
+    ),
+  );
+
+  Widget _original(FeedPost o) {
+    final poll = o.poll;
+    final headline = o.author.headline;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  FeedAvatar(photo: o.author.photo, initials: o.author.initials, size: 32, label: o.author.name),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          o.author.name,
+                          style: HomeType.name.copyWith(fontSize: 14),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (headline != null && headline.isNotEmpty)
+                          Text(headline, style: HomeType.headline, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(o.title, style: HomeType.title, maxLines: 3, overflow: TextOverflow.ellipsis),
+              if (o.body.isNotEmpty && poll == null) ...[
+                const SizedBox(height: 2),
+                Text(o.body, style: HomeType.body, maxLines: 3, overflow: TextOverflow.ellipsis),
+              ],
+              if (poll != null) ...[
+                const SizedBox(height: 8),
+                PollView(
+                  poll: poll,
+                  showLink: false,
+                  onVote: (option) => onVote?.call(o, option),
+                  onViewDiscussion: () => onOpen?.call(o),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (poll == null && (o.images.isNotEmpty || o.videos.isNotEmpty)) ...[
+          const SizedBox(height: 10),
+          _PostImages(post: o, onOpenVideo: onOpenVideo),
+        ],
+        const SizedBox(height: 12),
+      ],
     );
   }
 }
@@ -484,44 +624,104 @@ class _Tags extends StatelessWidget {
   }
 }
 
-/// The photos, across the whole card, as LinkedIn lays a post's picture.
+/// The photos and videos, across the whole card, as LinkedIn lays a post's media: one alone fills the width, more
+/// sit two across with "+N" on the second; a video tile carries a play glyph and opens the player.
 class _PostImages extends StatelessWidget {
-  const _PostImages({required this.post});
+  const _PostImages({required this.post, this.onOpenVideo});
 
   final FeedPost post;
+  final ValueChanged<String>? onOpenVideo;
 
   @override
   Widget build(BuildContext context) {
-    final images = post.images;
-    if (images.length == 1) {
+    final media = <_Media>[
+      for (final i in post.images) _Media(picture: i),
+      for (final v in post.videos) _Media(video: v),
+    ];
+    if (media.length == 1) {
+      final m = media.first;
       return AspectRatio(
         aspectRatio: 390 / 227,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            _Picture(picture: images.first),
-            if (post.imageCaption != null) Positioned(right: 12, bottom: 12, child: _Caption(text: post.imageCaption!)),
+            _MediaView(media: m, onOpenVideo: onOpenVideo),
+            if (m.picture != null && post.imageCaption != null)
+              Positioned(right: 12, bottom: 12, child: _Caption(text: post.imageCaption!)),
           ],
         ),
       );
     }
+    final more = media.length - 2 + post.morePhotos;
     return Row(
       children: [
-        Expanded(child: _Tile(picture: images[0])),
+        Expanded(
+          child: _Tile(media: media[0], onOpenVideo: onOpenVideo),
+        ),
         const SizedBox(width: 2),
         Expanded(
-          child: _Tile(picture: images[1], more: images.length - 2 + post.morePhotos),
+          child: _Tile(
+            media: media[1],
+            more: more,
+            moreLabel: post.videos.isEmpty ? '+$more photos' : '+$more more',
+            onOpenVideo: onOpenVideo,
+          ),
         ),
       ],
     );
   }
 }
 
-class _Tile extends StatelessWidget {
-  const _Tile({required this.picture, this.more = 0});
+/// One thing on a card: a photo, or a video (its URL).
+class _Media {
+  const _Media({this.picture, this.video});
 
-  final FeedPicture picture;
+  final FeedPicture? picture;
+  final String? video;
+}
+
+/// A photo as it is, or a video's dark tile with a play glyph that opens the player.
+class _MediaView extends StatelessWidget {
+  const _MediaView({required this.media, this.onOpenVideo});
+
+  final _Media media;
+  final ValueChanged<String>? onOpenVideo;
+
+  @override
+  Widget build(BuildContext context) {
+    final video = media.video;
+    if (video == null) return _Picture(picture: media.picture!);
+    return Semantics(
+      button: true,
+      label: 'Play video',
+      child: GestureDetector(
+        key: ValueKey('post-video:$video'),
+        behavior: HitTestBehavior.opaque,
+        onTap: onOpenVideo == null ? null : () => onOpenVideo!(video),
+        child: const ColoredBox(
+          color: Color(0xFF1F1F1F),
+          child: Center(
+            child: DecoratedBox(
+              decoration: BoxDecoration(color: Color(0xE6FFFFFF), shape: BoxShape.circle),
+              child: Padding(
+                padding: EdgeInsets.all(14),
+                child: Icon(LucideIcons.play, size: 28, color: Color(0xFF1F1F1F)),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Tile extends StatelessWidget {
+  const _Tile({required this.media, this.more = 0, this.moreLabel = '', this.onOpenVideo});
+
+  final _Media media;
   final int more;
+  final String moreLabel;
+  final ValueChanged<String>? onOpenVideo;
 
   @override
   Widget build(BuildContext context) {
@@ -530,10 +730,10 @@ class _Tile extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          _Picture(picture: picture),
+          _MediaView(media: media, onOpenVideo: onOpenVideo),
           if (more > 0) ...[
             const ColoredBox(color: AppColors.imageDim),
-            Center(child: Text('+$more photos', style: HomeType.morePhotos)),
+            Center(child: Text(moreLabel, style: HomeType.morePhotos)),
           ],
         ],
       ),
@@ -599,6 +799,16 @@ IconData reactionIcon(ReactionKind kind, {bool filled = false}) => switch (kind)
   ReactionKind.celebrate => filled ? Icons.celebration : LucideIcons.partyPopper,
   ReactionKind.support => filled ? Icons.volunteer_activism : LucideIcons.handHeart,
   ReactionKind.sustainable => filled ? Icons.eco : LucideIcons.leaf,
+};
+
+/// The colour of the count or word beside the reader's own reaction: its badge's colour, darkened where the badge
+/// is too pale to read as text.
+Color reactionInk(ReactionKind kind) => switch (kind) {
+  ReactionKind.like => AppColors.primary,
+  ReactionKind.insightful => AppColors.tertiary,
+  ReactionKind.celebrate => AppColors.tertiary,
+  ReactionKind.support => const Color(0xFFB45309),
+  ReactionKind.sustainable => const Color(0xFF2D6A4C),
 };
 
 /// The overlapping round badges of the kinds a discussion was reacted with, most used first.
@@ -698,7 +908,11 @@ class _Footer extends StatelessWidget {
           children: [
             _Action(
               key: ValueKey('like:${post.id}'),
-              icon: reactionIcon(mine ?? ReactionKind.like, filled: mine != null),
+              icon: reactionIcon(ReactionKind.like),
+              // Once the reader has reacted the button is that reaction as the picker drew it, its round badge
+              // (owner, 13 Nov 2026: "same to same ... not the blue colored icon").
+              glyph: mine == null ? null : ReactionBadge(key: ValueKey('my-reaction:${post.id}'), kind: mine, size: 24),
+              ink: mine == null ? null : reactionInk(mine),
               count: _count(post.reactions),
               label: mine != null ? 'Unlike' : 'Like',
               active: mine != null,
@@ -753,9 +967,17 @@ class _Action extends StatelessWidget {
     this.count,
     this.active = false,
     this.onHold,
+    this.glyph,
+    this.ink,
   });
 
   final IconData icon;
+
+  /// Drawn in place of [icon]: the reader's own reaction, as its badge.
+  final Widget? glyph;
+
+  /// The count's colour when [glyph] is drawn.
+  final Color? ink;
 
   /// What the button is for a screen reader.
   final String label;
@@ -770,7 +992,7 @@ class _Action extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? HomeLook.blue : HomeLook.soft;
+    final color = ink ?? (active ? HomeLook.blue : HomeLook.soft);
     return Semantics(
       button: true,
       label: label,
@@ -795,7 +1017,7 @@ class _Action extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 24, color: color),
+                glyph ?? Icon(icon, size: 24, color: color),
                 if (count != null) ...[
                   const SizedBox(width: 6),
                   Text(count!, style: HomeType.count.copyWith(color: color)),

@@ -107,7 +107,7 @@ class _ReferScreenState extends State<ReferScreen> {
 
   Future<void> _copy(String text, String what) async {
     await Clipboard.setData(ClipboardData(text: text));
-    if (mounted) showMessage(context, '$what copied');
+    if (mounted) showMessage(context, '$what copied.');
   }
 
   @override
@@ -123,7 +123,7 @@ class _ReferScreenState extends State<ReferScreen> {
             return SiteError(
               message: snapshot.error is ApiError
                   ? (snapshot.error! as ApiError).message
-                  : "Couldn't read your invitations.",
+                  : 'Unable to load your invitations.',
               onRetry: () => setState(() {
                 _mine = _repo.mine();
               }),
@@ -139,7 +139,7 @@ class _ReferScreenState extends State<ReferScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Invite colleagues to ICR', style: SiteText.heading),
+                    Text('Invite Colleagues to ICR', style: SiteText.heading),
                     const SizedBox(height: 4),
                     Text(
                       r.programme == null
@@ -148,7 +148,7 @@ class _ReferScreenState extends State<ReferScreen> {
                       style: SiteText.secondary,
                     ),
                     const SizedBox(height: 16),
-                    Text('Your code', style: SiteText.meta),
+                    Text('Your Code', style: SiteText.meta),
                     const SizedBox(height: 4),
                     Row(
                       children: [
@@ -167,7 +167,7 @@ class _ReferScreenState extends State<ReferScreen> {
                       ],
                     ),
                     const Divider(color: SiteColors.hairline),
-                    Text('Your link', style: SiteText.meta),
+                    Text('Your Link', style: SiteText.meta),
                     const SizedBox(height: 4),
                     Row(
                       children: [
@@ -182,7 +182,7 @@ class _ReferScreenState extends State<ReferScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    SiteButton(label: 'Share invitation', onPressed: () => _share(r)),
+                    SiteButton(label: 'Share Invitation', onPressed: () => _share(r)),
                   ],
                 ),
               ),
@@ -192,7 +192,7 @@ class _ReferScreenState extends State<ReferScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('What you each get', style: SiteText.subheading),
+                      Text('What You Each Get', style: SiteText.subheading),
                       const SizedBox(height: 8),
                       if (r.refereeReward != null) _line(Icons.card_giftcard_outlined, 'They get ${r.refereeReward}'),
                       if (r.referrerReward != null)

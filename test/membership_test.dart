@@ -562,18 +562,18 @@ void main() {
       expect(find.byKey(const ValueKey('audience-institution')), findsOneWidget);
       expect(find.text('Showcase. Connect. Grow.'), findsOneWidget);
       expect(find.byKey(const ValueKey('membership-your-plan')), findsOneWidget);
-      expect(find.text('YOUR MARKET PLACE PLAN'), findsOneWidget);
+      expect(find.text('YOUR MARKETPLACE PLAN'), findsOneWidget);
       expect(find.text('₹4,999'), findsOneWidget);
       expect(find.text('/year + GST'), findsNWidgets(2));
       expect(find.text('₹14,999'), findsOneWidget, reason: 'the compare-at price, struck through');
       expect(find.text('30 applications a month'), findsOneWidget);
       expect(find.text('Nothing here'), findsNothing, reason: 'a value the API does not show');
       expect(find.text('SERVICE TERMS'), findsOneWidget);
-      expect(find.text('Custom pricing'), findsOneWidget);
-      expect(find.text('Talk to us'), findsOneWidget);
+      expect(find.text('Custom Pricing'), findsOneWidget);
+      expect(find.text('Contact Us'), findsOneWidget);
       expect(find.text('YOURS'), findsOneWidget, reason: 'the free rung, with nothing held');
-      expect(find.text('Choose Silver'), findsOneWidget);
-      expect(find.text('Choose Gold'), findsOneWidget);
+      expect(find.text('Select Silver'), findsOneWidget);
+      expect(find.text('Select Gold'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -593,7 +593,7 @@ void main() {
       }
       expect(find.text('Learning'), findsNothing);
       expect(find.text('Partner Institution'), findsNothing);
-      expect(find.text('No plans on sale yet'), findsNothing);
+      expect(find.text('No Plans on Sale Yet'), findsNothing);
     });
 
     testWidgets('a link to Learning opens the member\'s first ladder, with no Learning chip', (tester) async {
@@ -608,7 +608,7 @@ void main() {
       expect(find.byKey(const ValueKey('audience-learning')), findsNothing);
       expect(find.text('Learn. Connect. Grow.'), findsOneWidget, reason: 'the Professional ladder');
       expect(find.text('Assess. Learn. Certify.'), findsNothing);
-      expect(find.text('No plans on sale yet'), findsNothing);
+      expect(find.text('No Plans on Sale Yet'), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
@@ -622,7 +622,7 @@ void main() {
         find.descendant(of: find.byKey(const ValueKey('plan-gold')), matching: find.text('YOURS')),
         findsOneWidget,
       );
-      expect(find.text('Current plan'), findsOneWidget);
+      expect(find.text('Current Plan'), findsOneWidget);
       await tester.tap(find.byTooltip('Dismiss'));
       await tester.pumpAndSettle();
       expect(find.text("You're on Gold."), findsNothing);
@@ -633,7 +633,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('plan-choose-gold')));
       await tester.pumpAndSettle();
       expect(find.text('Gold would replace a plan you have already paid for.'), findsOneWidget);
-      expect(find.text('Choose Gold'), findsOneWidget);
+      expect(find.text('Select Gold'), findsOneWidget);
       expect(repo.checkouts, ['price-gold']);
     });
 
@@ -647,7 +647,7 @@ void main() {
       await pump(tester, repo: _Plans(gateway: true));
       await tester.tap(find.byKey(const ValueKey('plan-choose-silver')));
       await tester.pumpAndSettle();
-      expect(paid, ['Pay for your plan → https://test.payu.in/_payment']);
+      expect(paid, ['Pay for Your Plan → https://test.payu.in/_payment']);
       expect(launches.urls, isEmpty, reason: 'the payment never leaves the app');
       expect(find.text('Payment received. Your plan is open.'), findsOneWidget);
     });
@@ -658,7 +658,7 @@ void main() {
       expect(find.text('These plans are bought by a company.'), findsOneWidget);
       expect(find.byKey(const ValueKey('membership-your-plan')), findsNothing);
       expect(find.byKey(const ValueKey('plan-choose-gold')), findsNothing);
-      expect(find.text('Talk to us'), findsOneWidget, reason: 'a conversation is always open');
+      expect(find.text('Contact Us'), findsOneWidget, reason: 'a conversation is always open');
     });
 
     testWidgets('a held plan shows its end, renews at today\'s price and opens its history', (tester) async {
@@ -684,7 +684,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(MembershipHistoryScreen), findsOneWidget);
       expect(find.text('Running · 12 Mar 2026 – 11 Mar 2027'), findsOneWidget);
-      expect(find.text('Changed plan · 1 Jan 2025 – 11 Mar 2026'), findsOneWidget);
+      expect(find.text('Changed Plan · 1 Jan 2025 – 11 Mar 2026'), findsOneWidget);
       expect(find.text('₹5,898.82'), findsOneWidget);
       expect(find.text('Free'), findsWidgets);
     });
@@ -703,9 +703,9 @@ void main() {
       final repo = await pump(tester, repo: _Plans(plansError: 'Plans are down'));
       expect(find.text('Plans are down'), findsOneWidget);
       repo.plansError = null;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
-      expect(find.text('Choose Gold'), findsOneWidget);
+      expect(find.text('Select Gold'), findsOneWidget);
 
       await tester.pumpWidget(
         MaterialApp(

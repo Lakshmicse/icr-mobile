@@ -140,7 +140,7 @@ String kickerFor(EventSummary e) => e.kicker ?? '${e.kind.tag} • ${formatOf(e)
 /// The right-hand slot of the spotlight's venue line and of the sheet's hero,
 /// where the design says "RICS Accredited": what the seat costs.
 String priceNote(EventSummary e) {
-  if (e.inviteOnly) return 'Invite only';
+  if (e.inviteOnly) return 'Invite Only';
   if (e.priced) return '${priceLabel(e.pricePaisa)} per pass';
   return 'Free for members';
 }
@@ -149,14 +149,14 @@ String priceNote(EventSummary e) {
 /// tickets to buy on the website, an invitation, or the place already held.
 EventFooter footerFor(EventSummary e) {
   if (e.footer != null) return e.footer!;
-  if (e.past) return const EventFooter(note: 'Event ended', action: 'View', bookmark: false);
+  if (e.past) return const EventFooter(note: 'Event Ended', action: 'View', bookmark: false);
   if (e.rsvp == RsvpState.going || e.rsvp == RsvpState.attended) {
     return const EventFooter(note: 'Registered', noteTone: NoteTone.green, action: 'View');
   }
-  if (e.rsvp == RsvpState.waitlisted) return const EventFooter(note: 'On the waitlist', action: 'View');
+  if (e.rsvp == RsvpState.waitlisted) return const EventFooter(note: 'On the Waitlist', action: 'View');
   if (e.inviteOnly) {
     final seats = e.seatsLeft;
-    return EventFooter(note: seats == null ? 'Invite only' : '$seats / ${e.capacity} Seats Left', action: 'Details');
+    return EventFooter(note: seats == null ? 'Invite Only' : '$seats / ${e.capacity} Seats Left', action: 'Details');
   }
   if (e.priced) {
     return EventFooter(
@@ -168,7 +168,7 @@ EventFooter footerFor(EventSummary e) {
       action: 'Get Tickets',
     );
   }
-  if (e.full) return const EventFooter(note: 'Waitlist open', action: 'Join Waitlist');
+  if (e.full) return const EventFooter(note: 'Waitlist Open', action: 'Join Waitlist');
   if (e.cpdHours != null && (e.kind == EventKind.workshop || e.kind == EventKind.masterclass)) {
     return EventFooter(
       note: cpdLabel(e.cpdHours!, unit: 'CPD Points'),

@@ -3,7 +3,7 @@
 /// through the API, and what can be undone is undone (a bookmark taken back).
 ///
 /// Needs the Marketplace seed (`tool/seed/marketplace.ts`, see tool/seed/README.md):
-/// the ten designed suppliers lead the "Top rated" order, Vikasha Aero Tech has the
+/// the ten designed suppliers lead the "Top Rated" order, Vikasha Aero Tech has the
 /// profile, and the sandbox supplier is the one the tests act on (saving, rating,
 /// asking for a quote), which every run of the seed puts back as it was.
 ///
@@ -49,7 +49,7 @@ Future<Map<String, dynamic>> getMap(ApiClient api, String path, [Map<String, dyn
 void main() {
   group('the directory', () {
     liveTest(
-      'opens on the designed suppliers in "Top rated" order, with their logos, and says how many there are',
+      'opens on the designed suppliers in "Top Rated" order, with their logos, and says how many there are',
       () async {
         final repo = await repoFor();
         final market = MarketplaceController(repo);
@@ -73,7 +73,7 @@ void main() {
         for (final s in market.suppliers) {
           expect(s.name, isNotEmpty);
           expect(s.rating, inInclusiveRange(0, 5));
-          expect(s.level.isVerified, isTrue, reason: '"Verified only" is on to begin with');
+          expect(s.level.isVerified, isTrue, reason: '"Verified Only" is on to begin with');
         }
       },
     );
@@ -165,13 +165,13 @@ void main() {
       expect(physical.suppliers.every((s) => s.categories.contains('PHYSICAL_SECURITY')), isTrue);
       expect(physical.suppliers.map((s) => s.name), isNot(contains('GreenGuard')));
 
-      // "Verified only" off widens the list.
+      // "Verified Only" off widens the list.
       final everyone = await repo.suppliers(const MarketplaceFilters(minLevel: null));
       final verified = await repo.suppliers(const MarketplaceFilters());
       expect(everyone.total, greaterThanOrEqualTo(verified.total));
     });
 
-    liveTest('"Load more suppliers" pages through a whole result, each supplier once', () async {
+    liveTest('"View More" pages through a whole result, each supplier once', () async {
       final repo = await repoFor(bharat, 10);
       final market = MarketplaceController(repo, initial: const MarketplaceFilters(city: 'Pune'));
       addTearDown(market.dispose);
@@ -262,7 +262,7 @@ void main() {
       expect(saved.suppliers.map((s) => s.id), contains(sandbox));
       expect(saved.suppliers.firstWhere((s) => s.id == sandbox).name, 'Sandbox Facility Services');
 
-      // "Only my saved suppliers" lists it, and only saved ones.
+      // "Only My Saved Suppliers" lists it, and only saved ones.
       await market.setFilters(market.filters.copyWith(savedOnly: true));
       expect(market.suppliers.map((s) => s.id), contains(sandbox));
       expect(market.suppliers.every((s) => market.isSaved(s.id)), isTrue);
@@ -557,7 +557,7 @@ void main() {
             isA<Object>().having(
               (e) => ApiError.from(e).message,
               'message',
-              'Add a mobile number so the supplier can reach you.',
+              'Add a mobile number so the supplier can contact you.',
             ),
           ),
         );
@@ -606,7 +606,7 @@ void main() {
       expect(p.supplierName, 'SecureTech');
       expect(p.supplierVendorId, 'design-mkt-v-securetech');
       expect(p.supplierLevel, 'ELITE');
-      // The page's "Sold by" reads the listing the product names.
+      // The page's "Sold By" reads the listing the product names.
       final controller = CatalogItemController<CatalogProduct>(
         read: () => repo.product('design-mkt-pr-1'),
         supplierFor: (p) async => repo.supplier(p.supplierVendorId!),

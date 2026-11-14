@@ -16,8 +16,8 @@ export 'team_rules.dart' show TeamTab, TeamViewer, teamTabOf;
 
 /// The website's `/manage/team`: the company's people. Members (their role and office, edited or removed by the
 /// admins who may), Requests (people who asked to join; the admin names the role and approves, or declines) and
-/// Pending (people added from ICR who have not answered, and email invites still open), with "Add someone on ICR"
-/// and "Invite by email" above them.
+/// Pending (people added from ICR who have not answered, and email invites still open), with "Add Existing ICR
+/// Member" and "Invite Team Member" above them.
 ///
 /// Only a company's team admins reach it (company admin, office admin, supplier account); anyone else is told it is
 /// not theirs. `?tab=requests` (a "someone asked to join your team" notification) opens on Requests.
@@ -121,7 +121,7 @@ class _TeamScreenState extends State<TeamScreen> {
   }
 
   Future<void> _cancelAdd(PendingAdd a) async {
-    if (await _controller.cancelAdd(a) && mounted) _say('Took back the add for ${a.name}.');
+    if (await _controller.cancelAdd(a) && mounted) _say('Cancelled the request to add ${a.name}.');
   }
 
   Future<void> _revoke(TeamInvite i) async {
@@ -136,7 +136,7 @@ class _TeamScreenState extends State<TeamScreen> {
       offices: _controller.data.offices,
       send: (patch) => _controller.update(m, patch),
     );
-    if (saved && mounted) _say('Saved ${m.name}.');
+    if (saved && mounted) _say('Saved changes for ${m.name}.');
   }
 
   Future<void> _remove(TeamMember m) async {
@@ -162,7 +162,7 @@ class _TeamScreenState extends State<TeamScreen> {
     );
     if (asked && mounted) {
       setState(() => _tab = TeamTab.pending);
-      _say('Asked. They join once they accept.');
+      _say('Request sent. They will join once they accept.');
     }
   }
 
@@ -209,7 +209,7 @@ class _TeamScreenState extends State<TeamScreen> {
             ? null
             : AccountButton(
                 key: const Key('team.createCompany'),
-                label: 'Create a company',
+                label: 'Create a Company',
                 icon: Symbols.add_business,
                 expand: false,
                 onPressed: widget.onCreateCompany,
@@ -233,7 +233,7 @@ class _TeamScreenState extends State<TeamScreen> {
           return AccountError(
             message: c.loadError ?? TeamWords.couldNotLoad,
             onRetry: c.load,
-            title: TeamWords.couldNotLoad,
+            title: TeamWords.couldNotLoadTitle,
           );
         }
         return RefreshIndicator(onRefresh: () => c.load(refresh: true), child: _list(c));

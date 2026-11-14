@@ -713,10 +713,9 @@ void main() {
       expect(find.text('Archibus (Your vote)'), findsOneWidget);
       expect(find.textContaining(RegExp(r'^\d+ votes • Open$')), findsOneWidget);
 
-      // The first post's comments, open, as the design draws them.
-      expect(find.text('Arvind Swamy'), findsNWidgets(2));
-      expect(find.text('+8 replies in this thread'), findsOneWidget);
-      expect(find.text('Reply to Priya Nambiar...'), findsOneWidget);
+      // Nothing opens inside a card (13 Nov 2026): the comments are in their sheet, which the speech bubble opens.
+      expect(find.textContaining('replies in this thread'), findsNothing);
+      expect(find.text('Add a comment...'), findsNothing);
     });
   });
 }

@@ -47,7 +47,7 @@ void main() {
   group('the saved shelf', () {
     testWidgets('lists the bookmarks with their count, each row bookmarked', (tester) async {
       await pumpSaved(tester);
-      expect(find.text('Saved jobs'), findsOneWidget);
+      expect(find.text('Saved Jobs'), findsOneWidget);
       expect(find.byType(JobRow), findsNWidgets(2));
       expect(find.text('Saved 2'), findsOneWidget);
       expect(find.byIcon(LucideIcons.bookmarkCheck), findsNWidgets(2));
@@ -59,7 +59,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(JobRow), findsNWidgets(1));
       expect(s.jobs.saves, [(jobId: 'demo-1', saved: false)]);
-      expect(find.text('Bookmark removed'), findsOneWidget);
+      expect(find.text('Bookmark removed.'), findsOneWidget);
 
       await tester.tap(find.text('Undo'));
       await tester.pumpAndSettle();
@@ -91,7 +91,7 @@ void main() {
         ..savedSet = true
         ..savedAnswer = [fakeJob('a', saved: true).copyWith(status: 'CLOSED')];
       await pumpSaved(tester, career: repo);
-      expect(find.text('No longer accepting applications'), findsOneWidget);
+      expect(find.text('No Longer Accepting Applications'), findsOneWidget);
     });
 
     testWidgets('View More reads the next page without repeating a job', (tester) async {
@@ -113,7 +113,7 @@ void main() {
         ..savedAnswer = const [];
       await pumpSaved(tester, career: repo);
       expect(find.byKey(const ValueKey('saved-empty')), findsOneWidget);
-      expect(find.text('Browse jobs'), findsOneWidget);
+      expect(find.text('Browse Jobs'), findsOneWidget);
     });
 
     testWidgets('a shelf that cannot load says why, and Try again reads it again', (tester) async {
@@ -122,7 +122,7 @@ void main() {
       expect(find.byKey(const ValueKey('saved-error')), findsOneWidget);
       expect(find.text('The jobs are down.'), findsOneWidget);
       repo.savedError = null;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byType(JobRow), findsNWidgets(2));
     });
@@ -147,7 +147,7 @@ void main() {
       await pumpSaved(tester, tab: SavedTab.hidden);
       expect(find.byType(HiddenJobRow), findsOneWidget);
       expect(find.text('Soft Services Manager'), findsOneWidget);
-      expect(find.text('Show again'), findsOneWidget);
+      expect(find.text('Show Again'), findsOneWidget);
       expect(find.text('Hidden 1'), findsOneWidget);
     });
 
@@ -163,12 +163,12 @@ void main() {
 
     testWidgets('Show again brings the job back to the board, and Undo hides it again', (tester) async {
       final s = await pumpSaved(tester, tab: SavedTab.hidden);
-      await tester.tap(find.text('Show again'));
+      await tester.tap(find.text('Show Again'));
       await tester.pumpAndSettle();
       expect(find.byType(HiddenJobRow), findsNothing);
       expect(s.jobs.hidden, isEmpty, reason: 'unhidden through the API');
       expect(find.byKey(const ValueKey('hidden-empty')), findsOneWidget);
-      expect(find.text('Back on your board'), findsOneWidget);
+      expect(find.text('Job restored to your board.'), findsOneWidget);
 
       await tester.tap(find.text('Undo'));
       await tester.pumpAndSettle();
@@ -191,7 +191,7 @@ void main() {
       await tester.tap(find.text('A job that is no longer open'));
       await tester.pumpAndSettle();
       expect(find.text('JOB DETAILS'), findsNothing);
-      await tester.tap(find.text('Show again'));
+      await tester.tap(find.text('Show Again'));
       await tester.pumpAndSettle();
       expect(find.byType(HiddenJobRow), findsNothing);
       expect(s.jobs.hidden, isEmpty);
@@ -203,7 +203,7 @@ void main() {
       expect(find.byKey(const ValueKey('hidden-error')), findsOneWidget);
       expect(find.text('Hidden jobs are down.'), findsOneWidget);
       repo.hiddenError = null;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byType(HiddenJobRow), findsOneWidget);
     });

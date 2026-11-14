@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app_notifications.dart' show appJobsNavigation;
+import 'app_community_manage.dart';
 import 'app_records.dart';
 import 'app_screens.dart';
 import 'app_search.dart' show openMentorProfile;
@@ -17,6 +18,7 @@ import 'features/career/saved_jobs_screen.dart';
 import 'features/events/api_events_repository.dart';
 import 'features/events/demo_events_repository.dart';
 import 'features/events/events_controller.dart';
+import 'features/events/event_manage_scope.dart';
 import 'features/events/events_screen.dart';
 import 'features/feed/feed_controller.dart';
 import 'features/feed/feed_models.dart' show FeedAuthor;
@@ -44,6 +46,9 @@ import 'features/mentorship_my/programmes_screen.dart';
 import 'features/messaging/inbox_screen.dart';
 import 'features/notifications/notification_scope.dart';
 import 'features/notifications/notifications_screen.dart' show openNotifications;
+import 'features/partner_console/batches_screen.dart';
+import 'features/partner_console/courses_screen.dart';
+import 'features/partner_console/enrolments_screen.dart';
 import 'features/partner_enquiries/enquiries_screen.dart';
 import 'features/account/widgets/account_session.dart' show maybeAuth;
 import 'features/profile/profile_drawer_data.dart';
@@ -121,6 +126,9 @@ SiteRouteOpener? workspaceRouteFor(Uri uri, {required FeedAuthor viewer, require
 /// menu may list. Kept beside the switch below; `workspaces_test.dart` builds each.
 const workspaceBuiltPaths = {
   '/admin/learning/enquiries',
+  '/admin/learning/courses',
+  '/admin/learning/batches',
+  '/admin/learning/enrolments',
   '/membership',
   '/career/plans',
   '/membership/history',
@@ -276,6 +284,13 @@ Widget? workspacePage(
     // The partner institute's enquiries (the Partner Institute row), the app's own since 7 Nov 2026.
     case '/admin/learning/enquiries':
       return PartnerEnquiriesScreen(onBack: back);
+    // The rest of the partner institute's console (the Learning Partner row), the app's own since 12 Nov 2026.
+    case '/admin/learning/courses':
+      return ManageCoursesScreen(onBack: back);
+    case '/admin/learning/batches':
+      return ManageBatchesScreen(onBack: back, courseId: uri.queryParameters['course']);
+    case '/admin/learning/enrolments':
+      return EnrolmentsScreen(onBack: back, courseId: uri.queryParameters['course']);
     case '/learning':
       // `?mine=1` (the Learning row's "My courses"): the My courses page alone — what the member holds, not the
       // hub (owner, 6 Nov 2026).
@@ -300,7 +315,10 @@ Widget? workspacePage(
       return ChangeNotifierProvider<EventsController>(
         create: (c) =>
             EventsController(AppConfig.demo ? DemoEventsRepository() : ApiEventsRepository(api: c.read<ApiClient>())),
-        child: EventsScreen(viewer: viewer, onBack: back, onAccount: back),
+        child: EventManageScope(
+          onManage: manageEventDoor(shell),
+          child: EventsScreen(viewer: viewer, onBack: back, onAccount: back),
+        ),
       );
     case '/messaging':
       return const InboxScreen();

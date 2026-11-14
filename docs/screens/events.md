@@ -39,7 +39,7 @@ EventsScreen(
 | `event_detail_controller.dart` | one sheet's state, register/cancel with rollback, the pass |
 | `event_format.dart` | IST dates, date lines, formats, tags, footers, tracks, host circles, description → paragraphs and highlight cards, talk slots and tags, pass reference, calendar link |
 | `events_styles.dart` | `EventsColors`, `EventsText` (sized by measured width) |
-| `events_screen.dart` | the board, the search box, the member tiles, the category row, the host card, the filter sheet |
+| `events_screen.dart` | the board, the search box, the category row, the host card, the filter sheet |
 | `event_sheet.dart` | the sheet and its bar |
 | `event_pass.dart` | the pass dialog ("Show Pass", "View Pass & QR") |
 | `widgets/` | `events_header`, `spotlight_card`, `event_card`, `pills` (tag pill, date badge, avatar stack, cover), `qr_code` (the QR encoder and its painter) |
@@ -155,3 +155,30 @@ Measured against the designs (dp, design vs render; 2x pixels / 2):
 ## Left out
 
 * The industry and price filters (events have neither), a calendar view, a saved-events list, ticket checkout (website), proposing a talk and sponsoring (website), pagination beyond the first 100 events of a window, a live buy-then-cancel proof of a paid seat (it cannot be undone by a member; the seeded ticket proves the refusal instead).
+
+
+## 12 Nov 2026: no count tiles over the hub
+
+The owner, shown the Digital Library's four count tiles: "like these 4 titles in Chapter, councils, Events remove it". The Events board no longer draws the "My Schedule (n)" and "CPD Earned" tiles between the spotlight and Explore by Category. The next booked event's sheet, with its pass and Cancel, opens from the event's own card (View); `EventsController.schedule` / `.cpd` are still read and drawn nowhere.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client marked up the user manual with the wording wanted on a dozen screens and asked for the rest of the app to read the same way: Title Case for what a person taps or reads as a label, a short sentence with a full stop for everything else, plain international English, no dash inside a sentence. Wording only: no layout, colour or behaviour changed. Semantics-only labels (what a screen reader says for an icon) were left as they were. By the lead's ruling the title of an empty, locked or error state is a heading (Title Case, no full stop) with a sentence under it, and the retry button reads **Try Again** everywhere.
+
+| Where | Old | New |
+|---|---|---|
+| A card's footer note | Event ended · On the waitlist · Invite only · Waitlist open | Event Ended · On the Waitlist · Invite Only · Waitlist Open |
+| The chip and label of a kind | Chapter meetup · Chapter meetups | Chapter Meetup · Chapter Meetups |
+| The sheet's status line | This event has ended · You're on the waitlist / We will move you up as seats free · By invitation · This event is full · Seats available | This Event Has Ended · You're on the Waitlist / You will move up as seats become available · By Invitation · This Event Is Full · Seats Available |
+| The pass | Your place / Scan to open the event's page, where your place is on your account. | Your Place / Scan to open the event page. Your place is saved to your account. |
+| The sheet, the filters | Add to calendar · In person · Clear all · Show events · Clear search (tooltip) | Add to Calendar · In Person · Clear All · Show Events · Clear Search |
+| Not loaded, empty | Couldn't load events · No events match · No upcoming events / New events show up here as ICR announces them. | Unable to Load Events (with **Try Again**) · No Events Match · No Upcoming Events / New events will appear here when ICR announces them. |
+| After a payment | The payment didn't go through. Nothing was charged. · The payment wasn't completed. If you did pay, your seat is confirmed within a minute. | The payment failed. You were not charged. · The payment was not completed. If you paid, your seat will be confirmed within a minute. |
+
+Kept as the design draws them: "Explore by Category", "N Tracks", "N Ready", "Upcoming Agenda", "Your Booking is Active", "Registration Confirmed", "Register Free", "Reserve Pass", "Get Tickets", "RSVP Free", "View Pass & QR", "Host or Propose an Event", "Submit Topic", and the fact lines ("Free for members", "By invitation only", "Hosted by …").
+
+## Managing (13 Nov 2026)
+
+For the staff who hold `events:manage` (a Super Admin, or a member given the Events Admin or Community Manager role on the website),
+a pencil left of the bell on the board opens Manage Events, and a pencil beside Share on an event's sheet that event's manage page. Nobody else sees a pencil. The pages stand over the app's bottom bar, as Home does. See
+`docs/screens/events_manage.md` and `docs/FLOW_PARITY.md` → "Managing Chapters, Councils and Events from the app".

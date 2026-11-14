@@ -128,7 +128,7 @@ class _GetInvolvedScreenState extends State<GetInvolvedScreen> {
       onBell: widget.onBell,
       opener: widget.opener,
     );
-    if (sent && mounted) showMessage(context, 'Your interest is with the ICR team.');
+    if (sent && mounted) showMessage(context, 'Your interest has been sent to the ICR team.');
   }
 
   @override
@@ -155,12 +155,12 @@ class _GetInvolvedScreenState extends State<GetInvolvedScreen> {
             Text('GET INVOLVED & VOLUNTEER', style: CommunityText.kicker),
             const SizedBox(height: 6),
             Text(
-              'Volunteer, lead, shape the profession',
+              'Volunteer, Lead, Shape the Profession',
               style: AppText.workSans(20, FontWeight.w700, AppColors.slate900, lineHeight: 26),
             ),
             const SizedBox(height: 8),
             Text(
-              'ICR offers members meaningful opportunities to give back: lead a chapter, mentor, speak, review '
+              'ICR offers members meaningful opportunities to contribute: lead a chapter, mentor, speak, review '
               'standards and more. Volunteering earns certified CPD credits.',
               style: CommunityText.body,
             ),
@@ -179,7 +179,7 @@ class _GetInvolvedScreenState extends State<GetInvolvedScreen> {
                   if (widget.onBecomeMentor != null)
                     Expanded(
                       child: CommunityButton(
-                        label: 'Become a mentor',
+                        label: 'Become a Mentor',
                         outlined: true,
                         expand: true,
                         height: 38,
@@ -190,7 +190,7 @@ class _GetInvolvedScreenState extends State<GetInvolvedScreen> {
                   if (widget.onOpenChapters != null)
                     Expanded(
                       child: CommunityButton(
-                        label: 'Find your chapter',
+                        label: 'Find Your Chapter',
                         outlined: true,
                         expand: true,
                         height: 38,
@@ -220,7 +220,10 @@ class _GetInvolvedScreenState extends State<GetInvolvedScreen> {
       const SizedBox(height: 4),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Text('Ways to give back, from a few hours a month to a cohort or an event.', style: CommunityText.small),
+        child: Text(
+          'Ways to contribute, from a few hours a month to a cohort or an event.',
+          style: CommunityText.small,
+        ),
       ),
       const SizedBox(height: 10),
       Padding(
@@ -235,11 +238,11 @@ class _GetInvolvedScreenState extends State<GetInvolvedScreen> {
       if (roles.isEmpty)
         CommunityNotice(
           icon: LucideIcons.searchX,
-          title: 'No role matches',
-          body: 'Try another word, or tell the team what you have in mind.',
+          title: 'No Roles Match',
+          body: 'Try another word, or describe your interest to the team.',
           action: 'Volunteer with ICR',
           onAction: () => _apply(),
-          secondary: 'Clear search',
+          secondary: 'Clear Search',
           onSecondary: () {
             _search.clear();
             c.setSearch('');
@@ -265,10 +268,7 @@ class _GetInvolvedScreenState extends State<GetInvolvedScreen> {
       const SizedBox(height: 4),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Text(
-          'Volunteering with ICR is a two-way exchange: you shape the profession and it shapes you.',
-          style: CommunityText.small,
-        ),
+        child: Text('Volunteering with ICR benefits both you and the profession.', style: CommunityText.small),
       ),
       const SizedBox(height: 10),
       for (final b in volunteerBenefits)
@@ -297,7 +297,7 @@ class _GetInvolvedScreenState extends State<GetInvolvedScreen> {
         ),
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-        child: CommunityButton(label: 'Raise your hand', expand: true, height: 40, onPressed: () => _apply()),
+        child: CommunityButton(label: 'Apply to Volunteer', expand: true, height: 40, onPressed: () => _apply()),
       ),
       const SizedBox(height: 18),
       Padding(
@@ -307,7 +307,7 @@ class _GetInvolvedScreenState extends State<GetInvolvedScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Volunteering earns CPD credits', style: CommunityText.cardTitle),
+              Text('Volunteering Earns CPD Credits', style: CommunityText.cardTitle),
               const SizedBox(height: 4),
               Text(
                 'Committee work, mentoring, speaking and standards work count towards your certification.',
@@ -364,7 +364,7 @@ class _CpdCard extends StatelessWidget {
                 onTap: c.refresh,
                 child: Padding(
                   padding: const EdgeInsets.all(8),
-                  child: Text('Try again', style: CommunityText.link),
+                  child: Text('Try Again', style: CommunityText.link),
                 ),
               ),
             ],
@@ -382,9 +382,9 @@ class _CpdCard extends StatelessWidget {
       children: [
         CommunityStatGrid(
           tiles: [
-            CommunityStatTile(label: 'Hours earned', value: CpdSummary.hoursLabel(cpd.totalHours)),
+            CommunityStatTile(label: 'Hours Earned', value: CpdSummary.hoursLabel(cpd.totalHours)),
             CommunityStatTile(
-              label: cpd.year == null ? 'This year' : 'In ${cpd.year}',
+              label: cpd.year == null ? 'This Year' : 'In ${cpd.year}',
               value: CpdSummary.hoursLabel(cpd.hoursThisYear),
               blue: true,
               note: target == null ? null : 'of ${CpdSummary.hoursLabel(target)}',
@@ -585,7 +585,7 @@ class _RoleCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           CommunityButton(
-            label: sent ? 'Apply again' : 'Apply',
+            label: sent ? 'Apply Again' : 'Apply',
             outlined: sent,
             expand: true,
             height: 36,

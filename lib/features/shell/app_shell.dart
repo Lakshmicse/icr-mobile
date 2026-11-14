@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
+import '../../core/util/screen_trail.dart';
 import '../assistant/open_assistant.dart';
 import '../discover/discover_sheet.dart';
 import 'icr_bottom_nav.dart';
@@ -24,6 +29,7 @@ class AppShell extends StatefulWidget {
     this.marketplace,
     this.jobs,
     this.doors = const {},
+    this.restorationId,
   });
 
   final Widget home;
@@ -42,6 +48,10 @@ class AppShell extends StatefulWidget {
   /// Screens the Discover sheet's doors open in the app, keyed by the door's
   /// website path (`/events`). A door with no entry opens the website.
   final Map<String, WidgetBuilder> doors;
+
+  /// Where the shell keeps the open tab and the screen over it in the activity's saved state, so the app comes back
+  /// to them after Android ended it in the background (owner, 14 Nov 2026). Null keeps nothing (tests).
+  final String? restorationId;
 
   /// The shell a context belongs to: the one it is inside, or the one a screen
   /// pushed with [push] sits over.
@@ -101,9 +111,16 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin {
+class _AppShellState extends State<AppShell>
+    with SingleTickerProviderStateMixin, RestorationMixin, WidgetsBindingObserver {
   final _scaffold = GlobalKey<ScaffoldState>();
   AppTab _tab = AppTab.home;
+
+  /// The open tab and the website page of the screen over the tabs ([ScreenTrail.place]), as Android keeps them
+  /// for an app it ends in the background. Android drops them when the person closes the app themselves, so a
+  /// fresh start is still Home.
+  final _savedTab = RestorableEnum<AppTab>(AppTab.home, values: AppTab.values);
+  final _savedPlace = RestorableStringN(null);
 
   /// The tabs opened so far. A tab is built the first time it is shown, so
   /// opening the app loads Home alone (every tab starts its own requests, and
@@ -124,35 +141,37 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
         const UpcomingTab(
           title: 'Learning',
           icon: Icon(Symbols.school_rounded, fill: 1, size: 34, color: _tint),
-          summary: 'Courses, mock exams, certificates and the resource library are on the website for now.',
+          summary: 'Courses, mock exams, certificates and the resource library are currently available on the website.',
           sitePath: '/learning',
         ),
     widget.mentorship ??
         const UpcomingTab(
           title: 'Mentorship',
           icon: Icon(Symbols.group_rounded, fill: 1, size: 34, color: _tint),
-          summary: 'Find a mentor, book a session and follow a programme on the website for now.',
+          summary:
+              'Finding a mentor, booking a session and following a programme are currently available on the website.',
           sitePath: '/mentorship',
         ),
     widget.forums ??
         const UpcomingTab(
           title: 'Forums',
           icon: Icon(Symbols.forum_rounded, fill: 1, size: 32, color: _tint),
-          summary: 'Browse every topic and start a discussion on the website. Your Home feed already shows the latest.',
+          summary:
+              'Browse every topic and start a discussion on the website. Your Home feed shows the latest discussions.',
           sitePath: '/community',
         ),
     widget.marketplace ??
         const UpcomingTab(
           title: 'Marketplace',
           icon: Icon(Symbols.storefront_rounded, fill: 1, size: 32, color: _tint),
-          summary: 'Supplier Mart, products, services and requirements are on the website for now.',
+          summary: 'Suppliers, products, services and requirements are currently available on the website.',
           sitePath: '/vendors',
         ),
     widget.jobs ??
         UpcomingTab(
           title: 'Jobs',
           icon: Transform.scale(scale: 1.45, child: const BriefcaseIcon(color: _tint)),
-          summary: 'Search roles, track your applications and get job alerts on the website for now.',
+          summary: 'Job search, application tracking and job alerts are currently available on the website.',
           sitePath: '/jobs',
         ),
   ];
@@ -171,14 +190,67 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
   void initState() {
     super.initState();
     AppShell._live = this;
+    ScreenTrail.instance.addListener(_rememberPlace);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
     if (AppShell._live == this) AppShell._live = null;
+    ScreenTrail.instance.removeListener(_rememberPlace);
+    WidgetsBinding.instance.removeObserver(this);
+    _savedTab.dispose();
+    _savedPlace.dispose();
     _bar.dispose();
     _discover.dispose();
     super.dispose();
+  }
+
+  @override
+  String? get restorationId => widget.restorationId;
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    registerForRestoration(_savedTab, 'tab');
+    registerForRestoration(_savedPlace, 'place');
+    if (!initialRestore) return;
+    // Android brought the app back after ending it: the tab it was on, then the screen that was over it.
+    final tab = _savedTab.value;
+    if (tab != AppTab.discover) {
+      _tab = tab;
+      _opened.add(tab);
+    }
+    final place = _savedPlace.value;
+    if (place != null) WidgetsBinding.instance.addPostFrameCallback((_) => _reopen(place));
+  }
+
+  /// Opens [place] again the way a link to it opens, once the shell is on screen (the links' resolver needs it).
+  void _reopen(String place) {
+    if (!mounted) return;
+    final open = SiteRoutes.inApp(AppConfig.sitePage(place));
+    if (open != null) unawaited(open(context));
+  }
+
+  /// Keeps what is on screen in the saved state while it changes, so it is there before Android asks for it. The
+  /// saved state is handed to Android at the end of a frame, so one is asked for.
+  void _rememberPlace() {
+    if (!mounted) return;
+    _savedPlace.value = ScreenTrail.instance.place;
+    SchedulerBinding.instance.ensureVisualUpdate();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Leaving the app (frames still run): a screen that moved within itself (a workspace's page) is read once more.
+    if (state == AppLifecycleState.inactive) _rememberPlace();
+  }
+
+  void _show(AppTab tab) {
+    setState(() {
+      _tab = tab;
+      _opened.add(tab);
+    });
+    _savedTab.value = tab;
   }
 
   void _select(AppTab tab) {
@@ -189,10 +261,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
       return;
     }
     _discover.reverse();
-    setState(() {
-      _tab = tab;
-      _opened.add(tab);
-    });
+    _show(tab);
   }
 
   /// The website page a tab stands for, so Saathi's chips and answers lean to it (`moduleForPath`).
@@ -217,7 +286,12 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
       openSitePage(context, door.sitePath);
       return;
     }
-    Navigator.of(context).push(AppShell._route<void>(this, screen));
+    unawaited(
+      ScreenTrail.instance.opening(
+        door.sitePath,
+        () => Navigator.of(context).push(AppShell._route<void>(this, screen)),
+      ),
+    );
   }
 
   @override
@@ -231,7 +305,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
         } else if (_discoverOpen) {
           _discover.reverse();
         } else {
-          setState(() => _tab = AppTab.home);
+          _show(AppTab.home);
         }
       },
       child: Scaffold(

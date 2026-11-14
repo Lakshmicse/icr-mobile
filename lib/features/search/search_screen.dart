@@ -301,7 +301,7 @@ class SeeAllRowMore extends StatelessWidget {
     child: Container(
       constraints: const BoxConstraints(minHeight: 48),
       alignment: Alignment.center,
-      child: Text('Show more results', style: SearchStyles.link),
+      child: Text('View More', style: SearchStyles.link),
     ),
   );
 }
@@ -439,11 +439,11 @@ class _Idle extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(SearchLook.pad, 12, 4, 0),
             child: Row(
               children: [
-                Expanded(child: Text('Recent searches', style: SearchStyles.heading)),
+                Expanded(child: Text('Recent Searches', style: SearchStyles.heading)),
                 TextButton(
                   key: const Key('search.recent.clear'),
                   onPressed: controller.clearRecents,
-                  child: Text('Clear all', style: SearchStyles.link),
+                  child: Text('Clear All', style: SearchStyles.link),
                 ),
               ],
             ),
@@ -479,7 +479,7 @@ class _Idle extends StatelessWidget {
         if (suggestions.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(SearchLook.pad, 16, SearchLook.pad, 4),
-            child: Text('Suggested for you', style: SearchStyles.heading),
+            child: Text('Suggested for You', style: SearchStyles.heading),
           ),
           for (final f in suggestions)
             HitRow(
@@ -510,10 +510,10 @@ class _NoResults extends StatelessWidget {
         const SizedBox(height: 24),
         const Icon(Icons.search_off, size: 40, color: SearchLook.soft),
         const SizedBox(height: 12),
-        Text('No results for “$query”', textAlign: TextAlign.center, style: SearchStyles.emptyTitle),
+        Text('No Results for “$query”', textAlign: TextAlign.center, style: SearchStyles.emptyTitle),
         const SizedBox(height: 8),
         Text(
-          'Check the spelling or try fewer words. You can also go straight to a place in ICR:',
+          'Check the spelling or try fewer words. You can also open a section of ICR:',
           textAlign: TextAlign.center,
           style: SearchStyles.emptyBody,
         ),
@@ -547,15 +547,11 @@ class _NoneOfKind extends StatelessWidget {
         children: [
           Icon(kind.icon, size: 40, color: SearchLook.soft),
           const SizedBox(height: 12),
-          Text(
-            'No ${kind.plural.toLowerCase()} for “$query”',
-            textAlign: TextAlign.center,
-            style: SearchStyles.emptyTitle,
-          ),
+          Text('No ${kind.plural} for “$query”', textAlign: TextAlign.center, style: SearchStyles.emptyTitle),
           const SizedBox(height: 4),
           TextButton(
             onPressed: onAll,
-            child: Text('Search everything', style: SearchStyles.link),
+            child: Text('Search Everything', style: SearchStyles.link),
           ),
         ],
       ),
@@ -577,14 +573,14 @@ class _Offline extends StatelessWidget {
         children: [
           const Icon(Icons.cloud_off_outlined, size: 40, color: SearchLook.soft),
           const SizedBox(height: 12),
-          Text("Can't reach ICR", style: SearchStyles.emptyTitle),
+          Text('Unable to Reach ICR', style: SearchStyles.emptyTitle),
           const SizedBox(height: 4),
           Text('Check your connection and try again.', textAlign: TextAlign.center, style: SearchStyles.emptyBody),
           const SizedBox(height: 8),
           TextButton(
             key: const Key('search.retry'),
             onPressed: onRetry,
-            child: Text('Try again', style: SearchStyles.link),
+            child: Text('Try Again', style: SearchStyles.link),
           ),
         ],
       ),

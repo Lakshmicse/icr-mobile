@@ -56,34 +56,34 @@ void main() {
   group('the page', () {
     testWidgets('a mentee sees who it is with, what needs attention first, and every section', (tester) async {
       await pump(tester);
-      expect(find.text('Your mentor'), findsOneWidget);
+      expect(find.text('Your Mentor'), findsOneWidget);
       expect(find.text('Anand Iyer'), findsWidgets);
       expect(find.textContaining('Mentor since'), findsOneWidget);
       // Only the mentor can mark an hour held, so a mentee is told who closes it, not asked to.
-      expect(find.text('Waiting on Anand to confirm'), findsOneWidget);
-      expect(find.text('Needs you: a session to close'), findsNothing);
+      expect(find.text('Waiting for Anand to confirm'), findsOneWidget);
+      expect(find.text('Action needed: close a session'), findsNothing);
       expect(
-        find.text('Anand confirms a session once it has happened. If it did not, move it to a new time.'),
+        find.text('Anand confirms a session after it takes place. If it did not take place, move it to a new time.'),
         findsOneWidget,
       );
       expect(find.text('Overdue'), findsOneWidget);
       expect(find.text('Sessions'), findsOneWidget);
-      expect(find.text('Ask for a time'), findsOneWidget);
+      expect(find.text('Request a Time'), findsOneWidget);
       expect(find.text('Goals'), findsOneWidget);
-      expect(find.text('Between sessions'), findsOneWidget);
-      expect(find.text('Shared resources'), findsOneWidget);
+      expect(find.text('Between Sessions'), findsOneWidget);
+      expect(find.text('Shared Resources'), findsOneWidget);
       expect(find.text('Timeline'), findsOneWidget);
-      expect(find.text('This mentorship'), findsOneWidget);
-      expect(find.text('Mark held'), findsNothing, reason: 'only the mentor confirms a session happened');
+      expect(find.text('This Mentorship'), findsOneWidget);
+      expect(find.text('Mark as Held'), findsNothing, reason: 'only the mentor confirms a session happened');
       expect(find.text('Awaiting Anand'), findsOneWidget);
     });
 
     testWidgets('a mentor sees Book a session, and Mark held on the session that slipped', (tester) async {
       await pump(tester, world: PairingWorld(side: 'MENTOR'));
-      expect(find.text('Your mentee'), findsOneWidget);
+      expect(find.text('Your Mentee'), findsOneWidget);
       expect(find.textContaining('Mentee since'), findsOneWidget);
-      expect(find.text('Book a session'), findsOneWidget);
-      expect(find.text('Mark held'), findsWidgets);
+      expect(find.text('Book a Session'), findsOneWidget);
+      expect(find.text('Mark as Held'), findsWidgets);
       expect(find.text('Asks for this time'), findsOneWidget);
     });
 
@@ -95,12 +95,12 @@ void main() {
         world: w,
         extra: {'GET /mentorship/pair-anand': (_) => fail ? refuse('Mentorship not found', status: 404) : w.pairing},
       );
-      expect(find.text("Couldn't load this mentorship"), findsOneWidget);
+      expect(find.text('Unable to Load This Mentorship'), findsOneWidget);
       expect(find.text('Mentorship not found'), findsOneWidget);
       fail = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester);
-      expect(find.text('Your mentor'), findsOneWidget);
+      expect(find.text('Your Mentor'), findsOneWidget);
       expect(api.count('GET /mentorship/pair-anand'), 2);
     });
 
@@ -114,13 +114,13 @@ void main() {
 
     testWidgets('Mentor profile opens the mentor', (tester) async {
       final (_, rec, _) = await pump(tester);
-      await tester.tap(find.text('Mentor profile'));
+      await tester.tap(find.text('Mentor Profile'));
       expect(rec.opened, ['mentor:mp-anand']);
     });
 
     testWidgets('a mentor has no Mentor profile button: the other person is their mentee', (tester) async {
       await pump(tester, world: PairingWorld(side: 'MENTOR'));
-      expect(find.text('Mentor profile'), findsNothing);
+      expect(find.text('Mentor Profile'), findsNothing);
     });
 
     testWidgets('the bell opens the notifications', (tester) async {
@@ -135,21 +135,21 @@ void main() {
     testWidgets('a mentee asks for a time from the mentor\'s free hours, and it waits for the mentor', (tester) async {
       final w = PairingWorld()..slots = [DateTime(2026, 10, 28, 18), DateTime(2026, 10, 28, 19)];
       final (api, _, _) = await pump(tester, world: w);
-      await tapText(tester, 'Ask for a time');
-      expect(find.text('Free times in their hours'), findsOneWidget);
+      await tapText(tester, 'Request a Time');
+      expect(find.text('Free Times in Their Hours'), findsOneWidget);
       await tester.tap(find.text('45 min'));
       await settle(tester);
       await tester.tap(find.text('6:00 PM'));
       await tester.pump();
       await tester.enterText(find.byKey(const ValueKey('session-agenda')), 'Prepare for the panel');
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await settle(tester);
       final body = api.bodyOf('POST /mentorship/pair-anand/sessions') as Map;
       expect(body['durationMin'], 45);
       expect(body['mode'], 'VIDEO');
       expect(body['agenda'], 'Prepare for the panel');
       expect(DateTime.parse(body['scheduledAt'] as String).isAtSameMomentAs(DateTime(2026, 10, 28, 18)), isTrue);
-      expect(find.text('Asked. Your mentor confirms the time.'), findsOneWidget);
+      expect(find.text('Request sent. Your mentor confirms the time.'), findsOneWidget);
       expect(find.text('Prepare for the panel'), findsOneWidget);
       expect(api.queryOf('GET /mentorship/mentors/mp-anand/slots'), {'durationMin': 45, 'days': 14});
     });
@@ -167,23 +167,23 @@ void main() {
           ),
         },
       );
-      await tapText(tester, 'Ask for a time');
-      await tester.tap(find.text('Send request'));
+      await tapText(tester, 'Request a Time');
+      await tester.tap(find.text('Send Request'));
       await tester.pump();
-      expect(find.text('Pick a time first.'), findsOneWidget);
+      expect(find.text('Select a time first.'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('length-other')));
       await tester.pump();
       await tester.enterText(find.byKey(const ValueKey('session-minutes')), '10');
       await tester.tap(find.text('6:00 PM'));
       await tester.pump();
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await tester.pump();
       expect(find.text('A session runs 15 to 480 minutes.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('session-minutes')), '50');
       await settle(tester); // a new length reads the free times again, and drops the pick
       await tester.tap(find.text('6:00 PM'));
       await tester.enterText(find.byKey(const ValueKey('session-agenda')), 'Prepare for the panel');
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await settle(tester);
       expect(api.count('POST /mentorship/pair-anand/sessions'), 1);
       expect((api.bodyOf('POST /mentorship/pair-anand/sessions') as Map)['durationMin'], 50);
@@ -194,15 +194,15 @@ void main() {
     testWidgets('a time of the phone\'s own can be picked when the mentor lists no free hours', (tester) async {
       final w = PairingWorld();
       final (api, _, _) = await pump(tester, world: w);
-      await tapText(tester, 'Ask for a time');
-      expect(find.text('No open times in the next two weeks; pick a day and time.'), findsOneWidget);
-      await tester.tap(find.text('Pick a day and time'));
+      await tapText(tester, 'Request a Time');
+      expect(find.text('No open times in the next two weeks. Select a day and time.'), findsOneWidget);
+      await tester.tap(find.text('Select a Day and Time'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await settle(tester);
       final at = DateTime.parse(
         (api.bodyOf('POST /mentorship/pair-anand/sessions') as Map)['scheduledAt'] as String,
@@ -215,15 +215,15 @@ void main() {
         ..slots = [DateTime(2026, 10, 28, 18)]
         ..modes = ['PHONE'];
       final (api, _, _) = await pump(tester, world: w);
-      await tapText(tester, 'Book a session');
-      expect(find.text('Video call'), findsNothing, reason: 'the mentor does not meet by video');
+      await tapText(tester, 'Book a Session');
+      expect(find.text('Video Call'), findsNothing, reason: 'the mentor does not meet by video');
       expect(find.text('Phone'), findsOneWidget);
       await tester.tap(find.text('6:00 PM'));
       await tester.pump();
-      await tester.tap(find.text('Book session'));
+      await tester.tap(find.text('Book Session'));
       await settle(tester);
       expect((api.bodyOf('POST /mentorship/pair-anand/sessions') as Map)['mode'], 'PHONE');
-      expect(find.text('Booked. Meera has been told.'), findsOneWidget);
+      expect(find.text('Booked. Meera has been notified.'), findsOneWidget);
     });
 
     testWidgets('either person moves a booked session; the API gets the new time', (tester) async {
@@ -232,38 +232,41 @@ void main() {
       await tester.ensureVisible(inCard('s-next', 'Move'));
       await tester.tap(inCard('s-next', 'Move'));
       await settle(tester);
-      expect(find.text('Move this session'), findsOneWidget);
+      expect(find.text('Move This Session'), findsOneWidget);
       await tester.tap(find.text('7:00 PM'));
       await tester.pump();
-      await tester.tap(find.text('Move session'));
+      await tester.tap(find.text('Move Session'));
       await settle(tester);
       final body = api.bodyOf('PATCH /mentorship/pair-anand/sessions/s-next') as Map;
       expect(DateTime.parse(body['scheduledAt'] as String).isAtSameMomentAs(DateTime(2026, 10, 30, 19)), isTrue);
       expect(body['agenda'], 'Mock panel interview', reason: 'the agenda travels with the move');
-      expect(find.textContaining('Moved. Anand has been told.'), findsOneWidget);
+      expect(find.textContaining('Moved. Anand has been notified.'), findsOneWidget);
     });
 
     testWidgets('cancelling asks for a reason of at least three characters and moves it to the past', (tester) async {
       final (api, _, _) = await pump(tester);
-      expect(find.text('Past sessions (2)'), findsOneWidget);
+      expect(find.text('Past Sessions (2)'), findsOneWidget);
       await tester.ensureVisible(inCard('s-next', 'Cancel'));
       await tester.tap(inCard('s-next', 'Cancel'));
       await settle(tester);
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'No');
-      await tester.tap(find.text('Cancel session'));
+      await tester.tap(find.text('Cancel Session'));
       await tester.pump();
-      expect(find.text('Write at least 3 characters.'), findsOneWidget);
+      expect(find.text('Enter at least 3 characters.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'Away that week');
-      await tester.tap(find.text('Cancel session'));
+      await tester.tap(find.text('Cancel Session'));
       await settle(tester);
       expect(api.bodyOf('POST /mentorship/pair-anand/sessions/s-next/cancel'), {'reason': 'Away that week'});
-      expect(find.text('Past sessions (3)'), findsOneWidget);
+      expect(find.text('Past Sessions (3)'), findsOneWidget);
     });
 
     testWidgets('a mentee withdraws a request they made', (tester) async {
       final (api, _, _) = await pump(tester);
       await tester.ensureVisible(inCard('s-req', 'Withdraw'));
       await tester.tap(inCard('s-req', 'Withdraw'));
+      await tester.pumpAndSettle();
+      // Asks first (owner, 7 Nov 2026).
+      await tester.tap(find.byKey(const ValueKey('withdraw-yes')));
       await settle(tester);
       expect(api.bodyOf('POST /mentorship/pair-anand/sessions/s-req/cancel'), {'reason': 'Withdrawn by the mentee.'});
       expect(find.text('Request withdrawn.'), findsOneWidget);
@@ -281,13 +284,13 @@ void main() {
     testWidgets('a mentor answers a request with another time, which books it', (tester) async {
       final w = PairingWorld(side: 'MENTOR')..slots = [DateTime(2026, 11, 5, 18)];
       final (api, _, _) = await pump(tester, world: w);
-      await tester.ensureVisible(inCard('s-req', 'Offer another time'));
-      await tester.tap(inCard('s-req', 'Offer another time'));
+      await tester.ensureVisible(inCard('s-req', 'Offer Another Time'));
+      await tester.tap(inCard('s-req', 'Offer Another Time'));
       await settle(tester);
-      expect(find.text('Offer another time'), findsWidgets);
+      expect(find.text('Offer Another Time'), findsWidgets);
       await tester.tap(find.text('6:00 PM'));
       await tester.pump();
-      await tester.tap(find.text('Book this time'));
+      await tester.tap(find.text('Book This Time'));
       await settle(tester);
       final body = api.bodyOf('PATCH /mentorship/pair-anand/sessions/s-req') as Map;
       expect(DateTime.parse(body['scheduledAt'] as String).isAtSameMomentAs(DateTime(2026, 11, 5, 18)), isTrue);
@@ -309,39 +312,39 @@ void main() {
       tester,
     ) async {
       final (api, _, w) = await pump(tester, world: PairingWorld(side: 'MENTOR'));
-      await tester.ensureVisible(inCard('s-overdue', 'Mark held'));
-      await tester.tap(inCard('s-overdue', 'Mark held'));
+      await tester.ensureVisible(inCard('s-overdue', 'Mark as Held'));
+      await tester.tap(inCard('s-overdue', 'Mark as Held'));
       await settle(tester);
       expect(find.textContaining('45 min was booked'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('held-minutes')), '5');
-      await tester.tap(find.text('Mark held').last);
+      await tester.tap(find.text('Mark as Held').last);
       await tester.pump();
-      expect(find.text('Enter the minutes it ran: 15 to 480.'), findsOneWidget);
+      expect(find.text('Enter the minutes it ran, from 15 to 480.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('held-minutes')), '50');
       await tester.enterText(find.byKey(const ValueKey('held-note')), 'Agreed the scorecard');
-      await tester.tap(find.text('Mark held').last);
+      await tester.tap(find.text('Mark as Held').last);
       await settle(tester);
       expect(api.bodyOf('POST /mentorship/pair-anand/sessions/s-overdue/complete'), {
         'durationMin': 50,
         'note': 'Agreed the scorecard',
       });
       expect(find.text('Marked as held.'), findsOneWidget);
-      expect(find.text('Needs you: a session to close'), findsNothing);
+      expect(find.text('Action needed: close a session'), findsNothing);
       expect(w.sessions.firstWhere((s) => s['id'] == 's-overdue')['status'], 'COMPLETED');
     });
 
     testWidgets('the mentor sets a meeting link, which is checked as the API checks it', (tester) async {
       final (api, _, _) = await pump(tester, world: PairingWorld(side: 'MENTOR'));
       expect(find.text('No meeting link yet'), findsOneWidget);
-      await tester.ensureVisible(inCard('s-req', 'Meeting link'));
-      await tester.tap(inCard('s-req', 'Meeting link'));
+      await tester.ensureVisible(inCard('s-req', 'Meeting Link'));
+      await tester.tap(inCard('s-req', 'Meeting Link'));
       await settle(tester);
       await tester.enterText(find.byKey(const ValueKey('meeting-link')), 'not a link');
-      await tester.tap(find.text('Save link'));
+      await tester.tap(find.text('Save Link'));
       await tester.pump();
       expect(find.textContaining('Enter a full web address'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('meeting-link')), 'meet.google.com/abc-defg-hij');
-      await tester.tap(find.text('Save link'));
+      await tester.tap(find.text('Save Link'));
       await settle(tester);
       expect(api.bodyOf('PATCH /mentorship/pair-anand/sessions/s-req/meeting-link'), {
         'meetingLink': 'https://meet.google.com/abc-defg-hij',
@@ -395,7 +398,7 @@ void main() {
     testWidgets('a call under way reads In progress, not Overdue', (tester) async {
       mentoringNow = () => DateTime(2026, 10, 29, 10, 10);
       await pump(tester);
-      expect(inCard('s-next', 'In progress'), findsOneWidget);
+      expect(inCard('s-next', 'In Progress'), findsOneWidget);
       expect(inCard('s-next', 'Overdue'), findsNothing);
       expect(inCard('s-next', 'Join'), findsOneWidget);
       expect(inCard('s-overdue', 'Overdue'), findsOneWidget);
@@ -403,7 +406,7 @@ void main() {
 
     testWidgets('a paused pairing offers no booking until it is resumed', (tester) async {
       await pump(tester, world: PairingWorld(status: 'PAUSED'));
-      expect(find.text('Ask for a time'), findsNothing);
+      expect(find.text('Request a Time'), findsNothing);
       expect(find.text('This mentorship is paused. Resume it to book a session.'), findsOneWidget);
       expect(find.text('Resume'), findsOneWidget);
     });
@@ -422,12 +425,12 @@ void main() {
         await tester.enterText(find.byKey(const ValueKey('record-link')), 'nope');
         await tester.enterText(find.byKey(const ValueKey('record-notes')), 'x' * 220);
         await tester.pump();
-        expect(find.text('Save your changes first: a summary is made from the saved notes.'), findsOneWidget);
-        await tester.tap(find.text('Save notes'));
+        expect(find.text('Save your changes first. A summary is made from the saved notes.'), findsOneWidget);
+        await tester.tap(find.text('Save Notes'));
         await tester.pump();
         expect(find.textContaining('Enter a full web address'), findsOneWidget);
         await tester.enterText(find.byKey(const ValueKey('record-link')), 'https://example.com/rec');
-        await tester.tap(find.text('Save notes'));
+        await tester.tap(find.text('Save Notes'));
         await settle(tester);
         expect(api.bodyOf('PATCH /mentorship/pair-anand/sessions/s-held/record'), {
           'notes': 'x' * 220,
@@ -438,7 +441,7 @@ void main() {
 
         await tester.tap(inCard('s-held', 'Notes'));
         await settle(tester);
-        await tester.tap(find.text('Summarise these notes'));
+        await tester.tap(find.text('Summarise Notes'));
         await settle(tester);
         expect(api.count('POST /mentorship/pair-anand/sessions/s-held/summarise'), 1);
         expect(find.textContaining('Discussed the 90-day target.'), findsWidgets);
@@ -464,10 +467,10 @@ void main() {
       await tester.ensureVisible(inCard('s-held', 'Notes'));
       await tester.tap(inCard('s-held', 'Notes'));
       await settle(tester);
-      await tester.tap(find.text('Summarise these notes'));
+      await tester.tap(find.text('Summarise Notes'));
       await settle(tester);
       expect(api.count('POST /mentorship/pair-anand/sessions/s-held/summarise'), 1);
-      expect(find.text('Summaries are not switched on here yet.'), findsOneWidget);
+      expect(find.text('Summaries are not available yet.'), findsOneWidget);
     });
   });
 
@@ -476,14 +479,14 @@ void main() {
       tester,
     ) async {
       final (api, _, w) = await pump(tester);
-      await tapText(tester, 'Add goal');
+      await tapText(tester, 'Add Goal');
       await tester.enterText(find.byKey(const ValueKey('goal-title')), 'ab');
-      await tester.tap(find.text('Add goal').last);
+      await tester.tap(find.text('Add Goal').last);
       await tester.pump();
-      expect(find.text('Name the goal: at least 3 characters.'), findsOneWidget);
+      expect(find.text('Enter a goal of at least 3 characters.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('goal-title')), 'Run a vendor review');
       await tester.enterText(find.byKey(const ValueKey('goal-detail')), 'Quarterly');
-      await tester.tap(find.text('Add goal').last);
+      await tester.tap(find.text('Add Goal').last);
       await settle(tester);
       expect((api.bodyOf('POST /mentorship/pair-anand/goals') as Map)['title'], 'Run a vendor review');
       expect(find.text('Goal added.'), findsOneWidget);
@@ -497,7 +500,7 @@ void main() {
       expect(find.text('40%'), findsWidgets);
       await tester.drag(find.byKey(const ValueKey('progress-slider')), const Offset(120, 0));
       await tester.pump();
-      await tester.tap(find.text('Save progress'));
+      await tester.tap(find.text('Save Progress'));
       await settle(tester);
       final sent = (api.bodyOf('POST /mentorship/pair-anand/goals/g1/progress') as Map)['progress'] as int;
       expect(sent, greaterThan(40));
@@ -522,13 +525,13 @@ void main() {
 
     testWidgets('a task is added, ticked, unticked and deleted (only the author deletes)', (tester) async {
       final (api, _, w) = await pump(tester);
-      await tapText(tester, 'Add task');
+      await tapText(tester, 'Add Task');
       await tester.enterText(find.byKey(const ValueKey('task-title')), 'x');
-      await tester.tap(find.text('Add task').last);
+      await tester.tap(find.text('Add Task').last);
       await tester.pump();
-      expect(find.text('Name the task: at least 2 characters.'), findsOneWidget);
+      expect(find.text('Enter a task of at least 2 characters.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('task-title')), 'Send the site list');
-      await tester.tap(find.text('Add task').last);
+      await tester.tap(find.text('Add Task').last);
       await settle(tester);
       expect((api.bodyOf('POST /mentorship/pair-anand/tasks') as Map)['title'], 'Send the site list');
       expect(find.text('Task added.'), findsOneWidget);
@@ -536,7 +539,7 @@ void main() {
       final row = find.byKey(const ValueKey('task-t1'));
       await tester.ensureVisible(row);
       expect(
-        find.descendant(of: row, matching: find.byTooltip('Delete task')),
+        find.descendant(of: row, matching: find.byTooltip('Delete Task')),
         findsNothing,
         reason: 'not their task',
       );
@@ -550,7 +553,7 @@ void main() {
 
       final mine = find.byKey(const ValueKey('task-t3'));
       await tester.ensureVisible(mine);
-      await tester.tap(find.descendant(of: mine, matching: find.byTooltip('Delete task')));
+      await tester.tap(find.descendant(of: mine, matching: find.byTooltip('Delete Task')));
       await settle(tester);
       expect(api.count('DELETE /mentorship/pair-anand/tasks/t3'), 1);
       expect(find.byKey(const ValueKey('task-t3')), findsNothing);
@@ -558,8 +561,8 @@ void main() {
 
     testWidgets('goals and tasks are read-only once the mentorship has ended', (tester) async {
       await pump(tester, world: PairingWorld(status: 'ENDED_EARLY'));
-      expect(find.text('Add goal'), findsNothing);
-      expect(find.text('Add task'), findsNothing);
+      expect(find.text('Add Goal'), findsNothing);
+      expect(find.text('Add Task'), findsNothing);
       expect(find.text('Drop'), findsNothing);
       expect(find.text('Pause'), findsNothing);
     });
@@ -570,10 +573,10 @@ void main() {
       tester,
     ) async {
       final (api, _, w) = await pump(tester);
-      await tapText(tester, 'Share a link or file');
+      await tapText(tester, 'Share a Link or File');
       await tester.tap(find.text('Share').last);
       await tester.pump();
-      expect(find.text('Give it a title: at least 2 characters.'), findsOneWidget);
+      expect(find.text('Enter a title of at least 2 characters.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('resource-title')), 'Handover checklist');
       await tester.tap(find.text('Share').last);
       await tester.pump();
@@ -657,12 +660,12 @@ void main() {
           },
         },
       );
-      await tapText(tester, 'Share a link or file');
+      await tapText(tester, 'Share a Link or File');
       await tester.tap(find.byKey(const ValueKey('share-file')));
       await tester.pump();
       await tester.tap(find.text('Share').last);
       await tester.pump();
-      expect(find.text('Give it a title: at least 2 characters.'), findsOneWidget);
+      expect(find.text('Enter a title of at least 2 characters.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('resource-title')), 'Org chart');
       await tester.tap(find.text('Share').last);
       await tester.pump();
@@ -700,7 +703,7 @@ void main() {
         },
         extra: {'POST /uploads': (_) => refuse('application/pdf is not an accepted file type for this upload.')},
       );
-      await tapText(tester, 'Share a link or file');
+      await tapText(tester, 'Share a Link or File');
       await tester.tap(find.byKey(const ValueKey('share-file')));
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('choose-file')));
@@ -745,14 +748,14 @@ void main() {
 
     testWidgets('a note goes on the timeline, shared or kept to the author', (tester) async {
       final (api, _, _) = await pump(tester);
-      await tapText(tester, 'Add a note');
-      await tester.tap(find.text('Add note').last);
+      await tapText(tester, 'Add a Note');
+      await tester.tap(find.text('Add Note').last);
       await tester.pump();
-      expect(find.text('Write the note first.'), findsOneWidget);
+      expect(find.text('Enter a note first.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('note-text')), 'Sent him the org chart');
       await tester.tap(find.byKey(const ValueKey('note-private')));
       await tester.pump();
-      await tester.tap(find.text('Add note').last);
+      await tester.tap(find.text('Add Note').last);
       await settle(tester);
       expect(api.bodyOf('POST /mentorship/pair-anand/notes'), {'note': 'Sent him the org chart', 'privateToMe': true});
       expect(find.text('Note added.'), findsOneWidget);
@@ -777,47 +780,47 @@ void main() {
         ];
       }
       await pump(tester, world: w);
-      expect(find.text('All 6 entries'), findsOneWidget);
+      expect(find.text('View All 6 Entries'), findsOneWidget);
       expect(find.text('Goal 4'), findsOneWidget, reason: 'newest first');
-      expect(find.text('Mentorship started'), findsNothing);
+      expect(find.text('Mentorship Started'), findsNothing);
       await tapKey(tester, 'timeline-all');
-      expect(find.text('Mentorship started'), findsOneWidget);
-      expect(find.text('Show less'), findsOneWidget);
+      expect(find.text('Mentorship Started'), findsOneWidget);
+      expect(find.text('View Less'), findsOneWidget);
     });
   });
 
   group('the plan behind it', () {
     testWidgets('an ongoing plan shows what is left of it, and its buyer may stop it renewing', (tester) async {
       final (api, _, w) = await pump(tester, world: PairingWorld(withPlan: true));
-      expect(find.text('Your plan'), findsOneWidget);
+      expect(find.text('Your Plan'), findsOneWidget);
       expect(find.text('Monthly leadership coaching'), findsOneWidget);
       expect(find.text('1 of 2 sessions left'), findsOneWidget);
-      await tapText(tester, 'Do not renew');
+      await tapText(tester, 'Do Not Renew');
       expect(api.count('POST /mentor-plans/subscriptions/term-1/cancel'), 1);
       expect(w.term!['cancelAtPeriodEnd'], isTrue);
       expect(find.text('It will not renew.'), findsOneWidget);
-      expect(find.textContaining('It will not renew: it ends at the close'), findsOneWidget);
+      expect(find.textContaining('It will not renew. It ends at the close'), findsOneWidget);
     });
 
     testWidgets('the mentor sees the plan too, but cannot stop it', (tester) async {
       await pump(tester, world: PairingWorld(side: 'MENTOR', withPlan: true));
       expect(find.text('Monthly leadership coaching'), findsOneWidget);
-      expect(find.text('Do not renew'), findsNothing);
+      expect(find.text('Do Not Renew'), findsNothing);
     });
 
     testWidgets('a programme lists its sessions in order and a booking is made against one of them', (tester) async {
       final w = PairingWorld(withPlan: true, programme: true)..slots = [DateTime(2026, 10, 28, 18)];
       final (api, _, _) = await pump(tester, world: w);
-      expect(find.text('The programme'), findsOneWidget);
+      expect(find.text('Programme'), findsOneWidget);
       expect(find.text('Held'), findsWidgets);
-      expect(find.text('Next to book'), findsOneWidget);
-      expect(find.text('No goals yet. A goal is what the two of you are working towards.'), findsNothing);
-      await tapText(tester, 'Ask for a time');
-      expect(find.text('Which session of the programme?'), findsOneWidget);
+      expect(find.text('Next to Book'), findsOneWidget);
+      expect(find.text('No goals yet. A goal is what you both work towards.'), findsNothing);
+      await tapText(tester, 'Request a Time');
+      expect(find.text('Programme Session'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('step-step-3')));
       await tester.tap(find.text('6:00 PM'));
       await tester.pump();
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Send Request'));
       await settle(tester);
       expect((api.bodyOf('POST /mentorship/pair-anand/sessions') as Map)['planStepId'], 'step-3');
     });
@@ -835,40 +838,40 @@ void main() {
       await tapKey(tester, 'cadence-WEEKLY');
       expect(api.bodyOf('PATCH /mentorship/pair-anand'), {'cadence': 'WEEKLY'});
       expect(w.cadence, 'WEEKLY');
-      expect(find.text('Rhythm changed.'), findsOneWidget);
+      expect(find.text('Meeting frequency updated.'), findsOneWidget);
     });
 
     testWidgets('ending early asks for a reason both of them read', (tester) async {
       final (api, _, w) = await pump(tester);
-      await tapText(tester, 'End early');
-      await tester.tap(find.text('End mentorship'));
+      await tapText(tester, 'End Early');
+      await tester.tap(find.text('End Mentorship'));
       await tester.pump();
-      expect(find.text('Write at least 3 characters.'), findsOneWidget);
-      await tester.enterText(find.byKey(const ValueKey('form-text')), 'Our schedules no longer line up');
-      await tester.tap(find.text('End mentorship'));
+      expect(find.text('Enter at least 3 characters.'), findsOneWidget);
+      await tester.enterText(find.byKey(const ValueKey('form-text')), 'Our schedules no longer match');
+      await tester.tap(find.text('End Mentorship'));
       await settle(tester);
       expect(api.bodyOf('PATCH /mentorship/pair-anand'), {
         'status': 'ENDED_EARLY',
-        'endedReason': 'Our schedules no longer line up',
+        'endedReason': 'Our schedules no longer match',
       });
       expect(w.status, 'ENDED_EARLY');
-      expect(find.text('Ended: Our schedules no longer line up'), findsOneWidget);
+      expect(find.text('Ended: Our schedules no longer match'), findsOneWidget);
       expect(find.text('Pause'), findsNothing);
     });
 
     testWidgets('completing it asks first, then the review and the certificate appear', (tester) async {
       final (api, _, _) = await pump(tester);
-      await tapText(tester, 'Mark complete');
-      await tester.tap(inDialog('Not yet'));
+      await tapText(tester, 'Mark Complete');
+      await tester.tap(inDialog('Not Yet'));
       await tester.pumpAndSettle();
       expect(api.count('PATCH /mentorship/pair-anand'), 0);
-      await tapText(tester, 'Mark complete');
-      await tester.tap(inDialog('Mark complete'));
+      await tapText(tester, 'Mark Complete');
+      await tester.tap(inDialog('Mark Complete'));
       await settle(tester);
       expect(api.bodyOf('PATCH /mentorship/pair-anand'), {'status': 'COMPLETED'});
-      expect(find.text('Your review'), findsOneWidget);
-      expect(find.text('Rate this mentorship'), findsOneWidget);
-      expect(find.text('Your certificate'), findsOneWidget);
+      expect(find.text('Your Review'), findsOneWidget);
+      expect(find.text('Rate This Mentorship'), findsOneWidget);
+      expect(find.text('Your Certificate'), findsOneWidget);
       expect(find.text('Mentoring completion certificate'), findsOneWidget);
       await tapKey(tester, 'certificate-card');
       expect(find.text('ICR-MENTEE-2026-BHARATXX'), findsOneWidget);
@@ -877,14 +880,14 @@ void main() {
     testWidgets('a completed mentorship is rated once, with a recommendation', (tester) async {
       final w = PairingWorld(status: 'COMPLETED');
       final (api, _, _) = await pump(tester, world: w);
-      await tapText(tester, 'Rate this mentorship');
-      await tester.tap(find.text('Send review'));
+      await tapText(tester, 'Rate This Mentorship');
+      await tester.tap(find.text('Send Review'));
       await tester.pump();
-      expect(find.text('Choose a rating from one to five stars.'), findsOneWidget);
+      expect(find.text('Select a rating from one to five stars.'), findsOneWidget);
       await tester.tap(find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.star_outline_rounded).last);
       await tester.pump();
       await tester.enterText(find.byKey(const ValueKey('review-comment')), 'Clear and practical');
-      await tester.tap(find.text('Send review'));
+      await tester.tap(find.text('Send Review'));
       await settle(tester);
       expect(api.bodyOf('POST /mentorship/pair-anand/feedback'), {
         'rating': 5,
@@ -892,16 +895,16 @@ void main() {
         'wouldRecommend': true,
       });
       expect(find.byKey(const ValueKey('my-review')), findsOneWidget);
-      expect(find.text('Rate this mentorship'), findsNothing);
+      expect(find.text('Rate This Mentorship'), findsNothing);
     });
 
     testWidgets('a concern needs ten characters, goes to ICR, and a safety concern is always urgent', (tester) async {
       final (api, _, _) = await pump(tester);
-      await tapText(tester, 'Report a concern');
+      await tapText(tester, 'Report a Concern');
       await tester.enterText(find.byKey(const ValueKey('concern-detail')), 'short');
       await tester.tap(find.text('Send to ICR'));
       await tester.pump();
-      expect(find.text('Tell ICR what happened: at least 10 characters.'), findsOneWidget);
+      expect(find.text('Describe what happened in at least 10 characters.'), findsOneWidget);
       await tester.tap(find.text('Safety'));
       await tester.enterText(find.byKey(const ValueKey('concern-detail')), 'I felt unsafe at the site visit');
       await tester.tap(find.text('Send to ICR'));
@@ -916,11 +919,11 @@ void main() {
 
     testWidgets('support is an ordinary request about this mentorship', (tester) async {
       final (api, _, _) = await pump(tester);
-      await tapText(tester, 'Contact ICR support');
+      await tapText(tester, 'Contact ICR Support');
       await tester.enterText(find.byKey(const ValueKey('support-subject')), 'Hi');
       await tester.tap(find.text('Send'));
       await tester.pump();
-      expect(find.text('Give it a subject: at least 5 characters.'), findsOneWidget);
+      expect(find.text('Enter a subject of at least 5 characters.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('support-subject')), 'The booking will not load');
       await tester.enterText(find.byKey(const ValueKey('support-body')), 'It spins forever when I tap Move.');
       await tester.tap(find.text('Send'));

@@ -53,7 +53,7 @@ Provide the links once above the shell (`Provider<MentorshipLinks>.value`) or pa
 
 ## The tabs of My mentoring
 
-Tab keys follow the website (`?tab=`): `active` (Mentoring), `requests`, `calendar`, `purchases`, `goals`, `saved`, `certificates`, `reports`. Saved, Purchases and Goals show for a member who is a mentee (`actsAsMentee`, the website's `useMentoringSides`); Reports shows once a concern was raised; the tab the member is on or was sent to always stays. The tab strip scrolls sideways and brings the open tab into view.
+Tab keys follow the website (`?tab=`): `active` (Mentoring), `requests`, `calendar`, `purchases`, `goals`, `saved`, `certificates`, `reports`. Saved and Goals show for a member who is a mentee (`actsAsMentee`, the website's `useMentoringSides`); **Purchases always shows** (owner, 9 Nov 2026: it appeared only when a notification opened it and vanished otherwise, so it "should be intact"); Reports shows once a concern was raised; the tab the member is on or was sent to always stays. The tab strip scrolls sideways and brings the open tab into view.
 
 | Tab | Reads | What each control does | Proved by |
 | --- | --- | --- | --- |
@@ -177,3 +177,227 @@ Live tests undo what the API allows: a request is withdrawn, a booked call cance
 * The seed has no programme term waiting on payment (a programme's payment sheet is proved with fixtures only): the two programme terms every mentee gets are `PENDING_MENTOR`, and changing one would disturb the mentor desk's tests that answer them.
 * The website's reschedule of a purchase takes the buyer's note only up to 300 characters: validated; the mentor's side of a purchase is the mentor desk.
 * Pixel matching, goldens as assertions and tablet layouts: postponed by instruction.
+
+## 7 Nov 2026
+
+* **Withdraw asks first** (`withdraw-confirm`) on a requested or accepted purchase.
+* Report a problem reads "ICR reviews your report and asks the mentor to respond." — no first name (owner: "where is this text coming that Rashmmi will look into issue?").
+* **A mentor who bought a session is a mentee too** (`hasPurchases`): the purchases load with the first screenful, the Purchases tab shows for them, and what waits on them (a time to accept, a payment, a move, a review) is listed under **Needs you** on the overview — a mentor could not find the time set for the session he had bought.
+
+## 9 Nov 2026
+
+* **The Purchases tab is always there** (`_visible`: `MyTab.purchases => true`). Before, it showed only for a mentee or someone with purchases, so a member sent to it by a notification saw it vanish on their next visit.
+* **No page title inside a tab**: see `docs/screens/learning_exam.md` → 9 Nov 2026; the rule is the workspace's, and holds here too.
+
+* **Bug sheet #18:** a programme in `OPEN` whose applications closed reads **Applications closed** (`statusLabel` follows `open`), where the badge said "Applications open" over "Applications closed 1 Oct".
+* **Bug sheet #12, #28, #31–#33, #38** were done on 3–8 Nov: hairline cards instead of boxes, no RFQ pill in mentoring threads, Withdraw asks first, the session texts, the Purchases tab for a mentor who bought a session.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client asked for the on-screen text to be refined "crisp, for global standard", in the style of the wording they marked up for sign-in and Settings. Wording only: no layout, colour or behaviour changed. Names of things a person taps or reads as a label are in Title Case; sentences are in sentence case with a full stop; no dash is used as punctuation; "pick" and "tick" read "select", "is told" reads "is notified", "show up / land here" reads "will appear here", and a load that fails reads "Unable to Load …". The title of an empty state or an error block is a heading (Title Case, no full stop: "No Purchases Yet", "Unable to Load Mentors"); the line under it is a sentence. The retry button reads **Try Again**.
+
+* "Needs you" reads **Action Needed** everywhere (the overview, a pairing, Purchases, and the overline on the attention card), which is the name the overview already used for the group on Engagements.
+* Form labels that were questions are now names: "How often?" → "Meeting Frequency", "Where are you in your career?" → "Career Stage", "What is it about?" → "Concern Type", "When?" → "Date and Time".
+* Left as they are: the report sentence "ICR reviews your report and asks the mentor to respond." (owner, 7 Nov), the reason sent to the API when a mentee withdraws a session request ("Withdrawn by the mentee."), example hints that show what to type ("Lead a site audit on my own", "Weekday evenings after 7 pm"), the tab names (single words), "FROM ICR", and counts and date lines ("3 sessions held · 2 hr in all").
+
+| Old | New |
+| --- | --- |
+| {…} a seat | {…} per seat |
+| Couldn't load the sessions | Unable to Load Sessions |
+| No sessions match | No Matching Sessions |
+| Reserve a seat at an open session and it shows up here. | Reserve a seat at an open session and it will appear here. |
+| Try another filter, or look again later: hosts add sessions all the time. | Try another filter, or check again later. Hosts add sessions regularly. |
+| Load more sessions | View More |
+| Couldn't load this session | Unable to Load This Session |
+| The days | Session Days |
+| Who is going ( | Attendees ( |
+| Sent to ICR. Someone will look into it and reply to you. | Sent to ICR. The team will review it and reply to you. |
+| Join the session | Join Session |
+| You are on the waitlist. You get a seat if one frees up, and the host tells you. | You are on the waitlist. If a seat becomes available, you get it and the host notifies you. |
+| Leave the waitlist | Leave Waitlist |
+| It is full, but you can join the waitlist. | This session is full. You can join the waitlist. |
+| A free seat. Tell the host what you want out of it. | This seat is free. Tell the host what you want from the session. |
+| A question for the host (optional) | Question for the Host (Optional) |
+| Join the waitlist | Join Waitlist |
+| How was it? Your rating helps others choose. | Your rating helps others choose. |
+| Hide my name on the rating | Hide My Name |
+| What you want out of it | What you want from the session |
+| You pay on ICR's secure PayU page, here in the app. | You pay on ICR's secure PayU page in the app. |
+| Tell ICR what happened: at least 10 characters. | Describe what happened in at least 10 characters. |
+| Goes to ICR's safeguarding team, not to the host. | This goes to ICR's safeguarding team, not to the host. |
+| What is it about? | Concern Type |
+| This is urgent | Mark as Urgent |
+| Couldn't open the conversation. Try again. | Unable to open the conversation. Try again. |
+| Awaiting the mentor | Awaiting Mentor |
+| The other person has gone quiet. | The other person has stopped responding. |
+| Contact outside what you agreed, or asks that made you uneasy. | Contact beyond what you agreed, or requests that made you uncomfortable. |
+| ICR is looking into it | Under Review |
+| Acted on | Action Taken |
+| Couldn't load your mentoring | Unable to Load Your Mentoring |
+| No sessions yet. Book your first session | No sessions yet. Book your first session. |
+| Needs you | Action Needed |
+| {mentor} set a time for {…}: accept it, or ask another | {mentor} set a time for {…}. Accept it or ask for another. |
+| No agenda yet — add one so your mentor can prepare | No agenda yet. Add one so your mentor can prepare. |
+| Your objective, in your own words | Your Objective |
+| Phone number | Mobile Number |
+| Every signal mentors match on is filled in. | All mentor matching criteria are complete. |
+| See purchases | View Purchases |
+| See all saved | View All Saved |
+| Requests asked of you — to mentor someone, for a session or for a programme — are on Engagements, | Requests to mentor someone, for a session or for a programme are on Engagements, |
+| — {about} | · {about} |
+| Declined. {…} has been told. | Declined. {…} has been notified. |
+| Asked of you | Requests Received |
+| When a member asks you to mentor them, it lands here. | When a member asks you to mentor them, the request will appear here. |
+| Sent by you | Requests Sent |
+| You have not asked anyone yet | No Requests Sent Yet |
+| Couldn't load your requests | Unable to Load Your Requests |
+| Could not refresh this month: | Unable to refresh this month: |
+| Nothing on this day. | No events on this day. |
+| Couldn't load your calendar | Unable to Load Your Calendar |
+| No goals yet. Open a mentorship and add one: a goal is what the two of you are working towards. | No goals yet. Open a mentorship and add one. A goal is what you both work towards. |
+| Couldn't load your goals | Unable to Load Your Goals |
+| Tell mentors what you want out of mentoring. A request needs your career stage first, and a few | Tell mentors what you want from mentoring. A request needs your career stage first. A few |
+| lines about the next step you want to take help it get answered. | lines about your next step help it get answered. |
+| Set it up | Set Up |
+| Nothing saved yet | No Saved Mentors Yet |
+| Save a mentor from their profile to keep a shortlist before you ask anyone. Only you see it. | Save a mentor from their profile to build a shortlist before you send a request. Only you can see it. |
+| saved. Only you see this list. | saved. Only you can see this list. |
+| Couldn't load your saved mentors | Unable to Load Your Saved Mentors |
+| Couldn't load your certificates | Unable to Load Your Certificates |
+| You have not raised a concern. You can from any mentorship: it goes to ICR, not to the other person. | You have not raised a concern. You can raise one from any mentorship. It goes to ICR, not to the other person. |
+| Couldn't load your reports | Unable to Load Your Reports |
+| Pick a time first. | Select a time first. |
+| Pick a time in the future. | Select a time in the future. |
+| Ask for a time | Request a Time |
+| is told, and the session is booked at the time you pick. | is notified, and the session is booked at the time you select. |
+| The other person is told. It stays booked at the new time. | The other person is notified. The session stays booked at the new time. |
+| It goes straight on both calendars. | It is added to both calendars immediately. |
+| Which session of the programme? | Programme Session |
+| Length | Duration |
+| How | Meeting Mode |
+| When? / Free times in your/their hours | Date and Time / Free Times in Your/Their Hours |
+| No open times in the next two weeks; pick a day and time. | No open times in the next two weeks. Select a day and time. |
+| On your phone's clock. The API refuses a time outside the mentor's hours or on top of another session. | Times are shown in your phone's time zone. A time outside the mentor's hours or overlapping another session is not accepted. |
+| Pick a day and time | Select a Day and Time |
+| Enter the minutes it ran: {minSessionMinutes} to {maxSessionMinutes}. | Enter the minutes it ran, from {minSessionMinutes} to {maxSessionMinutes}. |
+| Mark the session held | Mark Session as Held |
+| This is what gets counted: {…} was booked. | This duration is counted. {…} was booked. |
+| Mark held | Mark as Held |
+| Minutes it actually ran | Actual Minutes |
+| A note for the timeline (optional) | Timeline Note (Optional) |
+| Summaries are not switched on here yet. | Summaries are not available yet. |
+| Either of you can write these up. They are private to the two of you. | Either of you can write these notes. They are private to you both. |
+| Summarise these notes | Summarise Notes |
+| Save your changes first: a summary is made from the saved notes. | Save your changes first. A summary is made from the saved notes. |
+| Asked for only when you press it: the notes go to a model to be summarised. | Runs only when you select it. The notes are sent to an AI model to be summarised. |
+| is told when it changes. | is notified when it changes. |
+| Name the goal: at least 3 characters. | Enter a goal of at least 3 characters. |
+| Something the two of you agree to work towards. Both of you can update it. | A goal you both agree to work towards. Either of you can update it. |
+| Detail (optional) | Details (Optional) |
+| What done looks like | What success looks like |
+| Pick a date | Select a Date |
+| Name the task: at least 2 characters. | Enter a task of at least 2 characters. |
+| Due (optional) | Due Date (Optional) |
+| How far along is it? 100% marks it achieved. | Set the progress. 100% marks the goal as achieved. |
+| Write the note first. | Enter a note first. |
+| A line on the timeline: what happened, what is next. | A timeline entry. Describe what happened and what is next. |
+| Private: only you can see it | Private. Only you can see it. |
+| That file is over 10 MB. | The file is larger than 10 MB. |
+| Give it a title: at least 2 characters. | Enter a title of at least 2 characters. |
+| A link or a file | Link or File |
+| What it is | Resource Type |
+| Why it is worth opening (optional) | Why It Is Useful (Optional) |
+| Goes to ICR's safeguarding team, not to the other person. | This goes to ICR's safeguarding team, not to the other person. |
+| Give it a subject: at least 5 characters. | Enter a subject of at least 5 characters. |
+| Tell us what went wrong: at least 10 characters. | Describe what went wrong in at least 10 characters. |
+| Couldn't load this mentorship | Unable to Load This Mentorship |
+| How often you meet | Meeting Frequency |
+| Rhythm changed. | Meeting frequency updated. |
+| A concern is private to ICR: {other} is not told and nothing is shown to them. | A concern is private to ICR. {other} is not notified and nothing is shown to them. |
+| It closes the pairing for both of you and cancels anything still booked. | This closes the mentorship for you both and cancels any booked sessions. |
+| is told, and you can both leave a review. | is notified, and you can both leave a review. |
+| Both of you see the reason. Anything still booked is cancelled. | You both see the reason. Any booked sessions are cancelled. |
+| Our schedules no longer line up | Our schedules no longer match |
+| Nothing booked. Book a time from your hours. | No sessions booked. Book a time from your hours. |
+| Nothing booked yet. Ask for a time; your mentor confirms it. | No sessions booked yet. Request a time and your mentor confirms it. |
+| No sessions ahead. | No upcoming sessions. |
+| Needs you: a session to close | Action needed: close a session |
+| Waiting on {…} to confirm | Waiting for {…} to confirm |
+| Needs you: a time to answer | Action needed: respond to a time |
+| Waiting on {…} | Waiting for {…} |
+| Moved. {…} has been told. | Moved. {…} has been notified. |
+| Booked. {…} has been told. | Booked. {…} has been notified. |
+| Asked. Your mentor confirms the time. | Request sent. Your mentor confirms the time. |
+| confirms a session once it has happened. If it did not, move it to a new time. | confirms a session after it takes place. If it did not take place, move it to a new time. |
+| is told, with your reason. | is notified, with your reason. |
+| The request is taken back, and the mentor is told. | The request is withdrawn, and the mentor is notified. |
+| The programme | Programme |
+| A cancelled session gives its place back; a no-show does not. | A cancelled session is returned to your allowance. A no-show is not. |
+| It will not renew: it ends at the close of this term. | It will not renew. It ends at the close of this term. |
+| No goals yet. A goal is what the two of you are working towards. | No goals yet. A goal is what you both work towards. |
+| Nothing on the list. Agree the next steps after a session. | No tasks yet. Agree the next steps after a session. |
+| Nothing shared yet. Links and files you share show up for both of you. | Nothing shared yet. Links and files you share are visible to you both. |
+| Nothing recorded yet. Notes you add, and what happens, show up here. | Nothing recorded yet. Notes you add and mentorship events will appear here. |
+| All {…} entries | View All {…} Entries |
+| This mentorship is complete. How did it go? Your rating helps other members choose. | This mentorship is complete. Your rating helps other members choose. |
+| Couldn't load the programmes | Unable to Load Programmes |
+| No programmes here | No Programmes Found |
+| Cohort programmes open for applications from time to time. Look again soon. | Cohort programmes open for applications periodically. Check again soon. |
+| Couldn't load this programme | Unable to Load This Programme |
+| The detail | Details |
+| Your place in the programme is given up, and the mentor is told. | Your place in the programme is released, and the mentor is notified. |
+| Apply on the other side | Apply in the Other Role |
+| Which side are you applying on? | Applying As |
+| The {…} side is full. | All {…} places are taken. |
+| What you want out of it | What you want from the programme |
+| Tell us what you are after | Add My Mentoring Goals |
+| ; you pay {…}. | . You pay {…}. |
+| The payment didn't go through. Nothing was charged. | The payment failed. Nothing was charged. |
+| The payment wasn't completed. If you did pay, it shows under My mentoring within a minute. | The payment was not completed. If you paid, it will appear under My Mentoring within a minute. |
+| It is booked on both calendars at once. | It is booked on both calendars immediately. |
+| It is free: nothing to pay. | It is free. There is nothing to pay. |
+| after, to confirm it. | afterwards to confirm it. |
+| Start it | Start |
+| Say which times would, and {name} sets another. | Enter the times that suit you, and {name} sets another. |
+| Which times would work for you? | Times That Suit You |
+| The other person is told, with your reason. Whether you are refunded follows ICR's cancellation rules. | The other person is notified, with your reason. Refunds follow ICR's cancellation rules. |
+| Hide my name on the review | Hide My Name |
+| Pick a new time first. | Select a new time first. |
+| A note (optional) | Note (Optional) |
+| is told, with your reason if you give one. | is notified, with your reason if you give one. |
+| A note back (optional) | Reply Note (Optional) |
+| is told and the request is closed. You can ask again later. | is notified and the request is closed. You can ask again later. |
+| Sessions, guides, programmes and plans you ask for or buy from a mentor show up here, with group sessions and cohorts. | Sessions, guides, programmes and plans you request or buy from a mentor will appear here, with group sessions and cohorts. |
+| {mentor} can't take it | {mentor} is unable to take it |
+| Withdraw the request | Withdraw Request |
+| Ask another time | Ask for Another Time |
+| Thanks. Your review is on | Thank you. Your review is on |
+| Sent. ICR will look into it. | Sent. ICR will review it. |
+| The plan is not taken up, and the mentor is told. | The plan request is withdrawn, and the mentor is notified. |
+| A cohort programme | Cohort Programme |
+| You are all caught up. | Nothing needs your attention. |
+| NEEDS YOU | ACTION NEEDED |
+| Lapses {…} if nobody answers | Expires {…} if not answered |
+| Write at least {…} characters. | Enter at least {…} characters. |
+| Choose a rating from one to five stars. | Select a rating from one to five stars. |
+| Write at least {…} characters, or leave the comment empty. | Enter at least {…} characters, or leave the comment empty. |
+| What was it like? (optional) | Comment (Optional) |
+| When? / Free times | Date and Time / Free Times |
+| No open times are listed for the next two weeks; pick a day and time. | No open times are listed for the next two weeks. Select a day and time. |
+| On your phone's clock. | Times are shown in your phone's time zone. |
+| Tell us where you are in your career first. | Select your career stage first. |
+| Where are you in your career? | Career Stage |
+| What do you want help with? | Mentoring Goals |
+| That is the most you can pick ({_maxFocus}). | You have selected the maximum ({_maxFocus}). |
+| Pick up to {_maxFocus}. | Select up to {_maxFocus}. |
+| In your words (optional) | Your Objective (Optional) |
+| How would you like to meet? | Meeting Mode |
+| How often? | Meeting Frequency |
+| Couldn't load this | Unable to Load This |
+| s mentor and they are told. You can pause or end it later. | s mentor and they are notified. You can pause or end it later. |
+| How often will you meet? | Meeting Frequency |
+| Optional. It is a rhythm to aim for, not a rule. | Optional. This is a guide, not a rule. |
+| They are told, with your note. A kind line helps: they may look for someone else. | They are notified, with your note. A kind note helps, as they may look for another mentor. |
+| Couldn't load your purchases | Unable to Load Your Purchases |
+| About {subject}. For conduct, use "Report a concern": that stays private. | About {subject}. For conduct issues, use "Report a Concern". It stays private. |
+| Buttons, headings, tabs, chips, field labels and status names to Title Case: 215 strings | e.g. "Valid ICR mentoring certificate" → "Valid ICR Mentoring Certificate"; "Certificate not found" → "Certificate Not Found"; "This certificate is no longer valid" → "This Certificate Is No Longer Valid" |

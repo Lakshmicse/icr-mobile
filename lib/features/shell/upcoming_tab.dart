@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
 import '../../core/util/links.dart';
@@ -55,7 +56,7 @@ class UpcomingTab extends StatelessWidget {
                       ),
                       const SizedBox(height: 18),
                       Text(
-                        '$title is coming to the app',
+                        '$title Is Coming to the App',
                         textAlign: TextAlign.center,
                         style: AppText.postTitle.copyWith(fontSize: 18, height: 1.3),
                       ),
@@ -74,7 +75,7 @@ class UpcomingTab extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
                           textStyle: AppText.button,
                         ),
-                        child: Text('Open $title on icr.org.in', style: AppText.button),
+                        child: Text('Open $title on ${Uri.parse(AppConfig.siteUrl).host}', style: AppText.button),
                       ),
                     ],
                   ),

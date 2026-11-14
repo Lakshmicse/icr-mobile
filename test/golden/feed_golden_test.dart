@@ -12,6 +12,8 @@ import 'package:icr_mobile/features/feed/demo_feed_repository.dart';
 import 'package:icr_mobile/features/feed/feed_controller.dart';
 import 'package:icr_mobile/features/feed/feed_models.dart';
 import 'package:icr_mobile/features/feed/home_screen.dart';
+import 'package:icr_mobile/features/feed/feed_styles.dart';
+import 'package:icr_mobile/features/feed/widgets/comment_widgets.dart';
 import 'package:icr_mobile/features/feed/widgets/reply_widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -67,30 +69,69 @@ void main() {
     await expectLater(find.byType(HomeScreen), matchesGoldenFile('goldens/feed_home_demo.png'));
   });
 
-  testWidgets('the reply section at 328 × 283, the size of forum-replies.png at 4x', (tester) async {
-    tester.view.physicalSize = const Size(1312, 1132);
-    tester.view.devicePixelRatio = 4;
+  testWidgets('comments, drawn as LinkedIn draws them, at 360 × 520', (tester) async {
+    tester.view.physicalSize = const Size(1080, 1560);
+    tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
-    final reply = FeedReply(
-      id: 'r1',
-      author: const FeedAuthor(
-        id: 'arvind',
-        name: 'Arvind Swamy',
-        headline: 'VP Sustainability at Brookfield Properties',
-        photo: FeedPicture.asset('assets/images/demo/avatar_arvind.jpg'),
-      ),
-      body:
-          'Spot on Priya. Niagara framework BACnet/IP telemetry cut vendor lock-in completely across our commercial assets.',
-      createdAt: DateTime.now().subtract(const Duration(minutes: 42)),
-      meta: 'Brookfield Properties',
-      role: 'VP Sustainability',
-      likes: 3,
+    final now = DateTime(2026, 11, 13, 12);
+    FeedReply reply(
+      String id,
+      String name,
+      String headline,
+      String photo,
+      String body,
+      Duration ago, {
+      int likes = 0,
+    }) => FeedReply(
+      id: id,
+      author: FeedAuthor(id: id, name: name, headline: headline, photo: FeedPicture.asset(photo)),
+      body: body,
+      createdAt: now.subtract(ago),
+      likes: likes,
     );
+    final top = reply(
+      'c1',
+      'Arvind Swamy',
+      'VP Sustainability at Brookfield Properties',
+      'assets/images/demo/avatar_arvind.jpg',
+      'Niagara framework BACnet/IP telemetry cut vendor lock-in completely across our commercial assets.',
+      const Duration(days: 3),
+      likes: 9,
+    );
+    final answers = [
+      reply(
+        'c2',
+        'Priya Nambiar',
+        'Head of Facilities at TechCorp',
+        'assets/images/demo/avatar_me.jpg',
+        'Which supervisor version are you on?',
+        const Duration(days: 3),
+        likes: 36,
+      ),
+      reply(
+        'c3',
+        'Arvind Swamy',
+        'VP Sustainability at Brookfield Properties',
+        'assets/images/demo/avatar_arvind.jpg',
+        'Niagara 4.13, with the analytics pack.',
+        const Duration(days: 2),
+      ),
+    ];
     final controller = TextEditingController();
     final focus = FocusNode();
     addTearDown(controller.dispose);
     addTearDown(focus.dispose);
+    Widget tile(FeedReply r, {int replies = 0, String? to, bool follow = false}) => CommentTile(
+      reply: r,
+      now: now,
+      replyCount: replies,
+      replyingTo: to,
+      onFollow: follow ? () {} : null,
+      onLike: () {},
+      onReply: () {},
+      onMore: () {},
+    );
     await tester.pumpWidget(
       MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -104,43 +145,40 @@ void main() {
               child: ColoredBox(
                 color: Colors.white,
                 child: SizedBox(
-                  width: 328,
-                  height: 283,
-                  child: OverflowBox(
-                    alignment: Alignment.topLeft,
-                    minHeight: 0,
-                    maxHeight: 400,
-                    child: SizedBox(
-                      width: 326,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          ThreadBranch(
-                            gap: 12,
-                            armY: 11,
-                            child: ReplyTile(reply: reply, onLike: () {}, onReply: () {}, onMore: () {}),
+                  width: 360,
+                  height: 520,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: CommentDesign.pad),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: CommentSortButton(sort: CommentSort.relevant, onChanged: (_) {}),
+                        ),
+                        tile(top, replies: 2, follow: true),
+                        CommentReplies(
+                          children: [
+                            tile(answers[0], to: 'Arvind Swamy', follow: true),
+                            tile(answers[1], to: 'Priya Nambiar'),
+                          ],
+                        ),
+                        const Spacer(),
+                        ReplyBox(
+                          look: ReplyLook.home,
+                          viewer: const FeedAuthor(
+                            id: 'me',
+                            name: 'Rahul Mehta',
+                            photo: FeedPicture.asset('assets/images/demo/avatar_me.jpg'),
                           ),
-                          ThreadBranch(gap: 10, armY: 5, child: MoreRepliesPill(count: 8, onTap: () {})),
-                          ThreadBranch(
-                            gap: 9,
-                            armY: 10,
-                            last: true,
-                            child: ReplyBox(
-                              viewer: const FeedAuthor(
-                                id: 'me',
-                                name: 'Rahul Mehta',
-                                photo: FeedPicture.asset('assets/images/demo/avatar_me.jpg'),
-                              ),
-                              controller: controller,
-                              focusNode: focus,
-                              sending: false,
-                              hint: 'Reply to Priya Nambiar...',
-                              onSend: () {},
-                            ),
-                          ),
-                        ],
-                      ),
+                          controller: controller,
+                          focusNode: focus,
+                          sending: false,
+                          hint: 'Add a comment...',
+                          onSend: () {},
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                     ),
                   ),
                 ),
@@ -151,6 +189,6 @@ void main() {
       ),
     );
     await precacheAll(tester);
-    await export(tester, find.byKey(const ValueKey('frame')), 'forum_replies', 4);
+    await expectLater(find.byKey(const ValueKey('frame')), matchesGoldenFile('goldens/feed_comments.png'));
   });
 }

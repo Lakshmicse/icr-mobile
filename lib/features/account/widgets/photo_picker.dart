@@ -21,7 +21,7 @@ const maxEvidenceBytes = 10 * 1024 * 1024;
 String? photoProblem(PickedPhoto file, {int max = maxPhotoBytes}) {
   if (file.bytes.length <= max) return null;
   final mb = max ~/ (1024 * 1024);
-  return 'That file is too big. Choose one under $mb MB.';
+  return 'The file is too large. Choose one under $mb MB.';
 }
 
 /// The longest side, in pixels, a picture is kept to when it has to be shrunk to be sent.

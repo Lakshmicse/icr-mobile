@@ -10,8 +10,8 @@ import '../../mentorship_my/mentoring_format.dart' show inr, linkProblem, normal
 const minSessionMinutes = 15;
 const maxSessionMinutes = 480;
 
-/// `MENTOR_SERVICE_LIMITS`: what a service may be priced at.
-const minServicePricePaisa = 49900;
+/// `MENTOR_SERVICE_LIMITS`: the most a service may be priced at. The app sets no floor of its own
+/// (owner, 7 and 14 Nov 2026: no ₹499 criteria on any price).
 const maxServicePricePaisa = 5000000;
 
 /// The API's sentence for a resource that has no file behind it.
@@ -90,7 +90,7 @@ String rupeesOf(int? paisa) => paisa == null ? '' : '${(paisa / 100).round()}';
 
 String? serviceTitleProblem(String title) {
   final t = title.trim();
-  if (t.length < minServiceTitle) return 'Give it a title: at least $minServiceTitle characters.';
+  if (t.length < minServiceTitle) return 'Enter a title of at least $minServiceTitle characters.';
   if (t.length > maxServiceTitle) return 'Keep the title under $maxServiceTitle characters.';
   return null;
 }
@@ -98,13 +98,13 @@ String? serviceTitleProblem(String title) {
 String? blurbProblem(String blurb, {required int max}) =>
     blurb.trim().length > max ? 'Keep the description under $max characters.' : null;
 
-/// The price rule of every service: free, or at least ₹499 and at most ₹50,000; the strikethrough price
-/// above it and the price at least half of it.
+/// The price rule of every service: free, or a price up to ₹50,000; the strikethrough price above it and the
+/// price at least half of it. The app sets no floor of its own (owner, 7 Nov 2026: "remove the criteria and text");
+/// the API's own answer shows if it refuses a price.
 String? servicePriceProblem({required bool free, required String price, required String compareAt}) {
   if (free) return null;
   final p = paisaOf(price);
-  if (p == null) return 'Enter the price in rupees, or switch on Free.';
-  if (p < minServicePricePaisa) return 'Priced services start at ${inr(minServicePricePaisa)}.';
+  if (p == null) return 'Enter the price in rupees, or turn on Free.';
   if (p > maxServicePricePaisa) return 'Prices go up to ${inr(maxServicePricePaisa)}.';
   return compareAtProblem(price: p, compareAt: compareAt);
 }
@@ -116,7 +116,7 @@ String? compareAtProblem({required int price, required String compareAt}) {
   if (c == null) return 'Enter the strikethrough price in rupees, or leave it empty.';
   if (c <= price) return 'The compare-at price must be higher than the price.';
   if (price * 10000 < c * (10000 - maxDiscountBps)) {
-    return 'Discounts are capped at ${maxDiscountBps ~/ 100}%: the price must be at least half of the compare-at price.';
+    return 'Discounts are capped at ${maxDiscountBps ~/ 100}%. The price must be at least half of the compare-at price.';
   }
   return null;
 }
@@ -131,7 +131,7 @@ String? minutesProblem(String raw, {String what = 'A session'}) {
 
 String? seatsProblem(String raw, {int min = minSeats, int max = maxSeats}) {
   final s = int.tryParse(raw.trim());
-  if (s == null || s < min || s > max) return 'Seats: a number from $min to $max.';
+  if (s == null || s < min || s > max) return 'Enter seats as a number from $min to $max.';
   return null;
 }
 
@@ -141,7 +141,7 @@ String? seatsProblem(String raw, {int min = minSeats, int max = maxSeats}) {
 
 String? planTitleProblem(String title) {
   final t = title.trim();
-  if (t.length < minPlanTitle) return 'Give it a title: at least $minPlanTitle characters.';
+  if (t.length < minPlanTitle) return 'Enter a title of at least $minPlanTitle characters.';
   if (t.length > maxPlanTitle) return 'Keep the title under $maxPlanTitle characters.';
   return null;
 }
@@ -150,32 +150,29 @@ String? planTitleProblem(String title) {
 String? recurringPriceProblem({required bool free, required String price, required String compareAt}) {
   if (free) return null;
   final p = paisaOf(price);
-  if (p == null) return 'Enter the price in rupees, or switch on Free.';
+  if (p == null) return 'Enter the price in rupees, or turn on Free.';
   if (p < minPlanPricePaisa || p > maxPlanPricePaisa) {
     return 'An ongoing plan is either free, or priced between ${inr(minPlanPricePaisa)} and ${inr(maxPlanPricePaisa)} per term.';
   }
   if (compareAt.trim().isNotEmpty) {
     final c = paisaOf(compareAt);
     if (c == null) return 'Enter the strikethrough price in rupees, or leave it empty.';
-    if (c <= p) return 'The strikethrough price has to be higher than the price you are charging.';
+    if (c <= p) return 'The strikethrough price must be higher than the price you charge.';
   }
   return null;
 }
 
-/// A programme's price is the one rule of "1:1 mentoring": free, or at least ₹499; the strikethrough above it and
-/// the price at least half of it.
+/// A programme's price: free, or a price; the strikethrough above it and the price at least half of it. No floor
+/// of the app's own (owner, 7 Nov 2026); the API answers for its own.
 String? programmePriceProblem({required bool free, required String price, required String compareAt}) {
   if (free) return null;
   final p = paisaOf(price);
-  if (p == null) return 'Enter the price in rupees, or switch on Free.';
-  if (p < minServicePricePaisa) {
-    return '1:1 mentoring is either free or priced at ${inr(minServicePricePaisa)} or more.';
-  }
+  if (p == null) return 'Enter the price in rupees, or turn on Free.';
   if (p > maxPaisa) return 'That price is too large.';
   if (compareAt.trim().isNotEmpty) {
     final c = paisaOf(compareAt);
     if (c == null) return 'Enter the strikethrough price in rupees, or leave it empty.';
-    if (c <= p) return 'The strikethrough price has to be higher than the price you are charging.';
+    if (c <= p) return 'The strikethrough price must be higher than the price you charge.';
     if (p * 10000 < c * (10000 - maxDiscountBps)) {
       return 'A discount can be at most ${maxDiscountBps ~/ 100}% off the strikethrough price.';
     }
@@ -195,7 +192,7 @@ class ModuleDraft {
 String? moduleProblem(int index, ModuleDraft m) {
   final n = index + 1;
   final t = m.title.trim();
-  if (t.length < minModuleTitle) return 'Session $n: a title of at least $minModuleTitle characters.';
+  if (t.length < minModuleTitle) return 'Session $n: enter a title of at least $minModuleTitle characters.';
   if (t.length > maxModuleTitle) return 'Session $n: keep the title under $maxModuleTitle characters.';
   if (m.outline.trim().length > maxModuleOutline) {
     return 'Session $n: keep the outline under $maxModuleOutline characters.';
@@ -211,7 +208,7 @@ String? moduleProblem(int index, ModuleDraft m) {
 
 String? modulesProblem(List<ModuleDraft> modules) {
   if (modules.length < minPlanModules || modules.length > maxPlanModules) {
-    return 'A structured program runs between $minPlanModules and $maxPlanModules sessions.';
+    return 'A structured programme runs between $minPlanModules and $maxPlanModules sessions.';
   }
   for (final (i, m) in modules.indexed) {
     final p = moduleProblem(i, m);
@@ -238,7 +235,7 @@ String? inclusionsProblem(List<String> lines) {
 
 String? groupTitleProblem(String title) {
   final t = title.trim();
-  if (t.length < minGroupTitle) return 'Give it a title: at least $minGroupTitle characters.';
+  if (t.length < minGroupTitle) return 'Enter a title of at least $minGroupTitle characters.';
   if (t.length > maxGroupTitle) return 'Keep the title under $maxGroupTitle characters.';
   return null;
 }
@@ -256,7 +253,7 @@ String? groupPlaceProblem({
     if (location.trim().length > maxGroupLocation) return 'Keep the venue under $maxGroupLocation characters.';
     return null;
   }
-  if (link.trim().isEmpty) return standingLink ? null : 'Add the joining link people will use to get in.';
+  if (link.trim().isEmpty) return standingLink ? null : 'Add the joining link people will use.';
   return linkProblem(link, max: maxGroupLink);
 }
 
@@ -265,11 +262,11 @@ String? linkValue(String raw) => raw.trim().isEmpty ? null : normaliseLink(raw);
 
 /// A day's start must be in the future, and days may not overlap. [days] are (start, minutes) pairs.
 String? daysProblem(List<(DateTime, int)> days, DateTime now, {bool requireFuture = true}) {
-  if (days.isEmpty) return 'Give the session at least one day.';
-  if (days.length > maxGroupDays) return 'A session spans at most $maxGroupDays days: a longer run is a programme.';
+  if (days.isEmpty) return 'Add at least one day to the session.';
+  if (days.length > maxGroupDays) return 'A session spans at most $maxGroupDays days. A longer series is a programme.';
   final sorted = [...days]..sort((a, b) => a.$1.compareTo(b.$1));
   for (final (i, d) in sorted.indexed) {
-    if (requireFuture && !d.$1.isAfter(now)) return 'Pick a time in the future.';
+    if (requireFuture && !d.$1.isAfter(now)) return 'Select a time in the future.';
     if (d.$2 < minSessionMinutes || d.$2 > maxSessionMinutes) {
       return 'A day runs $minSessionMinutes to $maxSessionMinutes minutes.';
     }
@@ -281,12 +278,12 @@ String? daysProblem(List<(DateTime, int)> days, DateTime now, {bool requireFutur
   return null;
 }
 
-/// A seat price (free when empty): at least ₹499 and at most ₹50,000, and a paid session needs a number of seats.
+/// A seat price (free when empty): at most ₹50,000, and a paid session needs a number of seats. No floor of the
+/// app's own (owner, 14 Nov 2026: "why are we setting criteria for price set minimum").
 String? seatPriceProblem({required String price, required String capacity}) {
   if (price.trim().isEmpty) return null;
   final p = paisaOf(price);
   if (p == null) return 'Enter the seat price in rupees, or leave it empty for a free session.';
-  if (p < minServicePricePaisa) return 'Priced seats start at ${inr(minServicePricePaisa)}.';
   if (p > maxServicePricePaisa) return 'Prices go up to ${inr(maxServicePricePaisa)}.';
   if (capacity.trim().isEmpty) return 'A paid session needs a number of seats.';
   return null;
@@ -296,14 +293,14 @@ String? capacityProblem(String raw) {
   if (raw.trim().isEmpty) return null; // uncapped
   final s = int.tryParse(raw.trim());
   if (s == null || s < minGroupSeats || s > maxGroupSeats) {
-    return 'Seats: a number from $minGroupSeats to $maxGroupSeats, or leave it empty for no limit.';
+    return 'Enter seats as a number from $minGroupSeats to $maxGroupSeats, or leave it empty for no limit.';
   }
   return null;
 }
 
 String? cancelReasonProblem(String raw) {
   final r = raw.trim();
-  if (r.length < minCancelReason) return 'Write at least $minCancelReason characters.';
+  if (r.length < minCancelReason) return 'Enter at least $minCancelReason characters.';
   if (r.length > maxCancelReason) return 'Keep the reason under $maxCancelReason characters.';
   return null;
 }

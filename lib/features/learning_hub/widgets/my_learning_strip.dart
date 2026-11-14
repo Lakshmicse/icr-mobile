@@ -49,7 +49,7 @@ class MyLearningStrip extends StatelessWidget {
               child: _StatTile(
                 key: const ValueKey('my-learning-courses'),
                 icon: LucideIcons.graduationCap,
-                label: 'My courses',
+                label: 'My Courses',
                 note: 'places held',
                 stat: courses,
                 onTap: onCourses,
@@ -60,7 +60,7 @@ class MyLearningStrip extends StatelessWidget {
               child: _StatTile(
                 key: const ValueKey('my-learning-attempts'),
                 icon: LucideIcons.clipboardCheck,
-                label: 'My attempts',
+                label: 'My Attempts',
                 note: 'papers taken',
                 stat: attempts,
                 onTap: onAttempts,

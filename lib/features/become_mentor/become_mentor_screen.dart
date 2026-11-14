@@ -48,7 +48,7 @@ Future<void> openBecomeMentor(
   ),
 );
 
-/// "Become a mentor" and, once there is a profile, "My mentor profile" (the website's `/mentorship/become-a-mentor`).
+/// 'Become a Mentor' and, once there is a profile, 'My Mentor Profile' (the website's `/mentorship/become-a-mentor`).
 ///
 /// Two halves, as the website says out loud: the PERSON's (photo, current role, years, languages, career history),
 /// shared with the member's own profile, and the MENTORING half (how you mentor, expertise, who you mentor,
@@ -161,12 +161,12 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
   Widget build(BuildContext context) {
     if (_operator) {
       return MentoringPage(
-        title: 'Become a mentor',
+        title: 'Become a Mentor',
         onBack: widget.onBack,
         onBell: () => _links.notifications(context),
         body: const EmptyNote(
           icon: LucideIcons.lock,
-          title: 'Access denied',
+          title: 'Access Denied',
           body:
               'Platform administrators run the mentorship programme rather than take part in it. The review queue is '
               'under Admin → Trust & review.',
@@ -177,13 +177,13 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
       listenable: _c,
       builder: (context, _) {
         return MentoringPage(
-          title: _c.hasProfile ? 'My mentor profile' : 'Become a mentor',
+          title: _c.hasProfile ? 'My Mentor Profile' : 'Become a Mentor',
           onBack: widget.onBack,
           onBell: () => _links.notifications(context),
           body: LoadedList(
             loading: _c.loading,
             error: _c.error,
-            errorTitle: "Couldn't load your mentor profile",
+            errorTitle: 'Unable to Load Your Mentor Profile',
             onRefresh: _c.refresh,
             children: _c.loading || _c.error != null ? const [] : _content(context),
           ),
@@ -201,8 +201,10 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
     return [
       Padding(
         padding: const EdgeInsets.only(bottom: 10),
-        child: Text('An hour a month, and someone gets to skip a mistake you already made.', style: MentoringText.body),
+        child: Text('Give an hour a month to help someone learn from your experience.', style: MentoringText.body),
       ),
+      // The sections to fill come first and the application's standing after them (bug sheet #39, 9 Nov 2026:
+      // "first it should ask the user to fill the details and then show what is completed or pending").
       _StatusBanner(status: c.status, hasProfile: c.hasProfile, reviewNote: m?.reviewNote),
       if (ready?.renewalDue ?? false)
         Callout(
@@ -210,10 +212,35 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
           tone: PillTone.amber,
           text:
               'Your listing is due for renewal\n'
-              'Mentor approval runs for two years. Tick the code of conduct agreement in Your application to stay '
+              'Mentor approval runs for two years. Select the code of conduct agreement in Your Application to stay '
               '${ready?.approvalExpiresAt == null ? 'on the directory.' : 'listed in the directory. It expires on ${_dayYear(ready!.approvalExpiresAt!)}.'}',
         ),
       const SizedBox(height: 10),
+      const _GroupHeading(
+        'Your ICR Profile',
+        'This is shared with your ICR profile, so any change you make here also appears there.',
+      ),
+      _photoCard(context),
+      _introCard(context),
+      _languagesCard(context),
+      _experienceCard(context),
+      const _GroupHeading(
+        'Mentoring',
+        'These appear only on your mentor card: how you mentor, who you help, and when you are free.',
+      ),
+      _bioCard(context),
+      _expertiseCard(context),
+      _certificationsCard(context),
+      _audienceCard(context),
+      _availabilityCard(context),
+      _hoursCard(context),
+      if (c.trainingRequired) _trainingCard(context),
+      if (c.hasProfile) _documentsCard(context),
+      if (c.hasProfile) _listingCard(context),
+      const _GroupHeading(
+        'Review and Submit',
+        'What is done, what is still needed, and the code of conduct, before ICR reviews it.',
+      ),
       _ApplicationCard(
         controller: c,
         onFix: (n) => _fix(context, n.target),
@@ -227,31 +254,16 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
           if (context.mounted) {
             showMessage(
               context,
-              refusal ?? 'Sent to the ICR review team — we will let you know when your profile is live.',
+              refusal ?? 'Sent to the ICR review team. We will notify you when your profile is live.',
             );
           }
         },
       ),
-      const _GroupHeading('Your ICR profile', 'Shared with your profile. A change here is reflected there too.'),
-      _photoCard(context),
-      _introCard(context),
-      _languagesCard(context),
-      _experienceCard(context),
-      const _GroupHeading('Mentoring', 'Only on your mentor card: how you mentor, who you help and when you are free.'),
-      _bioCard(context),
-      _expertiseCard(context),
-      _certificationsCard(context),
-      _audienceCard(context),
-      _availabilityCard(context),
-      _hoursCard(context),
-      if (c.trainingRequired) _trainingCard(context),
-      if (c.hasProfile) _documentsCard(context),
-      if (c.hasProfile) _listingCard(context),
       Padding(
         padding: const EdgeInsets.fromLTRB(4, 6, 4, 0),
         child: Text(
-          'Worried about something in a mentoring relationship? You can raise it with ICR from any pairing — '
-          'the other person is never told.',
+          'If you have a concern about a mentoring relationship, you can raise it with ICR from any mentorship. '
+          'The other person is never notified.',
           style: MentoringText.meta,
         ),
       ),
@@ -298,7 +310,7 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
     final url = AppConfig.absoluteUrl(p?.avatarUrl, apiBase: _c.repository.api.dio.options.baseUrl);
     return SectionCard(
       cardKey: const ValueKey('card-photo'),
-      title: 'Profile photo',
+      title: 'Profile Photo',
       editLabel: url == null ? 'Add' : 'Change',
       onEdit: () => _photo(context),
       child: Row(
@@ -347,24 +359,24 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
     final p = _c.person.data;
     return SectionCard(
       cardKey: const ValueKey('card-intro'),
-      title: 'Role and experience',
+      title: 'Role and Experience',
       editLabel: p?.designation == null && p?.yearsExperience == null ? 'Add' : 'Edit',
       onEdit: () => _intro(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FactLine(
-            'Current role',
+            'Current Role',
             Text(
-              p?.designation ?? 'Not added yet — needed to submit.',
+              p?.designation ?? 'Not added yet. Required to submit.',
               key: const ValueKey('role-line'),
               style: MentoringText.body,
             ),
           ),
           FactLine(
-            'Years in the profession',
+            'Years in the Profession',
             Text(
-              p?.yearsExperience == null ? 'Not added yet — needed to submit.' : '${p!.yearsExperience} years',
+              p?.yearsExperience == null ? 'Not added yet. Required to submit.' : '${p!.yearsExperience} years',
               key: const ValueKey('years-line'),
               style: MentoringText.body,
             ),
@@ -397,7 +409,7 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
       onEdit: () => _languages(context),
       child: langs.isEmpty
           ? Text(
-              'The languages you can mentor in — add at least one to submit.',
+              'The languages you can mentor in. Add at least one to submit.',
               key: const ValueKey('languages-line'),
               style: MentoringText.body,
             )
@@ -412,8 +424,8 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
     final rows = _c.experience.data ?? const <ExperienceRow>[];
     return SectionCard(
       cardKey: const ValueKey('card-experience'),
-      title: 'Career history',
-      editLabel: 'Add a role',
+      title: 'Career History',
+      editLabel: 'Add a Role',
       onEdit: rows.length >= ExperienceLimits.rowsMax ? null : () => _addRole(context),
       child: rows.isEmpty
           ? Text(
@@ -475,12 +487,12 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
     final text = bioToText(_c.mentor?.bioHtml);
     return SectionCard(
       cardKey: const ValueKey('card-bio'),
-      title: 'How you mentor',
+      title: 'How You Mentor',
       editLabel: text.isEmpty ? 'Add' : 'Edit',
       onEdit: () => _bio(context),
       child: text.isEmpty
           ? Text(
-              'What you are good at, who you tend to help and how you like to work. Mentees read this first — at least '
+              'What you are good at, who you tend to help and how you like to work. Mentees read this first. At least '
               '${MentorLimits.bioMin} characters.',
               key: const ValueKey('bio-line'),
               style: MentoringText.body,
@@ -504,10 +516,10 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FactLine(
-            'Areas of expertise',
+            'Areas of Expertise',
             areas.isEmpty
                 ? Text(
-                    'None yet — add at least one to submit.',
+                    'None yet. Add at least one to submit.',
                     key: const ValueKey('areas-line'),
                     style: MentoringText.body,
                   )
@@ -519,7 +531,7 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
           ),
           if (m != null && m.topics.isNotEmpty)
             FactLine(
-              'Happy to talk about',
+              'Conversation Topics',
               Wrap(spacing: 6, runSpacing: 6, children: [for (final t in m.topics) StatusPill(t)]),
             ),
         ],
@@ -544,8 +556,8 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
     final nothingToPick = certs.isEmpty && _c.credentials.loaded && (held?.held.isEmpty ?? true);
     return SectionCard(
       cardKey: const ValueKey('card-certifications'),
-      title: 'Certifications on your card',
-      subtitle: 'Mentees filter the directory on these.',
+      title: 'Certifications on Your Card',
+      subtitle: 'Mentees filter the directory by these.',
       editLabel: certs.isEmpty ? 'Choose' : 'Edit',
       onEdit: nothingToPick ? null : () => _certifications(context),
       child: nothingToPick
@@ -561,14 +573,14 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
                 ),
                 const SizedBox(height: 8),
                 QuietButton(
-                  label: 'Manage my credentials',
+                  label: 'Manage My Credentials',
                   onPressed: () => _links.openSite(context, '/profile?tab=credentials&code=1'),
                 ),
               ],
             )
           : certs.isEmpty
           ? Text(
-              'Optional. Show the certifications you hold — mentees working toward the same one look for them.',
+              'Optional. Show the certifications you hold. Mentees working toward the same ones look for them.',
               key: const ValueKey('certs-line'),
               style: MentoringText.body,
             )
@@ -586,7 +598,7 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
-                      '${stale.join(', ')} ${stale.length == 1 ? 'is' : 'are'} no longer on your profile — remove '
+                      '${stale.join(', ')} ${stale.length == 1 ? 'is' : 'are'} no longer on your profile. Remove '
                       '${stale.length == 1 ? 'it' : 'them'} before you submit.',
                       style: MentoringText.error,
                     ),
@@ -615,17 +627,17 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
     final audiences = [for (final a in m?.targetAudiences ?? const <String>[]) ?MentorAudience.fromApi(a)?.label];
     return SectionCard(
       cardKey: const ValueKey('card-audience'),
-      title: 'Who you mentor',
+      title: 'Who You Mentor',
       editLabel: audiences.isEmpty ? 'Choose' : 'Edit',
       onEdit: () => _audience(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FactLine(
-            'Who you want to mentor',
+            'Who You Want to Mentor',
             audiences.isEmpty
                 ? Text(
-                    'Not chosen yet — needed to submit.',
+                    'Not selected yet. Required to submit.',
                     key: const ValueKey('audience-line'),
                     style: MentoringText.body,
                   )
@@ -637,7 +649,7 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
           ),
           if (m != null && m.targetRoles.isNotEmpty)
             FactLine(
-              'Roles you can help people reach',
+              'Roles You Can Help People Reach',
               Wrap(spacing: 6, runSpacing: 6, children: [for (final r in m.targetRoles) StatusPill(r)]),
             ),
         ],
@@ -670,18 +682,18 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          FactLine("How you'll meet", Text(modes.isEmpty ? 'Not set' : modes.join(' · '), style: MentoringText.body)),
+          FactLine('Meeting Modes', Text(modes.isEmpty ? 'Not set' : modes.join(' · '), style: MentoringText.body)),
           FactLine(
-            'Cadence',
+            'Meeting Frequency',
             Text(
               m?.cadence == null ? 'No preference' : mentorCadences[m!.cadence] ?? m.cadence!,
               style: MentoringText.body,
             ),
           ),
           FactLine(
-            "When you're free",
+            'Availability Note',
             Text(
-              m?.availabilityNote ?? 'Not said — e.g. weekday evenings after 7pm IST',
+              m?.availabilityNote ?? 'Not specified (for example, weekday evenings after 7 pm IST)',
               key: const ValueKey('note-line'),
               style: MentoringText.body,
             ),
@@ -701,16 +713,16 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
     const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return SectionCard(
       cardKey: const ValueKey('card-hours'),
-      title: 'Weekly hours',
+      title: 'Weekly Hours',
       subtitle: 'When mentees can book you.',
-      editLabel: blocks.isEmpty ? 'Set hours' : 'Edit hours',
+      editLabel: blocks.isEmpty ? 'Set Hours' : 'Edit Hours',
       // Hours belong to the mentor profile row, which the first save of any card creates.
       onEdit: m == null ? null : () => _hours(context),
       child: blocks.isEmpty
           ? Text(
               m == null
-                  ? 'Save any section above first: your hours belong to your mentor profile.'
-                  : 'No weekly hours set: a mentee asks you for a time instead of picking a free one.',
+                  ? 'Save any section above first. Your hours belong to your mentor profile.'
+                  : 'No weekly hours set. A mentee asks you for a time instead of selecting a free one.',
               key: const ValueKey('hours-line'),
               style: MentoringText.body,
             )
@@ -747,9 +759,9 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
     final t = _c.training;
     return SectionCard(
       cardKey: const ValueKey('card-training'),
-      title: 'Mentor training',
+      title: 'Mentor Training',
       subtitle:
-          'Short modules on how ICR mentoring works — boundaries, feedback, and what to do when something goes wrong. Finish them before your profile goes to review.',
+          'Short modules on how ICR mentoring works: boundaries, feedback, and what to do when something goes wrong. Complete them before your profile goes to review.',
       editLabel: '',
       onEdit: null,
       trailing: StatusPill(
@@ -806,7 +818,7 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
     final conduct = _c.conduct.data;
     if (!context.mounted) return;
     if (conduct == null) {
-      showMessage(context, _c.conduct.error ?? 'The code of conduct has not loaded yet — try again in a moment.');
+      showMessage(context, _c.conduct.error ?? 'The code of conduct has not loaded yet. Try again in a moment.');
       return;
     }
     // While the application can be sent, "I agree" ticks the one declaration beside Submit, which records it with the
@@ -832,8 +844,8 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
     final docs = _c.documents.data ?? const <MentorDocument>[];
     return SectionCard(
       cardKey: const ValueKey('card-documents'),
-      title: 'Supporting documents',
-      subtitle: 'Optional evidence for ICR\'s review team: a certificate, proof of where you work, a reference.',
+      title: 'Supporting Documents',
+      subtitle: 'Optional evidence for ICR\'s review team, such as a certificate, proof of employment or a reference.',
       editLabel: 'Add',
       onEdit: docs.length >= MentorLimits.documentsMax ? null : () => _addDocument(context),
       child: docs.isEmpty
@@ -895,7 +907,7 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
       pick: widget.pickDocument,
       onSave: (file, kind, label) => _c.addDocument(file, kind: kind, label: label),
     ),
-    done: 'Attached. ICR\'s review team will read it.',
+    done: 'Attached. ICR\'s review team will review it.',
   );
 
   // --- the listing ------------------------------------------------------------------
@@ -904,7 +916,7 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
     final m = _c.mentor!;
     return SectionCard(
       cardKey: const ValueKey('card-listing'),
-      title: 'Your listing',
+      title: 'Your Listing',
       editLabel: '',
       onEdit: null,
       child: Column(
@@ -921,11 +933,11 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
                     if (context.mounted) {
                       showMessage(
                         context,
-                        refusal ?? (on ? 'You are taking new requests.' : 'Hidden: you are not taking new requests.'),
+                        refusal ?? (on ? 'You are taking new requests.' : 'Hidden. You are not taking new requests.'),
                       );
                     }
                   },
-            title: Text('Accepting new requests', style: MentoringText.bodyStrong),
+            title: Text('Accepting New Requests', style: MentoringText.bodyStrong),
             subtitle: Text(
               m.discoverable
                   ? 'Mentees can find you and ask.'
@@ -938,12 +950,12 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
             children: [
               if (m.status == MentorStatus.approved)
                 SolidButton(
-                  label: 'View public profile',
+                  label: 'View Public Profile',
                   icon: LucideIcons.externalLink,
                   onPressed: () => _links.mentor(context, m.id),
                 ),
               QuietButton(
-                label: 'Withdraw my profile',
+                label: 'Withdraw My Profile',
                 icon: LucideIcons.userMinus,
                 danger: true,
                 onPressed: () => _withdraw(context),
@@ -959,13 +971,13 @@ class _BecomeMentorScreenState extends State<BecomeMentorScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
-        title: const Text('Withdraw your mentor profile?'),
+        title: const Text('Withdraw Your Mentor Profile?'),
         content: const Text(
           'It leaves the directory and stops taking requests. Your history is kept, and you can start again later. '
-          'You cannot withdraw while a mentorship is under way: pause your profile instead.',
+          'You cannot withdraw while a mentorship is in progress. Pause your profile instead.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Keep it')),
+          TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Keep It')),
           TextButton(onPressed: () => Navigator.pop(dialog, true), child: const Text('Withdraw')),
         ],
       ),
@@ -1021,13 +1033,14 @@ class _StatusBanner extends StatelessWidget {
       MentorStatus.approved => (
         PillTone.mint,
         status.label,
-        'Members can find you in the directory. Edits stay live; only a rejected profile is reviewed again.',
+        'Members can find you in the directory. Your edits go live immediately. Only a rejected profile is reviewed '
+            'again.',
       ),
       MentorStatus.pending => (
         PillTone.blue,
         status.label,
-        'A member of the ICR team is reading your profile. We vet mentors because your name will carry the '
-            'association\'s to someone early in their career.',
+        'A member of the ICR team is reviewing your profile. We review every mentor because you represent the '
+            'association to someone early in their career.',
       ),
       MentorStatus.rejected => (PillTone.amber, status.label, reviewNote ?? 'The review team asked for changes.'),
       MentorStatus.paused => (
@@ -1038,7 +1051,7 @@ class _StatusBanner extends StatelessWidget {
       MentorStatus.draft => (
         PillTone.blue,
         'Draft · not yet visible',
-        'Fill in each section, agree to the code of conduct and send your profile to the ICR team. Review usually takes a couple of days.',
+        'Fill in each section, agree to the code of conduct and send your profile to the ICR team. Review usually takes a few days.',
       ),
     };
     return Callout(key: ValueKey('banner-${status.api}'), tone: tone, text: '$title\n$body');
@@ -1078,9 +1091,9 @@ class _ApplicationCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text('Your application', style: MentoringText.cardTitle)),
+              Expanded(child: Text('Your Application', style: MentoringText.cardTitle)),
               StatusPill(
-                c.hasProfile ? c.status.label : 'Not started',
+                c.hasProfile ? c.status.label : 'Not Started',
                 tone: switch (c.status) {
                   MentorStatus.approved => PillTone.mint,
                   MentorStatus.pending => PillTone.blue,
@@ -1093,7 +1106,7 @@ class _ApplicationCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Text(
-              '$done of ${steps.length} steps done',
+              '$done of ${steps.length} steps completed',
               key: const ValueKey('steps-done'),
               style: MentoringText.meta,
             ),
@@ -1116,10 +1129,7 @@ class _ApplicationCard extends StatelessWidget {
             ),
           if (needed.isNotEmpty) ...[
             const Divider(height: 22),
-            Text(
-              canSubmit ? 'Still needed to submit' : 'Still missing from your card',
-              style: MentoringText.bodyStrong,
-            ),
+            Text(canSubmit ? 'Required to Submit' : 'Missing from Your Card', style: MentoringText.bodyStrong),
             const SizedBox(height: 4),
             for (final (i, n) in needed.indexed)
               InkWell(
@@ -1159,7 +1169,7 @@ class _ApplicationCard extends StatelessWidget {
           else if (c.conductAccepted)
             Row(
               children: [
-                Expanded(child: Text('Code of conduct', style: MentoringText.bodyStrong)),
+                Expanded(child: Text('Code of Conduct', style: MentoringText.bodyStrong)),
                 StatusPill('Accepted · ${c.readiness.data?.conductVersion ?? ''}', tone: PillTone.mint),
               ],
             )
@@ -1184,7 +1194,7 @@ class _ApplicationCard extends StatelessWidget {
             onTap: onReadConduct,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Text('Read the code of conduct', style: MentoringText.buttonQuiet),
+              child: Text('Read the Code of Conduct', style: MentoringText.buttonQuiet),
             ),
           ),
           if (canSubmit) ...[
@@ -1196,8 +1206,8 @@ class _ApplicationCard extends StatelessWidget {
                 label: c.busy
                     ? 'Sending…'
                     : c.status == MentorStatus.rejected
-                    ? 'Resubmit for review'
-                    : 'Submit for review',
+                    ? 'Resubmit for Review'
+                    : 'Submit for Review',
                 icon: LucideIcons.send,
                 onPressed: c.busy || !c.ready ? null : onSubmit,
               ),
@@ -1206,8 +1216,8 @@ class _ApplicationCard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 6),
               child: Text(
                 !c.ready
-                    ? (needed.isNotEmpty ? 'Finish the items above to submit.' : 'Tick the declaration to submit.')
-                    : 'Your tick is recorded when you submit.',
+                    ? (needed.isNotEmpty ? 'Complete the items above to submit.' : 'Select the declaration to submit.')
+                    : 'Your acceptance is recorded when you submit.',
                 key: const ValueKey('submit-hint'),
                 textAlign: TextAlign.center,
                 style: MentoringText.meta,

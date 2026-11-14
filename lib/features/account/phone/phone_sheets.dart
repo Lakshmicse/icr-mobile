@@ -33,7 +33,10 @@ class TestCodeNote extends StatelessWidget {
                 style: style,
                 children: [
                   const TextSpan(text: 'Test mode: your code is '),
-                  TextSpan(text: value, style: style.copyWith(fontWeight: FontWeight.w700, letterSpacing: 1.6)),
+                  TextSpan(
+                    text: value,
+                    style: style.copyWith(fontWeight: FontWeight.w700, letterSpacing: 1.6),
+                  ),
                   const TextSpan(text: '.'),
                 ],
               ),
@@ -42,8 +45,11 @@ class TestCodeNote extends StatelessWidget {
           TextButton(
             key: const Key('testCode.use'),
             onPressed: () => onUse(value),
-            style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 8)),
-            child: Text('Use code', style: AccountText.link.copyWith(fontSize: 14)),
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+            ),
+            child: Text('Use Code', style: AccountText.link.copyWith(fontSize: 14)),
           ),
         ],
       ),
@@ -58,7 +64,7 @@ class CodeField extends StatelessWidget {
     required this.controller,
     this.error,
     this.helper,
-    this.label = '6-digit code',
+    this.label = '6-Digit Code',
     this.fieldKey,
     this.onChanged,
   });
@@ -192,7 +198,7 @@ class _PhoneSheetState extends State<_PhoneSheet> {
   Future<void> _remove() async {
     final ok = await confirmAction(
       context,
-      title: 'Remove your number?',
+      title: 'Remove Your Number?',
       message: 'Employers and mentors you contact will be asked for a number again.',
       confirm: 'Remove',
     );
@@ -214,14 +220,14 @@ class _PhoneSheetState extends State<_PhoneSheet> {
       saveLabel = 'Verified';
       onSave = null;
     } else if (_untextable) {
-      saveLabel = 'Save number';
+      saveLabel = 'Save Number';
       onSave = _saveWithoutCode;
     } else {
-      saveLabel = 'Send code';
+      saveLabel = 'Send Code';
       onSave = _textable ? _send : null;
     }
     return EditSheet(
-      title: 'Mobile number',
+      title: 'Mobile Number',
       subtitle: 'Employers, mentors and suppliers you contact on ICR use it to reach you.',
       saving: _busy,
       error: _error,
@@ -229,19 +235,19 @@ class _PhoneSheetState extends State<_PhoneSheet> {
       saveLabel: saveLabel,
       onSave: onSave,
       onDelete: (widget.phone != null && !_busy) ? _remove : null,
-      deleteLabel: 'Remove number',
+      deleteLabel: 'Remove Number',
       children: [
         AccountPhoneField(
           fieldKey: const Key('phone.number'),
           countryKey: const Key('phone.country'),
-          label: 'Mobile number',
+          label: 'Mobile Number',
           value: _phone,
           enabled: !_busy,
           error: _shown || _phone.trim().isNotEmpty ? _unreadable : null,
           helper: _verifiedNow
               ? 'This number is verified.'
               : _untextable
-              ? 'We can only text codes to +91 numbers, so this one is saved as typed.'
+              ? 'Codes can be sent only to +91 numbers, so this number is saved as entered.'
               : phoneHelp,
           suffix: _verifiedNow
               ? const Padding(
@@ -277,7 +283,7 @@ class _PhoneSheetState extends State<_PhoneSheet> {
             child: TextButton(
               key: const Key('phone.resend'),
               onPressed: _busy ? null : _send,
-              child: Text('Send a new code', style: AccountText.link),
+              child: Text('Send a New Code', style: AccountText.link),
             ),
           ),
         ],
@@ -368,7 +374,7 @@ class PhoneNeededField extends StatelessWidget {
         return AccountPhoneField(
           fieldKey: const Key('phoneNeeded.number'),
           countryKey: const Key('phoneNeeded.country'),
-          label: 'Mobile number',
+          label: 'Mobile Number',
           required: true,
           value: controller.phone,
           enabled: enabled,
@@ -396,7 +402,7 @@ Future<String?> askForPhone(
   BuildContext context, {
   required AccountRepository repository,
   required String reason,
-  String title = 'Add your mobile number',
+  String title = 'Add Your Mobile Number',
   String actionLabel = 'Continue',
 }) async {
   final controller = PhoneNeededController(lookup: () async => (await repository.myProfile()).phone);
@@ -411,7 +417,12 @@ Future<String?> askForPhone(
 }
 
 class _AskForPhoneSheet extends StatefulWidget {
-  const _AskForPhoneSheet({required this.controller, required this.reason, required this.title, required this.actionLabel});
+  const _AskForPhoneSheet({
+    required this.controller,
+    required this.reason,
+    required this.title,
+    required this.actionLabel,
+  });
 
   final PhoneNeededController controller;
   final String reason;

@@ -339,7 +339,7 @@ class MessageBubble extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (m.deleted)
-                  Text('This message was deleted', style: ChatText.deleted)
+                  Text('This message was deleted.', style: ChatText.deleted)
                 else ...[
                   if (hasQuote) _Quote(reply: m.replyTo!, mine: mine, onTap: onJumpToReply),
                   if (hasText)
@@ -724,7 +724,7 @@ class PendingBubble extends StatelessWidget {
                           key: const ValueKey('pending-retry'),
                           onTap: onRetry,
                           child: Text(
-                            'Retry',
+                            'Try Again',
                             style: ChatText.sentTime.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
                           ),
                         ),
@@ -797,11 +797,11 @@ MeetingFacts? meetingOf(ConversationContext? context, Conversation? conversation
   final m = c.mentorship;
   if (m != null) {
     final topics = m.topics.take(2).join(', ');
-    final found = at(m.nextSessionAt, topics.isEmpty ? 'Mentoring session' : topics, 'Mentoring', mentorshipHref(m.id));
+    final found = at(m.nextSessionAt, topics.isEmpty ? 'Mentoring Session' : topics, 'Mentoring', mentorshipHref(m.id));
     if (found != null) return found;
   }
   final g = c.groupSession;
-  if (g != null) return at(g.nextAt, g.title, 'Group session', groupSessionHref(g.id));
+  if (g != null) return at(g.nextAt, g.title, 'Group Session', groupSessionHref(g.id));
   return null;
 }
 

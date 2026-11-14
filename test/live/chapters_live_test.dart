@@ -1,4 +1,4 @@
-/// The Regional Chapters screens against the LOCAL portal API (the association module's chapters and
+/// The Chapters screens against the LOCAL portal API (the association module's chapters and
 /// the events API's RSVP): the app's own repository and controllers, the way the screens use them,
 /// with the effect read back through the API.
 ///

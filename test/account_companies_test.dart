@@ -13,7 +13,7 @@ import 'helpers/account_harness.dart';
 import 'helpers/fonts.dart';
 
 /// "My companies" (act for one, or for yourself; leave; withdraw a request; ask
-/// to join; create) and "Create a company page", with the fresh token pair
+/// to join; create) and "Create a Company Page", with the fresh token pair
 /// every switch, leave and create hands back, taken through the app's own
 /// `AuthController`.
 void main() {
@@ -100,7 +100,7 @@ void main() {
       'each company with its role, place, size and what waits; the personal account is always there and Active when none is',
       (tester) async {
         await pumpList(tester);
-        expect(find.text('My companies'), findsOneWidget);
+        expect(find.text('My Companies'), findsOneWidget);
         expect(find.text('TechCorp'), findsOneWidget);
         expect(find.byKey(const Key('company.role.co-techcorp')), findsOneWidget);
         expect(find.text('Company Admin'), findsOneWidget);
@@ -109,7 +109,7 @@ void main() {
         expect(find.text('2 awaiting approval'), findsOneWidget);
         expect(find.text('Northwind Facilities'), findsOneWidget);
         await reveal(tester, find.byKey(const Key('company.personal')));
-        expect(find.text('Personal account'), findsOneWidget);
+        expect(find.text('Personal Account'), findsOneWidget);
         expect(find.byKey(const Key('company.personal.active')), findsOneWidget);
         expect(find.byKey(const Key('company.switch.personal')), findsNothing);
         expect(find.text('3'), findsOneWidget, reason: 'two companies and the personal account');
@@ -133,7 +133,7 @@ void main() {
     testWidgets('someone in no company sees what to do: create or ask to join', (tester) async {
       await pumpList(tester, companies: const MyCompanies(personalRole: 'PROFESSIONAL'));
       await reveal(tester, find.byKey(const Key('companies.empty')));
-      expect(find.text('You are not part of a company yet'), findsOneWidget);
+      expect(find.text('You Are Not Part of a Company Yet'), findsOneWidget);
       expect(find.byKey(const Key('companies.empty.create')), findsOneWidget);
       expect(find.byKey(const Key('companies.empty.join')), findsOneWidget);
     });
@@ -299,7 +299,7 @@ void main() {
         tester,
         companies: const MyCompanies(personalRole: 'PROFESSIONAL', companies: [tech], requests: [asked]),
       );
-      expect(find.text('Awaiting approval'), findsOneWidget);
+      expect(find.text('Awaiting Approval'), findsOneWidget);
       expect(find.text('Global Infra Solutions'), findsOneWidget);
       expect(find.text('Requested as Professional'), findsOneWidget);
       expect(find.text('“I work with them on the Pune campus.”'), findsOneWidget);
@@ -325,19 +325,19 @@ void main() {
       (tester) async {
         final repo = await pumpList(tester, companies: const MyCompanies(personalRole: 'PROFESSIONAL'));
         await tapKey(tester, 'companies.join');
-        expect(find.text('Ask to join a company'), findsWidgets);
+        expect(find.text('Ask to Join a Company'), findsWidgets);
         await tester.enterText(find.byKey(const Key('join.search')), 'Global');
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const Key('join.hit.co-global')));
         await tester.pumpAndSettle();
-        expect(find.text('Ask to join Global Infra Solutions'), findsOneWidget);
+        expect(find.text('Ask to Join Global Infra Solutions'), findsOneWidget);
         await tester.enterText(find.byKey(const Key('join.note')), 'I am their site lead.');
         await tester.pump();
         await tester.tap(find.byKey(const Key('sheet.save')));
         await tester.pumpAndSettle();
         expect(repo.sent['requestToJoin'], {'companyId': 'co-global', 'note': 'I am their site lead.'});
         expect(find.text('Request sent to Global Infra Solutions.'), findsOneWidget);
-        expect(find.text('Awaiting approval'), findsOneWidget);
+        expect(find.text('Awaiting Approval'), findsOneWidget);
       },
     );
   });
@@ -364,11 +364,11 @@ void main() {
       invitations: invitations ?? [added, addedAlone],
     );
 
-    testWidgets('"Waiting for you" lists each one: who added you, as what, how long ago, in which office', (
+    testWidgets('"Waiting for You" lists each one: who added you, as what, how long ago, in which office', (
       tester,
     ) async {
       await pumpList(tester, companies: waiting(companies: const [tech]));
-      expect(find.text('Waiting for you'), findsOneWidget);
+      expect(find.text('Waiting for You'), findsOneWidget);
       expect(find.text('(2)'), findsOneWidget);
       expect(
         find.text('An admin added you to their team. You join only when you accept, and you can decline.'),
@@ -388,7 +388,7 @@ void main() {
     testWidgets('no invitations, no card', (tester) async {
       await pumpList(tester, companies: waiting(invitations: const []));
       expect(find.byKey(const Key('companies.invitations')), findsNothing);
-      expect(find.text('Waiting for you'), findsNothing);
+      expect(find.text('Waiting for You'), findsNothing);
     });
 
     testWidgets(
@@ -526,7 +526,7 @@ void main() {
     testWidgets('focus with nothing waiting does nothing and does not fail', (tester) async {
       await pumpList(tester, companies: waiting(invitations: const []), focusInvitations: true);
       expect(find.byKey(const Key('companies.invitations')), findsNothing);
-      expect(find.text('My companies'), findsOneWidget);
+      expect(find.text('My Companies'), findsOneWidget);
     });
 
     testWidgets('the API repository posts to the invitation and reads the list it answers with', (tester) async {
@@ -640,7 +640,7 @@ void main() {
       await tester.enterText(find.byKey(const Key('join.search')), 'Alpha');
       await tester.pumpAndSettle();
       expect(find.text('Member'), findsOneWidget);
-      expect(find.text('Request sent'), findsOneWidget);
+      expect(find.text('Request Sent'), findsOneWidget);
       await tester.tap(find.byKey(const Key('join.hit.a')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('join.note')), findsNothing, reason: 'it stayed on the search step');
@@ -756,7 +756,7 @@ void main() {
       expect(await h.tokens.accessToken(), isNot(before));
       expect(log, ['session', 'created:Acme Facility Services']);
       expect(find.byKey(const Key('create.welcome')), findsOneWidget);
-      expect(find.text('Acme Facility Services is on ICR'), findsOneWidget);
+      expect(find.text('Welcome to ICR, Acme Facility Services!'), findsOneWidget);
     });
 
     testWidgets('the welcome steps go where the lead sends them; Done leaves', (tester) async {
@@ -785,16 +785,16 @@ void main() {
         expect(repo.count('createCompany'), 0);
         expect(find.text('6 details need attention'), findsOneWidget);
         expect(find.text('Enter the company name.'), findsOneWidget);
-        expect(find.text('Choose the industry it works in.'), findsOneWidget);
-        expect(find.text('Choose where the head office is.'), findsOneWidget);
-        expect(find.text('Choose how many people work there.'), findsOneWidget);
-        expect(find.text('Choose how the organisation is set up.'), findsOneWidget);
+        expect(find.text('Select the industry it works in.'), findsOneWidget);
+        expect(find.text('Select where the head office is.'), findsOneWidget);
+        expect(find.text('Select how many people work there.'), findsOneWidget);
+        expect(find.text('Select how the organisation is set up.'), findsOneWidget);
         expect(find.text('Confirm that you may create this page for the company.'), findsOneWidget);
         await tester.tap(find.byKey(const Key('create.summary.industry')));
         await tester.pumpAndSettle();
         // Fixing one removes its message at once.
         await pick(tester, 'create.industry', 'Facility management services');
-        expect(find.text('Choose the industry it works in.'), findsNothing);
+        expect(find.text('Select the industry it works in.'), findsNothing);
         expect(find.text('5 details need attention'), findsOneWidget);
       },
     );
@@ -809,10 +809,49 @@ void main() {
         await type(tester, 'create.legalName', '1');
         await type(tester, 'create.website', 'not a site');
         await tapKey(tester, 'create.submit');
-        expect(find.text('Enter the registered legal name — it needs at least one letter.'), findsOneWidget);
+        expect(find.text('Enter the registered legal name. It needs at least one letter.'), findsOneWidget);
         expect(find.text('Enter a website like acme.com or https://acme.com'), findsOneWidget);
       },
     );
+
+    testWidgets('Year Founded is optional; a year outside 1800 to this year is refused, a good one is sent', (
+      tester,
+    ) async {
+      final repo = await pumpCreate(tester);
+      await fillAll(tester);
+      await type(tester, 'create.foundedYear', '1799');
+      await tapKey(tester, 'create.submit');
+      final latest = DateTime.now().year;
+      expect(find.text('Enter a year between 1800 and $latest.'), findsOneWidget);
+      expect(find.text('1 detail needs attention'), findsOneWidget);
+      expect(repo.count('createCompany'), 0);
+
+      await type(tester, 'create.foundedYear', '${latest + 1}');
+      await tapKey(tester, 'create.submit');
+      expect(find.text('Enter a year between 1800 and $latest.'), findsOneWidget, reason: 'not a year to come');
+      expect(repo.count('createCompany'), 0);
+
+      await type(tester, 'create.foundedYear', '2014');
+      await tapKey(tester, 'create.submit');
+      expect((repo.sent['createCompany']! as Map)['foundedYear'], 2014);
+    });
+
+    testWidgets('the owner\'s wording (12 Nov 2026): the tips, the intro and the footer are gone', (tester) async {
+      await pumpCreate(tester);
+      expect(find.text('Company Details'), findsWidgets);
+      expect(find.text('Company identity'), findsNothing);
+      expect(find.text('How members find and recognise it.'), findsNothing);
+      expect(find.text('Company Brand Name / Legal Name'), findsOneWidget);
+      expect(find.textContaining('You become the page’s admin'), findsNothing);
+      expect(find.text('Buyers and candidates read this first.'), findsNothing);
+      expect(
+        find.text(
+          'I agree to the terms and policies of ICR and I am an authorised representative of this company to create '
+          'and manage this page on ICR.',
+        ),
+        findsOneWidget,
+      );
+    });
 
     testWidgets("the API's refusal shows above the buttons and every answer stays", (tester) async {
       final repo = DemoAccountRepository()
@@ -892,7 +931,7 @@ void main() {
     ) async {
       await pumpCreate(tester);
       expect(find.byKey(const Key('create.logo.add')), findsOneWidget);
-      expect(find.text('PNG, JPG or WEBP — up to 2MB'), findsOneWidget);
+      expect(find.text('PNG, JPG or WEBP, up to 2MB.'), findsOneWidget);
     });
 
     testWidgets('a failed logo upload says why in the API\'s words, else the website\'s', (tester) async {
@@ -907,7 +946,7 @@ void main() {
       expect(find.text('That image is corrupt.'), findsOneWidget);
       repo.failures['upload:company'] = ApiError('Something went wrong (500). Try again.', statusCode: 500);
       await tapKey(tester, 'create.logo.add');
-      expect(find.text('Upload failed. Please try again.'), findsOneWidget);
+      expect(find.text('Upload failed. Try again.'), findsOneWidget);
     });
 
     testWidgets('an ICR staff account is told it is personal and gets no form; the API would refuse it anyway', (
@@ -918,7 +957,7 @@ void main() {
       );
       await pumpCreate(tester, repo: repo);
       expect(find.byKey(const Key('create.staff')), findsOneWidget);
-      expect(find.text('Staff accounts don’t create companies'), findsOneWidget);
+      expect(find.text('Staff Accounts Don’t Create Companies'), findsOneWidget);
       expect(find.text('ICR staff accounts are personal: they do not create or join companies.'), findsOneWidget);
       expect(find.byKey(const Key('create.form')), findsNothing);
       expect(find.byKey(const Key('create.submit')), findsNothing);
@@ -966,11 +1005,11 @@ void main() {
         );
         expect(find.byKey(const Key('create.docs')), findsNothing, reason: 'nothing until a type is chosen');
         await fillAll(tester);
-        expect(find.text('Documents for a private limited company'), findsOneWidget);
+        expect(find.text('Documents for a Private Limited Company'), findsOneWidget);
         expect(find.textContaining('Optional now.'), findsOneWidget);
         expect(find.textContaining('Certificate of Incorporation', findRichText: true), findsOneWidget);
-        expect(find.textContaining('PAN card', findRichText: true), findsOneWidget);
-        expect(find.textContaining('GST certificate', findRichText: true), findsOneWidget);
+        expect(find.textContaining('PAN Card', findRichText: true), findsOneWidget);
+        expect(find.textContaining('GST Certificate', findRichText: true), findsOneWidget);
         expect(find.text('Only if the business is registered for GST.'), findsOneWidget);
         expect(
           find.text('Kept private, never shown on the company page. PDF, JPG, PNG or WebP, up to 10 MB each.'),
@@ -1006,7 +1045,7 @@ void main() {
         expect(find.text('1 of 3 added'), findsOneWidget);
 
         await pick(tester, 'create.structure', 'Sole proprietorship');
-        expect(find.text('Documents for a sole proprietorship'), findsOneWidget);
+        expect(find.text('Documents for a Sole Proprietorship'), findsOneWidget);
         expect(find.byKey(const Key('create.doc.incorporationDoc')), findsNothing);
         expect(find.text('A sole proprietorship has no registration certificate, so none is asked.'), findsOneWidget);
         expect(find.text('The proprietor’s own PAN card.'), findsOneWidget);
@@ -1084,7 +1123,7 @@ void main() {
       expect(asked, isEmpty, reason: 'one letter searches nothing');
       await tester.enterText(find.byKey(const Key('accountPicker.search')), 'Zzz');
       await tester.pumpAndSettle();
-      expect(find.text('No city by that name yet'), findsOneWidget);
+      expect(find.text('No city found with that name.'), findsOneWidget);
       await tester.enterText(find.byKey(const Key('accountPicker.search')), 'Dub');
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ListTile, 'Dubai, United Arab Emirates'));
@@ -1107,11 +1146,11 @@ void main() {
       await fillAll(tester);
       repo.failures['createCompany'] = ApiError('Something went wrong (500). Try again.', statusCode: 500);
       await tapKey(tester, 'create.submit');
-      expect(find.text('Could not create the company page.'), findsOneWidget);
+      expect(find.text('Unable to create the company page.'), findsOneWidget);
 
       repo.failures['createCompany'] = ApiError("Can't reach ICR right now. Check your connection and try again.");
       await tapKey(tester, 'create.submit');
-      expect(find.text('Could not create the company page.'), findsOneWidget);
+      expect(find.text('Unable to create the company page.'), findsOneWidget);
 
       repo.failures['createCompany'] = ApiError(
         'ICR staff accounts cannot create or join a company. Use a separate account.',
@@ -1132,10 +1171,7 @@ void main() {
 
       repo.failures['createCompany'] = ApiError('Too many requests. Wait a minute and try again.', statusCode: 429);
       await tapKey(tester, 'create.submit');
-      expect(
-        find.text('You have created several companies in the last hour. Try again a little later.'),
-        findsOneWidget,
-      );
+      expect(find.text('You have created several companies in the last hour. Try again later.'), findsOneWidget);
       expect(find.byKey(const Key('create.welcome')), findsNothing, reason: 'every answer stays');
     });
 
@@ -1159,17 +1195,17 @@ void main() {
     testWidgets('Back with something typed asks to discard; without, it just leaves', (tester) async {
       await pumpCreate(tester);
       await tapKey(tester, 'create.cancel');
-      expect(find.text('Create a company page'), findsNothing, reason: 'nothing typed: it left');
+      expect(find.text('Create a Company Page'), findsNothing, reason: 'nothing typed: it left');
     });
 
     testWidgets('Cancel after typing asks first', (tester) async {
       await pumpCreate(tester);
       await type(tester, 'create.name', 'Half done Ltd');
       await tapKey(tester, 'create.cancel');
-      expect(find.text('Discard this company page?'), findsOneWidget);
+      expect(find.text('Discard This Company Page?'), findsOneWidget);
       await tester.tap(find.text('Cancel').last);
       await tester.pumpAndSettle();
-      expect(find.text('Create a company page'), findsWidgets);
+      expect(find.text('Create a Company Page'), findsWidgets);
       expect(tester.widget<TextField>(find.byKey(const Key('create.name'))).controller!.text, 'Half done Ltd');
     });
   });

@@ -110,3 +110,39 @@ Checked against the website's `PartnerApplyDialog.tsx`, `PartnerInstitutesHero.t
 * **Not done in the app** (needs other files): the website's "Register a new company" goes to `/account/companies/new?partner=1`, which carries an "Apply to add partner courses" tick that sends the application the moment the company exists; the app's create-company screen has no such tick, so a new company is applied for from this screen afterwards. And an admin of an approved partner company gets no "Partner Institute" menu row: the API sends `learningPartner: true` for them and an empty `learningRoles` (an admin needs none), but `SessionUser` reads only `learningRoles`.
 
 Tests: the "Become a partner" group in `test/site_pages_test.dart` and the "Partner Courses" group in `test/learning_hub_test.dart` (the request body, the banner's words and states, the standing read again).
+
+## 9 Nov 2026 (bug sheet #6/#10): the institute's Website button
+
+`PartnerScreen`'s header shows **Website** (key `institute-website`, `OutlinePillButton`) when the institute has one, opening it in the phone's browser; an address saved without its scheme gets `https://` (`instituteSite`). The earlier build's button did nothing — the owner's screenshot (RideBob) — and the one in between had none.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+Wording only. The hub's headings and doors keep the client's 12 Nov words (Explore Learning Resources, Test Your
+Knowledge, Certification Mock Exams, ICR Professional Certifications, Partner Learning Programmes, Learn with
+Flashcards, Knowledge Assessments, Mock Exams, Flashcards, Knowledge Centre, ICR Programmes, Partner Programmes, View
+More); only "My courses" changed its capitals.
+
+State titles are headings (the lead's decision the same day): an empty-state, locked-state or error title is in Title Case with no full stop, and the line under it stays a sentence.
+
+| Where | Old | New |
+| --- | --- | --- |
+| The My Courses row's heading, the page's title, the strip | My courses · My attempts | My Courses · My Attempts |
+| Load errors (titles): 4 strings | Couldn't load this section · Couldn't load the decks · Couldn't load institutes · Couldn't load courses | Unable to Load This Section · Unable to Load the Decks · Unable to Load Institutes · Unable to Load Courses |
+| Hub search with no match | No matches | No Matches Found |
+| Empty-state titles to Title Case: 4 strings | No institutes yet · No institutes match · No courses published yet · No courses match | No Institutes Yet · No Institutes Match · No Courses Published Yet · No Courses Match |
+| The directory with no institutes | Partner institutes show up here as ICR takes them on. | Partner institutes will appear here as ICR adds them. |
+| Buttons to Title Case | Clear search · Open console · Try again | Clear Search · Open Console · Try Again |
+| The Apply banner | … Choose a company you run on ICR, or register a new one. | … Select a company you run on ICR, or register a new one. |
+| A company's standing (titles) | Skystar is a learning partner · Skystar's learning partner application is with ICR | Skystar Is a Learning Partner · Skystar's Learning Partner Application Is with ICR |
+| A company's standing, under review | Our team reviews every application by hand. You can add … | Our team reviews every application. You can add … |
+| A company's standing, another company active | Switch to this company in My companies to add and publish its courses. | Switch to this company in My Companies to add and publish its courses. |
+| Contact Institute form | Your question · … Your name and email go with the message. · Say a little more about what you would like to know. | Your Question · … Your name and email are sent with the message. · Add more detail to your message. |
+| An institute with no public slug | This institute cannot be written to from the app. | This institute cannot be contacted from the app. |
+| The stand-in page (`LearningComingSoon`) | X is on its way | X is coming soon. |
+
+Left as they were: the doors' blurbs and buttons, the Masterclass banner, "Verified by ICR", "Verified ICR Learning
+Partner", the institute card's count line ("No courses published yet", "3 courses": a fact on a card, not a state
+title), and the search hints.
+
+Tests: `test/learning_hub_test.dart` quotes the new words. One expectation there follows another folder's change of the
+same day (a partner application's status label reads "More Info Requested", from `lib/features/site/partner_apply_screen.dart`).

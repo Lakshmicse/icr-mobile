@@ -74,6 +74,6 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider<LearningController>.value(
     value: _hub.learning,
-    child: LearningScreen(onBack: widget.onBack, title: 'My courses', routes: widget.routes, onOpenDeck: _openDeck),
+    child: LearningScreen(onBack: widget.onBack, title: 'My Courses', routes: widget.routes, onOpenDeck: _openDeck),
   );
 }

@@ -133,9 +133,9 @@ class _InterviewBriefScreenState extends State<InterviewBriefScreen> {
         CareerNotice(
           key: const ValueKey('brief-error'),
           icon: LucideIcons.calendarX,
-          title: "Couldn't open this interview",
+          title: 'Unable to Open This Interview',
           body: _c.error!,
-          action: _c.canRetry ? 'Try again' : null,
+          action: _c.canRetry ? 'Try Again' : null,
           onAction: _c.canRetry ? _c.load : null,
         ),
       ];
@@ -152,27 +152,27 @@ class _InterviewBriefScreenState extends State<InterviewBriefScreen> {
       if (iv.notes != null) ...[const SizedBox(height: 12), _PanelNote(iv.notes!)],
       _Section(
         key: const ValueKey('brief-this-interview'),
-        title: 'This interview',
+        title: 'This Interview',
         child: _ThisInterview(brief: iv, now: _now, onOpen: _open),
       ),
       _Section(
         key: const ValueKey('brief-screening'),
-        title: 'From screening',
+        title: 'From Screening',
         child: _FromScreening(app: iv.application),
       ),
       _Section(
         key: const ValueKey('brief-notes'),
-        title: 'Hiring team notes',
+        title: 'Hiring Team Notes',
         child: _TeamNotes(notes: iv.teamNotes, now: _now),
       ),
       _Section(
         key: const ValueKey('brief-earlier-rounds'),
-        title: 'Earlier rounds',
+        title: 'Earlier Rounds',
         child: _EarlierRounds(rounds: iv.earlierRounds, now: _now),
       ),
       _Section(
         key: const ValueKey('brief-scorecard'),
-        title: iv.isPanelist ? 'Your scorecard' : 'Panel scorecards',
+        title: iv.isPanelist ? 'Your Scorecard' : 'Panel Scorecards',
         child: iv.isPanelist ? _yourScorecard(iv) : _ScorecardList(iv.panelScorecards, now: _now),
       ),
     ];
@@ -185,11 +185,11 @@ class _InterviewBriefScreenState extends State<InterviewBriefScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (mine != null) ...[
-          const StatusPill('Feedback submitted', key: ValueKey('scorecard-submitted'), tone: PillTone.success),
+          const StatusPill('Feedback Submitted', key: ValueKey('scorecard-submitted'), tone: PillTone.success),
           const SizedBox(height: 8),
           _ScorecardList([mine], now: _now),
           const SizedBox(height: 14),
-          Text('The rest of the panel', style: CareerText.bodyStrong),
+          Text('Rest of the Panel', style: CareerText.bodyStrong),
           const SizedBox(height: 6),
           if (iv.panelScorecards.isEmpty)
             Text('No one else on the panel has scored yet.', style: CareerText.body)
@@ -198,7 +198,7 @@ class _InterviewBriefScreenState extends State<InterviewBriefScreen> {
         ] else ...[
           if (iv.cancelled)
             Text(
-              'This interview was cancelled — no scorecard needed.',
+              'This interview was cancelled. No scorecard is needed.',
               key: const ValueKey('scorecard-cancelled'),
               style: CareerText.body,
             )
@@ -280,7 +280,7 @@ class _InterviewBriefScreenState extends State<InterviewBriefScreen> {
         FilledButton(
           key: const ValueKey('scorecard-submit'),
           onPressed: ready && !_c.submitting ? _submit : null,
-          child: Text(_c.submitting ? 'Submitting…' : 'Submit scorecard'),
+          child: Text(_c.submitting ? 'Submitting…' : 'Submit Scorecard'),
         ),
       ],
     );
@@ -412,7 +412,7 @@ class _CandidateHeader extends StatelessWidget {
                   icon: openingResume
                       ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(LucideIcons.eye, size: 15),
-                  label: const Text('Open résumé'),
+                  label: const Text('Open Résumé'),
                 ),
               if (app.linkedinUrl != null)
                 TextButton.icon(
@@ -464,7 +464,7 @@ class _PanelNote extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Notes for the panel', style: CareerText.bodyStrong.copyWith(color: AppColors.primary)),
+          Text('Notes for the Panel', style: CareerText.bodyStrong.copyWith(color: AppColors.primary)),
           const SizedBox(height: 3),
           Text(note, style: CareerText.body.copyWith(color: AppColors.onSurface)),
         ],
@@ -511,7 +511,7 @@ class _ThisInterview extends StatelessWidget {
                 FilledButton(
                   key: const ValueKey('brief-join'),
                   onPressed: () => onOpen(brief.meetingLink),
-                  child: const Text('Join meeting'),
+                  child: const Text('Join Meeting'),
                 ),
               if (map != null)
                 TextButton(
@@ -527,7 +527,10 @@ class _ThisInterview extends StatelessWidget {
           TextSpan(
             children: [
               TextSpan(text: 'Panel: ', style: CareerText.meta),
-              TextSpan(text: brief.panel.join(', '), style: CareerText.body.copyWith(color: AppColors.onSurface)),
+              TextSpan(
+                text: brief.panel.join(', '),
+                style: CareerText.body.copyWith(color: AppColors.onSurface),
+              ),
             ],
           ),
           key: const ValueKey('brief-panel'),
@@ -563,7 +566,7 @@ class _FromScreening extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Cover note', style: CareerText.metaStrong),
+                Text('Cover Note', style: CareerText.metaStrong),
                 const SizedBox(height: 3),
                 Text(app.coverNote!, style: CareerText.body.copyWith(color: AppColors.onSurface)),
               ],
@@ -579,7 +582,7 @@ class _FromScreening extends StatelessWidget {
             key: const ValueKey('match-insufficient'),
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('AI screening', style: CareerText.bodyStrong),
+              Text('AI Screening', style: CareerText.bodyStrong),
               Text(
                 'Not enough information to score: the résumé and profile have no skills, years of experience, '
                 'city or expected salary to compare with this job.',
@@ -606,9 +609,12 @@ class _Answers extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(child: Text('Employer questions', style: CareerText.bodyStrong)),
+            Expanded(child: Text('Employer Questions', style: CareerText.bodyStrong)),
             if (app.hasQualification)
-              StatusPill('${app.qualificationMet ?? 0} / ${app.qualificationTotal} met', key: const ValueKey('answers-met')),
+              StatusPill(
+                '${app.qualificationMet ?? 0} / ${app.qualificationTotal} met',
+                key: const ValueKey('answers-met'),
+              ),
             if (app.hasQualification && !app.qualified) ...[
               const SizedBox(width: 6),
               const StatusPill('Unqualified', tone: PillTone.danger),
@@ -630,7 +636,7 @@ class _Answers extends StatelessWidget {
                       if (a.mustHave)
                         const Padding(
                           padding: EdgeInsets.only(top: 2, bottom: 2),
-                          child: StatusPill('Must-have', tone: PillTone.danger),
+                          child: StatusPill('Must-Have', tone: PillTone.danger),
                         ),
                       Text(a.display.isEmpty ? '—' : a.display, style: CareerText.bodyStrong),
                       if (a.graded && a.needed != null) Text('Needed: ${a.needed}', style: CareerText.meta),
@@ -640,7 +646,7 @@ class _Answers extends StatelessWidget {
                 if (a.graded) ...[
                   const SizedBox(width: 8),
                   StatusPill(
-                    a.meetsIdeal ? 'Met' : 'Not met',
+                    a.meetsIdeal ? 'Met' : 'Not Met',
                     tone: a.meetsIdeal ? PillTone.success : PillTone.neutral,
                     icon: a.meetsIdeal ? LucideIcons.check : LucideIcons.x,
                   ),
@@ -689,7 +695,7 @@ class _AiScreening extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            Expanded(child: Text('AI screening', style: CareerText.bodyStrong)),
+            Expanded(child: Text('AI Screening', style: CareerText.bodyStrong)),
           ],
         ),
         if (summary != null) ...[const SizedBox(height: 8), Text(summary!, style: CareerText.body)],
@@ -759,7 +765,10 @@ class _TeamNotes extends StatelessWidget {
             ],
           ),
           if (n.note != null)
-            Padding(padding: const EdgeInsets.only(top: 4), child: Text(n.note!, style: CareerText.body)),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(n.note!, style: CareerText.body),
+            ),
         ],
       ],
     );

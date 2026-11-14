@@ -55,9 +55,14 @@ void main() {
 
   testWidgets('a view, a topic and a search work on the sample content', (tester) async {
     await pumpDemo(tester);
+    // Polls is past the screen's edge since the second chip reads "Trending Discussions": scroll the row to it.
+    await tester.drag(key('forum-views'), const Offset(-300, 0));
+    await settle(tester);
     await tester.tap(key('view:polls'));
     await settle(tester);
     expect(forums.posts.map((p) => p.id), ['fm-software-poll']);
+    await tester.drag(key('forum-views'), const Offset(600, 0));
+    await settle(tester);
     await tester.tap(key('view:all'));
     await settle(tester);
     await tester.enterText(find.byType(TextField).first, 'amc');
@@ -72,7 +77,7 @@ void main() {
     await settle(tester);
     expect(find.byType(ThreadScreen), findsOneWidget);
     expect(find.text('Arvind Swamy'), findsWidgets);
-    expect(find.text('VP Sustainability'), findsWidgets);
+    expect(find.textContaining('VP Sustainability'), findsWidgets);
     await tester.enterText(key('reply-input'), 'From the demo');
     await tester.pump();
     await tester.tap(key('reply-send'));

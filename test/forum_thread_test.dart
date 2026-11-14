@@ -8,7 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/core/util/links.dart' show SiteRoutes;
 import 'package:icr_mobile/features/feed/feed_models.dart';
-import 'package:icr_mobile/features/feed/widgets/reply_widgets.dart';
+import 'package:icr_mobile/features/feed/widgets/post_card.dart' show ReactionBadge;
+import 'package:icr_mobile/features/feed/widgets/comment_widgets.dart';
 import 'package:icr_mobile/features/forum/forum_callbacks.dart';
 import 'package:icr_mobile/features/forum/forum_models.dart';
 import 'package:icr_mobile/features/forum/thread_controller.dart';
@@ -194,9 +195,9 @@ void main() {
       expect(find.text('Question'), findsOneWidget);
       expect(find.text('Sarah Jenkins'), findsOneWidget);
       expect(find.text('Senior Facilities Manager at Google'), findsOneWidget);
-      expect(find.text('Follow'), findsOneWidget);
-      expect(find.textContaining('4,210 views'), findsOneWidget);
-      expect(find.textContaining('Still unanswered'), findsOneWidget);
+      expect(find.descendant(of: key('thread-follow-author'), matching: find.text('Follow')), findsOneWidget);
+      expect(find.textContaining('4,210 Views'), findsOneWidget);
+      expect(find.textContaining(' · Unanswered'), findsOneWidget);
       // The body keeps the website editor's shape: bold, italic, a bulleted list.
       expect(find.textContaining('sensors', findRichText: true), findsWidgets);
       expect(find.text('BMS'), findsOneWidget);
@@ -249,7 +250,7 @@ void main() {
     testWidgets('a discussion that is not there says so and offers no retry', (tester) async {
       final w = ForumWorld()..refusals['GET /forum/threads/slug-q'] = (404, 'Discussion not found');
       await pumpThread(tester, custom: w);
-      expect(find.text("This discussion isn't here"), findsOneWidget);
+      expect(find.text("Discussion Not Found"), findsOneWidget);
       expect(key('message-action'), findsNothing);
       expect(find.byType(TextField), findsNothing);
     });
@@ -257,7 +258,7 @@ void main() {
     testWidgets('a failed read says why, and Try again reads it', (tester) async {
       final w = ForumWorld()..refusals['GET /forum/threads/slug-q'] = (500, 'The forum is resting');
       await pumpThread(tester, custom: w);
-      expect(find.text("Couldn't load this discussion"), findsOneWidget);
+      expect(find.text("Unable to Load This Discussion"), findsOneWidget);
       expect(find.text('The forum is resting'), findsOneWidget);
       w.refusals.clear();
       await tester.tap(key('message-action'));
@@ -269,7 +270,7 @@ void main() {
     testWidgets('a locked discussion says so and the box gives the reason instead of a field', (tester) async {
       await pumpThread(tester, custom: ForumWorld(status: 'LOCKED'));
       expect(find.text('Locked'), findsWidgets);
-      expect(find.text('This discussion is locked, so it is not taking new replies.'), findsOneWidget);
+      expect(find.text('This discussion is locked and does not accept new replies.'), findsOneWidget);
       expect(key('reply-input'), findsNothing);
       // Still readable.
       expect(find.text('Spot on Priya.'), findsOneWidget);
@@ -292,7 +293,7 @@ void main() {
         tester,
         custom: ForumWorld(moderation: 'PENDING', canEdit: true, authorId: 'me'),
       );
-      expect(find.text('Waiting for review'), findsOneWidget);
+      expect(find.text('Awaiting Review'), findsOneWidget);
       expect(key('replies-heading'), findsNothing);
       expect(api.to('GET', '/forum/threads/slug-q/replies'), isEmpty);
       expect(find.text('This discussion is still awaiting review.'), findsOneWidget);
@@ -305,7 +306,8 @@ void main() {
       await pumpThread(tester, custom: w);
       expect(find.text('0 answers'), findsOneWidget);
       expect(key('replies-empty'), findsOneWidget);
-      expect(find.text('Be the first to share what you know.'), findsOneWidget);
+      expect(find.text('Start the Conversation'), findsOneWidget);
+      expect(find.text('Be the first to share your thoughts or insights.'), findsOneWidget);
     });
 
     testWidgets('a file that is not a photo is a tile that opens it; a poll draws its bars without View Discussion', (
@@ -397,23 +399,25 @@ void main() {
       expect(launched.length, 1);
     });
 
-    testWidgets('they hang off one line, an answer stepped in under the reply it answers, with the author\'s role', (
+    testWidgets('each is a plain row under its author and headline; answers sit one step in, naming whom they answer', (
       tester,
     ) async {
+      // Owner, 13 Nov 2026: comments as LinkedIn draws them.
       await pumpThread(tester);
       expect(find.text('Spot on Priya.'), findsOneWidget);
-      expect(find.text('Thanks Arvind.'), findsOneWidget);
-      expect(find.text('Kept the old controllers.'), findsOneWidget);
+      expect(find.textContaining('Thanks Arvind.'), findsOneWidget);
+      expect(find.textContaining('Kept the old controllers.'), findsOneWidget);
       expect(find.text('Pilot on one floor first.'), findsOneWidget);
-      // Arvind's headline is "General Counsel at Brookfield Properties": the role in the chip, the company under the name.
-      expect(find.text('General Counsel'), findsWidgets);
-      expect(find.textContaining('Brookfield Properties'), findsWidgets);
-      // Depth: the answer sits to the right of the reply it answers.
+      // The author's headline, whole, under the name.
+      expect(find.text('General Counsel at Brookfield Properties'), findsWidgets);
+      // An answer opens on the name of the person it answers.
+      expect(find.textContaining('Arvind Swamy Thanks Arvind.'), findsOneWidget);
+      // Depth: every answer sits one step in (the photo's width and its gap), however deep the forum nests it.
       final r1 = tester.getTopLeft(find.text('Spot on Priya.')).dx;
-      final r2 = tester.getTopLeft(find.text('Thanks Arvind.')).dx;
-      final r3 = tester.getTopLeft(find.text('Kept the old controllers.')).dx;
-      expect(r2 - r1, closeTo(20, 1));
-      expect(r3 - r2, closeTo(20, 1));
+      final r2 = tester.getTopLeft(find.textContaining('Thanks Arvind.')).dx;
+      final r3 = tester.getTopLeft(find.textContaining('Kept the old controllers.')).dx;
+      expect(r2 - r1, closeTo(CommentDesign.avatar + CommentDesign.gap, 1));
+      expect(r3, closeTo(r2, 1));
       expect(tester.getTopLeft(find.text('Pilot on one floor first.')).dx, closeTo(r1, 1));
     });
 
@@ -437,7 +441,7 @@ void main() {
       );
     });
 
-    testWidgets('"Show more replies" reads the next page and puts each reply under its parent', (tester) async {
+    testWidgets('"View More" reads the next page and puts each reply under its parent', (tester) async {
       final w = ForumWorld()
         ..replyCount = 8
         ..page2 = [
@@ -464,12 +468,15 @@ void main() {
       expect(find.text('Late answer under Arvind.'), findsNothing);
       await tapKey(tester, 'replies-more');
       expect(key('replies-more'), findsNothing);
-      expect(find.text('Late answer under Arvind.'), findsOneWidget);
+      expect(find.textContaining('Late answer under Arvind.'), findsOneWidget);
       expect(find.text('A new root on page two.'), findsOneWidget);
       expect(controller.totalReplies, 8);
       // The late answer is stepped in under Arvind's reply; the new root is at the top level.
       final root = tester.getTopLeft(find.text('Spot on Priya.')).dx;
-      expect(tester.getTopLeft(find.text('Late answer under Arvind.')).dx, closeTo(root + 20, 1));
+      expect(
+        tester.getTopLeft(find.textContaining('Late answer under Arvind.')).dx,
+        closeTo(root + CommentDesign.avatar + CommentDesign.gap, 1),
+      );
       expect(tester.getTopLeft(find.text('A new root on page two.')).dx, closeTo(root, 1));
       expect(api.to('GET', '/forum/threads/slug-q/replies').map((o) => o.queryParameters['page']), [1, 2]);
     });
@@ -492,7 +499,7 @@ void main() {
         },
       );
       await tapKey(tester, 'replies-more');
-      expect(find.text("Couldn't load more. Try again"), findsOneWidget);
+      expect(find.text("Unable to load more. Try again."), findsOneWidget);
       expect(find.text('Spot on Priya.'), findsOneWidget);
       failing = false;
       await tapKey(tester, 'replies-more');
@@ -548,6 +555,9 @@ void main() {
       expect(api.bodyOf('POST', '/forum/threads/t-q/vote'), {'value': 1, 'reaction': 'CELEBRATE'});
       expect(controller.post!.myReaction, ReactionKind.celebrate);
       expect(find.text('Celebrate'), findsOneWidget);
+      // The button is the reaction as the picker drew it: its badge (owner, 13 Nov 2026).
+      final mine = find.descendant(of: key('thread-like'), matching: find.byType(ReactionBadge));
+      expect(tester.widget<ReactionBadge>(mine).kind, ReactionKind.celebrate);
       await tester.longPress(key('thread-like'));
       await tester.pumpAndSettle();
       await tester.tap(key('reaction:CELEBRATE'));
@@ -587,9 +597,9 @@ void main() {
       expect(find.text('Save'), findsOneWidget);
     });
 
-    testWidgets('"Notify me" follows the discussion, again stops, a refusal leaves it', (tester) async {
+    testWidgets('"Notify Me" follows the discussion, again stops, a refusal leaves it', (tester) async {
       await pumpThread(tester);
-      expect(find.text('Notify me'), findsOneWidget);
+      expect(find.text('Notify Me'), findsOneWidget);
       await tapKey(tester, 'thread-subscribe');
       expect(world.subscribed, isTrue);
       expect(find.text('Notifying'), findsOneWidget);
@@ -597,7 +607,7 @@ void main() {
       expect(world.subscribed, isFalse);
       world.refusals['POST /forum/threads/t-q/subscribe'] = (500, 'Not now.');
       await tapKey(tester, 'thread-subscribe');
-      expect(find.text('Notify me'), findsOneWidget);
+      expect(find.text('Notify Me'), findsOneWidget);
       expect(snack('Not now.'), findsOneWidget);
     });
 
@@ -608,11 +618,11 @@ void main() {
       expect(find.text('Following'), findsOneWidget);
       await tapKey(tester, 'thread-follow-author');
       expect(world.following, isEmpty);
-      expect(find.text('Follow'), findsOneWidget);
+      expect(find.descendant(of: key('thread-follow-author'), matching: find.text('Follow')), findsOneWidget);
       world.refusals['POST /members/u-sarah/follow'] = (400, 'You cannot follow that member.');
       await tapKey(tester, 'thread-follow-author');
       expect(snack('You cannot follow that member.'), findsOneWidget);
-      expect(find.text('Follow'), findsOneWidget);
+      expect(find.descendant(of: key('thread-follow-author'), matching: find.text('Follow')), findsOneWidget);
     });
 
     testWidgets('a poll option votes or moves the vote, the bars follow; the same option asks nothing', (tester) async {
@@ -641,10 +651,10 @@ void main() {
 
     testWidgets('a refused poll vote says why and leaves the bars', (tester) async {
       final w = ForumWorld(withPoll: true, kind: 'DISCUSSION')
-        ..refusals['POST /forum/threads/t-q/poll/vote'] = (400, 'This discussion is closed, and so is its poll.');
+        ..refusals['POST /forum/threads/t-q/poll/vote'] = (400, 'This discussion and its poll are closed.');
       await pumpThread(tester, custom: w);
       await tapKey(tester, 'poll-option:o2');
-      expect(snack('closed, and so is its poll'), findsOneWidget);
+      expect(snack('This discussion and its poll are closed.'), findsOneWidget);
       expect(find.text('Planon (Your vote)'), findsNothing);
     });
 
@@ -657,7 +667,7 @@ void main() {
       await tester.tap(key('menu-copy'));
       await settle(tester);
       expect(copied, 'https://icr.org.in/community/slug-q');
-      expect(find.text('Link copied'), findsOneWidget);
+      expect(find.text('Link copied.'), findsOneWidget);
     });
 
     testWidgets("the three dots offer what the reader may do: report someone else's, delete one's own", (tester) async {
@@ -695,7 +705,7 @@ void main() {
       await tapKey(tester, 'thread-menu');
       await tester.tap(key('menu-delete'));
       await settle(tester);
-      expect(find.text('Delete this discussion?'), findsOneWidget);
+      expect(find.text('Delete This Discussion?'), findsOneWidget);
       await tester.tap(key('confirm-cancel'));
       await settle(tester);
       expect(api.count('DELETE', '/forum/threads/t-q'), 0);
@@ -726,15 +736,16 @@ void main() {
     testWidgets('"N reactions" lists who reacted; the views count lists who read it', (tester) async {
       await pumpThread(tester);
       await tapKey(tester, 'thread-reactions');
-      expect(find.text('Reactions'), findsOneWidget);
+      // The tabs: All with its count, then each reaction given (owner's reference, 13 Nov 2026).
+      expect(find.byKey(const ValueKey('reactors-tab:all')), findsOneWidget);
       expect(find.text('Anita Raghavan'), findsWidgets);
       expect(find.text('Karthik S'), findsOneWidget);
       await tester.tapAt(const Offset(10, 10));
       await tester.pumpAndSettle();
       await tapKey(tester, 'thread-views');
-      expect(find.text('Who viewed'), findsWidgets);
+      expect(find.text('Who Viewed'), findsWidgets);
       expect(find.text('Vikram Iyer'), findsOneWidget);
-      expect(find.text('4 other members read it with a private profile.'), findsOneWidget);
+      expect(find.text('4 other members viewed it with a private profile.'), findsOneWidget);
     });
 
     testWidgets(
@@ -763,7 +774,7 @@ void main() {
   });
 
   group('the replies the reader sends and acts on', () {
-    Finder tile(String words) => find.ancestor(of: find.text(words), matching: find.byType(ReplyTile));
+    Finder tile(String words) => find.ancestor(of: find.text(words), matching: find.byType(CommentTile));
 
     testWidgets('a reply is sent under the discussion as escaped paragraphs, shown, counted, and the box clears', (
       tester,
@@ -786,7 +797,7 @@ void main() {
       expect(api.count('POST', '/forum/threads/t-q/replies'), 0);
     });
 
-    testWidgets('Reply on a reply addresses that person and sends under that reply, stepped in', (tester) async {
+    testWidgets('Reply on a reply addresses that person and sends under that reply, on the same step', (tester) async {
       await pumpThread(tester);
       await tapKey(tester, 'reply-reply:r2');
       expect(find.text('Replying to Priya Nambiar'), findsOneWidget);
@@ -794,8 +805,8 @@ void main() {
       await write(tester, 'Glad it helped');
       await send(tester);
       expect(api.bodyOf('POST', '/forum/threads/t-q/replies'), {'bodyHtml': '<p>Glad it helped</p>', 'parentId': 'r2'});
-      final r2 = tester.getTopLeft(find.text('Thanks Arvind.')).dx;
-      expect(tester.getTopLeft(find.text('Glad it helped')).dx, closeTo(r2 + 20, 1));
+      final r2 = tester.getTopLeft(find.textContaining('Thanks Arvind.')).dx;
+      expect(tester.getTopLeft(find.textContaining('Glad it helped')).dx, closeTo(r2, 1));
       // The target is dropped once sent.
       expect(find.text('Replying to Priya Nambiar'), findsNothing);
     });
@@ -806,7 +817,7 @@ void main() {
       await tester.tap(key('reply-target-clear'));
       await tester.pump();
       expect(find.text('Replying to Priya Nambiar'), findsNothing);
-      expect(find.text('Write a reply...'), findsOneWidget);
+      expect(find.text('Add a comment...'), findsOneWidget);
     });
 
     testWidgets('a refused reply keeps what was typed and says why above the box', (tester) async {
@@ -887,7 +898,7 @@ void main() {
       await tapKey(tester, 'reply-more:r5');
       await tester.tap(key('reply-menu-delete'));
       await settle(tester);
-      expect(find.text('Delete your reply?'), findsOneWidget);
+      expect(find.text('Delete Your Reply?'), findsOneWidget);
       await tester.tap(key('confirm-cancel'));
       await settle(tester);
       expect(api.count('DELETE', '/forum/replies/r5'), 0);
@@ -927,7 +938,7 @@ void main() {
       expect(api.count('POST', '/forum/threads/t-q/accept/r4'), 1);
       expect(key('reply-accepted'), findsOneWidget);
       expect(find.text('Answered'), findsOneWidget);
-      expect(find.textContaining('Still unanswered'), findsNothing);
+      expect(find.textContaining(' · Unanswered'), findsNothing);
       expect(
         tester.getTopLeft(find.text('Pilot on one floor first.')).dy <
             tester.getTopLeft(find.text('Spot on Priya.')).dy,
@@ -951,7 +962,7 @@ void main() {
 
     testWidgets('someone who did not ask has no Accept answer', (tester) async {
       await pumpThread(tester, custom: ForumWorld());
-      expect(find.text('Accept answer'), findsNothing);
+      expect(find.text('Accept Answer'), findsNothing);
     });
 
     testWidgets('a discussion that is not a question has no Accept answer, even for its author', (tester) async {
@@ -959,7 +970,7 @@ void main() {
         tester,
         custom: ForumWorld(authorId: 'me', kind: 'DISCUSSION', canEdit: true),
       );
-      expect(find.text('Accept answer'), findsNothing);
+      expect(find.text('Accept Answer'), findsNothing);
     });
 
     testWidgets('Report on a reply sends the reason and the note; a refusal shows in the sheet and keeps the note', (
@@ -970,7 +981,7 @@ void main() {
       await tapKey(tester, 'reply-more:r4');
       await tester.tap(key('reply-menu-report'));
       await settle(tester);
-      expect(find.text('Report this reply'), findsOneWidget);
+      expect(find.text('Report This Reply'), findsOneWidget);
       await tester.tap(key('report-reason:OFF_TOPIC'));
       await tester.pump();
       await tester.enterText(key('report-note'), 'Nothing about HVAC');
@@ -978,7 +989,7 @@ void main() {
       await settle(tester);
       expect(find.text('You have already reported this.'), findsOneWidget);
       expect(tester.widget<TextField>(key('report-note')).controller!.text, 'Nothing about HVAC');
-      expect(find.text('Report this reply'), findsOneWidget);
+      expect(find.text('Report This Reply'), findsOneWidget);
       w.refusals.clear();
       await tester.tap(key('report-send'));
       await settle(tester);
@@ -987,8 +998,8 @@ void main() {
         'reason': 'OFF_TOPIC',
         'note': 'Nothing about HVAC',
       });
-      expect(find.text('Report this reply'), findsNothing);
-      expect(snack('A moderator will take a look.'), findsOneWidget);
+      expect(find.text('Report This Reply'), findsNothing);
+      expect(snack('A moderator will review it.'), findsOneWidget);
     });
 
     testWidgets('Report on the discussion names the discussion, with no note when none is typed', (tester) async {
@@ -996,7 +1007,7 @@ void main() {
       await tapKey(tester, 'thread-menu');
       await tester.tap(key('menu-report'));
       await settle(tester);
-      expect(find.text('Report this discussion'), findsOneWidget);
+      expect(find.text('Report This Discussion'), findsOneWidget);
       await tester.tap(key('report-send'));
       await settle(tester);
       expect(api.bodyOf('POST', '/forum/reports'), {'threadId': 't-q', 'reason': 'SPAM'});

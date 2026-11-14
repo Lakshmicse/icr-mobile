@@ -63,6 +63,7 @@ Future<RecordingLinks> pumpInsights(
   ScriptedCareer repo, {
   InsightsTab tab = InsightsTab.reviews,
   JobsNavigation navigation = JobsNavigation.none,
+  String? viewerCompanyId,
 }) async {
   tester.view.physicalSize = const Size(390, 900);
   tester.view.devicePixelRatio = 1;
@@ -71,7 +72,14 @@ Future<RecordingLinks> pumpInsights(
   await tester.pumpWidget(
     MaterialApp(
       theme: buildAppTheme(),
-      home: CompanyInsightsScreen(repository: repo, company: _company, links: links, navigation: navigation, tab: tab),
+      home: CompanyInsightsScreen(
+        repository: repo,
+        company: _company,
+        links: links,
+        navigation: navigation,
+        tab: tab,
+        viewerCompanyId: viewerCompanyId,
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -142,7 +150,7 @@ void main() {
       final s = await repo.ratingSummary('c1');
       expect((s.count, s.average), (3, 4.3));
       expect(s.distribution[5], 1);
-      expect(s.subRatings, {'Work-life balance': 4.5, 'Culture': 3.0});
+      expect(s.subRatings, {'Work-Life Balance': 4.5, 'Culture': 3.0});
     });
 
     test('salaries: roles with their percentiles, or none when the sample is too small', () async {
@@ -392,7 +400,7 @@ void main() {
       expect(find.byKey(const ValueKey('header-rating')), findsOneWidget);
       expect(find.text('4.5'), findsWidgets);
       expect(find.text('A place that lets facilities people lead'), findsOneWidget);
-      expect(find.text('Verified employee'), findsOneWidget);
+      expect(find.text('Verified Employee'), findsOneWidget);
       expect(find.text('PROS'), findsWidgets);
       expect(find.byKey(const ValueKey('rating-card')), findsOneWidget);
     });
@@ -410,7 +418,7 @@ void main() {
       await openTab(tester, InsightsTab.interviews);
       expect(find.byKey(const ValueKey('interview-averages')), findsOneWidget);
       expect(find.text('3.0 / 5'), findsOneWidget);
-      expect(find.text('Offer accepted'), findsNothing, reason: 'the outcome reads as the website words it');
+      expect(find.text('Offer Accepted'), findsNothing, reason: 'the outcome reads as the website words it');
       expect(find.text('Got an offer and accepted'), findsOneWidget);
       expect(find.text('Average difficulty'), findsOneWidget);
     });
@@ -454,7 +462,7 @@ void main() {
       expect(find.byKey(const ValueKey('tab-error')), findsOneWidget);
       expect(find.text('Reviews are down.'), findsOneWidget);
       repo.failReviews = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('A place that lets facilities people lead'), findsOneWidget);
     });
@@ -493,12 +501,20 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey('review-cons')), 'Long audits');
     }
 
+    testWidgets('a member of the company is not asked to review it (bug sheet #45, 9 Nov 2026)', (tester) async {
+      await pumpInsights(tester, ScriptedCareer(), viewerCompanyId: _company.id);
+      expect(find.byKey(const ValueKey('write-review')), findsNothing);
+      expect(find.byKey(const ValueKey('own-company-review')), findsOneWidget);
+      await pumpInsights(tester, ScriptedCareer(), viewerCompanyId: 'another-company');
+      expect(find.byKey(const ValueKey('write-review')), findsOneWidget);
+    });
+
     testWidgets('an empty form says what is required and sends nothing', (tester) async {
       final repo = ScriptedCareer();
       await pumpInsights(tester, repo);
       await tester.tap(find.byKey(const ValueKey('write-review')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Submit review'));
+      await tester.tap(find.text('Submit Review'));
       await tester.pump();
       expect(find.text('Overall rating, a headline, pros and cons are required.'), findsOneWidget);
       expect(repo.calls, isNot(contains('submitReview')));
@@ -513,15 +529,15 @@ void main() {
       await tester.ensureVisible(find.byKey(const ValueKey('status-CURRENT')));
       await tester.tap(find.byKey(const ValueKey('status-CURRENT')));
       await tester.pump();
-      await tester.tap(find.text('Submit review'));
+      await tester.tap(find.text('Submit Review'));
       await tester.pumpAndSettle();
 
       expect(repo.calls, contains('submitReview'));
       expect(repo.sentReview!.employmentStatus, 'CURRENT');
-      expect(find.text('Submit review'), findsNothing, reason: 'the form closed');
-      expect(find.textContaining('appears once ICR has read it'), findsOneWidget);
+      expect(find.text('Submit Review'), findsNothing, reason: 'the form closed');
+      expect(find.textContaining('will appear once ICR has reviewed it'), findsOneWidget);
       expect(find.byKey(const ValueKey('my-review')), findsOneWidget);
-      expect(find.text('Update my review'), findsOneWidget);
+      expect(find.text('Update My Review'), findsOneWidget);
     });
 
     testWidgets('a refusal keeps what was typed and shows the API\'s sentence', (tester) async {
@@ -530,12 +546,12 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('write-review')));
       await tester.pumpAndSettle();
       await fill(tester);
-      await tester.tap(find.text('Submit review'));
+      await tester.tap(find.text('Submit Review'));
       await tester.pumpAndSettle();
       expect(find.text('This company is suspended.'), findsOneWidget);
       expect(find.text('Worth it'), findsOneWidget, reason: 'the headline is still there');
       repo.submitError = null;
-      await tester.tap(find.text('Submit review'));
+      await tester.tap(find.text('Submit Review'));
       await tester.pumpAndSettle();
       expect(repo.calls, contains('submitReview'));
     });
@@ -548,18 +564,18 @@ void main() {
       await openTab(tester, InsightsTab.salaries);
       await tester.tap(find.byKey(const ValueKey('share-salary')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Share salary'));
+      await tester.tap(find.text('Share Salary'));
       await tester.pump();
       expect(find.text('A job title and an amount are required.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('salary-title')), 'Facilities Manager');
       await tester.enterText(find.byKey(const ValueKey('salary-amount')), '95000');
       await tester.tap(find.byKey(const ValueKey('period-MONTHLY')));
       await tester.pump();
-      await tester.tap(find.text('Share salary'));
+      await tester.tap(find.text('Share Salary'));
       await tester.pumpAndSettle();
       final sent = repo.salaryReports.single;
       expect((sent.jobTitle, sent.amount, sent.period), ('Facilities Manager', 95000, 'MONTHLY'));
-      expect(find.textContaining('only ever shown as an average'), findsOneWidget);
+      expect(find.textContaining('shown only as an average'), findsOneWidget);
     });
 
     testWidgets('an interview needs its ratings and the process, then is sent', (tester) async {
@@ -568,7 +584,7 @@ void main() {
       await openTab(tester, InsightsTab.interviews);
       await tester.tap(find.byKey(const ValueKey('share-interview')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Share interview'));
+      await tester.tap(find.text('Share Interview'));
       await tester.pump();
       expect(find.byKey(const ValueKey('form-problem')), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('difficulty-4')));
@@ -576,7 +592,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('outcome-NO_OFFER')));
       await tester.enterText(find.byKey(const ValueKey('interview-process')), 'Three rounds over two weeks.');
       await tester.pump();
-      await tester.tap(find.text('Share interview'));
+      await tester.tap(find.text('Share Interview'));
       await tester.pumpAndSettle();
       final sent = repo.interviewReports.single;
       expect((sent.difficulty, sent.experience, sent.outcome), (4, 5, 'NO_OFFER'));

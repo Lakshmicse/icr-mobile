@@ -16,7 +16,7 @@ import 'career_fakes.dart';
 import 'helpers/fonts.dart';
 import 'jobs_fakes.dart';
 
-/// "My applications" and one application's page, every control tapped. What the API does with the
+/// 'My Applications' and one application's page, every control tapped. What the API does with the
 /// taps (withdraw, answer an offer, message the team) is proved in `test/live/career_live_test.dart`.
 
 /// A Monday. The demo's applications are dated from it: the interview is Thursday, the offer
@@ -134,7 +134,7 @@ void main() {
   group('the figures and what is up next', () {
     testWidgets('the four figures read the list: active, viewed, interviews, offers', (tester) async {
       await pumpTracker(tester);
-      expect(find.text('My applications'), findsOneWidget);
+      expect(find.text('My Applications'), findsOneWidget);
       expect(
         find.descendant(of: find.byKey(const ValueKey('summary-active')), matching: find.text('3')),
         findsOneWidget,
@@ -202,7 +202,7 @@ void main() {
       expect(rig.links.opened.single.toString(), 'https://meet.example.com/icr-demo');
 
       await tester.tap(
-        find.descendant(of: find.byKey(const ValueKey('up-next-offer-1')), matching: find.text('Review offer')),
+        find.descendant(of: find.byKey(const ValueKey('up-next-offer-1')), matching: find.text('Review Offer')),
       );
       await tester.pumpAndSettle();
       expect(row('app-3'), findsOneWidget);
@@ -277,8 +277,8 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey('applications-search')), 'zzz');
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('applications-search-empty')), findsOneWidget);
-      expect(find.text('No applications match “zzz”'), findsOneWidget);
-      await tester.tap(find.text('Clear search'));
+      expect(find.text('No Applications Match “zzz”'), findsOneWidget);
+      await tester.tap(find.text('Clear Search'));
       await tester.pumpAndSettle();
       expect(row('app-1'), findsOneWidget);
     });
@@ -290,8 +290,8 @@ void main() {
       await pumpTracker(tester, repo: repo);
       await openTab(tester, ApplicationsTab.offers);
       expect(find.byKey(const ValueKey('applications-tab-empty')), findsOneWidget);
-      expect(find.text('No offers yet'), findsOneWidget);
-      await tester.tap(find.text('View all applications'));
+      expect(find.text('No Offers Yet'), findsOneWidget);
+      await tester.tap(find.text('View All Applications'));
       await tester.pumpAndSettle();
       expect(row('app-2'), findsOneWidget);
     });
@@ -311,13 +311,13 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('applications-sort')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Best match').last);
+      await tester.tap(find.text('Best Match').last);
       await tester.pumpAndSettle();
       expect(order(), ['app-app-3', 'app-app-1', 'app-app-2']);
 
       await tester.tap(find.byKey(const ValueKey('applications-sort')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Date applied').last);
+      await tester.tap(find.text('Date Applied').last);
       await tester.pumpAndSettle();
       expect(order(), ['app-app-2', 'app-app-1', 'app-app-3']);
     });
@@ -329,19 +329,19 @@ void main() {
       expect(inRow('app-1', find.text('Senior Facilities Manager for STP Plant')), findsOneWidget);
       expect(inRow('app-1', find.text('CBRE South Asia • Mumbai')), findsOneWidget);
       expect(inRow('app-1', find.text('Interviewing')), findsOneWidget);
-      expect(inRow('app-1', find.text('88% match')), findsOneWidget);
-      for (final step in ['Applied', 'Viewed', 'In review', 'Interview', 'Offer']) {
+      expect(inRow('app-1', find.text('88% Match')), findsOneWidget);
+      for (final step in ['Applied', 'Viewed', 'In Review', 'Interview', 'Offer']) {
         expect(inRow('app-1', find.text(step)), findsWidgets);
       }
       expect(inRow('app-1', find.byKey(const ValueKey('interview-strip'))), findsOneWidget);
       expect(inRow('app-1', find.textContaining('Round 1', findRichText: true)), findsWidgets);
       // Three days ahead the call is drawn greyed with the time it opens.
-      expect(inRow('app-1', find.text('Join call from 11:15 AM')), findsOneWidget);
+      expect(inRow('app-1', find.text('Join Call from 11:15 AM')), findsOneWidget);
     });
 
     testWidgets('Join call opens the meeting; an in-person round offers the map instead', (tester) async {
       final rig = await pumpTracker(tester, at: _inCallWindow);
-      await tester.tap(inRow('app-1', find.text('Join call')));
+      await tester.tap(inRow('app-1', find.text('Join Call')));
       await tester.pump();
       expect(rig.links.opened.single.toString(), 'https://meet.example.com/icr-demo');
 
@@ -368,7 +368,7 @@ void main() {
         ),
       ];
       final map = await pumpTracker(tester, repo: repo);
-      expect(find.text('Join call'), findsNothing);
+      expect(find.text('Join Call'), findsNothing);
       await tester.tap(
         find.descendant(of: find.byKey(const ValueKey('interview-strip')), matching: find.text('Open in Maps')),
       );
@@ -396,12 +396,12 @@ void main() {
       await tester.tap(inRow('app-3', find.text('Accept')));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('accept-dialog')), findsOneWidget);
-      expect(find.text('Accept this offer?'), findsOneWidget);
+      expect(find.text('Accept This Offer?'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('offer-note')), 'Delighted, thank you.');
       await tester.tap(find.byKey(const ValueKey('offer-confirm')));
       await tester.pumpAndSettle();
       expect(rig.repo.log, contains('offer offer-1 accept Delighted, thank you.'));
-      expect(find.text('Offer accepted. Congratulations! It is now under Offers.'), findsOneWidget);
+      expect(find.text('Offer accepted. It is now under Offers.'), findsOneWidget);
       // The application is read again: it is hired now, under Offers.
       expect(rig.repo.log.where((l) => l == 'application app-3'), isNotEmpty);
       expect(row('app-3'), findsOneWidget);
@@ -412,7 +412,7 @@ void main() {
       final rig = await pumpTracker(tester);
       await tester.tap(inRow('app-3', find.text('Decline')));
       await tester.pumpAndSettle();
-      expect(find.text('Decline this offer?'), findsOneWidget);
+      expect(find.text('Decline This Offer?'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('offer-confirm')));
       await tester.pumpAndSettle();
       expect(rig.repo.log, contains('offer offer-1 decline'));
@@ -420,7 +420,7 @@ void main() {
       expect(row('app-3'), findsNothing, reason: 'a declined offer leaves Active');
       await openTab(tester, ApplicationsTab.archived);
       expect(row('app-3'), findsOneWidget);
-      expect(inRow('app-3', find.text('Offer declined')), findsOneWidget);
+      expect(inRow('app-3', find.text('Offer Declined')), findsOneWidget);
     });
 
     testWidgets('backing out of the offer dialog sends nothing', (tester) async {
@@ -447,16 +447,16 @@ void main() {
     testWidgets('Withdraw asks first; keeping does nothing, withdrawing archives with the API\'s say', (tester) async {
       final rig = await pumpTracker(tester);
       await openMenu(tester, 'app-2');
-      await tester.tap(find.text('Withdraw application'));
+      await tester.tap(find.text('Withdraw Application'));
       await tester.pumpAndSettle();
-      expect(find.text('Withdraw your application?'), findsOneWidget);
+      expect(find.text('Withdraw Your Application?'), findsOneWidget);
       expect(find.textContaining('will no longer see your application for Facilities Operations Lead'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('withdraw-keep')));
       await tester.pumpAndSettle();
       expect(rig.repo.log.where((l) => l.startsWith('withdraw')), isEmpty);
 
       await openMenu(tester, 'app-2');
-      await tester.tap(find.text('Withdraw application'));
+      await tester.tap(find.text('Withdraw Application'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('withdraw-confirm')));
       await tester.pumpAndSettle();
@@ -473,7 +473,7 @@ void main() {
         ..withdrawError = ApiError('A hired application cannot be withdrawn.', statusCode: 400);
       await pumpTracker(tester, repo: repo);
       await openMenu(tester, 'app-2');
-      await tester.tap(find.text('Withdraw application'));
+      await tester.tap(find.text('Withdraw Application'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('withdraw-confirm')));
       await tester.pumpAndSettle();
@@ -485,15 +485,15 @@ void main() {
       await pumpTracker(tester);
       await openTab(tester, ApplicationsTab.archived);
       await openMenu(tester, 'app-4');
-      expect(find.text('Withdraw application'), findsNothing);
-      expect(find.text('View job'), findsOneWidget);
-      expect(find.text('Message hiring team'), findsOneWidget);
+      expect(find.text('Withdraw Application'), findsNothing);
+      expect(find.text('View Job'), findsOneWidget);
+      expect(find.text('Message Hiring Team'), findsOneWidget);
     });
 
     testWidgets('View job in the menu opens the job sheet', (tester) async {
       await pumpTracker(tester);
       await openMenu(tester, 'app-2');
-      await tester.tap(find.text('View job'));
+      await tester.tap(find.text('View Job'));
       await tester.pumpAndSettle();
       expect(find.text('JOB DETAILS'), findsOneWidget);
     });
@@ -501,7 +501,7 @@ void main() {
     testWidgets('Message hiring team opens the conversation the app wired', (tester) async {
       final rig = await pumpTracker(tester);
       await openMenu(tester, 'app-2');
-      await tester.tap(find.text('Message hiring team'));
+      await tester.tap(find.text('Message Hiring Team'));
       await tester.pumpAndSettle();
       expect(rig.repo.log, contains('message demo-2'));
       expect(rig.conversations, ['conv-1']);
@@ -512,7 +512,7 @@ void main() {
         ..messageError = ApiError('This job has no one to message.', statusCode: 400);
       final rig = await pumpTracker(tester, repo: repo);
       await openMenu(tester, 'app-2');
-      await tester.tap(find.text('Message hiring team'));
+      await tester.tap(find.text('Message Hiring Team'));
       await tester.pumpAndSettle();
       expect(find.text('This job has no one to message.'), findsOneWidget);
       expect(rig.conversations, isEmpty);
@@ -521,8 +521,8 @@ void main() {
     testWidgets('a Not selected row says so and offers similar jobs through the app', (tester) async {
       final rig = await pumpTracker(tester);
       await openTab(tester, ApplicationsTab.archived);
-      expect(inRow('app-4', find.textContaining('Not selected')), findsWidgets);
-      expect(inRow('app-4', find.textContaining('The employer moved ahead')), findsOneWidget);
+      expect(inRow('app-4', find.textContaining('Not Selected')), findsWidgets);
+      expect(inRow('app-4', find.textContaining('The employer selected other candidates')), findsOneWidget);
       expect(inRow('app-4', find.byKey(const ValueKey('step-locked'))), findsNothing);
       await tester.tap(inRow('app-4', find.byKey(const ValueKey('outcome-link'))));
       await tester.pump();
@@ -566,7 +566,7 @@ void main() {
       await tester.tap(inRow('app-2', find.byKey(const ValueKey('view-application'))));
       await tester.pumpAndSettle();
       expect(find.byType(ApplicationDetailScreen), findsOneWidget);
-      expect(find.text('Your application'), findsOneWidget);
+      expect(find.text('Your Application'), findsOneWidget);
       await tester.tap(find.byIcon(Symbols.arrow_back).last);
       await tester.pumpAndSettle();
       await tester.tap(inRow('app-2', find.text('Facilities Operations Lead')));
@@ -580,10 +580,10 @@ void main() {
       final repo = SpyCareer(jobs: SpyJobsRepository(), now: _now)..applicationsAnswer = const [];
       final rig = await pumpTracker(tester, repo: repo);
       expect(find.byKey(const ValueKey('applications-first')), findsOneWidget);
-      await tester.tap(find.text('Find jobs'));
+      await tester.tap(find.text('Find Jobs'));
       await tester.pump();
       expect(rig.finds, [null]);
-      await tester.tap(find.text('Set up a job alert'));
+      await tester.tap(find.text('Create a Job Alert'));
       await tester.pumpAndSettle();
       expect(find.byType(JobAlertsScreen), findsOneWidget);
       expect(rig.links.opened, isEmpty);
@@ -596,7 +596,7 @@ void main() {
       expect(find.byKey(const ValueKey('applications-error')), findsOneWidget);
       expect(find.text('The tracker is down.'), findsOneWidget);
       repo.applicationsError = null;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(row('app-1'), findsOneWidget);
     });
@@ -620,7 +620,7 @@ void main() {
   group('one application\'s page', () {
     testWidgets('names the job, the company and the status, and reads the whole application', (tester) async {
       final rig = await pumpDetail(tester, 'app-1');
-      expect(find.text('Your application'), findsOneWidget);
+      expect(find.text('Your Application'), findsOneWidget);
       expect(find.text('Senior Facilities Manager for STP Plant'), findsWidgets);
       expect(find.text('Interviewing'), findsOneWidget);
       expect(rig.repo.log, contains('application app-1'));
@@ -640,7 +640,7 @@ void main() {
       final repo = SpyCareer(jobs: SpyJobsRepository(), now: _now)..applicationsAnswer = [lockedApp()];
       final rig = await pumpDetail(tester, 'locked', repo: repo);
       expect(find.byKey(const ValueKey('match-locked')), findsOneWidget);
-      await tester.tap(find.text('See plans'));
+      await tester.tap(find.text('View Plans'));
       await tester.pump();
       expect(rig.links.paths, ['/career/plans']);
     });
@@ -682,7 +682,7 @@ void main() {
       repo.applicationsAnswer = [seed.copyWith(stage: 'REJECTED')];
       await pumpDetail(tester, 'app-1', repo: repo);
       expect(find.byKey(const ValueKey('stepper-rejected')), findsOneWidget);
-      expect(find.text('Not selected'), findsWidgets);
+      expect(find.text('Not Selected'), findsWidgets);
       repo.applicationsAnswer = [seed.copyWith(stage: 'WITHDRAWN')];
       await pumpDetail(tester, 'app-1', repo: repo);
       expect(find.byKey(const ValueKey('stepper-withdrawn')), findsOneWidget);
@@ -708,7 +708,7 @@ void main() {
       final rig = await pumpDetail(tester, 'app-1', at: _inCallWindow);
       expect(find.byKey(const ValueKey('round-iv-1')), findsOneWidget);
       expect(find.text('Technical round'), findsOneWidget);
-      expect(find.text('Thu 29 Oct, 11:30 AM • Video call • 45 min'), findsOneWidget);
+      expect(find.text('Thu 29 Oct, 11:30 AM • Video Call • 45 min'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('join-iv-1')));
       await tester.pump();
       expect(rig.links.opened.single.toString(), 'https://meet.example.com/icr-demo');
@@ -735,7 +735,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('another-time-send')));
       await tester.pumpAndSettle();
-      expect(find.text('Say when you could do instead.'), findsOneWidget);
+      expect(find.text('Enter the times you are available.'), findsOneWidget);
       expect(rig.repo.messages, isEmpty);
       await tester.enterText(find.byKey(const ValueKey('another-time-text')), 'Friday after 3 pm.');
       await tester.tap(find.byKey(const ValueKey('another-time-send')));
@@ -763,7 +763,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('offer-confirm')));
       await tester.pumpAndSettle();
       expect(rig.repo.log, contains('offer offer-1 accept'));
-      expect(find.text('Offer accepted. Congratulations!'), findsOneWidget);
+      expect(find.text('Offer accepted.'), findsOneWidget);
       expect(find.byKey(const ValueKey('offer-answered')), findsOneWidget);
       expect(find.text('You accepted this offer: ₹24,00,000 a year.'), findsOneWidget);
       expect(rig.finds.last, startsWith('app-3 '));
@@ -826,7 +826,7 @@ void main() {
 
     testWidgets('the search at a glance, what is next, how visible, where each application stands', (tester) async {
       await pumpHub(tester);
-      expect(find.text('Your career'), findsOneWidget);
+      expect(find.text('Your Career'), findsOneWidget);
       expect(find.descendant(of: find.byKey(const ValueKey('hub-active')), matching: find.text('3')), findsOneWidget);
       expect(
         find.descendant(of: find.byKey(const ValueKey('hub-interviews')), matching: find.text('1')),
@@ -848,11 +848,11 @@ void main() {
     testWidgets('each shortcut opens its screen in the app', (tester) async {
       await pumpHub(tester);
       for (final (key, screen) in <(String, String)>[
-        ('go-applications', 'My applications'),
+        ('go-applications', 'My Applications'),
         ('go-interviews', 'Interviews'),
-        ('go-saved', 'Saved jobs'),
-        ('go-hidden', 'Saved jobs'),
-        ('go-alerts', 'Job alerts'),
+        ('go-saved', 'Saved Jobs'),
+        ('go-hidden', 'Saved Jobs'),
+        ('go-alerts', 'Job Alerts'),
         ('go-invitations', 'Invitations'),
       ]) {
         await tester.ensureVisible(find.byKey(ValueKey(key)));

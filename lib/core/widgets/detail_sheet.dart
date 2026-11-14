@@ -3,6 +3,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../util/screen_trail.dart';
 
 /// The grab bar at the top of a sheet.
 class SheetHandle extends StatelessWidget {
@@ -92,17 +93,22 @@ Future<T?> showDetailSheet<T>(
   double topInset = 72,
   double handleTop = 13,
   double handleHeight = 38,
+  String? place,
 }) {
   return Navigator.of(context).push(
     BlurredSheetRoute<T>(
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => DetailSheetFrame(
-        topInset: topInset,
-        handleTop: handleTop,
-        handleHeight: handleHeight,
-        body: body(context),
-        bottomBar: bottomBar?.call(context),
+      // [place]: the website page the sheet stands for, so the app can open it again (`ScreenTrail`).
+      builder: (context) => SitePlace(
+        path: place,
+        child: DetailSheetFrame(
+          topInset: topInset,
+          handleTop: handleTop,
+          handleHeight: handleHeight,
+          body: body(context),
+          bottomBar: bottomBar?.call(context),
+        ),
       ),
     ),
   );

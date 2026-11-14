@@ -10,6 +10,7 @@ import '../forum/forum_callbacks.dart';
 import '../forum/forum_flows.dart';
 import '../forum/mentions/tag_person.dart';
 import '../forum/repost.dart';
+import '../media/video_player_screen.dart';
 import '../forum/thread_screen.dart';
 import '../forum/widgets/forum_sheets.dart';
 import 'feed_controller.dart';
@@ -18,7 +19,8 @@ import 'feed_styles.dart';
 import 'widgets/composer_and_filters.dart';
 import 'widgets/home_header.dart';
 import 'widgets/post_card.dart';
-import 'widgets/reply_thread.dart';
+import 'widgets/comment_widgets.dart';
+import 'widgets/comments_sheet.dart';
 
 /// The Home feed.
 class HomeScreen extends StatefulWidget {
@@ -67,9 +69,44 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Future<void> _run(Future<String?> action) async {
+  /// Where a menu or a message goes: over the comments sheet while one is open ([at] is a context inside it),
+  /// else over this page.
+  BuildContext _over(BuildContext? at) => at != null && at.mounted ? at : context;
+
+  Future<void> _run(Future<String?> action, {BuildContext? at}) async {
     final message = await action;
-    if (message != null && mounted) showMessage(context, message);
+    if (message != null && mounted) showMessage(_over(at), message);
+  }
+
+  /// The comment button: the post's comments in a sheet over the feed, as LinkedIn opens them (owner, 13 Nov
+  /// 2026: "Redesign the Comment like this"). The thread no longer opens inside the card.
+  void _openComments(FeedPost post) {
+    final feed = context.read<FeedController>();
+    feed.readReplies(post);
+    final forum = feed.repository.forum;
+    final follows = FollowBook(
+      viewerId: widget.viewer.id,
+      follows: forum.follows,
+      follow: (id) => forum.setFollowing(id, true),
+    );
+    FeedPost now() => feed.postById(post.id) ?? post;
+    final openMember = widget.callbacks.onOpenMember;
+    showCommentsSheet(
+      context,
+      host: CommentsHost(
+        listenable: feed,
+        post: () => feed.postById(post.id),
+        loading: () => feed.isLoadingReplies(post),
+        viewer: widget.viewer,
+        follows: follows,
+        onLike: (reply) => feed.toggleReplyLike(now(), reply),
+        onSend: (text, parentId, mentions) => feed.sendReply(now(), text, parentId: parentId, mentions: mentions),
+        onMore: (sheet, reply) => _replyMenu(now(), reply, at: sheet),
+        searchPeople: forum.mentionable,
+        onOpenMention: openMember,
+        onOpenAuthor: openMember == null ? null : (reply) => openMember(reply.author.id),
+      ),
+    ).whenComplete(follows.dispose);
   }
 
   /// The three dots on a post, or on a reply: open the discussion, copy its link, report it (not one's own), and
@@ -80,24 +117,25 @@ class _HomeScreenState extends State<HomeScreen> {
     required VoidCallback onOpen,
     VoidCallback? onReport,
     VoidCallback? onDelete,
+    BuildContext? at,
   }) {
     showActionSheet(
-      context,
+      _over(at),
       title: title,
       actions: [
         SheetAction(
           key: const ValueKey('menu-open'),
-          label: 'Open discussion',
+          label: 'Open Discussion',
           icon: Symbols.open_in_full,
           onTap: onOpen,
         ),
         SheetAction(
           key: const ValueKey('menu-copy'),
-          label: 'Copy link',
+          label: 'Copy Link',
           icon: Symbols.link,
           onTap: () async {
             await Clipboard.setData(ClipboardData(text: link.toString()));
-            if (mounted) showMessage(context, 'Link copied');
+            if (mounted) showMessage(_over(at), 'Link copied.');
           },
         ),
         if (onReport != null)
@@ -105,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (onDelete != null)
           SheetAction(
             key: const ValueKey('menu-delete'),
-            label: 'Delete reply',
+            label: 'Delete Reply',
             icon: Symbols.delete,
             destructive: true,
             onTap: onDelete,
@@ -121,23 +159,28 @@ class _HomeScreenState extends State<HomeScreen> {
     onReport: post.author.id == widget.viewer.id ? null : () => _report(post),
   );
 
-  void _replyMenu(FeedPost post, FeedReply reply) {
+  void _replyMenu(FeedPost post, FeedReply reply, {BuildContext? at}) {
     final feed = context.read<FeedController>();
     final own = reply.author.id == widget.viewer.id;
     _menu(
       feed.repository.link(post, reply: reply),
       title: reply.author.name,
-      onOpen: () => _openThread(post, reply: reply),
-      onReport: own ? null : () => _report(post, reply: reply),
-      onDelete: own ? () => _confirmDelete(post, reply) : null,
+      at: at,
+      onOpen: () {
+        // The discussion's page would open under the comments sheet: the sheet goes first.
+        if (at != null && at.mounted) Navigator.of(at).maybePop();
+        _openThread(post, reply: reply);
+      },
+      onReport: own ? null : () => _report(post, reply: reply, at: at),
+      onDelete: own ? () => _confirmDelete(post, reply, at: at) : null,
     );
   }
 
   /// Flags a discussion, or one of its replies, for the moderators (the same sheet as the discussion's page).
-  Future<void> _report(FeedPost post, {FeedReply? reply}) async {
+  Future<void> _report(FeedPost post, {FeedReply? reply, BuildContext? at}) async {
     final forum = context.read<FeedController>().repository.forum;
     final sent = await showReportSheet(
-      context,
+      _over(at),
       reply: reply != null,
       onSend: (reason, note) async {
         try {
@@ -148,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       },
     );
-    if (sent && mounted) showMessage(context, 'Thanks. A moderator will take a look.');
+    if (sent && mounted) showMessage(_over(at), 'Thank you. A moderator will review it.');
   }
 
   /// "Post a requirement or insight...": the composer, then the new discussion's page; the feed reads again so
@@ -194,20 +237,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _run(feed.react(post, picked == post.myReaction ? null : picked));
   }
 
-  /// A reaction on the reader's own post is refused here, as the website refuses it (its sentence), before
-  /// anything is sent: the API would say no too, in other words.
-  bool _refuseOwnReaction(FeedPost post) {
-    if (post.author.id != widget.viewer.id) return false;
-    showMessage(context, 'You cannot react to your own post.');
-    return true;
-  }
-
   /// Saving says so, as the website's toast does: the bookmark filling in alone is easy to miss.
   Future<void> _save(FeedPost post) async {
     final wasSaved = post.saved;
     final message = await context.read<FeedController>().toggleSave(post);
     if (!mounted) return;
-    showMessage(context, message ?? (wasSaved ? 'Removed from saved discussions' : 'Saved'));
+    showMessage(context, message ?? (wasSaved ? 'Removed from saved discussions.' : 'Saved.'));
   }
 
   /// "N votes": who voted and for what — the website's dialog; the API's sentence for someone who has not voted.
@@ -235,15 +270,15 @@ class _HomeScreenState extends State<HomeScreen> {
     showReactorsSheet(context, load: () => forum.reactors(post.id), onOpenMember: widget.callbacks.onOpenMember);
   }
 
-  Future<void> _confirmDelete(FeedPost post, FeedReply reply) async {
+  Future<void> _confirmDelete(FeedPost post, FeedReply reply, {BuildContext? at}) async {
     final feed = context.read<FeedController>();
     final sure = await confirm(
-      context,
-      title: 'Delete your reply?',
-      body: 'It is taken out of the discussion for everyone.',
+      _over(at),
+      title: 'Delete Your Reply?',
+      body: 'It will be removed from the discussion for everyone.',
       action: 'Delete',
     );
-    if (sure) _run(feed.deleteReply(post, reply));
+    if (sure) _run(feed.deleteReply(post, reply), at: at);
   }
 
   /// Repost: with the reader's thoughts in the composer, or as it stands; the feed reads again so the repost is at
@@ -350,9 +385,9 @@ class _HomeScreenState extends State<HomeScreen> {
           hasScrollBody: false,
           child: _Notice(
             icon: Symbols.cloud_off,
-            title: "Couldn't load the feed",
+            title: 'Unable to Load the Feed',
             body: feed.error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: feed.refresh,
           ),
         ),
@@ -366,9 +401,9 @@ class _HomeScreenState extends State<HomeScreen> {
           child: _Notice(
             icon: Symbols.forum,
             title: searching
-                ? 'No discussions match "${feed.search}"'
+                ? 'No Discussions Match "${feed.search}"'
                 : feed.tag != null
-                ? 'No discussions tagged #${feed.tag} yet'
+                ? 'No Discussions Tagged #${feed.tag} Yet'
                 : _emptyTitle(feed.filter),
             body: searching ? 'Try different words, or clear the search.' : _emptyBody(feed.filter),
           ),
@@ -380,20 +415,20 @@ class _HomeScreenState extends State<HomeScreen> {
     final posts = feed.posts;
     for (var i = 0; i < posts.length; i++) {
       final post = posts[i];
-      final open = feed.isOpen(post);
       children.add(
         _ReadOnShow(
           key: ValueKey(post.id),
           post: post,
           child: PostCard(
             post: post,
-            commentsOpen: open,
+            // The comments open in a sheet now, never inside the card.
+            commentsOpen: false,
             isOwn: post.author.id == widget.viewer.id,
             onFollow: () => _run(feed.follow(post)),
             onSave: () => _save(post),
             onMore: () => _postMenu(post),
             onLike: () {
-              if (!_refuseOwnReaction(post)) _run(feed.toggleLike(post));
+              _run(feed.toggleLike(post));
             },
             onOpen: () => _openThread(post),
             // A person's tag ("#@prashant") opens their profile, or does nothing when no profile fits; any other tag does
@@ -409,37 +444,21 @@ class _HomeScreenState extends State<HomeScreen> {
             onOpenMention: widget.callbacks.onOpenMember,
             onReactions: () => _reactors(post),
             onPickReaction: (rect) {
-              if (!_refuseOwnReaction(post)) _pickReaction(post, rect);
+              _pickReaction(post, rect);
             },
             onOpenAuthor: widget.callbacks.onOpenMember == null
                 ? null
                 : () => widget.callbacks.onOpenMember!(post.author.id),
-            onComments: () => feed.toggleReplies(post),
+            onComments: () => _openComments(post),
             onRepost: () => _repost(post),
             onShare: () => _share(post),
             onVote: (option) => _run(feed.vote(post, option)),
+            quotedLoader: feed.quoted,
+            onQuotedVote: (original, option) => _run(feed.voteQuoted(original, option)),
+            onOpenQuoted: _openThread,
+            onOpenVideo: (url) => openVideo(context, url),
             onVoters: () => _voters(post),
             afterPlacement: i == 2,
-            replies: open
-                ? ReplyThread(
-                    post: post,
-                    loading: feed.isLoadingReplies(post),
-                    viewer: widget.viewer,
-                    onLike: (reply) => _run(feed.toggleReplyLike(post, reply)),
-                    onSend: (text, parentId, mentions) async {
-                      final message = await feed.sendReply(post, text, parentId: parentId, mentions: mentions);
-                      if (message != null && mounted) showMessage(context, message);
-                      return message == null;
-                    },
-                    searchPeople: feed.repository.forum.mentionable,
-                    onOpenMention: widget.callbacks.onOpenMember,
-                    onMore: (reply) => _replyMenu(post, reply),
-                    onOpenThread: () => _openThread(post),
-                    onOpenAuthor: widget.callbacks.onOpenMember == null
-                        ? null
-                        : (reply) => widget.callbacks.onOpenMember!(reply.author.id),
-                  )
-                : null,
           ),
         ),
       );
@@ -455,7 +474,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
               : feed.hasMore
               ? const SizedBox(height: 20)
-              : Text("You're all caught up", style: HomeType.footer),
+              : Text('No more discussions.', style: HomeType.footer),
         ),
       ),
     );
@@ -463,17 +482,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   static String _emptyTitle(FeedFilter filter) => switch (filter) {
-    FeedFilter.following => 'Nothing from people you follow yet',
-    FeedFilter.unanswered => 'Every question has an answer',
-    FeedFilter.polls => 'No polls right now',
-    _ => 'No discussions yet',
+    FeedFilter.following => 'No Posts from People You Follow Yet',
+    FeedFilter.unanswered => 'No Unanswered Questions',
+    FeedFilter.polls => 'No Polls Yet',
+    _ => 'No Discussions Yet',
   };
 
   static String _emptyBody(FeedFilter filter) => switch (filter) {
     FeedFilter.following => 'Follow members from their posts to see what they share here.',
-    FeedFilter.unanswered => 'New questions without replies will show up here.',
-    FeedFilter.polls => 'Polls members start in the community will show up here.',
-    _ => 'Start one with the + at the top.',
+    FeedFilter.unanswered => 'New questions without replies will appear here.',
+    FeedFilter.polls => 'Polls started by members will appear here.',
+    _ => 'Select + at the top to start one.',
   };
 }
 

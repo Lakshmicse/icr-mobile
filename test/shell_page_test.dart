@@ -43,7 +43,7 @@ void main() {
     await tester.tap(find.text('Learning').hitTestable());
     await tester.pumpAndSettle();
     expect(find.text('the events screen'), findsNothing);
-    expect(find.text('Learning is coming to the app'), findsOneWidget);
+    expect(find.text('Learning Is Coming to the App'), findsOneWidget);
     expect(tester.widget<IcrBottomNav>(find.byType(IcrBottomNav)).current, AppTab.learning);
   });
 
@@ -101,7 +101,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('the second screen'), findsNothing);
     expect(find.text('open another'), findsNothing);
-    expect(find.text('Jobs is coming to the app'), findsOneWidget);
+    expect(find.text('Jobs Is Coming to the App'), findsOneWidget);
   });
 
   testWidgets('the Discover tab on a pushed screen opens the Discover sheet over the shell', (tester) async {

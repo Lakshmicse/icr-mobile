@@ -52,7 +52,11 @@ void main() {
     liveTest('a person with no company sees every public requirement in every status, drafts never', () async {
       final c = await _board(pooja);
       expect(c.total, greaterThan(0));
-      expect(c.total, lessThanOrEqualTo(c.pageSize), reason: 'the board reads one page of 100 (§3); past that it says it shows only the newest');
+      expect(
+        c.total,
+        lessThanOrEqualTo(c.pageSize),
+        reason: 'the board reads one page of 100 (§3); past that it says it shows only the newest',
+      );
       final rows = await _all(c);
       expect(rows, hasLength(c.total), reason: 'the board holds every one the API counts');
       expect(rows.map((r) => r.id).toSet(), hasLength(rows.length), reason: 'no row twice');

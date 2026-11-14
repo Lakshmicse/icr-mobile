@@ -47,7 +47,7 @@ class _InstituteEnquiryFormState extends State<InstituteEnquiryForm> {
 
   Future<void> _submit() async {
     if (_message.text.trim().length < 10) {
-      setState(() => _problem = 'Say a little more about what you would like to know.');
+      setState(() => _problem = 'Add more detail to your message.');
       return;
     }
     setState(() {
@@ -80,11 +80,11 @@ class _InstituteEnquiryFormState extends State<InstituteEnquiryForm> {
               Text('Ask $name', style: LearningText.formTitle),
               const SizedBox(height: 4),
               Text(
-                'About its courses, dates or fees. Your name and email go with the message.',
+                'About its courses, dates or fees. Your name and email are sent with the message.',
                 style: LearningText.formHelp,
               ),
               const SizedBox(height: 16),
-              Text('Your question', style: LearningText.formLabel),
+              Text('Your Question', style: LearningText.formLabel),
               const SizedBox(height: 4),
               TextField(
                 key: const ValueKey('institute-enquiry-message'),

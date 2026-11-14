@@ -47,11 +47,11 @@ class _AcceptSessionFormState extends State<AcceptSessionForm> {
   Future<void> _submit() async {
     final at = _at;
     if (at == null) {
-      setState(() => _problem = 'Pick a time first.');
+      setState(() => _problem = 'Select a time first.');
       return;
     }
     if (!at.isAfter(widget.controller.now)) {
-      setState(() => _problem = 'Pick a time in the future.');
+      setState(() => _problem = 'Select a time in the future.');
       return;
     }
     setState(() {
@@ -77,7 +77,7 @@ class _AcceptSessionFormState extends State<AcceptSessionForm> {
     return MentoringForm(
       title: 'Accept $name',
       subtitle: '${_p.title}. ${minutesLabel(_minutes)}${req.mode == null ? '' : ' · ${modeLabel(req.mode!)}'}.',
-      submitLabel: _free ? 'Accept and book' : 'Accept',
+      submitLabel: _free ? 'Accept and Book' : 'Accept',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
@@ -106,10 +106,10 @@ class _AcceptSessionFormState extends State<AcceptSessionForm> {
             }
             final s = snap.data ?? const SuggestedTimes();
             return FieldBlock(
-              label: 'Suggested times',
+              label: 'Suggested Times',
               help: s.suggestions.isEmpty
-                  ? 'Nothing free is suggested. Pick any time below.'
-                  : 'Free on your calendar, in your hours. A star is a time they said suits them.',
+                  ? 'No free times are suggested. Select any time below.'
+                  : 'Free on your calendar, within your hours. A star marks a time they prefer.',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -144,7 +144,7 @@ class _AcceptSessionFormState extends State<AcceptSessionForm> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 6),
                           child: Text(
-                            _slots == null ? 'See all free times' : 'Hide the full list',
+                            _slots == null ? 'View All Free Times' : 'Hide Full List',
                             style: MentoringText.buttonQuiet,
                           ),
                         ),
@@ -172,11 +172,10 @@ class _AcceptSessionFormState extends State<AcceptSessionForm> {
           },
         ),
         FieldBlock(
-          label: 'Or choose another time',
-          help:
-              'Your weekly hours do not bind it: any future time you pick is yours to set. A clash with another session does.',
+          label: 'Or Choose Another Time',
+          help: 'Your weekly hours do not limit this. Select any future time that does not clash with another session.',
           child: QuietButton(
-            label: _at == null ? 'Pick a day and time' : whenLabel(_at!),
+            label: _at == null ? 'Select a Day and Time' : whenLabel(_at!),
             icon: LucideIcons.calendarClock,
             onPressed: () async {
               final at = await pickDateTime(context, initial: _at);
@@ -192,8 +191,8 @@ class _AcceptSessionFormState extends State<AcceptSessionForm> {
         Callout(
           tone: PillTone.blue,
           text: _free
-              ? 'It is booked on both calendars at once.'
-              : 'The time is held for $name. It is booked once they accept it and pay; nothing is charged before.',
+              ? 'It is booked on both calendars immediately.'
+              : 'The time is held for $name. It is booked once they accept it and pay. Nothing is charged before that.',
         ),
       ],
     );
@@ -229,11 +228,11 @@ class _ProposeMoveFormState extends State<ProposeMoveForm> {
   Future<void> _submit() async {
     final at = _at;
     if (at == null) {
-      setState(() => _problem = 'Pick a time first.');
+      setState(() => _problem = 'Select a time first.');
       return;
     }
     if (!at.isAfter(widget.controller.now)) {
-      setState(() => _problem = 'Pick a time in the future.');
+      setState(() => _problem = 'Select a time in the future.');
       return;
     }
     setState(() {
@@ -257,9 +256,9 @@ class _ProposeMoveFormState extends State<ProposeMoveForm> {
     final b = widget.row.purchase.booking!;
     final name = buyerName(widget.row);
     return MentoringForm(
-      title: 'Offer another time',
-      subtitle: 'Booked now: ${whenLabel(b.scheduledAt)}. $name is asked; the call stays as it is until they accept.',
-      submitLabel: 'Send new time',
+      title: 'Offer Another Time',
+      subtitle: 'Booked now: ${whenLabel(b.scheduledAt)}. $name is asked. The call stays as booked until they accept.',
+      submitLabel: 'Send New Time',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
@@ -276,7 +275,7 @@ class _ProposeMoveFormState extends State<ProposeMoveForm> {
             final slots = snap.data ?? const <Slot>[];
             final own = _at != null && !slots.any((s) => s.at.isAtSameMomentAs(_at!));
             return FieldBlock(
-              label: slots.isEmpty ? 'When?' : 'Free times in your hours',
+              label: slots.isEmpty ? 'Date and Time' : 'Free Times in Your Hours',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -284,7 +283,7 @@ class _ProposeMoveFormState extends State<ProposeMoveForm> {
                     SlotPicker(slots: slots, selected: _at, onSelect: (at) => setState(() => _at = at)),
                   const SizedBox(height: 8),
                   QuietButton(
-                    label: own ? whenLabel(_at!) : (slots.isEmpty ? 'Pick a day and time' : 'Another time'),
+                    label: own ? whenLabel(_at!) : (slots.isEmpty ? 'Select a Day and Time' : 'Another Time'),
                     icon: LucideIcons.calendarClock,
                     onPressed: () async {
                       final at = await pickDateTime(context, initial: _at);
@@ -297,7 +296,7 @@ class _ProposeMoveFormState extends State<ProposeMoveForm> {
           },
         ),
         FieldBlock(
-          label: 'A note for $name (optional)',
+          label: 'Note for $name (Optional)',
           child: TextField(
             key: const ValueKey('move-note'),
             controller: _note,
@@ -362,10 +361,10 @@ class _CallLinkFormState extends State<CallLinkForm> {
   Widget build(BuildContext context) {
     final b = widget.row.purchase.booking!;
     return MentoringForm(
-      title: 'Meeting link',
+      title: 'Meeting Link',
       subtitle:
-          '${whenLabel(b.scheduledAt)}. ${buyerName(widget.row)} is told when it changes. Leave it empty to use your standing link.',
-      submitLabel: 'Save link',
+          '${whenLabel(b.scheduledAt)}. ${buyerName(widget.row)} is notified when it changes. Leave it empty to use your standing link.',
+      submitLabel: 'Save Link',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,

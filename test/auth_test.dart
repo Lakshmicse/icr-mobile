@@ -114,13 +114,13 @@ void main() {
     expect(signup, isA<SocialSignup>());
     expect(auth.status, isNot(SessionStatus.signedIn));
 
-    await auth.completeSocialSignup(signup: signup!, firstName: ' Sam ', lastName: 'Rao', phone: '+971501234567');
+    await auth.completeSocialSignup(signup: signup!, firstName: ' Sam ', lastName: 'Rao', phone: '+919876543210');
 
     final sent = api.calls.single.$2!;
     expect(sent['socialToken'], 'pending-1');
     expect(sent['socialVerifier'], 'secret-2');
     expect(sent['firstName'], 'Sam');
-    expect(sent['phone'], '+971501234567', reason: 'the API refuses a sign-up without a mobile number');
+    expect(sent['phone'], '+919876543210', reason: 'the API requires the number on a social sign-up too');
     expect(sent['acceptTerms'], isTrue);
     expect(auth.status, SessionStatus.signedIn);
   });

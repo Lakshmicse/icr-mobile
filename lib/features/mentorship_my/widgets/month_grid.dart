@@ -51,7 +51,7 @@ class MonthGrid extends StatelessWidget {
           Row(
             children: [
               IconButton(
-                tooltip: 'Previous month',
+                tooltip: 'Previous Month',
                 onPressed: onPrevious,
                 icon: const Icon(LucideIcons.chevronLeft, size: 18, color: AppColors.onSurfaceVariant),
               ),
@@ -59,7 +59,7 @@ class MonthGrid extends StatelessWidget {
                 child: Text(monthLabel(month), textAlign: TextAlign.center, style: MentoringText.section),
               ),
               IconButton(
-                tooltip: 'Next month',
+                tooltip: 'Next Month',
                 onPressed: onNext,
                 icon: const Icon(LucideIcons.chevronRight, size: 18, color: AppColors.onSurfaceVariant),
               ),

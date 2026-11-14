@@ -47,7 +47,7 @@ class _AttemptResultLoaderState extends State<AttemptResultLoader> {
       final paper = result.attempt.paper ?? widget.attempt.paper;
       return ResultScreen(
         result: result,
-        paperName: paper?.name ?? 'Your sitting',
+        paperName: paper?.name ?? 'Your attempt',
         certificateEnabled: paper?.certificateEnabled ?? false,
         onRetake: widget.onRetake,
         eyebrowSuffix: result.attempt.submittedAt == null ? null : ' · ${dayLabel(result.attempt.submittedAt)}',
@@ -67,9 +67,9 @@ class _AttemptResultLoaderState extends State<AttemptResultLoader> {
                   : SingleChildScrollView(
                       child: ScreenNotice(
                         icon: LucideIcons.clipboardCheck,
-                        title: "Couldn't open this result",
+                        title: 'Unable to Open This Result',
                         body: _error!,
-                        action: 'Try again',
+                        action: 'Try Again',
                         onAction: _load,
                       ),
                     ),

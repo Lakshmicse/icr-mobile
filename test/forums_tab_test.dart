@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
+import 'package:icr_mobile/core/widgets/search_field.dart';
 import 'package:icr_mobile/features/feed/feed_models.dart';
 import 'package:icr_mobile/features/forum/forum_callbacks.dart';
+import 'package:icr_mobile/features/forum/forum_models.dart';
 import 'package:icr_mobile/features/forum/forums_controller.dart';
 import 'package:icr_mobile/features/forum/forums_screen.dart';
 import 'package:icr_mobile/features/forum/thread_screen.dart';
@@ -392,20 +394,20 @@ void main() {
     ) async {
       await pumpForums(tester);
       expect(find.text('Forums'), findsOneWidget);
-      expect(find.text('Search discussions...'), findsOneWidget);
+      expect(find.text('Search discussions, topics and posts'), findsOneWidget);
       expect(find.text('Start a discussion...'), findsOneWidget);
-      for (final v in ['All Feed', 'Trending', 'Following', 'Unanswered']) {
+      for (final v in ['All Feed', 'Trending Discussions', 'Following', 'Unanswered']) {
         expect(find.text(v), findsOneWidget);
       }
       // The rest of the row is past the screen's edge: it builds as it scrolls in.
       await tester.drag(key('forum-views'), const Offset(-600, 0));
       await tester.pumpAndSettle();
-      for (final v in ['Polls', 'Saved', 'My posts']) {
+      for (final v in ['Polls', 'Saved', 'My Contributions']) {
         expect(find.text(v), findsOneWidget);
       }
       await tester.drag(key('forum-views'), const Offset(600, 0));
       await tester.pumpAndSettle();
-      expect(find.text('All topics'), findsOneWidget);
+      expect(find.text('All Topics'), findsOneWidget);
       expect(find.text('Technology (3)'), findsOneWidget);
       expect(find.text('ESG & Sustainability (1)'), findsOneWidget);
       expect(find.text('Chiller plant retrofit for a 12 year old building'), findsOneWidget);
@@ -413,7 +415,7 @@ void main() {
       expect(find.text('Marcus Reed'), findsOneWidget);
       expect(key('forums-total'), findsOneWidget);
       expect(find.text('6 discussions'), findsOneWidget);
-      expect(find.text("You're all caught up"), findsOneWidget);
+      expect(find.text("No more discussions."), findsOneWidget);
       // The first screen asks the forum for the latest page, the topics, the standing, the bell.
       expect(lastQuery(), {'page': 1, 'limit': 20, 'sort': 'latest'});
       expect(api.count('GET', '/forum/categories'), 1);
@@ -434,7 +436,7 @@ void main() {
     testWidgets('a reader whose posts are reviewed first is told so', (tester) async {
       await pumpForums(tester, custom: _Board()..requiresApproval = true);
       expect(key('forums-approval'), findsOneWidget);
-      expect(find.textContaining('read by a moderator before they go public'), findsOneWidget);
+      expect(find.textContaining('A moderator reviews your first few posts'), findsOneWidget);
     });
 
     testWidgets('a failed read says why and Try again reads again; the topics have their own retry', (tester) async {
@@ -442,9 +444,9 @@ void main() {
         ..refusals['GET /forum/threads'] = (500, 'The forum is resting')
         ..refusals['GET /forum/categories'] = (500, 'No topics');
       await pumpForums(tester, custom: b);
-      expect(find.text("Couldn't load the discussions"), findsOneWidget);
+      expect(find.text("Unable to Load Discussions"), findsOneWidget);
       expect(find.text('The forum is resting'), findsOneWidget);
-      expect(find.text("Couldn't load the topics"), findsOneWidget);
+      expect(find.text("Unable to load topics."), findsOneWidget);
       b.refusals.clear();
       await tester.tap(key('message-action'));
       await settle(tester);
@@ -492,13 +494,13 @@ void main() {
       final b = _Board()..following.clear();
       await pumpForums(tester, custom: b);
       await tapKey(tester, 'view:following');
-      expect(find.text('Nothing from people you follow yet'), findsOneWidget);
+      expect(find.text('No Posts from People You Follow Yet'), findsOneWidget);
       b.threads.removeWhere((t) => (t['author'] as Map)['id'] == 'me');
       await tapChip(tester, 'forum-views', 'view:mine');
-      expect(find.text("You haven't posted yet"), findsOneWidget);
+      expect(find.text("No Posts Yet"), findsOneWidget);
       b.threads.removeWhere((t) => t['saved'] == true);
       await tapChip(tester, 'forum-views', 'view:saved');
-      expect(find.text('Nothing saved yet'), findsOneWidget);
+      expect(find.text('No Saved Discussions Yet'), findsOneWidget);
     });
   });
 
@@ -526,7 +528,7 @@ void main() {
       await tester.enterText(find.byType(TextField).first, 'zzzz');
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await settle(tester);
-      expect(find.text('No discussions match "zzzz"'), findsOneWidget);
+      expect(find.text('No Discussions Match "zzzz"'), findsOneWidget);
     });
 
     testWidgets('a topic filters by its slug; its sub-topics appear and filter further; the lit chip again goes back', (
@@ -557,7 +559,7 @@ void main() {
         await pumpForums(tester);
         await tester.tap(key('forum-filters'));
         await settle(tester);
-        expect(find.text('Filter discussions'), findsOneWidget);
+        expect(find.text('Filter Discussions'), findsOneWidget);
         await tester.tap(key('filter-sort:top'));
         await tester.tap(key('filter-kind:questions'));
         await tester.pump();
@@ -582,7 +584,7 @@ void main() {
         expect(find.bySemanticsLabel('Filters, 4 set'), findsOneWidget);
         expect(key('active:tag'), findsOneWidget);
         expect(find.text('Questions'), findsOneWidget);
-        // "Clear all" in the sheet: back to the plain list (the view stays).
+        // "Clear All" in the sheet: back to the plain list (the view stays).
         await tester.tap(key('forum-filters'));
         await settle(tester);
         await tester.tap(key('filters-clear'));
@@ -624,7 +626,7 @@ void main() {
       await tester.tap(key('filter-kind:discussions'));
       await tester.tap(key('filters-apply'));
       await settle(tester);
-      expect(find.text('No discussions match these filters'), findsOneWidget);
+      expect(find.text('No Discussions Match These Filters'), findsOneWidget);
       await tester.tap(key('message-action'));
       await settle(tester);
       expect(forums.posts, isNotEmpty);
@@ -653,14 +655,14 @@ void main() {
       final b = _Board(extra: 30);
       await pumpForums(tester, custom: b, height: 2400);
       expect(forums.posts, hasLength(20));
-      expect(find.text("You're all caught up"), findsNothing);
+      expect(find.text("No more discussions."), findsNothing);
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -30000));
       await settle(tester);
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -30000));
       await settle(tester);
       expect(api.to('GET', '/forum/threads').map((o) => o.queryParameters['page']), [1, 2]);
       expect(forums.posts, hasLength(36));
-      expect(find.text("You're all caught up"), findsOneWidget);
+      expect(find.text("No more discussions."), findsOneWidget);
     });
 
     testWidgets('pulling down reads the list, the topics, the standing and the bell again', (tester) async {
@@ -709,7 +711,7 @@ void main() {
       expect(forums.posts.map((p) => p.id), ['f']);
       await tapKey(tester, 'save:f');
       expect(forums.posts, isEmpty);
-      expect(find.text('Nothing saved yet'), findsOneWidget);
+      expect(find.text('No Saved Discussions Yet'), findsOneWidget);
     });
 
     testWidgets('Follow follows the author and goes away for that author; a poll option votes', (tester) async {
@@ -730,7 +732,7 @@ void main() {
       await tapKey(tester, 'share:a');
       expect(shared.single['text'], endsWith('https://icr.org.in/community/slug-a'));
       await tapKey(tester, 'repost:a');
-      expect(find.text('Repost with your thoughts'), findsOneWidget);
+      expect(find.text('Repost with Your Thoughts'), findsOneWidget);
       expect(find.text('Repost'), findsOneWidget);
     });
 
@@ -754,7 +756,7 @@ void main() {
       await tester.tap(key('report-send'));
       await settle(tester);
       expect(api.bodyOf('POST', '/forum/reports'), {'threadId': 'a', 'reason': 'SPAM'});
-      expect(snack('A moderator will take a look.'), findsOneWidget);
+      expect(snack('A moderator will review it.'), findsOneWidget);
     });
 
     testWidgets('"N reactions" lists who reacted; a member\'s photo opens the member', (tester) async {
@@ -849,7 +851,7 @@ void main() {
       await tester.tap(key('home-composer'));
       await tester.pumpAndSettle();
       await settle(tester);
-      expect(find.text('New discussion'), findsOneWidget);
+      expect(find.text('New Discussion'), findsOneWidget);
       await tester.tap(key('composer-topic'));
       await tester.pumpAndSettle();
       await tester.tap(key('topic-option:TECHNOLOGY_INNOVATION'));
@@ -891,7 +893,82 @@ void main() {
       await pumpForums(tester, extra: posting(moderation: 'PENDING'));
       await writeAndPost(tester);
       expect(find.byType(ThreadScreen), findsNothing);
-      expect(snack('A moderator will read it before it goes public.'), findsOneWidget);
+      expect(snack('A moderator will review it before it is published.'), findsOneWidget);
+    });
+  });
+  group('My Forum: the reader\'s own discussions', () {
+    // Owner, 13 Nov 2026: "there is no posts still the counts showing and the categories posted only should show
+    // not the whole backend data and the Spacing is not used the gaps is more looks uneven".
+    Future<void> pumpMine(WidgetTester tester, {_Board? custom}) async {
+      tester.view.physicalSize = const Size(780, 3200);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+      board = custom ?? _Board();
+      api = FakeForum(board.routes());
+      forums = ForumsController(forumOn(api), initialView: ForumView.mine, ownTopics: true);
+      addTearDown(forums.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: buildAppTheme(),
+          home: ForumsScreen(viewer: reader, title: 'My Forum', ownOnly: true, controller: forums, onBack: () {}),
+        ),
+      );
+      await settle(tester);
+    }
+
+    testWidgets('lists only the topics the reader posted in, with the number of their own posts there', (tester) async {
+      await pumpMine(tester);
+      // One discussion of the reader's, in Technology; the forum as a whole holds three there.
+      expect(find.text('Topics'), findsOneWidget);
+      expect(key('topic:technology'), findsOneWidget);
+      expect(find.text('Technology (1)'), findsOneWidget);
+      expect(find.text('Technology (3)'), findsNothing);
+      expect(key('topic:esg-sustainability'), findsNothing, reason: 'nothing of the reader\'s there');
+      expect(key('topic:procurement-supply-chain'), findsNothing);
+      expect(key('forum-views'), findsNothing, reason: 'My Forum has no view chips');
+    });
+
+    testWidgets('with nothing posted there is no Topics block and no "0 discussions", only the empty state', (
+      tester,
+    ) async {
+      final b = _Board();
+      b.threads.removeWhere((t) => (t['author'] as Map)['id'] == 'me');
+      await pumpMine(tester, custom: b);
+      expect(find.text('Topics'), findsNothing);
+      expect(key('forum-topics'), findsNothing);
+      expect(key('topic:all'), findsNothing);
+      expect(find.textContaining('Technology ('), findsNothing);
+      expect(find.text('0 discussions'), findsNothing);
+      expect(find.text('No Posts Yet'), findsOneWidget);
+    });
+
+    testWidgets('the search, the composer and the topics stand the same distance apart, on one margin', (tester) async {
+      await pumpMine(tester);
+      final search = tester.getRect(find.byType(IcrSearchField));
+      final composer = tester.getRect(key('home-composer'));
+      final heading = tester.getRect(find.text('Topics'));
+      expect(composer.top - search.bottom, closeTo(12, 0.6));
+      expect(heading.top - composer.bottom, closeTo(12, 1.5));
+      expect(composer.left, closeTo(search.left, 0.6), reason: 'one left margin');
+      expect(composer.right, closeTo(search.right, 0.6), reason: 'one right margin');
+    });
+
+    testWidgets('a discussion just posted adds its topic; one taken back drops it', (tester) async {
+      final b = _Board();
+      b.threads.removeWhere((t) => (t['author'] as Map)['id'] == 'me');
+      await pumpMine(tester, custom: b);
+      expect(find.text('Topics'), findsNothing);
+      final mine = forumOn(api);
+      final page = await tester.runAsync(() => mine.threads(const ForumQuery()));
+      final posted = page!.posts.first;
+      forums.addPosted(posted);
+      await tester.pump();
+      expect(find.text('Topics'), findsOneWidget);
+      expect(find.text('Technology (1)'), findsOneWidget);
+      forums.removePost(posted.id);
+      await tester.pump();
+      expect(find.text('Topics'), findsNothing);
     });
   });
 }

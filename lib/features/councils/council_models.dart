@@ -330,8 +330,8 @@ class CouncilsOverview {
 /// How the directory is ordered, as the website's toolbar offers.
 enum CouncilSort {
   recommended('Recommended'),
-  members('Most members'),
-  active('Most active'),
+  members('Most Members'),
+  active('Most Active'),
   newest('Newest'),
   az('A to Z');
 

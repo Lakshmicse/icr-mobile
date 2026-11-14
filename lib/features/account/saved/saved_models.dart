@@ -12,11 +12,11 @@ library;
 
 /// A kind of bookmark: one chip on the screen.
 enum SavedKind {
-  jobs('Jobs', 'No saved jobs yet', 'Tap the bookmark on a job on the Jobs board to keep it here.'),
-  mentors('Mentors', 'No saved mentors yet', 'Save a mentor from Find mentors to come back to them.'),
-  suppliers('Suppliers', 'No saved suppliers yet', 'Save a supplier from the Marketplace to keep it here.'),
-  councils('Councils', 'No saved councils yet', 'Bookmark a council on the Councils screen to find it here.'),
-  discussions('Discussions', 'No saved discussions yet', 'Save a discussion in Forums to read it later.');
+  jobs('Jobs', 'No Saved Jobs Yet', 'Tap the bookmark on a job to save it here.'),
+  mentors('Mentors', 'No Saved Mentors Yet', 'Save a mentor from Find Mentors to view them here.'),
+  suppliers('Suppliers', 'No Saved Suppliers Yet', 'Save a supplier from the Marketplace to view it here.'),
+  councils('Councils', 'No Saved Councils Yet', 'Save a council from Councils to view it here.'),
+  discussions('Discussions', 'No Saved Discussions Yet', 'Save a discussion in Forums to read it later.');
 
   const SavedKind(this.label, this.emptyTitle, this.emptyHint);
 
@@ -120,14 +120,14 @@ class SavedJob extends SavedItem {
       state: _text(j['state']),
       country: _text(j['country']),
       workMode: switch (j['workMode']) {
-        'ONSITE' => 'On-site',
+        'ONSITE' => 'On-Site',
         'REMOTE' => 'Remote',
         'HYBRID' => 'Hybrid',
         _ => null,
       },
       employmentType: switch (j['employmentType']) {
-        'FULL_TIME' => 'Full-time',
-        'PART_TIME' => 'Part-time',
+        'FULL_TIME' => 'Full-Time',
+        'PART_TIME' => 'Part-Time',
         'CONTRACT' => 'Contract',
         'INTERNSHIP' => 'Internship',
         'TEMPORARY' => 'Temporary',

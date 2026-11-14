@@ -45,8 +45,10 @@ class AccountBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Inside a workspace's tab the workspace has the back arrow; the title stays as the page's heading.
+    // Inside a workspace's tab the workspace has the back arrow and the tab names the page: no title is drawn
+    // again (owner, 9 Nov 2026: "wherever it is remove it"); with no actions either, there is no bar.
     final embedded = WorkspaceEmbed.of(context);
+    if (embedded && actions.isEmpty) return const SizedBox.shrink();
     return Container(
       height: 56 + MediaQuery.paddingOf(context).top,
       padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
@@ -67,9 +69,12 @@ class AccountBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             const SizedBox(width: 6),
           ],
-          Expanded(
-            child: Text(title, style: AccountText.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ),
+          if (embedded)
+            const Spacer()
+          else
+            Expanded(
+              child: Text(title, style: AccountText.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
           ...actions,
           const SizedBox(width: 6),
         ],
@@ -97,10 +102,7 @@ class AccountCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
       padding: padding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -177,10 +179,7 @@ class AccountAvatar extends StatelessWidget {
     final fallback = Container(
       color: const Color(0xFFDCE6F2),
       alignment: Alignment.center,
-      child: Text(
-        initials,
-        style: AppText.workSans(size * 0.36, FontWeight.w600, AppColors.primary),
-      ),
+      child: Text(initials, style: AppText.workSans(size * 0.36, FontWeight.w600, AppColors.primary)),
     );
     return Container(
       width: size,
@@ -190,7 +189,9 @@ class AccountAvatar extends StatelessWidget {
         border: ring ? Border.all(color: Colors.white, width: 3) : null,
         boxShadow: ring ? const [BoxShadow(color: Color(0x1A000000), blurRadius: 6, offset: Offset(0, 2))] : null,
       ),
-      child: ClipOval(child: AccountImage(source: url, fallback: fallback)),
+      child: ClipOval(
+        child: AccountImage(source: url, fallback: fallback),
+      ),
     );
   }
 }
@@ -237,6 +238,11 @@ const profileCovers = <String, (String, List<Color>)>{
 };
 
 const _svgCovers = {'blueprint', 'skyline', 'campus', 'brand'};
+
+/// Whether [value] (a `User.coverImage`) is something [CoverBand] draws: a ready-made cover's id or the person's
+/// own `/uploads/...` picture. Anything else (null, '', a value the site no longer knows) is no cover.
+bool isProfileCover(String? value) =>
+    value != null && (profileCovers.containsKey(value) || RegExp(r'^/uploads/[A-Za-z0-9._-]+$').hasMatch(value));
 
 /// A profile's banner: an uploaded picture, a ready-made cover (the website's
 /// file over its colour band), or the default band.
@@ -300,7 +306,13 @@ class CoverBand extends StatelessWidget {
 
 /// A small rounded label ("Verified", "Company Admin").
 class AccountChip extends StatelessWidget {
-  const AccountChip({super.key, required this.label, this.color = AppColors.slate100, this.ink = AppColors.slate700, this.icon});
+  const AccountChip({
+    super.key,
+    required this.label,
+    this.color = AppColors.slate100,
+    this.ink = AppColors.slate700,
+    this.icon,
+  });
 
   final String label;
   final Color color;
@@ -321,7 +333,10 @@ class AccountChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[Icon(icon, size: 13, color: ink), const SizedBox(width: 4)],
-          Text(label, style: AccountText.chip.copyWith(color: ink, fontWeight: FontWeight.w600, fontSize: 13)),
+          Text(
+            label,
+            style: AccountText.chip.copyWith(color: ink, fontWeight: FontWeight.w600, fontSize: 13),
+          ),
         ],
       ),
     );
@@ -400,7 +415,9 @@ class AccountButton extends StatelessWidget {
             ),
             child: child,
           );
-    return expand ? SizedBox(width: double.infinity, height: height, child: button) : SizedBox(height: height, child: button);
+    return expand
+        ? SizedBox(width: double.infinity, height: height, child: button)
+        : SizedBox(height: height, child: button);
   }
 }
 
@@ -410,13 +427,14 @@ class AccountLoading extends StatelessWidget {
   const AccountLoading({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator(strokeWidth: 2.4)));
+  Widget build(BuildContext context) => const Center(
+    child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator(strokeWidth: 2.4)),
+  );
 }
 
 /// A read that failed: the API's sentence and "Try again".
 class AccountError extends StatelessWidget {
-  const AccountError({super.key, required this.message, required this.onRetry, this.title = 'Something went wrong'});
+  const AccountError({super.key, required this.message, required this.onRetry, this.title = 'Something Went Wrong'});
 
   final String title;
   final String message;
@@ -436,7 +454,7 @@ class AccountError extends StatelessWidget {
             const SizedBox(height: 6),
             Text(message, style: AccountText.body, textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            AccountButton(key: const Key('account.retry'), label: 'Try again', onPressed: onRetry, expand: false),
+            AccountButton(key: const Key('account.retry'), label: 'Try Again', onPressed: onRetry, expand: false),
           ],
         ),
       ),
@@ -461,7 +479,14 @@ class AccountEmpty extends StatelessWidget {
         Text(text, style: AccountText.meta.copyWith(fontSize: 14)),
         if (action != null) ...[
           const SizedBox(height: 10),
-          AccountButton(label: action!, onPressed: onAction, outlined: true, expand: false, icon: Icons.add_rounded, height: 38),
+          AccountButton(
+            label: action!,
+            onPressed: onAction,
+            outlined: true,
+            expand: false,
+            icon: Icons.add_rounded,
+            height: 38,
+          ),
         ],
       ],
     );
@@ -470,8 +495,10 @@ class AccountEmpty extends StatelessWidget {
 
 // --- forms ---------------------------------------------------------------------------------------------------
 
-OutlineInputBorder _border(Color color, [double width = 1]) =>
-    OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: color, width: width));
+OutlineInputBorder _border(Color color, [double width = 1]) => OutlineInputBorder(
+  borderRadius: BorderRadius.circular(10),
+  borderSide: BorderSide(color: color, width: width),
+);
 
 /// A label over a rounded field, its problem or helper under it.
 class AccountField extends StatelessWidget {
@@ -569,10 +596,8 @@ class AccountField extends StatelessWidget {
                   if (counter && maxLength != null)
                     ListenableBuilder(
                       listenable: controller,
-                      builder: (_, _) => Text(
-                        '${controller.text.length} / ${_grouped(maxLength!)}',
-                        style: AccountText.meta,
-                      ),
+                      builder: (_, _) =>
+                          Text('${controller.text.length} / ${_grouped(maxLength!)}', style: AccountText.meta),
                     ),
                 ],
               ),
@@ -763,7 +788,7 @@ class _PickerState<T> extends State<_Picker<T>> {
             ),
           Expanded(
             child: shown.isEmpty
-                ? Center(child: Text('Nothing matches “$_q”.', style: AccountText.meta))
+                ? Center(child: Text('No results for “$_q”.', style: AccountText.meta))
                 : ListView.builder(
                     itemCount: shown.length,
                     itemBuilder: (context, i) {
@@ -920,8 +945,8 @@ class EditSheet extends StatelessWidget {
     if (dirty) {
       final discard = await confirmAction(
         context,
-        title: 'Discard your changes?',
-        message: 'What you changed here has not been saved.',
+        title: 'Discard Your Changes?',
+        message: 'Your changes have not been saved.',
         confirm: 'Discard',
       );
       if (!discard || !context.mounted) return;
@@ -956,7 +981,10 @@ class EditSheet extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(title, style: AppText.workSans(18, FontWeight.w700, AppColors.slate900, lineHeight: 24)),
+                            Text(
+                              title,
+                              style: AppText.workSans(18, FontWeight.w700, AppColors.slate900, lineHeight: 24),
+                            ),
                             if (subtitle != null) ...[
                               const SizedBox(height: 2),
                               Text(subtitle!, style: AccountText.meta),
@@ -984,10 +1012,7 @@ class EditSheet extends StatelessWidget {
                     key: const Key('sheet.error'),
                     margin: const EdgeInsets.fromLTRB(20, 4, 20, 4),
                     padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF1F2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    decoration: BoxDecoration(color: const Color(0xFFFFF1F2), borderRadius: BorderRadius.circular(10)),
                     child: Text(error!, style: AccountText.error.copyWith(fontSize: 14)),
                   ),
                 const Divider(height: 1, thickness: 1, color: AppColors.slate100),

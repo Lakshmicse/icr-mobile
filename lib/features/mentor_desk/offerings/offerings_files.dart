@@ -46,6 +46,6 @@ String? uploadProblem(PickedUpload file, {required bool imageOnly}) {
   if (!allowed.contains(ext)) {
     return imageOnly ? 'A cover is a PNG, JPG or WebP image.' : 'A resource is a PDF or an image (PNG, JPG, WebP).';
   }
-  if (file.bytes.length > maxUploadBytes) return 'That file is over 10 MB.';
+  if (file.bytes.length > maxUploadBytes) return 'The file is larger than 10 MB.';
   return null;
 }

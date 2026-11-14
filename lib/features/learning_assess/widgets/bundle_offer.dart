@@ -117,7 +117,7 @@ class BundleOffer extends StatelessWidget {
                 ),
                 if (quote.offerEndsOn != null)
                   Text(
-                    'Offer valid till ${_day(quote.offerEndsOn!)}',
+                    'Offer valid until ${_day(quote.offerEndsOn!)}',
                     key: const ValueKey('bundle-offer-ends'),
                     style: AssessText.progressNote.copyWith(color: const Color(0xFFB5481F)),
                   ),
@@ -125,7 +125,7 @@ class BundleOffer extends StatelessWidget {
               ],
               button: RowButton(
                 key: const ValueKey('bundle-pay-now'),
-                label: 'Pay now',
+                label: 'Pay Now',
                 color: color,
                 onPressed: quote.payable ? onPay : null,
               ),
@@ -138,13 +138,13 @@ class BundleOffer extends StatelessWidget {
                 TextSpan(
                   children: [
                     if ((quote.separateCredits ?? 0) > inCredits) ...[
-                      TextSpan(
-                        text: creditsShort(quote.separateCredits ?? 0),
-                        style: AssessText.strikeSmall,
-                      ),
+                      TextSpan(text: creditsShort(quote.separateCredits ?? 0), style: AssessText.strikeSmall),
                       const TextSpan(text: '  '),
                     ],
-                    TextSpan(text: creditsLabel(inCredits), style: AssessText.priceBig.copyWith(color: color)),
+                    TextSpan(
+                      text: creditsLabel(inCredits),
+                      style: AssessText.priceBig.copyWith(color: color),
+                    ),
                   ],
                 ),
                 key: const ValueKey('bundle-credits'),

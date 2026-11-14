@@ -70,7 +70,9 @@ extension MarketplaceLinksOpening on MarketplaceLinks {
     if (!opened) {
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text("Couldn't open ${uri.host.isEmpty ? uri.scheme : uri.host}${uri.path}")));
+        ..showSnackBar(
+          SnackBar(content: Text('Unable to open ${uri.host.isEmpty ? uri.scheme : uri.host}${uri.path}')),
+        );
     }
   }
 
@@ -90,5 +92,5 @@ extension MarketplaceLinksOpening on MarketplaceLinks {
 
   /// Shares the supplier's page on the website.
   Future<void> shareSupplier(Supplier supplier) =>
-      share(text: '${supplier.name} on ICR Supplier Mart\n${supplierPageUri(supplier)}', subject: supplier.name);
+      share(text: '${supplier.name} on ICR Marketplace\n${supplierPageUri(supplier)}', subject: supplier.name);
 }

@@ -96,7 +96,9 @@ class MemberProfileController extends ChangeNotifier {
     following = true;
     actionError = null;
     final was = m.follow;
-    member = m.withFollow(was.copyWith(viewerFollows: !was.viewerFollows, followers: was.followers + (was.viewerFollows ? -1 : 1)));
+    member = m.withFollow(
+      was.copyWith(viewerFollows: !was.viewerFollows, followers: was.followers + (was.viewerFollows ? -1 : 1)),
+    );
     _notify();
     try {
       final next = was.viewerFollows ? await repository.unfollow(m.id) : await repository.follow(m.id);

@@ -22,7 +22,6 @@ class AuthPalette {
     required this.eye,
     required this.accent,
     required this.checkboxBorder,
-    required this.orText,
     required this.error,
     required this.logo,
   });
@@ -43,7 +42,7 @@ class AuthPalette {
   /// "Remember me", "New to ICR?", hints.
   final Color muted;
 
-  /// The hairline either side of "OR".
+  /// Hairlines: between the form and "Sign up using", between suggestion rows.
   final Color rule;
   final Color fieldFill;
   final Color fieldBorder;
@@ -55,7 +54,6 @@ class AuthPalette {
   /// Links, the primary button and a field's focus ring.
   final Color accent;
   final Color checkboxBorder;
-  final Color orText;
   final Color error;
 
   /// The ICR logo that reads on the card.
@@ -76,7 +74,6 @@ class AuthPalette {
     eye: Color(0xFF717273),
     accent: Color(0xFF32629E),
     checkboxBorder: Color(0xFF778599),
-    orText: Color(0xFF9E9E9E),
     error: Color(0xFFBA1A1A),
     logo: 'assets/images/brand/icr-logo.png',
   );
@@ -96,7 +93,6 @@ class AuthPalette {
     eye: Color(0xFFFFFFFF),
     accent: Color(0xFF32629E),
     checkboxBorder: Color(0xFF8492A6),
-    orText: Color(0xFF888C93),
     error: Color(0xFFF87171),
     logo: 'assets/images/brand/icr-logo-white.png',
   );

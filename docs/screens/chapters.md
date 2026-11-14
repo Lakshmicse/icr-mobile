@@ -1,6 +1,6 @@
-# Regional Chapters
+# Chapters
 
-The Regional Chapters board (`ChaptersScreen`), a chapter's quick-look sheet (`ChapterPreviewSheet`) and a chapter's own page (`ChapterScreen`). There is **no design** for these: they are built in the language of the Councils and Events designs (cover cards, pill chips, 10 dp corners, Work Sans headings, IBM Plex Sans body in Medium), from the website's `/chapters` board and `/chapters/[slug]` page (`frontend/src/components/association/chapters/**` and `chapter/**`) and the portal's `association` module.
+The Chapters board (`ChaptersScreen`), a chapter's quick-look sheet (`ChapterPreviewSheet`) and a chapter's own page (`ChapterScreen`). There is **no design** for these: they are built in the language of the Councils and Events designs (cover cards, pill chips, 10 dp corners, Work Sans headings, IBM Plex Sans body in Medium), from the website's `/chapters` board and `/chapters/[slug]` page (`frontend/src/components/association/chapters/**` and `chapter/**`) and the portal's `association` module.
 
 Status (26 Oct 2026): **audited against the live API; board, page, preview, join/leave and meetup RSVP built and proved** by `test/chapters_test.dart` (82 tests) and `test/live/chapters_live_test.dart` (13 live tests). Goldens are postponed (owner's call).
 
@@ -37,7 +37,7 @@ Navigator.of(ctx).push(MaterialPageRoute(builder: (_) => chapterPage(
 
 | Call | Used for |
 |---|---|
-| `GET /chapters?limit=100` (every page) | the directory, the tiles (count, members, countries, upcoming events) |
+| `GET /chapters?limit=100` (every page) | the directory (the counts it once fed the four tiles are no longer drawn) |
 | `GET /chapters/memberships/mine` | the member's seats and their role (`LEAD`/`MEMBER`); a 401 reads as none |
 | `GET /events?when=upcoming` (every page, 3 at most) | the board's "Upcoming Meetups" (only events with a `chapter`) and each chapter's "Next:" |
 | `GET /chapters/:slug` | the page and the preview sheet: about (`aboutHtml` as headings, paragraphs, bullets), gallery, stats, sponsors, committee (`leads`), next events. An **id** is looked up on the board first (the API reads by slug) |
@@ -63,7 +63,7 @@ Read against real calls on 26 Oct 2026 (Bharat Buyer): the previous builder's pa
 
 ## The board
 
-Top to bottom: four tiles (Chapters, Members, Countries, Upcoming events), **Your Chapters** (a sideways rail of the member's seats, leads first), **Upcoming Meetups** (three rows), then the directory: search, the **scope chips** (All Chapters (n), Joined (n), Nearby (n)), the **country chips** (All Countries (n) + one per country), the result count with Clear filters, the chapter cards, and a "Lead or serve on a chapter" card (hidden without `onOpenVolunteer`).
+Top to bottom: **Your Chapters** (a sideways rail of the member's seats, leads first), **Upcoming Meetups** (three rows), then the directory: search, the **scope chips** (All Chapters (n), Joined (n), Nearby (n)), the **country chips** (All Countries (n) + one per country), the result count with Clear filters, the chapter cards, and a "Lead or serve on a chapter" card (hidden without `onOpenVolunteer`).
 
 - **Nearby** = chapters the member has not joined, in a *region or country* of one they have (the website's place-overlap recommendation; a shared region counts two, a country one). The app asks for no location permission. With no seat of their own the tab says so ("Nothing nearby yet") and offers "Show all chapters".
 - The sliders glyph opens **Sort and filter**: Sort by (Recommended, Most members, Most active, Newest, A to Z), **Region** (states within the country chip), **City** (within region and country), Members (any, 1–2, 3–10, 10+), Activity (any, has upcoming events, new this quarter). Reset, Show chapters. A dot on the glyph shows a filter or a sort is on.
@@ -108,7 +108,7 @@ Nothing else leaves the app.
 | Control | Proved by |
 |---|---|
 | Back, bell (own or website), bell dot | W "Back and the bell", "the bell wears its dot…" |
-| tiles, rail, meetups, cards from the API | W "draws the numbers…"; L "the board is the API's…", "the board's meetups…" |
+| rail, meetups, cards from the API | W "draws the numbers…"; L "the board is the API's…", "the board's meetups…" |
 | meetup row → event by slug | W "a meetup opens through the callback…" |
 | search, Clear filters | W "the search narrows the cards…"; L "search, country, scope, region and city…" |
 | scope chips (All / Joined / Nearby), Nearby with no seat | W "the scope chips…", "Nearby with no chapter of my own…"; L the same live test |
@@ -142,5 +142,39 @@ Nothing else leaves the app.
 ## Left
 
 - Goldens (postponed).
-- The Discover sheet's "Regional Chapters" door, the profile drawer's "BLR" chip and the wiring of the callbacks above are the lead's.
+- The Discover sheet's "Chapters" door, the profile drawer's "BLR" chip and the wiring of the callbacks above are the lead's.
 - `GET /chapters/:slug` lists invite-only events to anyone (backend request 5 in `docs/backend-requests/community.md`).
+
+
+## 12 Nov 2026: no count tiles over the hub
+
+The owner, shown the Digital Library's four count tiles: "like these 4 titles in Chapter, councils, Events remove it". The Chapters hub no longer opens with the Chapters / Members / Countries / Upcoming events tiles and the rule under them: it opens on **Your Chapters**. `ChaptersStats` is still read from the API (`ChaptersController.stats`) and still drawn nowhere. `CommunityStatGrid` stays for the chapter page's own figures and the library's document page.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client marked up the user manual with the wording wanted on a dozen screens and asked for the rest of the app to read the same way: Title Case for what a person taps or reads as a label, a short sentence with a full stop for everything else, plain international English, no dash inside a sentence. Wording only: no layout, colour or behaviour changed. Semantics-only labels (what a screen reader says for an icon) were left as they were. By the lead's ruling the title of an empty, locked or error state is a heading (Title Case, no full stop) with a sentence under it, and the retry button reads **Try Again** everywhere.
+
+| Where | Old | New |
+|---|---|---|
+| Filters and sorts to Title Case (12) | Any size · 1–2 members · 3–10 members · 10+ members · Any activity · Has upcoming events · New this quarter · Most members · Most active · All members · Corporate only · Any region · Any city | Any Size · 1–2 Members · 3–10 Members · 10+ Members · Any Activity · Has Upcoming Events · New This Quarter · Most Members · Most Active · All Members · Corporate Only · Any Region · Any City |
+| Headings, buttons, pills to Title Case (19) | Chapter events · Clear filters · Sort and filter · Sort by · Show chapters · Show all chapters · Lead or serve on a chapter · Get involved · Chapter lead · Open chapter · Active members · Member companies · Upcoming events · Hosted sessions · Events & meetups · Other chapters in India · Volunteer with this chapter · View full details · Official ICR chapter | Chapter Events · Clear Filters · Sort and Filter · Sort By · Show Chapters · Show All Chapters · Lead or Serve on a Chapter · Get Involved · Chapter Lead · Open Chapter · Active Members · Member Companies · Upcoming Events · Hosted Sessions · Events & Meetups · Other Chapters in India · Volunteer with This Chapter · View Full Details · Official ICR Chapter |
+| A meetup's row | You attended · You are going · On the waitlist · Event ended · Get ticket · Join waitlist | You Attended · You Are Going · On the Waitlist · Event Ended · Get Ticket · Join Waitlist |
+| More of the roster | Show more members | View More |
+| Not loaded | Couldn't load chapters · Couldn't load this chapter | Unable to Load Chapters · Unable to Load This Chapter (with **Try Again**) |
+| Empty board | No chapters match · No chapters yet | No Chapters Match · No Chapters Yet |
+| Empty: Nearby | Nothing nearby yet / Nearby shows chapters in the regions and countries of the ones you join. Join your own city first. | No Nearby Chapters Yet / Nearby shows chapters in the regions and countries of chapters you join. Join your city's chapter first. |
+| The preview's events, the page's About | Nothing scheduled yet. Check back soon. · This chapter has not written its About text yet. | No events scheduled yet. Check back soon. · This chapter has not added a description yet. |
+| A resource that will not download | "x" has no real file yet: its address is only a placeholder. · That address sent nothing back. · That file came back empty. · That file is too large… · That file isn't at its address any more (host says 404). · host won't let the app download that file (403). · Couldn't make a secure connection to host. · Couldn't reach host. … · Couldn't download that file. Try again. · Couldn't download "x". Try again. | "x" has no file yet. Its address is a placeholder. · No response from that address. · The file is empty. · The file is too large… · The file is no longer available (host returned 404). · host does not allow the app to download this file (403). · Unable to make a secure connection to host. · Unable to reach host. … · Unable to download the file. Try again. · Unable to download "x". Try again. |
+| A resource that is a page | Open page | Open Page |
+| Clear the search (tooltip, shared `CommunitySearchField`) | Clear search | Clear Search |
+
+## Managing (13 Nov 2026)
+
+For the staff who hold `chapters:manage` (a Super Admin, or a member given the Chapters Admin or Community Manager role on the website),
+a pencil left of the bell on the board opens Manage Chapters, and on a chapter's page that chapter's manage page. Nobody else sees a pencil. The pages stand over the app's bottom bar, as Home does. See
+`docs/screens/community_manage.md` and `docs/FLOW_PARITY.md` → "Managing Chapters, Councils and Events from the app".
+
+
+## 13 Nov 2026: "Chapters", not "Regional Chapters"
+
+The owner: "change the name Regional Chapters ----> Chapters." The board's title, the drawer's row, the search catalogue's entry and the Councils footer's button ("View Chapters Directory") all say Chapters. Left as they are: the chapter kinds in the manage console ("Regional chapter" against "Country chapter") and the Councils footer's heading "Regional In-Person Chapters".

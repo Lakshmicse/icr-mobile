@@ -139,3 +139,38 @@ The local API holds 31 assessment programmes, 24 mock subjects (the tests compar
 - The sale test changes the global discount **as ICR staff** (`PUT /learning/admin/assessment-pricing`) for a few seconds and puts it back in a `finally`; a run killed in the middle would leave 40 % / 50 % on, which the next run's first step reads and restores.
 - The live widget tests run real calls outside the test's fake clock, pump rather than `pumpAndSettle` while a page loads (its progress bar animates for ever, and settling it would run the fake clock past the requests' own timeouts), and end by letting the screen's in-flight requests finish and the HTTP client's idle-connection timers fire.
 - The portal allows 120 requests a minute per address and every live file shares it: the client waits out a 429, so a run alongside other builders' live files can take a minute longer.
+
+## 7 Nov 2026: Free / Paid
+
+A paper is paid when the editor set a price (`priceAmount`), whatever `access` says — the website's own "priced" badge. The Free / Paid chips draw only while both kinds exist (`hasAccessFacet`, the website's `topicFacets`); on production every mock set is plan-locked and unpriced, which is why "Paid" listed nothing and "Free" listed locked sets.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+Wording only. Knowledge Assessments, Mock Exams, Select Your Proficiency Level, Start Assessment, Start Test and Retake
+Test keep the client's words.
+
+State titles are headings (the lead's decision the same day): an empty-state, locked-state or error title is in Title Case with no full stop, and the line under it stays a sentence.
+
+| Where | Old | New |
+| --- | --- | --- |
+| Load errors (titles) | Couldn't load the mock exams · Couldn't load the assessments | Unable to Load the Mock Exams · Unable to Load the Assessments |
+| Empty and not-found titles to Title Case: 6 strings | No mock exams available yet · No subject matches · Programme not found … | No Mock Exams Available Yet · No Subject Matches · Programme Not Found … |
+| Buttons and links to Title Case: 13 strings | Reset filters · Partner certifications · All subjects · Earn more · Pay now · See plans · Open with my plan · Retake assessment · No attempts left · View more · Try again … | Reset Filters · Partner Certifications · All Subjects · Earn More · Pay Now · See Plans · Open with My Plan · Retake Assessment · No Attempts Left · View More · Try Again … |
+| Buttons with a count | Redeem 5 ICR credits · Redeem 5 credits | Redeem 5 ICR Credits · Redeem 5 Credits (`creditsLabelTitle`, `creditsShortTitle`) |
+| Redeem sheet, title | 5 ICR credits for "Capital Planning" – Professional? | 5 ICR Credits for "Capital Planning" – Professional? |
+| Redeem sheet, body | This level opens for good. · All 3 levels open for good. | This level opens permanently. · All 3 levels open permanently. |
+| Plan sheet, title and button | Open "Human Capital" with your plan? · Open it | Open "Human Capital" with Your Plan? · Open |
+| The topics card's heading | Knowledge areas covered | Knowledge Areas Covered |
+| The note under the programmes | Those are listed under Professional Development, and are sat and issued through ICR just the same. | These are listed under Professional Development, and are also taken and issued through ICR. |
+| The plan card, once opened | This mock exam is open with your plan: every set is yours to sit. · This course is open with your plan: every level is yours to sit. | This mock exam is open with your plan. You can take every set. · This course is open with your plan. You can take every level. |
+| The plan card, a plan with no courses | Assess your knowledge courses are not included in your plan. | Knowledge Assessment courses are not included in your plan. |
+| The bundle offer | Offer valid till 30 Nov 2026 | Offer valid until 30 Nov 2026 |
+
+Left as they were: the bundle's ALL-CAPS kickers (BEST VALUE, BUNDLE · 20% OFF, SET 01); the pills, which are status
+words (Open, Locked, In your plan, Free + paid, All passed); the facts line of a paper (10 questions · 30 min · 70% to
+pass); "Save ₹300 vs buying separately"; the " – " that joins a programme's name to its level, which is part of a name.
+The API's own lock sentence still says "Assess your knowledge courses" where it sends it.
+
+Tests: `test/learning_assess_test.dart` quotes the new words; the three `creditsLabelTitle` / `creditsShortTitle` lines
+were added to *credits, durations, attempts and plurals read as sentences*. Every `learning_assess_*` golden but
+`learning_assess_mock_sets_design` and `learning_assess_mock_topics` was re-recorded for the wording.

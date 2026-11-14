@@ -9,15 +9,16 @@ import '../../mentorship_my/widgets/kit.dart';
 import 'offerings_files.dart';
 import 'offerings_repository.dart';
 
-/// The price block every offering shares: a Free switch, the price in rupees,
-/// and an optional strikethrough price. Each field shows the API's own limit.
+/// The price block every offering shares: a Free switch and the price in rupees. The strikethrough price the API
+/// also takes (`compareAtPaisa`) is not asked (owner, 9 Nov 2026: "why is the strikethrough price, what is the
+/// purpose?"); a listing that already carries one keeps it.
 class PriceBlock extends StatelessWidget {
   const PriceBlock({
     super.key,
     required this.free,
     required this.onFree,
     required this.price,
-    required this.compareAt,
+    this.compareAt,
     this.priceHelp,
     this.freeLabel = 'Free',
   });
@@ -25,7 +26,7 @@ class PriceBlock extends StatelessWidget {
   final bool free;
   final ValueChanged<bool> onFree;
   final TextEditingController price;
-  final TextEditingController compareAt;
+  final TextEditingController? compareAt;
   final String? priceHelp;
   final String freeLabel;
 
@@ -51,17 +52,6 @@ class PriceBlock extends StatelessWidget {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               style: MentoringText.formInput,
               decoration: fieldDecoration('1499'),
-            ),
-          ),
-          FieldBlock(
-            label: 'Strikethrough price (₹, optional)',
-            help: 'Shown crossed out beside the price. It must be higher, and the price at least half of it.',
-            child: TextField(
-              key: const ValueKey('offering-compare'),
-              controller: compareAt,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: MentoringText.formInput,
-              decoration: fieldDecoration('1999'),
             ),
           ),
         ],
@@ -126,7 +116,7 @@ class FileRow extends StatelessWidget {
             children: [
               QuietButton(
                 key: ValueKey(pickKey),
-                label: busy ? 'Uploading…' : (pickLabel ?? (name == null ? 'Choose a file' : 'Replace the file')),
+                label: busy ? 'Uploading…' : (pickLabel ?? (name == null ? 'Choose a File' : 'Replace File')),
                 icon: LucideIcons.upload,
                 onPressed: busy ? null : onPick,
               ),
@@ -154,7 +144,7 @@ Future<StoredUpload?> pickAndUpload({
   try {
     file = await pick(imageOnly: imageOnly);
   } catch (_) {
-    problem("Couldn't open your files. Try again.");
+    problem("Unable to open your files. Try again.");
     return null;
   }
   if (file == null) return null;

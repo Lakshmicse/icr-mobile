@@ -8,10 +8,11 @@ import 'mentoring_clock.dart';
 import 'mentoring_format.dart';
 import 'mentoring_links.dart';
 import 'mentoring_models.dart';
+import 'purchases_tab.dart' show PurchaseBucket, bucketOf;
 import 'my_mentoring_controller.dart';
 import 'widgets/kit.dart' show PersonAvatar;
 
-const _cadences = {'WEEKLY': 'Weekly', 'FORTNIGHTLY': 'Every two weeks', 'MONTHLY': 'Monthly', 'ADHOC': 'As needed'};
+const _cadences = {'WEEKLY': 'Weekly', 'FORTNIGHTLY': 'Every Two Weeks', 'MONTHLY': 'Monthly', 'ADHOC': 'As Needed'};
 const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -135,6 +136,7 @@ class _MentoringOverviewState extends State<MentoringOverview> {
       _c.ensureTab(MyTab.goals);
       _c.saved.ensure();
       _c.book.terms.ensure();
+      _c.book.purchases.ensure();
     });
   }
 
@@ -230,7 +232,7 @@ class _MentoringOverviewState extends State<MentoringOverview> {
         return WsScroll(
           loading: loading,
           error: c.pairings.error,
-          errorTitle: "Couldn't load your mentoring",
+          errorTitle: 'Unable to Load Your Mentoring',
           onRefresh: _refresh,
           children: loading || (c.pairings.error != null && !c.pairings.loaded) ? const [] : _sections(context, extras),
         );
@@ -300,41 +302,41 @@ class _MentoringOverviewState extends State<MentoringOverview> {
     final next = sessions.isEmpty ? null : sessions.first;
     final nextAt = next?.at.toLocal();
     return WsSection(
-      title: 'At a glance',
+      title: 'At a Glance',
       children: [
         WsKpiGrid(
           items: [
             WsKpi(
               key: const ValueKey('kpi-mentors'),
-              label: 'Active mentors',
+              label: 'Active Mentors',
               value: '${mine.length}',
               icon: LucideIcons.users,
-              sub: pending > 0 ? '${countLabel(pending, 'request')} pending' : 'no requests waiting',
+              sub: pending > 0 ? '${countLabel(pending, 'request')} pending' : 'No pending requests',
             ),
             WsKpi(
               key: const ValueKey('kpi-sessions'),
-              label: 'Sessions completed',
+              label: 'Sessions Completed',
               value: '$held',
               icon: LucideIcons.circleCheck,
-              sub: held == 0 ? 'none yet — book the first' : '${_hours(minutes)} with your mentors',
+              sub: held == 0 ? 'No sessions yet. Book your first session.' : '${_hours(minutes)} with your mentors',
             ),
             WsKpi(
               key: const ValueKey('kpi-goals'),
-              label: 'Goals achieved',
+              label: 'Goals Achieved',
               value: c.goals.loaded ? '$achieved' : '—',
               suffix: c.goals.loaded && goals.isNotEmpty ? '/ ${goals.length}' : null,
               meter: goals.isNotEmpty ? achieved / goals.length : null,
               icon: LucideIcons.target,
-              sub: open > 0 ? '$open in progress' : 'nothing outstanding',
+              sub: open > 0 ? '$open in progress' : 'No goals outstanding',
             ),
             WsKpi(
               key: const ValueKey('kpi-next'),
-              label: 'Next session',
+              label: 'Next Session',
               value: nextAt == null ? '—' : '${_weekdays[nextAt.weekday - 1]} ${nextAt.day}',
               suffix: nextAt == null ? null : _months[nextAt.month - 1],
               icon: LucideIcons.calendarClock,
               sub: next == null
-                  ? 'nothing booked'
+                  ? 'No session booked'
                   : next.who == null
                   ? timeLabel(next.at)
                   : '${timeLabel(next.at)} · with ${next.who!.firstName}',
@@ -377,13 +379,36 @@ class _MentoringOverviewState extends State<MentoringOverview> {
           action: 'Review',
           onTap: () => _openEngagements(context),
         ),
+      // A paid session, programme or plan waiting on the member (7 Nov 2026: a mentor could not find the time set
+      // for the session he had bought — it sat on a Purchases tab he was not shown).
+      for (final p
+          in (c.book.purchases.data ?? const <ServicePurchase>[])
+              .where((p) => bucketOf(p) == PurchaseBucket.needs)
+              .take(3))
+        _need(
+          icon: LucideIcons.receipt,
+          text: _purchaseNeed(p),
+          action: 'Open',
+          onTap: () => widget.onSelectTab(MyTab.purchases),
+        ),
     ];
     if (rows.isEmpty) return null;
     return WsSection(
       key: const ValueKey('needs-you'),
-      title: 'Needs you',
+      title: 'Action Needed',
       children: [WsRows(children: rows)],
     );
+  }
+
+  /// What a purchase waits for, in a line.
+  static String _purchaseNeed(ServicePurchase p) {
+    final mentor = p.mentor?.firstName ?? 'The mentor';
+    return switch (p.status) {
+      PurchaseStatus.accepted => '$mentor set a time for ${p.title}. Accept it or ask for another.',
+      PurchaseStatus.pendingPayment || PurchaseStatus.confirmed => 'Pay for ${p.title} to confirm it',
+      PurchaseStatus.paid => '$mentor asks to move ${p.title}',
+      _ => 'Rate your session ${p.title}',
+    };
   }
 
   Widget _need({required IconData icon, required String text, required String action, required VoidCallback onTap}) =>
@@ -400,17 +425,17 @@ class _MentoringOverviewState extends State<MentoringOverview> {
   Widget _mentors(BuildContext context, List<Pairing> mine, List<PlanTerm> terms, List<_Upcoming> sessions) {
     return WsSection(
       key: const ValueKey('my-mentors'),
-      title: 'My mentors',
+      title: 'My Mentors',
       note: mine.isEmpty ? null : '${mine.length} active',
-      action: mine.isEmpty ? null : 'Find another',
+      action: mine.isEmpty ? null : 'Find Another',
       onAction: () => widget.links.directory(context),
       children: [
         if (mine.isEmpty)
           WsEmpty(
             icon: LucideIcons.handshake,
-            title: 'No mentor yet',
+            title: 'No Mentor Yet',
             body: 'Ask a mentor to guide you. Most replies come within a few days.',
-            action: 'Find a mentor',
+            action: 'Find a Mentor',
             onAction: () => widget.links.directory(context),
           )
         else
@@ -436,14 +461,17 @@ class _MentoringOverviewState extends State<MentoringOverview> {
   Widget _upNext(BuildContext context, List<_Upcoming> sessions) {
     return WsSection(
       key: const ValueKey('up-next'),
-      title: 'Up next',
-      action: 'View calendar',
+      title: 'Up Next',
+      action: 'View Calendar',
       onAction: () => widget.onSelectTab(MyTab.calendar),
       children: [
         if (sessions.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Text('Nothing booked. Your mentor confirms a time once you ask for one.', style: WsText.body),
+            child: Text(
+              'No session has been scheduled yet. Your mentor will confirm a time once you request one.',
+              style: WsText.body,
+            ),
           )
         else
           WsRows(
@@ -463,13 +491,13 @@ class _MentoringOverviewState extends State<MentoringOverview> {
     return WsRow(
       onTap: open,
       leading: WsDateTile(at: s.at, highlight: first),
-      title: s.paid ? (s.title ?? 'Paid session') : (who == null ? 'Session' : '1:1 with $who'),
+      title: s.paid ? (s.title ?? 'Paid Session') : (who == null ? 'Session' : '1:1 with $who'),
       subtitle: '${timeLabel(s.at)} · ${s.durationMin} min · ${modeLabel(s.mode)} · ${_inDays(s.at)}',
       meta: s.agenda != null && s.agenda!.trim().isNotEmpty
           ? 'Agenda: ${s.agenda!.trim()}'
           : s.paid
           ? (who == null ? null : 'With $who')
-          : 'No agenda yet — add one so your mentor can prepare',
+          : 'No agenda yet. Add one so your mentor can prepare.',
       trailing: s.paid ? const WsChip('Paid', tone: WsTone.brand) : null,
       below: Wrap(
         spacing: 8,
@@ -477,7 +505,7 @@ class _MentoringOverviewState extends State<MentoringOverview> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           if (link != null && _joinOpen(s.at, s.durationMin))
-            WsButton(label: 'Join call', icon: LucideIcons.video, filled: true, onPressed: () => openUrl(context, link))
+            WsButton(label: 'Join Call', icon: LucideIcons.video, filled: true, onPressed: () => openUrl(context, link))
           else if (link == null && s.mode == 'VIDEO')
             Text('Link not shared yet', style: WsText.meta),
           WsButton(label: 'Details', onPressed: open),
@@ -499,17 +527,17 @@ class _MentoringOverviewState extends State<MentoringOverview> {
     final average = goals.isEmpty ? 0 : (goals.fold<int>(0, (n, g) => n + g.progress) / goals.length).round();
     return WsSection(
       key: const ValueKey('development-goals'),
-      title: 'Development goals',
+      title: 'Development Goals',
       note: goals.isEmpty ? null : '$achieved of ${goals.length} achieved',
-      action: mine.isEmpty ? null : 'Add goal',
+      action: mine.isEmpty ? null : 'Add Goal',
       onAction: mine.isEmpty ? null : () => widget.onOpenPairing(mine.first.id),
       children: [
         if (goals.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: Text(
-              'Nothing agreed yet. A goal is what the two of you are actually working towards — set one on any '
-              'mentorship.',
+              'No goals have been set yet. Goals help you and your mentor focus on specific outcomes. Set a goal '
+              'for any mentorship.',
               style: WsText.body,
             ),
           )
@@ -529,9 +557,9 @@ class _MentoringOverviewState extends State<MentoringOverview> {
                     children: [
                       _legend(WsColors.good, 'Achieved', '$achieved'),
                       const SizedBox(height: 6),
-                      _legend(const Color(0xFFC9DAEE), 'In progress', '$open'),
+                      _legend(const Color(0xFFC9DAEE), 'In Progress', '$open'),
                       const SizedBox(height: 6),
-                      _legend(AppColors.primary, 'Average progress', '$average%'),
+                      _legend(AppColors.primary, 'Average Progress', '$average%'),
                     ],
                   ),
                 ),
@@ -587,12 +615,12 @@ class _MentoringOverviewState extends State<MentoringOverview> {
     if (!intent.loaded) return null;
     final p = intent.data;
     final signals = <(String, bool)>[
-      ('Career stage', p != null && p.careerStage.isNotEmpty),
-      ('Mentoring goals', p != null && p.focusAreas.isNotEmpty),
-      ('Target certification', extras.targetCertification?.trim().isNotEmpty ?? false),
-      ('Meeting frequency', p?.cadence?.isNotEmpty ?? false),
-      ('Your objective, in your own words', p?.goalSummary?.trim().isNotEmpty ?? false),
-      ('Phone number', extras.hasPhone),
+      ('Career Stage', p != null && p.careerStage.isNotEmpty),
+      ('Mentoring Goals', p != null && p.focusAreas.isNotEmpty),
+      ('Target Certification', extras.targetCertification?.trim().isNotEmpty ?? false),
+      ('Meeting Frequency', p?.cadence?.isNotEmpty ?? false),
+      ('Your Objective', p?.goalSummary?.trim().isNotEmpty ?? false),
+      ('Mobile Number', extras.hasPhone),
     ];
     final done = signals.where((s) => s.$2).length;
     final strength = (done * 100 / signals.length).round();
@@ -602,7 +630,7 @@ class _MentoringOverviewState extends State<MentoringOverview> {
     ];
     return WsSection(
       key: const ValueKey('matching-profile'),
-      title: 'Your matching profile',
+      title: 'Your Matching Profile',
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -610,16 +638,16 @@ class _MentoringOverviewState extends State<MentoringOverview> {
           children: [
             Text('$strength%', style: WsText.big),
             const SizedBox(width: 10),
-            Expanded(child: Text('$done of ${signals.length} signals mentors match on', style: WsText.body)),
+            Expanded(child: Text('$done of ${signals.length} mentor matching criteria completed', style: WsText.body)),
           ],
         ),
         const SizedBox(height: 8),
         WsBar(value: strength / 100, color: strength >= 80 ? WsColors.good : AppColors.primary),
         const SizedBox(height: 12),
         if (missing.isEmpty)
-          Text('Every signal mentors match on is filled in.', style: WsText.body)
+          Text('All mentor matching criteria are complete.', style: WsText.body)
         else ...[
-          Text('Still missing', style: WsText.bodyStrong),
+          Text('Missing Information', style: WsText.bodyStrong),
           const SizedBox(height: 8),
           Wrap(spacing: 6, runSpacing: 6, children: [for (final m in missing) WsChip(m, icon: LucideIcons.plus)]),
         ],
@@ -627,7 +655,7 @@ class _MentoringOverviewState extends State<MentoringOverview> {
         Align(
           alignment: Alignment.centerLeft,
           child: WsButton(
-            label: missing.isEmpty ? 'Edit goals' : 'Finish in My goals',
+            label: missing.isEmpty ? 'Edit Goals' : 'Complete in Goals',
             onPressed: () => widget.onSelectTab(MyTab.goals),
           ),
         ),
@@ -640,8 +668,8 @@ class _MentoringOverviewState extends State<MentoringOverview> {
   Widget _plans(List<PlanTerm> terms) {
     return WsSection(
       key: const ValueKey('your-plans'),
-      title: 'Your plans',
-      footer: 'See purchases',
+      title: 'Your Plans',
+      footer: 'View Purchases',
       onFooter: () => widget.onSelectTab(MyTab.purchases),
       children: [
         WsRows(
@@ -659,7 +687,7 @@ class _MentoringOverviewState extends State<MentoringOverview> {
                   children: [
                     Row(
                       children: [
-                        Expanded(child: Text('Sessions left', style: WsText.meta)),
+                        Expanded(child: Text('Sessions Left', style: WsText.meta)),
                         Text('${t.sessionsLeft} of ${t.sessionsAllowance}', style: WsText.bodyStrong),
                       ],
                     ),
@@ -679,8 +707,8 @@ class _MentoringOverviewState extends State<MentoringOverview> {
   Widget _recommended(BuildContext context, List<_Recommended> mentors) {
     return WsSection(
       key: const ValueKey('recommended'),
-      title: 'Recommended for you',
-      footer: 'Browse all mentors',
+      title: 'Recommended for You',
+      footer: 'Browse All Mentors',
       onFooter: () => widget.links.directory(context),
       children: [
         WsRows(
@@ -703,8 +731,8 @@ class _MentoringOverviewState extends State<MentoringOverview> {
   Widget _saved(BuildContext context, List<SavedMentor> saved) {
     return WsSection(
       key: const ValueKey('saved-mentors'),
-      title: 'Saved mentors',
-      footer: 'See all saved',
+      title: 'Saved Mentors',
+      footer: 'View All Saved',
       onFooter: () => widget.onSelectTab(MyTab.saved),
       children: [
         WsRows(
@@ -727,7 +755,7 @@ class _MentoringOverviewState extends State<MentoringOverview> {
   Widget _past(BuildContext context, List<Pairing> finished) {
     return WsSection(
       key: const ValueKey('past-mentorships'),
-      title: 'Past mentorships',
+      title: 'Past Mentorships',
       note: '${finished.length}',
       children: [
         WsRows(
@@ -762,7 +790,7 @@ class _MentoringOverviewState extends State<MentoringOverview> {
     ];
     return WsSection(
       key: const ValueKey('engagements'),
-      title: 'Your mentees',
+      title: 'Your Mentees',
       note: mentees.isEmpty ? null : '${mentees.length} active',
       children: [
         WsRows(
@@ -781,8 +809,8 @@ class _MentoringOverviewState extends State<MentoringOverview> {
               leading: const WsIconDot(icon: LucideIcons.briefcaseBusiness, size: 42),
               title: waiting > 0 ? '${countLabel(waiting, 'request')} waiting on you' : 'Engagements',
               subtitle:
-                  'Requests asked of you — to mentor someone, for a session or for a programme — are on Engagements, '
-                  'under Action needed.',
+                  'Requests to mentor someone, for a session or for a programme are on Engagements, '
+                  'under Action Needed.',
               below: Align(
                 alignment: Alignment.centerLeft,
                 child: WsButton(label: 'Open Engagements', filled: true, onPressed: () => _openEngagements(context)),
@@ -826,12 +854,12 @@ class _MentorRow extends StatelessWidget {
     final about = next?.agenda?.trim().isNotEmpty ?? false ? next!.agenda!.trim() : null;
     final nextLine = next != null
         ? 'Next: ${_weekdays[next!.at.toLocal().weekday - 1]} ${_shortDay(next!.at)}, ${timeLabel(next!.at)}'
-              '${about == null ? '' : ' — $about'}'
+              '${about == null ? '' : ' · $about'}'
         : step != null
         ? 'Next step: ${step.title}${t?.periodEnd == null ? '' : ' · use by ${_shortDay(t!.periodEnd!)}'}'
-        : 'No session booked yet — open the mentorship to book one';
+        : 'No session has been booked yet. Open the mentorship to schedule a session.';
     final chips = <Widget>[
-      if (t == null) const WsChip('Free mentorship', tone: WsTone.brand),
+      if (t == null) const WsChip('Free Mentorship', tone: WsTone.brand),
       if (t == null && _cadences[p.cadence] != null) WsChip(_cadences[p.cadence]!),
       if (p.status != PairingStatus.active) WsChip(p.status.label, tone: WsTone.warn),
     ];
@@ -881,7 +909,7 @@ class _MentorRow extends StatelessWidget {
             if (t != null && allowance > 0) ...[
               Row(
                 children: [
-                  Expanded(child: Text('Sessions used', style: WsText.meta)),
+                  Expanded(child: Text('Sessions Used', style: WsText.meta)),
                   Text('$used of $allowance', style: WsText.bodyStrong),
                 ],
               ),

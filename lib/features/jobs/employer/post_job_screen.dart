@@ -220,13 +220,13 @@ class _PostJobScreenState extends State<PostJobScreen> {
       context: context,
       builder: (_) => AlertDialog(
         key: const ValueKey('leave-dialog'),
-        title: const Text('Leave without saving?'),
-        content: const Text('What you changed on this posting is not saved yet.'),
+        title: const Text('Leave Without Saving?'),
+        content: const Text('Your changes to this posting have not been saved.'),
         actions: [
           TextButton(
             key: const ValueKey('leave-stay'),
             onPressed: () => Navigator.pop(context, 'stay'),
-            child: const Text('Keep editing'),
+            child: const Text('Keep Editing'),
           ),
           TextButton(
             key: const ValueKey('leave-discard'),
@@ -237,7 +237,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
           TextButton(
             key: const ValueKey('leave-save'),
             onPressed: () => Navigator.pop(context, 'save'),
-            child: const Text('Save draft'),
+            child: const Text('Save Draft'),
           ),
         ],
       ),
@@ -267,7 +267,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
           if (await _confirmLeave() && mounted) navigator.pop();
         },
         child: CareerScaffold(
-          title: _c.editing ? 'Edit job' : 'Post a job',
+          title: _c.editing ? 'Edit Job' : 'Post a Job',
           onBack: widget.onBack,
           unread: _c.unread,
           onBell: () => widget.navigation.openNotifications(context, widget.links),
@@ -286,9 +286,9 @@ class _PostJobScreenState extends State<PostJobScreen> {
           CareerNotice(
             key: const ValueKey('composer-error'),
             icon: LucideIcons.cloudOff,
-            title: "Couldn't open this posting",
+            title: 'Unable to Open This Posting',
             body: _c.error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: () {
               _filled = false;
               _c.start();
@@ -306,8 +306,8 @@ class _PostJobScreenState extends State<PostJobScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ..._notices(),
-          _card('basics', 'The role', [
-            _label('Job title'),
+          _card('basics', 'Role', [
+            _label('Job Title'),
             TextField(
               key: const ValueKey('job-title'),
               controller: _title,
@@ -319,7 +319,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
               onChanged: _c.setTitle,
             ),
             ..._titleHints(),
-            _label('Department (optional)'),
+            _label('Department (Optional)'),
             TextField(
               key: const ValueKey('job-department'),
               controller: _department,
@@ -333,7 +333,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
               options: const [
                 ('INTERN', 'Intern'),
                 ('JUNIOR', 'Junior'),
-                ('MID', 'Mid-level'),
+                ('MID', 'Mid-Level'),
                 ('SENIOR', 'Senior'),
                 ('LEAD', 'Lead'),
                 ('DIRECTOR', 'Director'),
@@ -343,12 +343,12 @@ class _PostJobScreenState extends State<PostJobScreen> {
               onPick: (v) => _c.update((x) => v == null ? x.copyWith(clearSeniority: true) : x.copyWith(seniority: v)),
               clearable: true,
             ),
-            _label('Job type'),
+            _label('Job Type'),
             _choices(
               keyPrefix: 'type',
               options: const [
-                ('FULL_TIME', 'Full-time'),
-                ('PART_TIME', 'Part-time'),
+                ('FULL_TIME', 'Full-Time'),
+                ('PART_TIME', 'Part-Time'),
                 ('CONTRACT', 'Contract'),
                 ('INTERNSHIP', 'Internship'),
                 ('TEMPORARY', 'Temporary'),
@@ -357,22 +357,22 @@ class _PostJobScreenState extends State<PostJobScreen> {
               value: d.employmentType,
               onPick: (v) => _c.update((x) => x.copyWith(employmentType: v)),
             ),
-            _label('Work mode'),
+            _label('Work Mode'),
             _choices(
               keyPrefix: 'mode',
-              options: const [('ONSITE', 'On-site'), ('HYBRID', 'Hybrid'), ('REMOTE', 'Remote')],
+              options: const [('ONSITE', 'On-Site'), ('HYBRID', 'Hybrid'), ('REMOTE', 'Remote')],
               value: d.workMode,
               onPick: (v) => _c.update((x) => x.copyWith(workMode: v)),
             ),
           ]),
-          _card('location', 'Where', [
+          _card('location', 'Location', [
             _label('Country'),
             DropdownButtonFormField<String>(
               key: const ValueKey('job-country'),
               initialValue: jobCountries.contains(d.country) ? d.country : null,
               isDense: true,
               isExpanded: true,
-              decoration: _decoration(hint: 'Pick a country'),
+              decoration: _decoration(hint: 'Select a country'),
               items: [
                 for (final c in jobCountries)
                   DropdownMenuItem(
@@ -384,7 +384,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                 if (v != null) _c.update((x) => x.copyWith(country: v));
               },
             ),
-            _label('State (optional)'),
+            _label('State (Optional)'),
             TextField(
               key: const ValueKey('job-state'),
               controller: _state,
@@ -408,7 +408,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                 const SizedBox(width: 8),
                 IconButton.filledTonal(
                   key: const ValueKey('add-city'),
-                  tooltip: 'Add city',
+                  tooltip: 'Add City',
                   onPressed: _addCity,
                   icon: const Icon(LucideIcons.plus, size: 18),
                 ),
@@ -436,7 +436,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                 ),
               ),
             if (d.cities.length >= 2) ...[
-              _label('Openings in each city'),
+              _label('Openings in Each City'),
               for (final city in d.cities)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 6),
@@ -470,10 +470,14 @@ class _PostJobScreenState extends State<PostJobScreen> {
                     ],
                   ),
                 ),
-              Text('${d.totalOpenings} openings in all', style: CareerText.meta, key: const ValueKey('openings-total')),
+              Text(
+                '${d.totalOpenings} openings in total',
+                style: CareerText.meta,
+                key: const ValueKey('openings-total'),
+              ),
             ],
           ]),
-          _card('description', 'The description', [
+          _card('description', 'Description', [
             Text(
               'Write it plainly. Start a line with "- " for a bullet and "## " for a heading.',
               style: CareerText.body,
@@ -498,13 +502,13 @@ class _PostJobScreenState extends State<PostJobScreen> {
             ),
           ]),
           _card('skills', 'Skills', [
-            _label('Required skills'),
+            _label('Required Skills'),
             _skillInput(preferred: false),
             _skillChips(d.skills, preferred: false),
-            _label('Nice-to-have skills (optional)'),
+            _label('Preferred Skills (Optional)'),
             _skillInput(preferred: true),
             _skillChips(d.preferredSkills, preferred: true),
-            _label('Experience (years)'),
+            _label('Experience (Years)'),
             Row(
               children: [
                 Expanded(
@@ -560,17 +564,17 @@ class _PostJobScreenState extends State<PostJobScreen> {
               value: d.salaryCurrency,
               onPick: (v) => _c.update((x) => x.copyWith(salaryCurrency: v)),
             ),
-            _label('Paid'),
+            _label('Pay Period'),
             _choices(
               keyPrefix: 'period',
-              options: const [('YEARLY', 'Per year'), ('MONTHLY', 'Per month'), ('HOURLY', 'Per hour')],
+              options: const [('YEARLY', 'Per Year'), ('MONTHLY', 'Per Month'), ('HOURLY', 'Per Hour')],
               value: d.salaryPeriod,
               onPick: (v) => _c.update((x) => x.copyWith(salaryPeriod: v)),
             ),
             SwitchListTile(
               key: const ValueKey('salary-visible'),
               contentPadding: EdgeInsets.zero,
-              title: Text('Show the salary on the posting', style: JobsText.formLabel),
+              title: Text('Show Salary on the Posting', style: JobsText.formLabel),
               subtitle: Text('A posting with pay shown gets more applicants.', style: JobsText.formHelp),
               value: d.salaryVisible,
               onChanged: (v) => _c.update((x) => x.copyWith(salaryVisible: v)),
@@ -578,7 +582,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
             SwitchListTile(
               key: const ValueKey('salary-negotiable'),
               contentPadding: EdgeInsets.zero,
-              title: Text('Salary is negotiable', style: JobsText.formLabel),
+              title: Text('Salary Is Negotiable', style: JobsText.formLabel),
               value: d.negotiable,
               onChanged: (v) => _c.update((x) => x.copyWith(negotiable: v)),
             ),
@@ -597,15 +601,15 @@ class _PostJobScreenState extends State<PostJobScreen> {
                 ),
               ),
             ],
-            _label('How candidates apply'),
+            _label('How Candidates Apply'),
             _choices(
               keyPrefix: 'apply',
-              options: const [('ICR', 'On ICR'), ('EXTERNAL', 'On your own site')],
+              options: const [('ICR', 'On ICR'), ('EXTERNAL', 'On Your Own Site')],
               value: d.externalApply ? 'EXTERNAL' : 'ICR',
               onPick: (v) => _c.update((x) => x.copyWith(externalApply: v == 'EXTERNAL')),
             ),
             if (d.externalApply) ...[
-              _label('Link where candidates apply'),
+              _label('Application Link'),
               TextField(
                 key: const ValueKey('apply-url'),
                 controller: _applyUrl,
@@ -616,7 +620,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                 onChanged: (v) => _c.update((x) => x.copyWith(applyUrl: v)),
               ),
             ],
-            _label('Apply by (optional)'),
+            _label('Apply By (Optional)'),
             Row(
               children: [
                 OutlinedButton.icon(
@@ -634,12 +638,12 @@ class _PostJobScreenState extends State<PostJobScreen> {
                     }
                   },
                   icon: const Icon(LucideIcons.calendar, size: 15),
-                  label: Text(d.applyDeadline == null ? 'Pick a date' : formatDeadline(d.applyDeadline!)),
+                  label: Text(d.applyDeadline == null ? 'Select a Date' : formatDeadline(d.applyDeadline!)),
                 ),
                 if (d.applyDeadline != null)
                   IconButton(
                     key: const ValueKey('clear-deadline'),
-                    tooltip: 'No deadline',
+                    tooltip: 'No Deadline',
                     onPressed: () => _c.update((x) => x.copyWith(clearDeadline: true)),
                     icon: const Icon(LucideIcons.x, size: 16),
                   ),
@@ -648,20 +652,20 @@ class _PostJobScreenState extends State<PostJobScreen> {
             SwitchListTile(
               key: const ValueKey('require-resume'),
               contentPadding: EdgeInsets.zero,
-              title: Text('Ask for a résumé', style: JobsText.formLabel),
+              title: Text('Ask for a Résumé', style: JobsText.formLabel),
               value: d.requireResume,
               onChanged: (v) => _c.update((x) => x.copyWith(requireResume: v)),
             ),
             SwitchListTile(
               key: const ValueKey('show-contact'),
               contentPadding: EdgeInsets.zero,
-              title: Text('Show me as the contact', style: JobsText.formLabel),
+              title: Text('Show Me as the Contact', style: JobsText.formLabel),
               subtitle: Text('Candidates can message you from the posting.', style: JobsText.formHelp),
               value: d.showHiringContact,
               onChanged: (v) => _c.update((x) => x.copyWith(showHiringContact: v)),
             ),
           ]),
-          _card('questions', 'Questions for applicants', [
+          _card('questions', 'Questions for Applicants', [
             ScreeningEditor(
               questions: d.screening,
               onChanged: (list) => _c.update((x) => x.copyWith(screening: list), screening: true),
@@ -694,7 +698,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(switch (d.status) {
-                  PostingStatus.open => 'This posting is live: changes show at once.',
+                  PostingStatus.open => 'This posting is live. Changes appear immediately.',
                   PostingStatus.inReview => 'ICR is reviewing this posting.',
                   PostingStatus.paused => 'Paused. Publish to open it again.',
                   PostingStatus.closed => 'Closed. Publish to open it again.',
@@ -862,7 +866,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
             const SizedBox(width: 8),
             IconButton.filledTonal(
               key: ValueKey(preferred ? 'add-preferred' : 'add-skill'),
-              tooltip: 'Add skill',
+              tooltip: 'Add Skill',
               onPressed: () => _addSkill(c.text, preferred: preferred),
               icon: const Icon(LucideIcons.plus, size: 18),
             ),
@@ -921,7 +925,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              blockers.isEmpty ? 'Ready to publish' : 'Before you publish',
+              blockers.isEmpty ? 'Ready to Publish' : 'Before You Publish',
               style: CareerText.heading.copyWith(fontSize: 14),
             ),
             const SizedBox(height: 8),
@@ -969,7 +973,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                 child: TextButton(
                   key: const ValueKey('send-review'),
                   onPressed: _c.saving ? null : () => _run(_c.submitForReview),
-                  child: Text('Send to ICR for review instead', style: CareerText.link),
+                  child: Text('Send to ICR for Review', style: CareerText.link),
                 ),
               ),
           ],
@@ -991,14 +995,14 @@ class _PostJobScreenState extends State<PostJobScreen> {
               minimumSize: const Size.fromHeight(48),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: Text(_c.editing && live ? 'Save changes' : 'Save draft'),
+            child: Text(_c.editing && live ? 'Save Changes' : 'Save Draft'),
           ),
         ),
         Expanded(
           flex: 2,
           child: PrimaryButton(
             key: const ValueKey('publish'),
-            label: _c.saving ? 'Working…' : (reopen ? 'Publish again' : (live ? 'Update posting' : 'Publish')),
+            label: _c.saving ? 'Working…' : (reopen ? 'Publish Again' : (live ? 'Update Posting' : 'Publish')),
             icon: LucideIcons.send,
             onPressed: _c.saving || (live && _c.draft.status == PostingStatus.inReview)
                 ? null

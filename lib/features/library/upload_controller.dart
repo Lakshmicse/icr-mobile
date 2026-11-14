@@ -7,7 +7,7 @@ import 'library_repository.dart';
 
 /// The picker's "write your own" option, at the foot of all three category pickers. A marker, never
 /// stored: what is saved is whatever is typed in its place.
-const otherOption = 'Other (add your own)';
+const otherOption = 'Other (Add Your Own)';
 
 /// A node of the category tree as the search offers it: its name and the path down to it (a category is a
 /// path of one, a sub-category of two, a specialization of three).
@@ -316,7 +316,7 @@ class UploadController extends ChangeNotifier {
     final rejected = <String>[];
     for (final f in chosen) {
       if (!_acceptedExtension(f.name)) {
-        rejected.add('${f.name} is not a format the library takes');
+        rejected.add('${f.name} is not a supported format');
         continue;
       }
       if (f.size > LibraryLimits.maxBytes) {
@@ -326,7 +326,7 @@ class UploadController extends ChangeNotifier {
       // The same name and size twice is the picker opened twice on the same file, not two files.
       if (_entries.any((e) => e.file.name == f.name && e.file.size == f.size)) continue;
       if (_entries.length >= room) {
-        rejected.add('${f.name} — the limit is ${LibraryLimits.maxFiles} files');
+        rejected.add('${f.name}: the limit is ${LibraryLimits.maxFiles} files');
         continue;
       }
       _entries.add(UploadEntry(id: _nextId++, file: f, name: UploadEntry.baseOf(f.name)));
@@ -364,20 +364,20 @@ class UploadController extends ChangeNotifier {
   /// What is wrong with the form, by field; shown once a send was tried.
   Map<String, String> get problems {
     final p = <String, String>{};
-    if (_entries.isEmpty) p['files'] = 'Choose at least one file.';
+    if (_entries.isEmpty) p['files'] = 'Select at least one file.';
     for (final e in _entries) {
       if (e.fileName.length > LibraryLimits.fileName) {
-        p['files'] = '${e.fileName.substring(0, 24)}… has too long a name (255 characters at most).';
+        p['files'] = '${e.fileName.substring(0, 24)}… has a name that is too long (maximum 255 characters).';
       }
     }
     if (!appending) {
       if (_title.trim().isEmpty) {
-        p['title'] = 'Give the document a title.';
+        p['title'] = 'Enter a title for the document.';
       } else if (_title.trim().length > LibraryLimits.title) {
         p['title'] = 'A title is at most ${LibraryLimits.title} characters.';
       }
       if (resolvedCategory.isEmpty) {
-        p['category'] = _category == otherOption ? 'Type the category.' : 'Choose a category.';
+        p['category'] = _category == otherOption ? 'Enter the category.' : 'Select a category.';
       } else if (resolvedCategory.length > LibraryLimits.category) {
         p['category'] = 'A category is at most ${LibraryLimits.category} characters.';
       }

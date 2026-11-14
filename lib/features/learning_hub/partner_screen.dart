@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/buttons.dart';
 import '../../core/widgets/search_field.dart';
+import '../../core/util/links.dart';
 import '../../core/widgets/title_bar.dart';
 import '../learning/course_sheet.dart';
 import '../learning/learning_controller.dart';
@@ -92,7 +93,7 @@ class _PartnerScreenState extends State<PartnerScreen> {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    top: TitleBar.height,
+                    top: TitleBar.reserved(context),
                     child: RefreshIndicator(
                       color: AppColors.primary,
                       onRefresh: _hub.learning.refresh,
@@ -112,7 +113,7 @@ class _PartnerScreenState extends State<PartnerScreen> {
                     left: 0,
                     right: 0,
                     child: TitleBar(
-                      title: 'Partner institute',
+                      title: 'Learning Partner',
                       onBack: widget.onBack,
                       unread: _hub.unread,
                       onBell: () => openNotifications(context),
@@ -142,9 +143,9 @@ class _PartnerScreenState extends State<PartnerScreen> {
     if (learning.error != null && learning.courses.isEmpty) {
       return [
         HubNotice(
-          title: "Couldn't load courses",
+          title: 'Unable to Load Courses',
           body: learning.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: learning.refresh,
         ),
       ];
@@ -153,9 +154,11 @@ class _PartnerScreenState extends State<PartnerScreen> {
     if (all.isEmpty) {
       return [
         HubNotice(
-          title: 'No courses published yet',
-          body: '${_institute.name} has not published a course on ICR yet. Ask them what is coming.',
-          action: _institute.canEnquire ? 'Ask the institute' : null,
+          title: 'No Courses Published Yet',
+          body:
+              'This institute has not published any courses on ICR yet. Check back soon for new programmes and '
+              'certification opportunities.',
+          action: _institute.canEnquire ? 'Contact Institute' : null,
           onAction: _ask,
           padding: const EdgeInsets.fromLTRB(32, 28, 32, 40),
         ),
@@ -172,9 +175,9 @@ class _PartnerScreenState extends State<PartnerScreen> {
       ),
       if (shown.isEmpty)
         HubNotice(
-          title: 'No courses match',
+          title: 'No Courses Match',
           body: 'Try other words, or clear the search.',
-          action: 'Clear search',
+          action: 'Clear Search',
           onAction: _search.clear,
           padding: const EdgeInsets.fromLTRB(32, 28, 32, 40),
         )
@@ -239,7 +242,7 @@ class _Header extends StatelessWidget {
                           const Icon(LucideIcons.badgeCheck, size: 13, color: AppColors.successInk),
                           const SizedBox(width: 3),
                           Text(
-                            'Verified by ICR',
+                            'Verified ICR Learning Partner',
                             style: HubText.tileNote.copyWith(color: AppColors.successInk, fontWeight: FontWeight.w600),
                           ),
                           Text('  •  ', style: HubText.tileNote),
@@ -267,14 +270,31 @@ class _Header extends StatelessWidget {
             const SizedBox(height: 12),
             PrimaryButton(
               key: const ValueKey('ask-the-institute'),
-              label: 'Ask the institute',
+              label: 'Contact Institute',
               icon: LucideIcons.messageSquare,
               height: 44,
               onPressed: onAsk,
+            ),
+          ],
+          // The institute's own site, in the phone's browser (bug sheet #6, 9 Nov 2026: a Website button that did
+          // nothing). An address saved without its scheme is given https.
+          if (institute.website != null) ...[
+            const SizedBox(height: 8),
+            OutlinePillButton(
+              key: const ValueKey('institute-website'),
+              label: 'Website',
+              height: 36,
+              onPressed: () => openExternal(context, instituteSite(institute.website!)),
             ),
           ],
         ],
       ),
     );
   }
+}
+
+/// The institute's website as a URL the phone can open: a bare domain gets https.
+Uri instituteSite(String raw) {
+  final t = raw.trim();
+  return Uri.parse(t.contains('://') ? t : 'https://$t');
 }

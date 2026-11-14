@@ -674,7 +674,7 @@ void main() {
   });
 
   group('starting a thread', () {
-    test('who "New message" can reach: people with who they are, suppliers by listing', () async {
+    test('who "New Message" can reach: people with who they are, suppliers by listing', () async {
       final adapter = TableAdapter({
         'GET /messaging/recipients': (_) => {
           'people': [

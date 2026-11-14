@@ -144,7 +144,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ),
     );
     if (doc == null || !mounted) return;
-    showMessage(context, '“${doc.title}” is in the library.');
+    showMessage(context, '“${doc.title}” was added to the library.');
     await c.documentAdded();
   }
 
@@ -181,7 +181,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           const SizedBox(width: 8),
           CommunityButton(
             key: const ValueKey('library-upload'),
-            label: 'Upload',
+            label: 'Upload Resource',
             icon: LucideIcons.upload,
             height: CommunitySearchField.height,
             onPressed: () => _upload(c),
@@ -198,9 +198,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
         _searchRow(c),
         CommunityNotice(
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load the library",
+          title: 'Unable to Load the Library',
           body: c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: c.refresh,
         ),
       ];
@@ -210,48 +210,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return [
       const SizedBox(height: 10),
       _searchRow(c),
+      // No figures over the list (owner, 12 Nov 2026: "remove those metric points").
       const SizedBox(height: 12),
-      CommunityStatGrid(
-        tiles: [
-          // Every figure opens what it counts (owner, 4 Nov 2026), and the page then shows the list.
-          CommunityStatTile(
-            key: const ValueKey('stat-documents'),
-            label: 'Documents',
-            value: c.libraryTotal == null ? '–' : groupThousands(c.libraryTotal!),
-            onTap: () {
-              _search.clear();
-              c.clearFilters();
-              _showList();
-            },
-          ),
-          CommunityStatTile(
-            key: const ValueKey('stat-categories'),
-            label: 'Categories',
-            value: groupThousands(c.categories.length),
-            onTap: c.categories.isEmpty ? null : () => _pickCategory(c),
-          ),
-          CommunityStatTile(
-            key: const ValueKey('stat-formats'),
-            label: 'Formats',
-            value: groupThousands(c.fileTypes.length),
-            onTap: c.fileTypes.isEmpty ? null : () => _pickFormat(c),
-          ),
-          CommunityStatTile(
-            key: const ValueKey('stat-mine'),
-            label: 'Your uploads',
-            value: groupThousands(c.myUploads),
-            blue: true,
-            onTap: () {
-              c.setMine(!q.mine);
-              _showList();
-            },
-          ),
-        ],
-      ),
-      const SizedBox(height: 8),
-      const Divider(height: 1, thickness: 1, color: CommunityColors.tileRule),
-      const SizedBox(height: 12),
-      const CommunitySectionHeading(title: 'Browse by kind', caption: 'Quick searches'),
+      const CommunitySectionHeading(title: 'Browse by Kind', caption: 'Quick Searches'),
       const SizedBox(height: 8),
       ChipRow(
         height: 31,
@@ -303,7 +264,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         padding: 16,
         children: [
           IcrChip(
-            label: 'All formats',
+            label: 'All Formats',
             tone: q.fileType == null ? ChipTone.primary : ChipTone.outlined,
             height: 31,
             textStyle: CommunityText.chip,
@@ -324,7 +285,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       const SizedBox(height: 12),
       CommunitySectionHeading(
         key: _listKey,
-        title: q.mine ? 'Your uploads' : 'Documents',
+        title: q.mine ? 'My Contributions' : 'Documents',
         pill: c.loading && c.documents.isEmpty ? null : documentsLabel(c.total),
       ),
       if (q.filtered)
@@ -338,7 +299,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 _search.clear();
                 c.clearFilters();
               },
-              child: Text('Clear filters', style: CommunityText.sectionLink),
+              child: Text('Clear Filters', style: CommunityText.sectionLink),
             ),
           ),
         ),
@@ -348,11 +309,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
       else if (c.documents.isEmpty)
         CommunityNotice(
           icon: LucideIcons.fileSearch,
-          title: q.filtered ? 'No documents match' : 'The library is empty',
+          title: q.filtered ? 'No Documents Match' : 'Start Building Your Library',
           body: q.mine
               ? "You haven't shared a document yet. Share a checklist, a template or a case study."
-              : (q.filtered ? 'Try another word, or clear a filter.' : 'Be the first to share one.'),
-          action: q.filtered ? 'Clear filters' : 'Upload the first document',
+              : (q.filtered
+                    ? 'Try another word, or clear a filter.'
+                    : 'No resources have been uploaded yet. Share documents, templates, standards, checklists and industry references with the ICR community.'),
+          action: q.filtered ? 'Clear Filters' : 'Upload Your First Resource',
           onAction: q.filtered
               ? () {
                   _search.clear();
@@ -377,7 +340,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
             child: CommunityButton(
-              label: 'Show more documents',
+              label: 'View More',
               outlined: true,
               expand: true,
               height: 38,
@@ -390,66 +353,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
     ];
   }
 
-  /// Brings the list's heading to the top once a figure above has changed what it holds.
-  void _showList() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final at = _listKey.currentContext;
-      if (at == null || !at.mounted) return;
-      Scrollable.ensureVisible(at, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
-    });
-  }
-
-  /// "Categories": every category the library holds, to narrow the list to one.
-  Future<void> _pickCategory(LibraryController c) async {
-    await showCommunitySheet<void>(
-      context,
-      title: 'Categories',
-      body: (sheet, _) => CommunityChoiceWrap<String?>(
-        title: 'Show documents in',
-        options: [null, ...c.categories],
-        selected: c.query.category,
-        label: (cat) => cat ?? 'All categories (${c.categories.length})',
-        onSelected: (cat) {
-          c.setCategory(cat);
-          Navigator.pop(sheet);
-          _showList();
-        },
-      ),
-    );
-  }
-
-  /// "Formats": every file type in the library with how many documents have it.
-  Future<void> _pickFormat(LibraryController c) async {
-    await showCommunitySheet<void>(
-      context,
-      title: 'Formats',
-      body: (sheet, _) => CommunityChoiceWrap<LibraryFileType?>(
-        title: 'Show documents in',
-        options: [null, for (final f in c.fileTypes) f.type],
-        selected: c.query.fileType,
-        label: (type) {
-          if (type == null) return 'All formats';
-          final f = c.fileTypes.firstWhere((f) => f.type == type);
-          return '${f.label} (${f.count})';
-        },
-        onSelected: (type) {
-          c.setFileType(type);
-          Navigator.pop(sheet);
-          _showList();
-        },
-      ),
-    );
-  }
-
   Future<void> _filters(LibraryController c) async {
     await showCommunitySheet<void>(
       context,
-      title: 'Sort and filter',
+      title: 'Sort and Filter',
       body: (sheet, setState) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CommunityChoiceWrap<LibrarySort>(
-            title: 'Sort by',
+            title: 'Sort By',
             options: LibrarySort.values,
             selected: c.query.sort,
             label: (s) => s.label,
@@ -460,7 +372,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             title: 'Show',
             options: const [false, true],
             selected: c.query.mine,
-            label: (m) => m ? 'Only my uploads' : 'Everyone’s documents',
+            label: (m) => m ? 'My Contributions' : 'All Resources',
             onSelected: (m) => setState(() => c.setMine(m)),
           ),
         ],
@@ -485,7 +397,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: CommunityButton(
-                label: 'Show documents',
+                label: 'Show Documents',
                 height: 38,
                 expand: true,
                 onPressed: () => Navigator.pop(sheet),

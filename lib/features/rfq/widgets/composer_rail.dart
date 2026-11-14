@@ -9,9 +9,9 @@ import '../rfq_styles.dart';
 import 'rfq_widgets.dart';
 
 /// The website composer's side rail, which follows the form on a phone: the sections ticked as they are completed,
-/// what happens after posting, and why the responses are worth waiting for. The words are the website's
-/// (`rfq.ProgressCard`, `rfq.WhatHappensNextCard`, `rfq.PostingTrustCard`), "My Requirements" read as the app's
-/// "My RFQ's".
+/// what happens after posting, and why the responses are worth waiting for. The words are the owner's
+/// review of the website's composer (12 Nov 2026) for the sections, an enquiry's next steps and "Why ICR?"; an RFQ's
+/// staged steps keep the website's (`rfq.WhatHappensNextCard`).
 
 /// One section of the composer as the progress card lists it.
 class ProgressStep {
@@ -52,7 +52,7 @@ class ComposerProgress extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(child: _RailHeading('Your progress')),
+              const Expanded(child: _RailHeading('Your Progress')),
               Text('$done of ${steps.length}', style: RfqText.small),
             ],
           ),
@@ -119,11 +119,11 @@ class WhatHappensNext extends StatelessWidget {
   List<(String, String)> get _steps {
     if (kind != RfqKind.rfq) {
       return const [
-        ('You post your requirement', 'Nothing is shared until you send it.'),
-        ('Your enquiry goes to matching suppliers', 'Verified suppliers in your cities and category.'),
-        ('Suppliers reply', 'With questions, a price or a visit to arrange.'),
-        ('Compare replies', "Side by side in My RFQ's."),
-        ('Choose a supplier', 'Select the one you want to work with.'),
+        ('Submit Requirement', 'Share your requirement with ICR.'),
+        ('Supplier Matching', 'We identify relevant verified suppliers.'),
+        ('Receive Responses', 'Suppliers respond with queries, quotations or proposals.'),
+        ('Compare Offers', 'Review and compare supplier responses.'),
+        ('Select a Supplier', 'Choose the supplier that best meets your needs.'),
       ];
     }
     final d1 = _planDay(preQualEnd);
@@ -149,7 +149,7 @@ class WhatHappensNext extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _RailHeading('What happens next'),
+          const _RailHeading('What Happens Next?'),
           const SizedBox(height: 12),
           for (var i = 0; i < steps.length; i++)
             IntrinsicHeight(
@@ -204,15 +204,12 @@ class WhyIcrCard extends StatelessWidget {
   const WhyIcrCard({super.key});
 
   static const rows = [
-    (LucideIcons.shieldCheck, 'Every supplier is verified by ICR'),
-    (LucideIcons.receiptText, 'GST, PF/ESI and ISO checked at verification'),
-    (LucideIcons.searchCheck, 'Matched by service category and city'),
-    (LucideIcons.arrowLeftRight, "Responses compared side by side in My RFQ's"),
-    (
-      LucideIcons.lock,
-      'Your name, phone and email reach a supplier only after it responds, on plans that include them',
-    ),
-    (LucideIcons.globe, 'Also listed on the public requirements board, without your contact details'),
+    (LucideIcons.shieldCheck, 'Verified suppliers across the network'),
+    (LucideIcons.receiptText, 'GST, PAN and applicable certifications checked during verification'),
+    (LucideIcons.searchCheck, 'Relevant supplier matching by category and location'),
+    (LucideIcons.arrowLeftRight, 'Compare supplier responses in one place'),
+    (LucideIcons.lock, 'Your contact details are shared according to your membership plan and privacy settings'),
+    (LucideIcons.globe, 'Public requirement listings do not display your personal contact details'),
   ];
 
   @override
@@ -223,7 +220,7 @@ class WhyIcrCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _RailHeading('Why ICR'),
+          const _RailHeading('Why ICR?'),
           const SizedBox(height: 10),
           for (final (icon, text) in rows)
             Padding(

@@ -33,7 +33,7 @@ class PlanSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionTitle(title: t.programme ? 'The programme' : 'Your plan', top: 14),
+        SectionTitle(title: t.programme ? 'Programme' : 'Your Plan', top: 14),
         MentoringCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,18 +76,18 @@ class PlanSection extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
-                    'A cancelled session gives its place back; a no-show does not.',
+                    'A cancelled session is returned to your allowance. A no-show is not.',
                     style: MentoringText.meta,
                   ),
                 ),
               ],
               if (t.cancelAtPeriodEnd)
-                const MetaLine(icon: LucideIcons.info, text: 'It will not renew: it ends at the close of this term.'),
+                const MetaLine(icon: LucideIcons.info, text: 'It will not renew. It ends at the close of this term.'),
               if (c.termIsMine && t.open && !t.programme && !t.cancelAtPeriodEnd && t.status == 'ACTIVE')
                 ActionWrap(
                   children: [
                     QuietButton(
-                      label: 'Do not renew',
+                      label: 'Do Not Renew',
                       onPressed: () => report(context, c.stopRenewing, done: 'It will not renew.'),
                     ),
                   ],
@@ -124,7 +124,7 @@ class PlanSection extends StatelessWidget {
                               ? 'Held'
                               : s.booked
                               ? 'Booked'
-                              : (s.isNext ? 'Next to book' : 'Not booked yet'),
+                              : (s.isNext ? 'Next to Book' : 'Not Booked Yet'),
                           style: MentoringText.meta,
                         ),
                         if (s.outline != null) Text(s.outline!, style: MentoringText.meta),
@@ -157,14 +157,13 @@ class GoalsSection extends StatelessWidget {
       children: [
         SectionTitle(
           title: 'Goals',
-          action: c.live ? 'Add goal' : null,
+          action: c.live ? 'Add Goal' : null,
           onAction: () async {
             final sent = await showFormSheet(context, (_) => GoalForm(controller: c));
             if (sent && context.mounted) showMessage(context, 'Goal added.');
           },
         ),
-        if (c.goals.isEmpty)
-          Text('No goals yet. A goal is what the two of you are working towards.', style: MentoringText.body),
+        if (c.goals.isEmpty) Text('No goals yet. A goal is what you both work towards.', style: MentoringText.body),
         for (final g in c.goals) _GoalCard(controller: c, goal: g),
       ],
     );
@@ -269,15 +268,14 @@ class TasksSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionTitle(
-          title: 'Between sessions',
-          action: c.live ? 'Add task' : null,
+          title: 'Between Sessions',
+          action: c.live ? 'Add Task' : null,
           onAction: () async {
             final sent = await showFormSheet(context, (_) => TaskForm(controller: c));
             if (sent && context.mounted) showMessage(context, 'Task added.');
           },
         ),
-        if (c.tasks.isEmpty)
-          Text('Nothing on the list. Agree the next steps after a session.', style: MentoringText.body),
+        if (c.tasks.isEmpty) Text('No tasks yet. Agree the next steps after a session.', style: MentoringText.body),
         for (final t in c.tasks)
           Padding(
             key: ValueKey('task-${t.id}'),
@@ -311,7 +309,7 @@ class TasksSection extends StatelessWidget {
                 ),
                 if (t.isMine)
                   IconButton(
-                    tooltip: 'Delete task',
+                    tooltip: 'Delete Task',
                     icon: const Icon(LucideIcons.trash2, size: 16, color: AppColors.outline),
                     onPressed: () => report(context, () => c.deleteTask(t)),
                   ),
@@ -342,15 +340,15 @@ class ResourcesSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionTitle(
-          title: 'Shared resources',
-          action: c.live ? 'Share a link or file' : null,
+          title: 'Shared Resources',
+          action: c.live ? 'Share a Link or File' : null,
           onAction: () async {
             final sent = await showFormSheet(context, (_) => ResourceLinkForm(controller: c, pickFile: pickFile));
             if (sent && context.mounted) showMessage(context, 'Shared.');
           },
         ),
         if (c.resources.isEmpty)
-          Text('Nothing shared yet. Links and files you share show up for both of you.', style: MentoringText.body),
+          Text('Nothing shared yet. Links and files you share are visible to you both.', style: MentoringText.body),
         for (final r in c.resources)
           MentoringCard(
             key: ValueKey('resource-${r.id}'),
@@ -427,14 +425,17 @@ class _TimelineSectionState extends State<TimelineSection> {
       children: [
         SectionTitle(
           title: 'Timeline',
-          action: c.live ? 'Add a note' : null,
+          action: c.live ? 'Add a Note' : null,
           onAction: () async {
             final sent = await showFormSheet(context, (_) => NoteForm(controller: c));
             if (sent && context.mounted) showMessage(context, 'Note added.');
           },
         ),
         if (rows.isEmpty)
-          Text('Nothing recorded yet. Notes you add, and what happens, show up here.', style: MentoringText.body),
+          Text(
+            'Nothing recorded yet. Notes you add and mentorship events will appear here.',
+            style: MentoringText.body,
+          ),
         for (final e in shown)
           Padding(
             key: ValueKey('event-${e.id}'),
@@ -487,7 +488,7 @@ class _TimelineSectionState extends State<TimelineSection> {
             onTap: () => setState(() => _all = !_all),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Text(_all ? 'Show less' : 'All ${rows.length} entries', style: MentoringText.buttonQuiet),
+              child: Text(_all ? 'View Less' : 'View All ${rows.length} Entries', style: MentoringText.buttonQuiet),
             ),
           ),
       ],
@@ -515,17 +516,17 @@ class FeedbackSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle(title: 'Your review'),
+        const SectionTitle(title: 'Your Review'),
         if (f == null)
           Callout(
-            text: 'This mentorship is complete. How did it go? Your rating helps other members choose.',
+            text: 'This mentorship is complete. Your rating helps other members choose.',
             actions: [
               SolidButton(
-                label: 'Rate this mentorship',
+                label: 'Rate This Mentorship',
                 icon: LucideIcons.star,
                 onPressed: () => showReviewSheet(
                   context,
-                  title: 'Rate your mentorship with ${p.counterpart.firstName}',
+                  title: 'Rate Your Mentorship with ${p.counterpart.firstName}',
                   subtitle: p.viewerIsMentor
                       ? 'Seen by ICR only.'
                       : 'Shown on the mentor\'s profile without your name.',
@@ -561,7 +562,7 @@ class FeedbackSection extends StatelessWidget {
             ),
           ),
         if (cert != null) ...[
-          const SectionTitle(title: 'Your certificate', top: 10),
+          const SectionTitle(title: 'Your Certificate', top: 10),
           MentoringCard(
             key: const ValueKey('certificate-card'),
             onTap: () => showCertificateSheet(context, cert, links: links),

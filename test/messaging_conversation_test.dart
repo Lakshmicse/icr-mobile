@@ -249,10 +249,10 @@ void main() {
     testWidgets('a failure says why and Retry loads it', (tester) async {
       final repository = sarahRepo()..errors['thread'] = ApiError('Unable to reach the server.');
       await pump(tester, repository: repository);
-      expect(find.text('Unable to load this conversation.'), findsOneWidget);
+      expect(find.text('Unable to Load This Conversation'), findsOneWidget);
       expect(find.byType(Composer), findsNothing);
       repository.errors.remove('thread');
-      await tester.tap(find.text('Retry'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(text('Did you get a chance to look at it?'), findsOneWidget);
     });
@@ -260,10 +260,10 @@ void main() {
     testWidgets("someone else's thread (403/404): can't open, and the way back", (tester) async {
       final repository = sarahRepo()..errors['thread'] = ApiError('Forbidden', statusCode: 403);
       await pump(tester, repository: repository, pushed: true);
-      expect(find.text("You can't open this conversation"), findsOneWidget);
+      expect(find.text('Unable to Open This Conversation'), findsOneWidget);
       expect(find.text('It may belong to another account, or you may have left it.'), findsOneWidget);
       expect(find.byType(TextField), findsNothing, reason: 'no composer');
-      await tester.tap(find.text('Back to messages'));
+      await tester.tap(find.text('Back to Messages'));
       await tester.pumpAndSettle();
       expect(find.byType(ConversationScreen), findsNothing);
     });
@@ -275,7 +275,7 @@ void main() {
         contexts: {'sarah': const ConversationContext(kind: ConversationKind.direct, person: sarah)},
       );
       await pump(tester, repository: repository);
-      expect(find.text('No messages yet — say hello.'), findsOneWidget);
+      expect(find.text('No messages yet. Say hello.'), findsOneWidget);
       expect(composer(), findsOneWidget);
     });
   });
@@ -288,7 +288,7 @@ void main() {
     ];
 
     testWidgets(
-      'only the newest 50 are read, "Load earlier messages" pages back, and the end of history has no button',
+      'only the newest 50 are read, "Load Earlier Messages" pages back, and the end of history has no button',
       (tester) async {
         final repository = FakeMessagingRepository(
           rows: [convo('sarah')],
@@ -551,7 +551,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('action-copy')));
       await tester.pumpAndSettle();
       expect(copied, 'Did you get a chance to look at it?');
-      expect(find.text('Copied'), findsOneWidget);
+      expect(find.text('Copied.'), findsOneWidget);
     });
 
     testWidgets('your own message offers Delete, theirs offers Report', (tester) async {
@@ -571,11 +571,11 @@ void main() {
       await hold(tester, text('Yes, I did. Thursday works.'));
       await tester.tap(find.byKey(const ValueKey('action-delete')));
       await tester.pumpAndSettle();
-      expect(find.text('Delete this message?'), findsOneWidget);
+      expect(find.text('Delete This Message?'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('confirm-delete')));
       await tester.pumpAndSettle();
       expect(repo.calls, contains('deleteMessage sarah s6'));
-      expect(find.text('This message was deleted'), findsOneWidget);
+      expect(find.text('This message was deleted.'), findsOneWidget);
       expect(text('Yes, I did. Thursday works.'), findsNothing);
     });
 
@@ -606,7 +606,7 @@ void main() {
     testWidgets('a withdrawn message has no menu', (tester) async {
       final thread = [...sarahThread(), msg('s7', 'sarah', sarah, 'oops', ago: 5, deleted: true)];
       await pump(tester, repository: sarahRepo(messages: thread));
-      await tester.longPress(find.text('This message was deleted'));
+      await tester.longPress(find.text('This message was deleted.'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('action-reply')), findsNothing);
     });
@@ -618,20 +618,20 @@ void main() {
       await hold(tester, text('Did you get a chance to look at it?'));
       await tester.tap(find.byKey(const ValueKey('action-report')));
       await tester.pumpAndSettle();
-      expect(find.text('Report this message'), findsOneWidget);
+      expect(find.text('Report This Message'), findsOneWidget);
       final send = find.byKey(const ValueKey('send-report'));
       expect(tester.widget<FilledButton>(send).onPressed, isNull);
       await tester.tap(find.byKey(const ValueKey('reason-HARASSMENT')));
       await tester.pumpAndSettle();
       await tester.enterText(
-        find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText == 'Add a note (optional)'),
+        find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText == 'Add a note (Optional)'),
         'Repeated unwanted contact',
       );
       expect(tester.widget<FilledButton>(send).onPressed, isNotNull);
       await tester.tap(send);
       await tester.pumpAndSettle();
       expect(repo.reports.single, (messageId: 's4', reason: 'HARASSMENT', note: 'Repeated unwanted contact'));
-      expect(find.text('Thanks. ICR will review this message.'), findsOneWidget);
+      expect(find.text('Thank you. ICR will review this message.'), findsOneWidget);
     });
 
     testWidgets('a refused report shows the API\'s sentence', (tester) async {
@@ -708,7 +708,7 @@ void main() {
       await tester.pump(const Duration(seconds: 9));
       await tester.pumpAndSettle();
       expect(text('Did you get a chance to look at it?'), findsOneWidget);
-      expect(find.text('Unable to load this conversation.'), findsNothing);
+      expect(find.text('Unable to Load This Conversation'), findsNothing);
     });
 
     testWidgets('it stops in the background and catches up when the app returns', (tester) async {
@@ -776,20 +776,20 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      await menu('Star conversation');
+      await menu('Star Conversation');
       expect(repo.calls, contains('setPreference sarah starred=true pinned=null'));
       await tester.tap(find.byKey(const ValueKey('thread-menu')));
       await tester.pumpAndSettle();
-      expect(find.text('Remove star'), findsOneWidget);
+      expect(find.text('Remove Star'), findsOneWidget);
       await tester.tapAt(const Offset(5, 5));
       await tester.pumpAndSettle();
 
       repo.errors['setPreference'] = ApiError('You can pin at most ten conversations.', statusCode: 400);
-      await menu('Pin to top');
+      await menu('Pin to Top');
       expect(find.text('You can pin at most ten conversations.'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('thread-menu')));
       await tester.pumpAndSettle();
-      expect(find.text('Pin to top'), findsOneWidget, reason: 'still not pinned');
+      expect(find.text('Pin to Top'), findsOneWidget, reason: 'still not pinned');
     });
   });
 
@@ -824,20 +824,20 @@ void main() {
     ) async {
       final repository = inbox();
       await pump(tester, repository: repository, id: 'enq', asCompanyId: 'co-acme');
-      await menu(tester, 'Mark done');
+      await menu(tester, 'Mark Done');
       expect(repository.calls.last, 'updateCompanyThread enq company=co-acme status=done assignee=null unassign=false');
       await tester.tap(find.byKey(const ValueKey('thread-menu')));
       await tester.pumpAndSettle();
-      expect(find.text('Move back to open'), findsOneWidget);
+      expect(find.text('Move Back to Open'), findsOneWidget);
       await tester.tapAt(const Offset(5, 5));
       await tester.pumpAndSettle();
 
-      await menu(tester, 'Move back to open');
+      await menu(tester, 'Move Back to Open');
       expect(repository.calls.last, contains('status=open'));
-      await menu(tester, 'Mark as spam');
+      await menu(tester, 'Mark as Spam');
       expect(repository.calls.last, contains('status=spam'));
-      await menu(tester, 'Move back to open');
-      await menu(tester, 'Assign to me');
+      await menu(tester, 'Move Back to Open');
+      await menu(tester, 'Assign to Me');
       expect(repository.calls.last, 'updateCompanyThread enq company=co-acme status=null assignee=me unassign=false');
       await tester.tap(find.byKey(const ValueKey('thread-menu')));
       await tester.pumpAndSettle();
@@ -851,17 +851,17 @@ void main() {
       await pump(tester);
       await tester.tap(find.byKey(const ValueKey('thread-menu')));
       await tester.pumpAndSettle();
-      expect(find.text('Mark done'), findsNothing);
+      expect(find.text('Mark Done'), findsNothing);
     });
 
     testWidgets('a refusal puts the status back and shows why', (tester) async {
       final repository = inbox()..errors['updateCompanyThread'] = ApiError('Not your inbox.', statusCode: 403);
       await pump(tester, repository: repository, id: 'enq', asCompanyId: 'co-acme');
-      await menu(tester, 'Mark done');
+      await menu(tester, 'Mark Done');
       expect(find.text('Not your inbox.'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('thread-menu')));
       await tester.pumpAndSettle();
-      expect(find.text('Mark done'), findsOneWidget, reason: 'still open');
+      expect(find.text('Mark Done'), findsOneWidget, reason: 'still open');
     });
   });
 
@@ -942,7 +942,7 @@ void main() {
       await pump(tester);
       await tester.longPress(find.byKey(const ValueKey('thread-header')));
       await tester.pumpAndSettle();
-      expect(find.text('Star conversation'), findsOneWidget);
+      expect(find.text('Star Conversation'), findsOneWidget);
     });
 
     testWidgets("a file is a card under the sender's bubble, with its size and kind", (tester) async {
@@ -1112,8 +1112,28 @@ void main() {
   });
 
   group("the composer's pills and the draft", () {
-    testWidgets('a hint, the paperclip, RFQ, the emoji pill, and no microphone', (tester) async {
+    testWidgets('a plain chat between two people (a mentor reached from their card) has no RFQ pill and a plain hint', (
+      tester,
+    ) async {
       await pump(tester);
+      expect(find.byKey(const ValueKey('share-record')), findsNothing);
+      expect(find.text('RFQ'), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText == 'Write a message...'),
+        findsOneWidget,
+      );
+      for (final key in ['attach', 'emoji', 'send']) {
+        expect(find.byKey(ValueKey(key)), findsOneWidget, reason: key);
+      }
+    });
+
+    testWidgets('an enquiry thread: a hint, the paperclip, RFQ, the emoji pill, and no microphone', (tester) async {
+      await pump(
+        tester,
+        repository: sarahRepo(
+          context: const ConversationContext(kind: ConversationKind.enquiry, person: sarah),
+        ),
+      );
       expect(
         find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText == 'Write a message or attach RFP...'),
         findsOneWidget,
@@ -1211,7 +1231,7 @@ void main() {
         expect(find.text('680 KB • DOCX'), findsOneWidget);
         expect(find.text('1:1 Council Pre-Flight Sync'), findsOneWidget);
         expect(find.text('Tomorrow, 4:00 PM – 4:20 PM IST'), findsOneWidget);
-        expect(find.text('RFQ'), findsOneWidget);
+        expect(find.text('RFQ'), findsNothing, reason: 'a plain chat between two people has no RFQ pill (12 Nov 2026)');
         expect(find.text('Meet'), findsOneWidget);
         expect(find.byKey(const ValueKey('tick-seen')), findsOneWidget);
       });

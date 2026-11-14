@@ -246,6 +246,16 @@ class ApiLibraryRepository implements LibraryRepository {
   Future<void> delete(String id) => _api.send('DELETE', '/documents/${Uri.encodeComponent(id)}');
 
   @override
+  Future<LibraryDocument> update(String id, {String? title, String? description}) async {
+    final res = await _api.send(
+      'PATCH',
+      '/documents/${Uri.encodeComponent(id)}',
+      data: {if (title != null) 'title': title, if (description != null) 'description': description},
+    );
+    return _document((res as Map).cast<String, dynamic>());
+  }
+
+  @override
   Future<void> report(String id, DocumentReportReason reason, {String? note}) => _api.send(
     'POST',
     '/documents/${Uri.encodeComponent(id)}/report',

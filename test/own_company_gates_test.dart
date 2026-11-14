@@ -2,8 +2,9 @@
 /// he has the company he can't hire for the same company, and if he has the requirement post he can't bid for his own
 /// requirement"). Each gate is the website's, and the API's refusal behind it:
 ///
-///  * a job: someone who posts the company's jobs (any company they belong to) is not offered Easy Apply, the match
-///    or "Meet the hiring team" (`JobDetailPane`'s `postsHere`; `errors.applications.ownCompanyJob`);
+///  * a job: the company's hiring team (any company they belong to) is not offered Easy Apply, the match or "Meet
+///    the hiring team" — a poster (`JobDetailPane`'s `postsHere`; `errors.applications.ownCompanyJob`) and, since
+///    14 Nov 2026, a hiring manager (`hiringManagerForCompany`; `errors.applications.hiringManagerOwnJob`);
 ///  * a requirement: the company's own is not bid on (`managesRequirement`; `errors.rfq.youCannotBidOnYourOwn`);
 ///  * a supplier listing: the company it is acting for is not asked for a quote, its team is not offered Message or
 ///    Rate (`SupplierQuoteCard`'s owner note; `errors.messaging.ownListing`, `errors.vendors.youCannotRateYourOwnListing`).
@@ -34,14 +35,14 @@ import 'marketplace_fakes.dart';
 import 'marketplace_harness.dart';
 import 'rfq_fakes.dart';
 
-/// The job source, with the answer to "does this member post the company's jobs?" replaced.
-class _PostsRepo extends SpyJobsRepository {
-  _PostsRepo({required this.posts});
+/// The job source, with the answer to "where does this member sit on the company's hiring team?" replaced.
+class _SeatRepo extends SpyJobsRepository {
+  _SeatRepo({required this.seat});
 
-  final bool posts;
+  final HiringTeamSeat seat;
 
   @override
-  Future<bool> postsJobsFor(JobCompany company) async => posts;
+  Future<HiringTeamSeat> hiringTeamSeatAt(JobCompany company) async => seat;
 }
 
 /// The sample source, its one board requirement owned by [companyId] and posted by [buyerId].
@@ -69,11 +70,11 @@ class _OwnedRepo extends FlakyRfqRepository {
 
 const _hiringContact = JobContact(name: 'Priya Nair', role: 'Recruiter');
 
-Future<JobDetailController> _pumpJob(WidgetTester tester, {required bool posts}) async {
+Future<JobDetailController> _pumpJob(WidgetTester tester, {required HiringTeamSeat seat}) async {
   tester.view.physicalSize = const Size(390, 1400);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  final repo = _PostsRepo(posts: posts)
+  final repo = _SeatRepo(seat: seat)
     ..detailAnswer = Job(
       id: 'j1',
       title: 'Facilities Manager',
@@ -143,29 +144,45 @@ void main() {
   setUpAll(loadAppFonts);
   tearDown(RfqClock.reset);
 
-  group('a job of a company the member posts for', () {
-    testWidgets('has no Easy Apply and no hiring contact, only the website\'s sentence', (tester) async {
-      await _pumpJob(tester, posts: true);
+  group('a job of a company whose hiring team the member is on', () {
+    testWidgets('has no Easy Apply and no hiring contact for a poster, only the website\'s sentence', (tester) async {
+      await _pumpJob(tester, seat: HiringTeamSeat.poster);
       expect(find.text('Easy Apply'), findsNothing);
       expect(find.byKey(const ValueKey('posts-here')), findsOneWidget);
       expect(
         find.text('You post jobs for Acme Facilities, so you manage this one rather than apply to it.'),
         findsOneWidget,
       );
-      expect(find.text('Meet the hiring team'), findsNothing, reason: 'the API refuses the message too');
+      expect(find.text('Meet the Hiring Team'), findsNothing, reason: 'the API refuses the message too');
+      expect(find.text('Message'), findsNothing);
+    });
+
+    testWidgets('has no Easy Apply and no hiring contact for a hiring manager either', (tester) async {
+      final controller = await _pumpJob(tester, seat: HiringTeamSeat.hiringManager);
+      expect(controller.onHiringTeam, isTrue);
+      expect(controller.postsHere, isFalse, reason: 'a hiring manager does not manage the job');
+      expect(find.text('Easy Apply'), findsNothing);
+      expect(find.byKey(const ValueKey('posts-here')), findsNothing);
+      expect(find.byKey(const ValueKey('hiring-manager-here')), findsOneWidget);
+      expect(
+        find.text("You're a hiring manager at Acme Facilities, so you can't apply to its jobs."),
+        findsOneWidget,
+      );
+      expect(find.text('Meet the Hiring Team'), findsNothing, reason: 'the API refuses the message too');
       expect(find.text('Message'), findsNothing);
     });
 
     testWidgets('is a job to apply to for everyone else, with its hiring contact', (tester) async {
-      await _pumpJob(tester, posts: false);
+      await _pumpJob(tester, seat: HiringTeamSeat.none);
       expect(find.text('Easy Apply'), findsOneWidget);
       expect(find.byKey(const ValueKey('posts-here')), findsNothing);
+      expect(find.byKey(const ValueKey('hiring-manager-here')), findsNothing);
       await tester.scrollUntilVisible(
-        find.text('Meet the hiring team'),
+        find.text('Meet the Hiring Team'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text('Meet the hiring team'), findsOneWidget);
+      expect(find.text('Meet the Hiring Team'), findsOneWidget);
       expect(find.text('Message'), findsOneWidget);
     });
   });
@@ -279,7 +296,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('quote-own-listing')), findsOneWidget);
       expect(find.text(ownListingNote), findsOneWidget);
-      expect(find.text('Submit quote request'), findsNothing);
+      expect(find.text('Submit Quote Request'), findsNothing);
     });
 
     test('the quote controller knows the listing is the member\'s own', () async {

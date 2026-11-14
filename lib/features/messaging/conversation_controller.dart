@@ -217,7 +217,7 @@ class ConversationController extends ChangeNotifier {
     } catch (e) {
       final error = ApiError.from(e);
       _cannotOpen = error.statusCode == 403 || error.statusCode == 404;
-      _error = _cannotOpen ? "You can't open this conversation" : 'Unable to load this conversation.';
+      _error = _cannotOpen ? 'Unable to Open This Conversation' : 'Unable to Load This Conversation';
     } finally {
       _loading = false;
       _notify();
@@ -410,7 +410,7 @@ class ConversationController extends ChangeNotifier {
   Future<String?> attach(PickedAttachment file) async {
     if (file.size > attachmentMaxBytes) return 'That file is over 10 MB.';
     if (attachmentMimeFor(file.name, file.mimeType) == null) {
-      return "That kind of file can't be sent. Send a photo, a PDF or an Office document.";
+      return 'This file type cannot be sent. Send a photo, a PDF or an Office document.';
     }
     _uploadingName = file.name;
     _notify();
@@ -419,7 +419,7 @@ class ConversationController extends ChangeNotifier {
       return null;
     } catch (e) {
       final error = ApiError.from(e);
-      return error.statusCode == null ? error.message : "The file couldn't be uploaded. ${error.message}";
+      return error.statusCode == null ? error.message : 'Unable to upload the file. ${error.message}';
     } finally {
       _uploadingName = null;
       _notify();

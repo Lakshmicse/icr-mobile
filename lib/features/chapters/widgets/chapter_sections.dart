@@ -80,7 +80,7 @@ class SectionFailed extends StatelessWidget {
             onTap: onRetry,
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: Text('Try again', style: CommunityText.link),
+              child: Text('Try Again', style: CommunityText.link),
             ),
           ),
         ],
@@ -110,7 +110,7 @@ class AboutSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (blocks.isEmpty) return const SectionEmpty('This chapter has not written its About text yet.');
+    if (blocks.isEmpty) return const SectionEmpty('This chapter has not added a description yet.');
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -401,7 +401,7 @@ class _MembersSectionState extends State<MembersSection> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
               child: CommunityButton(
-                label: 'Show more members',
+                label: 'View More',
                 outlined: true,
                 expand: true,
                 height: 36,

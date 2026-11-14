@@ -32,7 +32,7 @@ class DemoMentorProfileRepository implements MentorProfileRepository {
     cover: const FeedPicture.asset('$_assets/profile_cover.jpg'),
     yearsExperience: 15,
     city: 'Hyderabad',
-    modes: const ['Video', 'In person'],
+    modes: const ['Video', 'In Person'],
     modeKeys: const ['VIDEO', 'IN_PERSON'],
     languages: const ['English', 'Telugu', 'Hindi', 'Kannada'],
     competencies: const [

@@ -275,7 +275,7 @@ void main() {
           'phone': '+919876543210',
           'topic': 'VOLUNTEER',
           'message':
-              'Volunteer application: Speaker or Panelist\nCommitment: Per event — 3–5 hours including preparation\nChapter: ICR Mumbai Chapter\n\nI can give a day a month.',
+              'Volunteer application: Speaker or Panelist\nCommitment: Per event, 3–5 hours including preparation\nChapter: ICR Mumbai Chapter\n\nI can give a day a month.',
         });
         expect(body.containsKey('website'), isFalse);
         await repo.apply(const VolunteerApplication(name: 'N', email: 'n@x.com', message: 'Hi'));
@@ -444,10 +444,10 @@ void main() {
       await _pump(tester);
       expect(find.text('Get Involved'), findsOneWidget);
       expect(find.text('GET INVOLVED & VOLUNTEER'), findsOneWidget);
-      expect(find.text('Volunteer, lead, shape the profession'), findsOneWidget);
+      expect(find.text('Volunteer, Lead, Shape the Profession'), findsOneWidget);
       // The ledger the API holds: 12 hours, 8.5 this year of a 15-hour target, by source, the latest entries.
       expect(find.text('Your CPD'), findsOneWidget);
-      expect(find.text('Hours earned'), findsOneWidget);
+      expect(find.text('Hours Earned'), findsOneWidget);
       expect(find.text('12'), findsOneWidget);
       expect(find.text('In 2026'), findsOneWidget);
       expect(find.text('8.5'), findsOneWidget);
@@ -462,8 +462,8 @@ void main() {
       expect(find.text('Chapter Committee Member'), findsOneWidget);
       expect(find.text('Community Ambassador'), findsOneWidget);
       expect(find.text('Volunteer Benefits'), findsOneWidget);
-      expect(find.text('Leadership experience'), findsOneWidget);
-      expect(find.text('Volunteering earns CPD credits'), findsOneWidget);
+      expect(find.text('Leadership Experience'), findsOneWidget);
+      expect(find.text('Volunteering Earns CPD Credits'), findsOneWidget);
       expect(find.text('Mentoring: 12 credits'), findsOneWidget);
     });
 
@@ -488,12 +488,12 @@ void main() {
       tester,
     ) async {
       final page = await _pump(tester);
-      await tester.tap(find.text('Become a mentor'));
-      await tester.tap(find.text('Find your chapter'));
+      await tester.tap(find.text('Become a Mentor'));
+      await tester.tap(find.text('Find Your Chapter'));
       expect((page.mentors, page.chapters), (1, 1));
       await _pump(tester, mentor: false, chapters: false);
-      expect(find.text('Become a mentor'), findsNothing);
-      expect(find.text('Find your chapter'), findsNothing);
+      expect(find.text('Become a Mentor'), findsNothing);
+      expect(find.text('Find Your Chapter'), findsNothing);
     });
 
     testWidgets('signed out, the CPD card says to sign in; a failed read says why and Try again reads it', (
@@ -501,15 +501,15 @@ void main() {
     ) async {
       await _pump(tester, repo: FakeVolunteer()..signedOut = true);
       expect(find.text('Sign in to see the CPD hours you have earned.'), findsOneWidget);
-      expect(find.text('Hours earned'), findsNothing);
+      expect(find.text('Hours Earned'), findsNothing);
 
       final repo = FakeVolunteer()..failures['cpd'] = ApiError('The ledger is down.', statusCode: 500);
       await _pump(tester, repo: repo);
       expect(find.text('The ledger is down.'), findsOneWidget);
       repo.failures.clear();
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
-      expect(find.text('Hours earned'), findsOneWidget);
+      expect(find.text('Hours Earned'), findsOneWidget);
     });
 
     testWidgets('a suggested target (the API’s default) is called that', (tester) async {
@@ -532,8 +532,8 @@ void main() {
       expect(expected, greaterThan(1));
       await tester.enterText(find.byType(TextField), 'zzzz');
       await tester.pumpAndSettle();
-      expect(find.text('No role matches'), findsOneWidget);
-      await tester.tap(find.text('Clear search'));
+      expect(find.text('No Roles Match'), findsOneWidget);
+      await tester.tap(find.text('Clear Search'));
       await tester.pumpAndSettle();
       expect(find.text('Chapter Committee Member'), findsOneWidget);
       expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, isEmpty);
@@ -565,46 +565,50 @@ void main() {
         expect(tester.widget<TextField>(_field('volunteer-email')).controller!.text, 'nikhil@techcorp.example');
         await tester.enterText(_field('volunteer-message'), 'I lead facilities at a GCC campus.');
         await tester.pump();
-        await tester.tap(find.text('Send to the ICR team'));
+        await tester.tap(find.text('Send to the ICR Team'));
         await tester.pumpAndSettle();
         expect(find.text('Thank you, Nikhil'), findsOneWidget);
-        expect(find.textContaining('Your interest in Chapter Committee Member reached the ICR team.'), findsOneWidget);
-        expect(find.textContaining('They will write to nikhil@techcorp.example.'), findsOneWidget);
+        expect(
+          find.textContaining('Your interest in Chapter Committee Member has been sent to the ICR team.'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('They will reply to nikhil@techcorp.example.'), findsOneWidget);
         expect(page.repo.sent.single.role!.key, 'chapter-committee-member');
         expect(page.repo.sent.single.message, 'I lead facilities at a GCC campus.');
 
         await tester.tap(find.text('Done'));
         await tester.pumpAndSettle();
         expect(find.byType(VolunteerApplyScreen), findsNothing);
-        expect(find.text('Your interest is with the ICR team.'), findsOneWidget);
+        expect(find.text('Your interest has been sent to the ICR team.'), findsOneWidget);
         expect(find.text('INTEREST SENT'), findsOneWidget);
-        expect(find.text('Apply again'), findsOneWidget);
+        expect(find.text('Apply Again'), findsOneWidget);
       },
     );
 
-    testWidgets('the hero button and "Raise your hand" open the form with no role; the general one is remembered too', (
-      tester,
-    ) async {
-      final page = await _pump(tester);
-      await tester.tap(find.text('Volunteer with ICR').first);
-      await tester.pumpAndSettle();
-      expect(find.text('Not sure yet: any role'), findsOneWidget);
-      await tester.tap(find.byIcon(Symbols.arrow_back));
-      await tester.pumpAndSettle();
-      expect(find.byType(VolunteerApplyScreen), findsNothing);
-      await tester.ensureVisible(find.text('Raise your hand'));
-      await tester.tap(find.text('Raise your hand'));
-      await tester.pumpAndSettle();
-      await tester.enterText(_field('volunteer-message'), 'Wherever I am useful.');
-      await tester.pump();
-      await tester.tap(find.text('Send to the ICR team'));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('Your interest in volunteering reached the ICR team.'), findsOneWidget);
-      expect(page.repo.sent.single.role, isNull);
-      await tester.tap(find.text('Done'));
-      await tester.pumpAndSettle();
-      expect(page.controller.isSent(null), isTrue);
-    });
+    testWidgets(
+      'the hero button and "Apply to Volunteer" open the form with no role; the general one is remembered too',
+      (tester) async {
+        final page = await _pump(tester);
+        await tester.tap(find.text('Volunteer with ICR').first);
+        await tester.pumpAndSettle();
+        expect(find.text('Any Role'), findsOneWidget);
+        await tester.tap(find.byIcon(Symbols.arrow_back));
+        await tester.pumpAndSettle();
+        expect(find.byType(VolunteerApplyScreen), findsNothing);
+        await tester.ensureVisible(find.text('Apply to Volunteer'));
+        await tester.tap(find.text('Apply to Volunteer'));
+        await tester.pumpAndSettle();
+        await tester.enterText(_field('volunteer-message'), 'Wherever I am useful.');
+        await tester.pump();
+        await tester.tap(find.text('Send to the ICR Team'));
+        await tester.pumpAndSettle();
+        expect(find.textContaining('Your interest in volunteering has been sent to the ICR team.'), findsOneWidget);
+        expect(page.repo.sent.single.role, isNull);
+        await tester.tap(find.text('Done'));
+        await tester.pumpAndSettle();
+        expect(page.controller.isSent(null), isTrue);
+      },
+    );
 
     testWidgets('a chapter’s page opens the form on a committee seat at that chapter', (tester) async {
       final page = await _pump(tester, intent: const VolunteerIntent.chapter('ICR Bengaluru Chapter'));
@@ -643,18 +647,18 @@ void main() {
       tester,
     ) async {
       await openForm(tester);
-      await tester.tap(find.text('Not sure yet: any role'));
+      await tester.tap(find.text('Any Role'));
       await tester.pumpAndSettle();
-      expect(find.text('Which role?'), findsOneWidget);
+      expect(find.text('Select a Role'), findsOneWidget);
       expect(find.text('Chapter Leader'), findsOneWidget);
       await tester.tap(find.text('Chapter Leader'));
       await tester.pumpAndSettle();
       expect(find.text('Chapter Leader'), findsOneWidget);
       expect(find.text('8–10 hours per month'), findsOneWidget);
 
-      await tester.tap(find.text('No chapter in particular'));
+      await tester.tap(find.text('No Specific Chapter'));
       await tester.pumpAndSettle();
-      expect(find.text('Which chapter?'), findsOneWidget);
+      expect(find.text('Select a Chapter'), findsOneWidget);
       for (final c in [
         'ICR Bengaluru Chapter',
         'ICR Delhi NCR Chapter',
@@ -666,14 +670,14 @@ void main() {
       await tester.tap(find.text('ICR Mumbai Chapter'));
       await tester.pumpAndSettle();
       expect(find.text('ICR Mumbai Chapter'), findsOneWidget);
-      expect(find.text('No chapter in particular'), findsNothing);
+      expect(find.text('No Specific Chapter'), findsNothing);
 
       // Back to none.
       await tester.tap(find.text('ICR Mumbai Chapter'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('No chapter in particular'));
+      await tester.tap(find.text('No Specific Chapter'));
       await tester.pumpAndSettle();
-      expect(find.text('No chapter in particular'), findsOneWidget);
+      expect(find.text('No Specific Chapter'), findsOneWidget);
     });
 
     testWidgets('a send with nothing written, a bad email or no name says what is wrong and sends nothing', (
@@ -681,17 +685,17 @@ void main() {
     ) async {
       final repo = FakeVolunteer()..signedOut = true;
       await openForm(tester, repo: repo);
-      await tester.tap(find.text('Send to the ICR team'));
+      await tester.tap(find.text('Send to the ICR Team'));
       await tester.pumpAndSettle();
       expect(find.text('Enter your name.'), findsOneWidget);
       expect(find.text('Enter your email address.'), findsOneWidget);
-      expect(find.text('Tell us a little about you and the time you can give.'), findsOneWidget);
+      expect(find.text('Describe your experience and the time you can give.'), findsOneWidget);
       expect(repo.count('apply'), 0);
 
       await tester.enterText(_field('volunteer-name'), 'Asha');
       await tester.enterText(_field('volunteer-email'), 'asha@@x');
       await tester.pump();
-      await tester.tap(find.text('Send to the ICR team'));
+      await tester.tap(find.text('Send to the ICR Team'));
       await tester.pumpAndSettle();
       expect(find.text('Enter a valid email address.'), findsOneWidget);
       expect(repo.count('apply'), 0);
@@ -704,14 +708,14 @@ void main() {
       await tester.enterText(_field('volunteer-message'), 'I can help with ESG content.');
       await tester.enterText(_field('volunteer-phone'), '+91 98765 43210');
       await tester.pump();
-      await tester.tap(find.text('Send to the ICR team'));
+      await tester.tap(find.text('Send to the ICR Team'));
       await tester.pumpAndSettle();
       expect(find.text('Too many requests. Wait a minute and try again.'), findsOneWidget);
       expect(find.text('I can help with ESG content.'), findsOneWidget);
       expect(find.text('+91 98765 43210'), findsOneWidget);
       expect(find.byType(VolunteerApplyScreen), findsOneWidget);
       repo.failures.clear();
-      await tester.tap(find.text('Send to the ICR team'));
+      await tester.tap(find.text('Send to the ICR Team'));
       await tester.pumpAndSettle();
       expect(find.text('Thank you, Nikhil'), findsOneWidget);
       expect(repo.sent.single.phone, '+91 98765 43210');
@@ -720,7 +724,7 @@ void main() {
     testWidgets('the message box allows what is left of 4,000 after the role and chapter lines', (tester) async {
       await openForm(tester);
       final before = tester.widget<TextField>(_field('volunteer-message')).maxLength!;
-      await tester.tap(find.text('Not sure yet: any role'));
+      await tester.tap(find.text('Any Role'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Chapter Leader'));
       await tester.pumpAndSettle();

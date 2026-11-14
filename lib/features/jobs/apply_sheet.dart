@@ -120,11 +120,11 @@ class _ApplyFormState extends State<ApplyForm> {
     }
     final job = widget.controller.job;
     if (job.diversityOnly && job.diversityCategories.isNotEmpty && _declared.isEmpty) {
-      setState(() => _problem = 'Choose the group that applies to you, or this role cannot take your application.');
+      setState(() => _problem = 'Select the group that applies to you, or this role cannot accept your application.');
       return;
     }
     if (genderRequiredBy(job.genderPreference) != null && _gender == null) {
-      setState(() => _problem = 'Choose your gender: this role is open to one gender only.');
+      setState(() => _problem = 'Select your gender. This role is open to one gender only.');
       return;
     }
     final linkedin = linkedinProblem(_linkedin.text);
@@ -158,7 +158,11 @@ class _ApplyFormState extends State<ApplyForm> {
       // what was missing, the field for it are new.
       setState(() {
         _sending = false;
-        _problem = result.message;
+        // The API judges a gender-only role on the gender on file, which locks once set; a refusal after the member
+        // chose one here means that stored gender differs (7 Nov 2026: a woman refused a women-only role).
+        _problem = _gender != null && result.message == genderOnlySentence(job.genderPreference)
+            ? 'Your ICR profile already holds a different gender, and it locks once set. Ask ICR support to correct it, then apply again.'
+            : result.message;
         if (result.needsPhone) _askPhone = true;
       });
       return;
@@ -187,7 +191,7 @@ class _ApplyFormState extends State<ApplyForm> {
               ],
               const SizedBox(height: 16),
               if (_askPhone) ...[
-                Text('Mobile number', style: JobsText.formLabel),
+                Text('Mobile Number', style: JobsText.formLabel),
                 const SizedBox(height: 4),
                 TextField(
                   key: const ValueKey('apply-phone'),
@@ -207,7 +211,7 @@ class _ApplyFormState extends State<ApplyForm> {
                 const SizedBox(height: 14),
               ],
               if (widget.resumes.isNotEmpty) ...[
-                Text('Résumé to send', style: JobsText.formLabel),
+                Text('Résumé to Send', style: JobsText.formLabel),
                 const SizedBox(height: 2),
                 for (final r in widget.resumes)
                   ResumeOption(
@@ -227,7 +231,7 @@ class _ApplyFormState extends State<ApplyForm> {
                 const SizedBox(height: 14),
               ],
               if (_questions.isNotEmpty) ...[
-                Text('The employer asks', style: JobsText.formLabel),
+                Text('Employer Questions', style: JobsText.formLabel),
                 const SizedBox(height: 8),
                 for (final (i, q) in _questions.indexed) ...[
                   ScreeningAnswerField(
@@ -297,7 +301,7 @@ class _ApplyFormState extends State<ApplyForm> {
                 ),
                 const SizedBox(height: 14),
               ],
-              Text('Your LinkedIn profile (optional)', style: JobsText.formLabel),
+              Text('LinkedIn Profile (Optional)', style: JobsText.formLabel),
               const SizedBox(height: 4),
               TextField(
                 key: const ValueKey('apply-linkedin'),
@@ -312,7 +316,7 @@ class _ApplyFormState extends State<ApplyForm> {
                 ),
               ),
               const SizedBox(height: 14),
-              Text('Expected salary (optional)', style: JobsText.formLabel),
+              Text('Expected Salary (Optional)', style: JobsText.formLabel),
               const SizedBox(height: 4),
               TextField(
                 key: const ValueKey('apply-salary'),
@@ -328,7 +332,7 @@ class _ApplyFormState extends State<ApplyForm> {
                 ),
               ),
               const SizedBox(height: 14),
-              Text('A note to the hiring team (optional)', style: JobsText.formLabel),
+              Text('Note to the Hiring Team (Optional)', style: JobsText.formLabel),
               const SizedBox(height: 4),
               TextField(
                 key: const ValueKey('apply-note'),
@@ -349,7 +353,7 @@ class _ApplyFormState extends State<ApplyForm> {
               ],
               const SizedBox(height: 16),
               PrimaryButton(
-                label: _sending ? 'Sending…' : 'Submit application',
+                label: _sending ? 'Sending…' : 'Submit Application',
                 icon: LucideIcons.zap,
                 onPressed: _sending ? null : _submit,
               ),
@@ -384,14 +388,14 @@ class QuotaNotice extends StatelessWidget {
           Expanded(
             child: Text(
               out
-                  ? "You've used all ${quota.limit} applications on your plan this month."
+                  ? 'You have used all ${quota.limit} applications on your plan this month.'
                   : '${quota.left} of ${quota.limit} applications left this month.',
               style: JobsText.formHelp.copyWith(color: AppColors.onSurface),
             ),
           ),
           TextButton(
             onPressed: onPlans,
-            child: Text('See plans', style: AppText.link.copyWith(fontSize: 13)),
+            child: Text('View Plans', style: AppText.link.copyWith(fontSize: 13)),
           ),
         ],
       ),
@@ -540,7 +544,7 @@ class ScreeningAnswerField extends StatelessWidget {
         return DropdownButtonFormField<String>(
           initialValue: value.isEmpty ? null : value,
           isDense: true,
-          decoration: const InputDecoration(isDense: true, border: OutlineInputBorder(), hintText: 'Choose'),
+          decoration: const InputDecoration(isDense: true, border: OutlineInputBorder(), hintText: 'Select'),
           items: [
             for (var n = 0; n <= screeningYearsMax; n++)
               DropdownMenuItem(
@@ -558,7 +562,7 @@ class ScreeningAnswerField extends StatelessWidget {
       case ScreeningType.date:
         return OutlinedButton.icon(
           icon: const Icon(LucideIcons.calendar, size: 16),
-          label: Text(value.isEmpty ? 'Pick a date' : value, style: JobsText.formInput.copyWith(fontSize: 14)),
+          label: Text(value.isEmpty ? 'Select a Date' : value, style: JobsText.formInput.copyWith(fontSize: 14)),
           onPressed: () async {
             final now = DateTime.now();
             final picked = await showDatePicker(

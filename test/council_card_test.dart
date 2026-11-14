@@ -5,7 +5,6 @@ import 'package:icr_mobile/features/councils/council_models.dart';
 import 'package:icr_mobile/features/councils/widgets/council_card.dart';
 import 'package:icr_mobile/features/councils/widgets/joined_council_card.dart';
 import 'package:icr_mobile/features/councils/widgets/roundtable_row.dart';
-import 'package:icr_mobile/features/councils/widgets/stat_tiles.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'helpers/fonts.dart';
@@ -149,7 +148,7 @@ void main() {
     testWidgets('an executive seat has Room Link, a member Meeting link, and each is its own tap', (tester) async {
       var taps = await pumpJoined(tester, _council(role: CouncilRole.lead, unread: 3));
       expect(find.text('Executive Seat'), findsOneWidget);
-      expect(find.text('Meeting link'), findsNothing);
+      expect(find.text('Meeting Link'), findsNothing);
       expect(find.text('642 peers'), findsOneWidget);
       await tester.tap(find.text('Room Link'));
       await tester.tap(find.text('3 unread'));
@@ -160,7 +159,7 @@ void main() {
       expect(find.text('Member'), findsOneWidget);
       expect(find.text('Room Link'), findsNothing);
       expect(find.text('Next Sync: Apr 18'), findsOneWidget);
-      await tester.tap(find.text('Meeting link'));
+      await tester.tap(find.text('Meeting Link'));
       expect(taps, ['room']);
     });
 
@@ -299,49 +298,6 @@ void main() {
       await tester.tap(find.byIcon(LucideIcons.calendarPlus));
       await tester.tap(find.text('ESG Mandates: BRSR Core & Scope 3'));
       expect(taps, ['calendar', 'row']);
-    });
-  });
-
-  group('the stat tiles', () {
-    Future<void> pumpTiles(WidgetTester tester, CouncilStats stats) => tester.pumpWidget(
-      MaterialApp(
-        theme: buildAppTheme(),
-        home: Scaffold(body: StatTiles(stats: stats)),
-      ),
-    );
-
-    testWidgets('print the four figures, the quarter pill and the green dot as the design does', (tester) async {
-      await pumpTiles(
-        tester,
-        const CouncilStats(
-          activeCouncils: 44,
-          newThisQuarter: 3,
-          quarter: 'Q4',
-          peerMembers: 1016,
-          peerMembersLabel: '1,010+',
-          domains: 166,
-          activeRoundtables: 4,
-        ),
-      );
-      expect(find.text('Active Councils'), findsOneWidget);
-      expect(find.text('44'), findsOneWidget);
-      expect(find.text('+3 Q4'), findsOneWidget);
-      expect(find.text('1,010+'), findsOneWidget);
-      expect(find.text('Domains Covered'), findsOneWidget);
-      expect(find.text('166'), findsOneWidget);
-      expect(find.text('Active Roundtables'), findsOneWidget);
-      expect(find.text('4'), findsOneWidget);
-    });
-
-    testWidgets('without a rounded label the exact count is grouped, and no new councils leaves no pill', (
-      tester,
-    ) async {
-      await pumpTiles(
-        tester,
-        const CouncilStats(activeCouncils: 2, peerMembers: 1222, domains: 3, activeRoundtables: 0),
-      );
-      expect(find.text('1,222'), findsOneWidget);
-      expect(find.textContaining('+'), findsNothing);
     });
   });
 }

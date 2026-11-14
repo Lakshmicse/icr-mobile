@@ -146,7 +146,7 @@ class _OfferingSheetBodyState extends State<OfferingSheetBody> {
                   ],
                   if (shown.details.isNotEmpty) ...[
                     const SizedBox(height: 12.8),
-                    Text('Program Details', style: MentorText.sheetSection),
+                    Text('Programme Details', style: MentorText.sheetSection),
                     const SizedBox(height: 7.2),
                     _DetailGrid(details: shown.details),
                   ],
@@ -484,7 +484,7 @@ _BarPricing _pricingFor(MentorOffering o, MentorOffering? plan) {
     );
   }
   final note = switch (o.kind) {
-    OfferingKind.resource => 'Instant download',
+    OfferingKind.resource => 'Instant Download',
     OfferingKind.query => 'Answer within ${o.slaHours ?? 72}h',
     OfferingKind.plan => '+ applicable taxes',
     OfferingKind.program => 'Pay after the mentor accepts',

@@ -167,7 +167,7 @@ class _CompaniesDirectoryScreenState extends State<CompaniesDirectoryScreen> {
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
                   isDense: true,
-                  hintText: 'Search companies',
+                  hintText: 'Search Companies',
                   prefixIcon: const Icon(Icons.search, size: 20),
                   filled: true,
                   fillColor: AppColors.surfaceContainer,
@@ -196,7 +196,7 @@ class _CompaniesDirectoryScreenState extends State<CompaniesDirectoryScreen> {
   Widget _body() {
     if (_items.isEmpty && _loading) return const Center(child: CircularProgressIndicator());
     if (_items.isEmpty && _error != null) return _Message(text: _error!, onRetry: _more);
-    if (_items.isEmpty) return const _Message(text: 'No companies match that search.');
+    if (_items.isEmpty) return const _Message(text: 'No companies match your search.');
     return ListView.separated(
       controller: _scroll,
       itemCount: _items.length + (_done ? 0 : 1),
@@ -281,7 +281,7 @@ class _Message extends StatelessWidget {
             textAlign: TextAlign.center,
             style: AppText.plexSans(14, FontWeight.w400, AppColors.onSurfaceVariant),
           ),
-          if (onRetry != null) TextButton(onPressed: onRetry, child: const Text('Try again')),
+          if (onRetry != null) TextButton(onPressed: onRetry, child: const Text('Try Again')),
         ],
       ),
     ),

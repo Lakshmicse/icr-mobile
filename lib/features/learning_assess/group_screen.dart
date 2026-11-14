@@ -176,9 +176,9 @@ class _GroupViewState extends State<_GroupView> with WidgetsBindingObserver {
     final noun = entry.paper.kind == PaperKind.mock ? 'set' : 'level';
     final ok = await showConfirmSheet(
       context,
-      title: '${creditsLabel(credits)} for “${g.group.title}” – ${entry.paper.title}?',
-      body: 'This $noun opens for good. You will have ${creditsLabel((held - credits).clamp(0, held))} left.',
-      confirmLabel: 'Redeem ${creditsShort(credits)}',
+      title: '${creditsLabelTitle(credits)} for “${g.group.title}” – ${entry.paper.title}?',
+      body: 'This $noun opens permanently. You will have ${creditsLabel((held - credits).clamp(0, held))} left.',
+      confirmLabel: 'Redeem ${creditsShortTitle(credits)}',
       color: AssessColors.rung(entry.paper.level).main,
     );
     if (!ok || !mounted) return;
@@ -198,11 +198,12 @@ class _GroupViewState extends State<_GroupView> with WidgetsBindingObserver {
     final count = quote.count;
     final ok = await showConfirmSheet(
       context,
-      title: '${creditsLabel(credits)} for “${quote.programmeTitle.isEmpty ? g.group.title : quote.programmeTitle}”?',
+      title:
+          '${creditsLabelTitle(credits)} for “${quote.programmeTitle.isEmpty ? g.group.title : quote.programmeTitle}”?',
       body:
-          '${count == 1 ? 'This $noun opens' : 'All $count ${noun}s open'} for good. '
+          '${count == 1 ? 'This $noun opens' : 'All $count ${noun}s open'} permanently. '
           'You will have ${creditsLabel((held - credits).clamp(0, held))} left.',
-      confirmLabel: 'Redeem ${creditsShort(credits)}',
+      confirmLabel: 'Redeem ${creditsShortTitle(credits)}',
     );
     if (!ok || !mounted) return;
     final outcome = await g.redeemBundle();
@@ -226,11 +227,11 @@ class _GroupViewState extends State<_GroupView> with WidgetsBindingObserver {
     final after = ((places?.left ?? 1) - 1).clamp(0, 9999);
     final ok = await showConfirmSheet(
       context,
-      title: 'Open “${g.group.title}” with your plan?',
+      title: 'Open “${g.group.title}” with Your Plan?',
       body:
           'It takes one of the ${plural(limit, noun, '${noun}s')} your plan includes, and every $what opens. '
           '${after == 0 ? 'None will be left.' : '$after will be left.'}',
-      confirmLabel: 'Open it',
+      confirmLabel: 'Open',
     );
     if (!ok || !mounted) return;
     final message = await g.openWithPlan();
@@ -280,7 +281,7 @@ class _GroupViewState extends State<_GroupView> with WidgetsBindingObserver {
                 left: 0,
                 right: 0,
                 child: AssessBar(
-                  title: isMock ? 'Mock Exam' : 'Assess Your Knowledge',
+                  title: isMock ? 'Mock Exam' : 'Knowledge Assessments',
                   onBack: widget.onBack,
                   onShare: isMock && !g.notFound ? _shareGroup : null,
                   shareLabel: 'Share ${group.title}',
@@ -307,9 +308,9 @@ class _GroupViewState extends State<_GroupView> with WidgetsBindingObserver {
   Widget _notFound(GroupController g) {
     final isMock = g.kind == PaperKind.mock;
     return AssessNotice(
-      title: isMock ? 'Subject not found' : 'Programme not found',
+      title: isMock ? 'Subject Not Found' : 'Programme Not Found',
       body: 'Nothing is published at “${g.group.key}”.',
-      action: isMock ? 'All subjects' : 'All programmes',
+      action: isMock ? 'All Subjects' : 'All Programmes',
       onAction: widget.onBack,
     );
   }
@@ -577,7 +578,7 @@ class _CreditsLine extends StatelessWidget {
           ),
           TextButton(
             onPressed: onEarnMore,
-            child: Text('Earn more', style: AssessText.noteLink),
+            child: Text('Earn More', style: AssessText.noteLink),
           ),
         ],
       ),
@@ -641,7 +642,7 @@ class _RefreshFailed extends StatelessWidget {
           ),
           TextButton(
             onPressed: onRetry,
-            child: Text('Try again', style: AssessText.noteLink),
+            child: Text('Try Again', style: AssessText.noteLink),
           ),
         ],
       ),

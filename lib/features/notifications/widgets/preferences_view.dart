@@ -22,12 +22,12 @@ class PreferencesView extends StatelessWidget {
     final children = <Widget>[
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-        child: Text('Notification preferences', style: ChatText.sheetTitle),
+        child: Text('Notification Preferences', style: ChatText.sheetTitle),
       ),
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: Text(
-          'Choose what reaches you in the app and by email. Payments, account security and support replies are always sent.',
+          'Select the notifications you receive in the app and by email. Payments, account security and support replies are always sent.',
           style: ChatText.hint.copyWith(fontSize: 12, height: 17 / 12),
         ),
       ),
@@ -58,8 +58,8 @@ class PreferencesView extends StatelessWidget {
         c.preferencesError != null
             ? ChatNotice(
                 icon: LucideIcons.bellOff,
-                title: c.preferencesError!,
-                action: 'Retry',
+                title: 'Unable to Load Notification Preferences',
+                action: 'Try Again',
                 onAction: c.loadPreferences,
               )
             : const Padding(padding: EdgeInsets.all(40), child: ChatSpinner()),
@@ -73,7 +73,7 @@ class PreferencesView extends StatelessWidget {
               Expanded(child: Text('Category', style: ChatText.noteMeta)),
               SizedBox(
                 width: 58,
-                child: Center(child: Text('In-app', style: ChatText.noteMeta)),
+                child: Center(child: Text('In App', style: ChatText.noteMeta)),
               ),
               SizedBox(
                 width: 58,

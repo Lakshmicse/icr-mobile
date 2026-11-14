@@ -341,7 +341,9 @@ class _HoldingCourses extends _DesignCourses {
   Future<List<Course>> courses() async => [
     for (final c in await super.courses())
       c.id == 'par-2'
-          ? c.copyWith(enrolment: MyEnrolment(id: 'e', courseId: c.id, status: EnrolmentStatus.confirmed))
+          ? c.copyWith(
+              enrolment: MyEnrolment(id: 'e', courseId: c.id, status: EnrolmentStatus.confirmed),
+            )
           : c,
   ];
 }

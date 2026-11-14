@@ -87,12 +87,12 @@ class _BrochureFormState extends State<BrochureForm> {
 
   /// Why the form cannot be sent yet, in one sentence; null when it can.
   static String? problemOf(BrochureLead lead, String rawPhone) {
-    if (lead.name.length < 2) return 'Your name, please.';
+    if (lead.name.length < 2) return 'Enter your name.';
     final at = lead.email.indexOf('@');
     if (at < 1 || !lead.email.substring(at).contains('.') || lead.email.endsWith('.')) {
-      return 'Enter the email address the brochure goes to.';
+      return 'Enter the email address to send the brochure to.';
     }
-    if (rawPhone.trim().isEmpty) return 'Your phone number, so the institute can call you back.';
+    if (rawPhone.trim().isEmpty) return 'Enter your mobile number so the institute can call you.';
     return phoneError(rawPhone);
   }
 
@@ -151,17 +151,17 @@ class _BrochureFormState extends State<BrochureForm> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Get the brochure', style: LearningText.formTitle),
+              Text('Get the Brochure', style: LearningText.formTitle),
               const SizedBox(height: 4),
               Text(
-                '${course.title}. Tell us who you are and the brochure is yours to read here or keep on your phone.',
+                '${course.title}. Enter your details to view the brochure here or save it to your phone.',
                 style: LearningText.formHelp,
               ),
               const SizedBox(height: 16),
-              _field('Your name', _name, 'brochure-name', type: TextInputType.name),
+              _field('Name', _name, 'brochure-name', type: TextInputType.name),
               _field('Email', _email, 'brochure-email', type: TextInputType.emailAddress),
-              _field('Phone', _phone, 'brochure-phone', hint: '+91 98765 43210', type: TextInputType.phone),
-              _field('Company (optional)', _company, 'brochure-company', type: TextInputType.text),
+              _field('Mobile Number', _phone, 'brochure-phone', hint: '+91 98765 43210', type: TextInputType.phone),
+              _field('Company (Optional)', _company, 'brochure-company', type: TextInputType.text),
               if (_problem != null) ...[
                 Text(
                   _problem!,
@@ -173,7 +173,7 @@ class _BrochureFormState extends State<BrochureForm> {
               const SizedBox(height: 4),
               PrimaryButton(
                 key: const ValueKey('brochure-view'),
-                label: _sending == BrochureIntent.view ? 'Opening…' : 'View brochure',
+                label: _sending == BrochureIntent.view ? 'Opening…' : 'View Brochure',
                 icon: LucideIcons.bookOpen,
                 onPressed: busy || !_prefilled ? null : () => _submit(BrochureIntent.view),
               ),
@@ -183,7 +183,7 @@ class _BrochureFormState extends State<BrochureForm> {
                   key: const ValueKey('brochure-download'),
                   onPressed: busy || !_prefilled ? null : () => _submit(BrochureIntent.download),
                   icon: const Icon(LucideIcons.download, size: 16),
-                  label: Text(_sending == BrochureIntent.download ? 'Sending…' : 'Download instead'),
+                  label: Text(_sending == BrochureIntent.download ? 'Sending…' : 'Download Instead'),
                 ),
               ),
             ],

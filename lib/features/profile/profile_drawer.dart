@@ -21,7 +21,7 @@ import '../account/companies/companies_controller.dart';
 import '../account/companies/company_words.dart';
 import '../account/companies/my_companies_screen.dart';
 import '../account/demo_account_repository.dart';
-import '../account/widgets/account_kit.dart' show CompanyLogo;
+import '../account/widgets/account_kit.dart' show CompanyLogo, CoverBand;
 import '../shell/app_shell.dart';
 import '../shell/icr_bottom_nav.dart';
 import '../workspaces/role_workspaces.dart';
@@ -201,7 +201,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
         return n != null && n > 0 ? _Pill(text: _count(n), tone: _PillTone.blue) : null;
       case 'account':
         // A referral earns ICR credits (the website's Refer page), and Refer & Earn is a page of this row.
-        return const _Pill(text: 'Earn credits', tone: _PillTone.green);
+        return const _Pill(text: 'Earn Credits', tone: _PillTone.green);
     }
     return null;
   }
@@ -214,12 +214,10 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
 
   static const _sectionGrey = Color(0xFF727781);
 
-  /// The member's rows, then Account (My Account, Saved Items, Referrals, Settings). No Sign Out here: it is in
-  /// Settings (owner, 5 Nov 2026).
+  /// The member's rows, then My Uploads, My Forum and Settings. No Sign Out here: it is in Settings (owner,
+  /// 5 Nov 2026).
   List<Widget> _menu(List<Workspace> rows, ProfileDrawerData data) {
     final current = widget.currentWorkspace ?? _rowOfTab[AppShell.currentTab(context)];
-    final account = widget.account;
-    final saved = data.savedItems;
     // White throughout, a thin line between rows and a heading over each block, no tiles or fills (owner, 6 Nov
     // 2026: "white background, no borders like boxes, line breakers, like LinkedIn").
     return [
@@ -247,7 +245,8 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
       ],
       if (widget.doors.isNotEmpty) ...[
         const _Rule(inset: 0, gap: 8),
-        const _SectionHeading('Do more on ICR'),
+        // "Do more on ICR" until 12 Nov 2026 (the owner's dashboards document).
+        const _SectionHeading('Explore more on ICR'),
         for (final (i, d) in widget.doors.indexed) ...[
           if (i > 0) const _Rule(),
           _DoorRow(
@@ -259,18 +258,23 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
           ),
         ],
       ],
-      // Under the rows: Saved Items and Settings (owner, 6 Nov 2026: "Saved Items leave as it is"; the plans and
-      // Refer & Earn are pages of the Account row above, so the My Account and Referrals rows are gone).
+      // Under the rows: the member's own content, then Settings (the owner's document "Mobile Profile Screen Text
+      // Changes", 12 Nov 2026: "My Uploads, My Forum, Settings" in place of Saved Items and Settings). My Uploads is
+      // the documents they put in the library, My Forum the discussions and polls they posted — each to edit or
+      // delete. Saved jobs are the Jobs row's; the plans and Refer & Earn the Account row's.
       const _Rule(inset: 0, gap: 8),
-      if (account.savedItems)
-        _AccountRow(
-          key: const ValueKey('account-saved'),
-          icon: LucideIcons500.bookmark,
-          label: 'Saved Items',
-          trailing: saved != null && saved > 0 ? _Pill(text: _count(saved), tone: _PillTone.grey) : null,
-          // Every kind the member bookmarked (jobs, mentors, suppliers, councils, discussions).
-          onTap: () => _open('/career/saved'),
-        ),
+      _AccountRow(
+        key: const ValueKey('account-uploads'),
+        icon: LucideIcons500.upload,
+        label: 'My Uploads',
+        onTap: () => _open('/documents?mine=1'),
+      ),
+      _AccountRow(
+        key: const ValueKey('account-forum'),
+        icon: LucideIcons500.messagesSquare,
+        label: 'My Forum',
+        onTap: () => _open('/community?mine=1'),
+      ),
       _AccountRow(
         key: const ValueKey('account-settings'),
         icon: LucideIcons500.settings,
@@ -311,7 +315,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
     if (!ok) {
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(controller.actionError ?? 'Could not switch company.')));
+        ..showSnackBar(SnackBar(content: Text(controller.actionError ?? 'Unable to switch company.')));
       controller.dismissError();
       return;
     }
@@ -380,7 +384,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                   ),
                                 _AssociationRow(
                                   icon: Image.asset('assets/images/icons/chapters.png', width: 48, height: 48),
-                                  title: 'Regional Chapters',
+                                  title: 'Chapters',
                                   subtitle: data.chaptersLine ?? 'Bengaluru, Mumbai, Delhi & more',
                                   trailing: data.chapterCode != null
                                       ? _Badge(text: data.chapterCode!)
@@ -424,10 +428,11 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                   onTap: () => _open('/rfq'),
                                 ),
                                 const SizedBox(height: 2),
-                                // The supplier's side of the same board (the website's Find Work & Bid).
+                                // The supplier's side of the same board (the website's Find Work & Bid, "Enquiries and
+                                // RFQ's" in the owner's dashboards document, 12 Nov 2026).
                                 _ActivityLink(
                                   icon: const Icon(LucideIcons.compass, size: 14, color: AppColors.slate500),
-                                  label: 'Find Work & Bid',
+                                  label: "Enquiries and RFQ's",
                                   onTap: () => _open('/manage/bids'),
                                 ),
                                 const SizedBox(height: 2),
@@ -501,7 +506,7 @@ class _Header extends StatelessWidget {
                           height: 52,
                           child: ClipRRect(
                             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                            child: _Cover(url: data.coverUrl, asset: data.coverAsset),
+                            child: _Cover(url: data.coverUrl, asset: data.coverAsset, cover: data.cover),
                           ),
                         ),
                         Positioned(left: 20, top: 26, child: _Avatar(data: data)),
@@ -657,7 +662,7 @@ class _CompaniesFrame extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: Text('See all', style: AppText.workSans(12, FontWeight.w600, AppColors.primary)),
+                    child: Text('View All', style: AppText.workSans(12, FontWeight.w600, AppColors.primary)),
                   ),
                 ),
             ],
@@ -768,10 +773,13 @@ class _SkeletonRow extends StatelessWidget {
 }
 
 class _Cover extends StatelessWidget {
-  const _Cover({this.url, this.asset});
+  const _Cover({this.url, this.asset, this.cover});
 
   final String? url;
   final String? asset;
+
+  /// The person's own banner, drawn as their profile draws it.
+  final String? cover;
 
   @override
   Widget build(BuildContext context) {
@@ -787,6 +795,7 @@ class _Cover extends StatelessWidget {
       ),
     );
     if (asset != null) return Image.asset(asset!, fit: BoxFit.cover);
+    if (cover != null) return CoverBand(cover: cover);
     if (url != null) {
       return CachedNetworkImage(
         imageUrl: url!,
@@ -1084,7 +1093,10 @@ class _Rule extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: EdgeInsets.fromLTRB(inset, gap, inset, gap),
-    child: const ColoredBox(color: Color(0xFFE1E3E4), child: SizedBox(height: 1, width: double.infinity)),
+    child: const ColoredBox(
+      color: Color(0xFFE1E3E4),
+      child: SizedBox(height: 1, width: double.infinity),
+    ),
   );
 }
 
@@ -1154,7 +1166,7 @@ class _MenuRow extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    style: AppText.plexSans(15, FontWeight.w600, selected ? blue : ink),
+                    style: AppText.plexSans(14, FontWeight.w600, selected ? blue : ink),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1199,7 +1211,8 @@ class _SubRow extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     label,
-                    style: AppText.plexSans(14, FontWeight.w500, _MenuRow.ink),
+                    // One size under the rows' names and dark grey (the owner's document, 12 Nov 2026).
+                    style: AppText.plexSans(12.5, FontWeight.w500, AppColors.slate600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1240,14 +1253,14 @@ class _DoorRow extends StatelessWidget {
                   children: [
                     Text(
                       label,
-                      style: AppText.plexSans(14, FontWeight.w600, _MenuRow.ink, lineHeight: 18),
+                      style: AppText.plexSans(12.5, FontWeight.w600, _MenuRow.ink, lineHeight: 18),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       caption,
-                      style: AppText.plexSans(12, FontWeight.w400, _ProfileDrawerState._sectionGrey, lineHeight: 16),
+                      style: AppText.plexSans(11, FontWeight.w400, _ProfileDrawerState._sectionGrey, lineHeight: 16),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1264,14 +1277,13 @@ class _DoorRow extends StatelessWidget {
   }
 }
 
-/// A row of the menu's Account block: a plain icon, its name, and a count, a pill or a chevron.
+/// A row of the menu's Account block: a plain icon, its name and a chevron.
 class _AccountRow extends StatelessWidget {
-  const _AccountRow({super.key, required this.icon, required this.label, required this.onTap, this.trailing});
+  const _AccountRow({super.key, required this.icon, required this.label, required this.onTap});
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -1290,13 +1302,14 @@ class _AccountRow extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    style: AppText.plexSans(14, FontWeight.w500, _MenuRow.ink),
+                    // One size under the rows' names and dark grey (the owner's document, 12 Nov 2026).
+                    style: AppText.plexSans(12.5, FontWeight.w500, AppColors.slate600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const SizedBox(width: 8),
-                trailing ?? const _RowChevron(),
+                const _RowChevron(),
               ],
             ),
           ),

@@ -9,63 +9,62 @@ class SupportWords {
 
   // --- The list (`support.MyTicketsList`) ---------------------------------------------------------------------
 
-  static const listTitle = 'Help & support';
+  static const listTitle = 'Help & Support';
   static const listLead = 'Raise a request, follow it, and reply to the ICR team in one place.';
-  static const commonQuestions = 'Common questions';
-  static const helpAnswered = 'This answered it';
-  static const helpThanks = 'Thanks';
-  static const newRequest = 'New request';
+  static const commonQuestions = 'Common Questions';
+  static const helpAnswered = 'This Was Helpful';
+  static const helpThanks = 'Thank you';
+  static const newRequest = 'New Request';
   static const searchMine = 'Search my requests';
-  static const nothingOpen = 'Nothing open';
-  static const nothingOpenLead =
-      'When something is not working, raise it here and you can follow it all the way through.';
-  static const nothingMatches = 'No request matches that search.';
-  static const couldNotLoad = 'Could not load your requests.';
-  static const yourManager = 'Your ICR account manager';
+  static const nothingOpen = 'No Open Requests';
+  static const nothingOpenLead = 'When something is not working, raise a request here and follow its progress.';
+  static const nothingMatches = 'No Matching Requests';
+  static const couldNotLoad = 'Unable to load your requests.';
+  static const couldNotLoadTitle = 'Unable to Load Your Requests';
+  static const yourManager = 'Your ICR Account Manager';
 
   // --- A request (`support.TicketThread`, `support.TicketRoute`) ------------------------------------------------
 
   static const couldNotOpen =
-      'We could not open that request. It may have been removed, or it belongs to another account.';
+      'Unable to open this request. It may have been removed, or it belongs to another account.';
   static const history = 'History';
-  static const addAReply = 'Add a reply';
+  static const addAReply = 'Add a Reply';
   static const replyHint = 'Anything else that would help us';
-  static const sendReply = 'Send reply';
+  static const sendReply = 'Send Reply';
   static const sending = 'Sending…';
   static const replyNotSent = 'Your reply was not sent.';
-  static const reopen = 'Reopen this request';
+  static const reopen = 'Reopen This Request';
   static const reopening = 'Reopening…';
-  static const couldNotReopen = 'This request could not be reopened.';
-  static const didWeGetThisRight = 'Did we get this right?';
-  static const submitRating = 'Submit rating';
+  static const couldNotReopen = 'Unable to reopen this request.';
+  static const didWeGetThisRight = 'Rate Our Support';
+  static const submitRating = 'Submit Rating';
   static const youRatedThis = 'You rated this';
   static const couldNotRate = 'Your rating was not sent.';
-  static const closedNote = 'This request is closed. If it comes back, please raise a new one so it gets a fresh look.';
-  static const waitingOnYou =
-      'We need something from you before we can go further — reply below and it comes straight back to us.';
+  static const closedNote = 'This request is closed. If the issue returns, raise a new request.';
+  static const waitingOnYou = 'We need more information from you to continue. Reply below.';
 
   static String aimToReply(int hours) =>
-      'We aim to reply within $hours hours. You will get a notification and an email as soon as we do.';
+      'We aim to reply within $hours hours. You will receive a notification and an email when we reply.';
 
   /// "ICR-12 · Billing & payments · raised 3d ago".
   static String raisedLine(String reference, String category, String ago) => '$reference · $category · raised $ago';
 
-  static const couldNotOpenFile = "Couldn't open that file. Try again.";
+  static const couldNotOpenFile = 'Unable to open this file. Try again.';
   static const fileNotShown = "This file's type can't be shown in the app.";
 
   // --- Raising one (`common.RaiseTicketDialog`, `common.AttachmentPicker`) ------------------------------------
 
-  static const raiseTitle = 'Get help from ICR';
-  static const whatIsThisAbout = 'What is this about?';
+  static const raiseTitle = 'Get Help from ICR';
+  static const whatIsThisAbout = 'Select a Topic';
   static const about = 'About';
-  static const beforeYouWrite = 'Before you write — these come up a lot';
+  static const beforeYouWrite = 'Common Questions on This Topic';
   static const subject = 'Subject';
-  static const subjectHint = 'One line — what is wrong';
+  static const subjectHint = 'Summarise the problem in one line';
   static const whatHappened = 'What happened?';
   static const whatHappenedHint = 'What you did, what you expected, and what happened instead.';
-  static const sendRequest = 'Send request';
-  static const couldNotLog = 'We could not log that request.';
-  static const attachAFile = 'Attach a file';
+  static const sendRequest = 'Send Request';
+  static const couldNotLog = 'Unable to submit your request.';
+  static const attachAFile = 'Attach a File';
   static const uploading = 'Uploading…';
 
   static String screenshotsHelp(int max) => 'Screenshots help. Up to $max files, 10 MB each.';
@@ -77,8 +76,8 @@ class SupportWords {
   /// `SUPPORT_TICKET_STATUS_LABELS`, as the member reads them.
   static const statusLabels = {
     'NEW': 'New',
-    'OPEN': 'In progress',
-    'AWAITING_USER': 'Waiting on you',
+    'OPEN': 'In Progress',
+    'AWAITING_USER': 'Waiting on You',
     'RESOLVED': 'Resolved',
     'CLOSED': 'Closed',
   };
@@ -105,12 +104,12 @@ class SupportWords {
   static const categories = <(String, String, String)>[
     (
       'ACCOUNT_ACCESS',
-      'Account & sign-in',
+      'Account & Sign-In',
       'Cannot sign in, lost access to an email or phone, a team invite that will not open.',
     ),
     (
       'BILLING_PAYMENTS',
-      'Billing & payments',
+      'Billing & Payments',
       'A payment that failed or charged twice, a refund, an invoice, a membership you did not expect.',
     ),
     (
@@ -120,7 +119,7 @@ class SupportWords {
     ),
     (
       'JOBS_HIRING',
-      'Jobs & hiring',
+      'Jobs & Hiring',
       'A posting that will not publish, a rejected job, an applicant or interview problem.',
     ),
     (
@@ -130,18 +129,18 @@ class SupportWords {
     ),
     (
       'MARKETPLACE_RFQ',
-      'Marketplace & requirements',
+      'Marketplace & Requirements',
       'Your listing, your bids, or a requirement that is not reaching the right suppliers.',
     ),
     ('LEARNING', 'Learning Center', 'Course access, batches, assessments or certificates.'),
     (
       'COMMUNITY',
-      'Community & discussions',
+      'Community & Discussions',
       'The forum, chapters, councils or events. To report a specific post, use Report on the post.',
     ),
-    ('BUG', 'Something is broken', 'Something behaves wrongly. Tell us what you did and what happened.'),
-    ('FEATURE_REQUEST', 'Feature request', 'Something you wish ICR did.'),
-    ('OTHER', 'Something else', 'Tell us in your own words.'),
+    ('BUG', 'Something Is Broken', 'Something does not work correctly. Describe what you did and what happened.'),
+    ('FEATURE_REQUEST', 'Feature Request', 'A feature you would like ICR to add.'),
+    ('OTHER', 'Something Else', 'Describe it in your own words.'),
   ];
 
   static String category(String key) {

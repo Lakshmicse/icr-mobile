@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../features/notifications/unread_counts.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
 import 'workspace_embed.dart';
@@ -17,11 +18,17 @@ class TitleBar extends StatelessWidget {
     this.onBack,
     this.leading,
     this.middle,
+    this.actions = const [],
     this.unread = 0,
     required this.onBell,
   });
 
   static const height = 56.0;
+
+  /// The room a screen leaves above its body for this bar: [height], or nothing in a workspace's tab when the bar
+  /// carries no [middle] and so draws nothing there.
+  static double reserved(BuildContext context, {bool middle = false}) =>
+      !middle && WorkspaceEmbed.of(context) ? 0 : height;
 
   final String? title;
   final VoidCallback? onBack;
@@ -29,6 +36,9 @@ class TitleBar extends StatelessWidget {
   /// Replaces the back arrow.
   final Widget? leading;
   final Widget? middle;
+
+  /// Drawn left of the bell (a record's pencil for the person who may edit it; owner, 12 Nov 2026).
+  final List<Widget> actions;
   final int unread;
   final VoidCallback onBell;
 
@@ -37,17 +47,14 @@ class TitleBar extends StatelessWidget {
     // Inside a workspace's tab the workspace's bar has the back arrow and the bell; this row keeps the page's title
     // as its heading and a search in the middle, in the same 56 dp the screens leave for it.
     if (WorkspaceEmbed.of(context)) {
+      // The tab names the page, so its title is not drawn again (owner, 9 Nov 2026: "wherever it is remove it");
+      // the row keeps only what else it carried (a search), and goes when that is nothing.
+      if (middle == null) return const SizedBox.shrink();
       return Container(
         height: height,
         color: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            if (title != null) Text(title!, style: AppText.barTitle),
-            if (title != null && middle != null) const SizedBox(width: 12),
-            if (middle != null) Expanded(child: middle!),
-          ],
-        ),
+        child: Row(children: [Expanded(child: middle!)]),
       );
     }
     return Container(
@@ -78,9 +85,39 @@ class TitleBar extends StatelessWidget {
           ],
           if (title != null) ...[const SizedBox(width: 18.75), Text(title!, style: AppText.barTitle)],
           if (middle != null) ...[const SizedBox(width: 12), Expanded(child: middle!)] else const Spacer(),
+          ...actions,
           BellButton(unread: unread, onTap: onBell),
           const SizedBox(width: 13),
         ],
+      ),
+    );
+  }
+}
+
+/// The pencil left of the bell: "edit this" (or "manage these", for the staff who run a section), shown to the
+/// person who may.
+class BarEditButton extends StatelessWidget {
+  const BarEditButton({super.key, required this.onTap, this.label = 'Edit'});
+
+  final VoidCallback onTap;
+
+  /// What a screen reader calls it.
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: InkResponse(
+        key: const ValueKey('bar-edit'),
+        onTap: onTap,
+        radius: 24,
+        child: const SizedBox(
+          width: 40,
+          height: 56,
+          child: Icon(LucideIcons.pencil, size: 19, color: AppColors.onSurfaceVariant),
+        ),
       ),
     );
   }
@@ -94,7 +131,9 @@ class BellButton extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LiveUnread(fallback: unread, builder: _bell);
+
+  Widget _bell(BuildContext context, int unread) {
     return Semantics(
       button: true,
       label: unread > 0 ? 'Notifications, $unread unread' : 'Notifications',

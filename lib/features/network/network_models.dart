@@ -91,7 +91,7 @@ class NetworkPost {
 /// The four lists, as chips under the header.
 enum NetworkTab {
   feed('Feed'),
-  suggestions('People to follow'),
+  suggestions('People to Follow'),
   following('Following'),
   followers('Followers');
 

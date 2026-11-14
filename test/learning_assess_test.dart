@@ -291,6 +291,9 @@ void main() {
       expect(creditsLabel(1), '1 ICR credit');
       expect(creditsLabel(5), '5 ICR credits');
       expect(creditsShort(1), '1 credit');
+      expect(creditsLabelTitle(1), '1 ICR Credit', reason: 'a button and a dialog title are in Title Case');
+      expect(creditsLabelTitle(5), '5 ICR Credits');
+      expect(creditsShortTitle(3), '3 Credits');
       expect(durationLabel(30), '30 min');
       expect(durationLabel(60), '1 h');
       expect(durationLabel(90), '1 h 30 min');
@@ -1041,7 +1044,7 @@ void main() {
       'one card per programme of ICR\'s own, in the catalogue\'s order, two to a row; a partner\'s is left out',
       (tester) async {
         await _landing(tester);
-        expect(find.text('Assess Your Knowledge'), findsOneWidget, reason: 'the title bar');
+        expect(find.text('Knowledge Assessments'), findsOneWidget, reason: 'the title bar');
         expect(find.text('Validate Your Expertise.'), findsNothing, reason: 'no banner (owner, 3 Nov 2026)');
         expect(_titles(tester), ['Capital Planning', 'Contract Management', 'Human Capital', 'Procurement Management']);
         expect(find.text('Leoron Certified Planner'), findsNothing);
@@ -1094,9 +1097,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'zzz');
       await tester.pumpAndSettle();
-      expect(find.text('No certification matches'), findsOneWidget);
+      expect(find.text('No Certification Matches'), findsOneWidget);
       expect(find.byType(GroupCard), findsNothing);
-      await tester.tap(find.text('Reset filters'));
+      await tester.tap(find.text('Reset Filters'));
       await tester.pumpAndSettle();
       expect(_titles(tester).length, 4);
       expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, isEmpty);
@@ -1141,10 +1144,10 @@ void main() {
     testWidgets('a failed load says why, and Try again reads it again', (tester) async {
       final fake = FakeAssess()..failures['groups'] = ApiError("Can't reach ICR right now.");
       await _landing(tester, fake: fake);
-      expect(find.text("Couldn't load the assessments"), findsOneWidget);
+      expect(find.text("Unable to Load the Assessments"), findsOneWidget);
       expect(find.text("Can't reach ICR right now."), findsOneWidget);
       fake.failures.clear();
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byType(GroupCard), findsNWidgets(4));
     });
@@ -1153,16 +1156,16 @@ void main() {
       tester,
     ) async {
       await _landing(tester, fake: FakeAssess(programmes: []));
-      expect(find.text('No assessments are published yet'), findsOneWidget);
-      expect(find.text('Partner certifications'), findsNothing);
+      expect(find.text('No Assessments Available Yet'), findsOneWidget);
+      expect(find.text('Partner Certifications'), findsNothing);
     });
 
     testWidgets('only a partner\'s programmes: the page leads to them on the website', (tester) async {
       final partner = assessWorld().last;
       final h = await _landing(tester, fake: FakeAssess(programmes: [partner]));
-      expect(find.text('No assessments are published yet'), findsOneWidget);
+      expect(find.text('No Assessments Available Yet'), findsOneWidget);
       expect(find.textContaining('awarded by partner institutes'), findsOneWidget);
-      await tester.tap(find.text('Partner certifications'));
+      await tester.tap(find.text('Partner Certifications'));
       await tester.pump();
       expect(h.launcher.uris.single, Uri.parse('https://site.test/partners'));
     });
@@ -1170,7 +1173,7 @@ void main() {
     testWidgets('beside ICR\'s own, a line leads to the partners\' certifications', (tester) async {
       final h = await _landing(tester);
       expect(find.textContaining('Looking for a partner institute'), findsOneWidget);
-      await tester.tap(find.text('Partner certifications'));
+      await tester.tap(find.text('Partner Certifications'));
       await tester.pump();
       expect(h.launcher.uris.single.path, '/partners');
     });
@@ -1198,7 +1201,7 @@ void main() {
         member: assessMember(open: {}, courses: const PlanPlaces(limit: 1)),
       );
       await _landing(tester, fake: fake);
-      expect(find.text('In your plan'), findsNWidgets(4));
+      expect(find.text('In Your Plan'), findsNWidgets(4));
       expect(find.text('Locked'), findsNothing);
     });
 
@@ -1485,10 +1488,13 @@ void main() {
       expect(f.width, a.width);
       expect(p.width, f.width);
       // No card around a row (owner, 3 Nov 2026: no borders, a thin line between rows is enough).
-      expect(find.descendant(of: _card('cp-foundation'), matching: find.byType(DecoratedBox)).evaluate().where((e) {
-        final d = (e.widget as DecoratedBox).decoration;
-        return d is BoxDecoration && d.border != null;
-      }), isEmpty);
+      expect(
+        find.descendant(of: _card('cp-foundation'), matching: find.byType(DecoratedBox)).evaluate().where((e) {
+          final d = (e.widget as DecoratedBox).decoration;
+          return d is BoxDecoration && d.border != null;
+        }),
+        isEmpty,
+      );
       // Each carries its name and its tagline.
       expect(_in('cp-foundation', find.text('Foundation')), findsOneWidget);
       expect(_in('cp-advanced', find.text('Advanced')), findsOneWidget);
@@ -1535,7 +1541,10 @@ void main() {
       expect(_in('cp-foundation', find.text('Foundation')), findsOneWidget);
       // One line of what it is: the tagline, the numbers a candidate decides on, the attempts it allows.
       expect(
-        _in('cp-foundation', find.text('Build your basics · 25 questions · 1 h 30 min · 60% to pass · Up to 3 attempts')),
+        _in(
+          'cp-foundation',
+          find.text('Build your basics · 25 questions · 1 h 30 min · 60% to pass · Up to 3 attempts'),
+        ),
         findsOneWidget,
       );
       expect(find.byType(PaperCard), findsOneWidget, reason: 'the two rungs this programme lacks are not drawn');
@@ -1580,7 +1589,7 @@ void main() {
       expect(ref.isMock, isFalse);
       expect(fake.count('member'), greaterThan(membersBefore), reason: 'the best score and attempts are read again');
       expect(_in('cp-foundation', find.textContaining('Best score 80% (8/10) · Passed · Certified')), findsOneWidget);
-      expect(_button('cp-foundation', 'Retake assessment'), findsOneWidget);
+      expect(_button('cp-foundation', 'Retake Assessment'), findsOneWidget);
     });
 
     testWidgets('a certified level opens its certificate in the app, with Download PDF; Retake still starts again', (
@@ -1618,7 +1627,7 @@ void main() {
       );
       // A level sat but not passed has no certificate to show.
       expect(_button('cp-advanced', 'Certificate'), findsNothing);
-      expect(_button('cp-advanced', 'Retake assessment'), findsOneWidget);
+      expect(_button('cp-advanced', 'Retake Assessment'), findsOneWidget);
 
       await tester.tap(_button('cp-foundation', 'Certificate'));
       await tester.pumpAndSettle();
@@ -1684,7 +1693,7 @@ void main() {
       final opener = RecordingOpener();
       await _group(tester, 'Capital Planning', fake: fake, opener: opener);
       expect(_in('cp-foundation', find.text('Best score 40% (4/10) · Not passed yet · 2 attempts')), findsOneWidget);
-      await tester.tap(_button('cp-foundation', 'Retake assessment'));
+      await tester.tap(_button('cp-foundation', 'Retake Assessment'));
       await tester.pumpAndSettle();
       expect(opener.opened.single.slug, 'capital-planning-foundation');
     });
@@ -1702,7 +1711,7 @@ void main() {
       final opener = RecordingOpener();
       await _group(tester, 'Capital Planning', fake: fake, opener: opener);
       expect(_in('cp-foundation', find.textContaining('All 2 attempts used')), findsOneWidget);
-      final button = _button('cp-foundation', 'No attempts left');
+      final button = _button('cp-foundation', 'No Attempts Left');
       expect(_btn(tester, button).onPressed, isNull);
       await tester.tap(button, warnIfMissed: false);
       await tester.pump();
@@ -1718,7 +1727,7 @@ void main() {
         expect(_in('cm-intermediate', find.text('₹999 + GST')), findsOneWidget);
         expect(_in('cm-intermediate', find.text('or 10 ICR credits')), findsOneWidget);
         final paid = _stubPayments();
-        await tester.tap(_button('cm-foundation', 'Pay now'));
+        await tester.tap(_button('cm-foundation', 'Pay Now'));
         await tester.pumpAndSettle();
         expect(h.fake.checkouts, ['contract-management-foundation'], reason: "the level's own checkout");
         expect(paid.single.action, 'https://pay.test/_payment', reason: "the gateway's form, run in the app");
@@ -1753,10 +1762,7 @@ void main() {
       await _group(tester, 'Contract Management', fake: fake);
       expect(_in('cm-foundation', find.text('₹374.25 + GST')), findsOneWidget);
       // Under it, one line: the list price struck through, the percent off, the plan's price, the credits.
-      expect(
-        _in('cm-foundation', find.text('₹499  25% off  Pro Plus member price  or 4 ICR credits')),
-        findsOneWidget,
-      );
+      expect(_in('cm-foundation', find.text('₹499  25% off  Pro Plus member price  or 4 ICR credits')), findsOneWidget);
     });
 
     testWidgets('while payment is unavailable Pay is off and says why', (tester) async {
@@ -1766,7 +1772,7 @@ void main() {
         'cm-foundation': const PaperQuote(paperId: 'cm-foundation', listPaisa: 49900, salePaisa: 49900, credits: 5),
       };
       final h = await _group(tester, 'Contract Management', fake: fake);
-      final pay = _button('cm-foundation', 'Pay now');
+      final pay = _button('cm-foundation', 'Pay Now');
       expect(_btn(tester, pay).onPressed, isNull);
       expect(_in('cm-foundation', find.text('Online payment is not available right now.')), findsOneWidget);
       await tester.tap(pay, warnIfMissed: false);
@@ -1785,13 +1791,13 @@ void main() {
         expect(_in('cp-intermediate', find.textContaining('You have')), findsNothing);
         expect(_button('cp-advanced', 'Start Assessment'), findsOneWidget, reason: 'Advanced was redeemed earlier');
 
-        await tester.tap(_button('cp-intermediate', 'Redeem 5 ICR credits'));
+        await tester.tap(_button('cp-intermediate', 'Redeem 5 ICR Credits'));
         await tester.pumpAndSettle();
-        expect(find.text('5 ICR credits for “Capital Planning” – Professional?'), findsOneWidget);
-        expect(find.text('This level opens for good. You will have 95 ICR credits left.'), findsOneWidget);
+        expect(find.text('5 ICR Credits for “Capital Planning” – Professional?'), findsOneWidget);
+        expect(find.text('This level opens permanently. You will have 95 ICR credits left.'), findsOneWidget);
         expect(h.fake.count('redeem'), 0, reason: 'nothing is spent before the confirmation');
 
-        await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 credits'));
+        await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 Credits'));
         await tester.pumpAndSettle();
         expect(h.fake.calls, contains('redeem:capital-planning-professional'));
         expect(_in('cp-intermediate', find.text('Worth ₹500')), findsNothing, reason: 'nothing is left to pay');
@@ -1804,12 +1810,12 @@ void main() {
 
     testWidgets('Cancel on the confirmation spends nothing', (tester) async {
       final h = await _group(tester, 'Capital Planning');
-      await tester.tap(_button('cp-intermediate', 'Redeem 5 ICR credits'));
+      await tester.tap(_button('cp-intermediate', 'Redeem 5 ICR Credits'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ActionButton, 'Cancel'));
       await tester.pumpAndSettle();
       expect(h.fake.count('redeem'), 0);
-      expect(_button('cp-intermediate', 'Redeem 5 ICR credits'), findsOneWidget);
+      expect(_button('cp-intermediate', 'Redeem 5 ICR Credits'), findsOneWidget);
       expect(h.fake.memberNow.access!.icrCredits, 100);
     });
 
@@ -1820,24 +1826,24 @@ void main() {
           statusCode: 403,
         );
       await _group(tester, 'Capital Planning', fake: fake);
-      await tester.tap(_button('cp-intermediate', 'Redeem 5 ICR credits'));
+      await tester.tap(_button('cp-intermediate', 'Redeem 5 ICR Credits'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 credits'));
+      await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 Credits'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Buy it, or invite colleagues'), findsOneWidget);
       expect(_button('cp-intermediate', 'Start Assessment'), findsNothing);
-      expect(_button('cp-intermediate', 'Redeem 5 ICR credits'), findsOneWidget);
-      expect(_btn(tester, _button('cp-intermediate', 'Redeem 5 ICR credits')).loading, isFalse);
+      expect(_button('cp-intermediate', 'Redeem 5 ICR Credits'), findsOneWidget);
+      expect(_btn(tester, _button('cp-intermediate', 'Redeem 5 ICR Credits')).loading, isFalse);
       expect(fake.memberNow.access!.icrCredits, 100);
     });
 
     testWidgets('while a redemption is in flight the button spins and cannot be pressed twice', (tester) async {
       final h = await _group(tester, 'Capital Planning');
-      await tester.tap(_button('cp-intermediate', 'Redeem 5 ICR credits'));
+      await tester.tap(_button('cp-intermediate', 'Redeem 5 ICR Credits'));
       await tester.pumpAndSettle();
       final gate = Completer<void>();
       h.fake.gate = gate.future;
-      await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 credits'));
+      await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 Credits'));
       await tester.pump();
       await tester.pump();
       final busy = _button('cp-intermediate', 'Redeeming…');
@@ -1851,18 +1857,20 @@ void main() {
       expect(_button('cp-intermediate', 'Start Assessment'), findsOneWidget);
     });
 
-    testWidgets('with too few credits Redeem is off; the balance over the rows says what the member has', (tester) async {
+    testWidgets('with too few credits Redeem is off; the balance over the rows says what the member has', (
+      tester,
+    ) async {
       final fake = FakeAssess(member: assessMember(credits: 2, open: {}));
       final h = await _group(tester, 'Capital Planning', fake: fake);
       expect(_in('cp-foundation', find.textContaining('Needs')), findsNothing, reason: 'said once, not per row');
-      final redeem = _button('cp-foundation', 'Redeem 5 ICR credits');
+      final redeem = _button('cp-foundation', 'Redeem 5 ICR Credits');
       expect(_btn(tester, redeem).onPressed, isNull);
       await tester.tap(redeem, warnIfMissed: false);
       await tester.pumpAndSettle();
-      expect(find.text('This level opens for good. You will have 0 ICR credits left.'), findsNothing);
+      expect(find.text('This level opens permanently. You will have 0 ICR credits left.'), findsNothing);
       expect(h.fake.count('redeem'), 0);
       expect(find.text('You have 2 ICR credits · 1 credit = ₹100'), findsOneWidget);
-      expect(find.widgetWithText(TextButton, 'Earn more'), findsOneWidget);
+      expect(find.widgetWithText(TextButton, 'Earn More'), findsOneWidget);
     });
 
     testWidgets('a level that is neither priced nor open to credits offers the plans', (tester) async {
@@ -1870,7 +1878,7 @@ void main() {
       fake.quotes = {...fake.quotes, 'cp-foundation': const PaperQuote(paperId: 'cp-foundation')};
       final h = await _group(tester, 'Capital Planning', fake: fake);
       expect(_in('cp-foundation', find.text('Not on sale right now.')), findsOneWidget);
-      await tester.tap(_button('cp-foundation', 'See plans'));
+      await tester.tap(_button('cp-foundation', 'See Plans'));
       await tester.pump();
       expect(h.launcher.uris.single.path, '/pricing/professional');
     });
@@ -1880,7 +1888,7 @@ void main() {
       await _group(tester, 'Capital Planning', fake: fake);
       expect(_in('cp-foundation', find.text('Locked')), findsOneWidget, reason: 'the row says it is locked');
       expect(_in('cp-foundation', find.text('Opens with ICR credits or a purchase.')), findsOneWidget);
-      expect(_in('cp-foundation', find.text('See plans')), findsOneWidget);
+      expect(_in('cp-foundation', find.text('See Plans')), findsOneWidget);
     });
 
     testWidgets('a plan place still free: the course asks to be opened first, and every level says it is included', (
@@ -1893,9 +1901,12 @@ void main() {
         ),
       );
       await _group(tester, 'Human Capital', fake: fake);
-      expect(find.text('Your plan includes 2 courses, and 1 is still free. Every level opens with it.'), findsOneWidget);
       expect(
-        find.widgetWithText(RowButton, 'Open with my plan'),
+        find.text('Your plan includes 2 courses, and 1 is still free. Every level opens with it.'),
+        findsOneWidget,
+      );
+      expect(
+        find.widgetWithText(RowButton, 'Open with My Plan'),
         findsNWidgets(3),
         reason: 'the card and the two levels',
       );
@@ -1910,18 +1921,18 @@ void main() {
         ),
       );
       await _group(tester, 'Human Capital', fake: fake);
-      await tester.tap(find.widgetWithText(RowButton, 'Open with my plan').first);
+      await tester.tap(find.widgetWithText(RowButton, 'Open with My Plan').first);
       await tester.pumpAndSettle();
-      expect(find.text('Open “Human Capital” with your plan?'), findsOneWidget);
+      expect(find.text('Open “Human Capital” with Your Plan?'), findsOneWidget);
       expect(
         find.text('It takes one of the 2 courses your plan includes, and every level opens. None will be left.'),
         findsOneWidget,
       );
       expect(fake.count('openWithPlan'), 0);
-      await tester.tap(find.widgetWithText(ActionButton, 'Open it'));
+      await tester.tap(find.widgetWithText(ActionButton, 'Open'));
       await tester.pumpAndSettle();
       expect(fake.calls, contains('openWithPlan:assessment:course-hc'));
-      expect(find.text('This course is open with your plan: every level is yours to sit.'), findsOneWidget);
+      expect(find.text('This course is open with your plan. You can take every level.'), findsOneWidget);
       expect(find.widgetWithText(RowButton, 'Start Assessment'), findsNWidgets(2));
       expect(find.text('Open this course'), findsNothing);
       await _back(tester);
@@ -1937,9 +1948,9 @@ void main() {
         member: assessMember(open: {}, courses: const PlanPlaces(limit: 1)),
       );
       await _group(tester, 'Human Capital', fake: fake);
-      await tester.tap(_button('hc-advanced', 'Open with my plan'));
+      await tester.tap(_button('hc-advanced', 'Open with My Plan'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ActionButton, 'Open it'));
+      await tester.tap(find.widgetWithText(ActionButton, 'Open'));
       await tester.pumpAndSettle();
       expect(fake.count('openWithPlan'), 1);
       expect(_button('hc-advanced', 'Start Assessment'), findsOneWidget);
@@ -1950,9 +1961,9 @@ void main() {
         member: assessMember(open: {}, courses: const PlanPlaces(limit: 1)),
       )..failures['openWithPlan'] = ApiError('Your plan has no course left to open.', statusCode: 403);
       await _group(tester, 'Human Capital', fake: fake);
-      await tester.tap(find.widgetWithText(RowButton, 'Open with my plan').first);
+      await tester.tap(find.widgetWithText(RowButton, 'Open with My Plan').first);
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ActionButton, 'Open it'));
+      await tester.tap(find.widgetWithText(ActionButton, 'Open'));
       await tester.pumpAndSettle();
       expect(find.text('Your plan has no course left to open.'), findsOneWidget);
       expect(find.byKey(const ValueKey('plan-open-card')), findsOneWidget, reason: 'still offering the plan place');
@@ -1968,12 +1979,12 @@ void main() {
         final h = await _group(tester, 'Contract Management', fake: fake);
         // One line for the plan, one for the credits — no box, no banner-sized button (owner, 3 Nov 2026).
         expect(find.text('Unlock a level'), findsNothing);
-        expect(find.text('Assess your knowledge courses are not included in your plan.'), findsOneWidget);
+        expect(find.text('Knowledge Assessment courses are not included in your plan.'), findsOneWidget);
         await tester.tap(find.widgetWithText(TextButton, 'See Pro Plus'));
         await tester.pump();
         expect(h.launcher.uris.last, Uri.parse('https://site.test/pricing/professional'));
         expect(find.text('You have 0 ICR credits · 1 credit = ₹100'), findsOneWidget);
-        await tester.tap(find.widgetWithText(TextButton, 'Earn more'));
+        await tester.tap(find.widgetWithText(TextButton, 'Earn More'));
         await tester.pump();
         expect(h.launcher.uris.last.path, '/refer');
         // No credits: every Redeem is off.
@@ -1990,7 +2001,7 @@ void main() {
       );
       await _group(tester, 'Procurement Management', fake: fake);
       expect(find.text('You have opened all 2 courses your plan includes.'), findsOneWidget);
-      expect(find.widgetWithText(TextButton, 'See plans'), findsOneWidget);
+      expect(find.widgetWithText(TextButton, 'See Plans'), findsOneWidget);
     });
 
     testWidgets('a course the plan opened says so in one line; one that opens everything says nothing', (tester) async {
@@ -2004,7 +2015,7 @@ void main() {
           ),
         ),
       );
-      expect(find.text('This course is open with your plan: every level is yours to sit.'), findsOneWidget);
+      expect(find.text('This course is open with your plan. You can take every level.'), findsOneWidget);
       expect(find.text('Unlock a level'), findsNothing);
       expect(find.widgetWithText(RowButton, 'Start Assessment'), findsNWidgets(3));
     });
@@ -2020,7 +2031,7 @@ void main() {
       tester,
     ) async {
       await _group(tester, 'Capital Planning');
-      expect(find.text('Knowledge areas covered'), findsOneWidget);
+      expect(find.text('Knowledge Areas Covered'), findsOneWidget);
       expect(find.text('10 Topics'), findsOneWidget);
       expect(find.text('Capital Planning Fundamentals'), findsOneWidget);
       // Long topics take a row each or two to a row: the first two rows show and the rest fold behind View more,
@@ -2028,8 +2039,8 @@ void main() {
       final shown = tester.widgetList<TopicChip>(find.byType(TopicChip)).length;
       expect(shown, lessThan(10), reason: 'ten long topics do not fit two rows at 390 dp');
       expect(find.text('Risk-Based Capital Planning'), findsNothing);
-      expect(find.text('View more'), findsOneWidget);
-      await tester.tap(find.text('View more'));
+      expect(find.text('View More'), findsOneWidget);
+      await tester.tap(find.text('View More'));
       await tester.pumpAndSettle();
       expect(find.byType(TopicChip), findsNWidgets(10));
       expect(find.text('Risk-Based Capital Planning'), findsOneWidget);
@@ -2074,11 +2085,11 @@ void main() {
       expect(count, inInclusiveRange(KnowledgeAreas.foldedRows, 39));
       expect(find.text('Topic number 1'), findsOneWidget);
       expect(find.text('Topic number 40'), findsNothing);
-      await tester.tap(find.text('View more'));
+      await tester.tap(find.text('View More'));
       await tester.pumpAndSettle();
       expect(find.byType(TopicChip), findsNWidgets(40));
       expect(find.text('Topic number 40'), findsOneWidget);
-      await tester.tap(find.text('View less'));
+      await tester.tap(find.text('View Less'));
       await tester.pumpAndSettle();
       expect(find.text('Topic number 40'), findsNothing);
     });
@@ -2091,7 +2102,7 @@ void main() {
         ],
       );
       await _group(tester, 'Capital Planning', fake: fake);
-      await tester.tap(find.text('View more'));
+      await tester.tap(find.text('View More'));
       await tester.pumpAndSettle();
       Color fill(int i) {
         final chip = find.ancestor(of: find.text('Topic number $i'), matching: find.byType(Container)).first;
@@ -2108,7 +2119,7 @@ void main() {
     testWidgets('a programme with no areas leaves the section out; its own summary still shows', (tester) async {
       await _group(tester, 'Contract Management');
       expect(find.byKey(const ValueKey('knowledge-areas')), findsNothing);
-      expect(find.text('Knowledge areas covered'), findsNothing);
+      expect(find.text('Knowledge Areas Covered'), findsNothing);
       expect(find.text(defaultAreasBlurb), findsNothing, reason: 'the standard sentence belongs to the topics');
       final fake = FakeAssess(
         programmes: [
@@ -2212,7 +2223,7 @@ void main() {
       expect(find.text("Can't reach ICR right now."), findsOneWidget);
       expect(_card('cp-foundation'), findsOneWidget);
       h.fake.failures.clear();
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('refresh-failed')), findsNothing);
     });
@@ -2224,17 +2235,17 @@ void main() {
           if (p.key != 'CP') p,
       ];
       await _pull(tester, find.byType(ListView).last);
-      expect(find.text('Programme not found'), findsOneWidget);
+      expect(find.text('Programme Not Found'), findsOneWidget);
       expect(find.text('Nothing is published at “CP”.'), findsOneWidget);
-      await tester.tap(find.text('All programmes'));
+      await tester.tap(find.text('All Programmes'));
       await tester.pumpAndSettle();
-      expect(find.text('Programme not found'), findsNothing);
+      expect(find.text('Programme Not Found'), findsNothing);
       expect(find.byType(GroupCard), findsNWidgets(4));
     });
 
     testWidgets('the programme page has the door\'s title and a back arrow, no bell and no share', (tester) async {
       final h = await _group(tester, 'Capital Planning');
-      expect(find.text('Assess Your Knowledge'), findsOneWidget);
+      expect(find.text('Knowledge Assessments'), findsOneWidget);
       expect(find.byIcon(LucideIcons.bell), findsNothing);
       expect(find.byIcon(Symbols.share), findsNothing);
       expect(find.byType(BellButton), findsNothing);
@@ -2261,8 +2272,8 @@ void main() {
       expect(find.text('Showing 1 of 3 subjects.'), findsOneWidget);
       await tester.enterText(find.byType(TextField), 'zzz');
       await tester.pumpAndSettle();
-      expect(find.text('No subject matches'), findsOneWidget);
-      await tester.tap(find.text('Reset filters'));
+      expect(find.text('No Subject Matches'), findsOneWidget);
+      await tester.tap(find.text('Reset Filters'));
       await tester.pumpAndSettle();
       expect(_titles(tester).length, 3);
     });
@@ -2282,12 +2293,12 @@ void main() {
 
     testWidgets('no subjects and a failed load say so', (tester) async {
       await _landing(tester, mock: true, fake: FakeAssess(topics: []));
-      expect(find.text('No subjects are published yet'), findsOneWidget);
+      expect(find.text('No Mock Exams Available Yet'), findsOneWidget);
       final fake = FakeAssess()..failures['groups'] = ApiError('Offline.');
       await _landing(tester, mock: true, fake: fake);
-      expect(find.text("Couldn't load the mock exams"), findsOneWidget);
+      expect(find.text("Unable to Load the Mock Exams"), findsOneWidget);
       fake.failures.clear();
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byType(GroupCard), findsNWidgets(3));
     });
@@ -2305,14 +2316,17 @@ void main() {
       expect(find.text('Set 1'), findsOneWidget);
       expect(find.text('Set 2'), findsOneWidget);
       // One line of what a set is: questions, time, pass mark, the attempts it allows.
-      expect(_in('aee-cbcp-set-1', find.text('10 questions · 30 min · 70% to pass · Up to 3 attempts')), findsOneWidget);
+      expect(
+        _in('aee-cbcp-set-1', find.text('10 questions · 30 min · 70% to pass · Up to 3 attempts')),
+        findsOneWidget,
+      );
       expect(_in('aee-cbcp-set-2', find.text('Business continuity: the second paper.')), findsOneWidget);
       expect(
         _in('aee-cbcp-set-1', find.text('Practice paper under exam conditions.')),
         findsNothing,
         reason: 'a set with no description of its own shows none',
       );
-      expect(find.text('Knowledge areas covered'), findsNothing, reason: 'a subject has none');
+      expect(find.text('Knowledge Areas Covered'), findsNothing, reason: 'a subject has none');
       expect(find.byType(BellButton), findsNothing);
     });
 
@@ -2388,7 +2402,10 @@ void main() {
       expect(ref.id, 'aee-cbcp-set-1');
       expect(ref.isMock, isTrue);
       expect(ref.courseCode, isNull);
-      expect(_in('aee-cbcp-set-1', find.text('Best score 60% (6/10) · Not passed yet · 1 of 3 attempts used')), findsOneWidget);
+      expect(
+        _in('aee-cbcp-set-1', find.text('Best score 60% (6/10) · Not passed yet · 1 of 3 attempts used')),
+        findsOneWidget,
+      );
       expect(_button('aee-cbcp-set-1', 'Retake Test'), findsOneWidget);
     });
 
@@ -2399,11 +2416,11 @@ void main() {
         expect(_in('aee-cbcp-set-1', find.text('Locked')), findsOneWidget);
         expect(find.text('Mock exams are not included in your plan.'), findsOneWidget);
         expect(find.text('Unlock a set'), findsNothing, reason: 'one line for the plan, no box');
-        await tester.tap(_button('aee-cbcp-set-1', 'Redeem 5 ICR credits'));
+        await tester.tap(_button('aee-cbcp-set-1', 'Redeem 5 ICR Credits'));
         await tester.pumpAndSettle();
-        expect(find.text('5 ICR credits for “AEE CBCP” – Set 1?'), findsOneWidget);
-        expect(find.text('This set opens for good. You will have 95 ICR credits left.'), findsOneWidget);
-        await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 credits'));
+        expect(find.text('5 ICR Credits for “AEE CBCP” – Set 1?'), findsOneWidget);
+        expect(find.text('This set opens permanently. You will have 95 ICR credits left.'), findsOneWidget);
+        await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 Credits'));
         await tester.pumpAndSettle();
         expect(h.fake.calls, contains('redeem:aee-cbcp-set-1'));
         expect(_button('aee-cbcp-set-1', 'Start Test'), findsOneWidget);
@@ -2417,7 +2434,7 @@ void main() {
       expect(_in('aee-cem-set-1', find.text('₹299 + GST')), findsOneWidget);
       expect(_in('aee-cem-set-1', find.text('or 3 ICR credits')), findsOneWidget);
       final paid = _stubPayments();
-      await tester.tap(_button('aee-cem-set-1', 'Pay now'));
+      await tester.tap(_button('aee-cem-set-1', 'Pay Now'));
       await tester.pumpAndSettle();
       expect(h.fake.checkouts, ['aee-cem-set-1']);
       expect(paid.single.action, 'https://pay.test/_payment');
@@ -2438,25 +2455,28 @@ void main() {
         member: assessMember(open: {}, mocks: const PlanPlaces(limit: 1), mockUpgradePlan: 'Pro Plus'),
       );
       await _group(tester, 'AEE CBCP', fake: fake, mock: true);
-      expect(find.text('Your plan includes 1 mock exam, and 1 is still free. Every set opens with it.'), findsOneWidget);
-      expect(find.widgetWithText(RowButton, 'Open with my plan'), findsNWidgets(3), reason: 'the card and two sets');
-      await tester.tap(find.widgetWithText(RowButton, 'Open with my plan').first);
+      expect(
+        find.text('Your plan includes 1 mock exam, and 1 is still free. Every set opens with it.'),
+        findsOneWidget,
+      );
+      expect(find.widgetWithText(RowButton, 'Open with My Plan'), findsNWidgets(3), reason: 'the card and two sets');
+      await tester.tap(find.widgetWithText(RowButton, 'Open with My Plan').first);
       await tester.pumpAndSettle();
-      expect(find.text('Open “AEE CBCP” with your plan?'), findsOneWidget);
+      expect(find.text('Open “AEE CBCP” with Your Plan?'), findsOneWidget);
       expect(
         find.text('It takes one of the 1 mock exam your plan includes, and every set opens. None will be left.'),
         findsOneWidget,
       );
-      await tester.tap(find.widgetWithText(ActionButton, 'Open it'));
+      await tester.tap(find.widgetWithText(ActionButton, 'Open'));
       await tester.pumpAndSettle();
       expect(fake.calls, contains('openWithPlan:mock:topic-aee-cbcp'));
-      expect(find.text('This mock exam is open with your plan: every set is yours to sit.'), findsOneWidget);
+      expect(find.text('This mock exam is open with your plan. You can take every set.'), findsOneWidget);
       expect(find.widgetWithText(RowButton, 'Start Test'), findsNWidgets(2));
     });
 
     testWidgets('no plan opens more mock exams: the card offers no plans link; with one it names it', (tester) async {
       await _group(tester, 'AEE CBCP', mock: true);
-      expect(find.widgetWithText(TextButton, 'See plans'), findsNothing);
+      expect(find.widgetWithText(TextButton, 'See Plans'), findsNothing);
       final fake = FakeAssess(
         member: assessMember(open: {}, mockUpgradePlan: 'Pro Plus'),
       );
@@ -2477,8 +2497,8 @@ void main() {
           if (t.key != 'aee-cbcp') t,
       ];
       await _pull(tester, find.byType(ListView).last);
-      expect(find.text('Subject not found'), findsOneWidget);
-      expect(find.text('All subjects'), findsOneWidget);
+      expect(find.text('Subject Not Found'), findsOneWidget);
+      expect(find.text('All Subjects'), findsOneWidget);
     });
   });
 
@@ -2506,7 +2526,7 @@ void main() {
       expect(find.byKey(const ValueKey('paper-cm-foundation')), findsOneWidget);
       await tester.tap(_button('cm-foundation', 'Redeem'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 credits'));
+      await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 Credits'));
       await tester.pumpAndSettle();
       expect(_button('cm-foundation', 'Start Assessment'), findsOneWidget);
     });
@@ -2632,7 +2652,7 @@ void main() {
         expect(b.inCredits, 10);
         final r = await repo.redeemBundle(PaperKind.assessment, 'CP');
         expect(api.calls.last, 'POST /learning/assessment-bundles/CP/redeem');
-        expect(r.unlockedCourseIds, ['course-cp'], reason: 'a flash-card deck of the same name follows these');
+        expect(r.unlockedCourseIds, ['course-cp'], reason: 'a flashcard deck of the same name follows these');
       });
 
       test('an API without the credit bundle (production today) offers none, however it answers', () async {
@@ -2711,7 +2731,7 @@ void main() {
         },
       );
 
-      test('a programme\'s course is noted as opened, for the flash-card deck of the same name', () async {
+      test('a programme\'s course is noted as opened, for the flashcard deck of the same name', () async {
         final fake = FakeAssess(
           bundle: const BundleQuote(
             courseCode: 'CP',
@@ -2785,9 +2805,9 @@ void main() {
 
         await tester.tap(find.byKey(const ValueKey('bundle-redeem-credits')));
         await tester.pumpAndSettle();
-        expect(find.text('5 ICR credits for “AEE CBCP”?'), findsOneWidget);
-        expect(find.text('All 2 sets open for good. You will have 95 ICR credits left.'), findsOneWidget);
-        await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 credits'));
+        expect(find.text('5 ICR Credits for “AEE CBCP”?'), findsOneWidget);
+        expect(find.text('All 2 sets open permanently. You will have 95 ICR credits left.'), findsOneWidget);
+        await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 Credits'));
         await tester.pumpAndSettle();
 
         expect(h.fake.calls, contains('redeemBundle:mock:aee-cbcp'));
@@ -2813,12 +2833,12 @@ void main() {
         final fake = FakeAssess(bundle: cbcpCredits(), member: assessMember(credits: 3));
         await _group(tester, 'AEE CBCP', fake: fake, mock: true);
         expect(find.text('You have 3 ICR credits · 1 credit = ₹100'), findsOneWidget);
-        expect(find.widgetWithText(TextButton, 'Earn more'), findsOneWidget);
+        expect(find.widgetWithText(TextButton, 'Earn More'), findsOneWidget);
         expect(tester.widget<RowButton>(find.byKey(const ValueKey('bundle-redeem-credits'))).onPressed, isNull);
         await tester.tap(find.byKey(const ValueKey('bundle-redeem-credits')), warnIfMissed: false);
         await tester.pumpAndSettle();
         expect(fake.count('redeemBundle'), 0);
-        expect(find.text('5 ICR credits for “AEE CBCP”?'), findsNothing);
+        expect(find.text('5 ICR Credits for “AEE CBCP”?'), findsNothing);
       });
 
       testWidgets('the API\'s refusal is shown as it is worded', (tester) async {
@@ -2830,7 +2850,7 @@ void main() {
         await _group(tester, 'AEE CBCP', fake: fake, mock: true);
         await tester.tap(find.byKey(const ValueKey('bundle-redeem-credits')));
         await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 credits'));
+        await tester.tap(find.widgetWithText(ActionButton, 'Redeem 5 Credits'));
         await tester.pumpAndSettle();
         expect(find.text('A set was opened meanwhile, so what is left costs less. Please look again.'), findsOneWidget);
         expect(_button('aee-cbcp-set-1', 'Start Test'), findsNothing);
@@ -2878,10 +2898,10 @@ void main() {
           findsOneWidget,
           reason: 'the list price struck through, the percent off, the plan, the credits',
         );
-        expect(_button('aee-cem-set-1', 'Pay now'), findsOneWidget);
+        expect(_button('aee-cem-set-1', 'Pay Now'), findsOneWidget);
         expect(_button('aee-cem-set-1', 'Redeem'), findsOneWidget, reason: 'the credits are said beside the price');
         final paid = _stubPayments();
-        await tester.tap(_button('aee-cem-set-1', 'Pay now'));
+        await tester.tap(_button('aee-cem-set-1', 'Pay Now'));
         await tester.pumpAndSettle();
         expect(h.fake.checkouts, ['aee-cem-set-1']);
         expect(paid.single.fields, {'txnid': 'T1'});
@@ -2889,8 +2909,8 @@ void main() {
 
       testWidgets('a set with no price shows the credits alone, as before', (tester) async {
         await _group(tester, 'AEE CBCP', mock: true);
-        expect(_button('aee-cbcp-set-1', 'Pay now'), findsNothing);
-        expect(_button('aee-cbcp-set-1', 'Redeem 5 ICR credits'), findsOneWidget);
+        expect(_button('aee-cbcp-set-1', 'Pay Now'), findsNothing);
+        expect(_button('aee-cbcp-set-1', 'Redeem 5 ICR Credits'), findsOneWidget);
         expect(_in('aee-cbcp-set-1', find.text('5 ICR credits')), findsOneWidget);
       });
     });
@@ -2905,7 +2925,7 @@ void main() {
         expect(find.text('BUNDLE · 30% OFF'), findsOneWidget);
         expect(find.text('Get all 3 levels together'), findsOneWidget);
         expect(find.textContaining('₹1,607.90 + GST'), findsOneWidget);
-        expect(find.text('Offer valid till 31 Dec 2026'), findsOneWidget);
+        expect(find.text('Offer valid until 31 Dec 2026'), findsOneWidget);
         expect(find.text('23 credits  13 ICR credits'), findsOneWidget, reason: 'one at a time struck, the bundle');
         expect(find.text('Save 10 ICR credits'), findsOneWidget);
         expect(find.text('You have 100 ICR credits · 1 credit = ₹100'), findsOneWidget, reason: 'once, over the rows');
@@ -2919,8 +2939,8 @@ void main() {
 
         await tester.tap(find.byKey(const ValueKey('bundle-redeem-credits')));
         await tester.pumpAndSettle();
-        expect(find.text('13 ICR credits for “Contract Management”?'), findsOneWidget);
-        expect(find.text('All 3 levels open for good. You will have 87 ICR credits left.'), findsOneWidget);
+        expect(find.text('13 ICR Credits for “Contract Management”?'), findsOneWidget);
+        expect(find.text('All 3 levels open permanently. You will have 87 ICR credits left.'), findsOneWidget);
       });
 
       testWidgets('a bundle that cannot be paid for online still redeems in credits', (tester) async {

@@ -84,7 +84,7 @@ class MentorDeskScreen extends StatefulWidget {
   /// Opens a page of the website (a path such as `/profile`): the few things the app hands over.
   final OpenSitePath? onOpenWebsite;
 
-  /// "Become a mentor" / "Continue your application": the lead wires it to the become-a-mentor screen.
+  /// "Become a Mentor" / "Continue Application": the lead wires it to the become-a-mentor screen.
   final void Function(BuildContext context)? onBecomeMentor;
 
   final DeskTab initialTab;
@@ -139,7 +139,7 @@ class _MentorDeskScreenState extends State<MentorDeskScreen> {
       listenable: _c,
       builder: (context, _) {
         return MentoringPage(
-          title: 'Mentor desk',
+          title: 'Mentor Desk',
           onBack: widget.onBack,
           onBell: () => _links.notifications(context),
           body: switch (_c.gate) {
@@ -147,7 +147,7 @@ class _MentorDeskScreenState extends State<MentorDeskScreen> {
             DeskGate.failed => LoadedList(
               loading: false,
               error: _c.dashboard.error,
-              errorTitle: "Couldn't load your desk",
+              errorTitle: 'Unable to Load Your Desk',
               onRefresh: _c.refresh,
               children: const [],
             ),
@@ -240,25 +240,25 @@ class _NotYet extends StatelessWidget {
     final none = d == null || !d.hasProfile;
     final (title, body, button) = none
         ? (
-            "You're not a mentor yet",
-            'Build a mentor profile and, once ICR approves it, this is where you run your mentoring: requests, mentees, calendar, hours and earnings.',
-            'Become a mentor',
+            'You Are Not a Mentor Yet',
+            'Create a mentor profile. Once ICR approves it, you manage your mentoring here: requests, mentees, calendar, hours and earnings.',
+            'Become a Mentor',
           )
         : switch (status) {
             DeskStatus.pending => (
-              'Your application is in review',
-              'ICR is reading your mentor profile. The desk opens when it is approved.',
-              'See my application',
+              'Your Application Is in Review',
+              'ICR is reviewing your mentor profile. The desk opens when it is approved.',
+              'View My Application',
             ),
             DeskStatus.rejected => (
-              'Your application was not approved',
-              d.profile?.reviewNote ?? 'You can change your profile and send it again.',
-              'Change my application',
+              'Your Application Was Not Approved',
+              d.profile?.reviewNote ?? 'You can update your profile and submit it again.',
+              'Update My Application',
             ),
             _ => (
-              'Finish your application',
-              'Your mentor profile is a draft. Complete it and send it to ICR; the desk opens once it is approved.',
-              'Continue your application',
+              'Complete Your Application',
+              'Your mentor profile is a draft. Complete it and submit it to ICR. The desk opens once it is approved.',
+              'Continue Application',
             ),
           };
     return RefreshIndicator(

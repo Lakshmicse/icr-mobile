@@ -37,10 +37,10 @@ abstract class JobsRepository {
 
   Future<void> setSaved(Job job, bool saved);
 
-  /// Whether the member posts jobs for [company]: an admin, office admin or recruiter of it by any of their
-  /// memberships, not only the company they act for (the website and the API read it the same way). Someone who
-  /// manages a company's jobs never applies to one.
-  Future<bool> postsJobsFor(JobCompany company);
+  /// Where the member sits on [company]'s hiring team: a poster (admin, office admin or recruiter) or a hiring
+  /// manager of it by any of their memberships, not only the company they act for (the website and the API read it
+  /// the same way). Nobody on a company's hiring team applies to its jobs.
+  Future<HiringTeamSeat> hiringTeamSeatAt(JobCompany company);
 
   /// Whether the member already has a phone on file; applying needs one.
   Future<bool> hasPhone();

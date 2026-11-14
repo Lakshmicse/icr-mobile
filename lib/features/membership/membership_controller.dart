@@ -115,7 +115,7 @@ class MembershipController extends ChangeNotifier {
         _gateway = outcome;
         _message = 'Complete the payment to start $planName.';
       } else {
-        _message = 'The checkout for $planName was started; ICR will confirm it.';
+        _message = 'Checkout for $planName has started. ICR will confirm it.';
       }
     } catch (e) {
       _message = ApiError.from(e).message;

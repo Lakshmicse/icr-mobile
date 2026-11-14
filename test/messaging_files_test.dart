@@ -23,7 +23,7 @@ import 'messaging_fakes.dart';
 
 /// The paperclip (a photo or a file: refused by size and kind, uploaded, held
 /// in the box, sent, opened by the other side), shared ICR records (a card read
-/// through the record's own endpoint, "Share an ICR record", a link in a
+/// through the record's own endpoint, "Share an ICR Record", a link in a
 /// sentence) and the phone's own picker. What the API does with each call:
 /// `test/live/messaging_live_test.dart`.
 void main() {
@@ -51,7 +51,8 @@ void main() {
     threads: {
       'sarah': thread ?? [msg('s1', 'sarah', sarah, 'Hello', ago: 60, read: true)],
     },
-    contexts: {'sarah': const ConversationContext(kind: ConversationKind.direct, person: sarah)},
+    // An enquiry's thread: the RFQ pill is not drawn in a plain chat between two people (12 Nov 2026).
+    contexts: {'sarah': const ConversationContext(kind: ConversationKind.enquiry, person: sarah)},
   );
 
   Future<void> pump(
@@ -161,7 +162,7 @@ void main() {
       await pump(tester, picker: (context) async => file('setup.exe'));
       await tester.tap(attach());
       await tester.pumpAndSettle();
-      expect(find.text("That kind of file can't be sent. Send a photo, a PDF or an Office document."), findsOneWidget);
+      expect(find.text("This file type cannot be sent. Send a photo, a PDF or an Office document."), findsOneWidget);
       expect(repo.uploads, isEmpty);
     });
 
@@ -170,7 +171,7 @@ void main() {
       await pump(tester, repository: repository, picker: (context) async => file('Quote.pdf'));
       await tester.tap(attach());
       await tester.pumpAndSettle();
-      expect(find.text("The file couldn't be uploaded. Files of this type are not allowed."), findsOneWidget);
+      expect(find.text('Unable to upload the file. Files of this type are not allowed.'), findsOneWidget);
       expect(find.byKey(const ValueKey('attachment-bar')), findsNothing);
     });
 
@@ -305,7 +306,7 @@ void main() {
       await pump(tester, repository: repository);
       await tester.tap(find.byKey(const ValueKey('attachment-f1')));
       await tester.pumpAndSettle();
-      expect(find.text("The file couldn't be opened. The file is no longer available."), findsOneWidget);
+      expect(find.text('Unable to open the file. The file is no longer available.'), findsOneWidget);
       expect(opened, isEmpty);
     });
 
@@ -338,7 +339,7 @@ void main() {
       final thread = [msg('f1', 'sarah', sarah, '', ago: 30, attachment: 'Quote.pdf', deleted: true)];
       await pump(tester, repository: seeded(thread: thread));
       expect(find.text('Quote.pdf'), findsNothing);
-      expect(find.text('This message was deleted'), findsOneWidget);
+      expect(find.text('This message was deleted.'), findsOneWidget);
     });
   });
 
@@ -554,7 +555,7 @@ void main() {
       final r = seeded(thread: [msg('r1', 'sarah', sarah, 'https://icr.org.in/jobs/J1', ago: 30)])
         ..errors['record'] = ApiError("Can't reach ICR right now.");
       await pump(tester, repository: r);
-      expect(find.text("Couldn't load this job."), findsOneWidget);
+      expect(find.text('Unable to load this job.'), findsOneWidget);
     });
 
     testWidgets('while it loads the card shows its kind and a progress line', (tester) async {
@@ -588,7 +589,7 @@ void main() {
     });
   });
 
-  group('"Share an ICR record" (the link beside the paperclip)', () {
+  group('"Share an ICR Record" (the link beside the paperclip)', () {
     FakeMessagingRepository sharing() => seeded()
       ..searchRecordsAnswers[RecordType.job] = [
         const RecordFacts(
@@ -648,7 +649,7 @@ void main() {
         ];
       await pump(tester, repository: repository);
       await openPicker(tester);
-      expect(find.text('Share an ICR record'), findsOneWidget);
+      expect(find.text('Share an ICR Record'), findsOneWidget);
       expect(repo.calls, contains('searchRecords requirement ""'));
       expect(find.text('Annual Housekeeping'), findsOneWidget);
       expect(find.text('Global Infra'), findsOneWidget);
@@ -714,7 +715,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('picker-product')));
       await tester.pumpAndSettle();
-      expect(find.text('Nothing found'), findsOneWidget);
+      expect(find.text('No Results Found'), findsOneWidget);
 
       r.errors['searchRecords'] = ApiError('The server is busy.', statusCode: 503);
       r.searchRecordsAnswers[RecordType.mentor] = const [
@@ -724,10 +725,10 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('picker-mentor')));
       await tester.pumpAndSettle();
-      expect(find.text("Couldn't load these."), findsOneWidget);
+      expect(find.text('Unable to Load Records'), findsOneWidget);
       expect(find.text('The server is busy.'), findsOneWidget);
       r.errors.remove('searchRecords');
-      await tester.tap(find.text('Retry'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('Rajesh Sharma'), findsOneWidget);
       expect(find.text('VP Facility Ops · 14 yrs experience'), findsOneWidget);

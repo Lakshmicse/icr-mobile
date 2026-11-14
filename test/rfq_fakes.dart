@@ -85,7 +85,8 @@ class FlakyRfqRepository extends DemoRfqRepository {
   bool failMe = false;
 
   @override
-  Future<Poster> me() => _read('me', () => failMe ? Future<Poster>.error(ApiError('The server said no.', statusCode: 500)) : super.me());
+  Future<Poster> me() =>
+      _read('me', () => failMe ? Future<Poster>.error(ApiError('The server said no.', statusCode: 500)) : super.me());
 
   /// The buyer's list answers 403 (an account whose role does not post requirements).
   bool forbidMine = false;

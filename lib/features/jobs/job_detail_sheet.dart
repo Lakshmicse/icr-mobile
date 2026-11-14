@@ -67,6 +67,7 @@ Future<void> showJobDetail(
   )..load();
   await showDetailSheet<void>(
     context,
+    place: '/jobs/${job.id}',
     body: (_) => ChangeNotifierProvider.value(value: controller, child: const JobSheetBody()),
     bottomBar: (_) => ChangeNotifierProvider.value(value: controller, child: const JobSheetBar()),
   );
@@ -85,10 +86,10 @@ class JobSheetBody extends StatelessWidget {
     final intro = blocks.takeWhile((b) => b.kind == BlockKind.paragraph).toList();
     final rest = blocks.skip(intro.length).toList();
     final skills = [...job.skills, ...job.preferredSkills.where((s) => !job.skills.contains(s))];
-    // A match against your own company's job means nothing to the person posting it (the website hides it too).
-    final postsHere = controller.postsHere;
-    final match = postsHere ? null : controller.match;
-    final matchScore = postsHere ? null : job.matchScore;
+    // A match against your own company's job means nothing to its hiring team (the website hides it too).
+    final onTeam = controller.onHiringTeam;
+    final match = onTeam ? null : controller.match;
+    final matchScore = onTeam ? null : job.matchScore;
     final people = controller.people;
     final posted = postedAgo(job.postedAt);
     final count = applicantsOrOpenings(job);
@@ -124,7 +125,7 @@ class JobSheetBody extends StatelessWidget {
                   const SizedBox(width: 5.5),
                   Flexible(
                     child: Text(
-                      job.statusLine ?? (job.applied ? 'You have applied' : 'Accepting applications'),
+                      job.statusLine ?? (job.applied ? 'You Have Applied' : 'Accepting Applications'),
                       style: JobsText.status,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -192,7 +193,7 @@ class JobSheetBody extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('About the job', style: JobsText.section),
+                Text('About the Job', style: JobsText.section),
                 const SizedBox(height: 12),
                 if (intro.isEmpty)
                   Text('The employer has not written a description yet.', style: JobsText.body)
@@ -247,9 +248,9 @@ class JobSheetBody extends StatelessWidget {
             const SizedBox(height: 10),
             const Hairline(color: AppColors.blockRule),
           ],
-          // Someone who posts this company's jobs has no hiring contact to message (the website hides the card, and the
-          // API refuses the message): "Meet the hiring team" is for the people applying.
-          if (job.contact != null && !postsHere)
+          // The company's hiring team has no hiring contact to message as a candidate (the website hides the card, and
+          // the API refuses the message): "Meet the hiring team" is for the people applying.
+          if (job.contact != null && !onTeam)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 19.5, 16, 0),
               child: _HiringTeam(
@@ -349,26 +350,28 @@ class JobSheetBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = context.watch<JobDetailController>();
     final job = controller.job;
-    final label = job.applied ? 'Applied' : (job.externalApply ? 'Apply on company site' : 'Easy Apply');
+    final label = job.applied ? 'Applied' : (job.externalApply ? 'Apply on Company Site' : 'Easy Apply');
     return BottomActionBar(
       gap: 13,
       children: [
         SoftIconButton(
           icon: job.saved ? LucideIcons.bookmarkCheck : LucideIcons.bookmark,
-          label: job.saved ? 'Remove bookmark' : 'Save job',
+          label: job.saved ? 'Remove bookmark' : 'Save Job',
           selected: job.saved,
           iconColor: job.saved ? AppColors.primary : AppColors.onSurface,
           onPressed: () => JobSheetBody._run(context, controller.toggleSave()),
         ),
         Expanded(
-          // Someone who posts this company's jobs manages them and never applies to one: the website says so in
-          // place of its Apply button, and the API refuses the application anyway.
-          child: controller.postsHere
+          // The company's hiring team never applies to one of its jobs: the website says why in place of its Apply
+          // button (a poster manages the job, a hiring manager sits on its panels), and the API refuses anyway.
+          child: controller.onHiringTeam
               ? Padding(
-                  key: const ValueKey('posts-here'),
+                  key: ValueKey(controller.postsHere ? 'posts-here' : 'hiring-manager-here'),
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Text(
-                    'You post jobs for ${job.company.name}, so you manage this one rather than apply to it.',
+                    controller.postsHere
+                        ? 'You post jobs for ${job.company.name}, so you manage this one rather than apply to it.'
+                        : "You're a hiring manager at ${job.company.name}, so you can't apply to its jobs.",
                     style: JobsText.meta,
                   ),
                 )
@@ -415,7 +418,7 @@ class _Toolbar extends StatelessWidget {
         _ToolIcon(
           icon: job.saved ? LucideIcons.bookmarkCheck : LucideIcons.bookmark,
           size: 20,
-          label: job.saved ? 'Remove bookmark' : 'Save job',
+          label: job.saved ? 'Remove bookmark' : 'Save Job',
           color: job.saved ? AppColors.primary : AppColors.onSurfaceVariant,
           onTap: onSave,
         ),
@@ -434,17 +437,17 @@ class _Toolbar extends StatelessWidget {
                 children: [
                   ListTile(
                     leading: const Icon(Symbols.link),
-                    title: Text('Copy link', style: AppText.small.copyWith(color: AppColors.onSurface, fontSize: 14)),
+                    title: Text('Copy Link', style: AppText.small.copyWith(color: AppColors.onSurface, fontSize: 14)),
                     onTap: () {
                       Clipboard.setData(ClipboardData(text: link.toString()));
                       Navigator.pop(sheet);
-                      showMessage(context, 'Link copied');
+                      showMessage(context, 'Link copied.');
                     },
                   ),
                   ListTile(
                     leading: const Icon(Symbols.reviews),
                     title: Text(
-                      'Reviews, salaries and interviews',
+                      'Reviews, Salaries and Interviews',
                       style: AppText.small.copyWith(color: AppColors.onSurface, fontSize: 14),
                     ),
                     onTap: () {
@@ -461,10 +464,10 @@ class _Toolbar extends StatelessWidget {
                   ListTile(
                     leading: const Icon(Symbols.visibility_off),
                     title: Text(
-                      'Not interested',
+                      'Not Interested',
                       style: AppText.small.copyWith(color: AppColors.onSurface, fontSize: 14),
                     ),
-                    subtitle: Text('Hide this job from your board', style: AppText.small.copyWith(fontSize: 13)),
+                    subtitle: Text('Hide this job from your board.', style: AppText.small.copyWith(fontSize: 13)),
                     onTap: () async {
                       Navigator.pop(sheet);
                       final refusal = await controller.hide();
@@ -782,7 +785,7 @@ class _HiringTeam extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Meet the hiring team', style: JobsText.section),
+        Text('Meet the Hiring Team', style: JobsText.section),
         const SizedBox(height: 16.5),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),

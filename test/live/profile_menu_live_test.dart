@@ -220,7 +220,7 @@ void main() {
       expect(find.text(grouped), findsOneWidget, reason: "the API's own sum, grouped");
       expect(find.text('Post Impressions'), findsOneWidget);
       expect(find.text('View Full Profile'), findsNothing, reason: 'the photo and the name open the profile');
-      expect(find.text('Regional Chapters'), findsOneWidget);
+      expect(find.text('Chapters'), findsOneWidget);
       expect(find.text('Bengaluru, Pune, New Jersey'), findsOneWidget);
       expect(find.text('BLR'), findsOneWidget);
       expect(find.text('Working Councils'), findsOneWidget);
@@ -231,7 +231,7 @@ void main() {
       expect(find.text('Saved Jobs'), findsOneWidget);
       // Everything posted on ICR, with the member's own list on it (3 Nov 2026), then the supplier's board.
       expect(find.text('Requirements'), findsOneWidget);
-      expect(find.text('Find Work & Bid'), findsOneWidget);
+      expect(find.text("Enquiries and RFQ's"), findsOneWidget);
       expect(find.text('Certificates & Badges'), findsOneWidget);
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Sign Out'), findsOneWidget);

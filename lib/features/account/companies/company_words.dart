@@ -10,50 +10,41 @@ import '../account_models.dart';
 class CompanyWords {
   CompanyWords._();
 
-  static const listTitle = 'My companies';
-  static const listIntro =
-      'The companies you belong to on ICR. You work in one at a time, and your role, team and dashboard change with '
-      'the company you select.';
+  static const listTitle = 'My Companies';
   static const staffNote = 'ICR staff accounts are personal: they do not create or join companies.';
-  static const couldNotLoad = 'Could not load your companies.';
+  static const couldNotLoad = 'Unable to load your companies.';
+  static const couldNotLoadTitle = 'Unable to Load Your Companies';
 
-  static const emptyTitle = 'You are not part of a company yet';
+  static const emptyTitle = 'You Are Not Part of a Company Yet';
   static const emptyBody =
-      'Create a company page to buy, sell or hire on its behalf, or find your organisation in the directory and '
+      'Create a company page to buy, sell or hire on its behalf, or find your company in the directory and '
       'request to join.';
 
-  static const workspaces = 'All workspaces';
-  static const workspacesLead =
-      'Switch between the companies you belong to. Your personal account is always available.';
-  static const personalAccount = 'Personal account';
+  static const workspaces = 'All Companies';
+  static const workspacesLead = 'Switch between companies';
+  static const personalAccount = 'Personal Account';
   static const actingAsYourself = 'Acting as yourself';
   static const active = 'Active';
 
   static const onlyAdmin = 'You are the only admin. Appoint another admin from the team page before leaving.';
 
-  static const awaitingApproval = 'Awaiting approval';
+  static const awaitingApproval = 'Awaiting Approval';
   static const awaitingExplain = 'The company’s admins review each request. You can withdraw one at any time.';
 
-  static const askToJoinTitle = 'Ask to join a company';
+  static const askToJoinTitle = 'Ask to Join a Company';
   static const askToJoinLead =
-      'Find your organisation on ICR. An admin there decides; until then nothing changes for you, and they choose '
+      'Find your company on ICR. An admin there decides. Until then nothing changes for you, and they choose '
       'the role you join with.';
 
-  static const invitationsTitle = 'Waiting for you';
+  static const invitationsTitle = 'Waiting for You';
   static const invitationsExplain =
       'An admin added you to their team. You join only when you accept, and you can decline.';
   static const accept = 'Accept';
   static const accepting = 'Joining…';
   static const decline = 'Decline';
   static const declining = 'Declining…';
-  static const couldNotAccept = 'Could not accept that invitation.';
-  static const couldNotDecline = 'Could not decline that invitation.';
-
-  static const principles = <(String, String)>[
-    ('One company at a time', 'Switching reloads your dashboard, team, jobs and requirements for that company.'),
-    ('Your profile stays yours', 'Your credentials and messages remain with you, whichever company you act for.'),
-    ('Every company keeps an admin', 'The last admin appoints a successor from the team page before leaving.'),
-  ];
+  static const couldNotAccept = 'Unable to accept that invitation.';
+  static const couldNotDecline = 'Unable to decline that invitation.';
 
   /// "Pune, Maharashtra", or null.
   static String? place(String? city, String? state) {
@@ -96,6 +87,6 @@ class CompanyWords {
     'You lose access to ${c.name}’s team, jobs, requirements and dashboard.',
     'Your ICR account, profile and messages stay yours.',
     'To come back, an admin must invite you again or approve a new request.',
-    if (c.active) 'You carry on as your next company, or as yourself if you have none.',
+    if (c.active) 'You continue as your next company, or as yourself if you have none.',
   ];
 }

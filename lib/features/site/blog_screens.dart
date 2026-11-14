@@ -110,7 +110,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return SiteError(
-              message: snapshot.error is ApiError ? (snapshot.error! as ApiError).message : "Couldn't read the blog.",
+              message: snapshot.error is ApiError ? (snapshot.error! as ApiError).message : 'Unable to load the blog.',
               onRetry: () => setState(() {
                 _posts = _repo.posts();
               }),
@@ -119,7 +119,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
           final posts = snapshot.data;
           if (posts == null) return const SiteLoading();
           if (posts.isEmpty) {
-            return Center(child: Text('Nothing has been published yet.', style: SiteText.secondary));
+            return Center(child: Text('No posts published yet.', style: SiteText.secondary));
           }
           return ListView.separated(
             padding: const EdgeInsets.only(top: 8, bottom: 24),
@@ -215,7 +215,7 @@ class _BlogPostScreenState extends State<BlogPostScreen> {
               ? SiteError(
                   message: snapshot.error is ApiError
                       ? (snapshot.error! as ApiError).message
-                      : "This post couldn't be read.",
+                      : 'Unable to load this post.',
                   onRetry: () => setState(() {
                     _post = _repo.post(widget.slug);
                   }),

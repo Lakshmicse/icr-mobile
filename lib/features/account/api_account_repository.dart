@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../forum/follow_events.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
@@ -159,14 +160,23 @@ class ApiAccountRepository implements AccountRepository {
       MemberProfile.fromJson(await _getMap('/members/${Uri.encodeComponent(idOrSlug)}'));
 
   @override
-  Future<FollowState> follow(String memberId) => _call(
-    (dio) async => FollowState.fromJson((await dio.post<Map<String, dynamic>>('/members/$memberId/follow')).data),
-  );
+  Future<FollowState> follow(String memberId) async {
+    final state = await _call(
+      (dio) async => FollowState.fromJson((await dio.post<Map<String, dynamic>>('/members/$memberId/follow')).data),
+    );
+    // The feed's cards mark this author as followed at once (bug sheet #5, 9 Nov 2026).
+    FollowEvents.note(memberId, follows: true);
+    return state;
+  }
 
   @override
-  Future<FollowState> unfollow(String memberId) => _call(
-    (dio) async => FollowState.fromJson((await dio.delete<Map<String, dynamic>>('/members/$memberId/follow')).data),
-  );
+  Future<FollowState> unfollow(String memberId) async {
+    final state = await _call(
+      (dio) async => FollowState.fromJson((await dio.delete<Map<String, dynamic>>('/members/$memberId/follow')).data),
+    );
+    FollowEvents.note(memberId, follows: false);
+    return state;
+  }
 
   @override
   Future<List<ForumPost>> memberPosts(String userId, {int limit = 5}) async => (await _getList('/forum/threads', {

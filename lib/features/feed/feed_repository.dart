@@ -30,6 +30,9 @@ abstract class FeedRepository {
   /// card already holds everything (the sample content).
   Future<FeedPostDetail?> detail(FeedPost post) async => null;
 
+  /// The discussion a repost quotes, read whole (its photos and poll too); null when it cannot be read.
+  Future<FeedPost?> quoted(String slug) async => null;
+
   Future<List<FeedReply>> replies(FeedPost post);
   Future<void> reply(FeedPost post, String text, {String? parentId, List<Mention> mentions = const []});
   Future<void> deleteReply(FeedReply reply);

@@ -14,10 +14,10 @@ String? _text(Object? v) => v is String && v.trim().isNotEmpty ? v : null;
 /// `MentorProfileStatus`, worded as the website words it (`MENTOR_PROFILE_STATUS_LABELS`).
 enum MentorStatus {
   draft('DRAFT', 'Draft'),
-  pending('PENDING', 'Awaiting review'),
+  pending('PENDING', 'Awaiting Review'),
   approved('APPROVED', 'Listed'),
   paused('PAUSED', 'Paused'),
-  rejected('REJECTED', 'Not approved');
+  rejected('REJECTED', 'Not Approved');
 
   const MentorStatus(this.api, this.label);
   final String api;
@@ -34,11 +34,11 @@ enum MentorStatus {
 
 /// `MentorAudience`: who a mentor is happy to hear from.
 enum MentorAudience {
-  earlyCareer('EARLY_CAREER', 'Early career', 'Studying, or under two years in'),
-  workingProfessional('WORKING_PROFESSIONAL', 'Working professional', 'Established in an FM or CRE role'),
-  careerSwitcher('CAREER_SWITCHER', 'Career switcher', 'Coming from another discipline or sector'),
-  peopleLeader('PEOPLE_LEADER', 'People leader', 'Already leading a team or a portfolio'),
-  returner('RETURNER', 'Returning after a break', 'Coming back after time away');
+  earlyCareer('EARLY_CAREER', 'Early Career', 'Studying, or under two years of experience'),
+  workingProfessional('WORKING_PROFESSIONAL', 'Working Professional', 'Established in an FM or CRE role'),
+  careerSwitcher('CAREER_SWITCHER', 'Career Switcher', 'Coming from another discipline or sector'),
+  peopleLeader('PEOPLE_LEADER', 'People Leader', 'Already leading a team or a portfolio'),
+  returner('RETURNER', 'Returning After a Break', 'Coming back after time away');
 
   const MentorAudience(this.api, this.label, this.note);
   final String api;
@@ -51,17 +51,17 @@ enum MentorAudience {
 /// `MentorshipCadence`.
 const mentorCadences = <String, String>{
   'WEEKLY': 'Weekly',
-  'FORTNIGHTLY': 'Every two weeks',
+  'FORTNIGHTLY': 'Every Two Weeks',
   'MONTHLY': 'Monthly',
-  'ADHOC': 'As needed',
+  'ADHOC': 'As Needed',
 };
 
 /// `MentorshipMode`.
 const mentorModes = <String, String>{
-  'VIDEO': 'Video call',
+  'VIDEO': 'Video Call',
   'PHONE': 'Phone',
-  'IN_PERSON': 'In person',
-  'CHAT': 'Chat / async',
+  'IN_PERSON': 'In Person',
+  'CHAT': 'Chat / Async',
 };
 
 /// The 24 competency domains every ICR certification is mapped to: the labels a mentor's
@@ -230,16 +230,16 @@ class TrainingCourse {
 
   bool get notEnrolled => status == 'NOT_ENROLLED';
 
-  /// "Not started", "Enrolment confirmed", "Complete".
+  /// 'Not Started', 'Enrolment Confirmed', "Complete".
   String get statusLabel => completed
       ? 'Complete'
       : switch (status.toLowerCase()) {
-          'not_enrolled' => 'Not started',
-          'pending' => 'Enrolment pending',
-          'confirmed' => 'Enrolment confirmed',
-          'waitlisted' => 'Enrolment waitlisted',
-          'cancelled' => 'Enrolment cancelled',
-          'completed' => 'Enrolment completed',
+          'not_enrolled' => 'Not Started',
+          'pending' => 'Enrolment Pending',
+          'confirmed' => 'Enrolment Confirmed',
+          'waitlisted' => 'Enrolment Waitlisted',
+          'cancelled' => 'Enrolment Cancelled',
+          'completed' => 'Enrolment Completed',
           final other => 'Enrolment $other',
         };
 }
@@ -354,9 +354,9 @@ class CodeOfConduct {
 /// `MentorDocumentKind` a mentor may attach (a photo ID is no longer collected).
 const mentorDocumentKinds = <String, String>{
   'CERTIFICATION': 'Certificate',
-  'EMPLOYMENT_PROOF': 'Proof of employment',
+  'EMPLOYMENT_PROOF': 'Proof of Employment',
   'REFERENCE_LETTER': 'Reference',
-  'BACKGROUND_CHECK': 'Background check',
+  'BACKGROUND_CHECK': 'Background Check',
   'OTHER': 'Other',
 };
 
@@ -389,8 +389,8 @@ class MentorDocument {
   String get kindLabel => mentorDocumentKinds[kind] ?? (kind == 'ID_PROOF' ? 'Photo ID' : 'Document');
   String get statusLabel => switch (status) {
     'VERIFIED' => 'Verified',
-    'REJECTED' => 'Not accepted',
-    _ => 'Awaiting review',
+    'REJECTED' => 'Not Accepted',
+    _ => 'Awaiting Review',
   };
 
   /// Only a document nobody has reviewed yet can be taken back.

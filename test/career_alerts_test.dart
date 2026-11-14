@@ -12,7 +12,7 @@ import 'career_fakes.dart';
 import 'helpers/fonts.dart';
 import 'jobs_fakes.dart';
 
-/// "Job alerts": the list, the switch, how often, the matches, make, edit and delete. What the API
+/// 'Job Alerts': the list, the switch, how often, the matches, make, edit and delete. What the API
 /// does with the taps is proved in `test/live/career_alerts_live_test.dart`.
 
 final _now = DateTime(2026, 10, 26, 12);
@@ -70,16 +70,16 @@ void main() {
   group('the list', () {
     testWidgets('names each search with its filters, how often it speaks and what is new', (tester) async {
       await pumpAlerts(tester);
-      expect(find.text('Job alerts'), findsOneWidget);
+      expect(find.text('Job Alerts'), findsOneWidget);
       expect(find.text('Facilities & Real Estate'), findsOneWidget);
-      expect(find.text('2 new'), findsOneWidget);
+      expect(find.text('2 New'), findsOneWidget);
       expect(find.descendant(of: card('alert-1'), matching: find.text('Bengaluru')), findsOneWidget);
       expect(find.descendant(of: card('alert-1'), matching: find.text('India')), findsOneWidget);
       expect(find.descendant(of: card('alert-2'), matching: find.text('“MEP”')), findsOneWidget);
       expect(find.descendant(of: card('alert-2'), matching: find.text('Remote')), findsOneWidget);
       expect(find.byKey(const ValueKey('alert-state-alert-1')), findsOneWidget);
-      expect(find.text('Telling you daily'), findsOneWidget);
-      expect(find.text('Telling you weekly'), findsOneWidget);
+      expect(find.text('Notifying you daily'), findsOneWidget);
+      expect(find.text('Notifying you weekly'), findsOneWidget);
       expect(find.text('2 new jobs match your searches.'), findsOneWidget);
     });
 
@@ -90,9 +90,9 @@ void main() {
       }
       await pumpAlerts(tester, repo: repo);
       expect(find.byKey(const ValueKey('alerts-empty')), findsOneWidget);
-      await tester.tap(find.text('Create an alert'));
+      await tester.tap(find.text('Create an Alert'));
       await tester.pumpAndSettle();
-      expect(find.text('New job alert'), findsOneWidget);
+      expect(find.text('New Job Alert'), findsOneWidget);
     });
 
     testWidgets('a list that cannot load says why, and Try again reads it again', (tester) async {
@@ -101,7 +101,7 @@ void main() {
       expect(find.byKey(const ValueKey('alerts-error')), findsOneWidget);
       expect(find.text('The alerts are down.'), findsOneWidget);
       broken.down = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('Facilities & Real Estate'), findsOneWidget);
     });
@@ -129,7 +129,7 @@ void main() {
       // And back on.
       await tester.tap(find.byKey(const ValueKey('alert-switch-alert-1')));
       await tester.pumpAndSettle();
-      expect(find.text('Telling you daily'), findsOneWidget);
+      expect(find.text('Notifying you daily'), findsOneWidget);
     });
 
     testWidgets('Weekly changes how often an alert speaks', (tester) async {
@@ -138,7 +138,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(rig.repo.log.last, 'updateAlert alert-1 name=null criteria=null enabled=null frequency=WEEKLY');
       expect(find.byKey(const ValueKey('alert-state-alert-1')), findsOneWidget);
-      expect(tester.widget<Text>(find.byKey(const ValueKey('alert-state-alert-1'))).data, 'Telling you weekly');
+      expect(tester.widget<Text>(find.byKey(const ValueKey('alert-state-alert-1'))).data, 'Notifying you weekly');
     });
 
     testWidgets('a refused switch is put back, with the API\'s sentence', (tester) async {
@@ -147,7 +147,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('alert-switch-alert-1')));
       await tester.pumpAndSettle();
       expect(find.text('Alerts are paused for your account.'), findsOneWidget);
-      expect(tester.widget<Text>(find.byKey(const ValueKey('alert-state-alert-1'))).data, 'Telling you daily');
+      expect(tester.widget<Text>(find.byKey(const ValueKey('alert-state-alert-1'))).data, 'Notifying you daily');
     });
   });
 
@@ -156,15 +156,15 @@ void main() {
       tester,
     ) async {
       final rig = await pumpAlerts(tester);
-      expect(find.text('See 2 new'), findsOneWidget);
+      expect(find.text('View 2 New'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('alert-matches-alert-1')));
       await tester.pumpAndSettle();
       expect(rig.repo.log, contains('runAlert alert-1 1'));
-      expect(find.text('2 new'), findsNothing, reason: 'the badge counts as seen');
-      expect(find.text('Hide matches'), findsOneWidget);
+      expect(find.text('2 New'), findsNothing, reason: 'the badge counts as seen');
+      expect(find.text('Hide Matches'), findsOneWidget);
       expect(find.descendant(of: card('alert-1'), matching: find.byType(JobRow)), findsNWidgets(3));
       expect(rig.changed, isNotEmpty);
-      expect(find.text('Searches you saved. We tell you when new jobs match.'), findsOneWidget);
+      expect(find.text('Your saved searches. We will notify you when new jobs match.'), findsOneWidget);
     });
 
     testWidgets('Hide matches folds the list away; opening another search closes the first', (tester) async {
@@ -249,7 +249,7 @@ void main() {
       final rig = await pumpAlerts(tester);
       await tester.tap(find.byKey(const ValueKey('new-alert')));
       await tester.pumpAndSettle();
-      expect(find.text('New job alert'), findsOneWidget);
+      expect(find.text('New Job Alert'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('alert-save')));
       await tester.pumpAndSettle();
       expect(find.text('Give the search a name.'), findsOneWidget);
@@ -269,7 +269,7 @@ void main() {
         rig.repo.log.last,
         'createAlert MEP in Pune {search: MEP, city: Pune,Mumbai, workMode: HYBRID, employmentType: FULL_TIME, salaryMin: 1200000} true WEEKLY',
       );
-      expect(find.text('Alert saved. We will tell you when new jobs match.'), findsOneWidget);
+      expect(find.text('Alert saved. We will notify you when new jobs match.'), findsOneWidget);
       expect(find.text('MEP in Pune'), findsOneWidget);
       expect(rig.changed, isNotEmpty);
     });
@@ -289,7 +289,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('alert-save')));
       await tester.pumpAndSettle();
       expect(repo.log.where((l) => l.startsWith('createAlert')), hasLength(2));
-      expect(find.text('Alert saved. We will tell you when new jobs match.'), findsOneWidget);
+      expect(find.text('Alert saved. We will notify you when new jobs match.'), findsOneWidget);
     });
 
     testWidgets('the form can start from a search the board was showing, with a name suggested', (tester) async {
@@ -298,13 +298,13 @@ void main() {
         startWithForm: true,
         criteria: const AlertCriteria(search: 'chiller', cities: ['Pune'], workModes: {WorkMode.onsite}),
       );
-      expect(find.text('New job alert'), findsOneWidget);
-      expect(find.text('chiller • Pune • On-site'), findsOneWidget);
+      expect(find.text('New Job Alert'), findsOneWidget);
+      expect(find.text('chiller • Pune • On-Site'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('alert-save')));
       await tester.pumpAndSettle();
       expect(
         rig.repo.log.last,
-        startsWith('createAlert chiller • Pune • On-site {search: chiller, city: Pune, workMode: ONSITE}'),
+        startsWith('createAlert chiller • Pune • On-Site {search: chiller, city: Pune, workMode: ONSITE}'),
       );
     });
   });
@@ -315,9 +315,9 @@ void main() {
     ) async {
       final rig = await pumpAlerts(tester);
       await openMenu(tester, 'alert-1');
-      await tester.tap(find.text('Edit search'));
+      await tester.tap(find.text('Edit Search'));
       await tester.pumpAndSettle();
-      expect(find.text('Edit search'), findsOneWidget);
+      expect(find.text('Edit Search'), findsOneWidget);
       expect(find.text('Facilities & Real Estate'), findsWidgets);
       expect(find.text('Bengaluru'), findsWidgets);
       await tester.enterText(find.byKey(const ValueKey('alert-name')), 'Bengaluru facilities');
@@ -334,7 +334,7 @@ void main() {
     testWidgets('Delete asks first; Keep does nothing, Delete removes the search', (tester) async {
       final rig = await pumpAlerts(tester);
       await openMenu(tester, 'alert-2');
-      await tester.tap(find.text('Delete alert'));
+      await tester.tap(find.text('Delete Alert'));
       await tester.pumpAndSettle();
       expect(find.text('Delete “Remote MEP roles”?'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('delete-alert-keep')));
@@ -342,7 +342,7 @@ void main() {
       expect(rig.repo.log.where((l) => l.startsWith('deleteAlert')), isEmpty);
 
       await openMenu(tester, 'alert-2');
-      await tester.tap(find.text('Delete alert'));
+      await tester.tap(find.text('Delete Alert'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('delete-alert-confirm')));
       await tester.pumpAndSettle();
@@ -356,7 +356,7 @@ void main() {
       final repo = SpyCareer(now: _now)..alertError = ApiError('Saved search not found', statusCode: 404);
       await pumpAlerts(tester, repo: repo);
       await openMenu(tester, 'alert-2');
-      await tester.tap(find.text('Delete alert'));
+      await tester.tap(find.text('Delete Alert'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('delete-alert-confirm')));
       await tester.pumpAndSettle();

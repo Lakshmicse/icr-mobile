@@ -22,7 +22,7 @@ import 'helpers/layout_audit.dart';
 
 /// The Learning screens on the sample content, at the widths phones come in, looked over for text drawn in a box
 /// shorter than its own lines (the app's 12 sp floor, 27 Oct 2026, left the design's 14–16 dp boxes too short:
-/// the course sheet's tabs and "Select Date" row, the institute line on a course card, the "Free" and
+/// the course sheet's tabs and "Select Batch" row, the institute line on a course card, the "Free" and
 /// "Verified by ICR" pills, the "ICR" tab, the section headings). A `clipped` line from [layoutProblems] is
 /// text Flutter cuts off without a sound; none of the Learning screens may have one.
 void main() {
@@ -71,7 +71,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.text('Select Date'), findsOneWidget, reason: 'the sheet is drawn, with its dates');
+        expect(find.text('Select Batch'), findsOneWidget, reason: 'the sheet is drawn, with its dates');
         expect(clipped(), isEmpty);
       });
     }
@@ -135,7 +135,7 @@ void main() {
           final hub = await start(tester);
           await tester.pumpWidget(app(PartnerCoursesScreen(onBack: () {}, hub: hub), scale));
           await tester.pumpAndSettle();
-          expect(find.text('Partner institutes'), findsOneWidget);
+          expect(find.text('Learning Partners'), findsOneWidget);
           expect(find.text('Verified by ICR'), findsWidgets, reason: 'a verified institute is in the sample content');
           expect(clipped(), isEmpty);
         });

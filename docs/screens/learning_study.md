@@ -15,7 +15,7 @@ Both are the website's **Resource Center** read two ways: a shelf (`LearningReso
 - **The summary** (after the last card, or Finish): a green check, "Deck complete", "You went through 40 cards.", three tiles (Got it / Still learning / Not marked), "N starred for another pass", **"Study the N you have not got"** (a pass over just the cards not marked Got it, with a banner and a "Whole deck" link back), **Start over**, **Back to the last card**, **All decks**. When every card is known the lead says "You know all N cards." and the button is "Study them again".
 - **A deck whose course is closed** (a refusal that names `course`): the study screen shows a lock, **"Opens with “Capital Planning”"**, the API's own sentence ("These flash cards open with “Capital Planning”. Your plan includes 3 Assess your knowledge courses, and 3 are still free: open the course with your plan to read its cards and sit its levels." / "...Your plan opens 3 ... courses, and you have opened them all. Redeem ICR credits for a level of the course, or buy one...") and **"Open Capital Planning"**, which pushes the course's own page in the app (`openAssessCourse`, `lib/features/learning_study/open_course.dart`: the programme's `GroupScreen` with its plan card, ICR credits, the bundle and the price), then **asks for the deck again when the member is back**, so a deck opens at once if its course did; also when the app returns to the front. "All decks" leaves. No "See plans": the course's page is the way in.
 - **A deck on its own the plan does not open**: the study screen shows a lock, "This deck isn't open on your plan", **the API's own sentence** ("Your plan opens 3 flash-card decks, and you have opened them all.", "Flash-card decks are not included in your plan.", "Sign in to open ..."), "See plans" (the website's `/pricing/<slug>` the API names) and "All decks".
-- **`KnowledgeCenterScreen({required VoidCallback onBack, StudyRepository? repository})`** — the formulas. `TitleBar` "Knowledge Center", search ("Search formulas..."), chips (All 87, one per group with its count), then **every group's formulas as one list under the group's heading** (its picture, name, "25 formulas"): a row is a number plate (01, 02… within the group, stable under a search), the name (two lines) and a chevron. The website opens one group at a time; on a phone one list is shorter to reach, and the search finds a formula wherever it sits.
+- **`KnowledgeCenterScreen({required VoidCallback onBack, StudyRepository? repository})`** — the formulas. `TitleBar` "Knowledge Center", search ("Search formulas..."), chips (All 87, one per group with its count), then, on **All**, the **topics** (owner, 9 Nov 2026: "when All is tapped it should show all topics"): one row per group with its picture, name, "25 formulas" and a chevron, a tap opening that group. A group's chip (or a topic row) lists **its formulas under its heading**: a row is a number plate (01, 02… within the group, stable under a search), the name (two lines) and a chevron. A search looks across every group and lists the matches under their headings, whichever chip is lit.
 - **`showFormulaSheet(context, entries:, index:)`** — a formula in full over the Knowledge Center (`showDetailSheet`): the group chip and "3 of 22", the name, **Formula** (the expression drawn as math in a tinted plate), **Where** (the variables), one **Worked example** per example (the figures it starts from, the working, the result, the analysis, the decision in a green callout), Related tags, the source link; pinned at the foot: previous, **Copy formula**, next, paging through the list the person was looking at (a search's matches, a group's).
 
 ## How the screens are wired
@@ -143,3 +143,46 @@ Measured with `tool/design/measure.py` on the 390 dp frame (the export is 1x: 46
 ## Tests added with the course link (27 Oct 2026)
 
 `test/learning_study_linked_test.dart` (22): `DeckPlan.courseOpen / stateFor / noteFor` (a place, credits, a plan with no number, a place left never opens a linked deck, only the oldest `limit` courses count); the JSON mapping (`courseId`/`course`, `unlockedCourseIds`, `openedCourseIds`, a refusal naming its course, an old API reading as every deck on its own); the grid (locked and named, open through a plan place, open through a level held on a plan with no decks, no number, every deck linked, the old API, a deck whose name differs from its course's, and **back in front the plan is read again and the deck opens at once**); the lock screen (the course's name, the API's sentence, "Open Capital Planning", no "See plans"; the button opens the course page, then the deck is asked for again and opens; back in front on the lock screen it does too; a deck on its own keeps its old notice); and `openAssessCourse` (reads the course by its code, pushes its page, completes when the page is left; a course that cannot be read says why and opens nothing). Goldens: `study_decks_linked`, `study_deck_course_lock`. Live, read-only (`test/live/learning_study_live_test.dart`): every linked deck's open/locked mark equals what the API answers for Bharat, every refusal names the deck's own course, and a visitor is refused with `SIGN_IN` naming it.
+
+## 7 Nov 2026: read-aloud and sharing
+
+* **Read aloud** (the website's `useReadAloud`): a speaker in the player bar (`study-speak`) reads the face showing through the phone's speech engine (`flutter_tts`, `en-IN`); it stops as soon as the card or its face changes, and when the page is left. The manifest declares the `TTS_SERVICE` query. Owner: "Audio is not integrated in flash cards".
+* **Share formula** (`formula-share`) replaces Copy formula: the phone's share sheet gets the name, the formula, its variables and the Knowledge Center's link (`formulaShareText`). Owner: "we should share the whole link of the formula".
+
+## 9 Nov 2026: All lists the topics (bug sheet #22)
+
+`KnowledgeCenterScreen`'s "All" showed every group's formulas at once, which the owner read as "subtopics instead of topics". It now lists the groups (`_TopicRow`, key `knowledge-topic-<slug>`); a tap selects the group as its chip does, and a group that failed to load still shows its error row under its topic row. The search keeps listing matches across groups. Tests: `the formulas are one list under their group's heading…` (now opens a topic first), `a group chip narrows the list…`, `the search finds a formula…` (Clear search brings the topics back), `a group that did not load says why…`.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+Wording only. Flashcards and Knowledge Centre keep the client's 12 Nov words; "flash cards" and "flash-card" in the
+app's own sentences now read "Flashcards" / "flashcard" to match.
+
+State titles are headings (the lead's decision the same day): an empty-state, locked-state or error title is in Title Case with no full stop, and the line under it stays a sentence.
+
+| Where | Old | New |
+| --- | --- | --- |
+| Load errors: 4 strings | Couldn't load the decks · Couldn't load the cards · Couldn't load the formulas · Couldn't load this group. | Unable to Load the Decks · Unable to Load the Cards · Unable to Load the Formulas · Unable to load this group. (an inline line, so a sentence) |
+| Empty and locked titles to Title Case: 8 strings | No deck matches · No flashcards available yet · No starred cards yet · No cards to study · No formula matches · No card matches "zebra" … | No Deck Matches · No Flashcards Available Yet · No Starred Cards Yet · No Cards to Study · No Formula Matches · No Card Matches "zebra" … |
+| A deck the plan does not open | This deck isn't open on your plan | This Deck Is Not Open on Your Plan |
+| Buttons, links and menu rows to Title Case: 14 strings | Clear search · See plans · All decks · Back to decks · Study starred (2) · Study starred cards (2) · Back to all cards · Pass summary · Whole deck · Start over · Study them again · Back to the last card · Open resource · Try again … | Clear Search · See Plans · All Decks · Back to Decks · Study Starred (2) · Study Starred Cards (2) · Back to All Cards · Pass Summary · Whole Deck · Start Over · Study Them Again · Back to the Last Card · Open Resource · Try Again … |
+| The mark buttons, their tally and the summary's tiles | Got it · Still learning · Got it 1 · Still learning 1 · Not marked | Known · Still Learning · Known 1 · Still learning 1 · Not Marked |
+| The summary's main button | Study the 3 you have not got | Study the 3 Not Yet Known |
+| The banner over a pass of the rest | Studying the 3 you have not got yet | Studying the 3 not yet known |
+| The summary's heading | Deck complete · Starred cards done | Deck Complete · Starred Cards Done |
+| The starred session's title | Starred cards | Starred Cards |
+| No starred cards | Tap the star on a card while you study and it is kept here for another pass. | Tap the star on a card while you study to keep it here for another pass. |
+| A deck with no cards | Cards show up here as ICR publishes them. | Cards will appear here as ICR publishes them. |
+| The decks' search | Search flash-card decks... | Search flashcard decks... |
+| The plan line | Flash cards are not included in your plan. · Your plan opens 3 flash-card decks (1 used). | Flashcards are not included in your plan. · Your plan opens 3 flashcard decks (1 used). |
+| The plan line, with linked decks | A deck that goes with an Assess your knowledge course opens with that course. | A deck linked to a Knowledge Assessment course opens with that course. |
+| A formula's sheet | Worked example · Worked example 2 | Worked Example · Worked Example 2 |
+
+Left as they were: the card's hints ("Tap card to reveal standard explanation", "Tap card to see the question again")
+and "Flip Card", from the design; QUESTION / ANSWER; the pills (Locked, Opens with the course, Included in the course);
+the counts (40 cards, 4 decks, Card 3 of 40); the spoken labels of the player's glyphs; the API's own lock sentences,
+which still say "flash cards" and "Assess your knowledge" where it sends them.
+
+Tests: `test/learning_study_test.dart`, `test/learning_study_screens_test.dart` and `test/learning_study_linked_test.dart`
+quote the new words (the fakes' API sentences keep the API's). Every `study_*` golden but `study_knowledge` was
+re-recorded for the wording.

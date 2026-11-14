@@ -15,6 +15,7 @@ import '../feed/widgets/composer_and_filters.dart';
 import '../feed/widgets/post_card.dart';
 import 'forum_callbacks.dart';
 import 'forum_flows.dart';
+import '../media/video_player_screen.dart';
 import 'repost.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
@@ -40,7 +41,16 @@ class ForumsScreen extends StatefulWidget {
     this.callbacks = const ForumCallbacks(),
     this.repository,
     this.controller,
+    this.title = 'Forums',
+    this.ownOnly = false,
   });
+
+  /// The bar's title: the Forums tab's, or "My Forum" for the menu's page of the member's own posts.
+  final String title;
+
+  /// The menu's My Forum: the member's own posts and nothing else, so the chips that lead to the rest of the
+  /// feed (All Feed, Trending, Following...) are not drawn (owner, 12 Nov 2026).
+  final bool ownOnly;
 
   /// The signed-in person, as the screens draw them (the reply box's photo, "your own" tests).
   final FeedAuthor viewer;
@@ -166,17 +176,17 @@ class _ForumsScreenState extends State<ForumsScreen> {
       actions: [
         SheetAction(
           key: const ValueKey('menu-open'),
-          label: 'Open discussion',
+          label: 'Open Discussion',
           icon: LucideIcons.expand,
           onTap: () => _open(post),
         ),
         SheetAction(
           key: const ValueKey('menu-copy'),
-          label: 'Copy link',
+          label: 'Copy Link',
           icon: LucideIcons.link,
           onTap: () async {
             await Clipboard.setData(ClipboardData(text: _forums.repository.link(post.slug).toString()));
-            if (mounted) showMessage(context, 'Link copied');
+            if (mounted) showMessage(context, 'Link copied.');
           },
         ),
         if (!mine)
@@ -203,7 +213,7 @@ class _ForumsScreenState extends State<ForumsScreen> {
         }
       },
     );
-    if (sent && mounted) showMessage(context, 'Thanks. A moderator will take a look.');
+    if (sent && mounted) showMessage(context, 'Thank you. A moderator will review it.');
   }
 
   Future<void> _pickReaction(FeedPost post, Rect anchor) async {
@@ -212,20 +222,12 @@ class _ForumsScreenState extends State<ForumsScreen> {
     _run(_forums.react(post, picked == post.myReaction ? null : picked));
   }
 
-  /// A reaction on the reader's own post is refused here, as the website refuses it (its sentence), before
-  /// anything is sent.
-  bool _refuseOwnReaction(FeedPost post) {
-    if (post.author.id != widget.viewer.id) return false;
-    showMessage(context, 'You cannot react to your own post.');
-    return true;
-  }
-
   /// Saving says so, as the website's toast does.
   Future<void> _save(FeedPost post) async {
     final wasSaved = post.saved;
     final message = await _forums.toggleSave(post);
     if (!mounted) return;
-    showMessage(context, message ?? (wasSaved ? 'Removed from saved discussions' : 'Saved'));
+    showMessage(context, message ?? (wasSaved ? 'Removed from saved discussions.' : 'Saved.'));
   }
 
   void _share(FeedPost post) {
@@ -246,7 +248,7 @@ class _ForumsScreenState extends State<ForumsScreen> {
             child: Stack(
               children: [
                 Positioned.fill(
-                  top: TitleBar.height,
+                  top: TitleBar.reserved(context),
                   child: RefreshIndicator(
                     color: AppColors.primary,
                     onRefresh: _forums.pullToRefresh,
@@ -255,7 +257,13 @@ class _ForumsScreenState extends State<ForumsScreen> {
                       physics: const AlwaysScrollableScrollPhysics(),
                       slivers: [
                         SliverToBoxAdapter(
-                          child: _Header(forums: _forums, search: _search, onFilters: _filters, onCompose: _compose),
+                          child: _Header(
+                            forums: _forums,
+                            search: _search,
+                            onFilters: _filters,
+                            onCompose: _compose,
+                            ownOnly: widget.ownOnly,
+                          ),
                         ),
                         ..._body(),
                       ],
@@ -267,7 +275,7 @@ class _ForumsScreenState extends State<ForumsScreen> {
                   left: 0,
                   right: 0,
                   child: TitleBar(
-                    title: 'Forums',
+                    title: widget.title,
                     onBack: widget.onBack,
                     unread: _forums.unread,
                     onBell: widget.callbacks.onBell ?? () => openSitePage(context, '/notifications'),
@@ -305,9 +313,9 @@ class _ForumsScreenState extends State<ForumsScreen> {
           hasScrollBody: false,
           child: ForumMessage(
             icon: LucideIcons.cloudOff,
-            title: "Couldn't load the discussions",
+            title: 'Unable to Load Discussions',
             body: f.error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: f.refresh,
           ),
         ),
@@ -322,7 +330,7 @@ class _ForumsScreenState extends State<ForumsScreen> {
             icon: e.icon,
             title: e.title,
             body: e.body,
-            action: f.query.refinements > 0 ? 'Clear filters' : null,
+            action: f.query.refinements > 0 ? 'Clear Filters' : null,
             onAction: f.query.refinements > 0 ? f.clearFilters : null,
           ),
         ),
@@ -340,9 +348,13 @@ class _ForumsScreenState extends State<ForumsScreen> {
           onSave: () => _save(post),
           onMore: () => _menu(post),
           onLike: () {
-            if (!_refuseOwnReaction(post)) _run(f.toggleLike(post));
+            _run(f.toggleLike(post));
           },
           onComments: () => _open(post, toReplies: true),
+          quotedLoader: f.quoted,
+          onQuotedVote: (original, option) => _run(f.voteQuoted(original, option)),
+          onOpenQuoted: _open,
+          onOpenVideo: (url) => openVideo(context, url),
           onRepost: () => repostDiscussion(
             context,
             post: post,
@@ -385,7 +397,7 @@ class _ForumsScreenState extends State<ForumsScreen> {
             onOpenMember: widget.callbacks.onOpenMember,
           ),
           onPickReaction: (rect) {
-            if (!_refuseOwnReaction(post)) _pickReaction(post, rect);
+            _pickReaction(post, rect);
           },
           onOpenAuthor: widget.callbacks.onOpenMember == null
               ? null
@@ -403,7 +415,7 @@ class _ForumsScreenState extends State<ForumsScreen> {
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
               : f.hasMore
               ? const SizedBox(height: 20)
-              : Text("You're all caught up", key: const ValueKey('forums-end'), style: ForumDesign.meta),
+              : Text('No more discussions.', key: const ValueKey('forums-end'), style: ForumDesign.meta),
         ),
       ),
     );
@@ -423,53 +435,61 @@ class _Empty {
     if (q.search.isNotEmpty) {
       return _Empty(
         LucideIcons.searchX,
-        'No discussions match "${q.search}"',
-        'Try different words, or start the discussion yourself.',
+        'No Discussions Match "${q.search}"',
+        'Try different words, or start a discussion.',
       );
     }
     if (q.tag != null) {
-      return _Empty(LucideIcons.hash, 'No discussions tagged #${q.tag} yet', 'Try another tag, or clear the filters.');
+      return _Empty(LucideIcons.hash, 'No Discussions Tagged #${q.tag} Yet', 'Try another tag, or clear the filters.');
     }
     if (q.refinements > 0 || q.category != null) {
       return const _Empty(
         LucideIcons.listFilter,
-        'No discussions match these filters',
+        'No Discussions Match These Filters',
         'Try other filters, or clear them.',
       );
     }
     return switch (q.view) {
       ForumView.following => const _Empty(
         LucideIcons.users,
-        'Nothing from people you follow yet',
+        'No Posts from People You Follow Yet',
         'Follow members from their posts to see what they share here.',
       ),
       ForumView.unanswered => const _Empty(
         LucideIcons.circleCheck,
-        'Every question has an answer',
-        'New questions without replies will show up here.',
+        'No Unanswered Questions',
+        'New questions without replies will appear here.',
       ),
       ForumView.polls => const _Empty(
         LucideIcons.chartBar,
-        'No polls right now',
-        'Polls members start in the community will show up here.',
+        'No Polls Yet',
+        'Polls started by members will appear here.',
       ),
       ForumView.saved => const _Empty(
         LucideIcons.bookmark,
-        'Nothing saved yet',
-        'Bookmark a discussion and it will show up here.',
+        'No Saved Discussions Yet',
+        'Bookmark a discussion and it will appear here.',
       ),
       ForumView.mine => const _Empty(
         LucideIcons.pencil,
-        "You haven't posted yet",
-        'Questions and discussions you start show up here, including any still awaiting approval.',
+        'No Posts Yet',
+        'Questions and discussions you start appear here, including those awaiting approval.',
       ),
-      _ => const _Empty(LucideIcons.messagesSquare, 'No discussions yet', 'Start one with "Start a discussion...".'),
+      _ => const _Empty(LucideIcons.messagesSquare, 'No Discussions Yet', 'Select "Start a discussion..." to begin.'),
     };
   }
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.forums, required this.search, required this.onFilters, required this.onCompose});
+  const _Header({
+    required this.forums,
+    required this.search,
+    required this.onFilters,
+    required this.onCompose,
+    this.ownOnly = false,
+  });
+
+  final bool ownOnly;
 
   final ForumsController forums;
   final TextEditingController search;
@@ -481,22 +501,24 @@ class _Header extends StatelessWidget {
     final q = forums.query;
     final topics = forums.topics;
     final subtopics = forums.subtopics;
+    final hideTopics = ownOnly && forums.topicsRead && topics.isEmpty && forums.topicsError == null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 10),
+        const SizedBox(height: _gap),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: IcrSearchField(
             controller: search,
             height: 34,
-            hint: 'Search discussions...',
+            hint: 'Search discussions, topics and posts',
             onSubmitted: forums.setSearch,
             trailing: FilterButton(count: q.refinements, onTap: onFilters),
           ),
         ),
-        const SizedBox(height: 10),
-        ComposerBar(onTap: onCompose, label: 'Start a discussion...'),
+        const SizedBox(height: _gap),
+        // The same 16 dp margin as the search box above it and the chips below.
+        ComposerBar(onTap: onCompose, label: 'Start a discussion...', inset: 16),
         if (forums.access.requiresApproval) ...[
           const SizedBox(height: 10),
           const Padding(
@@ -506,46 +528,54 @@ class _Header extends StatelessWidget {
               warn: true,
               icon: LucideIcons.clock,
               text:
-                  'Your first few posts are read by a moderator before they go public. Once a couple are approved, everything you write publishes straight away.',
+                  'A moderator reviews your first few posts before they are published. After a few are approved, your posts are published immediately.',
             ),
           ),
         ],
-        const SizedBox(height: 14),
-        SizedBox(
-          height: 28,
-          child: ListView.separated(
-            key: const ValueKey('forum-views'),
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: ForumView.values.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 5),
-            itemBuilder: (context, i) {
-              final view = ForumView.values[i];
-              return FeedChip(
-                key: ValueKey('view:${view.name}'),
-                label: view.label,
-                large: i >= 4,
-                active: q.view == view,
-                onTap: () => forums.setView(view),
-              );
-            },
+        // My Forum has no view chips, and no gap where they would be.
+        if (!ownOnly) ...[
+          const SizedBox(height: _gap),
+          SizedBox(
+            height: 28,
+            child: ListView.separated(
+              key: const ValueKey('forum-views'),
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: ForumView.values.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 5),
+              itemBuilder: (context, i) {
+                final view = ForumView.values[i];
+                return FeedChip(
+                  key: ValueKey('view:${view.name}'),
+                  label: view.label,
+                  large: i >= 4,
+                  active: q.view == view,
+                  onTap: () => forums.setView(view),
+                );
+              },
+            ),
           ),
-        ),
-        const SizedBox(height: 14),
-        const SectionHeading(title: 'Topics', padding: EdgeInsets.symmetric(horizontal: 16)),
-        const SizedBox(height: 8),
-        if (!forums.topicsRead)
+        ],
+        // My Forum lists only the topics the reader posted in; with none there is no Topics block at all.
+        if (!hideTopics) ...[
+          const SizedBox(height: _gap),
+          const SectionHeading(title: 'Topics', padding: EdgeInsets.symmetric(horizontal: 16)),
+          const SizedBox(height: 8),
+        ],
+        if (hideTopics)
+          const SizedBox.shrink()
+        else if (!forums.topicsRead)
           const SizedBox(height: 28)
         else if (forums.topicsError != null && topics.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Expanded(child: Text("Couldn't load the topics", style: ForumDesign.meta)),
+                Expanded(child: Text('Unable to load topics.', style: ForumDesign.meta)),
                 GestureDetector(
                   key: const ValueKey('topics-retry'),
                   onTap: forums.pullToRefresh,
-                  child: Text('Try again', style: ForumDesign.metaLink),
+                  child: Text('Try Again', style: ForumDesign.metaLink),
                 ),
               ],
             ),
@@ -563,7 +593,7 @@ class _Header extends StatelessWidget {
                 if (i == 0) {
                   return FeedChip(
                     key: const ValueKey('topic:all'),
-                    label: 'All topics',
+                    label: 'All Topics',
                     active: q.category == null,
                     onTap: () => forums.setTopic(null),
                   );
@@ -602,16 +632,23 @@ class _Header extends StatelessWidget {
             ),
           ),
         ],
-        _ActiveFilters(forums: forums, search: search),
+        _ActiveFilters(forums: forums, search: search, hideEmptyTotal: ownOnly),
         const SizedBox(height: 10),
       ],
     );
   }
+
+  /// One gap between the header's blocks (the search, the composer, the views, the topics), so they read as evenly
+  /// spaced (owner, 13 Nov 2026: "the gaps is more looks uneven").
+  static const _gap = 12.0;
 }
 
 /// What is narrowing the list, each with an x, and how many discussions are left.
 class _ActiveFilters extends StatelessWidget {
-  const _ActiveFilters({required this.forums, required this.search});
+  const _ActiveFilters({required this.forums, required this.search, this.hideEmptyTotal = false});
+
+  /// My Forum with nothing posted says so in its empty state, not as "0 discussions" over it.
+  final bool hideEmptyTotal;
 
   final ForumsController forums;
   final TextEditingController search;
@@ -635,7 +672,7 @@ class _ActiveFilters extends StatelessWidget {
       if (q.sortable && q.sort != ForumSort.latest) ('sort', q.sort.label, () => forums.setSort(ForumSort.latest)),
     ];
     final total = forums.total;
-    final summary = total == null || forums.loading
+    final summary = total == null || forums.loading || (hideEmptyTotal && total == 0 && pills.isEmpty)
         ? null
         : '${groupedCount(total)} ${total == 1 ? 'discussion' : 'discussions'}';
     if (pills.isEmpty && summary == null) return const SizedBox.shrink();
@@ -674,7 +711,7 @@ class _ActiveFilters extends StatelessWidget {
                 search.clear();
                 forums.clearAll();
               },
-              child: Text('Clear all', style: ForumDesign.metaLink),
+              child: Text('Clear All', style: ForumDesign.metaLink),
             ),
           if (summary != null) Text(summary, key: const ValueKey('forums-total'), style: ForumDesign.meta),
         ],

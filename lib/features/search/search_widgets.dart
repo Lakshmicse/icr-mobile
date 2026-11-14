@@ -102,7 +102,12 @@ class HitRow extends StatelessWidget {
                     Row(
                       children: [
                         Flexible(
-                          child: Text(hit.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: SearchStyles.title),
+                          child: Text(
+                            hit.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: SearchStyles.title,
+                          ),
                         ),
                         if (hit.verified) ...[
                           const SizedBox(width: 4),

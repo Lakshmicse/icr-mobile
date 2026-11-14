@@ -79,8 +79,11 @@ class KindPicker extends StatelessWidget {
   final bool locked;
 
   static const _words = {
-    RfqKind.enquiry: (short: 'ENQUIRY', title: 'Quick supplier matching'),
-    RfqKind.rfq: (short: 'RFQ', title: 'Formal quotation process'),
+    RfqKind.enquiry: (short: 'ENQUIRY', title: 'Quickly connect with relevant suppliers and receive responses.'),
+    RfqKind.rfq: (
+      short: 'RFQ',
+      title: 'Initiate a structured quotation process with defined requirements and specifications.',
+    ),
   };
 
   @override
@@ -147,7 +150,7 @@ class KindPicker extends StatelessWidget {
   }
 }
 
-/// "What suppliers usually ask": each detail ticks itself once the text mentions it, and an unticked one offers
+/// "Key requirement details": each detail ticks itself once the text mentions it, and an unticked one offers
 /// to add a labelled line for the buyer to complete.
 class DescriptionChecklist extends StatelessWidget {
   const DescriptionChecklist({super.key, required this.text, required this.onAdd});
@@ -167,12 +170,12 @@ class DescriptionChecklist extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text('What suppliers usually ask', style: RfqText.bodyStrong)),
+              Expanded(child: Text('Key Requirement Details', style: RfqText.bodyStrong)),
               Text('$covered of ${items.length} covered', key: const ValueKey('checklist-count'), style: RfqText.small),
             ],
           ),
           const SizedBox(height: 2),
-          Text('Answering these up front saves a round of questions.', style: RfqText.formHelp),
+          Text('Answering these now avoids follow-up questions.', style: RfqText.formHelp),
           const SizedBox(height: 4),
           for (final item in items)
             Padding(
@@ -234,7 +237,7 @@ class PlacesField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const FieldLabel('Service locations'),
+        const FieldLabel('Service Location(s)'),
         const SizedBox(height: 6),
         if (places.isNotEmpty)
           Padding(
@@ -285,7 +288,7 @@ class PlacesField extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    full ? 'The most places (${RfqLimits.maxLocations}) are added' : 'Search a city or a place',
+                    full ? 'The maximum of ${RfqLimits.maxLocations} places is added' : 'Search a city or a place',
                     style: RfqText.formHint,
                   ),
                 ),
@@ -402,7 +405,7 @@ class _PlaceSheetState extends State<_PlaceSheet> {
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
                   child: Row(
                     children: [
-                      Expanded(child: Text('Service locations', style: RfqText.sheetTitle)),
+                      Expanded(child: Text('Service Location(s)', style: RfqText.sheetTitle)),
                       Text('${c.draft.places.length} of ${RfqLimits.maxLocations}', style: RfqText.small),
                     ],
                   ),
@@ -538,7 +541,7 @@ class _ItemSheetState extends State<_ItemSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(widget.item == null ? 'Add a line item' : 'Change the line item', style: RfqText.sheetTitle),
+              Text(widget.item == null ? 'Add a Line Item' : 'Change the Line Item', style: RfqText.sheetTitle),
               const SizedBox(height: 14),
               RfqField(
                 fieldKey: const ValueKey('item-name'),
@@ -597,7 +600,7 @@ class _ItemSheetState extends State<_ItemSheet> {
                   minimumSize: const Size.fromHeight(46),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: Text(widget.item == null ? 'Add item' : 'Save item'),
+                child: Text(widget.item == null ? 'Add Item' : 'Save Item'),
               ),
             ],
           ),
@@ -675,7 +678,7 @@ class ItemsList extends StatelessWidget {
               key: const ValueKey('item-add'),
               onPressed: onAdd,
               icon: const Icon(LucideIcons.plus, size: 16),
-              label: const Text('Add a line item'),
+              label: const Text('Add a Line Item'),
             ),
           ),
       ],
@@ -718,6 +721,7 @@ class AttachmentsPanel extends StatelessWidget {
     this.error,
     this.busy = false,
     this.help,
+    this.addLabel = 'Add Photos or Documents',
   });
 
   final List<RfqFile> files;
@@ -733,6 +737,9 @@ class AttachmentsPanel extends StatelessWidget {
   final String? error;
   final bool busy;
   final String? help;
+
+  /// The add button's words while there is room: the composer's "Upload files", the bid form's default.
+  final String addLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -766,7 +773,7 @@ class AttachmentsPanel extends StatelessWidget {
                         value: f.title,
                         hint: 'Site layout, ground floor',
                         maxLength: RfqLimits.attachmentTitle,
-                        error: f.title.trim().isEmpty ? 'Give this file a title' : null,
+                        error: f.title.trim().isEmpty ? 'Enter a title for this file' : null,
                         onChanged: (v) => onTitle(i, v),
                       ),
                       Text(
@@ -846,7 +853,7 @@ class AttachmentsPanel extends StatelessWidget {
             key: const ValueKey('attach-add'),
             onPressed: full ? null : onPick,
             icon: Icon(busy ? LucideIcons.loader : LucideIcons.paperclip, size: 16),
-            label: Text(full ? 'The most ($max) files are attached' : 'Add photos or documents'),
+            label: Text(full ? 'The maximum of $max files is attached' : addLabel),
           ),
         ),
         const SizedBox(height: 4),
@@ -956,7 +963,7 @@ class DateField extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    value == null ? 'Pick a date' : pickedDay(value!),
+                    value == null ? 'Select a date' : pickedDay(value!),
                     style: value == null ? RfqText.formHint : RfqText.formInput,
                   ),
                 ),
@@ -1145,7 +1152,7 @@ class _ReviewSheetState extends State<_ReviewSheet> {
                       key: const ValueKey('review-keep'),
                       onPressed: _sending ? null : () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
-                      child: const Text('Keep editing'),
+                      child: const Text('Keep Editing'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -1187,21 +1194,21 @@ class ProblemsCard extends StatelessWidget {
 
   static const labels = {
     'title': 'Title',
-    'companyName': 'Company name',
-    'contactName': 'Contact person',
-    'contactPhone': 'Phone',
-    'facilityType': 'Facility type',
-    'locations': 'Service locations',
-    'category': 'Service category',
-    'text': 'What you need',
+    'companyName': 'Company / Organisation Name',
+    'contactName': 'Contact Person',
+    'contactPhone': 'Mobile Number',
+    'facilityType': 'Facility / Property Type',
+    'locations': 'Service Location(s)',
+    'category': 'Service Category',
+    'text': 'What You Need',
     'budget': 'Budget',
-    'items': 'Line items',
+    'items': 'Line Items',
     'attachments': 'Attachments',
-    'invited': 'Suppliers to invite',
-    'minYears': 'Supplier criteria',
-    'minAnnualTurnover': 'Supplier criteria',
-    'minLast3YrTurnover': 'Supplier criteria',
-    'preQualEndDate': 'Pre-qualification deadline',
+    'invited': 'Suppliers to Invite',
+    'minYears': 'Supplier Criteria',
+    'minAnnualTurnover': 'Supplier Criteria',
+    'minLast3YrTurnover': 'Supplier Criteria',
+    'preQualEndDate': 'Pre-Qualification Deadline',
     'dueDate': 'Deadline',
   };
 
@@ -1223,8 +1230,8 @@ class ProblemsCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 problems.length == 1
-                    ? '1 thing to fix before sending'
-                    : '${problems.length} things to fix before sending',
+                    ? '1 item to fix before sending'
+                    : '${problems.length} items to fix before sending',
                 style: RfqText.bodyStrong.copyWith(color: AppColors.onErrorContainer),
               ),
             ],
@@ -1326,10 +1333,10 @@ class PostedPanel extends StatelessWidget {
             Center(
               child: Text(
                 editing
-                    ? 'Changes saved'
+                    ? 'Changes Saved'
                     : draft
-                    ? 'Draft saved'
-                    : (enquiry ? 'Enquiry posted' : 'RFQ created'),
+                    ? 'Draft Saved'
+                    : (enquiry ? 'Enquiry Posted' : 'RFQ Created'),
                 style: RfqText.pageTitle,
               ),
             ),
@@ -1368,7 +1375,7 @@ class PostedPanel extends StatelessWidget {
               ),
             if (!draft && !editing) ...[
               const SizedBox(height: 16),
-              Text('What happens next', style: RfqText.section),
+              Text('What Happens Next', style: RfqText.section),
               const SizedBox(height: 6),
               for (final line in next)
                 Padding(
@@ -1395,7 +1402,7 @@ class PostedPanel extends StatelessWidget {
                 minimumSize: const Size.fromHeight(46),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: const Text('View requirement'),
+              child: const Text('View Requirement'),
             ),
             const SizedBox(height: 8),
             if (!editing && !draft && onBrowse != null) ...[
@@ -1403,7 +1410,7 @@ class PostedPanel extends StatelessWidget {
                 key: const ValueKey('posted-browse'),
                 onPressed: onBrowse,
                 style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
-                child: const Text('Browse suppliers'),
+                child: const Text('Browse Suppliers'),
               ),
               const SizedBox(height: 8),
             ],
@@ -1412,7 +1419,7 @@ class PostedPanel extends StatelessWidget {
                 key: const ValueKey('posted-another'),
                 onPressed: onPostAnother,
                 style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
-                child: const Text('Post another'),
+                child: const Text('Post Another'),
               ),
             TextButton(
               key: const ValueKey('posted-done'),

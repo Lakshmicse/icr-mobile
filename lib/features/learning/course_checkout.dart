@@ -37,9 +37,9 @@ Future<String> buyCoursePlace(BuildContext context, Course course, {CourseRun? r
     final outcome = await runCheckout(context, start, title: 'Place on ${course.title}');
     return switch (outcome) {
       PaymentOutcome.success => 'Payment received. Your place on ${course.title} is confirmed.',
-      PaymentOutcome.failure => "The payment didn't go through. Nothing was charged.",
+      PaymentOutcome.failure => 'The payment failed. No amount was charged.',
       PaymentOutcome.cancelled =>
-        "The payment wasn't completed. If you did pay, your place is confirmed within a minute.",
+        'The payment was not completed. If you paid, your place will be confirmed within a minute.',
     };
   } catch (e) {
     return ApiError.from(e).message;

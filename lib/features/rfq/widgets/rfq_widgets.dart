@@ -30,7 +30,7 @@ class RfqCard extends StatelessWidget {
   }
 }
 
-/// A short word in a tinted pill ("Live", "Shortlisted").
+/// A short word in a tinted pill ("Active", "Shortlisted").
 class TonePill extends StatelessWidget {
   const TonePill(this.label, {super.key, this.tone = Tone.slate, this.icon});
 
@@ -71,12 +71,17 @@ Tone bidTone(BidStatus s) => switch (s) {
 };
 
 class StatusPill extends StatelessWidget {
-  const StatusPill(this.status, {super.key});
+  const StatusPill(this.status, {super.key, this.toSuppliers = false});
 
   final RfqStatus status;
 
+  /// On the board of everything posted, read by suppliers: a live requirement is "Open for bids" there (the owner's
+  /// review of 12 Nov 2026), and "Active" on the buyer's own list and page.
+  final bool toSuppliers;
+
   @override
-  Widget build(BuildContext context) => TonePill(status.label, tone: statusTone(status));
+  Widget build(BuildContext context) =>
+      TonePill(toSuppliers && status == RfqStatus.published ? 'Open for Bids' : status.label, tone: statusTone(status));
 }
 
 /// The square logo tile of a company, or its initials.
@@ -348,7 +353,7 @@ Future<bool> confirmMove(
   required String title,
   required String body,
   required String confirm,
-  String keep = 'Keep it',
+  String keep = 'Keep It',
   bool destructive = false,
 }) async {
   final ok = await showDialog<bool>(
@@ -463,7 +468,7 @@ class _PickOneSheetState<T> extends State<_PickOneSheet<T>> {
                   if (shown.isEmpty)
                     Padding(
                       padding: const EdgeInsets.all(24),
-                      child: Text('Nothing matches', textAlign: TextAlign.center, style: RfqText.meta),
+                      child: Text('No Matches Found', textAlign: TextAlign.center, style: RfqText.meta),
                     ),
                 ],
               ),

@@ -1236,8 +1236,8 @@ void main() {
         );
         await settled(tester);
         expectNoFailure(tester);
-        expect(find.text('Find work'), findsOneWidget);
-        for (final tab in ['Recommended', 'All open', 'Invited']) {
+        expect(find.text('Find Work'), findsOneWidget);
+        for (final tab in ['Recommended', 'All Open', 'Invited']) {
           expect(find.text(tab), findsWidgets, reason: tab);
         }
         // The chips run past the edge of a phone: scroll the row until each is built.
@@ -1259,7 +1259,7 @@ void main() {
         final recommended = find.byType(OpportunityCard).evaluate().length;
         expect(recommended, greaterThan(0));
 
-        await tester.tap(find.text('All open'));
+        await tester.tap(find.text('All Open'));
         await settled(tester);
         await pumpUntilFound(tester, find.byType(OpportunityCard));
         expectNoFailure(tester);
@@ -1305,14 +1305,14 @@ void main() {
         await pumpUntilFound(tester, find.byType(OpportunityCard));
         expect(find.byType(OpportunityCard), findsWidgets, reason: 'an unverified supplier may still read');
 
-        await board(sunrise, find.text('Start selling'));
-        expect(find.text('Start selling to find work'), findsOneWidget);
-        expect(find.text('Start selling'), findsOneWidget);
+        await board(sunrise, find.text('Start Selling'));
+        expect(find.text('Start Selling to Find Work'), findsOneWidget);
+        expect(find.text('Start Selling'), findsOneWidget);
         expect(find.byType(OpportunityCard), findsNothing);
 
-        await board(bharat, find.text('This is for supplier accounts'));
-        expect(find.text('This is for supplier accounts'), findsOneWidget);
-        expect(find.text('Start selling'), findsNothing);
+        await board(bharat, find.text('This Is for Supplier Accounts'));
+        expect(find.text('This Is for Supplier Accounts'), findsOneWidget);
+        expect(find.text('Start Selling'), findsNothing);
         await finishLive(tester);
       },
     );
@@ -1351,7 +1351,7 @@ void main() {
           if (want == 0 && truth.count(tab) == 0) {
             expect(find.byType(MyBidCard), findsNothing);
             expect(
-              find.textContaining('No bids waiting').evaluate().length +
+              find.textContaining('No Bids Waiting').evaluate().length +
                   find.textContaining('Nothing').evaluate().length +
                   find.textContaining('No wins').evaluate().length,
               greaterThan(0),
@@ -1397,7 +1397,7 @@ void main() {
           await settled(tester);
           expectNoFailure(tester);
           expect(key('my-reply'), findsOneWidget);
-          expect(find.text('Your reply'), findsOneWidget);
+          expect(find.text('Your Reply'), findsOneWidget);
           expect(find.text('₹4,50,000'), findsWidgets);
           expect(find.text('7 days'), findsOneWidget);
           expect(find.text('Vivek here: we can mobilise within a week.'), findsOneWidget);
@@ -1530,10 +1530,10 @@ void main() {
           expectNoFailure(tester);
           expect(find.textContaining("You've been invited to reply"), findsOneWidget);
           await tapKey(tester, 'reply-decline');
-          expect(find.text('Decline this invitation?'), findsOneWidget, reason: 'it asks first');
+          expect(find.text('Decline This Invitation?'), findsOneWidget, reason: 'it asks first');
           await tester.tap(find.text('Decline').last);
           await settled(tester);
-          expect(find.text('Invitation declined'), findsOneWidget);
+          expect(find.text('Invitation Declined'), findsOneWidget);
           expect(key('reply-form'), findsNothing);
 
           // Read again from the API: still declined, and on the Invited tab of the board it is gone.
@@ -1543,7 +1543,7 @@ void main() {
             size: const Size(390, 3200),
           );
           await settled(tester);
-          expect(find.text('Invitation declined'), findsOneWidget);
+          expect(find.text('Invitation Declined'), findsOneWidget);
           await finishLive(tester);
         } finally {
           await tester.runAsync(() => buyer.deleteDraft(id));
@@ -1564,12 +1564,12 @@ void main() {
           await pumpLive(tester, screen, size: const Size(390, 900));
           await settled(tester);
           expectNoFailure(tester);
-          expect(find.textContaining('Start selling to '), findsOneWidget);
+          expect(find.textContaining('Start Selling to '), findsOneWidget);
           expect(
             find.text('Your company has no supplier listing yet. One tap creates it from your company profile.'),
             findsOneWidget,
           );
-          expect(find.text('Start selling'), findsOneWidget);
+          expect(find.text('Start Selling'), findsOneWidget);
         }
         await finishLive(tester);
       },
@@ -1699,7 +1699,7 @@ void main() {
           expect(tester.takeException(), isNull, reason: id);
           final shown =
               key('response-card').evaluate().isNotEmpty ||
-              find.text('This requirement is not available').evaluate().isNotEmpty;
+              find.text('This Requirement Is Not Available').evaluate().isNotEmpty;
           expect(shown, isTrue, reason: 'the page of $id says what the supplier can do, or that it is gone');
           expect(find.textContaining("Couldn't load"), findsNothing, reason: id);
           await finishLive(tester);
@@ -1733,7 +1733,7 @@ void main() {
         expect(find.text('Requirement'), findsOneWidget);
         final shown =
             find.byKey(const ValueKey('response-card')).evaluate().isNotEmpty ||
-            find.text('This requirement is not available').evaluate().isNotEmpty;
+            find.text('This Requirement Is Not Available').evaluate().isNotEmpty;
         expect(shown, isTrue);
         expect(find.textContaining("Couldn't load"), findsNothing);
         await finishLive(tester);
@@ -1812,15 +1812,15 @@ void main() {
           // The inbox switcher sits in the sliders menu (the designed inbox has no bar for it).
           await tester.tap(find.byKey(const ValueKey('inbox-options')));
           await settled(tester);
-          expect(find.text('My messages'), findsOneWidget, reason: who.label);
+          expect(find.text('My Messages'), findsOneWidget, reason: who.label);
           await tester.tapAt(const Offset(10, 10));
           await settled(tester);
           expect(find.text(name), findsWidgets, reason: who.label);
           for (final view in ['Open', 'Unread', 'Mine', 'Done', 'Spam']) {
             expect(find.text(view), findsWidgets, reason: '${who.label}: $view');
           }
-          expect(find.text('Sales & quotes'), findsWidgets, reason: '${who.label}: the topic chip');
-          expect(find.text('Requirements & buying'), findsWidgets);
+          expect(find.text('Sales & Quotes'), findsWidgets, reason: '${who.label}: the topic chip');
+          expect(find.text('Requirements & Buying'), findsWidgets);
           expect(find.byType(ConversationTile), findsWidgets, reason: '${who.label} has threads');
           await finishLive(tester);
         }
@@ -1892,16 +1892,16 @@ void main() {
           ),
         );
         await tester.tap(key('open'));
-        await pumpUntilFound(tester, find.text('Rate this supplier'));
+        await pumpUntilFound(tester, find.text('Rate This Supplier'));
         await settled(tester);
         expect(tester.takeException(), isNull);
         expect(find.textContaining('E2E Test Vendor Co'), findsWidgets);
         expect(find.text('42 Enterprise Reviews'), findsWidgets, reason: 'the count a buyer reads');
         expect(find.text('Request for Quote (RFQ)'), findsOneWidget);
         expect(find.text('Compliances & Audited Proofs'), findsOneWidget);
-        expect(find.text('Rate this supplier'), findsOneWidget, reason: 'the sheet is the one a buyer sees');
+        expect(find.text('Rate This Supplier'), findsOneWidget, reason: 'the sheet is the one a buyer sees');
 
-        await tester.tap(find.text('Rate this supplier'));
+        await tester.tap(find.text('Rate This Supplier'));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 900)); // the sheet slides in
         await tester.tap(key('star-5'));

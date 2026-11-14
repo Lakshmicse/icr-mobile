@@ -44,5 +44,6 @@ the sign-in ends on the website.
   address, so it opens in the tab; they finish sign-up there (or close the tab).
   The app's own short sign-up with Google is for the day the mobile addition to
   the API is deployed (`--dart-define=SOCIAL_FLOW=app`, the default against a
-  local API).
+  local API and, since 14 Nov 2026, against any server but icr.org.in, such as
+  dev.icr.org.in: `SocialSignIn.flowFor`).
 - A refusal (`/login?error=…`) shows the website's own sentence in the tab.

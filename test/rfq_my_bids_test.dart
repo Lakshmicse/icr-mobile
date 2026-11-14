@@ -33,14 +33,14 @@ void main() {
     await open(tester);
     expect(find.text('Submitted 0'), findsOneWidget);
     expect(find.text('Shortlisted 1'), findsOneWidget);
-    expect(find.text('Won 1'), findsOneWidget);
+    expect(find.text('Awarded 1'), findsOneWidget);
     expect(find.text('Archived 0'), findsOneWidget);
-    expect(find.text('No bids waiting'), findsOneWidget);
+    expect(find.text('No Bids Waiting'), findsOneWidget);
   });
 
   testWidgets('Find work from the empty Submitted tab opens the open board', (tester) async {
     await open(tester);
-    await tester.tap(find.text('Find work'));
+    await tester.tap(find.text('Find Work'));
     await settle(tester, 8);
     expect(find.byType(OpenRequirementsScreen), findsOneWidget);
   });
@@ -56,9 +56,9 @@ void main() {
     expect(find.text('Shortlisted'), findsWidgets);
   });
 
-  testWidgets('Won shows the purchase order', (tester) async {
+  testWidgets('Awarded shows the purchase order', (tester) async {
     await open(tester);
-    await tester.tap(find.text('Won 1'));
+    await tester.tap(find.text('Awarded 1'));
     await settle(tester);
     expect(find.text('Purchase order PO-MH3K9Z'), findsOneWidget);
   });
@@ -83,7 +83,7 @@ void main() {
     await open(tester);
     await tester.tap(find.text('Shortlisted 1'));
     await settle(tester);
-    await tester.tap(find.text('View requirement'));
+    await tester.tap(find.text('View Requirement'));
     await settle(tester, 8);
     expect(find.byType(OpportunityScreen), findsOneWidget);
   });
@@ -92,7 +92,7 @@ void main() {
     await open(tester);
     await tester.tap(find.text('Shortlisted 1'));
     await settle(tester);
-    await tester.tap(find.text('Message buyer'));
+    await tester.tap(find.text('Message Buyer'));
     await settle(tester);
     expect(threads, ['demo-thread-buyer-demo-board-cafeteria']);
   });
@@ -100,8 +100,8 @@ void main() {
   testWidgets('with no listing the screen offers to start selling, and does', (tester) async {
     repo.vendorAccess = const VendorAccess();
     await open(tester);
-    expect(find.text('Start selling to bid on requirements'), findsOneWidget);
-    await tester.tap(find.text('Start selling'));
+    expect(find.text('Start Selling to Bid on Requirements'), findsOneWidget);
+    await tester.tap(find.text('Start Selling'));
     await settle(tester);
     expect(find.text('Shortlisted 1'), findsOneWidget);
   });
@@ -109,15 +109,15 @@ void main() {
   testWidgets('a buyer account is told the screen is for suppliers', (tester) async {
     repo.accessError = ApiError('Insufficient role permissions', statusCode: 403);
     await open(tester);
-    expect(find.text('This is for supplier accounts'), findsOneWidget);
+    expect(find.text('This Is for Supplier Accounts'), findsOneWidget);
   });
 
   testWidgets('a failed load says so, and Try again reads it again', (tester) async {
     repo.failReads = true;
     await open(tester);
-    expect(find.text("Couldn't load your bids"), findsOneWidget);
+    expect(find.text("Unable to Load Your Bids"), findsOneWidget);
     repo.failReads = false;
-    await tester.tap(find.text('Try again'));
+    await tester.tap(find.text('Try Again'));
     await settle(tester);
     expect(find.text('Shortlisted 1'), findsOneWidget);
   });
@@ -141,11 +141,11 @@ void main() {
           isAwarded: awarded,
           requirement: Requirement(id: 'r', title: 't', kind: kind, status: rfq),
         );
-    expect(myBidStatusLabel(bid(BidStatus.pending)), 'Submitted');
+    expect(myBidStatusLabel(bid(BidStatus.pending)), 'Bid Submitted');
     expect(myBidStatusLabel(bid(BidStatus.pending, kind: RfqKind.enquiry)), 'Replied');
     expect(myBidStatusLabel(bid(BidStatus.pending, rfq: RfqStatus.closed)), 'Closed');
-    expect(myBidStatusLabel(bid(BidStatus.rejected)), 'Not selected');
-    expect(myBidStatusLabel(bid(BidStatus.awarded, awarded: true)), 'Won');
+    expect(myBidStatusLabel(bid(BidStatus.rejected)), 'Not Selected');
+    expect(myBidStatusLabel(bid(BidStatus.awarded, awarded: true)), 'Awarded');
     expect(myBidStatusLabel(bid(BidStatus.awarded, awarded: true, kind: RfqKind.enquiry)), 'Selected');
     expect(leadTimeLabel(1), '1 day');
     expect(leadTimeLabel(0), 'Same day');

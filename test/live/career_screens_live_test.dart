@@ -82,7 +82,7 @@ void main() {
         size: const Size(390, 2400),
       );
       await settleLive(tester);
-      expect(find.text('My applications'), findsOneWidget);
+      expect(find.text('My Applications'), findsOneWidget);
       expect(find.byKey(const ValueKey('summary-active')), findsOneWidget);
       expect(find.byKey(const ValueKey('up-next')), findsOneWidget, reason: 'a round is coming up');
       expect(find.text('Energy and Sustainability Lead'), findsWidgets);
@@ -145,7 +145,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('saved-tab-hidden')));
       await settleLive(tester);
       expect(find.text('Procurement Lead - Facilities'), findsOneWidget);
-      expect(find.text('Show again'), findsOneWidget);
+      expect(find.text('Show Again'), findsOneWidget);
       await finishLive(tester);
     });
 

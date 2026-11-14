@@ -11,7 +11,7 @@ export 'community_kit.dart' show FeedPicture, AboutBlock, AboutKind;
 /// The member's standing in a chapter (`AssociationRole`).
 enum ChapterRole {
   member('Member'),
-  lead('Chapter lead');
+  lead('Chapter Lead');
 
   const ChapterRole(this.label);
   final String label;
@@ -339,8 +339,8 @@ class ChapterDetail {
 
 /// The roster's three filters, each a parameter the members API takes.
 enum MemberFilter {
-  all('All members'),
-  corporate('Corporate only'),
+  all('All Members'),
+  corporate('Corporate Only'),
   committee('Committee');
 
   const MemberFilter(this.label);
@@ -443,10 +443,10 @@ class ChaptersOverview {
 
 /// The board's size filter (the website's "Members").
 enum ChapterSize {
-  any('Any size'),
-  small('1–2 members'),
-  medium('3–10 members'),
-  large('10+ members');
+  any('Any Size'),
+  small('1–2 Members'),
+  medium('3–10 Members'),
+  large('10+ Members');
 
   const ChapterSize(this.label);
   final String label;
@@ -461,9 +461,9 @@ enum ChapterSize {
 
 /// The board's activity filter.
 enum ChapterActivity {
-  any('Any activity'),
-  events('Has upcoming events'),
-  fresh('New this quarter');
+  any('Any Activity'),
+  events('Has Upcoming Events'),
+  fresh('New This Quarter');
 
   const ChapterActivity(this.label);
   final String label;
@@ -483,8 +483,8 @@ enum ChapterScope {
 /// How the board is ordered, as the website's toolbar offers.
 enum ChapterSort {
   recommended('Recommended'),
-  members('Most members'),
-  active('Most active'),
+  members('Most Members'),
+  active('Most Active'),
   newest('Newest'),
   az('A to Z');
 

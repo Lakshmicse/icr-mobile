@@ -40,7 +40,7 @@ class ContactController extends ChangeNotifier {
 
   /// What a 429 says here: the form keeps everything, so say so.
   static const throttledMessage =
-      'You have sent a few messages in a short while. Wait a minute, then send again: what you wrote is kept.';
+      'You have sent several messages in a short time. Wait a minute, then send again. Your message is kept.';
 
   /// What the screen that opened this one was about ("Host or propose an event").
   String? get subject => _subject;

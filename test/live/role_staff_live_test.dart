@@ -56,14 +56,14 @@ void main() {
           expectNoRawErrors(tester, 'Home');
           expect(find.text('All Feed'), findsWidgets, reason: 'the feed is the forum\'s, the same for staff');
           await retryWhileFailed(tester, what: 'Home');
-          expect(find.text('Try again'), findsNothing);
+          expect(find.text('Try Again'), findsNothing);
 
           // Each tab, in the bottom bar's order.
           final probes = {
-            'Learning': 'Assess Your Knowledge',
+            'Learning': 'Test Your Knowledge',
             'Mentorship': 'Top Mentors in Your Network',
             'Marketplace': 'Post RFQ',
-            'Jobs': 'Post a job',
+            'Jobs': 'Post a Job',
           };
           for (final entry in probes.entries) {
             await tester.tap(find.descendant(of: find.byType(IcrBottomNav), matching: find.text(entry.key)).first);
@@ -72,7 +72,7 @@ void main() {
             expectNoRawErrors(tester, entry.key);
             await retryWhileFailed(tester, what: entry.key);
             expect(find.text(entry.value), findsWidgets, reason: '${entry.key} shows "${entry.value}"');
-            expect(find.text('Try again'), findsNothing, reason: '${entry.key} is not in its error state');
+            expect(find.text('Try Again'), findsNothing, reason: '${entry.key} is not in its error state');
           }
 
           // The menu from Home's photo: the person's name, and Settings opens.
@@ -87,7 +87,7 @@ void main() {
           expectNoRawErrors(tester, 'the menu');
 
           await tester.tap(find.text('Sign Out'));
-          expect(await pumpUntil(tester, find.textContaining('Sign in'), timeout: const Duration(seconds: 15)), isTrue);
+          expect(await pumpUntil(tester, find.textContaining('Sign In'), timeout: const Duration(seconds: 15)), isTrue);
           expect(thrown(tester), isNull);
           await finishLive(tester);
         },
@@ -104,15 +104,15 @@ void main() {
   final limits = <String, Map<String, List<String>>>{
     // Candidate routes (applications, saved jobs, invitations, profile performance) are closed to a SUPER_ADMIN.
     'superadmin@icr.test': {
-      'the career hub': ['Your career', 'Insufficient role permissions'],
+      'the career hub': ['Your Career', 'Insufficient role permissions'],
     },
     // A person on no company's team: jobs are posted for a company. A requirement form is theirs (an enquiry needs
     // no company, as on the website since 3 Nov 2026), so its usual probe applies.
     'contentadmin@icr.test': {
-      'jobs you posted': ['Posting jobs is for hiring teams', 'Set up a company'],
+      'jobs you posted': ['Job Posting Is for Hiring Teams', 'Create a Company'],
     },
     'supportagent@icr.test': {
-      'jobs you posted': ['Posting jobs is for hiring teams', 'Set up a company'],
+      'jobs you posted': ['Job Posting Is for Hiring Teams', 'Create a Company'],
     },
   };
 
@@ -161,7 +161,7 @@ void main() {
             expectNoSpinner(c.name);
             if (limit == null) {
               expect(find.textContaining(c.probe), findsWidgets, reason: '${c.name} shows "${c.probe}"');
-              expect(find.text('Try again'), findsNothing, reason: '${c.name} is not in its error state');
+              expect(find.text('Try Again'), findsNothing, reason: '${c.name} is not in its error state');
               expect(find.textContaining("Couldn't load"), findsNothing);
             } else {
               for (final words in limit) {

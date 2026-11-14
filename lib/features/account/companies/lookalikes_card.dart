@@ -12,13 +12,7 @@ import 'company_words.dart';
 /// which splits the team, the jobs and the reviews, so each offers "Ask to
 /// join". A suggestion only: it never blocks creating the page.
 class LookalikesCard extends StatelessWidget {
-  const LookalikesCard({
-    super.key,
-    required this.companies,
-    required this.asked,
-    required this.onAsk,
-    this.onView,
-  });
+  const LookalikesCard({super.key, required this.companies, required this.asked, required this.onAsk, this.onView});
 
   final List<CompanyLookalike> companies;
 
@@ -34,10 +28,7 @@ class LookalikesCard extends StatelessWidget {
       key: const Key('create.lookalikes'),
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0F7FE),
-        borderRadius: BorderRadius.circular(10),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFFF0F7FE), borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -51,7 +42,7 @@ class LookalikesCard extends StatelessWidget {
           const SizedBox(height: 10),
           for (final c in companies) _row(context, c),
           const SizedBox(height: 2),
-          Text('Not yours? Carry on below. This is only a suggestion.', style: AccountText.meta),
+          Text('Not your company? Continue below. This is only a suggestion.', style: AccountText.meta),
         ],
       ),
     );
@@ -97,14 +88,14 @@ class LookalikesCard extends StatelessWidget {
                 if (sent)
                   AccountChip(
                     key: Key('lookalike.sent.${c.id}'),
-                    label: 'Request sent',
+                    label: 'Request Sent',
                     color: AppColors.emerald50,
                     ink: AppColors.emerald700,
                   )
                 else
                   AccountButton(
                     key: Key('lookalike.ask.${c.id}'),
-                    label: 'Ask to join',
+                    label: 'Ask to Join',
                     outlined: true,
                     expand: false,
                     height: 36,
@@ -114,7 +105,7 @@ class LookalikesCard extends StatelessWidget {
                   TextButton(
                     key: Key('lookalike.view.${c.id}'),
                     onPressed: () => onView!(c.id),
-                    child: const Text('View page'),
+                    child: const Text('View Page'),
                   ),
               ],
             ),

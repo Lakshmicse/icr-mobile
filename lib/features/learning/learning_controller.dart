@@ -83,7 +83,7 @@ class LearningController extends ChangeNotifier with NotifySafely {
       // The website's My Courses files a place by who runs the course: ICR's own, then the partner institutes'.
       final rows = mine.where(matches).toList();
       return [
-        for (final (title, own) in [('ICR Courses', true), ('Partner Courses', false)])
+        for (final (title, own) in [('ICR Programmes', true), ('Partner Programmes', false)])
           if (rows.any((c) => (c.provider == null) == own))
             CourseSection(
               kind: CourseKind.development,
@@ -98,10 +98,7 @@ class LearningController extends ChangeNotifier with NotifySafely {
     // production's website shows one ICR course, the app showed Skystar's, Moon studio's and BrightCore's).
     final taught = _courses.where((c) => c.kind == CourseKind.development && matches(c)).toList();
     return [
-      for (final (title, own) in [
-        ('ICR certified programs', true),
-        ('Related courses from our partners', false),
-      ])
+      for (final (title, own) in [('ICR Certification Programmes', true), ('Related Courses from Our Partners', false)])
         if (taught.any((c) => (c.provider == null) == own))
           CourseSection(
             kind: CourseKind.development,

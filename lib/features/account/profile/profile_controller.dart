@@ -4,6 +4,7 @@ import '../../../core/api/api_error.dart';
 import '../account_models.dart';
 import '../account_repository.dart';
 import '../account_rules.dart';
+import 'intro_line.dart';
 
 /// One part of the profile page: what was read, whether a read is running, and
 /// why it failed. Each section reads and fails on its own, so one list that
@@ -28,9 +29,22 @@ class Section<T> {
 /// one item and the controller merges it into the list it holds; the buttons
 /// wait for the list to load, since saving against nothing would wipe it.
 class MyProfileController extends ChangeNotifier {
-  MyProfileController(this.repository, {this.onIdentityChanged, DateTime Function()? clock}) : clock = clock ?? DateTime.now;
+  MyProfileController(
+    this.repository, {
+    this.onIdentityChanged,
+    DateTime Function()? clock,
+    IntroChoiceStore? introStore,
+  }) : clock = clock ?? DateTime.now,
+       introStore = introStore ?? MemoryIntroChoiceStore();
 
   final AccountRepository repository;
+
+  /// Where Edit Intro's Organisation and Education choice is kept (see `intro_line.dart`).
+  final IntroChoiceStore introStore;
+
+  /// The company and school Edit Intro chose for the line under the headline.
+  IntroChoice introChoice = IntroChoice.automatic;
+  String? _choiceReadFor;
 
   /// The name, photo or headline changed: the app's header and menus read them
   /// from the session, so it is read again (`AuthController.refreshUser`).
@@ -62,7 +76,7 @@ class MyProfileController extends ChangeNotifier {
 
   /// Reads every section at once.
   Future<void> load() => Future.wait([
-    _read(profile, repository.myProfile),
+    _readProfile(),
     _read(experience, repository.experience),
     _read(education, repository.education),
     _read(breaks, repository.careerBreaks),
@@ -82,7 +96,7 @@ class MyProfileController extends ChangeNotifier {
 
   /// A section's "Try again".
   Future<void> retry(Section<Object?> section) {
-    if (identical(section, profile)) return _read(profile, repository.myProfile);
+    if (identical(section, profile)) return _readProfile();
     if (identical(section, experience)) return _read(experience, repository.experience);
     if (identical(section, education)) return _read(education, repository.education);
     if (identical(section, breaks)) return _read(breaks, repository.careerBreaks);
@@ -109,6 +123,16 @@ class MyProfileController extends ChangeNotifier {
     }
   }
 
+  /// The account row, then this account's intro choice from the phone.
+  Future<void> _readProfile() async {
+    await _read(profile, repository.myProfile);
+    final id = profile.value?.id;
+    if (id == null || id == _choiceReadFor) return;
+    _choiceReadFor = id;
+    introChoice = await introStore.load(id);
+    _notify();
+  }
+
   /// Reads the account row again after a write that changes what it shows (the
   /// completeness, the headline). A failure here is not the write's failure.
   Future<void> _reloadProfile() => _read(profile, repository.myProfile, keep: true);
@@ -131,20 +155,40 @@ class MyProfileController extends ChangeNotifier {
     ];
     final ordered = newerFirst<TimelineEntry>(entries, (e) => experienceKeys(e.dates));
     if (!experience.ready || !breaks.ready) return ordered;
-    final gaps = careerGaps([for (final r in roles) _datesOf(r)], breaks: [for (final b in pauses) _datesOf(b)], now: clock());
-    return newerFirst<TimelineEntry>([...ordered, for (final g in gaps) TimelineEntry.gap(g)], (e) => experienceKeys(e.dates));
+    final gaps = careerGaps(
+      [for (final r in roles) _datesOf(r)],
+      breaks: [for (final b in pauses) _datesOf(b)],
+      now: clock(),
+    );
+    return newerFirst<TimelineEntry>([
+      ...ordered,
+      for (final g in gaps) TimelineEntry.gap(g),
+    ], (e) => experienceKeys(e.dates));
   }
 
   static TimelineDates _datesOf(Object r) => switch (r) {
-    Experience() => (startYear: r.startYear, startMonth: r.startMonth, endYear: r.endYear, endMonth: r.endMonth, isCurrent: r.isCurrent),
-    CareerBreak() => (startYear: r.startYear, startMonth: r.startMonth, endYear: r.endYear, endMonth: r.endMonth, isCurrent: r.isCurrent),
+    Experience() => (
+      startYear: r.startYear,
+      startMonth: r.startMonth,
+      endYear: r.endYear,
+      endMonth: r.endMonth,
+      isCurrent: r.isCurrent,
+    ),
+    CareerBreak() => (
+      startYear: r.startYear,
+      startMonth: r.startMonth,
+      endYear: r.endYear,
+      endMonth: r.endMonth,
+      isCurrent: r.isCurrent,
+    ),
     _ => (startYear: null, startMonth: null, endYear: null, endMonth: null, isCurrent: false),
   };
 
   /// Qualifications in date order.
   List<Education> get educationOrdered => newerFirst<Education>(
     education.value ?? const [],
-    (e) => educationKeys((startYear: e.startYear, startMonth: null, endYear: e.endYear, endMonth: null, isCurrent: false)),
+    (e) =>
+        educationKeys((startYear: e.startYear, startMonth: null, endYear: e.endYear, endMonth: null, isCurrent: false)),
   );
 
   // --- the intro ---------------------------------------------------------------------------------------------
@@ -176,6 +220,28 @@ class MyProfileController extends ChangeNotifier {
     }
     await _reloadProfile();
     await _identity();
+  }
+
+  /// What Edit Intro's Organisation offers: the current roles, one per organisation.
+  List<Experience> get introRoleOptions => introRoles(experience.value ?? const []);
+
+  /// What Edit Intro's Education offers: the qualifications, one per school.
+  List<Education> get introSchoolOptions => introSchools(educationOrdered);
+
+  /// "Company · School" under the headline, as LinkedIn has it; null when there is neither.
+  String? get introAffiliation => introLine(
+    roles: experience.value ?? const [],
+    education: educationOrdered,
+    choice: introChoice,
+    actingFor: profile.value?.companyName,
+  );
+
+  /// Keeps Edit Intro's Organisation and Education choice for this account.
+  Future<void> saveIntroChoice(IntroChoice choice) async {
+    introChoice = choice;
+    _notify();
+    final id = profile.value?.id;
+    if (id != null) await introStore.save(id, choice);
   }
 
   // --- photo and cover ---------------------------------------------------------------------------------------
@@ -383,11 +449,23 @@ class TimelineEntry {
   TimelineDates get dates {
     final r = role;
     if (r != null) {
-      return (startYear: r.startYear, startMonth: r.startMonth, endYear: r.endYear, endMonth: r.endMonth, isCurrent: r.isCurrent);
+      return (
+        startYear: r.startYear,
+        startMonth: r.startMonth,
+        endYear: r.endYear,
+        endMonth: r.endMonth,
+        isCurrent: r.isCurrent,
+      );
     }
     final b = pause;
     if (b != null) {
-      return (startYear: b.startYear, startMonth: b.startMonth, endYear: b.endYear, endMonth: b.endMonth, isCurrent: b.isCurrent);
+      return (
+        startYear: b.startYear,
+        startMonth: b.startMonth,
+        endYear: b.endYear,
+        endMonth: b.endMonth,
+        isCurrent: b.isCurrent,
+      );
     }
     final g = gap!;
     return (

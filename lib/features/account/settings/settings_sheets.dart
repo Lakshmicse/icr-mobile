@@ -14,6 +14,10 @@ const accountLanguages = <(String, String, String)>[
   ('en', 'English', 'English'),
   ('hi', 'हिन्दी', 'Hindi'),
   ('kn', 'ಕನ್ನಡ', 'Kannada'),
+  // The three the website added on 27 Oct 2026 (bug sheet, 9 Nov: the app offered three, the website six).
+  ('es', 'Español', 'Spanish'),
+  ('ar', 'العربية', 'Arabic'),
+  ('zh', '中文', 'Chinese'),
 ];
 
 String languageName(String? code) {
@@ -28,8 +32,14 @@ String languageName(String? code) {
 /// Chooses the language of ICR's emails, notifications and replies, saved on
 /// the account (`PATCH /users/me {locale}`). The app's own screens are in
 /// English for now, and the sheet says so. Returns the code saved, or null.
-Future<String?> showLanguageSheet(BuildContext context, {required AccountRepository repository, required String? current}) =>
-    showEditSheet<String>(context, builder: (_) => _LanguageSheet(repository: repository, current: current ?? 'en'));
+Future<String?> showLanguageSheet(
+  BuildContext context, {
+  required AccountRepository repository,
+  required String? current,
+}) => showEditSheet<String>(
+  context,
+  builder: (_) => _LanguageSheet(repository: repository, current: current ?? 'en'),
+);
 
 class _LanguageSheet extends StatefulWidget {
   const _LanguageSheet({required this.repository, required this.current});
@@ -101,10 +111,16 @@ class _LanguageSheetState extends State<_LanguageSheet> {
 
 // --- download my data ----------------------------------------------------------------------------------------
 
-/// "Download my data": reads what ICR holds for the account (`GET /users/me/export`)
+/// "Download My Data": reads what ICR holds for the account (`GET /users/me/export`)
 /// and offers it to copy or share as JSON.
-Future<void> showExportSheet(BuildContext context, {required AccountRepository repository, required Future<void> Function(String text, String subject) share}) =>
-    showEditSheet<void>(context, builder: (_) => _ExportSheet(repository: repository, share: share));
+Future<void> showExportSheet(
+  BuildContext context, {
+  required AccountRepository repository,
+  required Future<void> Function(String text, String subject) share,
+}) => showEditSheet<void>(
+  context,
+  builder: (_) => _ExportSheet(repository: repository, share: share),
+);
 
 class _ExportSheet extends StatefulWidget {
   const _ExportSheet({required this.repository, required this.share});
@@ -140,7 +156,7 @@ class _ExportSheetState extends State<_ExportSheet> {
   Widget build(BuildContext context) {
     final json = _json;
     return EditSheet(
-      title: 'Download my data',
+      title: 'Download My Data',
       subtitle: 'The personal data ICR holds for your account, as a file you can keep.',
       saveLabel: 'Done',
       onSave: () => Navigator.of(context).pop(),
@@ -149,7 +165,7 @@ class _ExportSheetState extends State<_ExportSheet> {
         if (json == null)
           AccountButton(
             key: const Key('export.read'),
-            label: 'Get my data',
+            label: 'Get My Data',
             icon: Icons.download_rounded,
             busy: _busy,
             onPressed: _read,
@@ -159,11 +175,13 @@ class _ExportSheetState extends State<_ExportSheet> {
             key: const Key('export.preview'),
             height: 180,
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.slate50,
-              borderRadius: BorderRadius.circular(10),
+            decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10)),
+            child: SingleChildScrollView(
+              child: Text(
+                json,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 13, color: AppColors.slate700),
+              ),
             ),
-            child: SingleChildScrollView(child: Text(json, style: const TextStyle(fontFamily: 'monospace', fontSize: 13, color: AppColors.slate700))),
           ),
           const SizedBox(height: 12),
           Row(
@@ -196,7 +214,7 @@ class _ExportSheetState extends State<_ExportSheet> {
 
 // --- delete my account ---------------------------------------------------------------------------------------
 
-/// "Delete my account": says what happens, asks for the word DELETE, then
+/// "Delete Account": says what happens, asks for the word DELETE, then
 /// `DELETE /users/me`, which anonymises and closes the account and ends every
 /// session. True when it was done (the caller signs the phone out).
 Future<bool> showDeleteAccountSheet(BuildContext context, {required AccountRepository repository}) async =>
@@ -243,22 +261,22 @@ class _DeleteSheetState extends State<_DeleteSheet> {
   @override
   Widget build(BuildContext context) {
     return EditSheet(
-      title: 'Delete my account',
+      title: 'Delete Account',
       saving: _busy,
       error: _error,
-      saveLabel: 'Delete my account',
+      saveLabel: 'Delete Account',
       danger: true,
       onSave: _ready ? _delete : null,
       children: [
         Text(
-          'This removes your name, photo, phone number and what you told ICR about your career, closes your account and signs you out everywhere. '
-          'What you posted for others (discussions, reviews) stays, without your name. It cannot be undone.',
+          'This removes your name, photo, mobile number and career details. It closes your account and signs you out '
+          'on all devices. Your discussions and reviews stay, without your name. This cannot be undone.',
           style: AccountText.body,
         ),
         const SizedBox(height: 16),
         AccountField(
           fieldKey: const Key('delete.word'),
-          label: 'Type DELETE to confirm',
+          label: 'Type DELETE to Confirm',
           controller: _word,
           textCapitalization: TextCapitalization.characters,
           onChanged: (_) => setState(() {}),

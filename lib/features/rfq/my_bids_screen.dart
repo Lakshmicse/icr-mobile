@@ -14,7 +14,7 @@ import 'widgets/rfq_widgets.dart';
 import 'widgets/supplier_parts.dart';
 
 /// "My Bids": what the supplier sent, by where it stands (Submitted,
-/// Shortlisted, Won, Archived), each with its price, lead time and the
+/// Shortlisted, Awarded, Archived), each with its price, lead time and the
 /// requirement behind it. A quote cannot be changed or withdrawn through the
 /// API yet (`docs/backend-requests/rfq.md`), so "Message buyer" is how: it
 /// opens the thread with the buyer.
@@ -118,9 +118,9 @@ class _MyBidsScreenState extends State<MyBidsScreen> {
         fill(
           RfqNotice(
             icon: LucideIcons.cloudOff,
-            title: "Couldn't load your bids",
+            title: 'Unable to Load Your Bids',
             body: b.error,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: b.refresh,
           ),
         ),
@@ -173,18 +173,22 @@ class _MyBidsScreenState extends State<MyBidsScreen> {
     final (icon, title, body) = switch (tab) {
       BidsTab.submitted => (
         LucideIcons.send,
-        'No bids waiting',
-        'Quotes you send show here until the buyer shortlists or decides. Find work on the open board.',
+        'No Bids Waiting',
+        'Quotes you send will appear here until the buyer shortlists or decides. Find work on the open board.',
       ),
       BidsTab.shortlisted => (
         LucideIcons.star,
-        'Nothing shortlisted yet',
+        'Nothing Shortlisted Yet',
         'When a buyer shortlists your quote it moves here.',
       ),
-      BidsTab.awarded => (LucideIcons.trophy, 'No wins yet', 'Awarded bids, with their purchase order, show here.'),
+      BidsTab.awarded => (
+        LucideIcons.trophy,
+        'Nothing Awarded Yet',
+        'Awarded bids and their purchase orders will appear here.',
+      ),
       BidsTab.archived => (
         LucideIcons.archive,
-        'Nothing archived',
+        'Nothing Archived',
         'Bids that were not selected, and requirements that closed, are kept here.',
       ),
     };
@@ -192,7 +196,7 @@ class _MyBidsScreenState extends State<MyBidsScreen> {
       icon: icon,
       title: title,
       body: body,
-      action: tab == BidsTab.submitted ? 'Find work' : null,
+      action: tab == BidsTab.submitted ? 'Find Work' : null,
       onAction: tab == BidsTab.submitted ? () => pushBoard(context, _hooks) : null,
     );
   }

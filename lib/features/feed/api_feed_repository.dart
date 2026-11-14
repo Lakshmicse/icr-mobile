@@ -112,26 +112,49 @@ class ApiFeedRepository implements FeedRepository {
   }
 
   @override
-  Future<FeedPostDetail?> detail(FeedPost post) async {
-    final json = await _get('/forum/threads/${post.slug}');
+  Future<FeedPostDetail?> detail(FeedPost post) async => _detailOf(await _get('/forum/threads/${post.slug}'));
+
+  @override
+  Future<FeedPost?> quoted(String slug) async {
+    try {
+      final json = await _get('/forum/threads/$slug');
+      final following = viewerId == null ? <String>{} : await _followingIds();
+      final detail = _detailOf(json);
+      return _json
+          .post(json, following: following)
+          .copyWith(
+            body: detail.body,
+            mentions: detail.mentions,
+            images: detail.images,
+            imageCaption: detail.caption,
+            morePhotos: detail.morePhotos,
+            detailLoaded: true,
+          );
+    } catch (_) {
+      // A repost of a discussion since removed (or unreachable) keeps its quote as words.
+      return null;
+    }
+  }
+
+  /// A discussion's whole text and photos, from the thread the API serves.
+  FeedPostDetail _detailOf(Map<String, dynamic> json) {
     final html = json['bodyHtml'] as String? ?? '';
     final base = api.dio.options.baseUrl;
 
-    // Photos: the thread's one attachment when it is a picture, then the images in the body.
-    final photos = <String>[];
+    // Photos: the forum's own list, a pictured attachment, then any picture in the body (`ForumJson.photoPaths`).
+    final photos = ForumJson.photoPaths(json);
     String? caption;
     final attachment = json['attachment'] as Map<String, dynamic>?;
     final upload = attachment?['uploadId'] as String?;
     if (upload != null && ForumJson.isPicture(upload)) {
-      photos.add('/uploads/$upload');
       caption = ForumJson.caption(attachment?['fileName'] as String?);
     }
-    photos.addAll(ForumJson.imageSources(html));
     final urls = [for (final p in photos) ?AppConfig.absoluteUrl(p, apiBase: base)];
     return FeedPostDetail(
       body: ForumJson.plainText(html),
       mentions: mentionsInHtml(html),
       images: [for (final url in urls.take(2)) FeedPicture.network(url)],
+      videos: [for (final src in ForumJson.videoSources(html)) ?AppConfig.absoluteUrl(src, apiBase: base)],
       // A caption is drawn on a lone photo only.
       caption: urls.length == 1 ? caption : null,
       morePhotos: math.max(0, urls.length - 2),

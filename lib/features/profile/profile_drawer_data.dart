@@ -1,3 +1,4 @@
+import '../account/widgets/account_kit.dart' show isProfileCover;
 import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_client.dart';
@@ -16,6 +17,7 @@ class ProfileDrawerData {
     this.photoAsset,
     this.coverUrl,
     this.coverAsset,
+    this.cover,
     this.verified = false,
     this.profileViews,
     this.postImpressions,
@@ -39,6 +41,10 @@ class ProfileDrawerData {
   final String? photoAsset;
   final String? coverUrl;
   final String? coverAsset;
+
+  /// The banner as the person set it on their profile (`User.coverImage`): a ready-made cover's id or their own
+  /// `/uploads/...` picture, drawn through the profile's own `CoverBand` so the menu shows what the profile shows.
+  final String? cover;
   final bool verified;
   final int? profileViews;
   final int? postImpressions;
@@ -121,6 +127,8 @@ class ProfileDrawerData {
     int? connections,
     String? photoUrl,
     String? coverUrl,
+    String? cover,
+    bool clearCover = false,
     bool? verified,
     int? profileViews,
     int? postImpressions,
@@ -139,8 +147,9 @@ class ProfileDrawerData {
     connections: connections ?? this.connections,
     photoUrl: photoUrl ?? this.photoUrl,
     photoAsset: photoAsset,
-    coverUrl: coverUrl ?? this.coverUrl,
+    coverUrl: clearCover ? null : (coverUrl ?? this.coverUrl),
     coverAsset: coverAsset,
+    cover: clearCover ? null : (cover ?? this.cover),
     verified: verified ?? this.verified,
     profileViews: profileViews ?? this.profileViews,
     postImpressions: postImpressions ?? this.postImpressions,
@@ -331,7 +340,9 @@ class ProfileDrawerController extends ChangeNotifier {
     _data = _data.copyWith(
       headline: headline,
       photoUrl: AppConfig.absoluteUrl(user['avatarUrl'] as String?, apiBase: base),
-      coverUrl: AppConfig.absoluteUrl(user['coverImage'] as String?, apiBase: base),
+      // A ready-made cover is a name ("skyline"), not an address: kept as it is, and drawn by `CoverBand`.
+      cover: isProfileCover(user['coverImage'] as String?) ? user['coverImage'] as String : null,
+      clearCover: !isProfileCover(user['coverImage'] as String?),
       location: _data.location ?? (resume?['location'] as String?) ?? (company?['city'] as String?),
       profilePath: user['profileSlug'] is String ? '/members/${user['profileSlug']}' : null,
     );

@@ -8,10 +8,10 @@ import '../mentorship_my/mentoring_models.dart';
 /// `MentorProfileStatus`.
 enum DeskStatus {
   draft('DRAFT', 'Draft'),
-  pending('PENDING', 'In review'),
+  pending('PENDING', 'In Review'),
   approved('APPROVED', 'Approved'),
   paused('PAUSED', 'Paused'),
-  rejected('REJECTED', 'Not approved');
+  rejected('REJECTED', 'Not Approved');
 
   const DeskStatus(this.api, this.label);
   final String api;

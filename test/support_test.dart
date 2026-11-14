@@ -18,7 +18,7 @@ import 'package:icr_mobile/features/support/ticket_screen.dart';
 import 'helpers/account_harness.dart';
 import 'helpers/fonts.dart';
 
-/// The support desk: "Help & support" (the member's requests under a status tab and a search, the common questions,
+/// The support desk: "Help & Support" (the member's requests under a status tab and a search, the common questions,
 /// the ICR account manager), one request's thread (banners, messages, history, reply, reopen, rating), and the
 /// form that raises one. The website's `/support`, `/support/[id]` and `RaiseTicketDialog`, over a fake API.
 void main() {
@@ -190,7 +190,7 @@ void main() {
       'open requests first: subject, reference, category, what it is about, status, replies and last activity',
       (tester) async {
         await pump(tester, listRoutes());
-        expect(find.text('Help & support'), findsOneWidget);
+        expect(find.text('Help & Support'), findsOneWidget);
         expect(find.text('Raise a request, follow it, and reply to the ICR team in one place.'), findsOneWidget);
         final first = h.api.where('GET /support/tickets').first;
         expect(first.query['status'], 'OPEN_ONLY');
@@ -199,13 +199,13 @@ void main() {
         expect(first.query.containsKey('search'), isFalse);
 
         expect(find.text('Payment taken twice for the Gold plan'), findsOneWidget);
-        expect(find.text('ICR-12 · Billing & payments · Gold plan'), findsOneWidget);
+        expect(find.text('ICR-12 · Billing & Payments · Gold plan'), findsOneWidget);
         expect(find.text('3 replies · 5h ago'), findsOneWidget);
         expect(find.text('ICR-9 · Learning Center'), findsOneWidget);
         expect(find.text('1 reply · 5h ago'), findsOneWidget);
         // The statuses read as the member reads them; the one waiting on them is told apart.
         expect(find.byKey(const Key('support.status.AWAITING_USER')), findsOneWidget);
-        expect(find.text('Waiting on you'), findsNWidgets(2), reason: 'the tab and the chip');
+        expect(find.text('Waiting on You'), findsNWidgets(2), reason: 'the tab and the chip');
         expect(find.byKey(const Key('support.status.NEW')), findsOneWidget);
       },
     );
@@ -264,16 +264,13 @@ void main() {
     ) async {
       await pump(tester, {...listRoutes(), 'GET /support/tickets': (_) => page(const [])});
       expect(find.byKey(const Key('support.empty')), findsOneWidget);
-      expect(find.text('Nothing open'), findsOneWidget);
-      expect(
-        find.text('When something is not working, raise it here and you can follow it all the way through.'),
-        findsOneWidget,
-      );
+      expect(find.text('No Open Requests'), findsOneWidget);
+      expect(find.text('When something is not working, raise a request here and follow its progress.'), findsOneWidget);
       expect(find.byKey(const Key('support.empty.new')), findsOneWidget);
 
       await tester.enterText(find.byKey(const Key('support.search')), 'zzz');
       await tester.pumpAndSettle();
-      expect(find.text('No request matches that search.'), findsOneWidget);
+      expect(find.text('No Matching Requests'), findsOneWidget);
       expect(find.byKey(const Key('support.empty.new')), findsNothing);
     });
 
@@ -290,11 +287,11 @@ void main() {
       expect(find.text('Payment taken twice for the Gold plan'), findsOneWidget);
     });
 
-    testWidgets('common questions: opening one counts a view once; "This answered it" counts and says Thanks', (
+    testWidgets('common questions: opening one counts a view once; "This Was Helpful" counts and says Thanks', (
       tester,
     ) async {
       await pump(tester, listRoutes());
-      expect(find.text('Common questions'), findsOneWidget);
+      expect(find.text('Common Questions'), findsOneWidget);
       expect(find.text('How do I get verified?'), findsOneWidget);
       expect(find.byKey(const Key('support.faq.answer.f1')), findsNothing, reason: 'closed until opened');
       expect(h.api.count('POST /support/faqs/f1/view'), 0);
@@ -310,12 +307,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(h.api.count('POST /support/faqs/f1/view'), 1);
 
-      expect(find.text('This answered it'), findsOneWidget);
+      expect(find.text('This Was Helpful'), findsOneWidget);
       await tester.tap(find.byKey(const Key('support.faq.helpful.f1')));
       await tester.pumpAndSettle();
       expect(h.api.count('POST /support/faqs/f1/helpful'), 1);
-      expect(find.text('Thanks'), findsOneWidget);
-      expect(find.text('This answered it'), findsNothing);
+      expect(find.text('Thank you'), findsOneWidget);
+      expect(find.text('This Was Helpful'), findsNothing);
     });
 
     testWidgets('a counter that fails never breaks the page', (tester) async {
@@ -351,7 +348,7 @@ void main() {
         opener: (context, uri) async => opened.add(uri),
       );
       expect(find.byKey(const Key('support.manager')), findsOneWidget);
-      expect(find.text('Your ICR account manager'), findsOneWidget);
+      expect(find.text('Your ICR Account Manager'), findsOneWidget);
       expect(find.text('Meera Iyer'), findsOneWidget);
       expect(find.text('meera@icr.org.in · +91 98450 00000'), findsOneWidget);
       expect(find.text('Your first call for anything.'), findsOneWidget);
@@ -516,7 +513,7 @@ void main() {
       expect(find.byKey(const Key('ticket.subject')), findsOneWidget);
       expect(find.text('Payment taken twice for the Gold plan'), findsOneWidget);
       expect(find.byKey(const Key('support.status.AWAITING_USER')), findsOneWidget);
-      expect(find.text('ICR-12 · Billing & payments · raised 3d ago'), findsOneWidget);
+      expect(find.text('ICR-12 · Billing & Payments · raised 3d ago'), findsOneWidget);
       // Messages, oldest first, with the author's name; the body keeps its line break.
       expect(find.text('Sam Rao'), findsOneWidget);
       expect(find.text('I was charged twice for the Gold plan.\nOn 2 November.'), findsOneWidget);
@@ -525,7 +522,7 @@ void main() {
       await reveal(tester, find.byKey(const Key('ticket.history')));
       expect(find.text('History'), findsOneWidget);
       expect(find.text('Raised · 3d ago'), findsOneWidget);
-      expect(find.text('Status changed → Waiting on you · 2d ago — Needs the statement'), findsOneWidget);
+      expect(find.text('Status changed → Waiting on You · 2d ago · Needs the statement'), findsOneWidget);
     });
 
     testWidgets('a message from ICR with no named person is drawn as ICR', (tester) async {
@@ -537,19 +534,14 @@ void main() {
     testWidgets('banners: a reply target while unanswered; "we need something from you" while waiting', (tester) async {
       await open(tester, () => thread(status: 'NEW', firstResponseHours: 24));
       expect(
-        find.text('We aim to reply within 24 hours. You will get a notification and an email as soon as we do.'),
+        find.text('We aim to reply within 24 hours. You will receive a notification and an email when we reply.'),
         findsOneWidget,
       );
       expect(find.byKey(const Key('ticket.waiting')), findsNothing);
 
       await open(tester, () => thread(status: 'AWAITING_USER', firstRespondedAt: ago(const Duration(days: 1))));
       expect(find.byKey(const Key('ticket.aim')), findsNothing, reason: 'it was answered');
-      expect(
-        find.text(
-          'We need something from you before we can go further — reply below and it comes straight back to us.',
-        ),
-        findsOneWidget,
-      );
+      expect(find.text('We need more information from you to continue. Reply below.'), findsOneWidget);
     });
 
     testWidgets('a closed request has no reply box and says what to do instead; no reply target either', (
@@ -557,10 +549,7 @@ void main() {
     ) async {
       await open(tester, () => thread(status: 'CLOSED', ratingScore: 4));
       expect(find.byKey(const Key('ticket.closed')), findsOneWidget);
-      expect(
-        find.text('This request is closed. If it comes back, please raise a new one so it gets a fresh look.'),
-        findsOneWidget,
-      );
+      expect(find.text('This request is closed. If the issue returns, raise a new request.'), findsOneWidget);
       expect(find.byKey(const Key('ticket.replyBox')), findsNothing);
       expect(find.byKey(const Key('ticket.reply')), findsNothing);
       expect(find.byKey(const Key('ticket.aim')), findsNothing);
@@ -670,7 +659,7 @@ void main() {
           },
         },
       );
-      expect(find.text('Reopen this request'), findsOneWidget);
+      expect(find.text('Reopen This Request'), findsOneWidget);
       await tapKey(tester, 'ticket.reopen');
       expect(h.api.count('POST /support/tickets/t1/reopen'), 1);
       expect(find.byKey(const Key('support.status.OPEN')), findsOneWidget);
@@ -690,7 +679,7 @@ void main() {
       expect(find.text('This request was resolved more than 14 days ago. Please raise a new one.'), findsOneWidget);
     });
 
-    testWidgets('a resolved, unrated request asks "Did we get this right?"; a score is sent once, then shown', (
+    testWidgets('a resolved, unrated request asks "Rate Our Support"; a score is sent once, then shown', (
       tester,
     ) async {
       int? score;
@@ -705,7 +694,7 @@ void main() {
         },
       );
       await reveal(tester, find.byKey(const Key('ticket.rating')));
-      expect(find.text('Did we get this right?'), findsOneWidget);
+      expect(find.text('Rate Our Support'), findsOneWidget);
       expect(
         tester
             .widget<FilledButton>(
@@ -826,7 +815,7 @@ void main() {
         routes: {'GET /support/tickets/t1': (_) => found ? thread() : ApiReply.refusal(404, 'Not found')},
       );
       expect(
-        find.text('We could not open that request. It may have been removed, or it belongs to another account.'),
+        find.text('Unable to open this request. It may have been removed, or it belongs to another account.'),
         findsOneWidget,
       );
       found = true;
@@ -922,14 +911,14 @@ void main() {
             .onPressed !=
         null;
 
-    testWidgets('opens on "Something else" with its hint; Send waits for a subject of 5 and a story of 10 characters', (
+    testWidgets('opens on "Something Else" with its hint; Send waits for a subject of 5 and a story of 10 characters', (
       tester,
     ) async {
       await openSheet(tester);
-      expect(find.text('Get help from ICR'), findsOneWidget);
-      expect(find.text('Something else'), findsOneWidget);
-      expect(find.text('Tell us in your own words.'), findsOneWidget);
-      expect(find.text('One line — what is wrong'), findsOneWidget);
+      expect(find.text('Get Help from ICR'), findsOneWidget);
+      expect(find.text('Something Else'), findsOneWidget);
+      expect(find.text('Describe it in your own words.'), findsOneWidget);
+      expect(find.text('Summarise the problem in one line'), findsOneWidget);
       expect(find.text('What you did, what you expected, and what happened instead.'), findsOneWidget);
       expect(sendEnabled(tester), isFalse);
 
@@ -949,10 +938,10 @@ void main() {
       expect(SupportWords.categories, hasLength(11), reason: 'every SupportTicketCategory');
       await tester.tap(find.descendant(of: find.byKey(const Key('raise.category')), matching: find.byType(InkWell)));
       await tester.pumpAndSettle();
-      expect(find.text('What is this about?'), findsWidgets);
-      expect(find.text('Account & sign-in'), findsOneWidget);
-      expect(find.text('Billing & payments'), findsOneWidget);
-      await tester.tap(find.text('Billing & payments'));
+      expect(find.text('Select a Topic'), findsWidgets);
+      expect(find.text('Account & Sign-In'), findsOneWidget);
+      expect(find.text('Billing & Payments'), findsOneWidget);
+      await tester.tap(find.text('Billing & Payments'));
       await tester.pumpAndSettle();
       expect(
         find.text('A payment that failed or charged twice, a refund, an invoice, a membership you did not expect.'),
@@ -960,7 +949,7 @@ void main() {
       );
       expect(h.api.last('GET /support/faqs').query['category'], 'BILLING_PAYMENTS');
       expect(h.api.last('GET /support/faqs').query['limit'], 3);
-      expect(find.text('Before you write — these come up a lot'), findsOneWidget);
+      expect(find.text('Common Questions on This Topic'), findsOneWidget);
       expect(find.text('Where is my invoice?'), findsOneWidget);
     });
 
@@ -1130,7 +1119,7 @@ void main() {
       expect(raised, isNull);
     });
 
-    testWidgets('with no sentence from the API, "We could not log that request."', (tester) async {
+    testWidgets('with no sentence from the API, "Unable to submit your request."', (tester) async {
       await openSheet(
         tester,
         routes: {
@@ -1140,7 +1129,7 @@ void main() {
       await fill(tester);
       await tester.tap(find.byKey(const Key('sheet.save')));
       await tester.pumpAndSettle();
-      expect(find.text('We could not log that request.'), findsOneWidget);
+      expect(find.text('Unable to submit your request.'), findsOneWidget);
     });
   });
 

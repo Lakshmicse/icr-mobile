@@ -178,7 +178,7 @@ void main() {
           expect(find.textContaining(entry.value), findsOneWidget, reason: entry.key.label);
           expect(find.textContaining(companyName), findsOneWidget, reason: entry.key.label);
           expect(
-            find.text('Create a company page'),
+            find.text('Create a Company Page'),
             findsNothing,
             reason: '${entry.key.label}: a new company is not the fix',
           );
@@ -231,7 +231,7 @@ void main() {
           );
           expect(tester.takeException(), isNull, reason: entry.key.label);
           expect(find.text(entry.value), findsWidgets, reason: entry.key.label);
-          expect(find.text('The list of services could not load.'), findsNothing, reason: entry.key.label);
+          expect(find.text('Unable to load the list of services.'), findsNothing, reason: entry.key.label);
           expect(find.byKey(const ValueKey('send')), findsOneWidget, reason: entry.key.label);
           expect(find.byKey(const ValueKey('role-cannot-post')), findsNothing, reason: entry.key.label);
         }
@@ -326,7 +326,7 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         expect(find.textContaining("Couldn't load"), findsNothing);
-        expect(find.text('Mark all read'), findsWidgets);
+        expect(find.text('Mark All Read'), findsWidgets);
         await finishLive(tester);
       },
     );
@@ -374,7 +374,7 @@ void main() {
           ),
         );
         expect(tester.takeException(), isNull);
-        expect(find.text('Start selling'), findsWidgets);
+        expect(find.text('Start Selling'), findsWidgets);
         for (final who in [branchAdmin, recruiter, hiringManager, marketNoPhone]) {
           final api = await client(tester, who);
           for (final screen in <Widget>[
@@ -389,7 +389,7 @@ void main() {
           ]) {
             await open(tester, screen);
             expect(tester.takeException(), isNull, reason: who.label);
-            expect(find.text('This is for supplier accounts'), findsOneWidget, reason: who.label);
+            expect(find.text('This Is for Supplier Accounts'), findsOneWidget, reason: who.label);
             expect(find.textContaining("Couldn't load"), findsNothing, reason: who.label);
             expect(find.textContaining('Insufficient'), findsNothing, reason: who.label);
           }
@@ -505,7 +505,7 @@ void main() {
             size: const Size(390, 3600),
           );
           expect(tester.takeException(), isNull, reason: who.label);
-          expect(find.text('Jobs you posted'), findsOneWidget, reason: who.label);
+          expect(find.text('Jobs You Posted'), findsOneWidget, reason: who.label);
           expect(find.byKey(const ValueKey('figures')), findsOneWidget, reason: who.label);
           expect(find.byKey(const ValueKey('no-role')), findsNothing, reason: who.label);
           expect(find.byKey(const ValueKey('jobs-error')), findsNothing, reason: who.label);
@@ -537,7 +537,7 @@ void main() {
           );
           expect(tester.takeException(), isNull, reason: who.label);
           expect(find.byKey(const ValueKey('no-role')), findsOneWidget, reason: who.label);
-          expect(find.text('Posting jobs is for hiring teams'), findsOneWidget, reason: who.label);
+          expect(find.text('Job Posting Is for Hiring Teams'), findsOneWidget, reason: who.label);
           expect(find.byKey(const ValueKey('jobs-error')), findsNothing, reason: who.label);
         }
         await finishLive(tester);
@@ -583,7 +583,7 @@ void main() {
             size: const Size(390, 6000),
           );
           expect(tester.takeException(), isNull, reason: who.label);
-          expect(find.text('Before you publish'), findsOneWidget, reason: who.label);
+          expect(find.text('Before You Publish'), findsOneWidget, reason: who.label);
           expect(
             find.byKey(const ValueKey('gate-note')),
             findsNothing,
@@ -878,9 +878,9 @@ void main() {
           expect(find.text('Active'), findsOneWidget, reason: who.label);
           expect(find.text('Leave'), leave ? findsOneWidget : findsNothing, reason: '${who.label}: Leave');
           if (note != null) expect(find.textContaining(note), findsWidgets, reason: who.label);
-          expect(find.text('Switch to personal account'), findsOneWidget, reason: who.label);
-          expect(find.text('Create a company'), findsWidgets, reason: who.label);
-          expect(find.text('Ask to join a company'), findsWidgets, reason: who.label);
+          expect(find.text('Switch to Personal Account'), findsOneWidget, reason: who.label);
+          expect(find.text('Create a Company'), findsWidgets, reason: who.label);
+          expect(find.text('Ask to Join a Company'), findsWidgets, reason: who.label);
         }
         await finishLive(tester);
       },

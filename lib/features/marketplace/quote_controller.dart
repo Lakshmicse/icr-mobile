@@ -179,7 +179,7 @@ class QuoteController extends ChangeNotifier {
   static String _worded(ApiError e, {bool hasCompany = false, bool ownListing = false}) {
     // The API answers a company's request to its own listing with "No valid companies to invite.".
     if (ownListing && e.statusCode == 400 && e.message.toLowerCase().contains('no valid companies')) {
-      return "This is your own company's listing: a company cannot ask itself for a quote.";
+      return "This is your own company's listing. A company cannot request a quote from itself.";
     }
     if (e.statusCode == 403) {
       final said = e.message.trim();

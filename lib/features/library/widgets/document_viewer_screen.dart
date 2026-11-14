@@ -157,7 +157,7 @@ class _ViewerActionState extends State<ViewerAction> {
       if (mounted) {
         ScaffoldMessenger.maybeOf(context)
           ?..hideCurrentSnackBar()
-          ..showSnackBar(const SnackBar(content: Text("That didn't work. Try again.")));
+          ..showSnackBar(const SnackBar(content: Text('Something went wrong. Try again.')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -377,7 +377,7 @@ class _PdfBodyState extends State<_PdfBody> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                tooltip: 'Zoom out',
+                tooltip: 'Zoom Out',
                 icon: const Icon(LucideIcons.zoomOut, size: 20, color: Colors.white),
                 onPressed: _zoomStep == 0 ? null : () => _zoomBy(-1),
               ),
@@ -389,7 +389,7 @@ class _PdfBodyState extends State<_PdfBody> {
                 ),
               ),
               IconButton(
-                tooltip: 'Zoom in',
+                tooltip: 'Zoom In',
                 icon: const Icon(LucideIcons.zoomIn, size: 20, color: Colors.white),
                 onPressed: _zoomStep == _zooms.length - 1 ? null : () => _zoomBy(1),
               ),

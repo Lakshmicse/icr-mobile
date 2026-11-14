@@ -151,11 +151,11 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
     final enquiry = _c.rfq?.isEnquiry ?? false;
     final ok = await confirmMove(
       context,
-      title: enquiry ? 'Withdraw your reply?' : 'Withdraw your quote?',
+      title: enquiry ? 'Withdraw Your Reply?' : 'Withdraw Your Quote?',
       body:
           'The buyer will no longer see it, and you can send a new one while the requirement is open.${enquiry ? '' : ' A withdrawn quote does not give back a bid you used this month.'}',
       confirm: 'Withdraw',
-      keep: 'Keep it',
+      keep: 'Keep It',
       destructive: true,
     );
     if (!ok || !mounted) return;
@@ -177,10 +177,10 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
   Future<void> _decline() async {
     final ok = await confirmMove(
       context,
-      title: 'Decline this invitation?',
-      body: 'The buyer is told you will not respond.',
+      title: 'Decline This Invitation?',
+      body: 'The buyer will be notified that you will not respond.',
       confirm: 'Decline',
-      keep: 'Keep it',
+      keep: 'Keep It',
       destructive: true,
     );
     if (!ok || !mounted) return;
@@ -191,7 +191,7 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
   Future<String?> _message() async {
     final result = await _c.messageBuyer();
     final id = result.id;
-    if (id == null) return result.error ?? "Couldn't open the conversation.";
+    if (id == null) return result.error ?? 'Unable to open the conversation.';
     if (!mounted) return null;
     await _hooks.openConversation(context, id);
     return null;
@@ -206,9 +206,9 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
     try {
       final path = await _hooks.repository.saveFile(f);
       final taken = await _hooks.links.shareFile(path, f.name ?? f.title);
-      if (!taken && mounted) showMessage(context, 'Nothing on this phone could open ${f.name ?? f.title}.');
+      if (!taken && mounted) showMessage(context, 'No app on this phone can open ${f.name ?? f.title}.');
     } catch (_) {
-      if (mounted) showMessage(context, "Couldn't fetch ${f.name ?? f.title}. Try again.");
+      if (mounted) showMessage(context, 'Unable to download ${f.name ?? f.title}. Try again.');
     }
   }
 
@@ -250,9 +250,9 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
     final r = _c.rfq;
     if (r == null || _editing) return null;
     final label = switch (_c.state) {
-      ResponseState.form => r.isEnquiry ? 'Reply now' : 'Quote now',
-      ResponseState.preQual => 'Respond to the criteria',
-      ResponseState.sent => 'View your ${r.isEnquiry ? 'reply' : 'quote'}',
+      ResponseState.form => r.isEnquiry ? 'Reply Now' : 'Quote Now',
+      ResponseState.preQual => 'Respond to the Criteria',
+      ResponseState.sent => 'View Your ${r.isEnquiry ? 'Reply' : 'Quote'}',
       _ => null,
     };
     if (label == null) return null;
@@ -272,25 +272,25 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
       return switch (_c.errorStatus) {
         403 => RfqNotice(
           icon: LucideIcons.clock,
-          title: 'Not open to your plan yet',
+          title: 'Not Open to Your Plan Yet',
           body: _c.error,
-          action: 'See plans',
+          action: 'See Plans',
           onAction: _seePlans,
           secondary: 'Back',
           onSecondary: () => Navigator.maybePop(context),
         ),
         404 => RfqNotice(
           icon: LucideIcons.searchX,
-          title: 'This requirement is not available',
+          title: 'This Requirement Is Not Available',
           body: 'It may be a draft, a private requirement, or one that no longer exists.',
           action: 'Back',
           onAction: () => Navigator.maybePop(context),
         ),
         _ => RfqNotice(
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load this requirement",
+          title: 'Unable to Load This Requirement',
           body: _c.error,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         ),
       };
@@ -335,7 +335,7 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
           ],
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-            child: Text('The requirement', style: RfqText.section),
+            child: Text('The Requirement', style: RfqText.section),
           ),
           const SizedBox(height: 10),
           Padding(
@@ -360,16 +360,16 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
   }
 
   Widget _response(Requirement rfq, {required bool enquiry}) {
-    final formTitle = enquiry ? 'Reply to this enquiry' : 'Submit your quote';
+    final formTitle = enquiry ? 'Submit Your Bid' : 'Submit Your Quote';
     final formCaption = enquiry
-        ? 'Tell the buyer how you would handle it. A price is optional.'
+        ? 'Describe how you would handle it. A price is optional.'
         : 'Your price for the work as described, with anything that supports it.';
     switch (_c.state) {
       case ResponseState.own:
         return const SizedBox.shrink();
       case ResponseState.notSupplier:
         return const ResponseCard(
-          title: 'Responses come from suppliers',
+          title: 'Responses Come from Suppliers',
           icon: LucideIcons.store,
           child: ResponseNote(
             'Your account is not a supplier\'s, so it cannot reply here. A company that sells on ICR has supplier accounts; ask your company admin to add you as one.',
@@ -379,7 +379,7 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
         final bid = _c.myBid!;
         if (_editing) {
           return ResponseCard(
-            title: enquiry ? 'Change your reply' : 'Change your quote',
+            title: enquiry ? 'Change Your Reply' : 'Change Your Quote',
             caption: 'The buyer sees the new version.',
             child: ReplyForm(
               key: const ValueKey('reply-form-edit'),
@@ -395,7 +395,7 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
           );
         }
         return ResponseCard(
-          title: enquiry ? 'Your reply' : 'Your quote',
+          title: enquiry ? 'Your Reply' : 'Your Submitted Quote',
           child: MyReplySummary(
             bid: bid,
             enquiry: enquiry,
@@ -410,13 +410,13 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
         );
       case ResponseState.closed:
         return const ResponseCard(
-          title: 'This requirement is closed',
+          title: 'This Requirement Is Closed',
           icon: LucideIcons.lock,
           child: ResponseNote('Bidding is no longer open for this requirement.'),
         );
       case ResponseState.declined:
         return const ResponseCard(
-          title: 'Invitation declined',
+          title: 'Invitation Declined',
           icon: LucideIcons.ban,
           child: ResponseNote('You\'ve declined this quote request. The buyer has been notified.'),
         );
@@ -435,7 +435,7 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
         );
       case ResponseState.preQual:
         return ResponseCard(
-          title: 'Submit pre-qualification response',
+          title: 'Submit Pre-Qualification Response',
           icon: LucideIcons.clipboardCheck,
           caption: 'The buyer screens suppliers against the criteria before asking for detailed quotes.',
           child: PreQualForm(
@@ -447,7 +447,7 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
         );
       case ResponseState.screening:
         return const ResponseCard(
-          title: 'Under evaluation',
+          title: 'Under Evaluation',
           icon: LucideIcons.hourglass,
           child: ResponseNote(
             'The buyer is screening pre-qualification responses. If you\'re shortlisted, you\'ll be able to submit a detailed quote here.',
@@ -455,7 +455,7 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
         );
       case ResponseState.evaluation:
         return const ResponseCard(
-          title: 'Quotes under evaluation',
+          title: 'Quotes Under Evaluation',
           icon: LucideIcons.hourglass,
           child: ResponseNote('Detailed quotes are closed and being evaluated by the buyer.'),
         );
@@ -471,7 +471,7 @@ class _OpportunityScreenState extends State<OpportunityScreen> {
             blocker: _c.blocker,
             invited: _c.invitedOnly,
             stageNote: rfq.staged && rfq.stage == RfqStage.quotation
-                ? 'You\'ve been shortlisted: submit your detailed quote below.'
+                ? 'You have been shortlisted. Submit your detailed quote below.'
                 : null,
             onDecline: _c.invitedOnly ? _decline : null,
             onSend: _send,

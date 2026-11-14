@@ -172,7 +172,7 @@ class AccountHarness {
   factory AccountHarness({Map<String, ApiHandler> routes = const {}}) {
     final api = FakeApi({
       'GET /auth/social/providers': (_) => {
-        'providers': ['GOOGLE'],
+        'providers': ['GOOGLE', 'LINKEDIN'],
       },
       ...routes,
     });

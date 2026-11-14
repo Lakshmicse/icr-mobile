@@ -141,15 +141,15 @@ List<MentorProblem<MentorProfileField>> mentorProfileProblems(MentorProfileFacts
   int count(List<String>? l) => l?.length ?? 0;
 
   if ((p.bioHtml ?? '').length > MentorLimits.bioHtmlMax) {
-    add(MentorProfileField.bioHtml, '“How you mentor” is too long — keep it under 20,000 characters.');
+    add(MentorProfileField.bioHtml, '“How You Mentor” is too long. Keep it under 20,000 characters.');
   } else if (forSubmit) {
     final chars = htmlToPlainText(p.bioHtml).length;
     if (chars < MentorLimits.bioMin) {
       add(
         MentorProfileField.bioHtml,
         chars > 0
-            ? 'Say a little more about how you mentor — at least ${MentorLimits.bioMin} characters ($chars so far).'
-            : 'Tell mentees how you mentor — at least ${MentorLimits.bioMin} characters.',
+            ? 'Describe how you mentor in at least ${MentorLimits.bioMin} characters ($chars so far).'
+            : 'Describe how you mentor in at least ${MentorLimits.bioMin} characters.',
       );
     }
   }
@@ -157,11 +157,11 @@ List<MentorProblem<MentorProfileField>> mentorProfileProblems(MentorProfileFacts
   if (count(p.competencies) > MentorLimits.competenciesMax) {
     add(MentorProfileField.competencies, 'Choose at most ${MentorLimits.competenciesMax} areas of expertise.');
   } else if (forSubmit && count(p.competencies) == 0 && count(p.expertiseKeys) == 0) {
-    add(MentorProfileField.competencies, 'Add at least one area of expertise — it is how mentees find you.');
+    add(MentorProfileField.competencies, 'Add at least one area of expertise. This is how mentees find you.');
   }
 
   if (count(p.topics) > MentorLimits.topicsMax) {
-    add(MentorProfileField.topics, 'Keep “Happy to talk about” to ${MentorLimits.topicsMax} topics.');
+    add(MentorProfileField.topics, 'Keep “Conversation Topics” to ${MentorLimits.topicsMax} topics.');
   }
 
   if (forSubmit && count(p.targetAudiences) == 0) {
@@ -178,7 +178,7 @@ List<MentorProblem<MentorProfileField>> mentorProfileProblems(MentorProfileFacts
   if ((p.availabilityNote ?? '').length > MentorLimits.availabilityNoteMax) {
     add(
       MentorProfileField.availabilityNote,
-      'Keep “When you\'re free” to ${MentorLimits.availabilityNoteMax} characters.',
+      'Keep “Availability Note” to ${MentorLimits.availabilityNoteMax} characters.',
     );
   }
   return out;
@@ -194,14 +194,14 @@ List<MentorProblem<MentorPersonField>> mentorPersonProblems(MentorPersonFacts p,
   int count(List<String>? l) => l?.length ?? 0;
 
   if (forSubmit && (p.avatarUrl == null || p.avatarUrl!.isEmpty)) {
-    add(MentorPersonField.avatarUrl, 'Add a profile photo — it is the first thing a mentee sees.');
+    add(MentorPersonField.avatarUrl, 'Add a profile photo. It is the first thing a mentee sees.');
   }
 
   final role = (p.designation ?? '').trim();
   if (role.length > MentorLimits.roleMax) {
     add(
       MentorPersonField.designation,
-      'Keep your current role to ${MentorLimits.roleMax} characters — just the job title.',
+      'Keep your current role to ${MentorLimits.roleMax} characters. Enter the job title only.',
     );
   } else if (role.isNotEmpty && role.length < MentorLimits.roleMin) {
     add(MentorPersonField.designation, 'Your current role needs at least ${MentorLimits.roleMin} characters.');
@@ -253,7 +253,7 @@ String? designationProblem(String raw) {
   if (t.isEmpty) return null;
   if (t.length < MentorLimits.roleMin) return 'A headline needs at least ${MentorLimits.roleMin} characters.';
   if (t.length > MentorLimits.roleMax) {
-    return 'Keep your current role to ${MentorLimits.roleMax} characters — just the job title.';
+    return 'Keep your current role to ${MentorLimits.roleMax} characters. Enter the job title only.';
   }
   return null;
 }
@@ -335,9 +335,9 @@ List<MentorProblem<ExperienceField>> experienceProblems(ExperienceFacts row, {Da
   if (sy == null) {
     add(ExperienceField.start, 'Add the year you started.');
   } else if (sy < ExperienceLimits.minCareerYear) {
-    add(ExperienceField.start, 'Choose a year from ${ExperienceLimits.minCareerYear} on.');
+    add(ExperienceField.start, 'Choose a year from ${ExperienceLimits.minCareerYear} onwards.');
   } else if (sy > thisYear || (sy == thisYear && sm != null && sm > thisMonth)) {
-    add(ExperienceField.start, 'The start date can’t be in the future.');
+    add(ExperienceField.start, 'The start date cannot be in the future.');
   }
 
   if (!row.isCurrent) {
@@ -346,10 +346,13 @@ List<MentorProblem<ExperienceField>> experienceProblems(ExperienceFacts row, {Da
     if (ey == null) {
       add(
         ExperienceField.end,
-        em != null ? 'Add the end year too.' : 'Add when this role ended, or tick “I work here now”.',
+        em != null ? 'Add the end year too.' : 'Add when this role ended, or select “I Work Here Now”.',
       );
     } else if (ey > thisYear || (ey == thisYear && em != null && em > thisMonth)) {
-      add(ExperienceField.end, 'The end date can’t be in the future. If you still work here, tick “I work here now”.');
+      add(
+        ExperienceField.end,
+        'The end date cannot be in the future. If you still work here, select “I Work Here Now”.',
+      );
     } else if (sy != null && (ey < sy || (ey == sy && sm != null && em != null && em < sm))) {
       add(ExperienceField.end, 'The end date is before the start date.');
     }

@@ -533,7 +533,14 @@ class DemoHiringRepository implements HiringRepository {
             mustHave: true,
             ideal: '5',
           ),
-          BriefAnswer(prompt: 'Can you work rotational shifts?', type: 'YES_NO', answer: 'true', graded: true, meetsIdeal: true, ideal: 'true'),
+          BriefAnswer(
+            prompt: 'Can you work rotational shifts?',
+            type: 'YES_NO',
+            answer: 'true',
+            graded: true,
+            meetsIdeal: true,
+            ideal: 'true',
+          ),
         ],
         qualificationMet: 2,
         qualificationTotal: 2,
@@ -563,7 +570,14 @@ class DemoHiringRepository implements HiringRepository {
         ),
       ],
       teamNotes: [
-        BriefNote(id: 'n-1', type: 'NOTE', note: 'Good first call; check notice period.', rating: 4, author: 'Rohit Rao', at: _ago(4)),
+        BriefNote(
+          id: 'n-1',
+          type: 'NOTE',
+          note: 'Good first call; check notice period.',
+          rating: 4,
+          author: 'Rohit Rao',
+          at: _ago(4),
+        ),
         BriefNote(id: 'n-2', type: 'STAGE_CHANGE', toStage: 'INTERVIEW', author: 'Meera Iyer', at: _ago(3)),
       ],
     );

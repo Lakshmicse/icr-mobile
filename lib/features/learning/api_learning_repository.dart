@@ -276,7 +276,7 @@ class ApiLearningRepository implements LearningRepository {
           ? null
           : CourseContact(
               name: specialist['name'] as String? ?? 'Enrolment specialist',
-              role: _text(specialist['title']) ?? 'Specialist – Program Enrollment',
+              role: _text(specialist['title']) ?? 'Programme Enrolment Specialist',
               photo: _picture(specialist['photoUrl'] as String?),
             ),
     );

@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
 import '../../core/util/site_policy.dart';
 import 'web_session.dart';
+import '../../core/util/screen_trail.dart';
 
 /// A page of the ICR website inside the app: the part of ICR the app has no
 /// screen of its own for yet. It keeps the person signed in (the access token
@@ -209,7 +210,9 @@ class _InAppWebScreenState extends State<InAppWebScreen> {
     if (!opened && mounted) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text("Couldn't open ${uri.host.isEmpty ? uri.scheme : uri.host}${uri.path}")));
+        ..showSnackBar(
+          SnackBar(content: Text('Unable to open ${uri.host.isEmpty ? uri.scheme : uri.host}${uri.path}.')),
+        );
     }
   }
 
@@ -230,7 +233,9 @@ class _InAppWebScreenState extends State<InAppWebScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => SitePlace(path: sitePlaceOf(widget.uri), child: _buildPage(context));
+
+  Widget _buildPage(BuildContext context) {
     final title = _pageTitle ?? widget.title ?? (widget.uri.host.isEmpty ? 'ICR' : widget.uri.host);
     return PopScope(
       canPop: !_canGoBack,
@@ -339,11 +344,11 @@ class _Failed extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("This page didn't load.", style: AppText.barTitle, textAlign: TextAlign.center),
+            Text('Unable to Load This Page', style: AppText.barTitle, textAlign: TextAlign.center),
             const SizedBox(height: 6),
             const Text('Check your connection and try again.', textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            FilledButton(key: const Key('web.retry'), onPressed: onRetry, child: const Text('Try again')),
+            FilledButton(key: const Key('web.retry'), onPressed: onRetry, child: const Text('Try Again')),
           ],
         ),
       ),

@@ -87,26 +87,30 @@ void main() {
       await open(tester, security);
       expect(find.text('ENQUIRY · PHYSICAL SECURITY'), findsOneWidget);
       expect(find.text('Corporate Security — Biometric systems, CCTV & Manpower'), findsOneWidget);
-      expect(find.text('3 replies so far'), findsOneWidget);
+      expect(find.text('3 responses'), findsOneWidget);
       expect(find.text('Replies due in 9 days'), findsOneWidget);
-      expect(find.text('Live'), findsWidgets);
-      expect(find.text('Replies 3'), findsOneWidget);
+      expect(find.text('Active'), findsWidgets);
+      expect(find.text('Responses 3'), findsOneWidget);
       expect(find.text('Suppliers 2'), findsOneWidget);
       expect(find.text('Messages 2'), findsOneWidget);
       expect(bidOrder(tester), ['demo-bid-innowork', 'demo-bid-securetech', 'demo-bid-bluedot']);
       expect(find.text('₹12,50,000'), findsOneWidget);
-      expect(find.text('Indicative · 7 days lead time'), findsOneWidget);
+      expect(find.text('Indicative quote · 7 days lead time'), findsOneWidget);
       expect(find.textContaining('Twelve PSARA-licensed guards'), findsOneWidget);
     });
 
     testWidgets('marks the best price and the top rating, and reading it tells the API', (tester) async {
       await open(tester, security);
       final secure = find.byKey(const ValueKey('bid-card-demo-bid-securetech'));
-      expect(find.descendant(of: secure, matching: find.text('Best price')), findsOneWidget);
-      expect(find.descendant(of: secure, matching: find.text('Top rated')), findsNothing);
+      expect(find.descendant(of: secure, matching: find.text('Best Price')), findsOneWidget);
+      expect(find.descendant(of: secure, matching: find.text('Top Rated')), findsNothing);
       for (final id in ['demo-bid-bluedot', 'demo-bid-innowork']) {
         final card = find.byKey(ValueKey('bid-card-$id'));
-        expect(find.descendant(of: card, matching: find.text('Top rated')), findsOneWidget, reason: id);
+        expect(
+          find.descendant(of: card, matching: find.text('Top Rated')),
+          findsOneWidget,
+          reason: id,
+        );
       }
       expect(repo.seen, [(AlertSide.owner, security)], reason: 'opening the page reads what told the owner about it');
     });
@@ -114,23 +118,25 @@ void main() {
     testWidgets('the sort picks what the replies are weighed on', (tester) async {
       await open(tester, security);
       await tapKey(tester, 'bids-sort');
-      await tester.tap(find.text('Fastest lead time'));
+      await tester.tap(find.text('Fastest Lead Time'));
       await settle(tester, 10);
       expect(bidOrder(tester), ['demo-bid-innowork', 'demo-bid-bluedot', 'demo-bid-securetech']);
       await tapKey(tester, 'bids-sort');
-      await tester.tap(find.text('Highest rating'));
+      await tester.tap(find.text('Highest Rating'));
       await settle(tester, 10);
       expect(bidOrder(tester).first, 'demo-bid-innowork');
       await tapKey(tester, 'bids-sort');
-      await tester.tap(find.text('Lowest price'));
+      await tester.tap(find.text('Lowest Price'));
       await settle(tester, 10);
       expect(bidOrder(tester), ['demo-bid-innowork', 'demo-bid-securetech', 'demo-bid-bluedot']);
     });
 
-    testWidgets('Compare lays the live bids side by side, the best in each row marked, and a name opens that bid', (tester) async {
+    testWidgets('Compare lays the live bids side by side, the best in each row marked, and a name opens that bid', (
+      tester,
+    ) async {
       await open(tester, security);
       await tapKey(tester, 'compare');
-      expect(find.text('Compare the replies'), findsOneWidget);
+      expect(find.text('Compare the Replies'), findsOneWidget);
       expect(key('compare-table'), findsOneWidget);
       expect(find.text('₹10,80,000'), findsWidgets);
       expect(find.text('Lowest'), findsOneWidget);
@@ -187,29 +193,38 @@ void main() {
       expect(find.text('An awarded bid cannot change status'), findsOneWidget);
     });
 
-    testWidgets('Select asks first: Keep it changes nothing, confirming closes the enquiry with that supplier', (tester) async {
+    testWidgets('Select asks first: Keep it changes nothing, confirming closes the enquiry with that supplier', (
+      tester,
+    ) async {
       await open(tester, security);
       await tapKey(tester, 'bid-award-demo-bid-bluedot');
       expect(find.text('Select BlueDot?'), findsOneWidget);
       expect(find.textContaining('closes the enquiry with BlueDot as your chosen supplier'), findsOneWidget);
-      await tester.tap(find.text('Keep it'));
+      await tester.tap(find.text('Keep It'));
       await settle(tester, 10);
       expect(pillOf(tester, 'demo-bid-bluedot'), 'New');
       expect(repo.calls, isNot(contains('award')));
       await tapKey(tester, 'bid-award-demo-bid-bluedot');
-      await tester.tap(find.text('Confirm selection'));
+      await tester.tap(find.text('Confirm Selection'));
       await settle(tester, 12);
-      expect(find.text('BlueDot selected. The other suppliers have been told.'), findsOneWidget);
+      expect(find.text('BlueDot selected. The other suppliers have been notified.'), findsOneWidget);
       expect(pillOf(tester, 'demo-bid-bluedot'), 'Selected');
       expect(pillOf(tester, 'demo-bid-innowork'), 'Declined');
       expect(key('bid-award-demo-bid-innowork'), findsNothing, reason: 'a settled requirement takes no more decisions');
-      expect(find.text('Awarded. Close it once the work is under way.'), findsOneWidget);
+      expect(find.text('Awarded. Close it once the work has started.'), findsOneWidget);
     });
 
     testWidgets('an RFQ is awarded, and the purchase order comes back in the sentence', (tester) async {
       repo.addBidFor(
         ifm,
-        Bid(id: 'rfq-bid-1', rfqId: ifm, supplier: DemoRfqRepository.vikasha, status: BidStatus.pending, amount: 24000000, leadTimeDays: 30),
+        Bid(
+          id: 'rfq-bid-1',
+          rfqId: ifm,
+          supplier: DemoRfqRepository.vikasha,
+          status: BidStatus.pending,
+          amount: 24000000,
+          leadTimeDays: 30,
+        ),
       );
       repo.setRfqStage(ifm, RfqStage.quotation);
       await open(tester, ifm);
@@ -217,9 +232,9 @@ void main() {
       await tapKey(tester, 'bid-award-rfq-bid-1');
       expect(find.text('Award to Vikasha Aero Tech?'), findsOneWidget);
       expect(find.textContaining('generates a purchase order, and declines all other bids'), findsOneWidget);
-      await tester.tap(find.text('Confirm award'));
+      await tester.tap(find.text('Confirm Award'));
       await settle(tester, 12);
-      expect(find.textContaining('Awarded to Vikasha Aero Tech — purchase order PO-DEMO'), findsOneWidget);
+      expect(find.textContaining('Awarded to Vikasha Aero Tech. Purchase order PO-DEMO'), findsOneWidget);
       expect(pillOf(tester, 'rfq-bid-1'), 'Awarded');
     });
 
@@ -227,7 +242,7 @@ void main() {
       await open(tester, security);
       repo.refuseNextWrite = 'Only a published requirement that is still open can be awarded';
       await tapKey(tester, 'bid-award-demo-bid-bluedot');
-      await tester.tap(find.text('Confirm selection'));
+      await tester.tap(find.text('Confirm Selection'));
       await settle(tester, 12);
       expect(find.text('Only a published requirement that is still open can be awarded'), findsOneWidget);
       expect(pillOf(tester, 'demo-bid-bluedot'), 'New');
@@ -250,7 +265,7 @@ void main() {
       expect(tester.widget<Text>(key('bid-message-text-long-bid')).maxLines, 4);
       await tapKey(tester, 'bid-more-long-bid');
       expect(tester.widget<Text>(key('bid-message-text-long-bid')).maxLines, isNull);
-      expect(find.text('Show less'), findsOneWidget);
+      expect(find.text('View Less'), findsOneWidget);
     });
   });
 
@@ -284,7 +299,9 @@ void main() {
       expect(threads, isEmpty);
     });
 
-    testWidgets('a bid\'s file is a private upload: it is fetched with the session and handed to the phone', (tester) async {
+    testWidgets('a bid\'s file is a private upload: it is fetched with the session and handed to the phone', (
+      tester,
+    ) async {
       await open(tester, security);
       await tapKey(tester, 'bid-file-demo-bidfile-1');
       expect(repo.calls, contains('saveFile'));
@@ -295,10 +312,10 @@ void main() {
       links = RecordingRfqLinks(opens: false);
       await open(tester, security);
       await tapKey(tester, 'bid-file-demo-bidfile-1');
-      expect(find.textContaining('Nothing on this phone could open quotation.pdf'), findsOneWidget);
+      expect(find.textContaining('No app on this phone can open quotation.pdf'), findsOneWidget);
       repo.refuseNextWrite = 'forbidden';
       await tapKey(tester, 'bid-file-demo-bidfile-1');
-      expect(find.textContaining("Couldn't fetch quotation.pdf"), findsOneWidget);
+      expect(find.textContaining('Unable to download quotation.pdf'), findsOneWidget);
     });
   });
 
@@ -307,7 +324,7 @@ void main() {
       await open(tester, security);
       await tester.tap(find.text('Suppliers 2'));
       await settle(tester, 10);
-      expect(find.text('Invited companies (2)'), findsOneWidget);
+      expect(find.text('Invited Companies (2)'), findsOneWidget);
       final blue = find.byKey(const ValueKey('invited-demo-v-bluedot'));
       expect(find.descendant(of: blue, matching: find.text('Responded')), findsOneWidget);
       final vikasha = find.byKey(const ValueKey('invited-demo-v-vikasha'));
@@ -316,24 +333,26 @@ void main() {
       expect(threads, ['demo-thread-demo-c-bluedot-$security']);
     });
 
-    testWidgets('Invite companies suggests the ones that fit, leaves out the invited, and sends the choice', (tester) async {
+    testWidgets('Invite suppliers suggests the ones that fit, leaves out the invited, and sends the choice', (
+      tester,
+    ) async {
       await open(tester, security);
       await tester.tap(find.text('Suppliers 2'));
       await settle(tester, 10);
       await tapKey(tester, 'invite-open', frames: 14);
-      expect(find.text('Suggested for this requirement'), findsOneWidget);
+      expect(find.text('Suggested suppliers based on your requirement'), findsOneWidget);
       expect(key('supplier-demo-v-bluedot'), findsNothing, reason: 'already invited');
       expect(key('supplier-demo-v-greenguard'), findsOneWidget);
-      expect(find.text('fit 80'), findsOneWidget);
+      expect(find.text('Match score: 80'), findsOneWidget);
       await tester.tap(key('supplier-demo-v-greenguard'));
       await settle(tester);
       await tester.tap(key('supplier-demo-v-safehome'));
       await settle(tester);
-      expect(find.text('Invite (2)'), findsOneWidget);
+      expect(find.text('Send Invitations (2)'), findsOneWidget);
       await tester.tap(key('supplier-confirm'));
       await settle(tester, 14);
       expect(find.text('Invitations sent.'), findsOneWidget);
-      expect(find.text('Invited companies (4)'), findsOneWidget);
+      expect(find.text('Invited Companies (4)'), findsOneWidget);
       expect(key('invited-demo-v-greenguard'), findsOneWidget);
     });
 
@@ -353,7 +372,7 @@ void main() {
       await tester.tap(key('supplier-confirm'));
       await settle(tester, 12);
       expect(find.text('You can invite at most 50 suppliers to one requirement.'), findsOneWidget);
-      expect(find.text('Invite (1)'), findsOneWidget, reason: 'the choice is kept so it can be sent again');
+      expect(find.text('Send Invitations (1)'), findsOneWidget, reason: 'the choice is kept so it can be sent again');
       await tester.tap(key('supplier-confirm'));
       await settle(tester, 14);
       expect(find.text('Invitations sent.'), findsOneWidget);
@@ -362,7 +381,7 @@ void main() {
     testWidgets('a closed requirement offers no invitations', (tester) async {
       await open(tester, security);
       await tapKey(tester, 'act-close');
-      await tester.tap(find.text('Close it'));
+      await tester.tap(find.text('Close It'));
       await settle(tester, 12);
       await tester.tap(find.text('Suppliers 2'));
       await settle(tester, 10);
@@ -371,11 +390,13 @@ void main() {
   });
 
   group('the threads', () {
-    testWidgets('each supplier\'s thread shows the last words and what is unread, and opens in the chat', (tester) async {
+    testWidgets('each supplier\'s thread shows the last words and what is unread, and opens in the chat', (
+      tester,
+    ) async {
       await open(tester, security);
       await tester.tap(find.text('Messages 2'));
       await settle(tester, 10);
-      expect(find.text('Supplier messages (2)'), findsOneWidget);
+      expect(find.text('Supplier Communications (2)'), findsOneWidget);
       expect(find.text('Happy to walk the floors with your admin team this week.'), findsOneWidget);
       expect(find.descendant(of: key('thread-unread-demo-thread-bluedot'), matching: find.text('1')), findsOneWidget);
       expect(key('thread-unread-demo-thread-innowork'), findsNothing);
@@ -388,31 +409,42 @@ void main() {
       await open(tester, ifm);
       await tester.tap(find.text('Messages 0'));
       await settle(tester, 10);
-      expect(find.text('No messages yet'), findsOneWidget);
+      expect(find.text('No Messages Yet'), findsOneWidget);
     });
   });
 
   group('what was posted', () {
-    testWidgets('shows the brief to the owner, with the contact on it and the files opened outside the app', (tester) async {
+    testWidgets('shows the brief to the owner, with the contact on it and the files opened outside the app', (
+      tester,
+    ) async {
       await open(tester, security);
-      await tester.tap(find.text('What you posted'));
+      // "Responses 3" is wider than "Replies 3" was: the last pill now sits just past a phone's width.
+      await tester.ensureVisible(find.text('What You Posted'));
+      await tester.pump();
+      await tester.tap(find.text('What You Posted'));
       await settle(tester, 10);
-      expect(find.text('At a glance'), findsOneWidget);
-      expect(find.text('Line items'), findsOneWidget);
+      expect(find.text('Requirement Overview'), findsOneWidget);
+      expect(find.text('Line Items'), findsOneWidget);
       expect(find.text('Security guards (24×7)'), findsOneWidget);
-      expect(find.text('Contact on this requirement'), findsOneWidget);
+      expect(find.text('Contact on This Requirement'), findsOneWidget);
       expect(find.text('Bharat Buyer'), findsWidgets);
       expect(find.text('1 file from the buyer'), findsOneWidget);
       await tapKey(tester, 'brief-file-demo-file-1');
       expect(links.opened.single.path, '/uploads/demo-floor-plan.pdf');
-      expect(repo.calls, isNot(contains('saveFile')), reason: 'requirement files are public: the phone opens them itself');
+      expect(
+        repo.calls,
+        isNot(contains('saveFile')),
+        reason: 'requirement files are public: the phone opens them itself',
+      );
     });
   });
 
   group('the owner\'s moves', () {
-    testWidgets('a live requirement offers Edit, Close, Cancel and a similar one, never Publish or Delete', (tester) async {
+    testWidgets('a live requirement offers Edit, Close, Cancel and a similar one, never Publish or Delete', (
+      tester,
+    ) async {
       await open(tester, security);
-      expect(find.text('Live: suppliers can find it and reply.'), findsOneWidget);
+      expect(find.text('Your requirement is live and visible to eligible suppliers.'), findsOneWidget);
       for (final k in ['act-edit', 'act-close', 'act-cancel', 'act-similar']) {
         expect(key(k), findsOneWidget, reason: k);
       }
@@ -423,14 +455,14 @@ void main() {
     testWidgets('Close asks first and then says it is closed', (tester) async {
       await open(tester, security);
       await tapKey(tester, 'act-close');
-      expect(find.text('Close this enquiry?'), findsOneWidget);
-      await tester.tap(find.text('Keep it'));
+      expect(find.text('Close This Enquiry?'), findsOneWidget);
+      await tester.tap(find.text('Keep It'));
       await settle(tester, 10);
       expect(repo.calls, isNot(contains('act')));
       await tapKey(tester, 'act-close');
-      await tester.tap(find.text('Close it'));
+      await tester.tap(find.text('Close It'));
       await settle(tester, 12);
-      expect(find.text('Closed: suppliers can no longer reply.'), findsOneWidget);
+      expect(find.text('Closed. Suppliers can no longer reply.'), findsOneWidget);
       expect(key('act-close'), findsNothing);
       expect(key('bid-award-demo-bid-bluedot'), findsNothing);
     });
@@ -438,20 +470,20 @@ void main() {
     testWidgets('Cancel says it cannot be undone and takes the requirement off the board', (tester) async {
       await open(tester, security);
       await tapKey(tester, 'act-cancel');
-      expect(find.textContaining('can’t be undone'), findsOneWidget);
-      await tester.tap(find.text('Cancel requirement').last);
+      expect(find.textContaining('cannot be undone'), findsOneWidget);
+      await tester.tap(find.text('Cancel Requirement').last);
       await settle(tester, 12);
-      expect(find.text('Cancelled: it is no longer listed.'), findsOneWidget);
+      expect(find.text('Cancelled. It is no longer listed.'), findsOneWidget);
     });
 
     testWidgets('a refused close puts the page back and shows the API\'s sentence', (tester) async {
       await open(tester, security);
       await tapKey(tester, 'act-close');
       repo.refuseNextWrite = 'Cannot move requirement from CLOSED to CLOSED';
-      await tester.tap(find.text('Close it'));
+      await tester.tap(find.text('Close It'));
       await settle(tester, 12);
       expect(find.text('Cannot move requirement from CLOSED to CLOSED'), findsOneWidget);
-      expect(find.text('Live: suppliers can find it and reply.'), findsOneWidget);
+      expect(find.text('Your requirement is live and visible to eligible suppliers.'), findsOneWidget);
     });
 
     testWidgets('a draft offers Publish, Edit, Cancel and Delete, and Publish makes it live', (tester) async {
@@ -462,7 +494,7 @@ void main() {
       }
       expect(key('act-close'), findsNothing);
       await tapKey(tester, 'act-publish');
-      expect(find.text('Live: suppliers can find it and reply.'), findsOneWidget);
+      expect(find.text('Your requirement is live and visible to eligible suppliers.'), findsOneWidget);
       expect(key('act-publish'), findsNothing);
     });
 
@@ -477,7 +509,9 @@ void main() {
             builder: (context) => Scaffold(
               body: TextButton(
                 onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => RfqDetailScreen(home, repository: repo, links: links)),
+                  MaterialPageRoute<void>(
+                    builder: (_) => RfqDetailScreen(home, repository: repo, links: links),
+                  ),
                 ),
                 child: const Text('open it'),
               ),
@@ -488,18 +522,20 @@ void main() {
       await tester.tap(find.text('open it'));
       await settle(tester, 14);
       await tapKey(tester, 'act-delete');
-      expect(find.text('Delete this draft?'), findsOneWidget);
-      await tester.tap(find.text('Keep it'));
+      expect(find.text('Delete This Draft?'), findsOneWidget);
+      await tester.tap(find.text('Keep It'));
       await settle(tester, 10);
       expect(find.byType(RfqDetailScreen), findsOneWidget);
       await tapKey(tester, 'act-delete');
-      await tester.tap(find.text('Delete draft').last);
+      await tester.tap(find.text('Delete Draft').last);
       await settle(tester, 16);
       expect(find.byType(RfqDetailScreen), findsNothing);
       expect(repo.calls, contains('deleteDraft'));
     });
 
-    testWidgets('Edit opens the composer on this requirement, and the page reads it again when it comes back', (tester) async {
+    testWidgets('Edit opens the composer on this requirement, and the page reads it again when it comes back', (
+      tester,
+    ) async {
       await open(tester, security);
       final before = repo.calls.where((c) => c == 'bids').length;
       await tapKey(tester, 'act-edit', frames: 14);
@@ -507,10 +543,14 @@ void main() {
       expect(composer.editRfqId, security);
       await tester.tap(find.bySemanticsLabel('Back').last);
       await settle(tester, 14);
-      expect(repo.calls.where((c) => c == 'bids').length, before, reason: 'nothing was saved, so nothing is read again');
+      expect(
+        repo.calls.where((c) => c == 'bids').length,
+        before,
+        reason: 'nothing was saved, so nothing is read again',
+      );
     });
 
-    testWidgets('"Post a similar one" opens the composer starting from it', (tester) async {
+    testWidgets('"Post a Similar One" opens the composer starting from it', (tester) async {
       await open(tester, security);
       await tapKey(tester, 'act-similar', frames: 14);
       expect(tester.widget<PostRfqScreen>(find.byType(PostRfqScreen)).copyFromRfqId, security);
@@ -520,16 +560,16 @@ void main() {
   group('a staged RFQ', () {
     testWidgets('shows its five stages, and the button moves it on', (tester) async {
       await open(tester, ifm);
-      expect(find.text('Tender stage'), findsOneWidget);
+      expect(find.text('Tender Stage'), findsOneWidget);
       for (final s in RfqStage.values) {
         expect(find.textContaining(s.label), findsWidgets, reason: s.label);
       }
       expect(find.text('Until 30 Oct'), findsOneWidget);
       expect(find.text('By 13 Nov'), findsOneWidget);
       expect(find.text('Responses 2'), findsOneWidget);
-      expect(find.text('Start screening & shortlist'), findsOneWidget);
+      expect(find.text('Start Screening & Shortlist'), findsOneWidget);
       await tapKey(tester, 'stage-advance');
-      expect(find.text('Open detailed quotes'), findsOneWidget);
+      expect(find.text('Open Detailed Quotes'), findsOneWidget);
       expect(repo.calls, contains('setStage'));
     });
 
@@ -538,35 +578,43 @@ void main() {
       repo.refuseNextWrite = 'Cannot move RFQ stage from PREQUALIFICATION to SHORTLISTING';
       await tapKey(tester, 'stage-advance');
       expect(find.text('Cannot move RFQ stage from PREQUALIFICATION to SHORTLISTING'), findsOneWidget);
-      expect(find.text('Start screening & shortlist'), findsOneWidget);
+      expect(find.text('Start Screening & Shortlist'), findsOneWidget);
     });
 
-    testWidgets('each pre-qualification response is read against the criteria, with the unmet ones named', (tester) async {
+    testWidgets('each pre-qualification response is read against the criteria, with the unmet ones named', (
+      tester,
+    ) async {
       await open(tester, ifm, section: 'prequal');
-      expect(find.text('Pre-qualification responses (2)'), findsOneWidget);
+      expect(find.text('Pre-Qualification Responses (2)'), findsOneWidget);
       expect(find.text('Meets all your criteria'), findsOneWidget);
       expect(find.textContaining('3 unmet: Annual turnover, Presence, Statutory compliance (ESI)'), findsOneWidget);
       final green = find.byKey(const ValueKey('prequal-demo-v-greenguard'));
-      expect(find.descendant(of: green, matching: find.text('To screen')), findsOneWidget);
+      expect(find.descendant(of: green, matching: find.text('To Screen')), findsOneWidget);
       expect(find.descendant(of: green, matching: find.text('₹8.2 Cr')), findsOneWidget);
       expect(find.descendant(of: green, matching: find.text('Pan-India')), findsWidgets);
       expect(find.descendant(of: green, matching: find.text('Provident Fund (PF)')), findsOneWidget);
     });
 
-    testWidgets('Qualify and Not qualified screen a response, and Shortlist waits for the shortlisting stage', (tester) async {
+    testWidgets('Qualify and Not qualified screen a response, and Shortlist waits for the shortlisting stage', (
+      tester,
+    ) async {
       await open(tester, ifm);
       await tapKey(tester, 'prequal-qualify-demo-v-greenguard');
       final green = find.byKey(const ValueKey('prequal-demo-v-greenguard'));
       expect(find.descendant(of: green, matching: find.text('Qualified')), findsOneWidget);
-      expect(tester.widget<RfqSmallButton>(key('prequal-shortlist-demo-v-greenguard')).onTap, isNull, reason: 'not yet');
-      expect(find.text('Move the RFQ on to "Screening & shortlist" to shortlist qualified suppliers.'), findsOneWidget);
+      expect(
+        tester.widget<RfqSmallButton>(key('prequal-shortlist-demo-v-greenguard')).onTap,
+        isNull,
+        reason: 'not yet',
+      );
+      expect(find.text('Move the RFQ on to "Screening & Shortlist" to shortlist qualified suppliers.'), findsOneWidget);
       await tapKey(tester, 'stage-advance');
       await tapKey(tester, 'prequal-shortlist-demo-v-greenguard');
       expect(find.descendant(of: green, matching: find.text('Shortlisted')), findsOneWidget);
       expect(key('prequal-shortlist-demo-v-greenguard'), findsNothing);
       await tapKey(tester, 'prequal-reject-demo-v-safehome');
       final safe = find.byKey(const ValueKey('prequal-demo-v-safehome'));
-      expect(find.descendant(of: safe, matching: find.text('Not qualified')), findsWidgets);
+      expect(find.descendant(of: safe, matching: find.text('Not Qualified')), findsWidgets);
       expect(repo.calls, containsAll(['screen', 'setStage', 'shortlist']));
     });
 
@@ -576,7 +624,7 @@ void main() {
       await tapKey(tester, 'prequal-qualify-demo-v-greenguard');
       expect(find.text('Could not update this response.'), findsOneWidget);
       final green = find.byKey(const ValueKey('prequal-demo-v-greenguard'));
-      expect(find.descendant(of: green, matching: find.text('To screen')), findsOneWidget);
+      expect(find.descendant(of: green, matching: find.text('To Screen')), findsOneWidget);
     });
 
     testWidgets('Message on a response opens the thread with that supplier', (tester) async {
@@ -602,7 +650,7 @@ void main() {
 
     testWidgets('section=invited opens the suppliers', (tester) async {
       await open(tester, security, section: 'invited');
-      expect(find.text('Invited companies (2)'), findsOneWidget);
+      expect(find.text('Invited Companies (2)'), findsOneWidget);
     });
   });
 
@@ -612,18 +660,18 @@ void main() {
       await open(tester, security);
       expect(find.textContaining('belongs to another company or person'), findsOneWidget);
       expect(key('manage-card'), findsNothing);
-      expect(find.text('At a glance'), findsOneWidget);
-      expect(find.text('Replies 0'), findsNothing);
+      expect(find.text('Requirement Overview'), findsOneWidget);
+      expect(find.text('Responses 0'), findsNothing);
     });
 
     testWidgets('a failed load says so and Try again reads it again', (tester) async {
       repo.failReads = true;
       await open(tester, security, height: 900);
-      expect(find.text("Couldn't load this requirement"), findsOneWidget);
+      expect(find.text("Unable to Load This Requirement"), findsOneWidget);
       repo.failReads = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester, 12);
-      expect(find.text('3 replies so far'), findsOneWidget);
+      expect(find.text('3 responses'), findsOneWidget);
     });
 
     testWidgets('pulling the page down reads it again', (tester) async {
@@ -636,7 +684,7 @@ void main() {
 
     testWidgets('an enquiry with no replies says so', (tester) async {
       await open(tester, home);
-      expect(find.text('No replies yet'), findsOneWidget);
+      expect(find.text('No Responses Yet'), findsOneWidget);
       expect(find.text('Suppliers who reply to your enquiry appear here.'), findsOneWidget);
     });
   });

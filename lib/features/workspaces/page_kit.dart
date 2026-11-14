@@ -53,7 +53,7 @@ class WsScroll extends StatelessWidget {
     required this.onRefresh,
     this.loading = false,
     this.error,
-    this.errorTitle = "Couldn't load this",
+    this.errorTitle = 'Unable to Load This Page',
     this.header,
   });
 
@@ -84,7 +84,7 @@ class WsScroll extends StatelessWidget {
               icon: Icons.cloud_off_outlined,
               title: errorTitle,
               body: error!,
-              action: 'Try again',
+              action: 'Try Again',
               onAction: onRefresh,
             ),
           ],

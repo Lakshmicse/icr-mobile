@@ -87,14 +87,14 @@ Future<void> withdrawPlace(BuildContext context, CourseSheetController controlle
   final sure = await showDialog<bool>(
     context: context,
     builder: (dialog) => AlertDialog(
-      title: Text(held ? 'Withdraw your place?' : 'Withdraw your request?'),
+      title: Text(held ? 'Withdraw Your Place?' : 'Withdraw Your Request?'),
       content: Text(
         held
-            ? 'You will give up your place on ${course.title}. You can ask for one again afterwards, if seats remain.'
-            : 'Your request for ${course.title} will be taken back. You can ask for a place again afterwards.',
+            ? 'You will lose your place on ${course.title}. You can request a place again if seats remain.'
+            : 'Your request for ${course.title} will be withdrawn. You can request a place again later.',
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(dialog).pop(false), child: const Text('Keep it')),
+        TextButton(onPressed: () => Navigator.of(dialog).pop(false), child: const Text('Keep It')),
         TextButton(
           onPressed: () => Navigator.of(dialog).pop(true),
           style: TextButton.styleFrom(foregroundColor: AppColors.error),

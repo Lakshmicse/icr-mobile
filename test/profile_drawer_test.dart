@@ -11,6 +11,7 @@ import 'package:icr_mobile/features/account/account_models.dart';
 import 'package:icr_mobile/features/account/account_repository.dart';
 import 'package:icr_mobile/features/account/companies/my_companies_screen.dart';
 import 'package:icr_mobile/features/account/demo_account_repository.dart';
+import 'package:icr_mobile/features/account/widgets/account_kit.dart' show CoverBand;
 import 'package:icr_mobile/features/profile/profile_drawer.dart';
 import 'package:icr_mobile/features/profile/profile_drawer_data.dart';
 import 'package:provider/provider.dart';
@@ -158,13 +159,13 @@ void main() {
 
     testWidgets('each row opens its page on the website and the menu closes behind it', (tester) async {
       const rows = {
-        'Regional Chapters': '/chapters',
+        'Chapters': '/chapters',
         'Working Councils': '/councils',
         'Get Involved & Volunteer': '/get-involved',
         'Saved Jobs': '/career/saved',
         // Everything posted on ICR, not only the member's own (owner, 3 Nov 2026).
         'Requirements': '/rfq',
-        'Find Work & Bid': '/manage/bids',
+        "Enquiries and RFQ's": '/manage/bids',
         'Certificates & Badges': '/learning/certificates',
         'Settings': '/profile?tab=security',
         'Nikhil Majjagi': '/members/nikhil-majjagi',
@@ -257,6 +258,49 @@ void main() {
       expect(find.text('1,204'), findsOneWidget);
       expect(find.textContaining('Connections'), findsNothing);
       expect(find.text('+12 CPD'), findsNothing);
+    });
+
+    testWidgets('the banner is the one the person set on their profile: a ready-made cover or their own picture', (
+      tester,
+    ) async {
+      // Owner, 14 Nov 2026: the banner set on the profile showed on the profile only. A ready-made cover's name
+      // ("skyline") was read as a web address, so the menu fell back to its default gradient.
+      CoverBand.loadArt = false;
+      addTearDown(() => CoverBand.loadArt = true);
+      FakeForum withCover(Object? cover) {
+        final routes = _memberRoutes();
+        final profile = routes['GET /users/me/profile']!;
+        routes['GET /users/me/profile'] = (o) {
+          final body = profile(o) as Map<String, Object?>;
+          return {
+            ...body,
+            'user': {...body['user']! as Map<String, Object?>, 'coverImage': cover},
+          };
+        };
+        return FakeForum(routes);
+      }
+
+      Future<String?> coverRead(Object? cover) async {
+        final controller = ProfileDrawerController.live(
+          api: clientOn(withCover(cover)),
+          userId: 'me',
+          seed: const ProfileDrawerData(name: 'Bharat Buyer'),
+        );
+        addTearDown(controller.dispose);
+        await tester.runAsync(controller.refresh);
+        return controller.data.cover;
+      }
+
+      // Drawn: a ready-made cover goes through the profile's own band.
+      await pumpDrawer(tester, api: withCover('skyline'));
+      expect(tester.widget<CoverBand>(find.byType(CoverBand)).cover, 'skyline');
+
+      // Read (an uploaded picture is fetched from the network, which a test has not): each value as the menu keeps it.
+      expect(await coverRead('skyline'), 'skyline');
+      expect(await coverRead('/uploads/c0ffee.jpg'), '/uploads/c0ffee.jpg');
+      expect(await coverRead(null), isNull, reason: "no banner set: the menu's own default band");
+      expect(await coverRead('https://elsewhere.example/a.jpg'), isNull, reason: 'never an outside address');
+      expect(await coverRead('sunset'), isNull, reason: 'a cover the site no longer has');
     });
 
     testWidgets('a wider pill does not cut the row\'s title short', (tester) async {
@@ -371,10 +415,10 @@ void main() {
     testWidgets('with no company there is no block at all: no heading, no "Create a company" row', (tester) async {
       await pumpDrawer(tester, companies: repoWith(const []), withApiClient: true);
       expect(find.text('MY COMPANIES'), findsNothing);
-      expect(find.text('Create a company'), findsNothing);
+      expect(find.text('Create a Company'), findsNothing);
       expect(find.byKey(const ValueKey('drawer-company-create')), findsNothing);
       expect(find.byKey(const ValueKey('drawer-companies-all')), findsNothing);
-      expect(find.text('Regional Chapters'), findsOneWidget, reason: 'the rest of the menu is untouched');
+      expect(find.text('Chapters'), findsOneWidget, reason: 'the rest of the menu is untouched');
     });
 
     testWidgets('while it reads, two grey rows; a failed read draws nothing and never an error', (tester) async {
@@ -392,7 +436,7 @@ void main() {
       await pumpDrawer(tester, companies: failing);
       expect(find.text('MY COMPANIES'), findsNothing);
       expect(find.text('The server is busy.'), findsNothing);
-      expect(find.text('Regional Chapters'), findsOneWidget, reason: 'the rest of the menu is untouched');
+      expect(find.text('Chapters'), findsOneWidget, reason: 'the rest of the menu is untouched');
     });
 
     testWidgets('a menu opened again shows the last list at once, with no grey rows, while it reads it again', (
@@ -420,7 +464,7 @@ void main() {
       );
       await pumpDrawer(tester, companies: staff);
       expect(find.text('MY COMPANIES'), findsNothing);
-      expect(find.text('Create a company'), findsNothing);
+      expect(find.text('Create a Company'), findsNothing);
     });
 
     testWidgets('without an account repository (no API client above the menu) there is no block', (tester) async {

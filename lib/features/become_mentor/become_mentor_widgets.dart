@@ -63,7 +63,7 @@ class TextChipEditor extends StatefulWidget {
     required this.onChanged,
     required this.max,
     this.suggestions = const [],
-    this.hint = 'Type and press Add',
+    this.hint = 'Enter and select Add',
     this.itemMax = 100,
     this.fieldKey,
     this.error,
@@ -146,7 +146,7 @@ class _TextChipEditorState extends State<TextChipEditor> {
                 onChanged: (_) => setState(() {}),
                 onSubmitted: _add,
                 decoration: fieldDecoration(
-                  _full ? 'That is the most you can add (${widget.max})' : widget.hint,
+                  _full ? 'Maximum reached (${widget.max}).' : widget.hint,
                 ).copyWith(counterText: ''),
               ),
             ),
@@ -256,14 +256,14 @@ class _OptionPickerState extends State<OptionPicker> {
         if (shown.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 6),
-            child: Text('Nothing matches.', style: MentoringText.meta),
+            child: Text('No matches.', style: MentoringText.meta),
           ),
         Padding(
           padding: const EdgeInsets.only(top: 6),
           child: Text(
             full
-                ? '${widget.max} of ${widget.max} chosen: the most you can pick.'
-                : '${widget.selected.length} chosen, up to ${widget.max}.',
+                ? '${widget.max} of ${widget.max} selected. This is the maximum.'
+                : '${widget.selected.length} selected, up to ${widget.max}.',
             style: MentoringText.meta.copyWith(color: AppColors.onSurfaceVariant),
           ),
         ),

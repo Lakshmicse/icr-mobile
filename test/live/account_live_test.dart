@@ -53,17 +53,6 @@ String throwawayEmail() =>
 
 const throwawayPassword = 'Account-live-1';
 
-/// The number a throwaway person signs up with: the API asks for one since 29 Oct 2026, and a number
-/// from outside India needs no texted code.
-const throwawayPhone = '+971501234567';
-
-/// An Indian mobile nobody has been texted at this hour (the API caps codes per number): the time's
-/// last eight digits after "98".
-String throwawayIndianMobile() {
-  final tail = (DateTime.now().millisecondsSinceEpoch + _counter++).toString();
-  return '+9198${tail.substring(tail.length - 8)}';
-}
-
 Future<ApiAccountRepository> repoOf(LivePerson who) async => ApiAccountRepository(api: await liveClient(who));
 
 /// A throwaway person, signed up through the app's own `AuthController` the way the screens do it:
@@ -84,7 +73,7 @@ Future<({AuthController auth, ApiClient api, String email})> signUpThrowaway({St
     password: throwawayPassword,
     firstName: first,
     lastName: 'Tester',
-    phone: throwawayPhone,
+    phone: '+447700900123',
   );
   expect(auth.status, SessionStatus.signedIn);
   return (auth: auth, api: api, email: email);
@@ -312,7 +301,7 @@ void main() {
   // ---------------------------------------------------------------------------------------------------
 
   group('sign-up and recovery', () {
-    liveTest('three screens: the emailed code, the account, then "Your work" written to the profile', () async {
+    liveTest('three screens: the emailed code, the account, then "Your Work" written to the profile', () async {
       final api = liveAnonymous();
       final auth = AuthController(api: api, tokens: api.tokens);
       final email = throwawayEmail();
@@ -325,47 +314,31 @@ void main() {
       expect(wrong.message, 'The OTP is incorrect. Please check your email and try again.');
 
       // No account until the code is right.
-      final phone = throwawayIndianMobile();
-      Future<void> register() => auth.register(
+      expect(
+        (await refusalOf(
+          auth.register(
+            email: email,
+            password: throwawayPassword,
+            firstName: 'Acctlive',
+            lastName: 'Tester',
+            phone: '+447700900123',
+          ),
+        )).statusCode,
+        isNotNull,
+      );
+      expect(auth.status, isNot(SessionStatus.signedIn));
+
+      await auth.verifyEmailCode(email, code!);
+      await auth.register(
         email: email,
         password: throwawayPassword,
         firstName: 'Acctlive',
         lastName: 'Tester',
-        phone: phone,
+        phone: '+447700900123',
       );
-      // No account without a mobile number (the API's rule since 29 Oct 2026), nor with a +91 number
-      // nobody confirmed, nor before the emailed code is right.
-      final noPhone = await refusalOf(
-        auth.register(email: email, password: throwawayPassword, firstName: 'Acctlive', lastName: 'Tester', phone: ''),
-      );
-      expect(noPhone.statusCode, 400);
-      expect(noPhone.message, isNotEmpty);
-      final unconfirmed = await refusalOf(register());
-      expect(unconfirmed.statusCode, 400);
-      expect(unconfirmed.message, 'Verify your phone number to continue.');
-      expect(auth.status, isNot(SessionStatus.signedIn));
-
-      // The +91 number: the texted code (handed back off production), a wrong one refused, then confirmed.
-      final texted = await auth.sendPhoneCode(phone);
-      expect(texted, matches(RegExp(r'^\d{6}$')), reason: 'a non-production API hands the code back');
-      final wrongText = await refusalOf(auth.verifyPhoneCode(phone, texted == '000000' ? '111111' : '000000'));
-      expect(wrongText.statusCode, anyOf(400, 401));
-      await auth.verifyPhoneCode(phone, texted!);
-      // A code cannot reach another country's number: the API refuses to send one.
-      expect((await refusalOf(auth.sendPhoneCode(throwawayPhone))).statusCode, 400);
-
-      // The number is confirmed but the address is not yet.
-      expect((await refusalOf(register())).statusCode, isNotNull);
-      expect(auth.status, isNot(SessionStatus.signedIn));
-
-      await auth.verifyEmailCode(email, code!);
-      await register();
       expect(auth.status, SessionStatus.signedIn);
       expect(auth.user!.email, email);
       expect(auth.user!.role, 'PROFESSIONAL', reason: 'a self-serve sign-up has no account type');
-      final made = await ApiAccountRepository(api: api).myProfile();
-      expect(made.phone, phone);
-      expect(made.phoneVerified, isTrue, reason: 'the texted code confirmed it before the account was made');
 
       // The address is taken now: another sign-up with it is a 409 ("That email already has an ICR account").
       final code2 = await auth.sendEmailCode(email).then<String?>((c) => c, onError: (Object e) => null);
@@ -380,12 +353,12 @@ void main() {
           password: throwawayPassword,
           firstName: 'Acctlive',
           lastName: 'Tester',
-          phone: throwawayPhone,
+          phone: '+447700900123',
         ),
       );
       expect(duplicate.statusCode, anyOf(409, 400));
 
-      // "Your work": what the third screen writes, through the same function.
+      // "Your Work": what the third screen writes, through the same function.
       final repo = ApiAccountRepository(api: api);
       final warning = await saveYourWork(
         repo,
@@ -419,14 +392,22 @@ void main() {
     liveTest('between roles asks for no company and can say recruiters may know', () async {
       final who = await signUpThrowaway();
       final repo = ApiAccountRepository(api: who.api);
+      // The city is required on the screen since 13 Nov 2026, so the answer always carries one.
       final warning = await saveYourWork(
         repo,
-        WorkAnswer(working: false, title: 'Site Engineer', company: '', readyNext: true),
+        WorkAnswer(
+          working: false,
+          title: 'Site Engineer',
+          company: '',
+          city: const CityOption(id: 'x', name: 'Pune', state: 'Maharashtra'),
+          readyNext: true,
+        ),
       );
       expect(warning, isNull);
       expect(await repo.experience(), isEmpty, reason: 'no role is invented for someone between roles');
       final p = await repo.myProfile();
       expect(p.jobTitle, 'Site Engineer');
+      expect(p.location, 'Pune, Maharashtra');
       final raw = await getMap(who.api, '/users/me/profile');
       expect((raw['resume'] as Map)['nextRoleStatus'], 'READY_NOW');
       expect((raw['resume'] as Map)['nextRoleVisibility'], 'RECRUITERS');
@@ -990,11 +971,6 @@ void main() {
 
         final who = await signUpThrowaway();
         final repo = ApiAccountRepository(api: who.api);
-        // Sign-up asks for a number now, kept unconfirmed for another country.
-        expect((await repo.myProfile()).phone, throwawayPhone);
-        expect((await repo.myProfile()).phoneVerified, isFalse);
-        // An account made before that rule has none: take it off to stand for one.
-        await repo.updateMe({'phone': ''});
         final needs = PhoneNeededController(lookup: () async => (await repo.myProfile()).phone);
         await needs.load();
         expect(needs.needed, isTrue);

@@ -135,6 +135,7 @@ class FeedController extends ChangeNotifier {
   /// Pull to refresh: what the server holds now, the photos and full texts read again too.
   Future<void> pullToRefresh() async {
     _details.clear();
+    _quotedPosts.clear();
     await Future.wait([refresh(), _loadUnread()]);
   }
 
@@ -161,7 +162,7 @@ class FeedController extends ChangeNotifier {
       ];
       _hasMore = page.hasMore;
       _page = 1;
-      // The design opens the first post's comments; the live feed does the same, once.
+      // The first post's comments are read ahead, once, so its sheet opens with them already there.
       if (!_leadOpened && repository.opensLeadThread && _filter == FeedFilter.all && _tag == null && _search.isEmpty) {
         _leadOpened = true;
         final lead = _posts.isEmpty ? null : _posts.first;
@@ -233,6 +234,7 @@ class FeedController extends ChangeNotifier {
           body: detail.body.isEmpty ? post.body : detail.body,
           mentions: detail.mentions,
           images: detail.images,
+          videos: detail.videos,
           imageCaption: detail.caption,
           morePhotos: detail.morePhotos,
           detailLoaded: true,
@@ -323,12 +325,52 @@ class FeedController extends ChangeNotifier {
     }
   }
 
+  final Map<String, FeedPost?> _quotedPosts = {};
+  final Map<String, Future<FeedPost?>> _quotedPending = {};
+
+  /// The discussion a repost quotes, read once and kept, so the card draws it inside the repost.
+  Future<FeedPost?> quoted(String slug) {
+    if (_quotedPosts.containsKey(slug)) return Future.value(_quotedPosts[slug]);
+    return _quotedPending.putIfAbsent(slug, () async {
+      final post = await repository.quoted(slug);
+      _quotedPosts[slug] = post;
+      _quotedPending.remove(slug);
+      notifyListeners();
+      return post;
+    });
+  }
+
+  /// A vote on a quoted original's poll is cast on the original; every repost of it shows the result.
+  Future<String?> voteQuoted(FeedPost original, String optionId) async {
+    final poll = original.poll;
+    if (poll == null || !poll.open || poll.myOptionId == optionId) return null;
+    try {
+      final updated = await repository.vote(original, optionId);
+      _quotedPosts[original.slug] = original.copyWith(poll: updated);
+      _replace(_find(original.id)?.copyWith(poll: updated));
+      notifyListeners();
+      return null;
+    } catch (e) {
+      return ApiError.from(e).message;
+    }
+  }
+
   void toggleReplies(FeedPost post) {
     if (!_open.remove(post.id)) {
       _open.add(post.id);
       if (!post.repliesLoaded) _fetchReplies(post);
     }
     notifyListeners();
+  }
+
+  /// The post with [id] as the feed holds it now; null once it has left the feed.
+  FeedPost? postById(String id) => _find(id);
+
+  /// The comments sheet is opening on [post]: reads its comments (again, quietly, when they are already held).
+  void readReplies(FeedPost post) {
+    final now = _find(post.id) ?? post;
+    _open.add(now.id);
+    _fetchReplies(now, quiet: now.repliesLoaded);
   }
 
   void openReplies(FeedPost post) {

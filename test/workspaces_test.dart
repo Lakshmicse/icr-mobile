@@ -79,7 +79,7 @@ void main() {
       );
       expect(
         [for (final i in learningSection.items.take(4)) i.label],
-        ['Learning', 'My courses', 'My attempts', 'Certificates & Badges'],
+        ['Learning', 'My Courses', 'My Attempts', 'Certificates & Badges'],
       );
       expect(myAccountSection.title, 'My Account');
       expect(
@@ -151,20 +151,21 @@ void main() {
     }
 
     testWidgets(
-      'acting as yourself: Marketplace, Mentorship, Learning, Jobs, Account, then the doors; no Company row',
+      'acting as yourself: Marketplace, Mentorship, Learning, Jobs, Company (My companies), Account, then the doors',
       (tester) async {
         await pumpMenu(tester);
         for (final key in ['marketplace', 'mentorship', 'learning', 'jobs', 'account']) {
           expect(find.byKey(ValueKey('workspace-$key')), findsOneWidget, reason: key);
         }
-        expect(find.byKey(const ValueKey('workspace-company')), findsNothing, reason: 'no company to run');
+        // The Company row holds My companies for everyone (owner, 7 Nov 2026: it sat under Account).
+        expect(find.byKey(const ValueKey('workspace-company')), findsOneWidget);
         // The website's "Do more on ICR": a company to hire, sell or buy with, and becoming a mentor.
-        expect(find.text('Do more on ICR'), findsOneWidget);
+        expect(find.text('Explore more on ICR'), findsOneWidget);
         for (final door in ['create-company', 'hire', 'sell', 'source', 'mentor']) {
           expect(find.byKey(ValueKey('door-$door')), findsOneWidget, reason: door);
         }
-        expect(find.text('Create a company'), findsOneWidget);
-        expect(find.text('Become a mentor'), findsOneWidget);
+        expect(find.text('Create a Company'), findsOneWidget);
+        expect(find.text('Become a Mentor'), findsOneWidget);
         // Each door says what it does in the website's words (WelcomeCard's intents).
         for (final caption in [
           'Create your company page, then post a job.',
@@ -174,13 +175,14 @@ void main() {
         ]) {
           expect(find.text(caption), findsOneWidget, reason: caption);
         }
-        // The Account row among the main ones; under the rows only Saved Items and Settings (the plans and Refer &
-        // Earn are the Account row's pages, so no My Account or Referrals row).
+        // The Account row among the main ones; under the rows My Uploads, My Forum and Settings (the owner's
+        // document, 12 Nov 2026; the plans and Refer & Earn are the Account row's pages).
         expect(find.text('Account'), findsOneWidget);
-        for (final row in ['Saved Items', 'Settings']) {
+        for (final row in ['My Uploads', 'My Forum', 'Settings']) {
           expect(find.text(row), findsOneWidget, reason: row);
         }
         for (final gone in [
+          'Saved Items',
           'My Account',
           'Referrals',
           'Membership',
@@ -193,7 +195,7 @@ void main() {
         }
         // A row's pages are not listed until it is tapped.
         expect(find.byKey(const ValueKey('workspace-learning-0')), findsNothing);
-        expect(find.text('Regional Chapters'), findsNothing, reason: 'the old rows are replaced');
+        expect(find.text('Chapters'), findsNothing, reason: 'the old rows are replaced');
         expect(find.text('Cohort programmes'), findsNothing, reason: 'a row\'s pages are tabs, not menu rows');
       },
     );
@@ -209,7 +211,7 @@ void main() {
       );
       await pumpMenu(tester, user: admin);
       expect(find.byKey(const ValueKey('workspace-company')), findsOneWidget);
-      expect(find.text('Do more on ICR'), findsNothing);
+      expect(find.text('Explore more on ICR'), findsNothing);
       expect(find.byKey(const ValueKey('door-create-company')), findsNothing);
     });
 
@@ -227,15 +229,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(opened, isEmpty, reason: 'the row itself only opens its list');
       expect(find.byType(ProfileDrawer), findsOneWidget);
-      for (final page in ['My courses', 'My attempts', 'My certificates']) {
+      for (final page in ['My Courses', 'My Attempts', 'My Certificates']) {
         expect(find.text(page), findsOneWidget, reason: page);
       }
       // Another row's tap closes the first list.
       await tester.tap(find.byKey(const ValueKey('workspace-mentorship')));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('workspace-learning-0')), findsNothing);
-      expect(find.text('My sessions'), findsOneWidget);
-      expect(find.text('Mentor offerings'), findsNothing, reason: 'a member who mentors nobody has no mentor desk');
+      expect(find.text('Mentoring Sessions'), findsOneWidget);
+      expect(find.text('Mentor Dashboard'), findsNothing, reason: 'a member who mentors nobody has no mentor desk');
       await tester.tap(find.byKey(const ValueKey('workspace-learning')));
       await tester.pumpAndSettle();
 
@@ -260,12 +262,20 @@ void main() {
       expect(opened, [('account', 3)]);
     });
 
-    testWidgets('Saved Items opens every kind the member bookmarked', (tester) async {
-      await pumpMenu(tester, screens: {'/career/saved': (_) => const Scaffold(body: Text('every saved kind'))});
-      await tester.tap(find.text('Saved Items'));
+    testWidgets("My Uploads opens the member's own uploads", (tester) async {
+      await pumpMenu(tester, screens: {'/documents?mine=1': (_) => const Scaffold(body: Text('my uploads'))});
+      await tester.tap(find.text('My Uploads'));
       await tester.pumpAndSettle();
-      expect(find.text('every saved kind'), findsOneWidget);
+      expect(find.text('my uploads'), findsOneWidget);
       expect(find.byType(ProfileDrawer), findsNothing, reason: 'the menu closes behind it');
+    });
+
+    testWidgets("My Forum opens the member's own discussions and polls", (tester) async {
+      await pumpMenu(tester, screens: {'/community?mine=1': (_) => const Scaffold(body: Text('my posts'))});
+      await tester.tap(find.text('My Forum'));
+      await tester.pumpAndSettle();
+      expect(find.text('my posts'), findsOneWidget);
+      expect(find.byType(ProfileDrawer), findsNothing);
     });
 
     testWidgets('Settings opens the settings screen, where Sign out lives', (tester) async {
@@ -285,9 +295,7 @@ void main() {
       }
     });
 
-    testWidgets('what is live: open requirements, a listed mentor, the jobs on the board, the saved count', (
-      tester,
-    ) async {
+    testWidgets('what is live: open requirements, a listed mentor, the jobs on the board', (tester) async {
       const mentor = SessionUser(
         id: 'u2',
         email: 'm@icr.test',
@@ -300,9 +308,8 @@ void main() {
       expect(find.text('LIVE RFQS'), findsOneWidget);
       expect(find.text('Available'), findsOneWidget);
       expect(find.text('124'), findsOneWidget, reason: 'the open jobs');
-      expect(find.text('14'), findsOneWidget, reason: 'the saved items');
       // A referral earns ICR credits, not CPD hours.
-      expect(find.text('Earn credits'), findsOneWidget);
+      expect(find.text('Earn Credits'), findsOneWidget);
       expect(find.text('Earn CPD'), findsNothing);
     });
 
@@ -333,7 +340,7 @@ void main() {
       );
       expect(find.text('LIVE RFQS'), findsNothing);
       expect(find.text('0'), findsNothing);
-      expect(find.text('Earn credits'), findsOneWidget, reason: 'what a referral earns is not a count');
+      expect(find.text('Earn Credits'), findsOneWidget, reason: 'what a referral earns is not a count');
     });
 
     testWidgets('ICR staff: their consoles and Settings, no member rows', (tester) async {
@@ -410,7 +417,7 @@ void main() {
       ],
     );
 
-    testWidgets("the option's name in the bar, its pages as tabs, and a page's own bar as its heading", (tester) async {
+    testWidgets("the option's name in the bar, its pages as tabs, and a page's own bar stepping aside", (tester) async {
       final built = <String>[];
       await tester.pumpWidget(
         MaterialApp(
@@ -436,7 +443,7 @@ void main() {
       expect(find.byKey(const ValueKey('workspace-tab-0')), findsOneWidget);
       expect(find.byKey(const ValueKey('workspace-tab-1')), findsOneWidget);
       expect(find.text('the jobs page'), findsOneWidget);
-      expect(find.text('Jobs board'), findsOneWidget, reason: "the page's title stays, as its heading");
+      expect(find.text('Jobs board'), findsNothing, reason: 'the tab names the page; its title is not drawn again');
       expect(find.bySemanticsLabel('Back'), findsNothing, reason: "the page's back arrow and bell step aside");
       expect(built, ['/jobs'], reason: 'a page is built when its tab is first opened');
 

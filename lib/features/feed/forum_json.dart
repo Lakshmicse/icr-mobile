@@ -160,6 +160,24 @@ class ForumJson {
     return label == null || label.isEmpty ? null : label;
   }
 
+  /// A discussion's photos as `/uploads/<file>` paths, in order and once each: the forum's own list (`images` on a
+  /// card, `imageIds` on a discussion, since Nov 2026), a pictured attachment on a server that predates the list,
+  /// then any picture written into the body.
+  static List<String> photoPaths(Map<String, dynamic> json) {
+    final out = <String>[];
+    void add(String path) {
+      if (!out.contains(path)) out.add(path);
+    }
+
+    for (final id in (json['images'] as List? ?? json['imageIds'] as List? ?? const [])) {
+      add('/uploads/$id');
+    }
+    final upload = (json['attachment'] as Map<String, dynamic>?)?['uploadId'] as String?;
+    if (upload != null && isPicture(upload)) add('/uploads/$upload');
+    imageSources(json['bodyHtml'] as String? ?? '').forEach(add);
+    return out;
+  }
+
   static bool isPicture(String file) => RegExp(r'\.(jpe?g|png|webp|gif)$', caseSensitive: false).hasMatch(file);
 
   /// A photo's name as a caption ("BIM Feasibility Lab.jpg" → "BIM Feasibility Lab"), when it reads as words:
@@ -173,6 +191,12 @@ class ForumJson {
   /// The `src` of each `<img>` in a body, in order.
   static List<String> imageSources(String html) => [
     for (final m in RegExp(r'''<img\b[^>]*?\bsrc\s*=\s*["']([^"']+)["']''', caseSensitive: false).allMatches(html))
+      m.group(1)!,
+  ];
+
+  /// The `src` of each `<video>` in a body, in order.
+  static List<String> videoSources(String html) => [
+    for (final m in RegExp(r'''<video\b[^>]*?\bsrc\s*=\s*["']([^"']+)["']''', caseSensitive: false).allMatches(html))
       m.group(1)!,
   ];
 

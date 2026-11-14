@@ -144,10 +144,10 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     if (_c.result == null && _dirty) {
       final leave = await confirmMove(
         context,
-        title: 'Leave without sending?',
-        body: 'Nothing you have typed is sent or kept. Leaving drops it.',
+        title: 'Leave Without Sending?',
+        body: 'Nothing you have entered is sent or saved. Leaving discards it.',
         confirm: 'Leave',
-        keep: 'Keep editing',
+        keep: 'Keep Editing',
         destructive: true,
       );
       if (!leave || !mounted) return;
@@ -207,8 +207,8 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     }
     await showReviewSheet(
       context,
-      title: _c.draft.isRfq ? 'Review your RFQ' : 'Review your enquiry',
-      confirmLabel: _c.draft.isRfq ? 'Create RFQ' : 'Send enquiry',
+      title: _c.draft.isRfq ? 'Review Your RFQ' : 'Review Your Enquiry',
+      confirmLabel: _c.draft.isRfq ? 'Publish RFQ' : 'Submit Enquiry',
       note: _sendNote,
       rows: _reviewRows(),
       onEdit: _goTo,
@@ -241,7 +241,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     final text = withoutEmptyPrompts(d.text);
     final files = d.attachments.map((f) => f.title.trim()).where((t) => t.isNotEmpty);
     return [
-      ReviewRow(label: 'Request type', value: d.isRfq ? 'Request for quotation' : 'Enquiry', section: 'type'),
+      ReviewRow(label: 'Request Type', value: d.isRfq ? 'Request for Quotation' : 'Enquiry', section: 'type'),
       ReviewRow(
         label: 'Contact',
         value: [
@@ -251,7 +251,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         ].where((s) => s.trim().isNotEmpty).join(' · '),
         section: 'details',
       ),
-      ReviewRow(label: 'Facility type', value: d.facilityType, section: 'location'),
+      ReviewRow(label: 'Facility / Property Type', value: d.facilityType, section: 'location'),
       ReviewRow(label: 'Locations', value: d.places.map((p) => p.label).join(' · '), section: 'location'),
       ReviewRow(label: 'Service', value: _c.servicePath, section: 'service'),
       ReviewRow(
@@ -266,7 +266,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
       ),
       if (d.isRfq) ...[
         ReviewRow(
-          label: 'Supplier criteria',
+          label: 'Supplier Criteria',
           value: d.criteriaCount == 0
               ? 'None: any matched supplier can pre-qualify'
               : '${d.criteriaCount} ${d.criteriaCount == 1 ? 'criterion' : 'criteria'} set',
@@ -293,7 +293,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     ];
     final picked = await pickOne<String>(
       context,
-      title: 'Facility type',
+      title: 'Facility / Property Type',
       options: options,
       labelOf: (s) => s,
       selected: d.facilityType.isEmpty ? null : d.facilityType,
@@ -304,7 +304,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
   Future<void> _pickCategory() async {
     final picked = await pickOne<CategoryNode>(
       context,
-      title: 'Service category',
+      title: 'Select Service Category',
       options: _c.categories,
       labelOf: (n) => n.name,
       selected: _c.categories.where((n) => n.key == _c.draft.category).firstOrNull,
@@ -315,7 +315,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
   Future<void> _pickSubcategory() async {
     final picked = await pickOne<CategoryNode>(
       context,
-      title: 'Sub-category',
+      title: 'Sub-Category',
       options: _c.subcategories,
       labelOf: (n) => n.name,
       selected: _c.subcategories.where((n) => n.key == _c.draft.subcategory).firstOrNull,
@@ -343,7 +343,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
       context,
       current: preQual ? d.preQualEndDate : d.dueDate,
       after: preQual ? null : d.preQualEndDate,
-      help: preQual ? 'Pre-qualification deadline' : (d.isRfq ? 'Quote deadline' : 'Reply by'),
+      help: preQual ? 'Pre-Qualification Deadline' : (d.isRfq ? 'Quote Deadline' : 'Reply By'),
     );
     if (picked == null) return;
     _c.update((d) {
@@ -452,7 +452,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
             if (!didPop) _leave();
           },
           child: RfqScaffold(
-            title: _c.editing ? 'Edit requirement' : 'Post your requirement',
+            title: _c.editing ? 'Edit Requirement' : 'Post Requirement',
             onBack: widget.onBack ?? _leave,
             onBell: widget.onBell ?? () => pushAlerts(context, _hooks),
             bottomBar: _bar(),
@@ -469,8 +469,8 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     }
     final d = _c.draft;
     final primary = _c.editing
-        ? (_c.source?.status == RfqStatus.draft ? 'Publish' : 'Save changes')
-        : (d.isRfq ? 'Create RFQ' : 'Send enquiry');
+        ? (_c.source?.status == RfqStatus.draft ? 'Publish' : 'Save Changes')
+        : (d.isRfq ? 'Publish RFQ' : 'Submit Enquiry');
     final busy = _c.sending;
     return BottomActionBar(
       children: [
@@ -484,7 +484,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 side: const BorderSide(color: AppColors.slate200),
               ),
-              child: Text('Save draft', style: RfqText.tab.copyWith(color: AppColors.primary)),
+              child: Text('Save Draft', style: RfqText.tab.copyWith(color: AppColors.primary)),
             ),
           ),
         Expanded(
@@ -505,9 +505,9 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
     if (_c.loadError != null) {
       return RfqNotice(
         icon: LucideIcons.cloudOff,
-        title: "Couldn't open the form",
+        title: 'Unable to Open the Form',
         body: _c.loadError,
-        action: 'Try again',
+        action: 'Try Again',
         onAction: _c.retry,
       );
     }
@@ -533,7 +533,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
       return RfqNotice(
         key: const ValueKey('role-cannot-post'),
         icon: LucideIcons.lock,
-        title: "Requirements aren't part of your role",
+        title: "Requirements Aren't Part of Your Role",
         body: _c.roleCannotPostMessage,
       );
     }
@@ -593,7 +593,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
               KindPicker(value: d.kind, locked: c.editing, onChanged: c.setKind),
               if (c.editing) ...[
                 const SizedBox(height: 8),
-                Text('A requirement keeps its kind once posted.', style: RfqText.formHelp),
+                Text('A requirement’s type cannot be changed after it is posted.', style: RfqText.formHelp),
               ],
               if (c.rfqNeedsCompany) ...[const SizedBox(height: 12), _rfqNeedsCompany()],
             ],
@@ -603,7 +603,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
       SectionCard(
         key: _anchors['details'],
         step: next(),
-        title: 'Your details',
+        title: 'Buyer Details',
         caption: 'Who suppliers reply to.',
         done: detailsDone,
         child: _details(problem),
@@ -611,7 +611,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
       SectionCard(
         key: _anchors['location'],
         step: next(),
-        title: 'Service location',
+        title: 'Location Details',
         caption: 'The kind of facility, and every city the work covers.',
         done: locationDone,
         child: Column(
@@ -619,7 +619,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
           children: [
             PickerField(
               key: const ValueKey('facility-field'),
-              label: 'Facility type',
+              label: 'Facility / Property Type',
               value: d.facilityType.isEmpty ? null : d.facilityType,
               hint: 'Select a facility type',
               help: 'The kind of site the service is for.',
@@ -639,15 +639,15 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
       SectionCard(
         key: _anchors['service'],
         step: next(),
-        title: 'Service needed',
-        caption: 'Suppliers are matched by this category, so pick the closest.',
+        title: 'Service Details',
+        caption: 'Suppliers are matched by this category, so select the closest.',
         done: serviceDone,
         child: _service(problem),
       ),
       SectionCard(
         key: _anchors['describe'],
         step: next(),
-        title: 'Tell suppliers what you need',
+        title: 'Requirement Specifications',
         caption: 'Include scope, quantity, frequency, timelines and any specific requirements.',
         done: describeDone,
         child: _describe(problem),
@@ -656,7 +656,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         SectionCard(
           key: _anchors['criteria'],
           step: next(),
-          title: 'Supplier criteria',
+          title: 'Supplier Criteria',
           caption: 'The minimum a supplier must meet to pre-qualify. Leave any criterion blank to skip it.',
           optional: true,
           child: _criteria(problem),
@@ -673,7 +673,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
             children: [
               DateField(
                 key: const ValueKey('prequal-date'),
-                label: 'Pre-qualification deadline',
+                label: 'Pre-Qualification Deadline',
                 value: d.preQualEndDate,
                 onTap: () => _pickDay(preQual: true),
                 error: problem('preQualEndDate'),
@@ -682,7 +682,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
               const SizedBox(height: 14),
               DateField(
                 key: const ValueKey('due-date'),
-                label: 'Quote deadline',
+                label: 'Quote Deadline',
                 value: d.dueDate,
                 onTap: () => _pickDay(preQual: false),
                 error: problem('dueDate'),
@@ -697,12 +697,12 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         SectionCard(
           key: _anchors['timeline'],
           step: next(),
-          title: 'Reply by',
-          caption: 'Replies are taken until the end of this day; after it the enquiry closes by itself.',
+          title: 'Reply By',
+          caption: 'Replies are accepted until the end of this day. After that, the enquiry closes automatically.',
           optional: true,
           child: DateField(
             key: const ValueKey('due-date'),
-            label: 'Reply-by date',
+            label: 'Reply-By Date',
             value: d.dueDate,
             optional: true,
             onTap: () => _pickDay(preQual: false),
@@ -726,10 +726,10 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         ),
         ComposerProgress(
           steps: [
-            ProgressStep(id: 'details', label: 'Your details', done: detailsDone),
-            ProgressStep(id: 'location', label: 'Service location', done: locationDone),
-            ProgressStep(id: 'service', label: 'Service needed', done: serviceDone),
-            ProgressStep(id: 'describe', label: 'Tell suppliers what you need', done: describeDone),
+            ProgressStep(id: 'details', label: 'Buyer Details', done: detailsDone),
+            ProgressStep(id: 'location', label: 'Service Location', done: locationDone),
+            ProgressStep(id: 'service', label: 'Service Details', done: serviceDone),
+            ProgressStep(id: 'describe', label: 'Requirement Specifications', done: describeDone),
             if (d.isRfq) ProgressStep(id: 'timeline', label: 'Timeline', done: timelineDone),
           ],
           onGo: _goTo,
@@ -787,13 +787,13 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
               TextButton(
                 key: const ValueKey('rfq-create-company'),
                 onPressed: widget.onCreateCompany ?? () => _hooks.openSite(context, '/account/companies/new'),
-                child: Text('Create a company', style: RfqText.link),
+                child: Text('Create a Company', style: RfqText.link),
               ),
               if (canSwitch)
                 TextButton(
                   key: const ValueKey('rfq-switch-company'),
                   onPressed: _pickPostingFor,
-                  child: Text('Switch company', style: RfqText.link),
+                  child: Text('Switch Company', style: RfqText.link),
                 ),
             ],
           ),
@@ -850,7 +850,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         if (_c.askCompany) ...[
           RfqField(
             fieldKey: const ValueKey('company-name'),
-            label: 'Company name',
+            label: 'Company / Organisation Name',
             value: d.companyName,
             maxLength: RfqLimits.companyName,
             showCounter: false,
@@ -862,7 +862,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         ],
         RfqField(
           fieldKey: const ValueKey('contact-name'),
-          label: 'Contact person',
+          label: 'Contact Person',
           value: d.contactName,
           maxLength: RfqLimits.contactName,
           showCounter: false,
@@ -872,7 +872,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         const SizedBox(height: 14),
         RfqField(
           fieldKey: const ValueKey('contact-phone'),
-          label: 'Phone',
+          label: 'Mobile Number',
           value: d.contactPhone,
           hint: 'e.g. +91 98765 43210',
           keyboardType: TextInputType.phone,
@@ -884,7 +884,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         const SizedBox(height: 14),
         RfqField(
           fieldKey: const ValueKey('contact-email'),
-          label: 'Email',
+          label: 'Business Email',
           value: d.email,
           readOnly: true,
           suffixIcon: LucideIcons.lock,
@@ -907,10 +907,10 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('The list of services could not load.', style: RfqText.error),
+          Text('Unable to load the list of services.', style: RfqText.error),
           TextButton(
             onPressed: c.reloadCategories,
-            child: Text('Try again', style: RfqText.link),
+            child: Text('Try Again', style: RfqText.link),
           ),
         ],
       );
@@ -920,7 +920,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
       children: [
         PickerField(
           key: const ValueKey('category-field'),
-          label: 'Service category',
+          label: 'Select Service Category',
           value: d.category.isEmpty ? null : c.nameOf(d.category),
           hint: 'Select a service category',
           error: problem('category'),
@@ -930,7 +930,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
           const SizedBox(height: 14),
           PickerField(
             key: const ValueKey('subcategory-field'),
-            label: 'Sub-category',
+            label: 'Sub-Category',
             optional: true,
             value: d.subcategory.isEmpty ? null : c.nameOf(d.subcategory),
             hint: 'Select a sub-category',
@@ -951,7 +951,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         if (problem('category') == null) ...[
           const SizedBox(height: 6),
           Text(
-            'Narrow it to a sub-category and specialisation if one fits; suppliers listed under it are matched first.',
+            'Narrow it to a sub-category and specialisation if one fits. Suppliers listed under it are matched first.',
             style: RfqText.formHelp,
           ),
         ],
@@ -976,13 +976,13 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
             hint: c.suggestedTitle,
             optional: true,
             maxLength: RfqLimits.title,
-            help: 'What suppliers see first. Left blank it reads "${c.suggestedTitle}".',
+            help: 'What suppliers see first. If left blank, it reads "${c.suggestedTitle}".',
             error: problem('title'),
             onChanged: c.setTitle,
           ),
           const SizedBox(height: 14),
         ],
-        FieldLabel(d.isRfq ? 'Scope of services' : 'Your requirement'),
+        FieldLabel(d.isRfq ? 'Scope of Services' : 'Detailed Requirement Description'),
         const SizedBox(height: 6),
         TextField(
           key: const ValueKey('text'),
@@ -1003,7 +1003,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
         const SizedBox(height: 4),
         if (problem('text') == null)
           Text(
-            'Suppliers see this exactly as you write it. Specific details get sharper quotes. '
+            'Suppliers see this exactly as you write it. Specific details get more accurate quotes. '
             '($n so far, at least ${RfqLimits.descriptionMin})',
             style: RfqText.formHelp,
           ),
@@ -1025,16 +1025,12 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
           ),
         ],
         const SizedBox(height: 16),
-        const FieldLabel('Photos and documents', optional: true),
+        const FieldLabel('Supporting Documents', optional: true),
         const SizedBox(height: 2),
-        Text(
-          d.isRfq
-              ? 'Drawings, floor plans, site photos or a scope document suppliers should quote against.'
-              : 'Site photos, drawings or a scope document help suppliers quote accurately.',
-          style: RfqText.formHelp,
-        ),
+        Text('Upload scope documents, specifications, photographs or other relevant files.', style: RfqText.formHelp),
         const SizedBox(height: 8),
         AttachmentsPanel(
+          addLabel: 'Upload Files',
           files: d.attachments,
           uploads: c.uploads,
           max: RfqLimits.maxAttachments,
@@ -1067,8 +1063,8 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
             icon: Icon(open ? LucideIcons.chevronUp : LucideIcons.chevronDown, size: 16),
             label: Text(
               open
-                  ? 'Hide supplier criteria'
-                  : (count > 0 ? '$count ${count == 1 ? 'criterion' : 'criteria'} set: edit' : 'Add supplier criteria'),
+                  ? 'Hide Supplier Criteria'
+                  : (count > 0 ? '$count ${count == 1 ? 'criterion' : 'criteria'} set: edit' : 'Add Supplier Criteria'),
               style: RfqText.link,
             ),
           ),
@@ -1082,7 +1078,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
               const SizedBox(height: 8),
               RfqField(
                 fieldKey: const ValueKey('min-years'),
-                label: 'Years in business',
+                label: 'Years in Business',
                 value: d.minYears,
                 optional: true,
                 keyboardType: TextInputType.number,
@@ -1093,7 +1089,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
               const SizedBox(height: 14),
               RfqField(
                 fieldKey: const ValueKey('min-turnover'),
-                label: 'Annual turnover',
+                label: 'Annual Turnover',
                 value: d.minAnnualTurnover,
                 optional: true,
                 prefixText: '₹ ',
@@ -1104,7 +1100,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
               const SizedBox(height: 14),
               RfqField(
                 fieldKey: const ValueKey('min-turnover-3'),
-                label: 'Turnover over the last 3 years',
+                label: 'Turnover Over the Last 3 Years',
                 value: d.minLast3YrTurnover,
                 optional: true,
                 prefixText: '₹ ',
@@ -1139,7 +1135,7 @@ class _PostRfqScreenState extends State<PostRfqScreen> {
                 ],
               ),
               const SizedBox(height: 14),
-              const FieldLabel('Statutory compliance', optional: true),
+              const FieldLabel('Statutory Compliance', optional: true),
               const SizedBox(height: 6),
               Wrap(
                 spacing: 8,

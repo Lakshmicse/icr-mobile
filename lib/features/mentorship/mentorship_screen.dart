@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../messaging/messaging_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
 import '../../core/widgets/section_heading.dart';
@@ -144,9 +145,9 @@ class _MentorshipScreenState extends State<MentorshipScreen> {
           SliverFillRemaining(
             hasScrollBody: false,
             child: MentorshipNotice(
-              title: "Couldn't load mentors",
+              title: 'Unable to Load Mentors',
               body: mentorship.error!,
-              action: 'Try again',
+              action: 'Try Again',
               onAction: mentorship.refresh,
             ),
           ),
@@ -164,8 +165,8 @@ class _MentorshipScreenState extends State<MentorshipScreen> {
         SliverFillRemaining(
           hasScrollBody: false,
           child: MentorshipNotice(
-            title: 'No mentors are listed yet',
-            body: 'Be the first to guide the next generation of facility and real estate leaders.',
+            title: 'No Mentors Listed Yet',
+            body: 'Apply to guide the next generation of facility and real estate leaders.',
             action: widget.offerMentoring ? 'Apply as Mentor' : null,
             onAction: widget.offerMentoring ? () => widget.openSite(context, '/become-a-mentor') : null,
           ),
@@ -208,7 +209,15 @@ class _MentorshipScreenState extends State<MentorshipScreen> {
         ),
         // The design's first grid hangs 1.3 dp nearer its heading than the second.
         SizedBox(height: i == 0 ? 12.2 : 12.5),
-        MentorGrid(mentors: s.mentors, padding: 16, rowGap: 5.4, bottomPad: 8.8, onOpen: openMentor),
+        MentorGrid(
+          mentors: s.mentors,
+          padding: 16,
+          rowGap: 5.4,
+          bottomPad: 8.8,
+          onOpen: openMentor,
+          onMessage: (m) => MessagingLauncher.withPerson(context, m.userId!),
+          viewerId: MessagingLauncher.viewerIdOf(context),
+        ),
         SizedBox(height: i == 0 ? 18.6 : 20.9),
       ],
     );
@@ -223,7 +232,7 @@ class _MentorshipScreenState extends State<MentorshipScreen> {
         if (o.categories.isNotEmpty) chips(),
         if (o.companies.isNotEmpty) ...[
           const SizedBox(height: 19),
-          lead('Learn from top leaders at top enterprises'),
+          lead('Learn from top leaders at top enterprises.'),
           const SizedBox(height: 2.4),
           CompanyTiles(
             companies: o.companies,
@@ -243,7 +252,7 @@ class _MentorshipScreenState extends State<MentorshipScreen> {
         if (o.categories.isNotEmpty) chips(),
         if (o.topics.isNotEmpty) ...[
           const SizedBox(height: 26.1),
-          lead('Learn from top topics'),
+          lead('Learn from mentors on top topics.'),
           const SizedBox(height: 4.1),
           TopicGrid(
             topics: o.topics,

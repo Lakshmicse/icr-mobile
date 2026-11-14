@@ -248,10 +248,10 @@ class _InterviewSheetState extends State<InterviewSheet> {
     final at = _at;
     final team = widget.team;
     return _SheetFrame(
-      title: editing ? 'Reschedule ${widget.existing!.name}' : 'Schedule an interview',
+      title: editing ? 'Reschedule ${widget.existing!.name}' : 'Schedule an Interview',
       action: PrimaryButton(
         key: const ValueKey('interview-save'),
-        label: _busy ? 'Saving…' : (editing ? 'Save the new time' : 'Schedule interview'),
+        label: _busy ? 'Saving…' : (editing ? 'Save New Time' : 'Schedule Interview'),
         icon: LucideIcons.calendarCheck,
         onPressed: _busy ? null : _save,
       ),
@@ -260,18 +260,18 @@ class _InterviewSheetState extends State<InterviewSheet> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              'They are told by email and in the app, with the link or the address.',
+              'They will be notified by email and in the app, with the link or the address.',
               style: JobsText.formHelp,
             ),
           ),
-        const _Label('Round name (optional)'),
+        const _Label('Round Name (Optional)'),
         TextField(
           key: const ValueKey('interview-title'),
           controller: _title,
           style: JobsText.formInput,
           decoration: hiringDecoration(hint: 'Technical round'),
         ),
-        const _Label('When'),
+        const _Label('Date and Time'),
         Row(
           children: [
             Expanded(
@@ -279,7 +279,7 @@ class _InterviewSheetState extends State<InterviewSheet> {
                 key: const ValueKey('interview-date'),
                 onPressed: _pickDate,
                 icon: const Icon(LucideIcons.calendar, size: 15),
-                label: Text(_date == null ? 'Pick a date' : formatWeekday(_date!)),
+                label: Text(_date == null ? 'Select a Date' : formatWeekday(_date!)),
               ),
             ),
             const SizedBox(width: 8),
@@ -290,7 +290,7 @@ class _InterviewSheetState extends State<InterviewSheet> {
                 icon: const Icon(LucideIcons.clock, size: 15),
                 label: Text(
                   _time == null
-                      ? (_date == null ? 'Pick a time' : '10:00 AM')
+                      ? (_date == null ? 'Select a Time' : '10:00 AM')
                       : formatTime(DateTime(2000, 1, 1, _time!.hour, _time!.minute)),
                 ),
               ),
@@ -302,22 +302,22 @@ class _InterviewSheetState extends State<InterviewSheet> {
             padding: const EdgeInsets.only(top: 6),
             child: Text(formatWhen(at), key: const ValueKey('interview-when'), style: CareerText.metaStrong),
           ),
-        const _Label('How long'),
+        const _Label('Duration'),
         _Choices(
           keyPrefix: 'interview-minutes',
           options: const [('30', '30 min'), ('45', '45 min'), ('60', '1 hour'), ('90', '90 min')],
           value: '$_duration',
           onPick: (v) => setState(() => _duration = int.parse(v)),
         ),
-        const _Label('How'),
+        const _Label('Interview Mode'),
         _Choices(
           keyPrefix: 'interview-mode',
-          options: const [('VIDEO', 'Video call'), ('IN_PERSON', 'In person'), ('PHONE', 'Phone call')],
+          options: const [('VIDEO', 'Video Call'), ('IN_PERSON', 'In Person'), ('PHONE', 'Phone Call')],
           value: _mode,
           onPick: (v) => setState(() => _mode = v),
         ),
         if (_mode == 'VIDEO') ...[
-          const _Label('Meeting link (optional)'),
+          const _Label('Meeting Link (Optional)'),
           TextField(
             key: const ValueKey('interview-link'),
             controller: _link,
@@ -337,7 +337,7 @@ class _InterviewSheetState extends State<InterviewSheet> {
             style: JobsText.formInput,
             decoration: hiringDecoration(hint: 'Floor 3, Northwind House, Andheri East'),
           ),
-          const _Label('Map link (optional)'),
+          const _Label('Map Link (Optional)'),
           TextField(
             key: const ValueKey('interview-map'),
             controller: _map,
@@ -346,7 +346,7 @@ class _InterviewSheetState extends State<InterviewSheet> {
             decoration: hiringDecoration(hint: 'https://maps.app.goo.gl/AbCdEf123'),
           ),
         ],
-        const _Label('Notes for the panel (optional)'),
+        const _Label('Notes for the Panel (Optional)'),
         TextField(
           key: const ValueKey('interview-notes'),
           controller: _notes,
@@ -367,7 +367,7 @@ class _InterviewSheetState extends State<InterviewSheet> {
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
               value: _panel.contains(m.id),
-              title: Text(m.id == widget.meId ? '${m.name} (you)' : m.name, style: CareerText.bodyStrong),
+              title: Text(m.id == widget.meId ? '${m.name} (You)' : m.name, style: CareerText.bodyStrong),
               subtitle: m.role.isEmpty ? null : Text(_roleWord(m.role), style: CareerText.meta),
               onChanged: (v) => setState(() => v == true ? _panel.add(m.id) : _panel.remove(m.id)),
             ),
@@ -375,7 +375,7 @@ class _InterviewSheetState extends State<InterviewSheet> {
           TextButton(
             key: const ValueKey('panel-add-me'),
             onPressed: () => setState(() => _panel.add(widget.meId!)),
-            child: const Text('Add me to the panel'),
+            child: const Text('Add Me to the Panel'),
           ),
         if (_problem != null) FormProblem(_problem!),
       ],
@@ -383,10 +383,10 @@ class _InterviewSheetState extends State<InterviewSheet> {
   }
 
   static String _roleWord(String role) => switch (role) {
-    'COMPANY_ADMIN' => 'Company admin',
-    'BRANCH_ADMIN' => 'Office admin',
+    'COMPANY_ADMIN' => 'Company Admin',
+    'BRANCH_ADMIN' => 'Office Admin',
     'RECRUITER' => 'Recruiter',
-    'HIRING_MANAGER' => 'Hiring manager',
+    'HIRING_MANAGER' => 'Hiring Manager',
     _ => role.isEmpty ? '' : '${role[0]}${role.substring(1).toLowerCase().replaceAll('_', ' ')}',
   };
 }
@@ -503,11 +503,11 @@ class _OfferSheetState extends State<OfferSheet> {
   Widget build(BuildContext context) {
     final sent = widget.existing?.status == 'SENT';
     return _SheetFrame(
-      title: widget.existing == null ? 'Make an offer' : 'Change the offer',
+      title: widget.existing == null ? 'Make an Offer' : 'Change the Offer',
       action: sent
           ? PrimaryButton(
               key: const ValueKey('offer-save'),
-              label: _busy ? 'Saving…' : 'Save changes',
+              label: _busy ? 'Saving…' : 'Save Changes',
               icon: LucideIcons.check,
               onPressed: _busy ? null : () => _submit(false),
             )
@@ -521,7 +521,7 @@ class _OfferSheetState extends State<OfferSheet> {
                       minimumSize: const Size.fromHeight(48),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Save draft'),
+                    child: const Text('Save Draft'),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -529,7 +529,7 @@ class _OfferSheetState extends State<OfferSheet> {
                   flex: 2,
                   child: PrimaryButton(
                     key: const ValueKey('offer-send'),
-                    label: _busy ? 'Sending…' : 'Send offer',
+                    label: _busy ? 'Sending…' : 'Send Offer',
                     icon: LucideIcons.send,
                     onPressed: _busy ? null : () => _submit(true),
                   ),
@@ -541,14 +541,14 @@ class _OfferSheetState extends State<OfferSheet> {
           padding: const EdgeInsets.only(top: 4),
           child: Text(
             sent
-                ? 'The offer is with ${widget.applicantName ?? 'the applicant'}. A change is sent to them.'
+                ? 'The offer is with ${widget.applicantName ?? 'the applicant'}. Any change will be sent to them.'
                 : widget.applicantName == null
                 ? 'Sending moves the application to Offer. The applicant accepts or declines in the app.'
                 : 'Sending moves ${widget.applicantName}\'s application to Offer. They accept or decline in the app.',
             style: JobsText.formHelp,
           ),
         ),
-        const _Label('Salary offered'),
+        const _Label('Salary Offered'),
         TextField(
           key: const ValueKey('offer-amount'),
           controller: _amount,
@@ -557,21 +557,21 @@ class _OfferSheetState extends State<OfferSheet> {
           style: JobsText.formInput,
           decoration: hiringDecoration(hint: '650000', prefix: '₹ '),
         ),
-        const _Label('Paid'),
+        const _Label('Pay Period'),
         _Choices(
           keyPrefix: 'offer-period',
-          options: const [('YEARLY', 'Per year'), ('MONTHLY', 'Per month'), ('HOURLY', 'Per hour')],
+          options: const [('YEARLY', 'Per Year'), ('MONTHLY', 'Per Month'), ('HOURLY', 'Per Hour')],
           value: _period,
           onPick: (v) => setState(() => _period = v),
         ),
-        const _Label('Job title on the offer (optional)'),
+        const _Label('Job Title on the Offer (Optional)'),
         TextField(
           key: const ValueKey('offer-title'),
           controller: _title,
           style: JobsText.formInput,
           decoration: hiringDecoration(hint: widget.jobTitle ?? 'Facility Supervisor'),
         ),
-        const _Label('Joining date (optional)'),
+        const _Label('Joining Date (Optional)'),
         Row(
           children: [
             Expanded(
@@ -582,19 +582,19 @@ class _OfferSheetState extends State<OfferSheet> {
                   if (d != null && mounted) setState(() => _joining = d);
                 },
                 icon: const Icon(LucideIcons.calendar, size: 15),
-                label: Text(_joining == null ? 'Pick a date' : formatDay(_joining!, now: widget.clock(), year: true)),
+                label: Text(_joining == null ? 'Select a Date' : formatDay(_joining!, now: widget.clock(), year: true)),
               ),
             ),
             if (_joining != null)
               IconButton(
                 key: const ValueKey('offer-joining-clear'),
-                tooltip: 'Clear the joining date',
+                tooltip: 'Clear Joining Date',
                 onPressed: () => setState(() => _joining = null),
                 icon: const Icon(LucideIcons.x, size: 16),
               ),
           ],
         ),
-        const _Label('Reply by (optional)'),
+        const _Label('Reply By (Optional)'),
         Row(
           children: [
             Expanded(
@@ -605,19 +605,19 @@ class _OfferSheetState extends State<OfferSheet> {
                   if (d != null && mounted) setState(() => _expires = d);
                 },
                 icon: const Icon(LucideIcons.calendarClock, size: 15),
-                label: Text(_expires == null ? 'Pick a date' : formatDay(_expires!, now: widget.clock(), year: true)),
+                label: Text(_expires == null ? 'Select a Date' : formatDay(_expires!, now: widget.clock(), year: true)),
               ),
             ),
             if (_expires != null)
               IconButton(
                 key: const ValueKey('offer-expires-clear'),
-                tooltip: 'Clear the reply-by date',
+                tooltip: 'Clear Reply-By Date',
                 onPressed: () => setState(() => _expires = null),
                 icon: const Icon(LucideIcons.x, size: 16),
               ),
           ],
         ),
-        const _Label('Note to the applicant (optional)'),
+        const _Label('Note to the Applicant (Optional)'),
         TextField(
           key: const ValueKey('offer-notes'),
           controller: _notes,
@@ -641,7 +641,7 @@ Future<String?> askStageNote(
   required String body,
   required String confirm,
   bool destructive = false,
-  String hint = 'A note for your team (optional)',
+  String hint = 'Note for your team (Optional)',
 }) {
   return showDialog<String>(
     context: context,

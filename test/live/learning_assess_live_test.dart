@@ -587,7 +587,7 @@ void main() {
       findsNWidgets(withPapers),
       reason: 'ICR\'s own programmes (none is a partner\'s here)',
     );
-    expect(find.text('Assess Your Knowledge'), findsOneWidget);
+    expect(find.text('Knowledge Assessments'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), 'contract');
     await tester.pumpAndSettle();
@@ -653,7 +653,7 @@ void main() {
     // What the exam made of earlier sittings shows as the best score the API's history adds up to.
     final raw = (await tester.runAsync(() => _rows(api, '/learning/me/attempts', {'kind': 'ASSESSMENT'})))!;
     final mine = raw.where((a) => a['paperId'] == firstOpen.entry.paper.id).toList();
-    final label = mine.isEmpty ? 'Start Assessment' : 'Retake assessment';
+    final label = mine.isEmpty ? 'Start Assessment' : 'Retake Assessment';
     if (mine.isNotEmpty) {
       final best = mine.map((a) => a['percentage'] as int).reduce((a, b) => a > b ? a : b);
       expect(firstOpen.entry.progress.attempts, mine.length);
@@ -831,7 +831,7 @@ void main() {
       final id = set['id'] as String;
       final redeem = find.descendant(
         of: _card(id),
-        matching: find.widgetWithText(ActionButton, 'Redeem ${creditsLabel(cost!)}'),
+        matching: find.widgetWithText(ActionButton, 'Redeem ${creditsLabelTitle(cost!)}'),
       );
       // The card shows at once; its price (and the button) when the quote arrives.
       await _settle(tester, until: () => redeem.evaluate().isNotEmpty);
@@ -840,8 +840,11 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(redeem);
       await tester.pumpAndSettle();
-      expect(find.text('This set opens for good. You will have ${creditsLabel(credits - cost)} left.'), findsOneWidget);
-      await _tapOnline(tester, find.widgetWithText(ActionButton, 'Redeem ${creditsShort(cost)}'));
+      expect(
+        find.text('This set opens permanently. You will have ${creditsLabel(credits - cost)} left.'),
+        findsOneWidget,
+      );
+      await _tapOnline(tester, find.widgetWithText(ActionButton, 'Redeem ${creditsShortTitle(cost)}'));
       await _settle(
         tester,
         until: () => find

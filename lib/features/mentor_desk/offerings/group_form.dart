@@ -10,8 +10,9 @@ import 'offerings_controller.dart';
 import 'offerings_models.dart';
 import 'offerings_rules.dart';
 
-/// The ways a group session can meet (`MentorshipMode`).
-const groupModes = <String, String>{'VIDEO': 'Video call', 'PHONE': 'Phone', 'IN_PERSON': 'In person', 'CHAT': 'Chat'};
+/// The ways a group session can meet (`MentorshipMode`): virtual (the API's VIDEO) or in person. Phone and chat
+/// were taken off, and "Video call" reads "Virtual" (owner, 7 Nov 2026).
+const groupModes = <String, String>{'VIDEO': 'Virtual', 'IN_PERSON': 'In Person'};
 
 class _Day {
   _Day({this.id, this.at, int minutes = 60, this.title, this.locked = false, this.status})
@@ -56,7 +57,8 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
   late final _price = TextEditingController(
     text: widget.existing?.pricePaisa == null ? '' : rupeesOf(widget.existing!.pricePaisa),
   );
-  late String _mode = widget.existing?.mode ?? 'VIDEO';
+  // An older session that met by phone or chat is edited as virtual.
+  late String _mode = groupModes.containsKey(widget.existing?.mode) ? widget.existing!.mode : 'VIDEO';
   bool _waitlist = true;
   bool _publish = false;
   final _days = <_Day>[];
@@ -113,10 +115,10 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
     final now = mentoringNow();
     final pairs = <(DateTime, int)>[];
     for (final d in _days) {
-      if (d.at == null) return 'Pick a date and time for every day.';
+      if (d.at == null) return 'Select a date and time for every day.';
       final m = d.minutesValue;
       if (m == null) return 'A day runs $minSessionMinutes to $maxSessionMinutes minutes.';
-      if (!d.locked && !d.at!.isAfter(now)) return 'Pick a time in the future.';
+      if (!d.locked && !d.at!.isAfter(now)) return 'Select a time in the future.';
       pairs.add((d.at!, m));
     }
     final days = daysProblem(pairs, now, requireFuture: false);
@@ -188,13 +190,13 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
   @override
   Widget build(BuildContext context) {
     return MentoringForm(
-      title: _editing ? 'Edit group session' : 'Host a group session',
+      title: _editing ? 'Edit Group Session' : 'Host a Group Session',
       subtitle: _editing
-          ? 'People who registered are told when the time moves. Days that already ran cannot change.'
-          : 'A clinic or a short series (up to $maxGroupDays days). Free sessions keep a waitlist; a seat price turns it off.',
+          ? 'Registered members are notified when the time changes. Past days cannot be changed.'
+          : 'A clinic or a short series (up to $maxGroupDays days). Free sessions keep a waitlist. A seat price turns it off.',
       submitLabel: _editing
-          ? (_publish && _editingDraft ? 'Save and publish' : 'Save')
-          : (_publish ? 'Publish' : 'Save draft'),
+          ? (_publish && _editingDraft ? 'Save and Publish' : 'Save')
+          : (_publish ? 'Publish' : 'Save Draft'),
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
@@ -210,7 +212,7 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
           ),
         ),
         FieldBlock(
-          label: 'Summary (optional)',
+          label: 'Summary (Optional)',
           child: TextField(
             key: const ValueKey('group-summary'),
             controller: _summary,
@@ -222,8 +224,8 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
           ),
         ),
         FieldBlock(
-          label: 'Agenda (optional)',
-          help: 'Plain text; a blank line starts a new paragraph.',
+          label: 'Agenda (Optional)',
+          help: 'Plain text. A blank line starts a new paragraph.',
           child: TextField(
             key: const ValueKey('group-agenda'),
             controller: _agenda,
@@ -234,7 +236,7 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
           ),
         ),
         FieldBlock(
-          label: 'How it meets',
+          label: 'Mode',
           child: Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -262,7 +264,7 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
           )
         else
           FieldBlock(
-            label: 'Joining link',
+            label: 'Joining Link',
             help: _editing ? null : 'Leave it empty to use the standing link on your mentor profile.',
             child: TextField(
               key: const ValueKey('group-link'),
@@ -273,7 +275,7 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
             ),
           ),
         FieldBlock(
-          label: _days.length == 1 ? 'When' : 'Days',
+          label: _days.length == 1 ? 'Date and Time' : 'Days',
           child: Column(children: [for (final (i, d) in _days.indexed) _dayRow(i, d)]),
         ),
         if (_days.length < maxGroupDays)
@@ -281,14 +283,14 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
             alignment: Alignment.centerLeft,
             child: QuietButton(
               key: const ValueKey('day-add'),
-              label: 'Add a day',
+              label: 'Add a Day',
               icon: LucideIcons.plus,
               onPressed: () => setState(() => _days.add(_Day(at: null))),
             ),
           ),
         const SizedBox(height: 14),
         FieldBlock(
-          label: 'Seats ($minGroupSeats to $maxGroupSeats; empty for no limit)',
+          label: 'Seats ($minGroupSeats to $maxGroupSeats, empty for no limit)',
           child: TextField(
             key: const ValueKey('group-capacity'),
             controller: _capacity,
@@ -299,8 +301,8 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
           ),
         ),
         FieldBlock(
-          label: 'Seat price (₹, empty for a free session)',
-          help: 'Charged seats start at ₹499 and need a number of seats. A paid session has no waitlist.',
+          label: 'Seat Price (₹, empty for a free session)',
+          help: 'A paid session needs a number of seats and keeps no waitlist.',
           child: TextField(
             key: const ValueKey('group-price'),
             controller: _price,
@@ -316,7 +318,7 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
             contentPadding: EdgeInsets.zero,
             value: _paid ? false : _waitlist,
             onChanged: _paid ? null : (v) => setState(() => _waitlist = v),
-            title: Text('Keep a waitlist when it fills', style: MentoringText.formLabel),
+            title: Text('Keep a Waitlist When Full', style: MentoringText.formLabel),
           ),
         if (!_editing || _editingDraft)
           SwitchListTile.adaptive(
@@ -324,9 +326,11 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
             contentPadding: EdgeInsets.zero,
             value: _publish,
             onChanged: (v) => setState(() => _publish = v),
-            title: Text('Open for registration now', style: MentoringText.formLabel),
+            title: Text('Open for Registration Now', style: MentoringText.formLabel),
             subtitle: Text(
-              _editing ? 'Off keeps it a draft: nobody can register.' : 'Off saves a draft you can publish later.',
+              _editing
+                  ? 'When off, it stays a draft and nobody can register.'
+                  : 'When off, a draft is saved that you can publish later.',
               style: MentoringText.meta,
             ),
           ),
@@ -361,7 +365,7 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
             flex: 5,
             child: QuietButton(
               key: ValueKey('day-pick-$i'),
-              label: d.at == null ? 'Pick a date and time' : whenLabel(d.at!),
+              label: d.at == null ? 'Select a Date and Time' : whenLabel(d.at!),
               icon: LucideIcons.calendarClock,
               onPressed: () async {
                 final at = await pickDateTime(context, initial: d.at);
@@ -383,7 +387,7 @@ class _GroupSessionFormState extends State<GroupSessionForm> {
           if (_days.length > 1)
             IconButton(
               key: ValueKey('day-remove-$i'),
-              tooltip: 'Remove this day',
+              tooltip: 'Remove This Day',
               onPressed: () => setState(() => _days.removeAt(i).minutes.dispose()),
               icon: const Icon(LucideIcons.trash2, size: 16, color: AppColors.outline),
             ),

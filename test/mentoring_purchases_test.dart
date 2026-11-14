@@ -100,10 +100,10 @@ void main() {
   group('the tab', () {
     testWidgets('sorts what needs the member from what is running and what is over', (tester) async {
       await pump(tester);
-      expect(find.text('NEEDS YOU'), findsOneWidget);
+      expect(find.text('ACTION NEEDED'), findsOneWidget);
       expect(find.text('ACTIVE'), findsOneWidget);
       // Needs: a time to accept, a programme to pay for.
-      expect(inCard('purchase-p-acc', 'Accept this time'), findsOneWidget);
+      expect(inCard('purchase-p-acc', 'Accept This Time'), findsOneWidget);
       expect(inCard('term-t-pay', 'Pay ₹5,382'), findsOneWidget);
       // Active: the ask waiting for a reply, the booked call, a programme waiting on the mentor, the plan, a seat, a cohort place.
       expect(inCard('purchase-p-req', 'Withdraw'), findsOneWidget);
@@ -129,18 +129,18 @@ void main() {
         ..seats = []
         ..enrolments = [];
       final (_, rec, _) = await pump(tester, world: w);
-      expect(find.text('Nothing bought yet'), findsOneWidget);
-      await tester.tap(find.text('Browse mentors'));
+      expect(find.text('No Purchases Yet'), findsOneWidget);
+      await tester.tap(find.text('Browse Mentors'));
       expect(rec.opened, ['directory']);
     });
 
     testWidgets('the browse buttons and the open callbacks reach the lead\'s screens', (tester) async {
       final (_, rec, _) = await pump(tester);
-      await tester.tap(find.text('Group sessions'));
+      await tester.tap(find.text('Group Sessions'));
       await tester.tap(find.text('Programmes'));
-      await tapIn(tester, 'seat-g-clinic', 'Open session');
-      await tapIn(tester, 'enrolment-e-1', 'Open programme');
-      await tapIn(tester, 'term-t-coach', 'Schedule a session');
+      await tapIn(tester, 'seat-g-clinic', 'Open Session');
+      await tapIn(tester, 'enrolment-e-1', 'Open Programme');
+      await tapIn(tester, 'term-t-coach', 'Schedule a Session');
       expect(rec.opened, [
         'browse-groups',
         'browse-programmes',
@@ -172,6 +172,11 @@ void main() {
     testWidgets('a request is withdrawn', (tester) async {
       final (api, _, w) = await pump(tester);
       await tapIn(tester, 'purchase-p-req', 'Withdraw');
+      // Withdraw asks first (owner, 7 Nov 2026): nothing is sent until the yes.
+      expect(find.byKey(const ValueKey('withdraw-confirm')), findsOneWidget);
+      expect(api.count('POST /mentor-services/purchases/p-req/withdraw'), 0);
+      await tester.tap(find.byKey(const ValueKey('withdraw-yes')));
+      await tester.pumpAndSettle();
       expect(api.count('POST /mentor-services/purchases/p-req/withdraw'), 1);
       expect(find.text('Request withdrawn.'), findsOneWidget);
       expect(find.byKey(const ValueKey('purchase-p-req')), findsNothing);
@@ -180,12 +185,12 @@ void main() {
 
     testWidgets('accepting the time a mentor set can spend a session credit that covers it', (tester) async {
       final (api, _, w) = await pump(tester);
-      await tapIn(tester, 'purchase-p-acc', 'Accept this time');
-      expect(find.text('Accept the time Anand set?'), findsOneWidget);
+      await tapIn(tester, 'purchase-p-acc', 'Accept This Time');
+      expect(find.text('Accept the Time Anand Set?'), findsOneWidget);
       expect(find.byKey(const ValueKey('quote-credit')), findsOneWidget);
       expect(find.text('A session credit pays for it, so there is nothing to pay.'), findsOneWidget);
       expect(find.byKey(const ValueKey('quote-charged')).evaluate().isNotEmpty, isTrue);
-      await tester.tap(find.text('Accept and confirm'));
+      await tester.tap(find.text('Accept and Confirm'));
       await settle(tester);
       expect(api.bodyOf('POST /mentor-services/purchases/p-acc/accept-time'), {'useCredit': true});
       expect(w.purchases.firstWhere((p) => p['id'] == 'p-acc')['status'], 'PAID');
@@ -208,17 +213,17 @@ void main() {
         },
       };
       final (api, _, _) = await pump(tester, world: w);
-      await tapIn(tester, 'purchase-p-acc', 'Accept this time');
+      await tapIn(tester, 'purchase-p-acc', 'Accept This Time');
       await tester.tap(find.byKey(const ValueKey('quote-credit')));
       await tester.pumpAndSettle();
       expect(
-        find.text('You pay ₹719.10 after, to confirm it.'),
+        find.text('You pay ₹719.10 afterwards to confirm it.'),
         findsOneWidget,
         reason: '10% off ₹799, after the credit is declined',
       );
       expect(find.byKey(const ValueKey('quote-discount')), findsOneWidget);
       expect(find.text('10% member discount from Gold.'), findsOneWidget);
-      await tester.tap(find.text('Accept and confirm'));
+      await tester.tap(find.text('Accept and Confirm'));
       await settle(tester);
       expect(api.bodyOf('POST /mentor-services/purchases/p-acc/accept-time'), {'useCredit': false});
       expect(find.text('Accepted. Pay to confirm it.'), findsOneWidget);
@@ -227,11 +232,11 @@ void main() {
 
     testWidgets('a time that does not suit is sent back with the times that would', (tester) async {
       final (api, _, w) = await pump(tester);
-      await tapIn(tester, 'purchase-p-acc', 'Ask another time');
+      await tapIn(tester, 'purchase-p-acc', 'Ask for Another Time');
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'No');
       await tester.tap(find.text('Send to Anand'));
       await tester.pump();
-      expect(find.text('Write at least 5 characters.'), findsOneWidget);
+      expect(find.text('Enter at least 5 characters.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'Weekday evenings after 7 pm');
       await tester.tap(find.text('Send to Anand'));
       await settle(tester);
@@ -254,10 +259,10 @@ void main() {
     testWidgets('a credit that covers the session pays for it in the app, even with real payments on', (tester) async {
       final (api, rec, w) = await pump(tester, world: confirmedWorld());
       await tapIn(tester, 'purchase-p-acc', 'Pay ₹799');
-      expect(find.text('Pay for your session'), findsOneWidget);
-      expect(find.text('Pay with a session credit'), findsOneWidget);
+      expect(find.text('Pay for Your Session'), findsOneWidget);
+      expect(find.text('Pay with a Session Credit'), findsOneWidget);
       expect(find.byKey(const ValueKey('pay-handoff')), findsNothing);
-      await tester.tap(find.text('Pay with a session credit'));
+      await tester.tap(find.text('Pay with a Session Credit'));
       await settle(tester);
       expect(api.bodyOf('POST /mentor-services/purchases/p-acc/pay'), {'useCredit': true});
       expect(find.text('Paid with a session credit. The session is booked.'), findsOneWidget);
@@ -311,10 +316,10 @@ void main() {
         extra: {'POST /mentor-services/purchases/p-acc/pay': (_) => refuse('This session can no longer be paid for.')},
       );
       await tapIn(tester, 'purchase-p-acc', 'Pay ₹799');
-      await tester.tap(find.text('Pay with a session credit'));
+      await tester.tap(find.text('Pay with a Session Credit'));
       await settle(tester);
       expect(find.text('This session can no longer be paid for.'), findsOneWidget);
-      expect(find.text('Pay for your session'), findsOneWidget);
+      expect(find.text('Pay for Your Session'), findsOneWidget);
     });
 
     testWidgets('a programme shows the API\'s quote, then is paid in the app', (tester) async {
@@ -324,7 +329,7 @@ void main() {
         extra: {'POST /mentor-plans/subscriptions/t-pay/pay': (_) => gatewayForm('t-pay')},
       );
       await tapIn(tester, 'term-t-pay', 'Pay ₹5,382');
-      expect(find.text('Pay for your programme'), findsOneWidget);
+      expect(find.text('Pay for Your Programme'), findsOneWidget);
       expect(find.byKey(const ValueKey('term-price')), findsOneWidget);
       String at(String key) => tester.widget<Text>(find.byKey(ValueKey(key))).data!;
       expect(at('term-price'), '₹5,999');
@@ -372,19 +377,19 @@ void main() {
       'asking to move picks a time from the mentor\'s hours and waits for them; the request can be withdrawn',
       (tester) async {
         final (api, _, _) = await pump(tester);
-        await tapIn(tester, 'purchase-p-booked', 'Ask to move');
+        await tapIn(tester, 'purchase-p-booked', 'Ask to Move');
         await tester.tap(find.text('7:00 PM'));
         await tester.pump();
         await tester.enterText(find.byKey(const ValueKey('move-note')), 'That day clashes with a site audit');
-        await tester.tap(find.text('Ask to move').last);
+        await tester.tap(find.text('Ask to Move').last);
         await settle(tester);
         final body = api.bodyOf('POST /mentor-services/purchases/p-booked/reschedule') as Map;
         expect(DateTime.parse(body['scheduledAt'] as String).isAtSameMomentAs(DateTime(2026, 10, 30, 19)), isTrue);
         expect(body['note'], 'That day clashes with a site audit');
         expect(find.byKey(const ValueKey('move-on-them')), findsOneWidget);
         expect(find.textContaining('Waiting for Anand.'), findsOneWidget);
-        expect(find.text('Ask to move'), findsNothing, reason: 'one request at a time');
-        await tester.tap(find.text('Withdraw the request'));
+        expect(find.text('Ask to Move'), findsNothing, reason: 'one request at a time');
+        await tester.tap(find.text('Withdraw Request'));
         await settle(tester);
         expect(api.count('POST /mentor-services/purchases/p-booked/reschedule/decline'), 1);
         expect(find.byKey(const ValueKey('move-on-them')), findsNothing);
@@ -393,10 +398,10 @@ void main() {
 
     testWidgets('asking to move needs a time first', (tester) async {
       await pump(tester);
-      await tapIn(tester, 'purchase-p-booked', 'Ask to move');
-      await tester.tap(find.text('Ask to move').last);
+      await tapIn(tester, 'purchase-p-booked', 'Ask to Move');
+      await tester.tap(find.text('Ask to Move').last);
       await tester.pump();
-      expect(find.text('Pick a new time first.'), findsOneWidget);
+      expect(find.text('Select a new time first.'), findsOneWidget);
     });
 
     testWidgets('a move the mentor proposed is accepted, or the booked time is kept with a note', (tester) async {
@@ -411,11 +416,11 @@ void main() {
       final (api, _, _) = await pump(tester, world: w);
       expect(find.byKey(const ValueKey('move-on-me')), findsOneWidget);
       expect(find.textContaining('A site visit came up'), findsOneWidget);
-      expect(find.text('NEEDS YOU'), findsOneWidget);
-      await tester.tap(find.text('Keep booked time'));
+      expect(find.text('ACTION NEEDED'), findsOneWidget);
+      await tester.tap(find.text('Keep Booked Time'));
       await settle(tester);
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'That day does not work for me');
-      await tester.tap(find.text('Keep the booked time'));
+      await tester.tap(find.text('Keep the Booked Time'));
       await settle(tester);
       expect(api.bodyOf('POST /mentor-services/purchases/p-booked/reschedule/decline'), {
         'reason': 'That day does not work for me',
@@ -432,7 +437,7 @@ void main() {
         proposedBy: 'MENTOR',
       );
       final (api, _, _) = await pump(tester, world: w);
-      await tester.tap(find.text('Accept new time'));
+      await tester.tap(find.text('Accept New Time'));
       await settle(tester);
       expect(api.count('POST /mentor-services/purchases/p-booked/reschedule/accept'), 1);
       expect(find.text('Moved to the new time.'), findsOneWidget);
@@ -443,11 +448,11 @@ void main() {
       final (api, _, w) = await pump(tester);
       await tapIn(tester, 'purchase-p-booked', 'Cancel');
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'No');
-      await tester.tap(find.text('Cancel session'));
+      await tester.tap(find.text('Cancel Session'));
       await tester.pump();
-      expect(find.text('Write at least 5 characters.'), findsOneWidget);
+      expect(find.text('Enter at least 5 characters.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'A site shutdown came up');
-      await tester.tap(find.text('Cancel session'));
+      await tester.tap(find.text('Cancel Session'));
       await settle(tester);
       expect(api.bodyOf('POST /mentor-services/purchases/p-booked/cancel'), {'reason': 'A site shutdown came up'});
       expect(w.purchases.firstWhere((p) => p['id'] == 'p-booked')['status'], 'CANCELLED');
@@ -492,20 +497,20 @@ void main() {
     testWidgets('a review needs a rating and, when written, ten characters; it may hide the name', (tester) async {
       final (api, _, w) = await pump(tester);
       await openPast(tester);
-      await tapIn(tester, 'purchase-p-kit', 'Leave a review');
-      await tester.tap(find.text('Send review'));
+      await tapIn(tester, 'purchase-p-kit', 'Leave a Review');
+      await tester.tap(find.text('Send Review'));
       await tester.pump();
-      expect(find.text('Choose a rating from one to five stars.'), findsOneWidget);
+      expect(find.text('Select a rating from one to five stars.'), findsOneWidget);
       await tester.tap(find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.star_outline_rounded).last);
       await tester.pump();
       await tester.enterText(find.byKey(const ValueKey('review-comment')), 'short');
-      await tester.tap(find.text('Send review'));
+      await tester.tap(find.text('Send Review'));
       await tester.pump();
-      expect(find.textContaining('Write at least 10 characters'), findsOneWidget);
+      expect(find.textContaining('Enter at least 10 characters'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('review-comment')), 'Eighty questions, well chosen');
       await tester.tap(find.byType(Switch));
       await tester.pump();
-      await tester.tap(find.text('Send review'));
+      await tester.tap(find.text('Send Review'));
       await settle(tester);
       expect(api.bodyOf('POST /mentor-services/purchases/p-kit/review'), {
         'rating': 5,
@@ -518,18 +523,18 @@ void main() {
     testWidgets('a problem is reported to ICR (ten characters at least)', (tester) async {
       final (api, _, _) = await pump(tester);
       await openPast(tester);
-      await tapIn(tester, 'purchase-p-kit', 'Report a problem');
+      await tapIn(tester, 'purchase-p-kit', 'Report a Problem');
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'short');
-      await tester.tap(find.text('Send report'));
+      await tester.tap(find.text('Send Report'));
       await tester.pump();
-      expect(find.text('Write at least 10 characters.'), findsOneWidget);
+      expect(find.text('Enter at least 10 characters.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'The file would not open on my phone');
-      await tester.tap(find.text('Send report'));
+      await tester.tap(find.text('Send Report'));
       await settle(tester);
       expect(api.bodyOf('POST /mentor-services/purchases/p-kit/report-issue'), {
         'note': 'The file would not open on my phone',
       });
-      expect(find.text('Sent. ICR will look into it.'), findsOneWidget);
+      expect(find.text('Sent. ICR will review it.'), findsOneWidget);
     });
   });
 
@@ -537,6 +542,8 @@ void main() {
     testWidgets('a programme asked for is withdrawn while it waits on the mentor', (tester) async {
       final (api, _, w) = await pump(tester);
       await tapIn(tester, 'term-t-prog', 'Withdraw');
+      await tester.tap(find.byKey(const ValueKey('withdraw-yes')));
+      await tester.pumpAndSettle();
       expect(api.count('POST /mentor-plans/subscriptions/t-prog/cancel'), 1);
       expect(w.terms.any((t) => t['id'] == 't-prog'), isFalse);
       expect(find.text('Request withdrawn.'), findsOneWidget);
@@ -545,7 +552,7 @@ void main() {
     testWidgets('a running plan shows what is left of it and its buyer may stop it renewing', (tester) async {
       final (api, _, w) = await pump(tester);
       expect(find.text('1 of 2 sessions left · use by 15 Nov'), findsOneWidget);
-      await tapIn(tester, 'term-t-coach', 'Do not renew');
+      await tapIn(tester, 'term-t-coach', 'Do Not Renew');
       expect(api.count('POST /mentor-plans/subscriptions/t-coach/cancel'), 1);
       expect(w.terms.firstWhere((t) => t['id'] == 't-coach')['cancelAtPeriodEnd'], isTrue);
       expect(find.text('It will not renew.'), findsWidgets);
@@ -554,13 +561,15 @@ void main() {
     testWidgets('a cohort application is withdrawn', (tester) async {
       final (api, _, _) = await pump(tester);
       await tapIn(tester, 'enrolment-e-1', 'Withdraw');
+      await tester.tap(find.byKey(const ValueKey('withdraw-yes')));
+      await tester.pumpAndSettle();
       expect(api.count('POST /mentorship/programmes/enrolments/e-1/withdraw'), 1);
       expect(find.text('Application withdrawn.'), findsOneWidget);
     });
 
     testWidgets('a free group seat is given up', (tester) async {
       final (api, _, w) = await pump(tester);
-      await tapIn(tester, 'seat-g-clinic', 'Give up seat');
+      await tapIn(tester, 'seat-g-clinic', 'Give Up Seat');
       expect(api.count('DELETE /mentorship/group-sessions/g-clinic/register'), 1);
       expect(w.seats, isEmpty);
       expect(find.text('You gave up your seat.'), findsOneWidget);

@@ -20,7 +20,13 @@ String serviceLabelOf(Requirement r, CategoryNamer nameOf) {
 
 /// The top of a requirement's page: what it is, its title and where it stands.
 class RequirementHeader extends StatelessWidget {
-  const RequirementHeader({super.key, required this.rfq, required this.nameOf, required this.now, this.showStatus = true});
+  const RequirementHeader({
+    super.key,
+    required this.rfq,
+    required this.nameOf,
+    required this.now,
+    this.showStatus = true,
+  });
 
   final Requirement rfq;
   final CategoryNamer nameOf;
@@ -48,12 +54,16 @@ class RequirementHeader extends StatelessWidget {
               if (showStatus) StatusPill(rfq.status),
               if (rfq.createdAt != null) Text(postedAgo(rfq.createdAt, now), style: RfqText.small),
               if (deadline != null)
-                TonePill('${deadline.label} ${deadline.relative}', tone: urgencyTone(deadline.urgency), icon: LucideIcons.clock),
+                TonePill(
+                  '${deadline.label} ${deadline.relative}',
+                  tone: urgencyTone(deadline.urgency),
+                  icon: LucideIcons.clock,
+                ),
               Text(
-                rfq.isEnquiry ? '${plural(replies, 'reply', 'replies')} so far' : '${plural(replies, 'quote')} so far',
+                rfq.isEnquiry ? plural(replies, 'response') : '${plural(replies, 'quotation')} received',
                 style: RfqText.small,
               ),
-              if (rfq.visibility == RfqVisibility.targeted) const TonePill('Private invite', icon: LucideIcons.lock),
+              if (rfq.visibility == RfqVisibility.targeted) const TonePill('Private Invite', icon: LucideIcons.lock),
             ],
           ),
         ],
@@ -82,10 +92,7 @@ class StageStepper extends StatelessWidget {
     return Row(
       children: [
         for (final (i, s) in RfqStage.values.indexed) ...[
-          if (i > 0)
-            Expanded(
-              child: Container(height: 2, color: i <= index ? AppColors.primary : AppColors.slate200),
-            ),
+          if (i > 0) Expanded(child: Container(height: 2, color: i <= index ? AppColors.primary : AppColors.slate200)),
           Column(
             children: [
               Container(
@@ -99,10 +106,16 @@ class StageStepper extends StatelessWidget {
                 ),
                 child: i < index
                     ? const Icon(LucideIcons.check, size: 12, color: Colors.white)
-                    : Text('${i + 1}', style: RfqText.step.copyWith(color: i <= index ? Colors.white : AppColors.slate500)),
+                    : Text(
+                        '${i + 1}',
+                        style: RfqText.step.copyWith(color: i <= index ? Colors.white : AppColors.slate500),
+                      ),
               ),
               const SizedBox(height: 4),
-              Text(s.label, style: RfqText.small.copyWith(fontSize: 12, color: i == index ? AppColors.primary : AppColors.slate500)),
+              Text(
+                s.label,
+                style: RfqText.small.copyWith(fontSize: 12, color: i == index ? AppColors.primary : AppColors.slate500),
+              ),
             ],
           ),
         ],
@@ -147,28 +160,36 @@ class RequirementBrief extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('At a glance', style: RfqText.section),
+              Text('Requirement Overview', style: RfqText.section),
               const SizedBox(height: 6),
               if (services.isNotEmpty) FactRow(icon: LucideIcons.layoutGrid, label: 'Service', value: services),
-              if (rfq.facilityType != null) FactRow(icon: LucideIcons.building2, label: 'Facility type', value: rfq.facilityType!),
+              if (rfq.facilityType != null)
+                FactRow(icon: LucideIcons.building2, label: 'Facility Type', value: rfq.facilityType!),
               if (places.isNotEmpty)
                 FactRow(
                   icon: LucideIcons.mapPin,
                   label: region.isEmpty ? 'Locations' : 'Locations in $region',
                   value: rfq.serviceLocations.isNotEmpty
-                      ? rfq.serviceLocations.map((p) => [p.label, if (p.hint.isNotEmpty) '(${p.hint})'].join(' ')).join('; ')
+                      ? rfq.serviceLocations
+                            .map((p) => [p.label, if (p.hint.isNotEmpty) '(${p.hint})'].join(' '))
+                            .join('; ')
                       : places.join(', '),
                 ),
-              if (rfq.budget != null) FactRow(icon: LucideIcons.wallet, label: 'Budget', value: formatInr(rfq.budget!)),
+              if (rfq.budget != null)
+                FactRow(icon: LucideIcons.wallet, label: 'Estimated Budget', value: formatInr(rfq.budget!)),
               if (rfq.preQualEndDate != null)
-                FactRow(icon: LucideIcons.hourglass, label: 'Pre-qual closes', value: fullDay(rfq.preQualEndDate!)),
+                FactRow(icon: LucideIcons.hourglass, label: 'Pre-Qual Closes', value: fullDay(rfq.preQualEndDate!)),
               if (rfq.dueDate != null)
                 FactRow(
                   icon: LucideIcons.calendar,
-                  label: rfq.isEnquiry ? 'Replies close' : 'Quotes due',
+                  label: rfq.isEnquiry ? 'Replies Close' : 'Quotes Due',
                   value: fullDay(rfq.dueDate!),
                 ),
-              if (services.isEmpty && rfq.facilityType == null && places.isEmpty && rfq.budget == null && rfq.dueDate == null)
+              if (services.isEmpty &&
+                  rfq.facilityType == null &&
+                  places.isEmpty &&
+                  rfq.budget == null &&
+                  rfq.dueDate == null)
                 Text('No details beyond the description.', style: RfqText.meta),
             ],
           ),
@@ -178,7 +199,7 @@ class RequirementBrief extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(rfq.isEnquiry ? 'What the buyer needs' : 'Scope of work', style: RfqText.section),
+              Text(rfq.isEnquiry ? 'Scope of Requirement' : 'Work Requirements', style: RfqText.section),
               const SizedBox(height: 8),
               Text(text == null ? 'No description given.' : plainText(text), style: RfqText.body),
             ],
@@ -190,7 +211,7 @@ class RequirementBrief extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Line items', style: RfqText.section),
+                Text('Line Items', style: RfqText.section),
                 const SizedBox(height: 6),
                 for (final item in rfq.items)
                   Padding(
@@ -221,7 +242,10 @@ class RequirementBrief extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(rfq.files.length == 1 ? '1 file from the buyer' : '${rfq.files.length} files from the buyer', style: RfqText.section),
+                Text(
+                  rfq.files.length == 1 ? '1 file from the buyer' : '${rfq.files.length} files from the buyer',
+                  style: RfqText.section,
+                ),
                 const SizedBox(height: 6),
                 for (final f in rfq.files)
                   InkWell(
@@ -257,21 +281,30 @@ class RequirementBrief extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Supplier criteria', style: RfqText.section),
+                Text('Supplier Criteria', style: RfqText.section),
                 const SizedBox(height: 2),
                 Text('Suppliers must meet these to pre-qualify.', style: RfqText.small),
                 const SizedBox(height: 6),
                 if (c.minYearsInBusiness != null)
-                  FactRow(icon: LucideIcons.history, label: 'Years in business', value: '${c.minYearsInBusiness}+ years'),
+                  FactRow(
+                    icon: LucideIcons.history,
+                    label: 'Years in Business',
+                    value: '${c.minYearsInBusiness}+ years',
+                  ),
                 if (c.minAnnualTurnover != null)
-                  FactRow(icon: LucideIcons.trendingUp, label: 'Annual turnover', value: 'At least ${formatInr(c.minAnnualTurnover!)}'),
+                  FactRow(
+                    icon: LucideIcons.trendingUp,
+                    label: 'Annual Turnover',
+                    value: 'At least ${formatInr(c.minAnnualTurnover!)}',
+                  ),
                 if (c.minLast3YrTurnover != null)
                   FactRow(
                     icon: LucideIcons.chartColumn,
-                    label: 'Last 3 years',
+                    label: 'Last 3 Years',
                     value: 'At least ${formatInr(c.minLast3YrTurnover!)}',
                   ),
-                if (c.minEmployees != null) FactRow(icon: LucideIcons.users, label: 'Employees', value: sizeLabel(c.minEmployees!)),
+                if (c.minEmployees != null)
+                  FactRow(icon: LucideIcons.users, label: 'Employees', value: sizeLabel(c.minEmployees!)),
                 if (c.requiredPresence != null)
                   FactRow(icon: LucideIcons.globe, label: 'Presence', value: c.requiredPresence!.label),
                 if (c.statutoryCompliance.isNotEmpty)
@@ -290,13 +323,18 @@ class RequirementBrief extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Contact on this requirement', style: RfqText.section),
+                Text('Contact on This Requirement', style: RfqText.section),
                 const SizedBox(height: 2),
-                Text('Suppliers see the company. The person and the numbers are shown only once they have bid, and only on a plan that includes them.', style: RfqText.small),
+                Text(
+                  'Suppliers see the company. The person and the numbers are shown only once they have bid, and only on a plan that includes them.',
+                  style: RfqText.small,
+                ),
                 const SizedBox(height: 6),
-                if (rfq.companyName != null) FactRow(icon: LucideIcons.building, label: 'Company', value: rfq.companyName!),
+                if (rfq.companyName != null)
+                  FactRow(icon: LucideIcons.building, label: 'Company', value: rfq.companyName!),
                 if (rfq.contactName != null) FactRow(icon: LucideIcons.user, label: 'Contact', value: rfq.contactName!),
-                if (rfq.contactPhone != null) FactRow(icon: LucideIcons.phone, label: 'Phone', value: rfq.contactPhone!),
+                if (rfq.contactPhone != null)
+                  FactRow(icon: LucideIcons.phone, label: 'Phone', value: rfq.contactPhone!),
                 if (rfq.contactEmail != null) FactRow(icon: LucideIcons.mail, label: 'Email', value: rfq.contactEmail!),
               ],
             ),
@@ -327,7 +365,12 @@ class BuyerLine extends StatelessWidget {
               Row(
                 children: [
                   Flexible(
-                    child: Text(buyer.displayName, style: RfqText.metaStrong, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      buyer.displayName,
+                      style: RfqText.metaStrong,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   if (buyer.verified) ...[
                     const SizedBox(width: 4),
@@ -336,7 +379,7 @@ class BuyerLine extends StatelessWidget {
                 ],
               ),
               Text(
-                [if (buyer.verified) 'Verified buyer' else 'Buyer', if (buyer.gstVerified) 'GST on file'].join(' • '),
+                [if (buyer.verified) 'Verified Buyer' else 'Buyer', if (buyer.gstVerified) 'GST on file'].join(' • '),
                 style: RfqText.small,
               ),
             ],

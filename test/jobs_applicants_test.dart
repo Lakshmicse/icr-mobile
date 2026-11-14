@@ -110,7 +110,7 @@ void main() {
       await openPipeline(tester);
       expect(find.text('All 6'), findsOneWidget);
       expect(find.text('Applied 2'), findsOneWidget);
-      expect(find.text('In review 1'), findsOneWidget);
+      expect(find.text('In Review 1'), findsOneWidget);
       expect(find.text('Interview 1'), findsOneWidget);
       expect(find.text('Offer 1'), findsOneWidget);
       // The tabs run sideways: at the app's 13 sp label size the last ones are past the edge until it is dragged.
@@ -119,7 +119,7 @@ void main() {
       expect(find.text('Hired 0'), findsOneWidget);
       await tester.drag(find.text('Hired 0'), const Offset(-400, 0));
       await tester.pumpAndSettle();
-      expect(find.text('Not selected 1'), findsOneWidget);
+      expect(find.text('Not Selected 1'), findsOneWidget);
     });
 
     testWidgets('a row says who they are, how well they match, and where they stand', (tester) async {
@@ -129,12 +129,12 @@ void main() {
       expect(
         find.descendant(
           of: aarav,
-          matching: find.text('Facilities Manager - healthcare campuses • Apollo Hospitals • 11 yrs'),
+          matching: find.text('Facilities Manager - healthcare campuses • Apollo Hospitals • 11 years'),
         ),
         findsOneWidget,
       );
       expect(find.descendant(of: aarav, matching: find.text('Applied')), findsOneWidget);
-      expect(find.descendant(of: aarav, matching: find.text('82% match')), findsOneWidget);
+      expect(find.descendant(of: aarav, matching: find.text('82% Match')), findsOneWidget);
       expect(find.descendant(of: aarav, matching: find.text('Applied 24 Oct')), findsOneWidget);
       expect(find.byKey(_k('unviewed-app-aarav')), findsOneWidget, reason: 'nobody on the team has opened it');
       expect(find.byKey(_k('unviewed-app-divya')), findsNothing);
@@ -156,8 +156,8 @@ void main() {
 
       await tapKey(tester, 'stage-HIRED');
       expect(find.byKey(_k('applicants-empty')), findsOneWidget);
-      expect(find.text('No one matches'), findsOneWidget);
-      await tester.tap(find.text('Show everyone'));
+      expect(find.text('No Matching Applicants'), findsOneWidget);
+      await tester.tap(find.text('Show All Applicants'));
       await tester.pumpAndSettle();
       expect(repo.applicantQueries.last.stage, isNull);
       expect(find.byKey(_k('applicant-app-aarav')), findsOneWidget);
@@ -174,10 +174,10 @@ void main() {
       final (repo, _, _) = await openPipeline(tester);
       await tester.tap(find.byKey(_k('applicants-sort')));
       await tester.pumpAndSettle();
-      for (final label in ['Most recent', 'Best match', 'Most qualified']) {
+      for (final label in ['Most Recent', 'Best Match', 'Most Qualified']) {
         expect(find.text(label), findsWidgets, reason: label);
       }
-      await tester.tap(find.text('Best match').last);
+      await tester.tap(find.text('Best Match').last);
       await tester.pumpAndSettle();
       expect(repo.applicantQueries.last.sort, 'match');
       final tops = [
@@ -191,17 +191,17 @@ void main() {
       final (repo, _, _) = await openPipeline(tester);
       await tester.tap(find.byKey(_k('applicants-rating')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('4 stars and up'));
+      await tester.tap(find.text('4 Stars and Up'));
       await tester.pumpAndSettle();
       expect(repo.applicantQueries.last.minRating, 4);
       expect(find.byKey(_k('applicant-app-nisha')), findsOneWidget);
       expect(find.byKey(_k('applicant-app-harsh')), findsNothing);
       expect(find.byKey(_k('applicant-app-aarav')), findsNothing);
-      expect(find.text('4+ stars'), findsOneWidget);
+      expect(find.text('4+ Stars'), findsOneWidget);
 
       await tester.tap(find.byKey(_k('applicants-rating')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Any rating'));
+      await tester.tap(find.text('Any Rating'));
       await tester.pumpAndSettle();
       expect(repo.applicantQueries.last.minRating, isNull);
       expect(find.byKey(_k('applicant-app-aarav')), findsOneWidget);
@@ -229,7 +229,7 @@ void main() {
       expect(find.byKey(_k('applicants-error')), findsOneWidget);
       expect(find.text('We could not reach ICR.'), findsOneWidget);
       repo.failures.remove('applicants');
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byKey(_k('applicants-error')), findsNothing);
       expect(find.byKey(_k('applicant-app-aarav')), findsOneWidget);
@@ -252,50 +252,50 @@ void main() {
     testWidgets('the menu offers only the moves the API allows from their stage', (tester) async {
       await openPipeline(tester);
       await menu(tester, 'app-aarav');
-      expect(find.text('Move to review'), findsOneWidget);
-      expect(find.text('Move to interview'), findsOneWidget);
+      expect(find.text('Move to Review'), findsOneWidget);
+      expect(find.text('Move to Interview'), findsOneWidget);
       expect(find.text('Reject'), findsOneWidget);
-      expect(find.text('Move to offer'), findsNothing);
+      expect(find.text('Move to Offer'), findsNothing);
       await tester.tapAt(const Offset(5, 5));
       await tester.pumpAndSettle();
 
       await menu(tester, 'app-sanjana');
-      expect(find.text('Move to offer'), findsOneWidget);
+      expect(find.text('Move to Offer'), findsOneWidget);
       expect(find.text('Reject'), findsOneWidget);
-      expect(find.text('Move to review'), findsNothing);
+      expect(find.text('Move to Review'), findsNothing);
       await tester.tapAt(const Offset(5, 5));
       await tester.pumpAndSettle();
 
       await menu(tester, 'app-ishita');
-      expect(find.text('Mark as hired'), findsOneWidget);
+      expect(find.text('Mark as Hired'), findsOneWidget);
       await tester.tapAt(const Offset(5, 5));
       await tester.pumpAndSettle();
 
       await menu(tester, 'app-harsh');
-      expect(find.text('Move to review'), findsOneWidget);
-      expect(find.text('Move to interview'), findsOneWidget);
+      expect(find.text('Move to Review'), findsOneWidget);
+      expect(find.text('Move to Interview'), findsOneWidget);
       expect(find.text('Reject'), findsNothing, reason: 'already not selected');
     });
 
     testWidgets('a move shows at once, the counts follow, and the API is told', (tester) async {
       final (repo, _, _) = await openPipeline(tester);
       await menu(tester, 'app-aarav');
-      await tester.tap(find.text('Move to review'));
+      await tester.tap(find.text('Move to Review'));
       await tester.pumpAndSettle();
       expect(repo.moves.single, (id: 'app-aarav', stage: 'SCREENING', note: null));
       expect(
-        find.descendant(of: find.byKey(_k('applicant-app-aarav')), matching: find.text('In review')),
+        find.descendant(of: find.byKey(_k('applicant-app-aarav')), matching: find.text('In Review')),
         findsOneWidget,
       );
       expect(find.text('Aarav Khanna moved to in review.'), findsOneWidget);
       expect(find.text('Applied 1'), findsOneWidget);
-      expect(find.text('In review 2'), findsOneWidget);
+      expect(find.text('In Review 2'), findsOneWidget);
     });
 
     testWidgets('on a stage tab, a moved applicant leaves the tab', (tester) async {
       final (repo, _, _) = await openPipeline(tester, stage: 'APPLIED');
       await menu(tester, 'app-aarav');
-      await tester.tap(find.text('Move to interview'));
+      await tester.tap(find.text('Move to Interview'));
       await tester.pumpAndSettle();
       expect(repo.moves.single.stage, 'INTERVIEW');
       expect(find.byKey(_k('applicant-app-aarav')), findsNothing);
@@ -308,7 +308,7 @@ void main() {
       await tester.tap(find.text('Reject'));
       await tester.pumpAndSettle();
       expect(find.byKey(_k('stage-note-dialog')), findsOneWidget);
-      expect(find.text('Not selecting Aarav Khanna?'), findsOneWidget);
+      expect(find.text('Reject Aarav Khanna?'), findsOneWidget);
       await tester.tap(find.byKey(_k('stage-note-cancel')));
       await tester.pumpAndSettle();
       expect(repo.moves, isEmpty);
@@ -321,7 +321,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(repo.moves.single, (id: 'app-aarav', stage: 'REJECTED', note: 'Not enough audit experience'));
       expect(
-        find.descendant(of: find.byKey(_k('applicant-app-aarav')), matching: find.text('Not selected')),
+        find.descendant(of: find.byKey(_k('applicant-app-aarav')), matching: find.text('Not Selected')),
         findsOneWidget,
       );
     });
@@ -330,7 +330,7 @@ void main() {
       final repo = SpyHiring()..failures['moveStage'] = ApiError('That move is not allowed from here.');
       await openPipeline(tester, repo: repo);
       await menu(tester, 'app-aarav');
-      await tester.tap(find.text('Move to review'));
+      await tester.tap(find.text('Move to Review'));
       await tester.pumpAndSettle();
       expect(find.text('That move is not allowed from here.'), findsOneWidget);
       expect(
@@ -374,7 +374,7 @@ void main() {
       await tester.tap(find.byIcon(Symbols.arrow_back));
       await tester.pumpAndSettle();
       expect(
-        find.descendant(of: find.byKey(_k('applicant-app-aarav')), matching: find.text('In review')),
+        find.descendant(of: find.byKey(_k('applicant-app-aarav')), matching: find.text('In Review')),
         findsOneWidget,
       );
     });
@@ -383,12 +383,12 @@ void main() {
       await openDetail(tester, 'app-aarav');
       expect(find.byKey(_k('detail-name')), findsOneWidget);
       expect(find.text('Facilities Manager - healthcare campuses'), findsOneWidget);
-      expect(find.text('Apollo Hospitals • Ahmedabad • 11 yrs experience'), findsOneWidget);
+      expect(find.text('Apollo Hospitals • Ahmedabad • 11 years of experience'), findsOneWidget);
       expect(find.text('HVAC Chillers'), findsOneWidget);
       expect(find.text('Statutory Audits'), findsOneWidget);
       expect(find.text('Applied 24 Oct 2026'), findsOneWidget);
       expect(find.descendant(of: find.byKey(_k('detail-stage')), matching: find.text('Applied')), findsOneWidget);
-      expect(find.text('82% match'), findsOneWidget);
+      expect(find.text('82% Match'), findsOneWidget);
       expect(find.text('I have run three healthcare campuses for eleven years.'), findsOneWidget);
       expect(find.byKey(_k('detail-email')), findsOneWidget);
     });
@@ -417,8 +417,8 @@ void main() {
       expect(find.text('No'), findsOneWidget);
       expect(find.text('Close to home.'), findsOneWidget);
       expect(find.text('Day, Night'), findsOneWidget);
-      expect(find.text('Misses a must-have'), findsOneWidget);
-      expect(find.text('Below your bar'), findsOneWidget);
+      expect(find.text('Does not meet a must-have'), findsOneWidget);
+      expect(find.text('Does not meet your preferred answer'), findsOneWidget);
       expect(find.byIcon(LucideIcons.circleCheck), findsOneWidget);
       expect(find.byIcon(LucideIcons.circleX), findsNWidgets(2));
       expect(find.byIcon(LucideIcons.circleHelp), findsNWidgets(2), reason: 'not graded: no bar to mark against');
@@ -478,7 +478,7 @@ void main() {
       expect(find.byKey(_k('detail-error')), findsOneWidget);
       expect(find.text('We could not reach ICR.'), findsOneWidget);
       repo.failures.remove('applicant');
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byKey(_k('detail-error')), findsNothing);
       expect(find.byKey(_k('section-answers')), findsOneWidget);
@@ -511,7 +511,7 @@ void main() {
       expect(action('detail-schedule'), findsOneWidget);
     });
 
-    testWidgets('one with an offer out has "Mark as hired" and no second offer', (tester) async {
+    testWidgets('one with an offer out has "Mark as Hired" and no second offer', (tester) async {
       await openDetail(tester, 'app-ishita');
       expect(action('detail-move-HIRED'), findsOneWidget);
       expect(action('detail-offer'), findsNothing);
@@ -533,7 +533,7 @@ void main() {
       final (repo, _, _, changes) = await openDetail(tester, 'app-aarav');
       await tapKey(tester, 'detail-move-SCREENING');
       expect(repo.moves.single, (id: 'app-aarav', stage: 'SCREENING', note: null));
-      expect(find.descendant(of: find.byKey(_k('detail-stage')), matching: find.text('In review')), findsOneWidget);
+      expect(find.descendant(of: find.byKey(_k('detail-stage')), matching: find.text('In Review')), findsOneWidget);
       expect(find.text('Moved from applied to in review'), findsOneWidget);
       expect(find.text('Aarav Khanna moved to in review.'), findsOneWidget);
       expect(action('detail-offer'), findsOneWidget, reason: 'in review: an offer is possible');
@@ -553,7 +553,7 @@ void main() {
       await tester.tap(find.byKey(_k('stage-note-confirm')));
       await tester.pumpAndSettle();
       expect(repo.moves.single, (id: 'app-aarav', stage: 'REJECTED', note: 'Not a fit'));
-      expect(find.descendant(of: find.byKey(_k('detail-stage')), matching: find.text('Not selected')), findsOneWidget);
+      expect(find.descendant(of: find.byKey(_k('detail-stage')), matching: find.text('Not Selected')), findsOneWidget);
       expect(action('detail-reject'), findsNothing);
       expect(find.text('Moved from applied to not selected: Not a fit'), findsOneWidget);
     });
@@ -602,7 +602,7 @@ void main() {
     testWidgets('an empty note with no stars is refused in the form', (tester) async {
       final (repo, _, _, _) = await openDetail(tester, 'app-aarav');
       await tapKey(tester, 'note-save');
-      expect(find.text('Write a note or give a rating.'), findsOneWidget);
+      expect(find.text('Add a note or a rating.'), findsOneWidget);
       expect(repo.notes, isEmpty);
     });
 
@@ -657,17 +657,17 @@ void main() {
     testWidgets('the sheet starts with the booker on the panel and the team to choose from', (tester) async {
       await openDetail(tester, 'app-aarav');
       await tapKey(tester, 'detail-schedule');
-      expect(find.text('Schedule an interview'), findsOneWidget);
+      expect(find.text('Schedule an Interview'), findsOneWidget);
       expect(tester.widget<CheckboxListTile>(find.byKey(_k('panel-me'))).value, isTrue);
       expect(tester.widget<CheckboxListTile>(find.byKey(_k('panel-meera'))).value, isFalse);
-      expect(find.text('Company admin'), findsOneWidget);
+      expect(find.text('Company Admin'), findsOneWidget);
     });
 
     testWidgets('booking needs a date, a future time, a panel, and an address for an in-person round', (tester) async {
       final (repo, _, _, _) = await openDetail(tester, 'app-aarav');
       await tapKey(tester, 'detail-schedule');
       await tapKey(tester, 'interview-save');
-      expect(find.text('Pick a date and time.'), findsOneWidget);
+      expect(find.text('Select a date and time.'), findsOneWidget);
 
       await pickDateAndTime(tester);
       expect(find.text('Tue 27 Oct'), findsOneWidget);
@@ -676,14 +676,14 @@ void main() {
       await tester.tap(find.byKey(_k('panel-me')));
       await tester.pump();
       await tapKey(tester, 'interview-save');
-      expect(find.text('Choose at least one person for the panel.'), findsOneWidget);
+      expect(find.text('Select at least one panel member.'), findsOneWidget);
       await tester.tap(find.byKey(_k('panel-meera')));
       await tester.pump();
 
       await tester.tap(find.byKey(_k('interview-mode-IN_PERSON')));
       await tester.pump();
       await tapKey(tester, 'interview-save');
-      expect(find.text('Give the address for an in-person interview.'), findsOneWidget);
+      expect(find.text('Enter the address for an in-person interview.'), findsOneWidget);
 
       await tester.enterText(find.byKey(_k('interview-map')), 'maps');
       await tester.enterText(find.byKey(_k('interview-location')), 'Floor 3, Northwind House');
@@ -715,10 +715,10 @@ void main() {
       expect(booked.draft.notes, 'Probe the audit answers');
       expect(booked.draft.interviewerIds, containsAll(['me', 'meera']));
 
-      expect(find.text('Schedule an interview'), findsNothing, reason: 'the sheet closed');
+      expect(find.text('Schedule an Interview'), findsNothing, reason: 'the sheet closed');
       expect(find.byKey(_k('interview-iv-100')), findsOneWidget);
       expect(find.text('Technical round'), findsOneWidget);
-      expect(find.text('Tue 27 Oct, 10:00 AM • 45 min • Video call'), findsOneWidget);
+      expect(find.text('Tue 27 Oct, 10:00 AM • 45 min • Video Call'), findsOneWidget);
       expect(find.text('Scheduled'), findsOneWidget);
     });
 
@@ -734,7 +734,7 @@ void main() {
       repo.failures.remove('scheduleInterview');
       await tapKey(tester, 'interview-save');
       expect(repo.booked, hasLength(1));
-      expect(find.text('Schedule an interview'), findsNothing);
+      expect(find.text('Schedule an Interview'), findsNothing);
     });
 
     testWidgets('a round is moved to a new time from its card', (tester) async {
@@ -853,7 +853,7 @@ void main() {
     testWidgets('an offer needs a salary, and goes out with the terms typed', (tester) async {
       final (repo, _, _, _) = await openDetail(tester, 'app-sanjana');
       await tapKey(tester, 'detail-offer');
-      expect(find.text('Make an offer'), findsWidgets);
+      expect(find.text('Make an Offer'), findsWidgets);
       await tapKey(tester, 'offer-send');
       expect(find.text('Enter the salary you are offering.'), findsOneWidget);
       expect(repo.offered, isEmpty);
@@ -890,7 +890,7 @@ void main() {
       await tapKey(tester, 'detail-offer');
       await tester.enterText(find.byKey(_k('offer-amount')), '1850000');
       await tapKey(tester, 'offer-send');
-      expect(find.text('Make an offer'), findsNothing, reason: 'the sheet closed');
+      expect(find.text('Make an Offer'), findsNothing, reason: 'the sheet closed');
       expect(find.descendant(of: find.byKey(_k('detail-stage')), matching: find.text('Offer')), findsOneWidget);
       expect(find.text('₹18,50,000 / yr'), findsOneWidget);
       expect(find.text('Sent'), findsOneWidget);
@@ -923,7 +923,7 @@ void main() {
       await tapKey(tester, 'offer-draft');
 
       await tapKey(tester, 'offer-edit-offer-100');
-      expect(find.text('Change the offer'), findsOneWidget);
+      expect(find.text('Change the Offer'), findsOneWidget);
       expect(tester.widget<TextField>(find.byKey(_k('offer-amount'))).controller!.text, '1850000');
       await tester.enterText(find.byKey(_k('offer-amount')), '1900000');
       await tapKey(tester, 'offer-draft');
@@ -934,7 +934,7 @@ void main() {
     testWidgets('a sent offer can be changed but not sent again', (tester) async {
       final (repo, _, _, _) = await openDetail(tester, 'app-ishita');
       await tapKey(tester, 'offer-edit-offer-app-ishita');
-      expect(find.text('Change the offer'), findsOneWidget);
+      expect(find.text('Change the Offer'), findsOneWidget);
       expect(find.byKey(_k('offer-send')), findsNothing);
       expect(find.byKey(_k('offer-draft')), findsNothing);
       await tester.enterText(find.byKey(_k('offer-amount')), '2200000');
@@ -951,7 +951,7 @@ void main() {
       await tester.enterText(find.byKey(_k('offer-amount')), '1850000');
       await tapKey(tester, 'offer-send');
       expect(find.text('This application already has an active offer.'), findsOneWidget);
-      expect(find.text('Make an offer'), findsWidgets);
+      expect(find.text('Make an Offer'), findsWidgets);
     });
 
     testWidgets('the joining and reply-by dates can be taken off again', (tester) async {

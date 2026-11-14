@@ -35,7 +35,7 @@ class _LegalPageScreenState extends State<LegalPageScreen> {
           onBack: widget.onBack,
           child: snapshot.hasError
               ? SiteError(
-                  message: "This page couldn't be read.",
+                  message: 'Unable to load this page.',
                   onRetry: () => setState(() {
                     _page = (widget.load ?? loadLegalPage)(widget.page);
                   }),

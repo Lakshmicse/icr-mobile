@@ -181,14 +181,14 @@ class _ServiceFormState extends State<ServiceForm> {
   Widget build(BuildContext context) {
     final editing = widget.existing != null;
     return MentoringForm(
-      title: editing ? 'Edit ${_kind.label.toLowerCase()}' : 'Add a ${_kind.label.toLowerCase()}',
+      title: editing ? 'Edit ${_kind.label}' : 'Add a ${_kind.label}',
       subtitle: switch (_kind) {
         ServiceKind.oneOnOne =>
-          'Members ask for a time; you set it. A free session is booked at once, a paid one when they pay.',
+          'Members ask for a time and you set it. A free session is booked immediately, a paid one when they pay.',
         ServiceKind.resource =>
-          'A file members download: a guide, a template, a checklist. Free works as a lead magnet.',
+          'A file members download, such as a guide, a template or a checklist. A free resource helps attract members.',
         ServiceKind.groupSeat => 'An older listing for a seat. New seats are sold from the group session itself.',
-        ServiceKind.query => 'Written consultations are no longer sold. You can switch this one off or delete it.',
+        ServiceKind.query => 'Written consultations are no longer sold. You can turn this one off or delete it.',
       },
       submitLabel: editing ? 'Save' : 'Add',
       busy: _busy,
@@ -206,7 +206,7 @@ class _ServiceFormState extends State<ServiceForm> {
           ),
         ),
         FieldBlock(
-          label: 'Description (optional)',
+          label: 'Description (Optional)',
           child: TextField(
             key: const ValueKey('offering-blurb'),
             controller: _blurb,
@@ -219,7 +219,7 @@ class _ServiceFormState extends State<ServiceForm> {
         ),
         if (_isCall || _isSeat)
           FieldBlock(
-            label: 'Length (minutes, $minSessionMinutes to $maxSessionMinutes)',
+            label: 'Duration (Minutes)',
             child: TextField(
               key: const ValueKey('offering-minutes'),
               controller: _minutes,
@@ -239,30 +239,25 @@ class _ServiceFormState extends State<ServiceForm> {
               decoration: fieldDecoration('12'),
             ),
           ),
-        PriceBlock(
-          free: _free,
-          onFree: (v) => setState(() => _free = v),
-          price: _price,
-          compareAt: _compare,
-          priceHelp: 'Charged services start at ₹499 and go up to ₹50,000. Free is always allowed.',
-        ),
+        // No price criteria under the field (owner, 7 Nov 2026); the API's own answer shows if it refuses a price.
+        PriceBlock(free: _free, onFree: (v) => setState(() => _free = v), price: _price, compareAt: _compare),
         if (_isResource)
           FileRow(
-            label: 'The file',
+            label: 'File',
             pickKey: 'offering-file',
             name: _fileName,
             size: _fileSize,
             busy: _uploading,
-            help: 'A PDF or an image, up to 10 MB. It is needed before the resource can be live.',
+            help: 'A PDF or an image, up to 10 MB. It is required before the resource can go live.',
             onPick: _pickFile,
           ),
         if (!_isSeat)
           FileRow(
-            label: 'Cover image (optional)',
+            label: 'Cover Image (Optional)',
             pickKey: 'offering-cover',
             name: _cover == null ? null : (_coverName ?? 'Current cover'),
             busy: _uploading,
-            pickLabel: _cover == null ? 'Choose an image' : 'Replace the image',
+            pickLabel: _cover == null ? 'Choose an Image' : 'Replace Image',
             onPick: _pickCover,
             onClear: () => setState(() {
               _cover = null;
@@ -270,14 +265,8 @@ class _ServiceFormState extends State<ServiceForm> {
               _coverChanged = true;
             }),
           ),
-        SwitchListTile.adaptive(
-          key: const ValueKey('offering-active'),
-          contentPadding: EdgeInsets.zero,
-          value: _active,
-          onChanged: (v) => setState(() => _active = v),
-          title: Text('Live on your storefront', style: MentoringText.formLabel),
-          subtitle: Text('Members see only what is live. Switch it off to pause it.', style: MentoringText.meta),
-        ),
+        // No "Live on your storefront" switch (owner, 7 Nov 2026): a new listing goes live, and Pause / Resume on
+        // the list is where it is paused once posted.
       ],
     );
   }

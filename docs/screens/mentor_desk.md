@@ -78,3 +78,103 @@ W = widget test, L = live test. Every tab has loading, error with "Try again", e
 * Late answers to written consultations are not handled: the API retired that service type.
 
 **6 Nov 2026 (owner).** The Overview's six figures are one `StatStrip` of plain figures in two rows of three with a hairline under — no grey tiles (`StatTile`/`StatStrip` in `mentorship_my/widgets`, shared with the People tabs' strips): "these designs should not have the background colour and efficiently use the space".
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client asked for the on-screen text to be refined "crisp, for global standard", in the style of the wording they marked up for sign-in and Settings. Wording only: no layout, colour or behaviour changed. Names of things a person taps or reads as a label are in Title Case; sentences are in sentence case with a full stop; no dash is used as punctuation; "pick" and "tick" read "select", "is told" reads "is notified", "show up / land here" reads "will appear here", and a load that fails reads "Unable to Load …". The title of an empty state or an error block is a heading (Title Case, no full stop: "No Purchases Yet", "Unable to Load Mentors"); the line under it is a sentence. The retry button reads **Try Again**.
+
+* Left as they are: the tab names (single words), the checklist lines that already start with a verb ("Add a profile photo"), example hints, counts ("3 requests to answer"), and fallback names ("A member", "A buyer").
+
+| Old | New |
+| --- | --- |
+| Pick a time first. | Select a time first. |
+| Pick a time in the future. | Select a time in the future. |
+| Nothing free is suggested. Pick any time below. | No free times are suggested. Select any time below. |
+| Free on your calendar, in your hours. A star is a time they said suits them. | Free on your calendar, within your hours. A star marks a time they prefer. |
+| See all free times | View All Free Times |
+| Hide the full list | Hide Full List |
+| Your weekly hours do not bind it: any future time you pick is yours to set. A clash with another session does. | Your weekly hours do not limit this. Select any future time that does not clash with another session. |
+| Pick a day and time | Select a Day and Time |
+| It is booked on both calendars at once. | It is booked on both calendars immediately. |
+| It is booked once they accept it and pay; nothing is charged before. | It is booked once they accept it and pay. Nothing is charged before that. |
+| is asked; the call stays as it is until they accept. | is asked. The call stays as booked until they accept. |
+| When? / Free times in your hours | Date and Time / Free Times in Your Hours |
+| A note for {name} (optional) | Note for {name} (Optional) |
+| is told when it changes. Leave it empty to use your standing link. | is notified when it changes. Leave it empty to use your standing link. |
+| Couldn't load your desk | Unable to Load Your Desk |
+| Your profile is paused: it is out of the directory and takes no new requests. | Your profile is paused. It is hidden from the directory and takes no new requests. |
+| You keep serving the mentees you have. | You continue with your current mentees. |
+| Nothing is waiting on you. | Nothing needs your attention. |
+| Lately | Recent Activity |
+| Switched on. | Turned on. |
+| Switched off: nobody new can find you. Current mentees are not affected. | Turned off. New members cannot find you. Current mentees are not affected. |
+| State your years of experience | Add your years of experience |
+| Say when you are free | Add your availability |
+| Nothing is missing. | Your profile is complete. |
+| Finish my profile | Complete My Profile |
+| Couldn't load your mentees | Unable to Load Your Mentees |
+| You keep what is left after ICR's fee. ICR pays out by bank transfer and records the reference here. | You receive the amount left after ICR's fee. ICR pays by bank transfer and records the reference here. |
+| Nothing on this page can be changed from the app. | This page cannot be edited in the app. |
+| Paid sessions, resources, programmes and plans show up here as they are sold. | Paid sessions, resources, programmes and plans will appear here as they are sold. |
+| Couldn't load your earnings | Unable to Load Your Earnings |
+| On what you sell | On Your Offerings |
+| Couldn't load your reviews | Unable to Load Your Reviews |
+| Nothing is waiting on you | Nothing Needs Your Attention |
+| Mentoring requests, session requests and programme requests land here. | Mentoring requests, session requests and programme requests will appear here. |
+| Sessions asked for | Session Requests |
+| Waiting on the mentee | Waiting for the Mentee |
+| Accepted, waiting for payment | Accepted, Awaiting Payment |
+| They pay on the website; the mentorship starts when they do. | They pay on the website. The mentorship starts when they pay. |
+| Answered lately | Recently Answered |
+| Couldn't load your requests | Unable to Load Your Requests |
+| Waiting on you | Awaiting Your Reply |
+| Suits them: {…} | Preferred times: {…} |
+| Booked. {…} has been told. | Booked. {…} has been notified. |
+| Why | Reason |
+| Send decline | Decline Request |
+| The request is cancelled and {…} is told. | The request is cancelled and {…} is notified. |
+| The hour you held is free again, and they can ask again. | The time you held is free again, and they can ask again. |
+| Accepting promises your time; they are charged only when they pay. | Accepting commits your time. They are charged only when they pay. |
+| They read your reason as written. A kind line helps: they may look at another offer of yours. | They read your reason as written. A kind note helps, as they may consider another of your offerings. |
+| Members book calls with you inside these windows, in {…}. | Members book calls with you within these windows, in {…}. |
+| Your phone may be in another timezone: the times here are yours, as you set them. | Your phone may be in another time zone. The times here are shown as you set them. |
+| No hours set. Without them members can still ask you for a time, and you pick it. | No hours set. Members can still ask you for a time, and you select it. |
+| Couldn't load your hours | Unable to Load Your Hours |
+| Pick at least one day. | Select at least one day. |
+| The hours you take calls, on the days you pick. | The hours you take calls, on the days you select. |
+| Pick at least one way you meet. | Select at least one meeting mode. |
+| Give your timezone, for example Asia/Kolkata. | Enter your time zone, for example Asia/Kolkata. |
+| Your bio is too long: keep it under {maxBio} characters. | Your bio is too long. Keep it under {maxBio} characters. |
+| How you meet | Meeting Modes |
+| How often you usually meet | Usual Meeting Frequency |
+| Your timezone | Your Time Zone |
+| Your weekly hours are read in it. | Your weekly hours use this time zone. |
+| Used for sessions where you set no link of your own. Leave it empty to clear it. | Used for sessions that have no link of their own. Leave it empty to clear it. |
+| A note on your availability | Availability Note |
+| Couldn't load your settings | Unable to Load Your Settings |
+| No paid work right now | No Paid Work at Present |
+| Calls, programmes and plans people buy from you show up here. | Calls, programmes and plans people buy from you will appear here. |
+| Needs you | Action Needed |
+| Calls ahead | Upcoming Calls |
+| Waiting on others | Waiting for Others |
+| Programmes and plans running | Active Programmes and Plans |
+| Couldn't load your paid work | Unable to Load Your Paid Work |
+| ICR settles an unclosed call as held a day after it ends. Confirm it, or cancel if it did not happen. | ICR marks an unconfirmed call as held one day after it ends. Confirm it, or cancel it if it did not take place. |
+| Mark held | Mark as Held |
+| {…} is told, with your reason. | {…} is notified, with your reason. |
+| Asks to move | Move Requested |
+| They ask for: {…} | Requested: {…} |
+| New time asked | New Time Requested |
+| Withdraw the offer | Withdraw Offer |
+| ; they accept and pay. | . They accept and pay. |
+| The call is done; the buyer has not paid yet. | The call is complete. The buyer has not paid yet. |
+| You're not a mentor yet | You Are Not a Mentor Yet |
+| Build a mentor profile and, once ICR approves it, this is where you run your mentoring: requests, mentees, calendar, hours and earnings. | Create a mentor profile. Once ICR approves it, you manage your mentoring here: requests, mentees, calendar, hours and earnings. |
+| ICR is reading your mentor profile. The desk opens when it is approved. | ICR is reviewing your mentor profile. The desk opens when it is approved. |
+| See my application | View My Application |
+| You can change your profile and send it again. | You can update your profile and submit it again. |
+| Change my application | Update My Application |
+| Finish your application | Complete Your Application |
+| Your mentor profile is a draft. Complete it and send it to ICR; the desk opens once it is approved. | Your mentor profile is a draft. Complete it and submit it to ICR. The desk opens once it is approved. |
+| Continue your application | Continue Application |
+| Buttons, headings, tabs, chips, field labels and status names to Title Case: 58 strings | e.g. "Accept and book" → "Accept and Book"; "Suggested times" → "Suggested Times"; "Or choose another time" → "Or Choose Another Time" |

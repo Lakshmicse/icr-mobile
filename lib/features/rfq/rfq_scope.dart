@@ -137,7 +137,7 @@ class RfqScaffold extends StatelessWidget {
           bottom: bottomBar == null,
           child: Stack(
             children: [
-              Positioned.fill(top: TitleBar.height, child: body),
+              Positioned.fill(top: TitleBar.reserved(context), child: body),
               Positioned(
                 top: 0,
                 left: 0,

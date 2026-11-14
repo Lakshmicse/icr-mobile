@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
 import '../../core/util/links.dart';
+import '../../core/util/screen_trail.dart';
 import '../../core/widgets/workspace_embed.dart';
 import 'workspaces.dart';
 
@@ -80,6 +81,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   Widget build(BuildContext context) {
     _pages.putIfAbsent(_index, () => _page(_index));
     final items = widget.section.items;
+    // The page on screen, so the app comes back to it after Android ends it (`ScreenTrail`).
+    return SitePlace(path: items[_index].path, child: _frame(items));
+  }
+
+  Widget _frame(List<WorkspaceItem> items) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent),
       child: Scaffold(
@@ -226,7 +232,7 @@ class _WebsitePage extends StatelessWidget {
             FilledButton(
               key: ValueKey('workspace-open-${item.path}'),
               onPressed: () => openSitePage(context, item.path),
-              child: Text('Open ${item.label.toLowerCase()}'),
+              child: Text('Open ${item.label}'),
             ),
           ],
         ),

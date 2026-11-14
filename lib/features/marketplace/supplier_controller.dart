@@ -10,7 +10,7 @@ import 'marketplace_repository.dart';
 /// The tabs of a supplier's profile.
 enum SupplierTab {
   overview('Overview'),
-  catalog('Products & services'),
+  catalog('Products & Services'),
   proofs('Compliances & Proofs');
 
   const SupplierTab(this.label);

@@ -21,6 +21,7 @@ class Composer extends StatelessWidget {
     this.onAttach,
     this.onShareRecord,
     this.onMeet,
+    this.onShareLocation,
     this.onEmoji,
     this.asCompany,
     this.draftSaved = false,
@@ -39,6 +40,9 @@ class Composer extends StatelessWidget {
 
   /// The "Meet" pill: the thread's own session record. Null when the thread has none: no pill is drawn.
   final VoidCallback? onMeet;
+
+  /// The "Location" pill: sends where the phone is, as a map link (owner, 9 Nov 2026). Null draws none.
+  final VoidCallback? onShareLocation;
   final VoidCallback? onEmoji;
 
   /// The company the person answers as, when they read the thread from its inbox.
@@ -78,74 +82,90 @@ class Composer extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
               child: Row(
                 children: [
-                  if (onAttach != null) ...[
-                    IconButton(
-                      key: const ValueKey('attach'),
-                      tooltip: 'Attach a file',
-                      onPressed: c.uploading ? null : onAttach,
-                      icon: const Icon(LucideIcons.paperclip, size: 18),
-                      style: _circle,
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  if (onShareRecord != null) ...[
-                    _Pill(
-                      key: const ValueKey('share-record'),
-                      icon: LucideIcons.indianRupee,
-                      label: 'RFQ',
-                      hint: 'Share an ICR record',
-                      onTap: onShareRecord!,
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  if (onMeet != null) ...[
-                    _Pill(
-                      key: const ValueKey('meet'),
-                      icon: LucideIcons.calendarClock,
-                      label: 'Meet',
-                      hint: "Open this conversation's session",
-                      onTap: onMeet!,
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  if (onEmoji != null)
-                    IconButton(
-                      key: const ValueKey('emoji'),
-                      tooltip: 'Add an emoji',
-                      onPressed: onEmoji,
-                      icon: const Icon(LucideIcons.smile, size: 18),
-                      style: _circle,
-                    ),
+                  // The controls scroll sideways when a thread offers them all (RFQ, Meet, Location) on a narrow
+                  // phone, so the row never overflows (9 Nov 2026: 360 dp with the Location pill).
                   Expanded(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: ValueListenableBuilder<TextEditingValue>(
-                        valueListenable: text,
-                        builder: (context, value, _) {
-                          final length = value.text.length;
-                          if (length > messageBodyMax - 500) {
-                            return Text(
-                              '$length/$messageBodyMax',
-                              style: ChatText.draftSaved.copyWith(
-                                color: length > messageBodyMax ? ChatColors.failed : null,
-                              ),
-                            );
-                          }
-                          return draftSaved
-                              ? Padding(
-                                  padding: const EdgeInsets.only(left: 8),
-                                  child: Text(
-                                    'Draft Saved',
-                                    key: const ValueKey('draft-saved'),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: ChatText.draftSaved,
-                                  ),
-                                )
-                              : const SizedBox.shrink();
-                        },
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          if (onAttach != null) ...[
+                            IconButton(
+                              key: const ValueKey('attach'),
+                              tooltip: 'Attach a File',
+                              onPressed: c.uploading ? null : onAttach,
+                              icon: const Icon(LucideIcons.paperclip, size: 18),
+                              style: _circle,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          if (onShareRecord != null) ...[
+                            _Pill(
+                              key: const ValueKey('share-record'),
+                              icon: LucideIcons.indianRupee,
+                              label: 'RFQ',
+                              hint: 'Share an ICR record',
+                              onTap: onShareRecord!,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          if (onMeet != null) ...[
+                            _Pill(
+                              key: const ValueKey('meet'),
+                              icon: LucideIcons.calendarClock,
+                              label: 'Meet',
+                              hint: "Open this conversation's session",
+                              onTap: onMeet!,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          if (onShareLocation != null) ...[
+                            _Pill(
+                              key: const ValueKey('share-location'),
+                              icon: LucideIcons.mapPin,
+                              label: 'Location',
+                              hint: 'Share where you are',
+                              onTap: onShareLocation!,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          if (onEmoji != null)
+                            IconButton(
+                              key: const ValueKey('emoji'),
+                              tooltip: 'Add an Emoji',
+                              onPressed: onEmoji,
+                              icon: const Icon(LucideIcons.smile, size: 18),
+                              style: _circle,
+                            ),
+                        ],
                       ),
                     ),
+                  ),
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: text,
+                    builder: (context, value, _) {
+                      final length = value.text.length;
+                      if (length > messageBodyMax - 500) {
+                        return Text(
+                          '$length/$messageBodyMax',
+                          style: ChatText.draftSaved.copyWith(
+                            color: length > messageBodyMax ? ChatColors.failed : null,
+                          ),
+                        );
+                      }
+                      return draftSaved
+                          ? Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: Text(
+                                'Draft Saved',
+                                key: const ValueKey('draft-saved'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: ChatText.draftSaved,
+                              ),
+                            )
+                          : const SizedBox.shrink();
+                    },
                   ),
                 ],
               ),
@@ -205,7 +225,8 @@ class Composer extends StatelessWidget {
                           isCollapsed: false,
                           contentPadding: const EdgeInsets.symmetric(vertical: 10),
                           border: InputBorder.none,
-                          hintText: 'Write a message or attach RFP...',
+                          // The RFP is offered only where the RFQ pill is.
+                          hintText: onShareRecord == null ? 'Write a message...' : 'Write a message or attach RFP...',
                           hintStyle: ChatText.composerHintDesign,
                         ),
                       ),

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/feed/feed_controller.dart';
 import 'package:icr_mobile/features/feed/feed_models.dart';
+import 'package:icr_mobile/features/feed/widgets/post_card.dart';
 import 'package:icr_mobile/features/feed/home_screen.dart';
 import 'package:icr_mobile/features/forum/forum_callbacks.dart';
 import 'package:icr_mobile/features/forum/thread_screen.dart';
@@ -176,7 +177,8 @@ void main() {
   testWidgets('"184 reactions" lists who reacted; holding Like offers the five reactions', (tester) async {
     await pumpHome(tester);
     await tapKey(tester, 'reactions:iot');
-    expect(find.text('Reactions'), findsOneWidget);
+    // The tabs: All with its count, then each reaction given (owner's reference, 13 Nov 2026).
+    expect(find.byKey(const ValueKey('reactors-tab:all')), findsOneWidget);
     expect(find.text('Anita Raghavan'), findsOneWidget);
     await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
@@ -187,6 +189,11 @@ void main() {
     await settle(tester);
     expect(post('iot').myReaction, ReactionKind.celebrate);
     expect(api.to('POST', '/forum/threads/iot/vote').last.data, {'value': 1, 'reaction': 'CELEBRATE'});
+    // The button now shows the reaction as the picker drew it: its round badge, not a blue glyph
+    // (owner, 13 Nov 2026).
+    final mine = find.descendant(of: key('like:iot'), matching: find.byType(ReactionBadge));
+    expect(mine, findsOneWidget);
+    expect(tester.widget<ReactionBadge>(mine).kind, ReactionKind.celebrate);
   });
 
   testWidgets('a card\'s three dots can report it; one\'s own has no Report', (tester) async {
@@ -194,14 +201,14 @@ void main() {
     await tapKey(tester, 'more:photo');
     await tester.tap(key('menu-report'));
     await settle(tester);
-    expect(find.text('Report this discussion'), findsOneWidget);
+    expect(find.text('Report This Discussion'), findsOneWidget);
     await tester.tap(key('report-reason:ABUSE'));
     await tester.pump();
     await tester.tap(key('report-send'));
     await settle(tester);
     expect(api.bodyOf('POST', '/forum/reports'), {'threadId': 'photo', 'reason': 'ABUSE'});
     expect(
-      find.descendant(of: find.byType(SnackBar), matching: find.textContaining('A moderator will take a look.')),
+      find.descendant(of: find.byType(SnackBar), matching: find.textContaining('A moderator will review it.')),
       findsOneWidget,
     );
 

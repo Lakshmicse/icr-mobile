@@ -57,7 +57,7 @@ class CouncilSearchField extends StatelessWidget {
                   suffixIcon: value.text.isEmpty
                       ? null
                       : IconButton(
-                          tooltip: 'Clear search',
+                          tooltip: 'Clear Search',
                           padding: EdgeInsets.zero,
                           iconSize: 14,
                           onPressed: () {

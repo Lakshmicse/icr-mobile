@@ -30,7 +30,8 @@ class AssistantController extends ChangeNotifier {
   bool _disposed = false;
 
   /// The reply being written has no words yet (the typing dots).
-  bool get awaitingFirstWord => _streaming && _messages.isNotEmpty && _messages.last.isAssistant && _messages.last.content.isEmpty;
+  bool get awaitingFirstWord =>
+      _streaming && _messages.isNotEmpty && _messages.last.isAssistant && _messages.last.content.isEmpty;
 
   /// Opens with the greeting the first time.
   void open() {

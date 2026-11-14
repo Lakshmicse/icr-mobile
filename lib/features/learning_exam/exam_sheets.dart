@@ -64,7 +64,7 @@ class PaletteSheet extends StatelessWidget {
                 shrinkWrap: true,
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 children: [
-                  Text('Question palette', style: ExamText.heading),
+                  Text('Question Palette', style: ExamText.heading),
                   const SizedBox(height: 4),
                   Text('Tap a number to go to that question.', style: ExamText.small),
                   const SizedBox(height: 14),
@@ -93,7 +93,7 @@ class PaletteSheet extends StatelessWidget {
                     const SizedBox(height: 8),
                   ],
                   const SizedBox(height: 8),
-                  ExamButton(label: 'Review & submit', icon: LucideIcons.listChecks, onPressed: onReview),
+                  ExamButton(label: 'Review & Submit', icon: LucideIcons.listChecks, onPressed: onReview),
                 ],
               ),
             ),
@@ -193,7 +193,7 @@ class OverviewSheet extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Text('Assessment overview', style: ExamText.heroTitle.copyWith(fontSize: 22)),
+                  Text('Assessment Overview', style: ExamText.heroTitle.copyWith(fontSize: 22)),
                   const SizedBox(height: 4),
                   Text('Review your progress before the final submission.', style: ExamText.body),
                   const SizedBox(height: 14),
@@ -237,7 +237,7 @@ class OverviewSheet extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 16),
-                  Text('Question status', style: ExamText.subheading),
+                  Text('Question Status', style: ExamText.subheading),
                   const SizedBox(height: 10),
                   GridView.builder(
                     shrinkWrap: true,
@@ -271,11 +271,11 @@ class OverviewSheet extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: ExamButton(label: 'Back to test', quiet: true, onPressed: () => popOnce(context)),
+                        child: ExamButton(label: 'Back to Test', quiet: true, onPressed: () => popOnce(context)),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: ExamButton(label: 'Submit test', icon: LucideIcons.send, onPressed: onSubmit),
+                        child: ExamButton(label: 'Submit Test', icon: LucideIcons.send, onPressed: onSubmit),
                       ),
                     ],
                   ),

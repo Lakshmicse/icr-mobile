@@ -53,42 +53,42 @@ void main() {
     testWidgets('a member with no mentor profile is offered to become one, and sees no desk', (tester) async {
       final became = <String>[];
       await pumpDesk(tester, DeskWorld(hasProfile: false), becameMentor: became);
-      expect(find.text("You're not a mentor yet"), findsOneWidget);
+      expect(find.text('You Are Not a Mentor Yet'), findsOneWidget);
       expect(find.byType(SegmentTabs), findsNothing);
-      await tester.tap(find.text('Become a mentor'));
+      await tester.tap(find.text('Become a Mentor'));
       expect(became, ['become']);
     });
 
     testWidgets('an application in review says so, and the button leads back to it', (tester) async {
       final became = <String>[];
       await pumpDesk(tester, DeskWorld(status: 'PENDING'), becameMentor: became);
-      expect(find.text('Your application is in review'), findsOneWidget);
-      expect(find.text('Status: In review'), findsOneWidget);
+      expect(find.text('Your Application Is in Review'), findsOneWidget);
+      expect(find.text('Status: In Review'), findsOneWidget);
       expect(find.byType(SegmentTabs), findsNothing);
-      await tester.tap(find.text('See my application'));
+      await tester.tap(find.text('View My Application'));
       expect(became, ['become']);
     });
 
     testWidgets('a rejected application shows the reviewer\'s note as written', (tester) async {
       await pumpDesk(tester, DeskWorld(status: 'REJECTED'));
-      expect(find.text('Your application was not approved'), findsOneWidget);
+      expect(find.text('Your Application Was Not Approved'), findsOneWidget);
       expect(find.text('Please add a second reference.'), findsOneWidget);
-      expect(find.text('Change my application'), findsOneWidget);
+      expect(find.text('Update My Application'), findsOneWidget);
     });
 
     testWidgets('a draft is to be finished', (tester) async {
       await pumpDesk(tester, DeskWorld(status: 'DRAFT'));
-      expect(find.text('Finish your application'), findsOneWidget);
-      expect(find.text('Continue your application'), findsOneWidget);
+      expect(find.text('Complete Your Application'), findsOneWidget);
+      expect(find.text('Continue Application'), findsOneWidget);
     });
 
     testWidgets('a desk that cannot load says why, and Try again reads it again', (tester) async {
       final w = DeskWorld()..offline = true;
       final (api, _) = await pumpDesk(tester, w);
-      expect(find.text("Couldn't load your desk"), findsOneWidget);
+      expect(find.text('Unable to Load Your Desk'), findsOneWidget);
       expect(find.text('The desk is down.'), findsOneWidget);
       w.offline = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester);
       expect(find.byType(SegmentTabs), findsOneWidget);
       expect(api.count('GET /mentorship/mentors/me/dashboard'), greaterThanOrEqualTo(2));
@@ -124,7 +124,7 @@ void main() {
   group('Overview', () {
     testWidgets('shows how the mentor stands and what needs them, each line a way in', (tester) async {
       await pumpDesk(tester, DeskWorld());
-      expect(find.text('Active mentees'), findsOneWidget);
+      expect(find.text('Active Mentees'), findsOneWidget);
       // No places: the portal keeps no limit on mentees (27 Oct 2026); the tile counts finished pairings instead.
       expect(find.text('Places open'), findsNothing);
       expect(find.text('Completed'), findsWidgets);
@@ -146,7 +146,7 @@ void main() {
     testWidgets('a line about paid work opens the Work tab', (tester) async {
       await pumpDesk(tester, DeskWorld());
       await tapText(tester, '1 paid call to confirm held');
-      expect(find.text('NEEDS YOU'), findsOneWidget);
+      expect(find.text('ACTION NEEDED'), findsOneWidget);
       expect(find.byKey(const ValueKey('ended-p-ended')), findsOneWidget);
     });
 
@@ -158,8 +158,8 @@ void main() {
 
     testWidgets('Up next shows the next session across every mentee, and opens it', (tester) async {
       await pumpDesk(tester, DeskWorld());
-      expect(find.text('Up next'), findsOneWidget);
-      expect(find.text('Meera Nair · 45 min · Video call'), findsOneWidget);
+      expect(find.text('Up Next'), findsOneWidget);
+      expect(find.text('Meera Nair · 45 min · Video Call'), findsOneWidget);
       expect(find.text('in 3 days'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('up-next')));
       await settle(tester);
@@ -195,7 +195,7 @@ void main() {
       await tapKey(tester, 'visibility-switch');
       expect(api.bodyOf('PATCH /mentorship/mentors/me/visibility'), {'discoverable': false});
       expect(find.text('Hidden from the directory.'), findsOneWidget);
-      expect(find.text('Not listed'), findsOneWidget);
+      expect(find.text('Not Listed'), findsOneWidget);
       await tapKey(tester, 'visibility-switch');
       expect(api.bodyOf('PATCH /mentorship/mentors/me/visibility'), {'discoverable': true});
       expect(find.text('You are listed again.'), findsOneWidget);
@@ -211,7 +211,7 @@ void main() {
       await tapText(tester, 'List your certifications');
       await tapText(tester, 'Add your work history');
       // The mentor profile editor, which the app opens itself; never the person's /profile, which has no mentor fields.
-      await tapText(tester, 'Finish my profile');
+      await tapText(tester, 'Complete My Profile');
       expect(rec.sites, [
         '/mentorship/become-a-mentor?fix=certifications',
         '/mentorship/become-a-mentor?fix=experience',
@@ -220,9 +220,9 @@ void main() {
     });
 
     test('every item the API counts opens where it is set', () {
-      expect(fixPathFor('Say when you are free'), '/mentorship/become-a-mentor?fix=availability');
+      expect(fixPathFor('Add your availability'), '/mentorship/become-a-mentor?fix=availability');
       expect(fixPathFor('Add conversation topics'), '/mentorship/become-a-mentor?fix=expertise');
-      expect(fixPathFor('State your years of experience'), '/mentorship/become-a-mentor?fix=intro');
+      expect(fixPathFor('Add your years of experience'), '/mentorship/become-a-mentor?fix=intro');
       expect(fixPathFor('Add your education'), '/profile?tab=education');
       expect(fixPathFor('Something new the API added'), '/mentorship/become-a-mentor');
       for (final m in [
@@ -245,13 +245,13 @@ void main() {
       await pumpDesk(tester, DeskWorld(status: 'PAUSED'), becameMentor: became);
       expect(find.textContaining('Your profile is paused'), findsOneWidget);
       expect(tester.widget<SwitchListTile>(find.byKey(const ValueKey('visibility-switch'))).onChanged, isNull);
-      await tapText(tester, 'Review my profile');
+      await tapText(tester, 'Review My Profile');
       expect(became, ['become']);
     });
 
     testWidgets('the recent activity lists what happened lately', (tester) async {
       await pumpDesk(tester, DeskWorld());
-      expect(find.text('Lately'), findsOneWidget);
+      expect(find.text('Recent Activity'), findsOneWidget);
       expect(find.byKey(const ValueKey('activity-ev-1')), findsOneWidget);
       expect(find.text('Marked complete by the mentor.'), findsOneWidget);
     });
@@ -266,7 +266,7 @@ void main() {
       expect(find.text('Accept Isha'), findsOneWidget);
       await tester.tap(find.text('Weekly'));
       await tester.enterText(find.byKey(const ValueKey('accept-note')), 'Bring your org chart.');
-      await tester.tap(find.text('Accept and start'));
+      await tester.tap(find.text('Accept and Start'));
       await settle(tester);
       expect(api.bodyOf('POST /mentorship/requests/r-isha/accept'), {
         'responseNote': 'Bring your org chart.',
@@ -282,10 +282,10 @@ void main() {
       await settle(tester);
       expect(find.text('Decline Vikram?'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'Full until the new year');
-      await tester.tap(find.text('Decline request'));
+      await tester.tap(find.text('Decline Request'));
       await settle(tester);
       expect(api.bodyOf('POST /mentorship/requests/r-vikram/decline'), {'responseNote': 'Full until the new year'});
-      expect(find.textContaining('Declined. Vikram has been told.'), findsOneWidget);
+      expect(find.textContaining('Declined. Vikram has been notified.'), findsOneWidget);
       expect(find.text('Declined'), findsOneWidget);
     });
 
@@ -296,15 +296,15 @@ void main() {
       final (api, _) = await pumpDesk(tester, w, tab: DeskTab.requests);
       expect(find.text('Preparing for a facilities head interview'), findsNothing);
       expect(find.textContaining('Preparing for a facilities head interview'), findsOneWidget);
-      expect(find.text('Suits them: Weekday evenings'), findsOneWidget);
-      await tester.ensureVisible(inCard('sreq-p-req', 'Accept and set time'));
-      await tester.tap(inCard('sreq-p-req', 'Accept and set time'));
+      expect(find.text('Preferred times: Weekday evenings'), findsOneWidget);
+      await tester.ensureVisible(inCard('sreq-p-req', 'Accept and Set Time'));
+      await tester.tap(inCard('sreq-p-req', 'Accept and Set Time'));
       await settle(tester);
       expect(find.text('Accept Isha Verma'), findsOneWidget);
-      expect(find.text('Suggested times'), findsOneWidget);
+      expect(find.text('Suggested Times'), findsOneWidget);
       await tester.tap(find.text('Accept').last);
       await tester.pump();
-      expect(find.text('Pick a time first.'), findsOneWidget);
+      expect(find.text('Select a time first.'), findsOneWidget);
       final first = find.byKey(ValueKey('suggest-${iso(DateTime(2026, 10, 28, 18))}'));
       expect(find.descendant(of: first, matching: find.textContaining('★')), findsOneWidget);
       await tester.tap(first);
@@ -321,24 +321,24 @@ void main() {
 
     testWidgets('a free session is booked at once, and a time of the mentor\'s own can be chosen', (tester) async {
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.requests);
-      await tester.ensureVisible(inCard('sreq-p-free', 'Accept and set time'));
-      await tester.tap(inCard('sreq-p-free', 'Accept and set time'));
+      await tester.ensureVisible(inCard('sreq-p-free', 'Accept and Set Time'));
+      await tester.tap(inCard('sreq-p-free', 'Accept and Set Time'));
       await settle(tester);
-      expect(find.text('Accept and book'), findsOneWidget);
-      expect(find.text('It is booked on both calendars at once.'), findsOneWidget);
-      await tester.tap(find.text('Pick a day and time'));
+      expect(find.text('Accept and Book'), findsOneWidget);
+      expect(find.text('It is booked on both calendars immediately.'), findsOneWidget);
+      await tester.tap(find.text('Select a Day and Time'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Accept and book'));
+      await tester.tap(find.text('Accept and Book'));
       await settle(tester);
       final at = DateTime.parse(
         (api.bodyOf('POST /mentor-services/purchases/p-free/accept') as Map)['scheduledAt'] as String,
       ).toLocal();
       expect(at.day, 27, reason: 'the pickers open on tomorrow');
-      expect(find.text('Booked. Vikram Singh has been told.'), findsOneWidget);
+      expect(find.text('Booked. Vikram Singh has been notified.'), findsOneWidget);
     });
 
     testWidgets('the whole of the mentor\'s free hours can be opened, and a refusal keeps the sheet', (tester) async {
@@ -352,12 +352,12 @@ void main() {
           ),
         },
       );
-      await tester.ensureVisible(inCard('sreq-p-req', 'Accept and set time'));
-      await tester.tap(inCard('sreq-p-req', 'Accept and set time'));
+      await tester.ensureVisible(inCard('sreq-p-req', 'Accept and Set Time'));
+      await tester.tap(inCard('sreq-p-req', 'Accept and Set Time'));
       await settle(tester);
       await tapKey(tester, 'see-all-slots');
       expect(api.queryOf('GET /mentorship/mentors/mp-anand/slots'), {'durationMin': 45, 'days': 14});
-      expect(find.text('Hide the full list'), findsOneWidget);
+      expect(find.text('Hide Full List'), findsOneWidget);
       await tester.tap(find.text('7:00 PM'));
       await tester.pump();
       await tester.tap(find.text('Accept').last);
@@ -369,8 +369,8 @@ void main() {
     testWidgets('a mentee who sent a time back is heard in the request and in the sheet', (tester) async {
       await pumpDesk(tester, DeskWorld(), tab: DeskTab.requests);
       expect(find.textContaining('Asked for another time (25 Oct): Evenings after 7 suit me better.'), findsOneWidget);
-      await tester.ensureVisible(inCard('sreq-p-asked-again', 'Accept and set time'));
-      await tester.tap(inCard('sreq-p-asked-again', 'Accept and set time'));
+      await tester.ensureVisible(inCard('sreq-p-asked-again', 'Accept and Set Time'));
+      await tester.tap(inCard('sreq-p-asked-again', 'Accept and Set Time'));
       await settle(tester);
       expect(find.textContaining('Sana Qureshi asked for another time'), findsOneWidget);
     });
@@ -381,11 +381,11 @@ void main() {
       await tester.tap(inCard('sreq-p-req', 'Decline'));
       await settle(tester);
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'No');
-      await tester.tap(find.text('Send decline'));
+      await tester.tap(find.text('Decline Request'));
       await tester.pump();
-      expect(find.text('Write at least 5 characters.'), findsOneWidget);
+      expect(find.text('Enter at least 5 characters.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'I am travelling that month');
-      await tester.tap(find.text('Send decline'));
+      await tester.tap(find.text('Decline Request'));
       await settle(tester);
       expect(api.bodyOf('POST /mentor-services/purchases/p-req/decline'), {'reason': 'I am travelling that month'});
       expect(find.byKey(const ValueKey('sreq-p-req')), findsNothing);
@@ -412,14 +412,14 @@ void main() {
     ) async {
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.requests);
       expect(find.byKey(const ValueKey('held-p-held')), findsOneWidget);
-      await tester.ensureVisible(inCard('held-p-held', 'Withdraw this time'));
-      await tester.tap(inCard('held-p-held', 'Withdraw this time'));
+      await tester.ensureVisible(inCard('held-p-held', 'Withdraw This Time'));
+      await tester.tap(inCard('held-p-held', 'Withdraw This Time'));
       await tester.pumpAndSettle();
-      expect(find.text('Withdraw this time?'), findsOneWidget);
-      await tester.tap(inDialog('Keep it'));
+      expect(find.text('Withdraw This Time?'), findsOneWidget);
+      await tester.tap(inDialog('Keep It'));
       await tester.pumpAndSettle();
       expect(api.count('POST /mentor-services/purchases/p-held/withdraw'), 0, reason: 'keeping it sends nothing');
-      await tester.tap(inCard('held-p-held', 'Withdraw this time'));
+      await tester.tap(inCard('held-p-held', 'Withdraw This Time'));
       await tester.pumpAndSettle();
       await tester.tap(inDialog('Withdraw'));
       await settle(tester);
@@ -447,11 +447,11 @@ void main() {
       await tester.tap(inCard('term-t-prog', 'Decline'));
       await settle(tester);
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'full');
-      await tester.tap(find.text('Send decline'));
+      await tester.tap(find.text('Decline Request'));
       await tester.pump();
-      expect(find.text('Write at least 5 characters.'), findsOneWidget);
+      expect(find.text('Enter at least 5 characters.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'My programme places are full');
-      await tester.tap(find.text('Send decline'));
+      await tester.tap(find.text('Decline Request'));
       await settle(tester);
       expect(api.bodyOf('POST /mentor-plans/subscriptions/t-prog/decide'), {
         'decision': 'DECLINE',
@@ -462,8 +462,8 @@ void main() {
 
     testWidgets('an accepted programme waits on the buyer, who pays on the website', (tester) async {
       await pumpDesk(tester, DeskWorld(), tab: DeskTab.requests);
-      expect(find.text('Accepted, waiting for payment'.toUpperCase()), findsOneWidget);
-      expect(find.text('They pay on the website; the mentorship starts when they do.'), findsOneWidget);
+      expect(find.text('Accepted, Awaiting Payment'.toUpperCase()), findsOneWidget);
+      expect(find.text('They pay on the website. The mentorship starts when they pay.'), findsOneWidget);
     });
 
     testWidgets('with nothing asked, the tab says so', (tester) async {
@@ -472,7 +472,7 @@ void main() {
         ..sold = []
         ..terms = [];
       await pumpDesk(tester, w, tab: DeskTab.requests);
-      expect(find.text('Nothing is waiting on you'), findsOneWidget);
+      expect(find.text('Nothing Needs Your Attention'), findsOneWidget);
     });
 
     testWidgets('a failed read says why and Try again reads it again', (tester) async {
@@ -491,11 +491,11 @@ void main() {
               fail ? refuse('We could not reach the requests.', status: 500) : w.terms,
         },
       );
-      expect(find.text("Couldn't load your requests"), findsOneWidget);
+      expect(find.text('Unable to Load Your Requests'), findsOneWidget);
       fail = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester);
-      expect(find.text("Couldn't load your requests"), findsNothing);
+      expect(find.text('Unable to Load Your Requests'), findsNothing);
       expect(api.count('GET /mentorship/requests/incoming'), greaterThanOrEqualTo(2));
     });
   });
@@ -532,7 +532,7 @@ void main() {
         ..roster = []
         ..finished = [];
       await pumpDesk(tester, w, tab: DeskTab.mentees);
-      expect(find.text('No mentees yet'), findsOneWidget);
+      expect(find.text('No Mentees Yet'), findsOneWidget);
     });
   });
 
@@ -564,7 +564,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('Reviewing the scorecard draft'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Open mentorship'));
+        await tester.tap(find.text('Open Mentorship'));
         await settle(tester);
         expect(find.byType(PairingScreen), findsOneWidget);
         expect(api.count('GET /mentorship/sessions'), 1);
@@ -573,7 +573,7 @@ void main() {
 
     testWidgets('the arrows read the next month', (tester) async {
       final (api, _) = await pumpDesk(tester, DeskWorld(), tab: DeskTab.calendar);
-      await tester.tap(find.byTooltip('Next month'));
+      await tester.tap(find.byTooltip('Next Month'));
       await settle(tester);
       expect(find.text('November 2026'), findsOneWidget);
       expect(api.count('GET /mentorship/sessions'), 2);

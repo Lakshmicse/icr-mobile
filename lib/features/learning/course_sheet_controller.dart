@@ -112,7 +112,7 @@ class CourseSheetController extends ChangeNotifier with NotifySafely {
     if (_course.closed) return 'ENROLMENT CLOSED';
     final run = selectedRun;
     if (run?.full ?? _course.full) return (run?.waitlistEnabled ?? _course.waitlistEnabled) ? 'JOIN WAITLIST' : 'FULL';
-    return 'ADD TO CART';
+    return 'ENROL NOW';
   }
 
   bool get canAct => !_course.enrolled && !_course.closed && !_enrolling && ctaLabel != 'FULL';

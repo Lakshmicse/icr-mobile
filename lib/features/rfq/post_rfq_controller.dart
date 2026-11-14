@@ -452,7 +452,7 @@ class PostRfqController extends ChangeNotifier {
       if (accepted.length >= room) {
         problems.add(
           room <= 0
-              ? 'You have attached the most (${RfqLimits.maxAttachments}) files.'
+              ? 'You have attached the maximum of ${RfqLimits.maxAttachments} files.'
               : 'Only $room more file${room == 1 ? '' : 's'} fit.',
         );
         break;

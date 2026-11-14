@@ -122,7 +122,7 @@ class _NewMessageSheetState extends State<NewMessageSheet> {
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text('New message', style: ChatText.sheetTitle),
+              child: Text('New Message', style: ChatText.sheetTitle),
             ),
           ),
           Padding(
@@ -135,7 +135,7 @@ class _NewMessageSheetState extends State<NewMessageSheet> {
               style: ChatText.composer,
               decoration: InputDecoration(
                 isDense: true,
-                hintText: 'Search a person or a supplier',
+                hintText: 'Search for a person or supplier',
                 hintStyle: ChatText.composerHint,
                 prefixIcon: const Icon(LucideIcons.search, size: 18),
                 border: OutlineInputBorder(
@@ -166,21 +166,21 @@ class _NewMessageSheetState extends State<NewMessageSheet> {
                 : _error != null
                 ? ChatNotice(
                     icon: LucideIcons.cloudOff,
-                    title: "Couldn't search.",
+                    title: 'Unable to Search',
                     body: _error,
-                    action: 'Retry',
+                    action: 'Try Again',
                     onAction: _run,
                   )
                 : term.length < 2
                 ? const ChatNotice(
                     icon: LucideIcons.users,
-                    title: 'Who would you like to message?',
-                    body: 'Type at least two letters of a name or a company.',
+                    title: 'Who Would You Like to Message?',
+                    body: 'Enter at least two letters of a name or company.',
                   )
                 : _found.isEmpty
                 ? const ChatNotice(
                     icon: LucideIcons.userX,
-                    title: 'No one found',
+                    title: 'No One Found',
                     body: 'People with a private profile do not appear here.',
                   )
                 : ListView(

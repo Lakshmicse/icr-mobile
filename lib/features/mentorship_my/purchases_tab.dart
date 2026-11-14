@@ -56,6 +56,15 @@ PurchaseBucket termBucket(PlanTerm t) => switch (t.status) {
   _ => PurchaseBucket.past,
 };
 
+/// "Withdraw" acts only after a yes (owner, 7 Nov 2026: a tap by mistake must not take the request back).
+Future<void> _withdrawAfterConfirm(BuildContext context, PurchasesBook book, ServicePurchase p) async {
+  final ok = await confirmWithdraw(
+    context,
+    body: '${p.mentor?.firstName ?? 'The mentor'} is notified and the request is closed. You can ask again later.',
+  );
+  if (ok) await _report(context, () => book.withdrawRequest(p), done: 'Request withdrawn.');
+}
+
 Future<void> _report(BuildContext context, Future<String?> Function() action, {String? done}) async {
   final refusal = await action();
   if (!context.mounted) return;
@@ -130,13 +139,13 @@ class _PurchasesTabState extends State<PurchasesTab> {
       if (book.loaded && needs.isEmpty && active.isEmpty && past.isEmpty)
         EmptyNote(
           icon: LucideIcons.shoppingBag,
-          title: 'Nothing bought yet',
+          title: 'No Purchases Yet',
           body:
-              'Sessions, guides, programmes and plans you ask for or buy from a mentor show up here, with group sessions and cohorts.',
-          action: 'Browse mentors',
+              'Sessions, guides, programmes and plans you request or buy from a mentor will appear here, with group sessions and cohorts.',
+          action: 'Browse Mentors',
           onAction: () => widget.links.directory(context),
         ),
-      if (needs.isNotEmpty) ...[const GroupLabel('Needs you', top: 0), ...needs],
+      if (needs.isNotEmpty) ...[const GroupLabel('Action Needed', top: 0), ...needs],
       if (active.isNotEmpty) ...[GroupLabel('Active', top: needs.isEmpty ? 0 : 12), ...active],
       if (past.isNotEmpty) ...[
         InkWell(
@@ -144,7 +153,7 @@ class _PurchasesTabState extends State<PurchasesTab> {
           onTap: () => setState(() => _past = !_past),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Text(_past ? 'Hide past' : 'Past (${past.length})', style: MentoringText.buttonQuiet),
+            child: Text(_past ? 'Hide Past' : 'Past (${past.length})', style: MentoringText.buttonQuiet),
           ),
         ),
         if (_past) ...past,
@@ -154,7 +163,7 @@ class _PurchasesTabState extends State<PurchasesTab> {
           top: 12,
           children: [
             if (widget.onBrowseGroups != null)
-              QuietButton(label: 'Group sessions', icon: LucideIcons.users, onPressed: widget.onBrowseGroups),
+              QuietButton(label: 'Group Sessions', icon: LucideIcons.users, onPressed: widget.onBrowseGroups),
             if (widget.onBrowseProgrammes != null)
               QuietButton(label: 'Programmes', icon: LucideIcons.layers, onPressed: widget.onBrowseProgrammes),
           ],
@@ -163,7 +172,7 @@ class _PurchasesTabState extends State<PurchasesTab> {
     return LoadedList(
       loading: book.loading,
       error: book.error,
-      errorTitle: "Couldn't load your purchases",
+      errorTitle: 'Unable to Load Your Purchases',
       onRefresh: book.reload,
       children: book.loading || book.error != null ? const [] : children,
     );
@@ -236,7 +245,7 @@ class PurchaseCard extends StatelessWidget {
           if (p.status == PurchaseStatus.declined)
             Callout(
               tone: PillTone.red,
-              text: '$mentor can\'t take it${req?.declineReason == null ? '.' : ': ${req!.declineReason}'}',
+              text: '$mentor is unable to take it${req?.declineReason == null ? '.' : ': ${req!.declineReason}'}',
             ),
           if (req != null &&
               req.timeDeclineCount > 0 &&
@@ -259,12 +268,12 @@ class PurchaseCard extends StatelessWidget {
                   '${b.proposedNote == null || b.proposedNote!.isEmpty ? '' : ' “${b.proposedNote}”'}',
               actions: [
                 SolidButton(
-                  label: 'Accept new time',
+                  label: 'Accept New Time',
                   icon: LucideIcons.check,
                   onPressed: () =>
                       _report(context, () => book.answerMove(p, accept: true), done: 'Moved to the new time.'),
                 ),
-                QuietButton(label: 'Keep booked time', onPressed: () => showKeepTimeSheet(context, book, p)),
+                QuietButton(label: 'Keep Booked Time', onPressed: () => showKeepTimeSheet(context, book, p)),
               ],
             ),
           if (movePendingOnThem(p))
@@ -274,7 +283,7 @@ class PurchaseCard extends StatelessWidget {
               text: 'You asked to move this to ${whenLabel(b!.proposedAt!)}. Waiting for $mentor.',
               actions: [
                 QuietButton(
-                  label: 'Withdraw the request',
+                  label: 'Withdraw Request',
                   onPressed: () =>
                       _report(context, () => book.answerMove(p, accept: false), done: 'Request withdrawn.'),
                 ),
@@ -303,14 +312,10 @@ class PurchaseCard extends StatelessWidget {
     final mentor = p.mentor?.firstName ?? 'the mentor';
     return [
       if (p.status == PurchaseStatus.requested)
-        QuietButton(
-          label: 'Withdraw',
-          danger: true,
-          onPressed: () => _report(context, () => book.withdrawRequest(p), done: 'Request withdrawn.'),
-        ),
+        QuietButton(label: 'Withdraw', danger: true, onPressed: () => _withdrawAfterConfirm(context, book, p)),
       if (p.status == PurchaseStatus.accepted) ...[
         SolidButton(
-          label: 'Accept this time',
+          label: 'Accept This Time',
           icon: LucideIcons.check,
           onPressed: () async {
             final done = await showAcceptTimeSheet(context, book, p);
@@ -323,16 +328,12 @@ class PurchaseCard extends StatelessWidget {
             }
           },
         ),
-        QuietButton(label: 'Ask another time', onPressed: () => showAskAnotherTimeSheet(context, book, p)),
-        QuietButton(
-          label: 'Withdraw',
-          danger: true,
-          onPressed: () => _report(context, () => book.withdrawRequest(p), done: 'Request withdrawn.'),
-        ),
+        QuietButton(label: 'Ask for Another Time', onPressed: () => showAskAnotherTimeSheet(context, book, p)),
+        QuietButton(label: 'Withdraw', danger: true, onPressed: () => _withdrawAfterConfirm(context, book, p)),
       ],
       if (p.status == PurchaseStatus.pendingPayment || p.status == PurchaseStatus.confirmed)
         SolidButton(
-          label: p.status == PurchaseStatus.confirmed ? 'Pay ${moneyLabel(p.duePaisa)}' : 'Pay to confirm',
+          label: p.status == PurchaseStatus.confirmed ? 'Pay ${moneyLabel(p.duePaisa)}' : 'Pay to Confirm',
           icon: LucideIcons.creditCard,
           onPressed: () => showPaySessionSheet(context, book, p, links),
         ),
@@ -345,7 +346,7 @@ class PurchaseCard extends StatelessWidget {
           joinShown(b.scheduledAt, b.durationMin, mentoringNow()))
         JoinButton(link: link, startsAt: b.scheduledAt, durationMin: b.durationMin),
       if (b != null && b.scheduled && p.status == PurchaseStatus.paid && b.proposedAt == null)
-        QuietButton(label: 'Ask to move', onPressed: () => showProposeMoveSheet(context, book, p)),
+        QuietButton(label: 'Ask to Move', onPressed: () => showProposeMoveSheet(context, book, p)),
       if (p.type == ServiceType.resource && held && p.downloadUrl != null)
         SolidButton(
           label: p.fileName == null ? 'Download' : 'Download ${p.fileName}',
@@ -353,7 +354,7 @@ class PurchaseCard extends StatelessWidget {
           onPressed: () => links.download(context, () => book.download(p), _fileName(p)),
         ),
       if (p.type == ServiceType.groupSession && p.groupSessionId != null && onOpenGroup != null)
-        QuietButton(label: 'Open session', onPressed: () => onOpenGroup!(p.groupSessionId!)),
+        QuietButton(label: 'Open Session', onPressed: () => onOpenGroup!(p.groupSessionId!)),
       if ((p.status == PurchaseStatus.paid || held) && p.mentor != null)
         QuietButton(
           label: 'Message',
@@ -362,20 +363,20 @@ class PurchaseCard extends StatelessWidget {
         ),
       if (held && !p.hasReview)
         QuietButton(
-          label: 'Leave a review',
+          label: 'Leave a Review',
           icon: LucideIcons.star,
           onPressed: () async {
             final sent = await showReviewPurchaseSheet(context, book, p);
-            if (sent && context.mounted) showMessage(context, 'Thanks. Your review is on $mentor\'s profile.');
+            if (sent && context.mounted) showMessage(context, 'Thank you. Your review is on $mentor\'s profile.');
           },
         ),
       if (p.status == PurchaseStatus.paid || held || p.status == PurchaseStatus.confirmed)
         QuietButton(
-          label: 'Report a problem',
+          label: 'Report a Problem',
           icon: LucideIcons.flag,
           onPressed: () async {
             final sent = await showReportIssueSheet(context, book, p);
-            if (sent && context.mounted) showMessage(context, 'Sent. ICR will look into it.');
+            if (sent && context.mounted) showMessage(context, 'Sent. ICR will review it.');
           },
         ),
     ];
@@ -441,7 +442,7 @@ class _TermCard extends StatelessWidget {
           if (t.status == 'DECLINED')
             Callout(
               tone: PillTone.red,
-              text: '$mentor can\'t take it${t.declineReason == null ? '.' : ': ${t.declineReason}'}',
+              text: '$mentor is unable to take it${t.declineReason == null ? '.' : ': ${t.declineReason}'}',
             ),
           if (t.status == 'REFUNDED')
             MetaLine(
@@ -481,15 +482,22 @@ class _TermCard extends StatelessWidget {
                 QuietButton(
                   label: 'Withdraw',
                   danger: true,
-                  onPressed: () => _report(context, () => book.cancelTerm(t), done: 'Request withdrawn.'),
+                  onPressed: () async {
+                    if (await confirmWithdraw(
+                      context,
+                      body: 'The plan request is withdrawn, and the mentor is notified.',
+                    )) {
+                      await _report(context, () => book.cancelTerm(t), done: 'Request withdrawn.');
+                    }
+                  },
                 ),
               if (t.mentorshipId != null && onOpenPairing != null && active && left > 0)
-                SolidButton(label: 'Schedule a session', onPressed: () => onOpenPairing!(t.mentorshipId!)),
+                SolidButton(label: 'Schedule a Session', onPressed: () => onOpenPairing!(t.mentorshipId!)),
               if (t.mentorshipId != null && onOpenPairing != null && !(active && left > 0))
-                QuietButton(label: 'Open mentorship', onPressed: () => onOpenPairing!(t.mentorshipId!)),
+                QuietButton(label: 'Open Mentorship', onPressed: () => onOpenPairing!(t.mentorshipId!)),
               if (active && !t.programme && !t.cancelAtPeriodEnd)
                 QuietButton(
-                  label: 'Do not renew',
+                  label: 'Do Not Renew',
                   onPressed: () => _report(context, () => book.cancelTerm(t), done: 'It will not renew.'),
                 ),
             ],
@@ -522,7 +530,7 @@ class _EnrolmentCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text(p?.name ?? 'A cohort programme', style: MentoringText.cardTitle)),
+              Expanded(child: Text(p?.name ?? 'Cohort Programme', style: MentoringText.cardTitle)),
               StatusPill(
                 e.statusLabel,
                 tone: switch (e.status) {
@@ -539,12 +547,20 @@ class _EnrolmentCard extends StatelessWidget {
           ActionWrap(
             children: [
               if (p != null && onOpenProgramme != null)
-                QuietButton(label: 'Open programme', onPressed: () => onOpenProgramme!(p.slug)),
+                QuietButton(label: 'Open Programme', onPressed: () => onOpenProgramme!(p.slug)),
               if (e.status == 'APPLIED' || e.status == 'ACCEPTED')
                 QuietButton(
                   label: 'Withdraw',
                   danger: true,
-                  onPressed: () => _report(context, () => book.withdrawEnrolment(e), done: 'Application withdrawn.'),
+                  onPressed: () async {
+                    if (await confirmWithdraw(
+                      context,
+                      title: 'Withdraw This Application?',
+                      body: 'Your place in the programme is released, and the mentor is notified.',
+                    )) {
+                      await _report(context, () => book.withdrawEnrolment(e), done: 'Application withdrawn.');
+                    }
+                  },
                 ),
             ],
           ),
@@ -573,7 +589,7 @@ class _SeatCard extends StatelessWidget {
             children: [
               Expanded(child: Text(s.title, style: MentoringText.cardTitle)),
               StatusPill(
-                s.myStatus == 'WAITLISTED' ? 'Waitlisted' : 'Seat held',
+                s.myStatus == 'WAITLISTED' ? 'Waitlisted' : 'Seat Held',
                 tone: s.myStatus == 'WAITLISTED' ? PillTone.amber : PillTone.mint,
               ),
             ],
@@ -588,10 +604,10 @@ class _SeatCard extends StatelessWidget {
           ),
           ActionWrap(
             children: [
-              if (onOpenGroup != null) SolidButton(label: 'Open session', onPressed: () => onOpenGroup!(s.id)),
+              if (onOpenGroup != null) SolidButton(label: 'Open Session', onPressed: () => onOpenGroup!(s.id)),
               if (!s.paid)
                 QuietButton(
-                  label: 'Give up seat',
+                  label: 'Give Up Seat',
                   danger: true,
                   onPressed: () => _report(context, () => book.leaveSeat(s), done: 'You gave up your seat.'),
                 ),

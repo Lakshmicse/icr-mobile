@@ -23,6 +23,7 @@ Future<ForumThread?> startDiscussion(
   String? initialTitle,
   String? initialBody,
   String? repostOfId,
+  ForumAttachment? initialAttachment,
 }) async {
   final saved = await openComposer(
     context,
@@ -32,10 +33,11 @@ Future<ForumThread?> startDiscussion(
     initialTitle: initialTitle,
     initialBody: initialBody,
     repostOfId: repostOfId,
+    initialAttachment: initialAttachment,
   );
   if (saved == null || !context.mounted) return saved;
   if (saved.moderation != 'APPROVED') {
-    showMessage(context, 'Posted. A moderator will read it before it goes public.');
+    showMessage(context, 'Posted. A moderator will review it before it is published.');
     return saved;
   }
   await openThreadPage(

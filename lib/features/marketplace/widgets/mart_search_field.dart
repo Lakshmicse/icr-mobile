@@ -13,7 +13,7 @@ class MartSearchField extends StatelessWidget {
     required this.onSubmitted,
     this.onChanged,
     this.focusNode,
-    this.hint = 'Search suppliers, services, RFQs...',
+    this.hint = 'Search Suppliers, Services, RFQs',
   });
 
   final TextEditingController controller;

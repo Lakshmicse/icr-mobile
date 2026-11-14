@@ -82,7 +82,7 @@ class KnowledgeAreas extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text('Knowledge areas covered', style: AssessText.section)),
+              Expanded(child: Text('Knowledge Areas Covered', style: AssessText.section)),
               const SizedBox(width: 8),
               Container(
                 key: const ValueKey('areas-count'),
@@ -120,7 +120,7 @@ class KnowledgeAreas extends StatelessWidget {
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            showAll ? 'View less' : 'View more',
+                            showAll ? 'View Less' : 'View More',
                             key: const ValueKey('areas-toggle'),
                             style: AssessText.noteLink,
                           ),

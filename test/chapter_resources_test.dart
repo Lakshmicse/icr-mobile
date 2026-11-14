@@ -176,32 +176,35 @@ void main() {
             _bytes(utf8.encode('<h1>Not found</h1>'), status: 404, headers: {Headers.contentTypeHeader: 'text/html'}),
       );
       final e = await _refusal(_downloader(net).fetch(_resource()));
-      expect(e.message, "That file isn't at its address any more (files.test says 404).");
+      expect(e.message, 'The file is no longer available (files.test returned 404).');
       expect(e.openInstead, isNull);
     });
 
     test('a refusal, a host in trouble and an unreachable host each say so', () async {
       Future<String> say(ResponseBody Function(RequestOptions) answer) async =>
           (await _refusal(_downloader(_Net(answer)).fetch(_resource()))).message;
-      expect(await say((_) => _bytes([], status: 403)), "files.test won't let the app download that file (403).");
+      expect(
+        await say((_) => _bytes([], status: 403)),
+        'files.test does not allow the app to download this file (403).',
+      );
       expect(
         await say((_) => _bytes([], status: 503)),
-        'files.test had a problem sending that file (503). Try again later.',
+        'files.test had a problem sending the file (503). Try again later.',
       );
       expect(await say((_) => _bytes([], status: 418)), 'files.test refused the download (418).');
       expect(
         await say((o) => throw DioException(requestOptions: o, type: DioExceptionType.connectionError)),
-        "Couldn't reach files.test. Check your connection and try again.",
+        'Unable to reach files.test. Check your connection and try again.',
       );
       expect(
         await say((o) => throw DioException(requestOptions: o, type: DioExceptionType.connectionTimeout)),
-        "Couldn't reach files.test. Check your connection and try again.",
+        'Unable to reach files.test. Check your connection and try again.',
       );
     });
 
     test('an empty file, and a resource with no address, are said so', () async {
       final empty = await _refusal(_downloader(_Net((_) => _bytes([]))).fetch(_resource()));
-      expect(empty.message, 'That file came back empty.');
+      expect(empty.message, 'The file is empty.');
       final none = _Net((_) => _bytes([1]));
       final e = await _refusal(_downloader(none).fetch(_resource(url: '')));
       expect(e.message, 'This resource has no file attached yet.');
@@ -211,7 +214,7 @@ void main() {
     test('a placeholder address (the demo data) is not fetched: it has no real file', () async {
       final net = _Net((_) => _bytes([1]));
       final e = await _refusal(_downloader(net).fetch(_resource(url: 'https://example.com/whitepaper.pdf')));
-      expect(e.message, '"Benchmark 2026" has no real file yet: its address is only a placeholder.');
+      expect(e.message, '"Benchmark 2026" has no file yet. Its address is a placeholder.');
       expect(net.requests, isEmpty);
     });
 
@@ -222,7 +225,7 @@ void main() {
       final e = await _refusal(
         _downloader(net).fetch(_resource(kind: 'RECORDING', url: 'https://videos.test/forum.mp4')),
       );
-      expect(e.message, startsWith('That file is '));
+      expect(e.message, startsWith('The file is '));
       expect(e.message, endsWith('MB, too large to save from the app.'));
       expect(e.openInstead, Uri.parse('https://videos.test/forum.mp4'));
     });
@@ -322,14 +325,12 @@ void main() {
 
     testWidgets('a download that fails says why, in the app, and saves nothing', (tester) async {
       final fake = FakeResourceDownloader()
-        ..answers['r1'] = const ResourceDownloadException(
-          "That file isn't at its address any more (files.test says 404).",
-        );
+        ..answers['r1'] = const ResourceDownloadException('The file is no longer available (files.test returned 404).');
       final (_, opened) = await pump(tester, downloader: fake);
       await tester.tap(find.text('Download'));
       await tester.pump();
       await tester.pump();
-      expect(find.text("That file isn't at its address any more (files.test says 404)."), findsOneWidget);
+      expect(find.text('The file is no longer available (files.test returned 404).'), findsOneWidget);
       expect(fake.saved, isEmpty);
       expect(opened, isEmpty);
       expect(find.text('Download'), findsOneWidget);
@@ -341,14 +342,14 @@ void main() {
       await tester.tap(find.text('Download'));
       await tester.pump();
       await tester.pump();
-      expect(find.text('Couldn\'t download "Benchmark 2026". Try again.'), findsOneWidget);
+      expect(find.text('Unable to download "Benchmark 2026". Try again.'), findsOneWidget);
     });
 
     testWidgets('a file too large for the app offers the browser, only when asked', (tester) async {
       final page = Uri.parse('https://videos.test/forum.mp4');
       final fake = FakeResourceDownloader()
         ..answers['r1'] = ResourceDownloadException(
-          'That file is 400 MB, too large to save from the app.',
+          'The file is 400 MB, too large to save from the app.',
           openInstead: page,
         );
       final (_, opened) = await pump(
@@ -359,7 +360,7 @@ void main() {
       await tester.tap(find.text('Download'));
       await tester.pump();
       await tester.pump();
-      expect(find.text('That file is 400 MB, too large to save from the app.'), findsOneWidget);
+      expect(find.text('The file is 400 MB, too large to save from the app.'), findsOneWidget);
       expect(opened, isEmpty);
       await tester.pump(const Duration(milliseconds: 500));
       await tester.tap(find.text('Open'));
@@ -392,7 +393,7 @@ void main() {
       expect(find.text('"Benchmark 2026" is a web page, not a file you can save.'), findsOneWidget);
       expect(opened, isEmpty);
       await tester.pump(const Duration(milliseconds: 500));
-      await tester.tap(find.text('Open page'));
+      await tester.tap(find.text('Open Page'));
       await tester.pump();
       expect(opened, [page]);
     });

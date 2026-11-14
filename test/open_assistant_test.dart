@@ -59,9 +59,9 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.byType(AssistantScreen), findsOneWidget);
-    expect(find.byKey(const ValueKey('suggestion-Browse jobs')), findsOneWidget);
+    expect(find.byKey(const ValueKey('suggestion-Browse Jobs')), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('suggestion-Browse jobs')));
+    await tester.tap(find.byKey(const ValueKey('suggestion-Browse Jobs')));
     await tester.pump();
     expect(opened, ['/jobs']);
     expect(readable, [true], reason: "opened with the shell's context, not Saathi's route's");

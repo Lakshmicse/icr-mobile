@@ -86,7 +86,7 @@ class _ResultScreenState extends State<ResultScreen> {
     final pct = attempt.percentage;
     final String base;
     if (!attempt.passed) {
-      base = 'Not quite there yet';
+      base = 'Not passed yet';
     } else {
       base = pct >= 85 ? 'Outstanding result' : 'Well done';
     }
@@ -97,7 +97,7 @@ class _ResultScreenState extends State<ResultScreen> {
   String get _blurb {
     final pct = attempt.percentage;
     final pass = attempt.passPercentage;
-    if (!widget.certificateEnabled) return 'Practice paper — no certificate is issued.';
+    if (!widget.certificateEnabled) return 'Practice paper. No certificate is issued.';
     return attempt.passed
         ? 'You passed ${widget.paperName} with $pct%, against a pass mark of $pass%.'
         : 'You scored $pct%, and the pass mark is $pass%. Review the answers, then try again.';
@@ -148,7 +148,7 @@ class _ResultScreenState extends State<ResultScreen> {
                       Notice(
                         tone: NoticeTone.success,
                         text: 'Certificate issued: ${cert.certificateId}, on attempt ${cert.attempt}.',
-                        action: 'View certificate',
+                        action: 'View Certificate',
                         onAction: () => showCertificateSheet(context, cert),
                       ),
                     ],
@@ -164,7 +164,7 @@ class _ResultScreenState extends State<ResultScreen> {
                             Expanded(
                               flex: 173,
                               child: ExamButton(
-                                label: 'Retake test',
+                                label: 'Retake Test',
                                 icon: LucideIcons.rotateCcw,
                                 color: ExamColors.action,
                                 height: 45,
@@ -177,7 +177,7 @@ class _ResultScreenState extends State<ResultScreen> {
                             Expanded(
                               flex: 166,
                               child: ExamButton(
-                                label: 'Review answers',
+                                label: 'Review Answers',
                                 icon: LucideIcons.clipboardCheck,
                                 quiet: true,
                                 color: ExamColors.ink,
@@ -301,7 +301,7 @@ class _Tiles extends StatelessWidget {
       _Tile(value: '${a.correct}', label: 'Correct', color: ExamColors.right),
       _Tile(value: '${a.wrong}', label: 'Wrong', color: ExamColors.wrong),
       _Tile(value: '${a.unanswered}', label: 'Unanswered', color: ExamColors.ink),
-      _Tile(value: takenLabel(a.timeTaken), label: 'Time taken', color: ExamColors.ink),
+      _Tile(value: takenLabel(a.timeTaken), label: 'Time Taken', color: ExamColors.ink),
     ];
     return Column(
       children: [

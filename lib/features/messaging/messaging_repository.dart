@@ -75,11 +75,11 @@ extension CompanyInboxViewWords on CompanyInboxView {
   };
 
   String get empty => switch (this) {
-    CompanyInboxView.open => 'Nothing waiting in this inbox',
-    CompanyInboxView.unread => "You're all caught up",
-    CompanyInboxView.mine => 'Nothing assigned to you',
-    CompanyInboxView.done => 'Nothing marked done yet',
-    CompanyInboxView.spam => 'No spam',
+    CompanyInboxView.open => 'No Conversations Waiting in This Inbox',
+    CompanyInboxView.unread => 'No Unread Messages',
+    CompanyInboxView.mine => 'No Conversations Assigned to You',
+    CompanyInboxView.done => 'No Conversations Marked Done Yet',
+    CompanyInboxView.spam => 'No Spam',
   };
 }
 

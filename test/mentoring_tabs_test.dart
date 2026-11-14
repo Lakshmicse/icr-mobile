@@ -65,22 +65,22 @@ void main() {
       };
       final (api, rec) = await pumpMyMentoring(tester, routes);
       await openTab(tester, 'Requests');
-      expect(find.text('Sent by you'.toUpperCase()), findsOneWidget);
+      expect(find.text('Requests Sent'.toUpperCase()), findsOneWidget);
       expect(find.text('You have 1 of 3 open requests on your plan.'), findsOneWidget);
       expect(find.text('Neha Kapoor'), findsOneWidget);
-      expect(find.text('Awaiting reply'), findsOneWidget);
-      expect(find.textContaining('Lapses in 10 days if nobody answers'), findsOneWidget);
+      expect(find.text('Awaiting Reply'), findsOneWidget);
+      expect(find.textContaining('Expires in 10 days if not answered'), findsOneWidget);
       expect(find.text('Declined'), findsOneWidget);
       expect(find.textContaining('Divya replied: My cohort is full'), findsOneWidget);
 
-      await tester.tap(find.text('View profile'));
+      await tester.tap(find.text('View Profile'));
       expect(rec.opened, ['mentor:mp-neha']);
-      await tester.tap(find.text('Find similar mentors'));
+      await tester.tap(find.text('Find Similar Mentors'));
       expect(rec.opened.last, 'directory');
 
       await tester.tap(find.text('Withdraw'));
       await tester.pumpAndSettle();
-      await tester.tap(inDialog('Keep it'));
+      await tester.tap(inDialog('Keep It'));
       await tester.pumpAndSettle();
       expect(api.count('POST /mentorship/requests/req-neha/withdraw'), 0, reason: 'keeping it sends nothing');
 
@@ -90,7 +90,7 @@ void main() {
       await settle(tester);
       expect(api.count('POST /mentorship/requests/req-neha/withdraw'), 1);
       expect(find.text('Request withdrawn.'), findsOneWidget);
-      expect(find.text('Awaiting reply'), findsNothing);
+      expect(find.text('Awaiting Reply'), findsNothing);
       expect(find.text('Withdrawn'), findsOneWidget, reason: 'the list is read again');
     });
 
@@ -104,7 +104,7 @@ void main() {
       await tester.tap(inDialog('Withdraw'));
       await settle(tester);
       expect(find.text('This request was already answered.'), findsOneWidget);
-      expect(find.text('Awaiting reply'), findsOneWidget);
+      expect(find.text('Awaiting Reply'), findsOneWidget);
     });
 
     testWidgets('a mentor answers a request: accept with a rhythm and a note', (tester) async {
@@ -112,17 +112,17 @@ void main() {
       routes['POST /mentorship/requests/r-isha/accept'] = (_) => {'id': 'pair-isha'};
       final (api, _) = await pumpMyMentoring(tester, routes);
       await openTab(tester, 'Requests');
-      expect(find.text('ASKED OF YOU'), findsOneWidget);
-      expect(find.text('SENT BY YOU'), findsNothing, reason: 'a mentor only sees the mentee side when they are one');
+      expect(find.text('REQUESTS RECEIVED'), findsOneWidget);
+      expect(find.text('REQUESTS SENT'), findsNothing, reason: 'a mentor only sees the mentee side when they are one');
       expect(find.text('Isha Verma'), findsOneWidget);
-      expect(find.textContaining('Mid career'), findsOneWidget);
+      expect(find.textContaining('Mid Career'), findsOneWidget);
 
       await tester.tap(find.text('Accept'));
       await tester.pumpAndSettle();
       expect(find.text('Accept Isha'), findsOneWidget);
       await tester.tap(find.text('Weekly'));
       await tester.enterText(find.byKey(const ValueKey('accept-note')), 'Bring your org chart.');
-      await tester.tap(find.text('Accept and start'));
+      await tester.tap(find.text('Accept and Start'));
       await settle(tester);
       expect(api.bodyOf('POST /mentorship/requests/r-isha/accept'), {
         'responseNote': 'Bring your org chart.',
@@ -146,16 +146,16 @@ void main() {
       await tester.tap(find.text('Decline'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const ValueKey('form-text')), 'Full until the new year, please ask again');
-      await tester.tap(find.text('Decline request'));
+      await tester.tap(find.text('Decline Request'));
       await settle(tester);
       expect(find.text('Could not record your answer. Try again.'), findsOneWidget);
       expect(find.text('Full until the new year, please ask again'), findsOneWidget, reason: 'what was typed stays');
-      await tester.tap(find.text('Decline request'));
+      await tester.tap(find.text('Decline Request'));
       await settle(tester);
       expect(api.bodyOf('POST /mentorship/requests/r-isha/decline'), {
         'responseNote': 'Full until the new year, please ask again',
       });
-      expect(find.textContaining('Declined. Isha has been told.'), findsOneWidget);
+      expect(find.textContaining('Declined. Isha has been notified.'), findsOneWidget);
     });
   });
 
@@ -197,7 +197,7 @@ void main() {
       expect(find.textContaining('Anand Iyer'), findsWidgets);
       await tester.tap(find.byKey(const ValueKey('day-16')));
       await tester.pumpAndSettle();
-      expect(find.text('Nothing on this day.'), findsOneWidget);
+      expect(find.text('No events on this day.'), findsOneWidget);
     });
 
     testWidgets('an entry opens in full, with Join and the way to its mentorship', (tester) async {
@@ -212,7 +212,7 @@ void main() {
       await tester.tap(find.text('Reviewing the scorecard draft'));
       await tester.pumpAndSettle();
       expect(find.text('MENTORING SESSION'), findsOneWidget);
-      expect(find.text('Open mentorship'), findsOneWidget);
+      expect(find.text('Open Mentorship'), findsOneWidget);
       await tester.tap(find.text('Join'));
       await tester.pump();
       expect(urls, ['https://meet.google.com/icr-demo']);
@@ -223,13 +223,13 @@ void main() {
       await openTab(tester, 'Calendar');
       final now = mentoringNow();
       final first = DateTime(now.year, now.month);
-      await tester.tap(find.byTooltip('Next month'));
+      await tester.tap(find.byTooltip('Next Month'));
       await settle(tester);
       final q = api.queryOf('GET /mentorship/sessions')!;
       expect(q['from'], iso(DateTime(first.year, first.month + 1)));
       expect(q['to'], iso(DateTime(first.year, first.month + 2)));
       expect(api.count('GET /mentorship/sessions'), 2);
-      await tester.tap(find.byTooltip('Previous month'));
+      await tester.tap(find.byTooltip('Previous Month'));
       await settle(tester);
       expect(api.queryOf('GET /mentorship/sessions')!['from'], iso(first));
     });
@@ -257,7 +257,7 @@ void main() {
       expect(find.text('Understand SLA reporting'), findsOneWidget);
       expect(find.text('FINISHED OR DROPPED'), findsOneWidget);
       expect(find.textContaining('40% · by'), findsOneWidget);
-      expect(find.text('Set it up'), findsOneWidget, reason: 'no intent written yet');
+      expect(find.text('Set Up'), findsOneWidget, reason: 'no intent written yet');
     });
 
     testWidgets('what the member wants from mentoring is saved as the API wants it, and shown', (tester) async {
@@ -270,14 +270,14 @@ void main() {
       };
       (api, _) = await pumpMyMentoring(tester, routes, height: 2600);
       await openTab(tester, 'Goals');
-      await tester.tap(find.text('Set it up'));
+      await tester.tap(find.text('Set Up'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
-      expect(find.text('Tell us where you are in your career first.'), findsOneWidget);
-      await tester.tap(find.text('Mid career'));
+      expect(find.text('Select your career stage first.'), findsOneWidget);
+      await tester.tap(find.text('Mid Career'));
       await tester.tap(find.text('Career transitions'));
-      await tester.tap(find.text('Video call'));
+      await tester.tap(find.text('Video Call'));
       await tester.tap(find.text('Monthly'));
       await tester.enterText(find.byKey(const ValueKey('intent-goal')), 'Move from a site to a portfolio.');
       await tester.tap(find.text('Save'));
@@ -291,10 +291,10 @@ void main() {
         'timezone': 'Asia/Kolkata',
         'discoverable': true,
       });
-      expect(find.text('What you want from mentoring'), findsOneWidget);
-      expect(find.text('Mid career'), findsOneWidget);
+      expect(find.text('What You Want from Mentoring'), findsOneWidget);
+      expect(find.text('Mid Career'), findsOneWidget);
       expect(find.text('Move from a site to a portfolio.'), findsOneWidget);
-      expect(find.text('Visible to mentors'), findsOneWidget);
+      expect(find.text('Visible to Mentors'), findsOneWidget);
     });
   });
 
@@ -328,12 +328,12 @@ void main() {
       expect(find.text('Anand Iyer'), findsOneWidget);
       expect(find.text('4.8 · 14 reviews'), findsOneWidget);
       expect(find.text('2 open mentoring slots'), findsOneWidget);
-      await tester.tap(find.text('View profile'));
+      await tester.tap(find.text('View Profile'));
       expect(rec.opened, ['mentor:mp-anand']);
       await tester.tap(find.text('Remove'));
       await settle(tester);
       expect(api.count('DELETE /mentorship/mentors/mp-anand/save'), 1);
-      expect(find.text('Nothing saved yet'), findsOneWidget);
+      expect(find.text('No Saved Mentors Yet'), findsOneWidget);
       expect(find.text('Anand removed from your list.'), findsOneWidget);
     });
 
@@ -341,7 +341,7 @@ void main() {
       final routes = {...menteeRoutes(), 'GET /mentorship/mentors/saved': (_) => page([])};
       final (_, rec) = await pumpMyMentoring(tester, routes);
       await openTab(tester, 'Saved');
-      await tester.tap(find.text('Browse mentors'));
+      await tester.tap(find.text('Browse Mentors'));
       expect(rec.opened, ['directory']);
     });
   });
@@ -359,7 +359,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('ICR-MENTEE-2026-BHARATXX'), findsOneWidget);
       expect(find.textContaining('5 sessions · 3.75 hr'), findsOneWidget);
-      await tester.tap(find.text('Verify online'));
+      await tester.tap(find.text('Verify Online'));
       await tester.pump();
       expect(rec.sites, ['/mentorship/certificates/ICR-MENTEE-2026-BHARATXX']);
     });
@@ -368,7 +368,7 @@ void main() {
       final routes = {...menteeRoutes(), 'GET /mentorship/mine/certificates': (_) => []};
       await pumpMyMentoring(tester, routes);
       await openTab(tester, 'Certificates');
-      expect(find.text('No certificates yet'), findsOneWidget);
+      expect(find.text('No Certificates Available Yet'), findsOneWidget);
     });
   });
 
@@ -381,17 +381,18 @@ void main() {
       final (api, _) = await pumpMyMentoring(tester, routes, tab: MyTab.reports);
       expect(tester.widget<SegmentTabs>(find.byType(SegmentTabs)).labels, contains('Reports'));
       expect(api.count('GET /mentorship/concerns/mine'), 1);
-      expect(find.text('Not responding'), findsOneWidget);
-      expect(find.text('Acted on'), findsOneWidget);
+      expect(find.text('Not Responding'), findsOneWidget);
+      expect(find.text('Action Taken'), findsOneWidget);
       expect(find.text('We spoke to the mentor and a session is booked.'), findsOneWidget);
       expect(find.text('FROM ICR'), findsOneWidget);
     });
   });
 
-  testWidgets('a mentor who is not also a mentee has no Saved, Purchases or Goals tab', (tester) async {
+  testWidgets('a mentor who is not also a mentee has no Saved or Goals tab; Purchases always stays', (tester) async {
     await pumpMyMentoring(tester, _mentorRoutes(incoming: []));
     final tabs = tester.widget<SegmentTabs>(find.byType(SegmentTabs)).labels;
-    expect(tabs, ['Mentoring', 'Requests', 'Calendar', 'Certificates']);
-    expect(find.text('Your mentees'), findsOneWidget);
+    // Purchases is never hidden (owner, 9 Nov 2026: it came and went with the data).
+    expect(tabs, ['Mentoring', 'Requests', 'Calendar', 'Purchases', 'Certificates']);
+    expect(find.text('Your Mentees'), findsOneWidget);
   });
 }

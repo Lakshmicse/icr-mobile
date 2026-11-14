@@ -56,7 +56,10 @@ String? _text(String? s) {
 String _flat(String s) => s.replaceAll(RegExp(r'\s+'), ' ').trim();
 
 String? _join(Iterable<String?> parts, [String sep = ' · ']) {
-  final kept = [for (final p in parts) if (_text(p) != null) p!.trim()];
+  final kept = [
+    for (final p in parts)
+      if (_text(p) != null) p!.trim(),
+  ];
   return kept.isEmpty ? null : kept.join(sep);
 }
 
@@ -182,10 +185,11 @@ class CoursesSource extends SearchSource {
     _readAt = _clock();
     final read = _repo.courses();
     // A failed read must not be remembered.
-    _catalogue = read..catchError((Object _) {
-      _catalogue = null;
-      return <Course>[];
-    });
+    _catalogue = read
+      ..catchError((Object _) {
+        _catalogue = null;
+        return <Course>[];
+      });
     return read;
   }
 

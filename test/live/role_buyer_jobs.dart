@@ -210,7 +210,7 @@ void roleBuyerJobs() {
           size: const Size(390, 1700),
         );
         final text = expectHealthy(tester, 'the Jobs board as ${w.email}');
-        expect(text, contains('Post a job'));
+        expect(text, contains('Post a Job'));
         expect(text, contains('Alerts'));
         expect(text, contains('Easy Apply'));
         expect(jobs.sections, isNotEmpty);
@@ -281,13 +281,13 @@ void roleBuyerJobs() {
             expect(phone.evaluate().isNotEmpty, needsPhone, reason: '${w.email}: the form asks for a number or not');
             if (needsPhone) {
               // Submitting without it is refused on the form, in words; nothing is sent.
-              await tester.tap(find.text('Submit application'));
+              await tester.tap(find.text('Submit Application'));
               await tester.pump();
               expect(find.text('Add the mobile number the employer can reach you on.'), findsOneWidget);
               await tester.enterText(phone, '+91 98123 45670');
             }
-            await tester.ensureVisible(find.text('Submit application'));
-            await tester.tap(find.text('Submit application'));
+            await tester.ensureVisible(find.text('Submit Application'));
+            await tester.tap(find.text('Submit Application'));
             await afterTap(tester);
             expect(find.text('Applied'), findsWidgets, reason: '${w.email}: the bar reads Applied');
             final mine = (await tester.runAsync(() => careerOf(w).applications()))!.where((a) => a.jobId == jobId);

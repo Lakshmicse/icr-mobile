@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -72,11 +73,63 @@ class _DeckStudyScreenState extends State<DeckStudyScreen> with WidgetsBindingOb
   final _search = TextEditingController();
   bool _searching = false;
 
+  /// Read-aloud over the phone's speech engine (the website's speaker, `useReadAloud`): the face showing, and
+  /// silence as soon as the card, or its face, changes. Made on the first tap, so a test or a phone with no engine
+  /// never touches it.
+  FlutterTts? _tts;
+  bool _speaking = false;
+  String? _spokenFace;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _c.addListener(_stopWhenTheFaceChanges);
     _c.load();
+  }
+
+  String get _face => '${_c.position}:${_c.flipped}:${_c.current?.id}';
+
+  void _stopWhenTheFaceChanges() {
+    if (_speaking && _spokenFace != _face) _stopSpeaking();
+  }
+
+  Future<void> _stopSpeaking() async {
+    if (mounted) setState(() => _speaking = false);
+    try {
+      await _tts?.stop();
+    } catch (_) {
+      // No engine to stop.
+    }
+  }
+
+  Future<void> _toggleSpeech() async {
+    if (_speaking) return _stopSpeaking();
+    final card = _c.current;
+    if (card == null) return;
+    try {
+      final tts = _tts ??= FlutterTts()
+        ..setCompletionHandler(() {
+          if (mounted) setState(() => _speaking = false);
+        })
+        ..setCancelHandler(() {
+          if (mounted) setState(() => _speaking = false);
+        })
+        ..setErrorHandler((_) {
+          if (mounted) setState(() => _speaking = false);
+        });
+      await tts.setLanguage('en-IN');
+      await tts.setSpeechRate(0.5);
+      if (!mounted) return;
+      setState(() {
+        _speaking = true;
+        _spokenFace = _face;
+      });
+      await tts.speak(_c.flipped ? card.back : card.front);
+    } catch (_) {
+      // The phone has no speech engine (or the plugin is not there, as in a test): the button simply stays quiet.
+      if (mounted) setState(() => _speaking = false);
+    }
   }
 
   /// Back in front (the member paid for the course in the browser, or opened it elsewhere): a deck that was locked
@@ -90,6 +143,9 @@ class _DeckStudyScreenState extends State<DeckStudyScreen> with WidgetsBindingOb
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _c.removeListener(_stopWhenTheFaceChanges);
+    // Leaving the page never leaves a voice talking over whatever comes next.
+    _tts?.stop().catchError((_) => 1);
     _search.dispose();
     _c.dispose();
     super.dispose();
@@ -184,13 +240,13 @@ class _DeckStudyScreenState extends State<DeckStudyScreen> with WidgetsBindingOb
             key: const ValueKey('study-menu-starred'),
             value: _MenuAction.starred,
             enabled: starred > 0 || _c.starredOnly,
-            child: Text(_c.starredOnly ? 'Back to all cards' : 'Study starred cards ($starred)'),
+            child: Text(_c.starredOnly ? 'Back to All Cards' : 'Study Starred Cards ($starred)'),
           ),
         PopupMenuItem(
           key: const ValueKey('study-menu-summary'),
           value: _MenuAction.summary,
           enabled: !_c.finished && _c.total > 0,
-          child: const Text('Pass summary'),
+          child: const Text('Pass Summary'),
         ),
       ],
       child: const StudyMenuGlyph(),
@@ -214,7 +270,7 @@ class _DeckStudyScreenState extends State<DeckStudyScreen> with WidgetsBindingOb
         body: lock.message,
         action: 'Open ${course.title}',
         onAction: () => _openCourse(course),
-        secondary: 'All decks',
+        secondary: 'All Decks',
         onSecondary: () => Navigator.of(context).maybePop(),
       );
     }
@@ -222,43 +278,57 @@ class _DeckStudyScreenState extends State<DeckStudyScreen> with WidgetsBindingOb
       return StudyNotice(
         icon: Symbols.lock,
         tint: StudyColors.amberInk,
-        title: "This deck isn't open on your plan",
+        title: 'This Deck Is Not Open on Your Plan',
         // The API's own sentence says which: sign in, no decks included, or all the plan's places used.
         body: lock.message,
-        action: 'See plans',
+        action: 'See Plans',
         onAction: () => openUrl(context, widget.repository.plansLink(lock.pricingSlug)),
-        secondary: 'All decks',
+        secondary: 'All Decks',
         onSecondary: () => Navigator.of(context).maybePop(),
       );
     }
     if (_c.error != null) {
       return StudyNotice(
         icon: LucideIcons.cloudOff,
-        title: "Couldn't load the cards",
+        title: 'Unable to Load the Cards',
         body: _c.error!,
-        action: 'Try again',
+        action: 'Try Again',
         onAction: _c.load,
       );
     }
     if (_c.allCards.isEmpty) {
       return StudyNotice(
         icon: _c.isStarredSession ? Symbols.star : LucideIcons.layers,
-        title: _c.isStarredSession ? 'No starred cards yet' : 'No cards in this deck yet',
+        title: _c.isStarredSession ? 'No Starred Cards Yet' : 'No Cards in This Deck Yet',
         body: _c.isStarredSession
-            ? 'Tap the star on a card while you study and it is kept here for another pass.'
-            : 'Cards show up here as ICR publishes them.',
-        action: 'Back to decks',
+            ? 'Tap the star on a card while you study to keep it here for another pass.'
+            : 'Cards will appear here as ICR publishes them.',
+        action: 'Back to Decks',
         onAction: () => Navigator.of(context).maybePop(),
       );
     }
     if (_c.finished) return StudySummary(controller: _c, onBack: () => Navigator.of(context).maybePop());
-    return _StudyView(controller: _c, typed: _search.text.trim(), onStar: _star, onClearSearch: _clearSearch);
+    return _StudyView(
+      controller: _c,
+      typed: _search.text.trim(),
+      onStar: _star,
+      onClearSearch: _clearSearch,
+      onSpeak: _toggleSpeech,
+      speaking: _speaking,
+    );
   }
 }
 
 /// The cards: the categories, the card, the player and the marks, laid out to fit the screen without scrolling.
 class _StudyView extends StatelessWidget {
-  const _StudyView({required this.controller, required this.typed, required this.onStar, required this.onClearSearch});
+  const _StudyView({
+    required this.controller,
+    required this.typed,
+    required this.onStar,
+    required this.onClearSearch,
+    required this.onSpeak,
+    required this.speaking,
+  });
 
   final DeckStudyController controller;
 
@@ -266,6 +336,8 @@ class _StudyView extends StatelessWidget {
   final String typed;
   final Future<void> Function(StudyCard card) onStar;
   final VoidCallback onClearSearch;
+  final VoidCallback onSpeak;
+  final bool speaking;
 
   /// Under the card: the gap, the player bar, the gap, the marks with their tally line, the bottom margin.
   static const _below = 12 + StudyPlayer.height + 10 + StudyVerdict.buttonHeight + StudyVerdict.tallyHeight + 8;
@@ -287,9 +359,9 @@ class _StudyView extends StatelessWidget {
           child: card == null
               ? StudyNotice(
                   icon: Symbols.search_off,
-                  title: typed.isEmpty ? 'No cards to study' : 'No card matches “$typed”',
+                  title: typed.isEmpty ? 'No Cards to Study' : 'No Card Matches “$typed”',
                   body: 'Try another word, or clear the search to study the whole pass.',
-                  action: typed.isEmpty ? null : 'Clear search',
+                  action: typed.isEmpty ? null : 'Clear Search',
                   onAction: onClearSearch,
                 )
               : LayoutBuilder(
@@ -319,6 +391,8 @@ class _StudyView extends StatelessWidget {
                                 onShuffle: c.toggleShuffle,
                                 onPrevious: c.previous,
                                 onNext: c.next,
+                                onSpeak: onSpeak,
+                                speaking: speaking,
                               ),
                               const SizedBox(height: 10),
                               StudyVerdict(
@@ -417,7 +491,7 @@ class _Filters extends StatelessWidget {
     if (c.restricted) {
       return _Note(
         key: const ValueKey('study-restricted'),
-        text: 'Studying the ${c.total} you have not got yet',
+        text: 'Studying the ${c.total} not yet known',
         buttonKey: const ValueKey('study-show-all'),
         onShowAll: c.showAll,
       );
@@ -472,7 +546,7 @@ class _Note extends StatelessWidget {
             key: buttonKey,
             onPressed: onShowAll,
             style: TextButton.styleFrom(minimumSize: const Size(48, 44), foregroundColor: StudyColors.amberInk),
-            child: Text('Whole deck', style: StudyText.noteLink.copyWith(color: StudyColors.amberInk)),
+            child: Text('Whole Deck', style: StudyText.noteLink.copyWith(color: StudyColors.amberInk)),
           ),
         ],
       ),

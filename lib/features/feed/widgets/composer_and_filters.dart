@@ -8,7 +8,17 @@ import 'feed_avatar.dart';
 /// "Start a post": the reader's photo beside an outlined pill that opens the composer, as LinkedIn's. Without
 /// a photo (the Forums tab), the pill alone.
 class ComposerBar extends StatelessWidget {
-  const ComposerBar({super.key, required this.onTap, this.label = 'Start a post', this.photo, this.initials});
+  const ComposerBar({
+    super.key,
+    required this.onTap,
+    this.label = 'Start a post',
+    this.photo,
+    this.initials,
+    this.inset = HomeLook.pad,
+  });
+
+  /// The space at each side: the page's own margin, so the pill lines up with what is above and below it.
+  final double inset;
 
   final VoidCallback onTap;
 
@@ -22,7 +32,7 @@ class ComposerBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: HomeLook.pad),
+      padding: EdgeInsets.symmetric(horizontal: inset),
       child: Row(
         children: [
           if (initials != null) ...[FeedAvatar(photo: photo, initials: initials!, size: 36), const SizedBox(width: 8)],

@@ -914,13 +914,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text('Your network'), findsNothing);
+      expect(find.text('Your Network'), findsNothing);
 
       server.gates['GET /members/me/feed']!.complete();
       await tester.pumpAndSettle();
 
       expect(find.byType(CircularProgressIndicator), findsNothing);
-      expect(find.text('Your network'), findsOneWidget);
+      expect(find.text('Your Network'), findsOneWidget);
       expect(find.text('Articles and discussions from the people you follow.'), findsOneWidget);
     });
 
@@ -928,15 +928,15 @@ void main() {
       final server = _usual()..refusals['GET /members/me/feed'] = _refusal(503, 'Service unavailable');
       await _pump(tester, server: server);
 
-      expect(find.text("Couldn't load your network"), findsOneWidget);
+      expect(find.text("Unable to Load Your Network"), findsOneWidget);
       expect(find.text('Service unavailable'), findsOneWidget);
-      expect(find.text('Your network'), findsNothing);
+      expect(find.text('Your Network'), findsNothing);
 
       server.refusals.clear();
-      await _tap(tester, find.text('Retry'));
+      await _tap(tester, find.text('Try Again'));
 
-      expect(find.text("Couldn't load your network"), findsNothing);
-      expect(find.text('Your network'), findsOneWidget);
+      expect(find.text("Unable to Load Your Network"), findsNothing);
+      expect(find.text('Your Network'), findsOneWidget);
       expect(find.text('Site Audit: Implementing Sustainable Net-Zero Solutions'), findsOneWidget);
     });
 
@@ -946,9 +946,9 @@ void main() {
         ..feed.clear();
       await _pump(tester, server: server);
 
-      expect(find.text('Follow someone to start your feed'), findsOneWidget);
-      expect(find.text('Nothing new yet'), findsNothing);
-      expect(find.text('People worth following'), findsOneWidget);
+      expect(find.text('Follow Members to Start Your Feed'), findsOneWidget);
+      expect(find.text('No New Posts Yet'), findsNothing);
+      expect(find.text('Who to Follow'), findsOneWidget);
       expect(_key('person-nikhil'), findsOneWidget);
       expect(_key('person-admin'), findsOneWidget);
       expect(_inTile('stat-following', '0'), findsOneWidget);
@@ -963,7 +963,7 @@ void main() {
       await _tap(tester, _key('follow-nikhil'));
 
       expect(server.calls, contains('POST /members/nikhil/follow'));
-      expect(find.text('Follow someone to start your feed'), findsNothing);
+      expect(find.text('Follow Members to Start Your Feed'), findsNothing);
       expect(_inTile('stat-following', '1'), findsOneWidget);
     });
 
@@ -973,10 +973,10 @@ void main() {
       final server = _usual()..feed.clear();
       await _pump(tester, server: server);
 
-      expect(find.text('Nothing new yet'), findsOneWidget);
+      expect(find.text('No New Posts Yet'), findsOneWidget);
       expect(find.text('The people you follow have not published anything recently.'), findsOneWidget);
-      expect(find.text('Follow someone to start your feed'), findsNothing);
-      expect(find.text('Who to follow'), findsOneWidget);
+      expect(find.text('Follow Members to Start Your Feed'), findsNothing);
+      expect(find.text('Who to Follow'), findsOneWidget);
       expect(_key('person-nikhil'), findsOneWidget);
     });
 
@@ -984,7 +984,7 @@ void main() {
       final server = _usual()..suggestions.clear();
       await _pump(tester, server: server);
 
-      expect(find.text('Who to follow'), findsNothing);
+      expect(find.text('Who to Follow'), findsNothing);
       expect(find.text('Site Audit: Implementing Sustainable Net-Zero Solutions'), findsOneWidget);
     });
 
@@ -993,23 +993,23 @@ void main() {
       await _pump(tester, server: server);
 
       await _tap(tester, _key('tab-suggestions'));
-      expect(find.text('No suggestions right now'), findsOneWidget);
+      expect(find.text('No Suggestions Yet'), findsOneWidget);
 
       await _tap(tester, _key('tab-following'));
-      expect(find.text("You don't follow anyone yet"), findsOneWidget);
+      expect(find.text("Not Following Anyone Yet"), findsOneWidget);
 
       await _tap(tester, _key('tab-followers'));
-      expect(find.text('No followers yet'), findsOneWidget);
+      expect(find.text('No Followers Yet'), findsOneWidget);
     });
 
-    testWidgets('"Find people" on an empty Following list opens the suggestions', (tester) async {
+    testWidgets('"Find People" on an empty Following list opens the suggestions', (tester) async {
       await _pump(tester, server: _usual()..following.clear());
       await _tap(tester, _key('tab-following'));
 
-      await _tap(tester, find.text('Find people'));
+      await _tap(tester, find.text('Find People'));
 
       expect(_key('person-nikhil'), findsOneWidget);
-      expect(find.text("You don't follow anyone yet"), findsNothing);
+      expect(find.text("Not Following Anyone Yet"), findsNothing);
     });
   });
 
@@ -1122,9 +1122,9 @@ void main() {
     testWidgets('See all under Who to follow opens the suggestions list', (tester) async {
       await _pump(tester);
 
-      await _tap(tester, find.text('See all'));
+      await _tap(tester, find.text('View More'));
 
-      expect(find.text('See all'), findsNothing);
+      expect(find.text('View More'), findsNothing);
       expect(find.text('Site Audit: Implementing Sustainable Net-Zero Solutions'), findsNothing);
       expect(_key('person-nikhil'), findsOneWidget);
     });
@@ -1200,7 +1200,7 @@ void main() {
         find.descendant(of: _key('person-sarah'), matching: find.text('Follows you since 22 Oct 2026')),
         findsOneWidget,
       );
-      expect(_followLabel('sarah', 'Follow back'), findsOneWidget);
+      expect(_followLabel('sarah', 'Follow Back'), findsOneWidget);
       expect(_followLabel('marcus', 'Following'), findsOneWidget, reason: 'Marcus is in both lists');
     });
 
@@ -1293,7 +1293,10 @@ void main() {
 
       await _tap(tester, _key('follow-elena'));
       expect(find.text('Unfollow Elena Rostova?'), findsOneWidget);
-      expect(find.text("Their articles and discussions leave your feed. They aren't told."), findsOneWidget);
+      expect(
+        find.text("Their articles and discussions will no longer appear in your feed. They will not be notified."),
+        findsOneWidget,
+      );
 
       await _tap(tester, _key('unfollow-cancel'));
 
@@ -1380,14 +1383,14 @@ void main() {
     testWidgets('pulling on an empty list works too, and picks up what arrived', (tester) async {
       final server = _Server();
       await _pump(tester, server: server);
-      expect(find.text('Follow someone to start your feed'), findsOneWidget);
+      expect(find.text('Follow Members to Start Your Feed'), findsOneWidget);
 
       server.following.add(_row('elena', 'Elena', 'Rostova'));
       server.feed.add(_post('THREAD', 'late', 'Fresh from Elena'));
       await _pull(tester);
 
       expect(find.text('Fresh from Elena'), findsOneWidget);
-      expect(find.text('Follow someone to start your feed'), findsNothing);
+      expect(find.text('Follow Members to Start Your Feed'), findsNothing);
     });
 
     testWidgets('a pull that fails says why and leaves the lists on screen', (tester) async {
@@ -1399,7 +1402,7 @@ void main() {
 
       expect(find.text('Service unavailable'), findsOneWidget);
       expect(find.text('Site Audit: Implementing Sustainable Net-Zero Solutions'), findsOneWidget);
-      expect(find.text("Couldn't load your network"), findsNothing);
+      expect(find.text("Unable to Load Your Network"), findsNothing);
     });
 
     testWidgets('the bell shows the unread count and opens notifications', (tester) async {
@@ -1432,21 +1435,21 @@ void main() {
 
     testWidgets('Write an article calls onWriteArticle', (tester) async {
       final screen = await _pump(tester);
-      await _tap(tester, find.text('Write an article'));
+      await _tap(tester, find.text('Write an Article'));
       expect(screen.writes, 1);
       expect(screen.opened, isEmpty);
     });
 
     testWidgets('without onWriteArticle it opens the website\'s article composer', (tester) async {
       final screen = await _pump(tester, wired: false);
-      await _tap(tester, find.text('Write an article'));
+      await _tap(tester, find.text('Write an Article'));
       expect(screen.opened, [_site('/manage/articles')]);
     });
 
     testWidgets('the card says what writing earns', (tester) async {
       await _pump(tester);
-      expect(find.text('Be worth following'), findsOneWidget);
-      expect(find.text('Members who follow you hear when you publish something new.'), findsOneWidget);
+      expect(find.text('Publish for Your Followers'), findsOneWidget);
+      expect(find.text('Members who follow you are notified when you publish something new.'), findsOneWidget);
     });
   });
 
@@ -1546,7 +1549,7 @@ void main() {
     });
 
     test('NetworkTab labels are the chips', () {
-      expect(NetworkTab.values.map((t) => t.label), ['Feed', 'People to follow', 'Following', 'Followers']);
+      expect(NetworkTab.values.map((t) => t.label), ['Feed', 'People to Follow', 'Following', 'Followers']);
     });
   });
 }

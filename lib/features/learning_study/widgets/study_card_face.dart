@@ -196,7 +196,7 @@ class _Answer extends StatelessWidget {
                   TextButton.icon(
                     onPressed: () => openUrl(context, Uri.parse(link)),
                     icon: const Icon(LucideIcons.fileText, size: 16),
-                    label: Text(card.resourceLabel ?? 'Open resource'),
+                    label: Text(card.resourceLabel ?? 'Open Resource'),
                   ),
                 ],
               ],

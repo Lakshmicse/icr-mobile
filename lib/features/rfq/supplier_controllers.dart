@@ -19,7 +19,7 @@ enum SupplierGate {
 /// the requirements the supplier was invited to.
 enum BoardTab {
   recommended('Recommended'),
-  open('All open'),
+  open('All Open'),
   invited('Invited');
 
   const BoardTab(this.label);
@@ -608,7 +608,7 @@ class OpportunityController extends ChangeNotifier with _SupplierAccess {
 enum BidsTab {
   submitted('Submitted'),
   shortlisted('Shortlisted'),
-  awarded('Won'),
+  awarded('Awarded'),
   archived('Archived');
 
   const BidsTab(this.label);

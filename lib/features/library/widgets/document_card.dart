@@ -108,15 +108,6 @@ class DocumentCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (mine) ...[
-              const SizedBox(width: 6),
-              CommunityPill(
-                label: 'YOURS',
-                fill: CommunityColors.blue50,
-                style: CommunityText.pill.copyWith(color: CommunityColors.blue700),
-                height: 17,
-              ),
-            ],
           ],
         ),
         if (d.description != null) ...[

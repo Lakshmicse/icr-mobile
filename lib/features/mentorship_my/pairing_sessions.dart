@@ -57,7 +57,7 @@ class _SessionsSectionState extends State<SessionsSection> {
         ],
         SectionTitle(
           title: 'Sessions',
-          action: c.active ? (c.isMentor ? 'Book a session' : 'Ask for a time') : null,
+          action: c.active ? (c.isMentor ? 'Book a Session' : 'Request a Time') : null,
           onAction: () => openSessionForm(context, c, p),
           top: featured != null ? 8 : 18,
         ),
@@ -67,12 +67,12 @@ class _SessionsSectionState extends State<SessionsSection> {
           Text(
             c.active
                 ? (c.isMentor
-                      ? 'Nothing booked. Book a time from your hours.'
-                      : 'Nothing booked yet. Ask for a time; your mentor confirms it.')
-                : 'No sessions ahead.',
+                      ? 'No sessions booked. Book a time from your hours.'
+                      : 'No sessions booked yet. Request a time and your mentor confirms it.')
+                : 'No upcoming sessions.',
             style: MentoringText.body,
           ),
-        if (live.isEmpty && featured != null) Text('Nothing else is booked.', style: MentoringText.body),
+        if (live.isEmpty && featured != null) Text('No additional sessions scheduled.', style: MentoringText.body),
         for (final s in live) SessionCard(controller: c, links: widget.links, session: s),
         if (past.isNotEmpty) ...[
           InkWell(
@@ -81,7 +81,7 @@ class _SessionsSectionState extends State<SessionsSection> {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                _showPast ? 'Hide past sessions' : 'Past sessions (${past.length})',
+                _showPast ? 'Hide Past Sessions' : 'Past Sessions (${past.length})',
                 style: MentoringText.buttonQuiet,
               ),
             ),
@@ -94,15 +94,15 @@ class _SessionsSectionState extends State<SessionsSection> {
   }
 
   String _featuredHeading(PairingSession s) {
-    if (c.running(s)) return 'Happening now';
+    if (c.running(s)) return 'Happening Now';
     // Only the mentor can mark an hour held; the mentee waits on them for it.
     if (c.overdue(s)) {
-      return c.isMentor ? 'Needs you: a session to close' : 'Waiting on ${c.pairing!.mentor.firstName} to confirm';
+      return c.isMentor ? 'Action needed: close a session' : 'Waiting for ${c.pairing!.mentor.firstName} to confirm';
     }
     if (s.status == SessionStatus.requested) {
-      return c.isMentor ? 'Needs you: a time to answer' : 'Waiting on ${c.pairing!.mentor.firstName}';
+      return c.isMentor ? 'Action needed: respond to a time' : 'Waiting for ${c.pairing!.mentor.firstName}';
     }
-    return 'Up next';
+    return 'Up Next';
   }
 }
 
@@ -115,10 +115,10 @@ Future<void> openSessionForm(BuildContext context, PairingController c, Pairing 
       session != null
           ? (session.status == SessionStatus.requested
                 ? 'Booked at the new time.'
-                : 'Moved. ${p.counterpart.firstName} has been told.')
+                : 'Moved. ${p.counterpart.firstName} has been notified.')
           : (c.isMentor
-                ? 'Booked. ${p.counterpart.firstName} has been told.'
-                : 'Asked. Your mentor confirms the time.'),
+                ? 'Booked. ${p.counterpart.firstName} has been notified.'
+                : 'Request sent. Your mentor confirms the time.'),
     );
   }
 }
@@ -164,7 +164,7 @@ class SessionCard extends StatelessWidget {
                 overdue
                     ? 'Overdue'
                     : running
-                    ? 'In progress'
+                    ? 'In Progress'
                     : _statusWord(c, s),
                 tone: overdue
                     ? PillTone.amber
@@ -189,7 +189,7 @@ class SessionCard extends StatelessWidget {
             MetaLine(
               icon: LucideIcons.info,
               text:
-                  '${p.mentor.firstName} confirms a session once it has happened. If it did not, move it to a new time.',
+                  '${p.mentor.firstName} confirms a session after it takes place. If it did not take place, move it to a new time.',
             ),
           if (s.cancelReason != null && s.status == SessionStatus.cancelled)
             MetaLine(icon: LucideIcons.info, text: s.cancelReason!, color: AppColors.amber800),
@@ -226,7 +226,7 @@ class SessionCard extends StatelessWidget {
                   onPressed: () => report(context, () => c.approve(s), done: 'Approved. It is on both calendars.'),
                 ),
                 QuietButton(
-                  label: 'Offer another time',
+                  label: 'Offer Another Time',
                   onPressed: () => openSessionForm(context, c, p, session: s),
                 ),
                 QuietButton(
@@ -234,8 +234,8 @@ class SessionCard extends StatelessWidget {
                   danger: true,
                   onPressed: () => showTextSheet(
                     context,
-                    title: 'Decline this time?',
-                    subtitle: '${whenLabel(s.scheduledAt)}. ${p.counterpart.firstName} is told, with your reason.',
+                    title: 'Decline This Time?',
+                    subtitle: '${whenLabel(s.scheduledAt)}. ${p.counterpart.firstName} is notified, with your reason.',
                     label: 'Reason',
                     hint: 'I am travelling that day',
                     submitLabel: 'Decline',
@@ -248,13 +248,17 @@ class SessionCard extends StatelessWidget {
               if (!c.isMentor && requested)
                 QuietButton(
                   label: 'Withdraw',
-                  onPressed: () =>
-                      report(context, () => c.cancel(s, 'Withdrawn by the mentee.'), done: 'Request withdrawn.'),
+                  onPressed: () async {
+                    // Asks first (owner, 7 Nov 2026).
+                    if (await confirmWithdraw(context, body: 'The request is withdrawn, and the mentor is notified.')) {
+                      await report(context, () => c.cancel(s, 'Withdrawn by the mentee.'), done: 'Request withdrawn.');
+                    }
+                  },
                 ),
               if (c.canComplete(s, now) && overdue)
-                SolidButton(label: 'Mark held', onPressed: () => _complete(context)),
+                SolidButton(label: 'Mark as Held', onPressed: () => _complete(context)),
               if (c.canComplete(s, now) && !overdue)
-                QuietButton(label: 'Mark held', onPressed: () => _complete(context)),
+                QuietButton(label: 'Mark as Held', onPressed: () => _complete(context)),
               if (scheduled && c.active)
                 QuietButton(
                   label: 'Move',
@@ -265,11 +269,11 @@ class SessionCard extends StatelessWidget {
                   label: 'Cancel',
                   onPressed: () => showTextSheet(
                     context,
-                    title: 'Cancel this session?',
-                    subtitle: '${whenLabel(s.scheduledAt)}. The other person is told, with your reason.',
+                    title: 'Cancel This Session?',
+                    subtitle: '${whenLabel(s.scheduledAt)}. The other person is notified, with your reason.',
                     label: 'Reason',
                     hint: 'Something came up at work',
-                    submitLabel: 'Cancel session',
+                    submitLabel: 'Cancel Session',
                     minLength: 3,
                     danger: true,
                     onSend: (reason) => c.cancel(s, reason),
@@ -277,7 +281,7 @@ class SessionCard extends StatelessWidget {
                 ),
               if (c.isMentor && (scheduled || requested))
                 QuietButton(
-                  label: 'Meeting link',
+                  label: 'Meeting Link',
                   icon: LucideIcons.link,
                   onPressed: () async {
                     final sent = await showFormSheet(context, (_) => MeetingLinkForm(controller: c, session: s));
@@ -286,7 +290,7 @@ class SessionCard extends StatelessWidget {
                 ),
               if (held)
                 QuietButton(
-                  label: (s.notes ?? '').isEmpty ? 'Add notes' : 'Notes',
+                  label: (s.notes ?? '').isEmpty ? 'Add Notes' : 'Notes',
                   icon: LucideIcons.notebookPen,
                   onPressed: () async {
                     final sent = await showFormSheet(context, (_) => SessionRecordForm(controller: c, session: s));

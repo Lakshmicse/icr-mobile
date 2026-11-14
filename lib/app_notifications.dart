@@ -8,6 +8,8 @@ import 'app_screens.dart';
 import 'app_search.dart' show openMentorProfile;
 import 'features/account/companies/create_company_screen.dart';
 import 'features/account/profile/my_profile_screen.dart' show ProfileSection;
+import 'features/account/widgets/account_session.dart' show maybeAuth;
+import 'features/workspaces/workspaces.dart' show isStaff;
 import 'features/become_mentor/become_mentor_screen.dart';
 import 'features/career/career_routes.dart';
 import 'features/career/company_insights_controller.dart' show InsightsTab;
@@ -235,9 +237,29 @@ Map<String, NotificationOpener> appNotificationOpeners({required BuildContext sh
     // the row is about (the owner's tap on "New enquiry about CSF" was told "staff tools"). The console's other
     // sections are still the website's staff pages, which the app does not draw.
     NotificationKinds.adminLearning: (ctx, t) {
-      if (t['section'] != 'enquiries') return NotificationRouter.staffOnly(ctx);
-      unawaited(openPartnerEnquiries(ctx, focusId: t['leadId']));
-      return true;
+      final section = t['section'];
+      if (section == 'enquiries') {
+        unawaited(openPartnerEnquiries(ctx, focusId: t['leadId']));
+        return true;
+      }
+      // The rest of the partner institute's console: a course's review decision (no section), its batches and its
+      // enrolments. ICR's own Learning Center (and its other sections) is a staff console the app does not have.
+      final user = maybeAuth(ctx)?.user;
+      final institute = user != null && (!isStaff(user) || user.role == 'PARTNER_ADMIN');
+      if (!institute) return NotificationRouter.staffOnly(ctx);
+      switch (section) {
+        case null:
+        case 'courses':
+          unawaited(openPartnerCourses(ctx));
+          return true;
+        case 'batches':
+          unawaited(openPartnerBatches(ctx, courseId: t['courseId']));
+          return true;
+        case 'enrolments':
+          unawaited(openPartnerEnrolments(ctx, courseId: t['courseId']));
+          return true;
+      }
+      return NotificationRouter.staffOnly(ctx);
     },
 
     // --- Mentorship ----------------------------------------------------------------------------------------

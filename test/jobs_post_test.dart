@@ -10,7 +10,7 @@ import 'hiring_fakes.dart';
 import 'helpers/fonts.dart';
 import 'jobs_fakes.dart';
 
-/// Every control of "Post a job" and "Edit job", tapped: what it does on the phone and what it sends.
+/// Every control of 'Post a Job' and 'Edit Job', tapped: what it does on the phone and what it sends.
 /// What the API does with a posting is proved in `test/live/jobs_employer_live_test.dart`.
 
 final _description =
@@ -66,8 +66,8 @@ void main() {
   group('opening the composer', () {
     testWidgets('a new posting starts empty and lists what it needs to go live', (tester) async {
       await openComposer(tester);
-      expect(find.text('Post a job'), findsOneWidget);
-      expect(find.text('Before you publish'), findsOneWidget);
+      expect(find.text('Post a Job'), findsOneWidget);
+      expect(find.text('Before You Publish'), findsOneWidget);
       expect(find.byKey(_k('blocker-title')), findsOneWidget);
       expect(find.byKey(_k('blocker-description')), findsOneWidget);
       expect(find.byKey(_k('blocker-skills')), findsOneWidget);
@@ -78,12 +78,12 @@ void main() {
 
     testWidgets('an existing posting loads into the form, with its status said', (tester) async {
       await openComposer(tester, jobId: 'job-open');
-      expect(find.text('Edit job'), findsOneWidget);
+      expect(find.text('Edit Job'), findsOneWidget);
       expect(tester.widget<TextField>(find.byKey(_k('job-title'))).controller!.text, 'Facilities Operations Lead');
       expect(find.text('Open'), findsOneWidget);
-      expect(find.text('This posting is live: changes show at once.'), findsOneWidget);
-      expect(find.text('Update posting'), findsOneWidget);
-      expect(find.text('Save changes'), findsOneWidget);
+      expect(find.text('This posting is live. Changes appear immediately.'), findsOneWidget);
+      expect(find.text('Update Posting'), findsOneWidget);
+      expect(find.text('Save Changes'), findsOneWidget);
     });
 
     testWidgets('a posting that cannot be opened says why and tries again', (tester) async {
@@ -92,7 +92,7 @@ void main() {
       expect(find.byKey(_k('composer-error')), findsOneWidget);
       expect(find.text('We could not reach ICR.'), findsOneWidget);
       repo.failures.remove('job');
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byKey(_k('composer-error')), findsNothing);
       expect(tester.widget<TextField>(find.byKey(_k('job-title'))).controller!.text, 'Facilities Operations Lead');
@@ -100,7 +100,7 @@ void main() {
 
     testWidgets('a paused posting offers to publish it again, a draft sent back shows nothing odd', (tester) async {
       await openComposer(tester, jobId: 'job-paused');
-      expect(find.text('Publish again'), findsOneWidget);
+      expect(find.text('Publish Again'), findsOneWidget);
       expect(find.text('Paused. Publish to open it again.'), findsOneWidget);
     });
   });
@@ -243,7 +243,7 @@ void main() {
       expect(find.text('Enter the number of openings for each city (Mumbai is missing).'), findsOneWidget);
       await type(tester, 'openings-Mumbai', '3');
       expect(find.byKey(_k('blocker-cityOpenings')), findsNothing);
-      expect(find.text('5 openings in all'), findsOneWidget);
+      expect(find.text('5 openings in total'), findsOneWidget);
 
       await tap(tester, 'save-draft');
       final json = repo.created.single.draft.toJson();
@@ -373,7 +373,7 @@ void main() {
     testWidgets('salary is optional, and a maximum below the minimum is called out', (tester) async {
       final (repo, _, _) = await openComposer(tester);
       await fillReady(tester);
-      expect(find.text('Ready to publish'), findsOneWidget, reason: 'no salary needed');
+      expect(find.text('Ready to Publish'), findsOneWidget, reason: 'no salary needed');
       await type(tester, 'sal-min', '900000');
       await type(tester, 'sal-max', '500000');
       expect(find.byKey(_k('blocker-salaryOrder')), findsOneWidget);
@@ -450,7 +450,7 @@ void main() {
     testWidgets('the apply-by date is picked, shown, and cleared', (tester) async {
       final (repo, _, _) = await openComposer(tester);
       await type(tester, 'job-title', 'Supervisor');
-      expect(find.text('Pick a date'), findsOneWidget);
+      expect(find.text('Select a Date'), findsOneWidget);
       await tap(tester, 'apply-deadline');
       await tester.pumpAndSettle();
       await tester.tap(find.text('OK'));
@@ -460,7 +460,7 @@ void main() {
       expect(repo.created.single.draft.applyDeadline, isNotNull);
 
       await tap(tester, 'clear-deadline');
-      expect(find.text('Pick a date'), findsOneWidget);
+      expect(find.text('Select a Date'), findsOneWidget);
       expect(find.byKey(_k('clear-deadline')), findsNothing);
     });
 
@@ -479,10 +479,10 @@ void main() {
   });
 
   group('the checklist', () {
-    testWidgets('a complete posting is "Ready to publish"', (tester) async {
+    testWidgets('a complete posting is "Ready to Publish"', (tester) async {
       await openComposer(tester);
       await fillReady(tester);
-      expect(find.text('Ready to publish'), findsOneWidget);
+      expect(find.text('Ready to Publish'), findsOneWidget);
       expect(find.byKey(_k('blocker-title')), findsNothing);
       expect(find.byKey(_k('send-review')), findsOneWidget);
     });
@@ -528,7 +528,7 @@ void main() {
       final (repo, _, _) = await openComposer(tester);
       await tap(tester, 'save-draft');
       await tester.pump();
-      expect(find.text('Give the posting a title to save it.'), findsWidgets);
+      expect(find.text('Enter a job title to save the posting.'), findsWidgets);
       expect(repo.created, isEmpty);
     });
 
@@ -575,7 +575,7 @@ void main() {
       await type(tester, 'job-title', 'Supervisor');
       await tap(tester, 'publish');
       await tester.pump();
-      expect(find.text('Finish 2 things before publishing.'), findsWidgets);
+      expect(find.text('Complete 2 items before publishing.'), findsWidgets);
       expect(repo.created, isEmpty);
     });
 
@@ -705,7 +705,7 @@ void main() {
       expect(repo.created, isEmpty, reason: 'discarded');
     });
 
-    testWidgets('"Save draft" on the way out saves, then leaves', (tester) async {
+    testWidgets('"Save Draft" on the way out saves, then leaves', (tester) async {
       final (repo, _, _) = await openComposer(tester);
       await type(tester, 'job-title', 'Supervisor');
       await tester.tap(find.byIcon(Symbols.arrow_back));
@@ -716,7 +716,7 @@ void main() {
       expect(find.byKey(_k('open-screen')), findsOneWidget);
     });
 
-    testWidgets('"Save draft" on the way out stays if the save is refused', (tester) async {
+    testWidgets('"Save Draft" on the way out stays if the save is refused', (tester) async {
       final repo = SpyHiring()..failures['createJob'] = ApiError('Not now.');
       await openComposer(tester, repo: repo);
       await type(tester, 'job-title', 'Supervisor');
@@ -772,7 +772,7 @@ void main() {
       await addQuestion(tester, ideal: 'true', must: true);
       expect(find.byKey(_k('no-questions')), findsNothing);
       expect(find.text('1. Can you work rotational shifts?'), findsOneWidget);
-      expect(find.text('Yes or no • Must have'), findsOneWidget);
+      expect(find.text('Yes or No • Must-Have'), findsOneWidget);
     });
 
     testWidgets('a question too short is refused in the dialog', (tester) async {
@@ -796,11 +796,11 @@ void main() {
       await tester.enterText(find.byKey(_k('question-options')), 'Day');
       await tester.tap(find.byKey(_k('question-save')));
       await tester.pump();
-      expect(find.text('Give "Which shift?" at least two options.'), findsOneWidget);
+      expect(find.text('Add at least two options to "Which shift?".'), findsOneWidget);
       await tester.enterText(find.byKey(_k('question-options')), 'Day\nNight\n');
       await tester.tap(find.byKey(_k('question-save')));
       await tester.pumpAndSettle();
-      expect(find.text('Pick one • 2 options'), findsOneWidget);
+      expect(find.text('Single Choice • 2 options'), findsOneWidget);
     });
 
     testWidgets('a rating asks for its scale; a text question has no answer to match', (tester) async {

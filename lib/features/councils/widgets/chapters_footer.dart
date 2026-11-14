@@ -93,7 +93,7 @@ class ChaptersFooter extends StatelessWidget {
                     children: [
                       const Icon(Symbols.apartment, size: 15, color: AppColors.slate900),
                       const SizedBox(width: 6),
-                      Text('View Regional Chapters Directory', style: CouncilsText.directoryButton),
+                      Text('View Chapters Directory', style: CouncilsText.directoryButton),
                     ],
                   ),
                 ),

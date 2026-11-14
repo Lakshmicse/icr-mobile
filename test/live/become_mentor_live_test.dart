@@ -182,7 +182,7 @@ void main() {
 
         List<String> mine() => [for (final n in c.needed) n.message];
         expect(mine(), apiBlockers(c.readiness.data!), reason: 'the first state: nothing but a short bio');
-        expect(mine(), contains('Say a little more about how you mentor — at least 100 characters (6 so far).'));
+        expect(mine(), contains('Describe how you mentor in at least 100 characters (6 so far).'));
 
         await completePerson(c);
         expect(mine(), apiBlockers(c.readiness.data!), reason: 'the person\'s half done');
@@ -211,7 +211,7 @@ void main() {
         // A photo is part of it too: take it off and the API names it, in the same words and the same place.
         expect(await c.removePhoto(), isNull);
         expect(c.person.data!.avatarUrl, isNull);
-        expect(mine(), ['Add a profile photo — it is the first thing a mentee sees.']);
+        expect(mine(), ['Add a profile photo. It is the first thing a mentee sees.']);
         expect(mine(), apiBlockers(c.readiness.data!));
         expect(await c.savePerson({'avatarUrl': originalAvatar ?? ''}), isNull);
         expect(c.person.data!.avatarUrl, originalAvatar);
@@ -520,7 +520,7 @@ void main() {
       expect(d.kindLabel, 'Certificate');
       expect(d.label, 'CFMP certificate (live test)');
       expect(d.status, 'PENDING');
-      expect(d.statusLabel, 'Awaiting review');
+      expect(d.statusLabel, 'Awaiting Review');
       expect(d.removable, isTrue);
       expect(d.fileUrl, startsWith('/uploads/'));
       expect(d.fileName, 'kiran-live-test.pdf');
@@ -567,7 +567,7 @@ void main() {
         expect(await c.submit(), isNull);
         expect(c.status, MentorStatus.pending);
         expect(c.mentor!.reviewNote, isNull);
-        expect(c.steps.last.label, 'ICR review — in progress');
+        expect(c.steps.last.label, 'ICR Review (In Progress)');
         expect(await c.submit(), 'Your profile is already with the review team.');
 
         expect(await c.withdraw(), isNull);

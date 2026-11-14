@@ -21,7 +21,7 @@ enum RfqKind {
 
 enum RfqStatus {
   draft('DRAFT', 'Draft'),
-  published('PUBLISHED', 'Live'),
+  published('PUBLISHED', 'Active'),
   closed('CLOSED', 'Closed'),
   awarded('AWARDED', 'Awarded'),
   cancelled('CANCELLED', 'Cancelled');
@@ -38,7 +38,7 @@ enum RfqStatus {
 
 /// The staged RFQ's steps, in order (the requirement stays PUBLISHED throughout).
 enum RfqStage {
-  prequalification('PREQUALIFICATION', 'Pre-qualification'),
+  prequalification('PREQUALIFICATION', 'Pre-Qualification'),
   shortlisting('SHORTLISTING', 'Shortlist'),
   quotation('QUOTATION', 'Quotes'),
   evaluation('EVALUATION', 'Evaluation'),
@@ -65,9 +65,9 @@ enum RfqStage {
 
   /// The words on the owner's button that moves it on.
   String? get nextAction => switch (this) {
-    prequalification => 'Start screening & shortlist',
-    shortlisting => 'Open detailed quotes',
-    quotation => 'Begin evaluation',
+    prequalification => 'Start Screening & Shortlist',
+    shortlisting => 'Open Detailed Quotes',
+    quotation => 'Begin Evaluation',
     _ => null,
   };
 }
@@ -114,9 +114,9 @@ enum InviteStatus {
 }
 
 enum PreQualStatus {
-  pending('PENDING', 'To screen'),
+  pending('PENDING', 'To Screen'),
   qualified('QUALIFIED', 'Qualified'),
-  rejected('REJECTED', 'Not qualified');
+  rejected('REJECTED', 'Not Qualified');
 
   const PreQualStatus(this.wire, this.label);
   final String wire;
@@ -657,12 +657,12 @@ class RequirementPage {
 /// The buyer's views (tabs and tiles), as `GET /rfq/mine` takes them.
 enum MyView {
   all('ALL', 'All'),
-  live('LIVE', 'Live'),
+  live('LIVE', 'Active'),
   draft('DRAFT', 'Drafts'),
   awarded('AWARDED', 'Awarded'),
   ended('ENDED', 'Ended'),
-  attention('ATTENTION', 'Waiting on you'),
-  closing('CLOSING', 'Closing this week');
+  attention('ATTENTION', 'Waiting on You'),
+  closing('CLOSING', 'Closing Soon');
 
   const MyView(this.wire, this.label);
   final String wire;
@@ -671,8 +671,8 @@ enum MyView {
 
 /// How the buyer's list is ordered (`sort`).
 enum MySort {
-  updated('updated', 'Recently updated'),
-  closing('closing', 'Closing soonest'),
+  updated('updated', 'Recently Updated'),
+  closing('closing', 'Closing Soonest'),
   newest('newest', 'Newest'),
   title('title', 'Title A–Z');
 
@@ -1111,10 +1111,10 @@ class BuyerContact {
 
 /// The open board's sorts (`sort` on `GET /rfq/open`).
 enum BoardSort {
-  match('match', 'Best match'),
+  match('match', 'Best Match'),
   newest('newest', 'Newest'),
-  closing('closing', 'Closing soon'),
-  budget('budget', 'Highest budget');
+  closing('closing', 'Closing Soon'),
+  budget('budget', 'Highest Budget');
 
   const BoardSort(this.wire, this.label);
   final String wire;

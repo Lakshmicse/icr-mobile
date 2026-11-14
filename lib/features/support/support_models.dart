@@ -13,7 +13,7 @@ Map<String, dynamic> _map(Object? v) => v is Map ? v.cast<String, dynamic>() : c
 /// The tabs over the list (`FILTERS` of the website's `MyTicketsList`): [api] is the `status` it asks for.
 enum SupportFilter {
   open('OPEN_ONLY', 'Open'),
-  waiting('AWAITING_USER', 'Waiting on you'),
+  waiting('AWAITING_USER', 'Waiting on You'),
   resolved('RESOLVED', 'Resolved'),
   all('ALL', 'All');
 

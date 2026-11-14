@@ -73,10 +73,10 @@ class NotificationRouter {
   };
 
   /// What a person is told when a record cannot be opened (deleted, no longer theirs, offline).
-  static const unavailable = 'This is no longer available.';
+  static const unavailable = 'This item is no longer available.';
 
   /// What a person is told when a row is for a page only ICR's staff have, on the website.
-  static const staffOnlyMessage = "That one is for ICR's staff tools, which aren't in the app.";
+  static const staffOnlyMessage = 'This notification is for ICR staff tools, which are not available in the app.';
 
   /// Says so, and takes the tap: an opener for a kind with staff-only sections returns this for them.
   static bool staffOnly(BuildContext context) {

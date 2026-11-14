@@ -9,8 +9,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
 import '../../core/util/links.dart';
 import '../../core/widgets/chips.dart';
+import '../../core/widgets/title_bar.dart' show BarEditButton;
 import '../feed/feed_models.dart';
-import 'event_format.dart';
 import 'event_models.dart';
 import 'event_sheet.dart';
 import 'event_tickets.dart';
@@ -22,7 +22,10 @@ import 'widgets/spotlight_card.dart';
 
 /// The Events tab: the board from the Events design.
 class EventsScreen extends StatefulWidget {
-  const EventsScreen({super.key, required this.onBack, required this.viewer, required this.onAccount});
+  const EventsScreen({super.key, required this.onBack, required this.viewer, required this.onAccount, this.onManage});
+
+  /// The pencil beside the bell: the Manage Events page, for the staff who run events. No pencil when null.
+  final VoidCallback? onManage;
 
   /// Takes the shell back to Home. The design's header has no back arrow (the
   /// reader's photo sits there) and the shell's own `PopScope` already returns
@@ -99,6 +102,9 @@ class _EventsScreenState extends State<EventsScreen> {
                   unread: events.unread,
                   onAvatarTap: widget.onAccount,
                   onBellTap: () => openSitePage(context, '/notifications'),
+                  actions: [
+                    if (widget.onManage != null) BarEditButton(label: 'Manage events', onTap: widget.onManage!),
+                  ],
                 ),
               ),
             ],
@@ -123,9 +129,9 @@ class _EventsScreenState extends State<EventsScreen> {
         SliverFillRemaining(
           hasScrollBody: false,
           child: _Notice(
-            title: "Couldn't load events",
+            title: 'Unable to Load Events',
             body: events.error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: events.refresh,
             secondary: 'Back to Home',
             onSecondary: widget.onBack,
@@ -151,15 +157,8 @@ class _EventsScreenState extends State<EventsScreen> {
           ),
         );
       }
-      if (events.schedule != null || events.cpd != null) {
-        children.add(const SizedBox(height: 9));
-        children.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: _MemberTiles(schedule: events.schedule, cpd: events.cpd),
-          ),
-        );
-      }
+      // The "My Schedule" and "CPD Earned" tiles that sat here went (owner, 12 Nov 2026: no count tiles over the Chapters, Councils and Events hubs); a booked
+      // event's sheet, with its pass and Cancel, opens from its own card.
       if (events.tracks.isNotEmpty) {
         children.add(const SizedBox(height: 10));
         children.add(
@@ -213,10 +212,10 @@ class _EventsScreenState extends State<EventsScreen> {
     if (agenda.isEmpty) {
       children.add(
         _Notice(
-          title: events.narrowed ? 'No events match' : 'No upcoming events',
+          title: events.narrowed ? 'No Events Match' : 'No Upcoming Events',
           body: events.narrowed
               ? 'Try other words, or clear the filters.'
-              : 'New events show up here as ICR announces them.',
+              : 'New events will appear here when ICR announces them.',
         ),
       );
     } else {
@@ -364,7 +363,7 @@ class _SearchBox extends StatelessWidget {
                   suffixIcon: value.text.isEmpty
                       ? null
                       : IconButton(
-                          tooltip: 'Clear search',
+                          tooltip: 'Clear Search',
                           padding: EdgeInsets.zero,
                           iconSize: 14,
                           onPressed: () {
@@ -393,150 +392,6 @@ class _SearchBox extends StatelessWidget {
           const SizedBox(width: 7),
         ],
       ),
-    );
-  }
-}
-
-/// "My Schedule (2)" and "CPD Earned", side by side.
-class _MemberTiles extends StatelessWidget {
-  const _MemberTiles({required this.schedule, required this.cpd});
-
-  final MySchedule? schedule;
-  final CpdProgress? cpd;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = schedule;
-    final c = cpd;
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: _Tile(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // The title rows are as tall as their text (17 dp at the 12 sp floor, the design drew 13); the
-                  // gap below each gave up the 4 dp, so the tile keeps its height.
-                  Row(
-                    children: [
-                      Text('My Schedule (${s?.count ?? 0})', style: EventsText.tileTitle),
-                      const Spacer(),
-                      if ((s?.count ?? 0) > 0)
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(color: AppColors.online, shape: BoxShape.circle),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  if (s?.next == null)
-                    Text('Nothing booked yet', style: EventsText.tileBody, maxLines: 1, overflow: TextOverflow.ellipsis)
-                  else
-                    // A long title is cut, never the day and hour after it.
-                    Row(
-                      children: [
-                        Text('Next: ', style: EventsText.tileBody),
-                        Flexible(
-                          child: Text(
-                            s!.nextLabel ?? s.next!.title,
-                            style: EventsText.tileBody,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Text(' • ${nextWhen(s.next!.startsAt)}', style: EventsText.tileBody, softWrap: false),
-                      ],
-                    ),
-                  // The next booked event's sheet, where its pass and Cancel are (the website's events page is this
-                  // screen); nothing to manage, no link.
-                  if (s?.next != null) ...[
-                    const SizedBox(height: 10),
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => showEventSheet(context, s!.next!),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('Manage & View', style: EventsText.tileLink),
-                          const SizedBox(width: 1),
-                          const Icon(LucideIcons.chevronRight, size: 12, color: EventsColors.link),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 7),
-          Expanded(
-            child: _Tile(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(LucideIcons.award, size: 12, color: AppColors.tertiary),
-                      const SizedBox(width: 4),
-                      Text('CPD Earned', style: EventsText.tileTitle),
-                      const Spacer(),
-                      if (c != null)
-                        Text(
-                          c.target > 0 ? '${hoursLabel(c.earned)} / ${hoursLabel(c.target)}' : hoursLabel(c.earned),
-                          style: EventsText.cpdValue,
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(3.5),
-                    child: SizedBox(
-                      height: 7,
-                      child: Stack(
-                        children: [
-                          const ColoredBox(color: EventsColors.progressTrack, child: SizedBox.expand()),
-                          FractionallySizedBox(
-                            widthFactor: c?.fraction ?? 0,
-                            child: const ColoredBox(color: EventsColors.progressFill, child: SizedBox.expand()),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 9.5),
-                  Text(_cpdNote(c), style: EventsText.cpdNote, maxLines: 1, overflow: TextOverflow.ellipsis),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static String _cpdNote(CpdProgress? c) {
-    if (c == null) return 'Hours from events you attend land here';
-    if (c.target <= 0) return '${hoursLabel(c.earned)} hours logged in ${c.year}';
-    if (c.remaining <= 0) return 'Target for ${c.year} reached';
-    return '${hoursLabel(c.remaining)} credits needed by Dec 31';
-  }
-}
-
-class _Tile extends StatelessWidget {
-  const _Tile({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 8.5),
-      // A tinted tile, never an outlined one (the owner's rule, Nov 2026).
-      decoration: BoxDecoration(color: EventsColors.panel, borderRadius: BorderRadius.circular(10)),
-      child: child,
     );
   }
 }
@@ -738,7 +593,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                 for (final (format, label) in [
                   (FormatFilter.any, 'Anywhere'),
                   (FormatFilter.online, 'Online'),
-                  (FormatFilter.inPerson, 'In person'),
+                  (FormatFilter.inPerson, 'In Person'),
                 ])
                   ChoiceChip(
                     label: Text(label),
@@ -752,13 +607,13 @@ class _FilterSheetState extends State<_FilterSheet> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, EventQuery(search: _query.search)),
-                  child: Text('Clear all', style: labelStyle.copyWith(color: AppColors.primary)),
+                  child: Text('Clear All', style: labelStyle.copyWith(color: AppColors.primary)),
                 ),
                 const Spacer(),
                 FilledButton(
                   style: FilledButton.styleFrom(backgroundColor: AppColors.primary, shape: const StadiumBorder()),
                   onPressed: () => Navigator.pop(context, _query),
-                  child: const Text('Show events'),
+                  child: const Text('Show Events'),
                 ),
               ],
             ),

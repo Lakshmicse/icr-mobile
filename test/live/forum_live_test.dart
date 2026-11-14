@@ -217,7 +217,7 @@ void main() {
           final after = await b.forum.threads(const ForumQuery(view: ForumView.saved));
           expect(after.posts.map((x) => x.id), isNot(contains(sandbox.id)));
 
-          // "Notify me": the forum counts the reader as following the discussion.
+          // "Notify Me": the forum counts the reader as following the discussion.
           expect(c.thread!.subscribed, isFalse);
           expect(await c.toggleSubscribed(), isNull);
           expect((await b.forum.thread(sandbox.slug)).subscribed, isTrue);
@@ -393,7 +393,7 @@ void main() {
           // An empty reply, as the forum words it.
           await expectLater(
             b.forum.reply(sandbox.id, '   '),
-            throwsA(isA<ApiError>().having((e) => e.message, 'message', 'Write something before posting.')),
+            throwsA(isA<ApiError>().having((e) => e.message, 'message', 'Enter a reply before posting.')),
           );
           // A reply under a reply that is not there.
           await expectLater(
@@ -828,8 +828,8 @@ void main() {
         final c = ThreadController(repository: b.forum, slug: locked.slug, viewer: b.asViewer);
         await c.start();
         expect(c.takesReplies, isFalse);
-        expect(c.lockedReason, 'This discussion is locked, so it is not taking new replies.');
-        expect(await c.sendReply('Can I still reply?'), 'This discussion is locked, so it is not taking new replies.');
+        expect(c.lockedReason, 'This discussion is locked and does not accept new replies.');
+        expect(await c.sendReply('Can I still reply?'), 'This discussion is locked and does not accept new replies.');
         c.dispose();
 
         final poll = await b.forum.thread('which-bms-vendor-did-you-shortlist-last-year-forums-design');
@@ -837,9 +837,7 @@ void main() {
         expect(poll.card.poll!.totalVotes, 80);
         await expectLater(
           b.forum.vote(poll.id, poll.card.poll!.options.first.id, open: false),
-          throwsA(
-            isA<ApiError>().having((e) => e.message, 'message', 'This discussion is closed, and so is its poll.'),
-          ),
+          throwsA(isA<ApiError>().having((e) => e.message, 'message', 'This discussion and its poll are closed.')),
         );
       },
     );

@@ -47,7 +47,7 @@ class _IntentFormState extends State<IntentForm> {
 
   Future<void> _submit() async {
     if (_stage == null) {
-      setState(() => _problem = 'Tell us where you are in your career first.');
+      setState(() => _problem = 'Select your career stage first.');
       return;
     }
     if (_goal.text.trim().length > 2000) {
@@ -83,7 +83,7 @@ class _IntentFormState extends State<IntentForm> {
   @override
   Widget build(BuildContext context) {
     return MentoringForm(
-      title: 'What you want from mentoring',
+      title: 'What You Want from Mentoring',
       subtitle: 'Mentors read this before they answer your request.',
       submitLabel: 'Save',
       busy: _busy,
@@ -91,7 +91,7 @@ class _IntentFormState extends State<IntentForm> {
       onSubmit: _submit,
       children: [
         FieldBlock(
-          label: 'Where are you in your career?',
+          label: 'Career Stage',
           child: Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -106,8 +106,8 @@ class _IntentFormState extends State<IntentForm> {
           ),
         ),
         FieldBlock(
-          label: 'What do you want help with?',
-          help: _focus.length >= _maxFocus ? 'That is the most you can pick ($_maxFocus).' : 'Pick up to $_maxFocus.',
+          label: 'Mentoring Goals',
+          help: _focus.length >= _maxFocus ? 'You have selected the maximum ($_maxFocus).' : 'Select up to $_maxFocus.',
           child: Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -128,7 +128,7 @@ class _IntentFormState extends State<IntentForm> {
           ),
         ),
         FieldBlock(
-          label: 'In your words (optional)',
+          label: 'Your Objective (Optional)',
           child: TextField(
             key: const ValueKey('intent-goal'),
             controller: _goal,
@@ -140,7 +140,7 @@ class _IntentFormState extends State<IntentForm> {
           ),
         ),
         FieldBlock(
-          label: 'How would you like to meet?',
+          label: 'Meeting Mode',
           child: Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -155,7 +155,7 @@ class _IntentFormState extends State<IntentForm> {
           ),
         ),
         FieldBlock(
-          label: 'How often?',
+          label: 'Meeting Frequency',
           child: Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -173,7 +173,7 @@ class _IntentFormState extends State<IntentForm> {
           contentPadding: EdgeInsets.zero,
           value: _discoverable,
           onChanged: (v) => setState(() => _discoverable = v),
-          title: Text('Let mentors find me', style: MentoringText.formLabel),
+          title: Text('Let Mentors Find Me', style: MentoringText.formLabel),
           subtitle: Text(
             'Mentors can offer you help from their recommendations. Turn it off any time.',
             style: MentoringText.meta,

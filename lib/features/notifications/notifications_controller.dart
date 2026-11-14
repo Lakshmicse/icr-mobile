@@ -14,7 +14,7 @@ enum NotificationBucket { today, thisWeek, earlier }
 extension NotificationBucketWords on NotificationBucket {
   String get label => switch (this) {
     NotificationBucket.today => 'Today',
-    NotificationBucket.thisWeek => 'This week',
+    NotificationBucket.thisWeek => 'This Week',
     NotificationBucket.earlier => 'Earlier',
   };
 }
@@ -173,11 +173,25 @@ class NotificationsController extends ChangeNotifier {
     if (category.locked) return 'These are always sent.';
     if (_preferences == null) await loadPreferences();
     final list = _preferences;
-    if (list == null) return _preferencesError ?? 'Your notification preferences could not be loaded.';
+    if (list == null) return _preferencesError ?? 'Unable to load your notification preferences.';
     final pref = list.where((p) => p.category.id == category.id).firstOrNull;
-    if (pref == null) return 'That setting could not be found.';
+    if (pref == null) return 'Unable to find that setting.';
     if (!pref.inApp) return null;
     return setChannel(pref, inApp: false);
+  }
+
+  /// Whether [category]'s in-app notifications are off, once the preferences are known.
+  bool categoryOff(NotificationCategory category) =>
+      _preferences?.where((p) => p.category.id == category.id).firstOrNull?.inApp == false;
+
+  /// "Turn on [category] notifications": the in-app switch back on (bug sheet #17, 9 Nov 2026: the menu kept
+  /// offering "Turn off" for a kind already off).
+  Future<String?> turnOnCategory(NotificationCategory category) async {
+    if (_preferences == null) await loadPreferences();
+    final pref = _preferences?.where((p) => p.category.id == category.id).firstOrNull;
+    if (pref == null) return _preferencesError ?? 'Unable to find that setting.';
+    if (pref.inApp) return null;
+    return setChannel(pref, inApp: true);
   }
 
   Future<void> _load({required bool notify}) async {
@@ -288,7 +302,7 @@ class NotificationsController extends ChangeNotifier {
       _viewer = NotificationViewer(id: v?.id ?? '', activeCompanyId: company.id, companyCount: v?.companyCount ?? 0);
       return null;
     } catch (_) {
-      return "You're no longer part of ${company.name}, so this can't open as it.";
+      return 'You are no longer a member of ${company.name}, so this notification cannot be opened.';
     }
   }
 
@@ -308,7 +322,7 @@ class NotificationsController extends ChangeNotifier {
     try {
       _preferences = await repository.preferences();
     } catch (e) {
-      _preferencesError = 'Your notification preferences could not be loaded.';
+      _preferencesError = 'Unable to load your notification preferences.';
     } finally {
       _preferencesLoading = false;
       _notify();
@@ -330,7 +344,7 @@ class NotificationsController extends ChangeNotifier {
     } catch (e) {
       _preferences = list;
       final error = ApiError.from(e);
-      _saveError = error.statusCode == null ? error.message : 'Your change could not be saved. Try again.';
+      _saveError = error.statusCode == null ? error.message : 'Unable to save your change. Try again.';
       _notify();
       return _saveError;
     }

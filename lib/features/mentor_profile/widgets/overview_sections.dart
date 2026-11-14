@@ -448,7 +448,7 @@ class _RoleTileState extends State<_RoleTile> {
   }
 }
 
-/// "Education & Academic": a round tile, the school, the degree in blue, the batch.
+/// "Education": a round tile, the school, the degree in blue, the batch.
 class EducationSection extends StatelessWidget {
   const EducationSection({super.key, required this.education});
 
@@ -462,7 +462,7 @@ class EducationSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Education & Academic', style: MentorText.sectionWide),
+          Text('Education', style: MentorText.sectionWide),
           const SizedBox(height: 16.2),
           for (final (i, e) in education.indexed) ...[
             if (i > 0) ...[const Hairline(color: AppColors.cardRule), const SizedBox(height: 21.7)],
@@ -639,7 +639,7 @@ class RecommendationsSection extends StatelessWidget {
                       review: r,
                       footer: i == shown.length - 1 && p.ratingCount > 0
                           ? _ViewAll(
-                              label: 'View all ${p.ratingCount} verified review${p.ratingCount == 1 ? '' : 's'}',
+                              label: 'View All ${p.ratingCount} Verified Review${p.ratingCount == 1 ? '' : 's'}',
                               onTap: onViewAll,
                             )
                           : null,

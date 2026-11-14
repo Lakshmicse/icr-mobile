@@ -208,7 +208,7 @@ class _ReplyFormState extends State<ReplyForm> {
                 widget.blocker!,
                 tone: Tone.amber,
                 icon: LucideIcons.triangleAlert,
-                action: widget.onSeePlans != null && mentionsPlan(widget.blocker) ? 'See plans' : null,
+                action: widget.onSeePlans != null && mentionsPlan(widget.blocker) ? 'See Plans' : null,
                 onAction: widget.onSeePlans,
               ),
               const SizedBox(height: 12),
@@ -216,7 +216,7 @@ class _ReplyFormState extends State<ReplyForm> {
             if (enquiry) ...[
               _message(
                 problems,
-                label: 'Your reply',
+                label: 'Your Reply',
                 hint: 'How you would handle it, availability, anything you need to know…',
                 lines: 5,
               ),
@@ -224,7 +224,7 @@ class _ReplyFormState extends State<ReplyForm> {
             ],
             RfqField(
               fieldKey: const ValueKey('reply-amount'),
-              label: enquiry ? 'Indicative price' : 'Your price',
+              label: enquiry ? 'Indicative Price' : 'Your Price',
               value: _draft.amount,
               prefixText: '₹ ',
               optional: enquiry,
@@ -236,7 +236,7 @@ class _ReplyFormState extends State<ReplyForm> {
             const SizedBox(height: 14),
             RfqField(
               fieldKey: const ValueKey('reply-lead'),
-              label: 'Lead time',
+              label: 'Lead Time',
               value: _draft.leadTime,
               suffixText: 'days',
               optional: true,
@@ -248,14 +248,14 @@ class _ReplyFormState extends State<ReplyForm> {
               const SizedBox(height: 14),
               _message(
                 problems,
-                label: 'Message to buyer',
+                label: 'Message to Buyer',
                 hint: 'What is included, assumptions, how long the price holds…',
                 lines: 3,
                 optional: true,
               ),
             ],
             const SizedBox(height: 14),
-            FieldLabel(enquiry ? 'Supporting files' : 'Quotation & supporting files', optional: true),
+            FieldLabel(enquiry ? 'Supporting Files' : 'Quotation & Supporting Files', optional: true),
             const SizedBox(height: 2),
             Text(
               enquiry
@@ -284,7 +284,7 @@ class _ReplyFormState extends State<ReplyForm> {
               RfqBanner(
                 _error!,
                 key: const ValueKey('reply-error'),
-                action: widget.onSeePlans != null && mentionsPlan(_error) ? 'See plans' : null,
+                action: widget.onSeePlans != null && mentionsPlan(_error) ? 'See Plans' : null,
                 onAction: widget.onSeePlans,
               ),
             ],
@@ -305,14 +305,14 @@ class _ReplyFormState extends State<ReplyForm> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               label: Text(
-                _busy ? 'Sending…' : (widget.editing ? 'Save changes' : (enquiry ? 'Send reply' : 'Submit quote')),
+                _busy ? 'Sending…' : (widget.editing ? 'Save Changes' : (enquiry ? 'Send Reply' : 'Submit Quote')),
               ),
             ),
             if (widget.onCancel != null)
               TextButton(
                 key: const ValueKey('reply-cancel'),
                 onPressed: _busy ? null : widget.onCancel,
-                child: Text('Keep the bid as it is', style: RfqText.link),
+                child: Text('Keep Bid Unchanged', style: RfqText.link),
               ),
             const SizedBox(height: 6),
             Text(
@@ -404,14 +404,17 @@ class MyReplySummary extends StatelessWidget {
         ],
         Row(
           children: [
-            Expanded(child: Text(bid.createdAt == null ? '' : 'Sent ${fullDay(bid.createdAt!)}', style: RfqText.small)),
+            Expanded(
+              child: Text(bid.createdAt == null ? '' : 'Submitted on ${fullDay(bid.createdAt!)}', style: RfqText.small),
+            ),
             TonePill(myBidStatusLabel(statusBid), tone: myBidTone(statusBid)),
           ],
         ),
         const SizedBox(height: 10),
-        if (bid.amount != null) _row(enquiry ? 'Indicative price' : 'Your price', formatInr(bid.amount!), strong: true),
-        if (bid.leadTimeDays != null) _row('Lead time', leadTimeLabel(bid.leadTimeDays!)),
-        if (bid.poNumber != null) _row('Purchase order', bid.poNumber!, strong: true),
+        if (bid.amount != null)
+          _row(enquiry ? 'Indicative Price' : 'Quoted Price', formatInr(bid.amount!), strong: true),
+        if (bid.leadTimeDays != null) _row('Mobilisation Time', leadTimeLabel(bid.leadTimeDays!)),
+        if (bid.poNumber != null) _row('Purchase Order', bid.poNumber!, strong: true),
         if (bid.message != null) ...[
           const SizedBox(height: 8),
           Container(
@@ -451,7 +454,7 @@ class MyReplySummary extends StatelessWidget {
               if (onEdit != null)
                 RfqSmallButton(
                   key: const ValueKey('reply-edit'),
-                  label: 'Edit bid',
+                  label: 'Edit Bid',
                   icon: LucideIcons.pencil,
                   onTap: busy ? null : onEdit,
                 ),
@@ -490,7 +493,9 @@ class MyReplySummary extends StatelessWidget {
         const SizedBox(height: 10),
         Text.rich(
           TextSpan(
-            text: 'One reply per requirement. ',
+            text: enquiry
+                ? 'One response is allowed per requirement. The buyer will respond through ICR messaging. '
+                : 'One quotation is allowed per requirement. The buyer will respond through ICR messaging. ',
             style: RfqText.small,
             children: [
               if (onSeeBids != null)
@@ -500,7 +505,7 @@ class MyReplySummary extends StatelessWidget {
                   child: GestureDetector(
                     key: const ValueKey('see-all-bids'),
                     onTap: onSeeBids,
-                    child: Text('See all your bids', style: RfqText.link.copyWith(fontSize: 12)),
+                    child: Text('View All My Bids', style: RfqText.link.copyWith(fontSize: 12)),
                   ),
                 ),
             ],
@@ -574,7 +579,7 @@ class _PreQualFormState extends State<PreQualForm> {
         ],
         RfqField(
           fieldKey: const ValueKey('pq-years'),
-          label: 'Years in business',
+          label: 'Years in Business',
           value: _draft.yearsInBusiness,
           optional: true,
           keyboardType: TextInputType.number,
@@ -585,7 +590,7 @@ class _PreQualFormState extends State<PreQualForm> {
         const SizedBox(height: 14),
         RfqField(
           fieldKey: const ValueKey('pq-turnover'),
-          label: 'Annual turnover',
+          label: 'Annual Turnover',
           value: _draft.annualTurnover,
           optional: true,
           prefixText: '₹ ',
@@ -596,7 +601,7 @@ class _PreQualFormState extends State<PreQualForm> {
         const SizedBox(height: 14),
         RfqField(
           fieldKey: const ValueKey('pq-turnover-3'),
-          label: 'Turnover over the last 3 years',
+          label: 'Turnover Over the Last 3 Years',
           value: _draft.last3YrTurnover,
           optional: true,
           prefixText: '₹ ',
@@ -633,7 +638,7 @@ class _PreQualFormState extends State<PreQualForm> {
           ],
         ),
         const SizedBox(height: 14),
-        const FieldLabel('Statutory compliance', optional: true),
+        const FieldLabel('Statutory Compliance', optional: true),
         const SizedBox(height: 6),
         Wrap(
           spacing: 8,
@@ -668,7 +673,7 @@ class _PreQualFormState extends State<PreQualForm> {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                 )
-              : const Text('Send pre-qualification response'),
+              : const Text('Send Pre-Qualification Response'),
         ),
         const SizedBox(height: 6),
         Text('Only the buyer\'s team sees your answers.', textAlign: TextAlign.center, style: RfqText.small),
@@ -736,10 +741,10 @@ class _ContactBuyerCardState extends State<ContactBuyerCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Contact the buyer', style: RfqText.section),
+          Text('Connect with the Buyer', style: RfqText.section),
           const SizedBox(height: 6),
           Text(
-            'Ask about the scope, the site or the timeline. The buyer\'s replies arrive in your messages.',
+            'Clarify the scope, site requirements or timelines directly with the buyer. All responses are managed through ICR messaging.',
             style: RfqText.formHelp,
           ),
           const SizedBox(height: 12),
@@ -758,7 +763,7 @@ class _ContactBuyerCardState extends State<ContactBuyerCard> {
               minimumSize: const Size.fromHeight(44),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            label: const Text('Message the buyer'),
+            label: const Text('Message Buyer'),
           ),
           const SizedBox(height: 8),
           if (contact == null)
@@ -767,7 +772,7 @@ class _ContactBuyerCardState extends State<ContactBuyerCard> {
               onPressed: _revealing ? null : _reveal,
               icon: const Icon(LucideIcons.eye, size: 16),
               style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),
-              label: const Text('Show contact details'),
+              label: const Text('View Contact Details'),
             )
           else
             Container(
@@ -791,7 +796,7 @@ class _ContactBuyerCardState extends State<ContactBuyerCard> {
               key: const ValueKey('contact-error'),
               tone: Tone.amber,
               icon: LucideIcons.info,
-              action: widget.onSeePlans != null && mentionsPlan(_error) ? 'See plans' : null,
+              action: widget.onSeePlans != null && mentionsPlan(_error) ? 'See Plans' : null,
               onAction: widget.onSeePlans,
             ),
           ],
@@ -824,16 +829,16 @@ class MatchCard extends StatelessWidget {
   final List<MatchReason> reasons;
 
   static const _words = {
-    'category': 'Your service category',
-    'location': 'Your service area',
-    'rating': 'Your buyer rating',
-    'trust': 'Your verification level',
-    'premium': 'Premium membership',
+    'category': 'Service Category',
+    'location': 'Service Area',
+    'rating': 'Buyer Rating',
+    'trust': 'Verification Level',
+    'premium': 'Premium Membership',
   };
 
   @override
   Widget build(BuildContext context) {
-    final label = score >= 70 ? 'Strong match' : (score >= 40 ? 'Good match' : 'Partial match');
+    final label = score >= 70 ? 'Excellent Match' : (score >= 40 ? 'Good Match' : 'Partial Match');
     final ordered = [for (final key in _words.keys) ?reasons.where((r) => r.key == key).firstOrNull];
     return RfqCard(
       key: const ValueKey('match-card'),
@@ -841,9 +846,12 @@ class MatchCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('How you match', style: RfqText.section),
+          Text('Your Opportunity Match', style: RfqText.section),
           const SizedBox(height: 2),
-          Text('Scored by the same rules the Find Work board ranks by.', style: RfqText.formHelp),
+          Text(
+            'Your match score is based on your services, location, buyer rating and verification status.',
+            style: RfqText.formHelp,
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -854,7 +862,12 @@ class MatchCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(label, key: const ValueKey('match-label'), style: RfqText.cardTitle),
-                    Text(matched ? 'In a category you list' : 'Outside the categories you list', style: RfqText.small),
+                    Text(
+                      matched
+                          ? 'Matches your listed services'
+                          : 'This opportunity is outside your listed service categories.',
+                      style: RfqText.small,
+                    ),
                   ],
                 ),
               ),
@@ -901,9 +914,9 @@ class OwnRequirementNotice extends StatelessWidget {
   Widget build(BuildContext context) {
     return RfqNotice(
       icon: LucideIcons.building2,
-      title: 'This is your company\'s own requirement',
+      title: 'This Is Your Company\'s Own Requirement',
       body: 'A company cannot bid on its own requirement. Open it as its owner to see the responses and decide.',
-      action: 'Open as owner',
+      action: 'Open as Owner',
       onAction: onOpenOwner,
     );
   }

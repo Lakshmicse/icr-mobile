@@ -36,10 +36,7 @@ typedef TagCompanySearch = Future<List<TagCompany>> Function(String query);
 /// The forum's own rule for a tag's characters, as `ComposerController.normaliseTag` and the API store one: lower
 /// case, anything but letters and digits to one dash, at most 31 after the "@" (a tag is 32).
 String tagHandleOf(String name) {
-  final h = name
-      .toLowerCase()
-      .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-      .replaceAll(RegExp(r'^-+|-+$'), '');
+  final h = name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-+|-+$'), '');
   return h.length > 31 ? h.substring(0, 31).replaceAll(RegExp(r'-+$'), '') : h;
 }
 
@@ -111,7 +108,8 @@ class TagSuggestController extends ChangeNotifier {
     _query = query;
     _timer?.cancel();
     _ticket++;
-    if (query == null || query.length < 2) {
+    // From the first letter (bug sheet #3, 9 Nov 2026: "typing the first letter should auto-show matching names").
+    if (query == null || query.isEmpty) {
       _loading = false;
       _failed = false;
       _people = const [];
@@ -188,13 +186,15 @@ class TagSuggestions extends StatelessWidget {
         final c = controller;
         final children = <Widget>[];
         if ((c.query ?? '').length < 2) {
-          children.add(const _Note(key: ValueKey('tag-suggest-hint'), text: 'Type a name to tag a person or a company.'));
+          children.add(
+            const _Note(key: ValueKey('tag-suggest-hint'), text: 'Type a name to tag a person or a company.'),
+          );
         } else if (c.loading || c.resultsFor == null) {
           children.add(const _Note(key: ValueKey('tag-suggest-loading'), text: 'Searching…', spinner: true));
         } else if (c.failed) {
-          children.add(const _Note(key: ValueKey('tag-suggest-failed'), text: "Couldn't search just now."));
+          children.add(const _Note(key: ValueKey('tag-suggest-failed'), text: 'Unable to search. Try again.'));
         } else if (c.people.isEmpty && c.companies.isEmpty) {
-          children.add(const _Note(key: ValueKey('tag-suggest-empty'), text: 'No one found'));
+          children.add(const _Note(key: ValueKey('tag-suggest-empty'), text: 'No one found.'));
         } else {
           if (c.people.isNotEmpty) {
             children.add(_Label('People', style: _label));
@@ -213,7 +213,8 @@ class TagSuggestions extends StatelessWidget {
             }
           }
           if (c.companies.isNotEmpty) {
-            if (c.people.isNotEmpty) children.add(const Divider(height: 1, thickness: 1, color: AppColors.outlineVariant));
+            if (c.people.isNotEmpty)
+              children.add(const Divider(height: 1, thickness: 1, color: AppColors.outlineVariant));
             children.add(_Label('Companies', style: _label));
             for (final co in c.companies) {
               children.add(
@@ -257,8 +258,10 @@ class _Label extends StatelessWidget {
   final TextStyle style;
 
   @override
-  Widget build(BuildContext context) =>
-      Padding(padding: const EdgeInsets.fromLTRB(4, 8, 4, 2), child: Text(text, style: style));
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(4, 8, 4, 2),
+    child: Text(text, style: style),
+  );
 }
 
 class _Option extends StatelessWidget {

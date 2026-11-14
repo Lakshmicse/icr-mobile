@@ -424,6 +424,13 @@ void main() {
       expect(runDates(DateTime(2024, 10, 5), null), 'Oct 05, 2024');
     });
 
+    test("the pinned bar's words are in Title Case, small words kept lower-case", () {
+      expect(titleCase('ENROL NOW'), 'Enrol Now');
+      expect(titleCase('ENROLMENT CLOSED'), 'Enrolment Closed');
+      expect(titleCase('Place requested'), 'Place Requested');
+      expect(titleCase('On the waitlist'), 'On the Waitlist');
+    });
+
     test('a price reads in rupees from paise, and Free for nothing', () {
       expect(priceLabel(1180000), '₹11,800');
       expect(priceLabel(58882), '₹588.82');
@@ -747,7 +754,11 @@ void main() {
     test('groups courses by kind, searches them, and rolls a refused place back', () async {
       final learning = LearningController(_Refusing(DemoLearningRepository()));
       await learning.start();
-      expect(learning.sections.single.title, 'ICR certified programs', reason: 'the demo course has no awarding body');
+      expect(
+        learning.sections.single.title,
+        'ICR Certification Programmes',
+        reason: 'the demo course has no awarding body',
+      );
       learning.setSearch('nothing like this');
       expect(learning.sections, isEmpty);
       learning.setSearch('leadership');
@@ -771,7 +782,10 @@ void main() {
       final learning = LearningController(fake);
       await learning.start();
       // The website's /learning/professional-development: ICR's own taught courses, then the institutes'.
-      expect(learning.sections.map((s) => s.title), ['ICR certified programs', 'Related courses from our partners']);
+      expect(learning.sections.map((s) => s.title), [
+        'ICR Certification Programmes',
+        'Related Courses from Our Partners',
+      ]);
       expect(learning.sections.first.courses.map((c) => c.code), ['BBB', 'CCC']);
       expect(learning.sections.last.courses.map((c) => c.code), ['AAA']);
       learning.setSearch('capital');
@@ -818,7 +832,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(fake.courseCalls, 3);
       final section = learning.sections.single;
-      expect(section.title, 'ICR Courses', reason: "the website's shelves file a place by who runs the course");
+      expect(section.title, 'ICR Programmes', reason: "the website's shelves file a place by who runs the course");
       expect(section.courses.single.code, 'HELD');
       learning.setSearch('zzz');
       expect(learning.sections, isEmpty, reason: 'the search narrows within My courses');
@@ -839,7 +853,7 @@ void main() {
       expect(sheet.hasMoreRuns, isFalse);
       expect(sheet.review?.author, 'Charles Selasie Tuffour');
       expect(sheet.reviewTotal, 1);
-      expect(sheet.ctaLabel, 'ADD TO CART');
+      expect(sheet.ctaLabel, 'ENROL NOW');
       sheet.selectMode(DeliveryMode.virtual);
       expect(sheet.selectedRun, isNull);
       sheet.selectMode(DeliveryMode.inPerson);
@@ -906,7 +920,7 @@ void main() {
       await sheet.load();
       expect(await sheet.enrol(), 'No places today.');
       expect(sheet.course.enrolled, isFalse);
-      expect(sheet.ctaLabel, 'ADD TO CART');
+      expect(sheet.ctaLabel, 'ENROL NOW');
     });
 
     test('an enquiry passes its kind, company and headcount to the repository', () async {
@@ -973,8 +987,8 @@ void main() {
 
     testWidgets("lists ICR's own courses, then the partners' under their own heading, as cards", (tester) async {
       await pumpTab(tester, threeCourses());
-      expect(find.text('ICR certified programs'), findsOneWidget);
-      expect(find.text('Related courses from our partners'), findsOneWidget);
+      expect(find.text('ICR Certification Programmes'), findsOneWidget);
+      expect(find.text('Related Courses from Our Partners'), findsOneWidget);
       expect(find.text('Professional development'), findsNothing, reason: 'one heading for both read as ICR’s own');
       expect(find.text('Certification programmes'), findsNothing);
       expect(find.text('Capital Planning'), findsNothing, reason: 'the programme has its own door');
@@ -1003,20 +1017,20 @@ void main() {
       expect(find.byType(CourseCard), findsOneWidget);
       expect(find.text('Colloboration'), findsOneWidget);
       expect(
-        find.text('Related courses from our partners'),
+        find.text('Related Courses from Our Partners'),
         findsNothing,
         reason: 'a heading with no row under it goes',
       );
       await tester.enterText(find.byType(TextField), 'zzzz');
       await tester.pump();
-      expect(find.text('No courses match'), findsOneWidget);
-      await tester.tap(find.text('Clear search'));
+      expect(find.text('No Courses Match'), findsOneWidget);
+      await tester.tap(find.text('Clear Search'));
       await tester.pumpAndSettle();
       expect(find.byType(CourseCard), findsNWidgets(3));
       expect(fake.courseCalls, 1, reason: 'the API has no search; the loaded list is what narrows');
     });
 
-    testWidgets('My courses shows the places the member holds; pressing it again goes back to the catalogue', (
+    testWidgets('My courses shows the places the member holds; the catalogue is back when the hub turns it off', (
       tester,
     ) async {
       final fake = threeCourses();
@@ -1034,46 +1048,38 @@ void main() {
       ];
       await pumpTab(tester, fake);
       expect(find.text('Enrolled'), findsOneWidget, reason: 'the row says so in the catalogue too');
-      await tester.tap(find.text('My courses'));
+      // The hub turns My courses on and off; the chip that did is gone (owner, 7 Nov 2026).
+      final learning = Provider.of<LearningController>(tester.element(find.byType(LearningScreen)), listen: false);
+      learning.setMineOnly(true);
       await tester.pumpAndSettle();
       expect(find.byType(CourseCard), findsOneWidget);
       expect(find.text('Rich course AAA'), findsOneWidget);
       expect(find.text('Aug 23 - 27, 2027 • Riyadh, KSA'), findsOneWidget, reason: 'the run the place is on');
       expect(find.text('Professional development'), findsNothing);
-      expect(find.text('My courses'), findsOneWidget, reason: 'the chip; the shelf is named by who runs the course');
-      expect(find.text('Partner Courses'), findsOneWidget, reason: 'AAA is an institute\'s');
-      await tester.tap(find.text('My courses').first);
+      expect(find.text('My Courses'), findsNothing, reason: 'no chip; the shelf is named by who runs the course');
+      expect(find.text('Partner Programmes'), findsNWidgets(2), reason: 'AAA is an institute\'s');
+      learning.setMineOnly(false);
       await tester.pumpAndSettle();
       expect(find.byType(CourseCard), findsNWidgets(3));
     });
 
     testWidgets('My courses with no places says so and offers the catalogue', (tester) async {
-      await pumpTab(tester, threeCourses());
-      await tester.tap(find.text('My courses'));
-      await tester.pumpAndSettle();
-      expect(find.text('No courses yet'), findsOneWidget);
-      await tester.tap(find.text('Browse courses'));
+      // The hub opens the screen on the member's own courses; there is no chip to toggle it (owner, 7 Nov 2026).
+      await pumpTab(tester, threeCourses(), prepare: (l) => l.setMineOnly(true));
+      expect(find.text('No Courses Yet'), findsOneWidget);
+      await tester.tap(find.text('Browse Courses'));
       await tester.pumpAndSettle();
       expect(find.byType(CourseCard), findsNWidgets(3));
     });
 
-    testWidgets('the chips open the Learning Center screens in the app, not the website', (tester) async {
+    testWidgets('no row of chips under the search: the hub\'s tabs are the way around (owner, 7 Nov 2026)', (
+      tester,
+    ) async {
       await pumpTab(tester, threeCourses());
-      for (final (label, stub) in [
-        ('Mock exams', 'stub:mockTests'),
-        ('Certificates', 'stub:certificates'),
-        ('Flash cards', 'stub:flashCards'),
-        ('Knowledge center', 'stub:knowledgeCenter'),
-      ]) {
-        await tester.ensureVisible(find.text(label));
-        await tester.tap(find.text(label));
-        await tester.pumpAndSettle();
-        expect(find.text(stub), findsOneWidget, reason: label);
-        await tester.tap(find.byKey(const ValueKey('stub-back')));
-        await tester.pumpAndSettle();
-        expect(find.byType(LearningScreen), findsOneWidget, reason: '$label: Back returns to the grid');
+      for (final label in ['Mock Exams', 'Certificates', 'Flash cards', 'Knowledge center', 'My Attempts']) {
+        expect(find.text(label), findsNothing, reason: label);
       }
-      expect(launches.urls, isEmpty, reason: 'nothing here goes to the browser any more');
+      expect(launches.urls, isEmpty);
     });
 
     testWidgets('the title bar says what the hub called the screen', (tester) async {
@@ -1094,7 +1100,7 @@ void main() {
       await pumpTab(tester, threeCourses());
       await tester.tap(find.text('Rich course AAA'));
       await tester.pumpAndSettle();
-      expect(find.text('Select Date'), findsOneWidget);
+      expect(find.text('Select Batch'), findsOneWidget);
       expect(find.text('PREMIUM CERTIFICATION'), findsNWidgets(2), reason: "the card behind and the sheet's cover");
       expect(find.text('Rich course AAA'), findsNWidgets(2), reason: 'the card behind and the sheet title');
     });
@@ -1103,7 +1109,7 @@ void main() {
       await pumpTab(tester, threeCourses());
       await tester.tap(find.text('Communication'));
       await tester.pumpAndSettle();
-      expect(find.text('Select Date'), findsNothing, reason: 'a programme with no runs has no date grid');
+      expect(find.text('Select Batch'), findsNothing, reason: 'a programme with no runs has no date grid');
       expect(find.text('Communication'), findsNWidgets(2), reason: 'the card behind and the sheet title');
     });
 
@@ -1122,13 +1128,13 @@ void main() {
     testWidgets('a failed load says why and Try again reads the courses again', (tester) async {
       final broken = _Fake(catalogue: const [], listError: 'The server is down.');
       await pumpTab(tester, broken);
-      expect(find.text("Couldn't load courses"), findsOneWidget);
+      expect(find.text("Unable to Load Courses"), findsOneWidget);
       expect(find.text('The server is down.'), findsOneWidget);
       broken.listError = null;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(broken.courseCalls, 2);
-      expect(find.text('No courses published yet'), findsOneWidget);
+      expect(find.text('No Courses Published Yet'), findsOneWidget);
     });
   });
 
@@ -1209,12 +1215,15 @@ void main() {
         ],
       );
       await pump(tester, fake);
-      final icr = tester.getRect(find.text('ICR certified programs'));
-      final partners = tester.getRect(find.text('Related courses from our partners'));
+      final icr = tester.getRect(find.text('ICR Certification Programmes'));
+      final partners = tester.getRect(find.text('Related Courses from Our Partners'));
       expect(icr.top, lessThan(tester.getRect(card('Colloboration')).top));
       expect(partners.top, greaterThan(tester.getRect(card('Colloboration')).bottom));
       expect(partners.top, lessThan(tester.getRect(card('Rich course AAA')).top));
-      expect(find.descendant(of: find.byType(CourseCard), matching: find.text('ICR certified programs')), findsNothing);
+      expect(
+        find.descendant(of: find.byType(CourseCard), matching: find.text('ICR Certification Programmes')),
+        findsNothing,
+      );
     });
 
     testWidgets('a card carries what the row did: cover pill, title, awarding body, meta, price, place', (
@@ -1470,7 +1479,7 @@ void main() {
         ),
       ];
       await pump(tester, fake);
-      await tester.tap(find.text('My courses'));
+      Provider.of<LearningController>(tester.element(find.byType(LearningScreen)), listen: false).setMineOnly(true);
       await tester.pumpAndSettle();
       expect(find.byType(CourseCard), findsOneWidget);
       final c = card('Rich course AAA');
@@ -1585,7 +1594,7 @@ void main() {
       expect(find.text('Live online'), findsNWidgets(2));
       expect(find.text('Riyadh, KSA'), findsNothing);
       expect(sheet.selectedRun?.id, 'v1');
-      await tester.tap(find.text('Face to Face On site Training'));
+      await tester.tap(find.text('Classroom Training'));
       await tester.pumpAndSettle();
       expect(find.text('Riyadh, KSA'), findsOneWidget);
       expect(sheet.selectedRun?.id, 'r1');
@@ -1596,7 +1605,7 @@ void main() {
       await tester.tap(find.text('Live Virtual Training'));
       await tester.pumpAndSettle();
       expect(find.text('No live virtual training dates are scheduled yet.'), findsOneWidget);
-      expect(find.text('Suggest A Date &\nLocation'), findsOneWidget);
+      expect(find.text('Suggest a Date &\nLocation'), findsOneWidget);
       expect(sheet.selectedRun, isNull);
     });
 
@@ -1642,9 +1651,9 @@ void main() {
       expect(find.text('CONFIRMED'), findsOneWidget);
       expect(find.text('ENROLLED'), findsNothing, reason: 'the big button gives way to the place itself');
       expect(find.text('You are confirmed on Riyadh, KSA, Aug 23 - 27, 2027.'), findsOneWidget);
-      expect(find.text('ADD TO CART'), findsNothing);
-      expect(find.text('enrolled'), findsOneWidget, reason: 'the pinned bar still says so');
-      await tester.tap(find.text('enrolled'));
+      expect(find.text('ENROL NOW'), findsNothing);
+      expect(find.text('Enrolled'), findsOneWidget, reason: 'the pinned bar still says so');
+      await tester.tap(find.text('Enrolled'));
       await tester.pump();
       expect(fake.enrols, isEmpty, reason: 'a held place is never taken twice');
       expect(
@@ -1654,16 +1663,16 @@ void main() {
       );
     });
 
-    testWidgets('ADD TO CART on a free course takes the selected run through the enrol endpoint', (tester) async {
+    testWidgets('ENROL NOW on a free course takes the selected run through the enrol endpoint', (tester) async {
       final (fake, sheet) = await pumpSheet(tester, _Fake(catalogue: [_rich()]));
       await tester.tap(find.text('London, UK'));
       await tester.pump();
-      await tester.tap(find.text('ADD TO CART'));
+      await tester.tap(find.text('ENROL NOW'));
       await tester.pumpAndSettle();
       expect(fake.enrols, [('RICH', 'r2')]);
       expect(sheet.course.enrolment?.status, EnrolmentStatus.pending);
       expect(
-        find.text('You are pending on London, UK, Sep 14 - 18, 2027 — the ICR team will confirm your place.'),
+        find.text('You are pending on London, UK, Sep 14 - 18, 2027. The ICR team will confirm your place.'),
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('withdraw')), findsOneWidget, reason: 'a request can be taken back');
@@ -1672,7 +1681,7 @@ void main() {
       expect(launches.urls, isEmpty);
     });
 
-    testWidgets('ADD TO CART on a paid course pays for the place in the app, never on the website', (tester) async {
+    testWidgets('ENROL NOW on a paid course pays for the place in the app, never on the website', (tester) async {
       final bought = <String>[];
       CourseCheckout.start = (context, course, run) async {
         bought.add(course.code);
@@ -1686,7 +1695,7 @@ void main() {
       addTearDown(CourseCheckout.reset);
       addTearDown(PaymentServices.reset);
       final (fake, _) = await pumpSheet(tester, _Fake(catalogue: [_rich(code: 'PAID', price: 1180000)]));
-      await tester.tap(find.text('ADD TO CART'));
+      await tester.tap(find.text('ENROL NOW'));
       await tester.pumpAndSettle();
       expect(bought, ['PAID']);
       expect(posted, ['https://test.payu.in/_payment'], reason: "the gateway's form, in the app's payment view");
@@ -1696,11 +1705,11 @@ void main() {
 
     testWidgets("a refused place is put back and the API's sentence shown", (tester) async {
       final (_, sheet) = await pumpSheet(tester, _Fake(catalogue: [_rich()], enrolError: 'This batch is full.'));
-      await tester.tap(find.text('ADD TO CART'));
+      await tester.tap(find.text('ENROL NOW'));
       await tester.pumpAndSettle();
       expect(find.text('This batch is full.'), findsOneWidget);
       expect(sheet.course.enrolled, isFalse);
-      expect(find.text('ADD TO CART'), findsOneWidget);
+      expect(find.text('ENROL NOW'), findsOneWidget);
     });
 
     group('withdrawing a place, as the website does', () {
@@ -1718,12 +1727,12 @@ void main() {
         expect(find.text('REQUESTED'), findsOneWidget);
         await tester.tap(find.byKey(const ValueKey('withdraw')));
         await tester.pumpAndSettle();
-        expect(find.text('Withdraw your request?'), findsOneWidget);
+        expect(find.text('Withdraw Your Request?'), findsOneWidget);
         await tester.tap(find.text('Withdraw').last);
         await tester.pumpAndSettle();
         expect(fake.withdrawals, ['RICH']);
         expect(sheet.course.enrolled, isFalse);
-        expect(find.text('ADD TO CART'), findsOneWidget, reason: 'the member can ask again, here or on another date');
+        expect(find.text('ENROL NOW'), findsOneWidget, reason: 'the member can ask again, here or on another date');
         expect(find.byKey(const ValueKey('place-status')), findsNothing);
         expect(find.text('REQUESTED'), findsNothing, reason: 'the date tile is plain again');
         expect(find.text('Your request was withdrawn.'), findsOneWidget);
@@ -1733,7 +1742,7 @@ void main() {
         final (fake, sheet) = await pumpHeld(tester, held(EnrolmentStatus.pending));
         await tester.tap(find.byKey(const ValueKey('withdraw')));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Keep it'));
+        await tester.tap(find.text('Keep It'));
         await tester.pumpAndSettle();
         expect(fake.withdrawals, isEmpty);
         expect(sheet.course.enrolled, isTrue);
@@ -1743,7 +1752,7 @@ void main() {
         final (fake, sheet) = await pumpHeld(tester, held(EnrolmentStatus.confirmed));
         await tester.tap(find.byKey(const ValueKey('withdraw')));
         await tester.pumpAndSettle();
-        expect(find.text('Withdraw your place?'), findsOneWidget);
+        expect(find.text('Withdraw Your Place?'), findsOneWidget);
         await tester.tap(find.text('Withdraw').last);
         await tester.pumpAndSettle();
         expect(fake.withdrawals, ['RICH']);
@@ -1767,7 +1776,9 @@ void main() {
       testWidgets('a waitlist place is told what happens next, and can be withdrawn', (tester) async {
         await pumpHeld(tester, held(EnrolmentStatus.waitlisted));
         expect(
-          find.text('You are waitlisted on London, UK, Sep 14 - 18, 2027 — we will be in touch if a seat frees up.'),
+          find.text(
+            'You are waitlisted on London, UK, Sep 14 - 18, 2027. We will contact you if a seat becomes available.',
+          ),
           findsOneWidget,
         );
         expect(find.byKey(const ValueKey('withdraw')), findsOneWidget);
@@ -1781,7 +1792,7 @@ void main() {
 
       testWidgets('a place on no run names none', (tester) async {
         await pumpHeld(tester, held(EnrolmentStatus.pending, runId: null));
-        expect(find.text('You are pending — the ICR team will confirm your place.'), findsOneWidget);
+        expect(find.text('You are pending. The ICR team will confirm your place.'), findsOneWidget);
       });
     });
 
@@ -1790,7 +1801,7 @@ void main() {
       final (fake, _) = await pumpSheet(tester, _Fake(catalogue: [_rich()]));
       await tester.tap(find.text('DOWNLOAD BROCHURE'));
       await tester.pumpAndSettle();
-      expect(find.text('Get the brochure'), findsOneWidget);
+      expect(find.text('Get the Brochure'), findsOneWidget);
       expect(tester.widget<TextField>(find.byKey(const ValueKey('brochure-name'))).controller!.text, 'Bharat Buyer');
       expect(tester.widget<TextField>(find.byKey(const ValueKey('brochure-email'))).controller!.text, 'buyer@icr.dev');
       expect(launches.urls, isEmpty, reason: 'nothing opens before the lead is sent');
@@ -1803,7 +1814,7 @@ void main() {
       expect(fake.brochureLeads.single.$2.phone, '+919845012345', reason: 'the phone is normalised');
       expect(fake.brochureLeads.single.$3, BrochureIntent.download);
       expect(launches.urls, ['https://files.test/brochure.pdf']);
-      expect(find.text('Get the brochure'), findsNothing);
+      expect(find.text('Get the Brochure'), findsNothing);
     });
 
     testWidgets('View brochure sends the lead and opens the PDF in the app, nothing downloaded', (tester) async {
@@ -1845,12 +1856,12 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey('brochure-phone')), '');
       await tester.tap(find.byKey(const ValueKey('brochure-download')));
       await tester.pump();
-      expect(find.text('Your phone number, so the institute can call you back.'), findsOneWidget);
+      expect(find.text('Enter your mobile number so the institute can call you.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('brochure-phone')), '+91 98450 12345');
       await tester.enterText(find.byKey(const ValueKey('brochure-email')), 'nope');
       await tester.tap(find.byKey(const ValueKey('brochure-download')));
       await tester.pump();
-      expect(find.text('Enter the email address the brochure goes to.'), findsOneWidget);
+      expect(find.text('Enter the email address to send the brochure to.'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('brochure-email')), 'buyer@icr.dev');
       fake.brochureRefusal = 'Too many requests. Wait a minute and try again.';
       await tester.tap(find.byKey(const ValueKey('brochure-download')));
@@ -1863,7 +1874,7 @@ void main() {
     testWidgets('a course with no brochure offers none, as the website shows no prospectus link', (tester) async {
       await pumpSheet(tester, _Fake(catalogue: [_rich(code: 'NOB', brochure: null)]));
       expect(find.text('DOWNLOAD BROCHURE'), findsNothing);
-      expect(find.text('ADD TO CART'), findsOneWidget, reason: 'the rest of the sheet stands');
+      expect(find.text('ENROL NOW'), findsOneWidget, reason: 'the rest of the sheet stands');
       expect(launches.urls, isEmpty);
     });
 
@@ -1871,7 +1882,7 @@ void main() {
       final (fake, _) = await pumpSheet(tester, _Fake(catalogue: [_rich()])..contactFails = true);
       await tester.tap(find.text('DOWNLOAD BROCHURE'));
       await tester.pumpAndSettle();
-      expect(find.text('Get the brochure'), findsOneWidget);
+      expect(find.text('Get the Brochure'), findsOneWidget);
       expect(tester.widget<TextField>(find.byKey(const ValueKey('brochure-name'))).controller!.text, '');
       expect(
         tester.widget<PrimaryButton>(find.byKey(const ValueKey('brochure-view'))).onPressed,
@@ -1889,31 +1900,31 @@ void main() {
 
     testWidgets('the overview folds after four lines and "show more" unfolds it', (tester) async {
       await pumpSheet(tester, _Fake(catalogue: [_rich()]));
-      expect(find.text('show more'), findsOneWidget);
-      await tester.tap(find.text('show more'));
+      expect(find.text('View More'), findsOneWidget);
+      await tester.tap(find.text('View More'));
       await tester.pump();
-      expect(find.text('show less'), findsOneWidget);
-      await tester.tap(find.text('show less'));
+      expect(find.text('View Less'), findsOneWidget);
+      await tester.tap(find.text('View Less'));
       await tester.pump();
-      expect(find.text('show more'), findsOneWidget);
+      expect(find.text('View More'), findsOneWidget);
     });
 
     testWidgets('"view full outline" opens every module; each module folds on its own', (tester) async {
       await pumpSheet(tester, _Fake(catalogue: [_rich()]));
       expect(find.text('Lesson A'), findsOneWidget, reason: 'the first module opens');
-      expect(find.text('Detail for this module is on its way.'), findsNothing);
-      await tester.tap(find.text('view full outline'));
+      expect(find.text('Details for this module will be available soon.'), findsNothing);
+      await tester.tap(find.text('View Full Outline'));
       await tester.pump();
-      expect(find.text('Detail for this module is on its way.'), findsOneWidget);
-      expect(find.text('collapse outline'), findsOneWidget);
+      expect(find.text('Details for this module will be available soon.'), findsOneWidget);
+      expect(find.text('Collapse Outline'), findsOneWidget);
       await tester.tap(find.text('Module 1: Leadership Intelligence'));
       await tester.pump();
       expect(find.text('Lesson A'), findsNothing);
-      expect(find.text('Detail for this module is on its way.'), findsOneWidget);
-      await tester.tap(find.text('collapse outline'));
+      expect(find.text('Details for this module will be available soon.'), findsOneWidget);
+      await tester.tap(find.text('Collapse Outline'));
       await tester.pump();
       expect(find.text('Lesson A'), findsOneWidget, reason: 'back to the first module open, the rest folded');
-      expect(find.text('Detail for this module is on its way.'), findsNothing);
+      expect(find.text('Details for this module will be available soon.'), findsNothing);
     });
 
     testWidgets('the specialist: the email line mails ICR on a live course, the third button asks the institute', (
@@ -1927,16 +1938,12 @@ void main() {
       expect(launches.urls.single, startsWith('mailto:$icrEnquiryEmail?subject='));
       expect(launches.urls.single, contains('Rich%20course%20RICH%20(RICH)'));
 
-      await tester.tap(find.text('ask the institute'));
+      await tester.tap(find.text('Ask the Institute'));
       await tester.pumpAndSettle();
       expect(find.text('Ask Vinfraa Institute'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('enquiry-send')));
       await tester.pump();
-      expect(
-        find.text('Say a little more about what you would like to know.'),
-        findsOneWidget,
-        reason: 'too short to send',
-      );
+      expect(find.text('Add more detail to your message.'), findsOneWidget, reason: 'too short to send');
       await tester.enterText(find.byKey(const ValueKey('enquiry-message')), 'Do you run this in Pune?');
       await tester.tap(find.byKey(const ValueKey('enquiry-send')));
       await tester.pumpAndSettle();
@@ -1949,26 +1956,26 @@ void main() {
       tester,
     ) async {
       await pumpSheet(tester, _Fake(catalogue: [DemoLearningRepository().course]));
-      expect(find.text("let's talk on whatsapp"), findsOneWidget);
+      expect(find.text("Let's Talk on WhatsApp"), findsOneWidget);
       await tester.tap(find.text('contact@icrvinfraa.com'));
       await tester.pump();
-      await tester.tap(find.text("let's talk on whatsapp"));
+      await tester.tap(find.text("Let's Talk on WhatsApp"));
       await tester.pump();
       expect(launches.urls.first, startsWith('mailto:contact@icrvinfraa.com?subject='));
       expect(launches.urls.last, 'https://wa.me/');
     });
 
-    testWidgets('"take this course as in-house" is a corporate enquiry with company and headcount', (tester) async {
+    testWidgets('"Request Corporate Training" is a corporate enquiry with company and headcount', (tester) async {
       final (fake, _) = await pumpSheet(tester, _Fake(catalogue: [_rich()]));
-      await tester.tap(find.text('take this course as in-house'));
+      await tester.tap(find.text('Request Corporate Training'));
       await tester.pumpAndSettle();
-      expect(find.text('Take this course in-house'), findsOneWidget);
+      expect(find.text('Request Corporate Training'), findsNWidgets(2), reason: 'the button, and the form it opens');
       await tester.enterText(find.byKey(const ValueKey('enquiry-company')), 'Acme Facilities');
       await tester.enterText(find.byKey(const ValueKey('enquiry-message')), 'Two cohorts in Pune, March.');
       await tester.enterText(find.byKey(const ValueKey('enquiry-headcount')), '0');
       await tester.tap(find.byKey(const ValueKey('enquiry-send')));
       await tester.pump();
-      expect(find.text('How many people? A whole number from 1.'), findsOneWidget);
+      expect(find.text('Enter the number of people as a whole number, 1 or more.'), findsOneWidget);
       expect(fake.enquiries, isEmpty);
       await tester.enterText(find.byKey(const ValueKey('enquiry-headcount')), '30');
       await tester.tap(find.byKey(const ValueKey('enquiry-send')));
@@ -1984,11 +1991,11 @@ void main() {
       tester,
     ) async {
       final (fake, _) = await pumpSheet(tester, _Fake(catalogue: [_rich(code: 'OWN', provider: null)]));
-      await tester.tap(find.text('take this course as in-house'));
+      await tester.tap(find.text('Request Corporate Training'));
       await tester.pump();
-      await tester.tap(find.text('ask the institute'));
+      await tester.tap(find.text('Ask the Institute'));
       await tester.pump();
-      await tester.tap(find.text('Suggest A Date &\nLocation'));
+      await tester.tap(find.text('Suggest a Date &\nLocation'));
       await tester.pump();
       expect(launches.urls, hasLength(3));
       expect(launches.urls[0], startsWith('https://icr.org.in/contact?subject=In-house+delivery%3A+'));
@@ -1997,11 +2004,11 @@ void main() {
       expect(fake.enquiries, isEmpty);
     });
 
-    testWidgets('"Suggest A Date & Location" sends a date and location request to the institute', (tester) async {
+    testWidgets('"Suggest a Date & Location" sends a date and location request to the institute', (tester) async {
       final (fake, _) = await pumpSheet(tester, _Fake(catalogue: [_rich()]));
-      await tester.tap(find.text('Suggest A Date &\nLocation'));
+      await tester.tap(find.text('Suggest a Date &\nLocation'));
       await tester.pumpAndSettle();
-      expect(find.text('Suggest a date & location'), findsOneWidget);
+      expect(find.text('Suggest a Date & Location'), findsOneWidget);
       expect(
         find.byKey(const ValueKey('enquiry-company')),
         findsNothing,
@@ -2025,11 +2032,11 @@ void main() {
       expect(find.text('Reviewer 1'), findsOneWidget);
       expect(find.text('Facilities Manager'), findsOneWidget);
       expect(find.textContaining('Review body number 2'), findsNothing);
-      await tester.tap(find.text('see all 3 reviews'));
+      await tester.tap(find.text('See All 3 Reviews'));
       await tester.pump();
       expect(find.textContaining('Review body number 2'), findsOneWidget);
       expect(find.textContaining('Review body number 3'), findsOneWidget);
-      await tester.tap(find.text('show fewer reviews'));
+      await tester.tap(find.text('Show Fewer Reviews'));
       await tester.pump();
       expect(find.textContaining('Review body number 2'), findsNothing);
     });
@@ -2042,12 +2049,12 @@ void main() {
         reviewList: CourseReviews(items: [_review(1), _review(2)], total: 41),
       );
       await pumpSheet(tester, fake);
-      await tester.tap(find.text('see all 41 reviews'));
+      await tester.tap(find.text('See All 41 Reviews'));
       await tester.pump();
       expect(find.textContaining('Review body number 2'), findsOneWidget);
       expect(find.text('Showing the newest 2 of 41.'), findsOneWidget);
       expect(find.text('read all 41 reviews on the website'), findsNothing);
-      await tester.tap(find.text('show fewer reviews'));
+      await tester.tap(find.text('Show Fewer Reviews'));
       await tester.pump();
       expect(find.textContaining('Review body number 2'), findsNothing);
       expect(launches.urls, isEmpty);

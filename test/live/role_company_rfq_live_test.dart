@@ -167,7 +167,7 @@ void main() {
         expect(c.review(publish: true), isFalse);
         expect(
           c.problems['contactPhone'],
-          'Enter a phone number',
+          'Enter a mobile number',
           reason: 'the composer asks for it before the API has to',
         );
         final posted = await _post(
@@ -486,7 +486,11 @@ void main() {
         // requirements only since 3 Nov 2026).
         final ask = PostRfqController(
           repository: repo,
-          target: QuoteTarget(vendorId: bluepeakVendor, supplierName: 'Bluepeak Security', categoryKey: 'PHYSICAL_SECURITY'),
+          target: QuoteTarget(
+            vendorId: bluepeakVendor,
+            supplierName: 'Bluepeak Security',
+            categoryKey: 'PHYSICAL_SECURITY',
+          ),
         );
         await ask.start();
         ask.quote
@@ -842,7 +846,7 @@ void main() {
             isA<Object>().having(
               (e) => ApiError.from(e).message,
               'message',
-              'Add a mobile number so the supplier can reach you.',
+              'Add a mobile number so the supplier can contact you.',
             ),
           ),
         );

@@ -184,7 +184,7 @@ void main() {
     testWidgets('no one found, and Escape', (tester) async {
       await pumpThread(tester);
       await typeInto(tester, 'reply-input', 'Hi @zzz');
-      expect(find.text('No one found'), findsOneWidget);
+      expect(find.text('No one found.'), findsOneWidget);
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pump();
       expect(key('mention-panel'), findsNothing);
@@ -320,13 +320,18 @@ void main() {
       final w = FeedWorld();
       w.replies['slug-iot']![0]['bodyHtml'] = '<p>Spot on, <a href="/members/u-rahul">@Rahul Sharma</a>.</p>';
       await pumpHome(tester, custom: w);
-      // The lead discussion's comments are open when the feed loads.
+      // The comments open in their sheet; a tap on the name leaves it for the member.
+      await tester.tap(key('comments:iot'));
+      await settle(tester);
       await tester.tapOnText(find.textRange.ofSubstring('@Rahul Sharma'));
+      await settle(tester);
       expect(members, ['u-rahul']);
     });
 
     testWidgets('"@" in a card\'s comment box lists people; a pick is sent as a link to them', (tester) async {
       await pumpHome(tester);
+      await tester.tap(key('comments:iot'));
+      await settle(tester);
       await typeInto(tester, 'reply-input', 'Thanks @pri');
       expect(key('mention-option:u-priya'), findsOneWidget);
       expect(find.text('Facilities Lead'), findsWidgets);
@@ -345,6 +350,8 @@ void main() {
 
     testWidgets('a comment with no tag is sent exactly as before', (tester) async {
       await pumpHome(tester);
+      await tester.tap(key('comments:iot'));
+      await settle(tester);
       await tester.enterText(key('reply-input'), 'Plain words');
       await tester.pump();
       await tester.tap(key('reply-send'));
@@ -384,7 +391,7 @@ void main() {
       expect(posted['title'], startsWith('Repost: Implementing IoT sensors'));
     });
 
-    testWidgets('"Repost with your thoughts" sends it too, once the reader posts', (tester) async {
+    testWidgets('"Repost with Your Thoughts" sends it too, once the reader posts', (tester) async {
       await pumpHome(tester, extra: composing());
       await tapIn(tester, 'iot', 'repost:iot');
       await tester.tap(key('repost-thoughts'));

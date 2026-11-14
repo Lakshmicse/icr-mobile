@@ -101,7 +101,7 @@ class _PartnerCoursesScreenState extends State<PartnerCoursesScreen> {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    top: TitleBar.height,
+                    top: TitleBar.reserved(context),
                     child: RefreshIndicator(
                       color: AppColors.primary,
                       onRefresh: () => Future.wait([_hub.reloadInstitutes(), _hub.loadPartnerStanding()]),
@@ -128,7 +128,7 @@ class _PartnerCoursesScreenState extends State<PartnerCoursesScreen> {
                     left: 0,
                     right: 0,
                     child: TitleBar(
-                      title: 'Partner Courses',
+                      title: 'Partner Programmes',
                       onBack: widget.onBack,
                       unread: _hub.unread,
                       onBell: () => openNotifications(context),
@@ -181,9 +181,9 @@ class _PartnerCoursesScreenState extends State<PartnerCoursesScreen> {
       return [
         SliverToBoxAdapter(
           child: HubNotice(
-            title: "Couldn't load institutes",
+            title: 'Unable to Load Institutes',
             body: error,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: _hub.reloadInstitutes,
             icon: LucideIcons.handshake,
           ),
@@ -196,11 +196,11 @@ class _PartnerCoursesScreenState extends State<PartnerCoursesScreen> {
       return [
         SliverToBoxAdapter(
           child: HubNotice(
-            title: _query.isEmpty ? 'No institutes yet' : 'No institutes match',
+            title: _query.isEmpty ? 'No Institutes Yet' : 'No Institutes Match',
             body: _query.isEmpty
-                ? 'Partner institutes show up here as ICR takes them on.'
+                ? 'Partner institutes will appear here as ICR adds them.'
                 : 'Try other words, or clear the search.',
-            action: _query.isEmpty ? null : 'Clear search',
+            action: _query.isEmpty ? null : 'Clear Search',
             onAction: _search.clear,
             icon: LucideIcons.handshake,
           ),
@@ -211,7 +211,7 @@ class _PartnerCoursesScreenState extends State<PartnerCoursesScreen> {
     return [
       SliverList(
         delegate: SliverChildListDelegate([
-          SectionHeading(title: _query.isEmpty ? 'Partner institutes' : '${shown.length} found'),
+          SectionHeading(title: _query.isEmpty ? 'Learning Partners' : '${shown.length} found'),
           const SizedBox(height: 11.5),
           for (var i = 0; i < shown.length; i += 2) ...[
             if (i > 0) const SizedBox(height: CourseGridRow.rowGap),
@@ -242,11 +242,11 @@ class _ApplyBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return _BannerRow(
       icon: LucideIcons.handshake,
-      title: 'Apply to become Partner Institute',
-      body: 'Partners apply as a company. Choose a company you run on ICR, or register a new one.',
+      title: 'Become an ICR Learning Partner',
+      body: 'Partners apply as a company. Select a company you run on ICR, or register a new one.',
       action: OutlinePillButton(
         key: const ValueKey('apply-to-partner'),
-        label: 'Apply',
+        label: 'Apply Now',
         height: 34,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         onPressed: onApply,
@@ -306,13 +306,13 @@ class _StandingBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final partner = company.isPartner;
     final title = partner
-        ? '${company.name} is a learning partner'
-        : "${company.name}'s learning partner application is with ICR";
+        ? '${company.name} Is a Learning Partner'
+        : "${company.name}'s Learning Partner Application Is with ICR";
     final body = !partner
-        ? 'Our team reviews every application by hand. You can add and publish courses here once it is approved.'
+        ? 'Our team reviews every application. You can add and publish courses here once it is approved.'
         : company.active
         ? 'Add your courses, modules, materials and batches in the partner console, and publish them when they are ready.'
-        : 'Switch to this company in My companies to add and publish its courses.';
+        : 'Switch to this company in My Companies to add and publish its courses.';
     return _BannerRow(
       key: ValueKey('partner-standing-${company.companyId}'),
       icon: partner ? LucideIcons.badgeCheck : LucideIcons.clock,
@@ -321,7 +321,7 @@ class _StandingBanner extends StatelessWidget {
       action: partner && company.active
           ? OutlinePillButton(
               key: const ValueKey('open-partner-console'),
-              label: 'Open console',
+              label: 'Open Console',
               height: 34,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               onPressed: () => openSitePage(context, '/admin/learning'),

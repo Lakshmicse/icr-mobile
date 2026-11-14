@@ -18,6 +18,7 @@ import 'career_models.dart';
 import 'career_repository.dart';
 import 'career_styles.dart';
 import 'career_widgets.dart';
+import '../../core/util/screen_trail.dart';
 import 'my_applications_screen.dart' show LockedTimelineNotice;
 
 /// One application, as the person who made it reads it (the website's
@@ -114,10 +115,7 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> with 
     if (!decision.confirmed || !mounted) return;
     final message = await _c.respondToOffer(accept: accept, note: decision.note);
     if (!mounted) return;
-    showMessage(
-      context,
-      message ?? (accept ? 'Offer accepted. Congratulations!' : 'Offer declined. The application is now archived.'),
-    );
+    showMessage(context, message ?? (accept ? 'Offer accepted.' : 'Offer declined. The application is now archived.'));
   }
 
   /// There is no RSVP for a candidate in the API: confirming, or asking for another time, is a
@@ -131,11 +129,14 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> with 
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      SitePlace(path: '/career/applications/${widget.application.id}', child: _buildPage(context));
+
+  Widget _buildPage(BuildContext context) {
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) => CareerScaffold(
-        title: 'Your application',
+        title: 'Your Application',
         onBack: widget.onBack,
         unread: _c.unread,
         onBell: () => widget.navigation.openNotifications(context, widget.links),
@@ -151,9 +152,9 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> with 
           CareerNotice(
             key: const ValueKey('application-error'),
             icon: LucideIcons.cloudOff,
-            title: "Couldn't open this application",
+            title: 'Unable to Open This Application',
             body: _c.error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: _c.start,
           ),
         ],
@@ -185,13 +186,13 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> with 
                 key: const ValueKey('view-job'),
                 onPressed: _openJob,
                 icon: const Icon(LucideIcons.briefcaseBusiness, size: 14),
-                label: const Text('View job'),
+                label: const Text('View Job'),
               ),
               OutlinedButton.icon(
                 key: const ValueKey('message-team'),
                 onPressed: _c.busy ? null : () => _message(),
                 icon: const Icon(LucideIcons.messageSquare, size: 14),
-                label: const Text('Message hiring team'),
+                label: const Text('Message Hiring Team'),
               ),
               if (canWithdraw(app))
                 TextButton.icon(
@@ -206,7 +207,7 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> with 
           if (progress != null) ...[
             const SizedBox(height: 14),
             _Section(
-              title: 'Where it stands',
+              title: 'Application Status',
               child: ApplicationProgress(steps: progress),
             ),
           ],
@@ -225,8 +226,8 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> with 
           if (app.answers.isNotEmpty) ...[
             const SizedBox(height: 10),
             _Section(
-              title: 'Your answers',
-              caption: 'What you told the employer when you applied.',
+              title: 'Your Answers',
+              caption: 'The answers you gave the employer when you applied.',
               child: Column(
                 key: const ValueKey('my-answers'),
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,10 +371,10 @@ class _Match extends StatelessWidget {
     final score = app.matchScore;
     final signals = app.signals;
     return _Section(
-      title: 'Your match',
+      title: 'Your Match',
       child: score == null
           ? Text(
-              'ICR is still scoring this application against your résumé. Check back soon.',
+              'ICR is still scoring this application against your résumé. Check again later.',
               key: const ValueKey('match-scoring'),
               style: CareerText.body,
             )
@@ -455,15 +456,10 @@ class _Match extends StatelessWidget {
                       children: [
                         const Icon(LucideIcons.lock, size: 14, color: AppColors.primary),
                         const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            'The breakdown behind your match is part of Career Plus.',
-                            style: CareerText.body,
-                          ),
-                        ),
+                        Expanded(child: Text('The match breakdown is part of Career Plus.', style: CareerText.body)),
                         TextButton(
                           onPressed: onPlans,
-                          child: Text('See plans', style: CareerText.link),
+                          child: Text('View Plans', style: CareerText.link),
                         ),
                       ],
                     ),
@@ -572,13 +568,13 @@ class _Round extends StatelessWidget {
                 ),
               StripButton(
                 key: ValueKey('confirm-${iv.id}'),
-                label: 'Confirm I will attend',
+                label: 'Confirm Attendance',
                 icon: LucideIcons.check,
                 onTap: () => onConfirm(iv),
               ),
               StripButton(
                 key: ValueKey('reschedule-${iv.id}'),
-                label: 'Ask for another time',
+                label: 'Ask for Another Time',
                 icon: LucideIcons.calendarClock,
                 onTap: () => onReschedule(iv),
               ),
@@ -609,7 +605,7 @@ class _Sent extends StatelessWidget {
     );
     final expected = app.expectedSalary;
     return _Section(
-      title: 'What you sent',
+      title: 'What You Sent',
       child: Column(
         key: const ValueKey('sent'),
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -664,11 +660,7 @@ class _Timeline extends StatelessWidget {
         _Stepper(stage: app.stage),
         const SizedBox(height: 14),
         if (events.isEmpty)
-          Text(
-            'Nothing has happened to this application yet.',
-            key: const ValueKey('timeline-empty'),
-            style: CareerText.body,
-          ),
+          Text('No activity on this application yet.', key: const ValueKey('timeline-empty'), style: CareerText.body),
         for (final e in events)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -711,7 +703,7 @@ class _Stepper extends StatelessWidget {
       return Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          rejected ? 'Not selected' : 'You withdrew your application',
+          rejected ? 'Not Selected' : 'You withdrew your application',
           key: ValueKey('stepper-${rejected ? 'rejected' : 'withdrawn'}'),
           style: CareerText.body.copyWith(
             fontWeight: FontWeight.w600,

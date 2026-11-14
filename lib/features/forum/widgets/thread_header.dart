@@ -35,7 +35,11 @@ class ThreadHeaderActions {
     this.onTopic,
     this.onLink,
     this.onOpenAttachment,
+    this.onOpenVideo,
   });
+
+  /// A video tile, tapped: the player, with the video's URL.
+  final ValueChanged<String>? onOpenVideo;
 
   final VoidCallback onMenu;
   final VoidCallback onFollowAuthor;
@@ -87,7 +91,7 @@ class ThreadHeader extends StatelessWidget {
             ForumNotice(
               warn: true,
               icon: LucideIcons.clock,
-              title: 'Waiting for review',
+              title: 'Awaiting Review',
               text: 'Only you and the moderators can see this until it is approved.',
             ),
             const SizedBox(height: 12),
@@ -96,7 +100,7 @@ class ThreadHeader extends StatelessWidget {
               icon: LucideIcons.lock,
               title: thread.status == 'LOCKED' ? 'Locked' : 'Archived',
               text: thread.status == 'LOCKED'
-                  ? 'This discussion is not taking new replies, and its poll takes no votes.'
+                  ? 'This discussion does not accept new replies or poll votes.'
                   : 'This discussion has been archived.',
             ),
             const SizedBox(height: 12),
@@ -129,6 +133,36 @@ class ThreadHeader extends StatelessWidget {
                 child: AspectRatio(
                   aspectRatio: 358 / 208,
                   child: ForumPicture(picture: picture),
+                ),
+              ),
+            ),
+          ],
+          for (final (i, video) in (thread?.videos ?? post.videos).indexed) ...[
+            const SizedBox(height: 12),
+            Semantics(
+              button: true,
+              label: 'Play video',
+              child: GestureDetector(
+                key: ValueKey('thread-video:$i'),
+                behavior: HitTestBehavior.opaque,
+                onTap: actions.onOpenVideo == null ? null : () => actions.onOpenVideo!(video),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: const AspectRatio(
+                    aspectRatio: 358 / 208,
+                    child: ColoredBox(
+                      color: Color(0xFF1F1F1F),
+                      child: Center(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(color: Color(0xE6FFFFFF), shape: BoxShape.circle),
+                          child: Padding(
+                            padding: EdgeInsets.all(14),
+                            child: Icon(LucideIcons.play, size: 28, color: Color(0xFF1F1F1F)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -252,7 +286,7 @@ class _MetaLine extends StatelessWidget {
     final replies = post.comments;
     final views = post.views ?? 0;
     final started = 'Started ${timeAgo(post.createdAt)}';
-    final last = thread == null ? null : 'last activity ${timeAgo(thread!.lastActivityAt)}';
+    final last = thread == null ? null : 'Last Activity: ${timeAgo(thread!.lastActivityAt)}';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -261,7 +295,7 @@ class _MetaLine extends StatelessWidget {
         Wrap(
           children: [
             Text(
-              '$replies ${replies == 1 ? 'reply' : 'replies'}',
+              '$replies ${replies == 1 ? 'Reply' : 'Replies'}',
               key: const ValueKey('thread-reply-count'),
               style: ForumDesign.meta,
             ),
@@ -270,9 +304,9 @@ class _MetaLine extends StatelessWidget {
               key: const ValueKey('thread-views'),
               onTap: onViewers,
               behavior: HitTestBehavior.opaque,
-              child: Text('${groupedCount(views)} ${views == 1 ? 'view' : 'views'}', style: ForumDesign.metaLink),
+              child: Text('${groupedCount(views)} ${views == 1 ? 'View' : 'Views'}', style: ForumDesign.metaLink),
             ),
-            if (controller.isQuestion && !post.answered) Text(' · Still unanswered', style: ForumDesign.meta),
+            if (controller.isQuestion && !post.answered) Text(' · Unanswered', style: ForumDesign.meta),
           ],
         ),
       ],
@@ -420,7 +454,12 @@ class _ActionBar extends StatelessWidget {
           Expanded(
             child: _Act(
               key: const ValueKey('thread-like'),
-              icon: reactionIcon(post.myReaction ?? ReactionKind.like),
+              icon: reactionIcon(ReactionKind.like),
+              // The reader's own reaction is drawn as the picker drew it (owner, 13 Nov 2026).
+              glyph: post.myReaction == null
+                  ? null
+                  : ReactionBadge(key: const ValueKey('thread-my-reaction'), kind: post.myReaction!, size: 20),
+              ink: post.myReaction == null ? null : reactionInk(post.myReaction!),
               label: liked ? reactionLabels[post.myReaction] ?? 'Liked' : 'Like',
               active: liked,
               onTap: actions.onLike,
@@ -439,7 +478,7 @@ class _ActionBar extends StatelessWidget {
             child: _Act(
               key: const ValueKey('thread-subscribe'),
               icon: subscribed ? LucideIcons.bellRing : LucideIcons.bell,
-              label: subscribed ? 'Notifying' : 'Notify me',
+              label: subscribed ? 'Notifying' : 'Notify Me',
               active: subscribed,
               onTap: actions.onSubscribe,
             ),
@@ -475,9 +514,15 @@ class _Act extends StatelessWidget {
     required this.onTap,
     this.active = false,
     this.onHold,
+    this.glyph,
+    this.ink,
   });
 
   final IconData icon;
+
+  /// Drawn in place of [icon], with the word in [ink]: the reader's own reaction, as its badge.
+  final Widget? glyph;
+  final Color? ink;
   final String label;
   final VoidCallback? onTap;
   final bool active;
@@ -485,7 +530,7 @@ class _Act extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = onTap == null ? AppColors.outlineVariant : (active ? AppColors.primary : AppColors.icon);
+    final color = onTap == null ? AppColors.outlineVariant : (ink ?? (active ? AppColors.primary : AppColors.icon));
     return Semantics(
       button: true,
       label: label,
@@ -503,7 +548,7 @@ class _Act extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 19, color: color),
+            glyph ?? Icon(icon, size: 19, color: color),
             const SizedBox(height: 4),
             Text(label, style: ForumDesign.action.copyWith(color: color), maxLines: 1),
           ],

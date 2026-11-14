@@ -66,7 +66,10 @@ void main() {
       expect(b.earlierRounds, isEmpty);
 
       final answers = b.application.answers;
-      expect(answers.map((a) => a.prompt), ['How many years have you run site operations?', 'Can you work rotational shifts?']);
+      expect(answers.map((a) => a.prompt), [
+        'How many years have you run site operations?',
+        'Can you work rotational shifts?',
+      ]);
       expect(answers.map((a) => a.display), ['14 years', 'Yes']);
       expect(answers.first.mustHave, isTrue);
       expect(answers.every((a) => a.graded && a.meetsIdeal), isTrue);
@@ -149,17 +152,17 @@ void main() {
       expect(half.toJson()['recommendation'], isNull, reason: 'refused by the DTO before the service runs');
       await expectLater(
         (await hiringAs(meera)).submitScorecard(round('sanjana'), half),
-        throwsA(isA<ApiError>().having((e) => e.statusCode, 'status', 400).having(
-          (e) => e.message,
-          'message',
-          isNot('The scorecard opens after the interview starts.'),
-        )),
+        throwsA(
+          isA<ApiError>()
+              .having((e) => e.statusCode, 'status', 400)
+              .having((e) => e.message, 'message', isNot('The scorecard opens after the interview starts.')),
+        ),
       );
     });
   });
 
   group('the screen over the API', () {
-    testWidgets('a scored round reads "Feedback submitted" with the panelist\'s scorecard', tags: const ['live'], (
+    testWidgets('a scored round reads "Feedback Submitted" with the panelist\'s scorecard', tags: const ['live'], (
       tester,
     ) async {
       if (!await liveScreenReady(tester)) return;
@@ -192,7 +195,7 @@ void main() {
           size: const Size(390, 3200),
         );
         await settleLive(tester);
-        expect(find.text('Notes for the panel'), findsOneWidget);
+        expect(find.text('Notes for the Panel'), findsOneWidget);
         expect(find.text('91%'), findsOneWidget);
         if (b.scheduledAt.isAfter(DateTime.now())) {
           expect(find.byKey(const ValueKey('scorecard-not-yet')), findsOneWidget);

@@ -40,8 +40,8 @@ class _SupplierCatalogTabState extends State<SupplierCatalogTab> {
     if (total == 0) {
       if (failed != null) return InlineNotice(message: failed, onRetry: () => c.reload(SupplierTab.catalog));
       return const EmptyPart(
-        title: 'Nothing listed yet',
-        body: 'This supplier has not added products or services. Request a quote and tell them what you need.',
+        title: 'No Products or Services Listed Yet',
+        body: 'This supplier has not added products or services. Request a quote and describe what you need.',
       );
     }
     // The chips: a service's group is its sub-category, else its category, by the name people read.

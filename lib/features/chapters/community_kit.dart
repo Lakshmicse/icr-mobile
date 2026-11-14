@@ -294,6 +294,7 @@ class CommunityPage extends StatelessWidget {
     this.unread = 0,
     this.controller,
     this.bottomBar,
+    this.actions = const [],
   });
 
   final String title;
@@ -307,6 +308,9 @@ class CommunityPage extends StatelessWidget {
   /// Pinned under the list (a form's send button).
   final Widget? bottomBar;
 
+  /// The title bar's actions, left of the bell.
+  final List<Widget> actions;
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -319,7 +323,7 @@ class CommunityPage extends StatelessWidget {
           child: Stack(
             children: [
               Positioned.fill(
-                top: TitleBar.height,
+                top: TitleBar.reserved(context),
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: onRefresh,
@@ -335,7 +339,7 @@ class CommunityPage extends StatelessWidget {
                 top: 0,
                 left: 0,
                 right: 0,
-                child: TitleBar(title: title, onBack: onBack, unread: unread, onBell: onBell),
+                child: TitleBar(title: title, onBack: onBack, actions: actions, unread: unread, onBell: onBell),
               ),
             ],
           ),
@@ -619,7 +623,7 @@ class CommunitySearchField extends StatelessWidget {
                   suffixIcon: value.text.isEmpty
                       ? null
                       : IconButton(
-                          tooltip: 'Clear search',
+                          tooltip: 'Clear Search',
                           padding: EdgeInsets.zero,
                           iconSize: 14,
                           onPressed: () {

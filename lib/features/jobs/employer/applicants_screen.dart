@@ -122,7 +122,7 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
       },
     );
     if (!mounted) return;
-    if (booked) showMessage(context, 'Interview booked with ${a.name}.');
+    if (booked) showMessage(context, 'Interview scheduled with ${a.name}.');
     _c.refresh();
   }
 
@@ -131,11 +131,11 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
     if (to == 'REJECTED') {
       note = await askStageNote(
         context,
-        title: 'Not selecting ${a.name}?',
-        body: 'They are told their application was not selected. You can move them back later.',
+        title: 'Reject ${a.name}?',
+        body: 'They will be notified that their application was not selected. You can move them back later.',
         confirm: 'Reject',
         destructive: true,
-        hint: 'Why (only your team sees this)',
+        hint: 'Reason (visible only to your team)',
       );
       if (note == null || !mounted) return;
     }
@@ -220,7 +220,7 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
           children: [
             PopupMenuButton<ApplicantSort>(
               key: const ValueKey('applicants-sort'),
-              tooltip: 'Sort by',
+              tooltip: 'Sort By',
               onSelected: _c.setSort,
               itemBuilder: (_) => [
                 for (final s in ApplicantSort.values)
@@ -231,16 +231,16 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
             const SizedBox(width: 6),
             PopupMenuButton<int>(
               key: const ValueKey('applicants-rating'),
-              tooltip: 'Filter by rating',
+              tooltip: 'Filter by Rating',
               onSelected: (v) => _c.setMinRating(v == 0 ? null : v),
               itemBuilder: (_) => [
-                CheckedPopupMenuItem(value: 0, checked: _c.minRating == null, child: const Text('Any rating')),
+                CheckedPopupMenuItem(value: 0, checked: _c.minRating == null, child: const Text('Any Rating')),
                 for (final n in const [3, 4, 5])
-                  CheckedPopupMenuItem(value: n, checked: _c.minRating == n, child: Text('$n stars and up')),
+                  CheckedPopupMenuItem(value: n, checked: _c.minRating == n, child: Text('$n Stars and Up')),
               ],
               child: _Pill(
                 icon: LucideIcons.star,
-                label: _c.minRating == null ? 'Rating' : '${_c.minRating}+ stars',
+                label: _c.minRating == null ? 'Rating' : '${_c.minRating}+ Stars',
                 on: _c.minRating != null,
               ),
             ),
@@ -259,9 +259,9 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
         CareerNotice(
           key: const ValueKey('applicants-error'),
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load the applicants",
+          title: 'Unable to Load Applicants',
           body: _c.error!,
-          action: 'Try again',
+          action: 'Try Again',
           onAction: _c.refresh,
         )
       else if (!_c.loaded)
@@ -270,11 +270,13 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
         CareerNotice(
           key: const ValueKey('applicants-empty'),
           icon: LucideIcons.users,
-          title: _c.stage != null || _c.minRating != null || _c.qualifiedOnly ? 'No one matches' : 'No applicants yet',
+          title: _c.stage != null || _c.minRating != null || _c.qualifiedOnly
+              ? 'No Matching Applicants'
+              : 'No Applicants Yet',
           body: _c.stage != null || _c.minRating != null || _c.qualifiedOnly
-              ? 'Try another stage, or clear the filters.'
-              : 'People who apply show up here, best match first if you sort that way.',
-          action: _c.stage != null || _c.minRating != null || _c.qualifiedOnly ? 'Show everyone' : null,
+              ? 'Try another stage or clear the filters.'
+              : 'People who apply will appear here.',
+          action: _c.stage != null || _c.minRating != null || _c.qualifiedOnly ? 'Show All Applicants' : null,
           onAction: () async {
             await _c.setMinRating(null);
             await _c.setQualifiedOnly(false);
@@ -419,7 +421,7 @@ class ApplicantRow extends StatelessWidget {
     final facts = [
       if (a.headline != null && a.headline!.isNotEmpty) a.headline!,
       if (a.currentCompany != null && a.currentCompany!.isNotEmpty) a.currentCompany!,
-      if (a.experienceYears != null) '${_years(a.experienceYears!)} yrs',
+      if (a.experienceYears != null) '${_years(a.experienceYears!)} ${a.experienceYears == 1 ? 'year' : 'years'}',
     ];
     return Container(
       key: ValueKey('applicant-${a.id}'),
@@ -485,10 +487,10 @@ class ApplicantRow extends StatelessWidget {
                               key: ValueKey('stage-pill-${a.id}'),
                               child: StatusPill(stageWord(a.stage), tone: stageTone(a.stage)),
                             ),
-                            if (a.matchScore != null) StatusPill('${a.matchScore}% match', tone: PillTone.brand),
+                            if (a.matchScore != null) StatusPill('${a.matchScore}% Match', tone: PillTone.brand),
                             if (a.qualificationsTotal != null && a.qualificationsTotal! > 0)
                               StatusPill(
-                                '${a.qualificationsMet ?? 0} of ${a.qualificationsTotal} met',
+                                '${a.qualificationsMet ?? 0} of ${a.qualificationsTotal} Met',
                                 tone: (a.qualificationsMet ?? 0) >= a.qualificationsTotal!
                                     ? PillTone.success
                                     : PillTone.neutral,
@@ -523,7 +525,7 @@ class ApplicantRow extends StatelessWidget {
                           PopupMenuItem(
                             key: ValueKey('schedule-${a.id}'),
                             value: ApplicantRow.scheduleItem,
-                            child: const Text('Schedule interview'),
+                            child: const Text('Schedule Interview'),
                           ),
                       ],
                     )

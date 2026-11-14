@@ -159,7 +159,7 @@ class _SupportScreenState extends State<SupportScreen> {
       return [
         SizedBox(
           height: 260,
-          child: AccountError(message: c.error!, onRetry: c.load, title: SupportWords.couldNotLoad),
+          child: AccountError(message: c.error!, onRetry: c.load, title: SupportWords.couldNotLoadTitle),
         ),
       ];
     }
@@ -230,7 +230,7 @@ class _SupportScreenState extends State<SupportScreen> {
                         : TextButton(
                             key: const Key('support.more'),
                             onPressed: c.loadMore,
-                            child: const Text('Load more'),
+                            child: const Text('View More'),
                           ),
                   ),
                 ),

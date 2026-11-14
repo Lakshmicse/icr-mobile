@@ -17,7 +17,7 @@ Future<void> showRateSheet(BuildContext context) async {
     context,
     builder: (_) => ChangeNotifierProvider<SupplierController>.value(value: controller, child: const RateSheet()),
   );
-  if (done == true && context.mounted) showMessage(context, 'Thanks, your rating is saved.');
+  if (done == true && context.mounted) showMessage(context, 'Your rating is saved.');
 }
 
 /// The longest comment the sheet takes (the API sets no limit; a rating is a few lines).
@@ -44,7 +44,7 @@ class _RateSheetState extends State<RateSheet> {
 
   Future<void> _send() async {
     if (_score == 0) {
-      setState(() => _error = 'Pick one to five stars first.');
+      setState(() => _error = 'Select one to five stars first.');
       return;
     }
     setState(() {
@@ -77,7 +77,7 @@ class _RateSheetState extends State<RateSheet> {
               Text('Rate $name', style: MartText.sheetTitle),
               const SizedBox(height: 4),
               Text(
-                'Your rating counts towards the supplier\'s average. It is shown as "Verified buyer", without your name.',
+                'Your rating counts towards the supplier\'s average. It is shown as "Verified Buyer", without your name.',
                 style: MartText.sheetRowMuted,
               ),
               const SizedBox(height: 14),
@@ -114,7 +114,7 @@ class _RateSheetState extends State<RateSheet> {
                 maxLength: ratingCommentLimit,
                 style: MartText.sheetRow,
                 decoration: InputDecoration(
-                  hintText: 'What went well, or what should change (optional)',
+                  hintText: 'What went well or what should change (Optional)',
                   hintStyle: MartText.sheetRowMuted,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 ),
@@ -144,7 +144,7 @@ class _RateSheetState extends State<RateSheet> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
-                      : Text('Send rating', style: MartText.sheetButton),
+                      : Text('Send Rating', style: MartText.sheetButton),
                 ),
               ),
             ],

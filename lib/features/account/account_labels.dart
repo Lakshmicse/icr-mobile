@@ -20,6 +20,19 @@ const userRoleLabels = {
 
 String roleLabel(String? role) => userRoleLabels[role] ?? (role ?? '');
 
+/// The profile checklist's items as the owner wants them read (12 Nov 2026),
+/// by the sentence the API sends (`PROFESSIONAL_CHECKS` in `@icr/shared`'s
+/// `discovery.ts`). The API's sentence stays the key the screen matches on;
+/// an item not listed here reads as sent.
+const completionTaskLabels = {
+  'Write a professional summary': 'Write a Professional Summary',
+  'List your skills': 'Add Skills',
+  'Add your work history': 'Add Work History',
+  'Add your education': 'Add Education',
+};
+
+String completionTaskLabel(String item) => completionTaskLabels[item] ?? item;
+
 /// `JOB_INDUSTRIES`, in the website's order.
 const industries = <(String, String)>[
   ('CRE_SERVICES', 'Commercial real estate services'),
@@ -69,8 +82,8 @@ const legalStructures = <(String, String)>[
 ];
 
 const employmentTypes = <(String, String)>[
-  ('FULL_TIME', 'Full-time'),
-  ('PART_TIME', 'Part-time'),
+  ('FULL_TIME', 'Full-Time'),
+  ('PART_TIME', 'Part-Time'),
   ('CONTRACT', 'Contract'),
   ('INTERNSHIP', 'Internship'),
   ('TEMPORARY', 'Temporary'),
@@ -113,20 +126,20 @@ String careerBreakLabel(String? key) {
 /// The notification preferences' rows: label and hint, by category id.
 const notificationCategories = <String, (String, String)>{
   'messages': ('Messages', 'New direct messages.'),
-  'jobs': ('Jobs and applications', 'Applications, interviews, offers, job alerts and profile views.'),
-  'procurement': ('Requirements and bids', 'Requirements, enquiries, bids and shortlists.'),
+  'jobs': ('Jobs and Applications', 'Applications, interviews, offers, job alerts and profile views.'),
+  'procurement': ('Requirements and Bids', 'Requirements, enquiries, bids and shortlists.'),
   'mentoring': ('Mentoring', 'Requests, sessions, reminders, tasks and feedback.'),
-  'learning': ('Courses and assignments', 'Assignments, grades and course enquiries.'),
+  'learning': ('Courses and Assignments', 'Assignments, grades and course enquiries.'),
   'events': ('Events', 'Invitations, talk proposals and sponsorships.'),
-  'community': ('Community and articles', 'Replies to your posts, accepted answers, followers and articles.'),
-  'verification': ('Verification and credentials', 'Verification reviews, certificates and credentials.'),
-  'team': ('Team and company', 'Invitations and requests to join a company team.'),
-  'membership': ('Membership and rewards', 'Renewal reminders, expiry, price changes and referral rewards.'),
-  'onboarding': ('Getting started', 'Reminders to finish setting up your account.'),
-  'general': ('Other updates', 'Anything else ICR tells you about.'),
-  'payments': ('Payments and receipts', 'Receipts, purchases, refunds and payment problems.'),
-  'support': ('Support requests', 'Replies and updates on your support requests.'),
-  'security': ('Account and security', 'Sign-in codes, password resets and email verification.'),
+  'community': ('Community and Articles', 'Replies to your posts, accepted answers, followers and articles.'),
+  'verification': ('Verification and Credentials', 'Verification reviews, certificates and credentials.'),
+  'team': ('Team and Company', 'Invitations and requests to join a company team.'),
+  'membership': ('Membership and Rewards', 'Renewal reminders, expiry, price changes and referral rewards.'),
+  'onboarding': ('Getting Started', 'Reminders to finish setting up your account.'),
+  'general': ('Other Updates', 'Other updates from ICR.'),
+  'payments': ('Payments and Receipts', 'Receipts, purchases, refunds and payment problems.'),
+  'support': ('Support Requests', 'Replies and updates on your support requests.'),
+  'security': ('Account and Security', 'Sign-in codes, password resets and email verification.'),
 };
 
 /// Languages the website suggests for a profile (`LANGUAGE_SUGGESTIONS`).
@@ -177,10 +190,7 @@ String careerDuration(int months) {
   if (months < 1) return 'Less than a month';
   final y = months ~/ 12;
   final m = months % 12;
-  final parts = [
-    if (y > 0) '$y ${y == 1 ? 'yr' : 'yrs'}',
-    if (m > 0) '$m ${m == 1 ? 'mo' : 'mos'}',
-  ];
+  final parts = [if (y > 0) '$y ${y == 1 ? 'yr' : 'yrs'}', if (m > 0) '$m ${m == 1 ? 'mo' : 'mos'}'];
   return parts.join(' ');
 }
 

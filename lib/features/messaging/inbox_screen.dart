@@ -18,8 +18,10 @@ import 'messaging_styles.dart';
 import 'widgets/conversation_tile.dart';
 import 'widgets/new_message_sheet.dart';
 import 'widgets/states.dart';
+import '../../core/util/screen_trail.dart';
 
-/// The person's messages, as the designed inbox (docs/designs/messaging-inbox.png): "Messaging" with its
+/// The person's messages, as the designed inbox (docs/designs/messaging-inbox.png): "Messages" (the
+/// design's "Messaging"; owner, 12 Nov 2026) with its
 /// "N Active" pill, an options menu and the "New message" pencil, a search box, one row of filter chips and the
 /// threads. The options menu holds "Mark all as read" and, for someone who answers for a company, the inbox
 /// switcher (their own messages and each company inbox, with the other inbox's unread count). Search covers
@@ -153,7 +155,7 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
   Future<void> _markAll() async {
     final error = await _c.markAllRead();
     if (!mounted) return;
-    showMessage(context, error ?? 'All marked as read');
+    showMessage(context, error ?? 'All messages marked as read.');
   }
 
   Future<void> _menu(Conversation c) async {
@@ -169,13 +171,13 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
             ListTile(
               key: const ValueKey('menu-star'),
               leading: Icon(c.starred ? Icons.star_rounded : Icons.star_outline_rounded, color: ChatColors.star),
-              title: Text(c.starred ? 'Remove star' : 'Star conversation'),
+              title: Text(c.starred ? 'Remove Star' : 'Star Conversation'),
               onTap: () => Navigator.pop(context, 'star'),
             ),
             ListTile(
               key: const ValueKey('menu-pin'),
               leading: const Icon(LucideIcons.pin, color: AppColors.slate600),
-              title: Text(c.pinned ? 'Unpin from top' : 'Pin to top'),
+              title: Text(c.pinned ? 'Unpin from Top' : 'Pin to Top'),
               onTap: () => Navigator.pop(context, 'pin'),
             ),
             const SizedBox(height: 8),
@@ -189,7 +191,9 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => SitePlace(path: '/messaging', child: _buildPage(context));
+
+  Widget _buildPage(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.white),
       child: Scaffold(
@@ -221,9 +225,9 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
           hasScrollBody: false,
           child: ChatNotice(
             icon: LucideIcons.cloudOff,
-            title: 'Your messages could not be loaded.',
+            title: 'Unable to Load Messages',
             body: _c.error,
-            action: 'Retry',
+            action: 'Try Again',
             onAction: _c.refresh,
           ),
         ),
@@ -261,7 +265,7 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
       }
       if (_c.conversations.isNotEmpty) {
         if (_c.pinned.isNotEmpty || _c.hits.isNotEmpty) {
-          slivers.add(SliverToBoxAdapter(child: _Heading(_c.searching ? 'Conversations' : 'All messages')));
+          slivers.add(SliverToBoxAdapter(child: _Heading(_c.searching ? 'Conversations' : 'All Messages')));
         }
         slivers.add(_list(_c.conversations, meId, now));
       }
@@ -295,7 +299,7 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
     if (_c.searching) {
       return ChatNotice(
         icon: LucideIcons.searchX,
-        title: 'No matches',
+        title: 'No Matches Found',
         body: 'Nothing in your messages matches "${q.search.trim()}".',
       );
     }
@@ -305,21 +309,21 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
     return switch (q.filter) {
       InboxFilter.unread => const ChatNotice(
         icon: LucideIcons.checkCheck,
-        title: "You're all caught up",
+        title: 'No Unread Messages',
         body: 'Nothing is waiting for a reply.',
       ),
       InboxFilter.starred => const ChatNotice(
         icon: LucideIcons.star,
-        title: 'Nothing starred',
+        title: 'No Starred Conversations',
         body: 'Press and hold a conversation to star it.',
       ),
       InboxFilter.all => ChatNotice(
         icon: LucideIcons.messageCircle,
-        title: q.kind == null ? 'No messages yet' : 'Nothing here',
+        title: q.kind == null ? 'No Messages Yet' : 'No Conversations',
         body: q.kind == null
-            ? 'Message a person, a supplier or a company from their page, or tap the pencil to start one.'
+            ? 'Message a person, supplier or company from their page, or start a new message.'
             : 'No ${q.kind!.label.toLowerCase()} conversations.',
-        action: q.kind == null ? 'New message' : null,
+        action: q.kind == null ? 'New Message' : null,
         onAction: q.kind == null ? _compose : null,
       ),
     };
@@ -334,7 +338,7 @@ class _InboxScreenState extends State<InboxScreen> with WidgetsBindingObserver {
         child: TextButton(
           key: const ValueKey('load-more'),
           onPressed: _c.loadMore,
-          child: Text('Show more conversations', style: ChatText.barAction),
+          child: Text('View More', style: ChatText.barAction),
         ),
       ),
     );
@@ -448,7 +452,7 @@ class _Controls extends StatelessWidget {
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(bottom: 1),
-                            child: Text('Messaging', style: InboxText.title),
+                            child: Text('Messages', style: InboxText.title),
                           ),
                           if (pillText != null) ...[
                             const SizedBox(width: 8),
@@ -524,7 +528,7 @@ class _Controls extends StatelessWidget {
             if ((inbox?.topics.length ?? 0) > 1) ...[
               const SizedBox(height: 8),
               row([
-                pill('topic-all', 'All topics', q.topic == null, () => c.setTopic(null)),
+                pill('topic-all', 'All Topics', q.topic == null, () => c.setTopic(null)),
                 for (final t in inbox!.topics)
                   pill('topic-$t', messageTopicLabels[t] ?? t, q.topic == t, () => c.setTopic(q.topic == t ? null : t)),
               ]),
@@ -592,7 +596,7 @@ class _OptionsMenu extends StatelessWidget {
     final q = c.query;
     return PopupMenuButton<String>(
       key: const ValueKey('inbox-options'),
-      tooltip: 'Inbox options',
+      tooltip: 'Inbox Options',
       padding: EdgeInsets.zero,
       color: Colors.white,
       surfaceTintColor: Colors.transparent,
@@ -615,7 +619,7 @@ class _OptionsMenu extends StatelessWidget {
             children: [
               const Icon(LucideIcons.checkCheck, size: 18, color: InboxColors.navy),
               const SizedBox(width: 10),
-              Text('Mark all as read', style: _item),
+              Text('Mark All as Read', style: _item),
             ],
           ),
         ),
@@ -631,7 +635,7 @@ class _OptionsMenu extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      i.personal ? 'My messages' : (i.name ?? 'Company'),
+                      i.personal ? 'My Messages' : (i.name ?? 'Company'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: _item,
@@ -696,7 +700,7 @@ class _ComposeButton extends StatelessWidget {
     button: true,
     label: 'New message',
     child: Tooltip(
-      message: 'New message',
+      message: 'New Message',
       excludeFromSemantics: true,
       child: InkResponse(
         key: const ValueKey('compose'),
@@ -762,7 +766,7 @@ class _SearchBox extends StatelessWidget {
                 ),
                 if (value.text.isNotEmpty)
                   IconButton(
-                    tooltip: 'Clear search',
+                    tooltip: 'Clear Search',
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                     iconSize: 16,

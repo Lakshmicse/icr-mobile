@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:icr_mobile/features/feed/widgets/poll_view.dart';
 import 'package:icr_mobile/core/theme/app_colors.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/core/util/app_actions.dart';
 import 'package:icr_mobile/features/feed/feed_controller.dart';
 import 'package:icr_mobile/features/feed/feed_models.dart';
 import 'package:icr_mobile/features/feed/home_screen.dart';
+import 'package:icr_mobile/features/feed/widgets/comments_sheet.dart';
 import 'package:icr_mobile/features/feed/widgets/composer_and_filters.dart';
 import 'package:icr_mobile/features/forum/new_thread_screen.dart';
 import 'package:icr_mobile/features/forum/thread_screen.dart';
@@ -125,6 +127,30 @@ void main() {
     await settle(tester);
   }
 
+  /// A world with two reposts at the top: one of the poll, one of the discussion with the photo.
+  FeedWorld worldWithReposts() {
+    final w = FeedWorld();
+    w.threads.insert(
+      0,
+      threadCard(
+        'rp-poll',
+        title: 'Repost: What is your primary FM Software in 2026?',
+        excerpt:
+            '↻ Reposted from Author poll\n“What is your primary FM Software in 2026?”\nhttps://icr.org.in/community/slug-poll',
+      ),
+    );
+    w.threads.insert(
+      1,
+      threadCard(
+        'rp-photo',
+        title: 'Repost: Discussion photo',
+        excerpt:
+            'My take first.\n↻ Reposted from Author photo\n“Discussion photo”\nhttps://icr.org.in/community/slug-photo',
+      ),
+    );
+    return w;
+  }
+
   /// A chip in the row that scrolls sideways (the topic chips sit past the screen's edge).
   Future<void> tapChip(WidgetTester tester, String label) async {
     final chip = find.descendant(of: find.byType(FeedFilterChips), matching: find.text(label));
@@ -136,12 +162,6 @@ void main() {
     await tester.ensureVisible(chip);
     await tester.pumpAndSettle();
     await tester.tap(chip);
-    await settle(tester);
-  }
-
-  /// A control inside one post's card (an open thread has its own pill, box and tiles).
-  Future<void> tapIn(WidgetTester tester, String postId, String key) async {
-    await tester.tap(find.descendant(of: find.byKey(ValueKey(postId)), matching: find.byKey(ValueKey(key))));
     await settle(tester);
   }
 
@@ -185,7 +205,7 @@ void main() {
         expect(find.text('Start a post'), findsNothing);
         await tapKey(tester, 'home-compose');
         expect(find.byType(NewThreadScreen), findsOneWidget);
-        expect(find.text('New discussion'), findsOneWidget);
+        expect(find.text('New Discussion'), findsOneWidget);
         expect(launched, isEmpty);
       },
     );
@@ -220,6 +240,28 @@ void main() {
     });
 
     group('Repost', () {
+      testWidgets('a repost draws the original inside it — its poll, its photo — and not the quote\'s link', (
+        tester,
+      ) async {
+        await pumpHome(tester, custom: worldWithReposts());
+        // The poll's repost: the original's poll inside, the link line gone.
+        expect(find.byKey(const ValueKey('quoted:slug-poll')), findsOneWidget);
+        expect(find.textContaining('icr.org.in/community/slug-poll'), findsNothing);
+        expect(find.byType(PollView), findsNWidgets(2), reason: 'the original and its repost both show the poll');
+        // The photo's repost keeps the reposter's own words and shows the original with its photo.
+        expect(find.byKey(const ValueKey('quoted:slug-photo')), findsOneWidget);
+        expect(find.text('My take first.'), findsOneWidget);
+        expect(find.textContaining('icr.org.in/community/slug-photo'), findsNothing);
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('quoted:slug-photo')),
+            matching: find.text('The impact of AI on preliminary site feasibility analysis'),
+          ),
+          findsOneWidget,
+          reason: "the original's own title, not the quote's",
+        );
+      });
+
       Map<String, Handler> createRoute({String moderation = 'APPROVED'}) => {
         'POST /forum/threads': (o) => {
           ...threadCard('new', title: (o.data as Map)['title'] as String, author: member('me', 'Bharat Buyer')),
@@ -233,12 +275,12 @@ void main() {
       testWidgets('offers a repost with your thoughts or as it stands, instead of "not available"', (tester) async {
         await pumpHome(tester);
         await tapKey(tester, 'repost:iot');
-        expect(find.text('Repost with your thoughts'), findsOneWidget);
-        expect(find.text('Instantly bring this post to your feed.'), findsOneWidget);
+        expect(find.text('Repost with Your Thoughts'), findsOneWidget);
+        expect(find.text('Share this post to your feed immediately.'), findsOneWidget);
         expect(find.textContaining("isn't available"), findsNothing);
       });
 
-      testWidgets('"Repost with your thoughts" opens the composer with the quote already in it', (tester) async {
+      testWidgets('"Repost with Your Thoughts" opens the composer with the quote already in it', (tester) async {
         await pumpHome(tester, extra: createRoute());
         await tapKey(tester, 'repost:iot');
         await tapKey(tester, 'repost-thoughts');
@@ -272,7 +314,7 @@ void main() {
         await pumpHome(tester, extra: createRoute(moderation: 'PENDING'));
         await tapKey(tester, 'repost:iot');
         await tapKey(tester, 'repost-instant');
-        expect(find.textContaining('A moderator will read it'), findsOneWidget);
+        expect(find.textContaining('A moderator will review it'), findsOneWidget);
       });
 
       testWidgets('a refusal from the forum is shown, not swallowed', (tester) async {
@@ -334,7 +376,7 @@ void main() {
         await tester.tap(find.text(label));
       }
 
-      await tapChip('Trending');
+      await tapChip('Trending Discussions');
       await settle(tester);
       expect(lastQuery()['sort'], 'top');
       expect(feed.filter, FeedFilter.trending);
@@ -368,7 +410,7 @@ void main() {
       await tester.tap(find.text('Following'));
       await settle(tester);
       expect(feed.posts, isEmpty);
-      expect(find.text('Nothing from people you follow yet'), findsOneWidget);
+      expect(find.text('No Posts from People You Follow Yet'), findsOneWidget);
       expect(find.text('Follow members from their posts to see what they share here.'), findsOneWidget);
     });
 
@@ -403,7 +445,7 @@ void main() {
       expect(api.to('GET', '/forum/threads').last.queryParameters['tag'], 'ESG');
       expect(feed.posts, isEmpty);
       expect(feed.topics.first.tag, 'ESG');
-      expect(find.text('No discussions tagged #ESG yet'), findsOneWidget);
+      expect(find.text('No Discussions Tagged #ESG Yet'), findsOneWidget);
     });
   });
 
@@ -456,7 +498,7 @@ void main() {
       expect(find.text('+3 photos'), findsOneWidget);
     });
 
-    testWidgets("Like reacts at once, again takes it back, and the reader's own post refuses it before sending", (
+    testWidgets("Like reacts at once, again takes it back, and the reader's own post is liked like any other", (
       tester,
     ) async {
       await pumpHome(tester);
@@ -472,13 +514,12 @@ void main() {
       expect(post('photo').myReaction, isNull);
       expect(post('photo').reactions, 20);
 
-      // The website refuses a reaction on your own post itself, with this sentence, and sends nothing; the API
-      // would refuse too ("You cannot vote on your own discussion."), but nobody has to wait for it.
+      // A member may like their own post (owner, 7 Nov 2026: "remove this restriction"); the API allows it.
       await tapKey(tester, 'like:mine');
-      expect(find.text('You cannot react to your own post.'), findsOneWidget);
-      expect(api.to('POST', '/forum/threads/mine/vote'), isEmpty);
-      expect(post('mine').myReaction, isNull);
-      expect(post('mine').reactions, 0);
+      expect(find.text('You cannot react to your own post.'), findsNothing);
+      expect(api.to('POST', '/forum/threads/mine/vote').single.data, {'value': 1, 'reaction': 'LIKE'});
+      expect(post('mine').myReaction, ReactionKind.like);
+      expect(post('mine').reactions, 1);
     });
 
     testWidgets('the votes count opens who voted, with the option each person picked', (tester) async {
@@ -566,11 +607,11 @@ void main() {
         await pumpHome(tester);
         final calls = api.calls.length;
         await tapKey(tester, 'repost:iot');
-        expect(find.text('Repost with your thoughts'), findsOneWidget);
+        expect(find.text('Repost with Your Thoughts'), findsOneWidget);
         expect(api.calls.length, calls, reason: 'asking how to repost asks the forum for nothing');
         await tester.tapAt(const Offset(10, 10)); // the scrim
         await settle(tester);
-        expect(find.text('Repost with your thoughts'), findsNothing);
+        expect(find.text('Repost with Your Thoughts'), findsNothing);
 
         await tapKey(tester, 'share:iot');
         expect(shared.single['text'], contains('Implementing IoT sensors for HVAC efficiency: Best practices?'));
@@ -582,48 +623,57 @@ void main() {
     testWidgets("the three dots copy the discussion's link or open the discussion", (tester) async {
       await pumpHome(tester);
       await tapKey(tester, 'more:photo');
-      expect(find.text('Copy link'), findsOneWidget);
-      await tester.tap(find.text('Copy link'));
+      expect(find.text('Copy Link'), findsOneWidget);
+      await tester.tap(find.text('Copy Link'));
       await settle(tester);
       expect(copied, 'https://icr.org.in/community/slug-photo');
-      expect(find.text('Link copied'), findsOneWidget);
+      expect(find.text('Link copied.'), findsOneWidget);
 
       // The discussion opens in the app, on its own page; nothing is handed to the browser.
       await tapKey(tester, 'more:photo');
-      await tester.tap(find.text('Open discussion'));
+      await tester.tap(find.text('Open Discussion'));
       await settle(tester);
       expect(find.byType(ThreadScreen), findsOneWidget);
       expect(find.text('The impact of AI on preliminary site feasibility analysis'), findsWidgets);
       expect(launched, isEmpty);
     });
 
-    testWidgets('the speech bubble and the comment count open and close the replies', (tester) async {
+    testWidgets('the speech bubble and the comment count open the comments in a sheet over the feed', (tester) async {
+      // Owner, 13 Nov 2026: comments as LinkedIn shows them, in a sheet, never inside the card.
       await pumpHome(tester);
       expect(find.text('The data gap is real.'), findsNothing);
       await tapKey(tester, 'comments:photo');
+      expect(find.byType(CommentsSheet), findsOneWidget);
       expect(api.to('GET', '/forum/threads/slug-photo/replies'), hasLength(1));
       expect(find.text('The data gap is real.'), findsOneWidget);
-      expect(feed.isOpen(post('photo')), isTrue);
+      expect(find.text('Most Relevant'), findsOneWidget);
+      expect(find.text('Add a comment...'), findsOneWidget);
 
-      await tapKey(tester, 'comments:photo');
+      // Leaving the sheet leaves the feed as it was: nothing stays open inside the card.
+      Navigator.of(tester.element(find.byType(CommentsSheet))).pop();
+      await settle(tester);
+      expect(find.byType(CommentsSheet), findsNothing);
       expect(find.text('The data gap is real.'), findsNothing);
 
       // The count beside the bubble is part of the same button.
       await tester.tap(find.descendant(of: find.byKey(const ValueKey('comments:photo')), matching: find.text('5')));
       await settle(tester);
+      expect(find.byType(CommentsSheet), findsOneWidget);
       expect(find.text('The data gap is real.'), findsOneWidget);
-      // Opened again, the replies are not read again.
-      expect(api.to('GET', '/forum/threads/slug-photo/replies'), hasLength(1));
     });
 
-    testWidgets("the first post's comments open by themselves, as the design shows them", (tester) async {
+    testWidgets("the first post's comments are read ahead, and show only once its sheet is opened", (tester) async {
       await pumpHome(tester);
-      expect(feed.isOpen(post('iot')), isTrue);
+      expect(api.to('GET', '/forum/threads/slug-iot/replies'), hasLength(1));
+      expect(find.byType(CommentsSheet), findsNothing);
+      expect(find.textContaining('Spot on Priya. Niagara framework'), findsNothing);
+
+      await tapKey(tester, 'comments:iot');
       expect(find.textContaining('Spot on Priya. Niagara framework'), findsOneWidget);
-      // Its first answer, then the replies that thread still has, then the box.
-      expect(find.text('Spot on Priya.'), findsOneWidget);
-      expect(find.text('+8 replies in this thread'), findsOneWidget);
-      expect(feed.isOpen(post('photo')), isFalse);
+      // Every answer is there, one step in under its comment: no "+8 replies in this thread" to open.
+      expect(find.textContaining('Spot on Priya.'), findsWidgets);
+      expect(find.textContaining('replies in this thread'), findsNothing);
+      expect(find.textContaining('Great tips everyone.'), findsOneWidget);
     });
 
     testWidgets("a feed whose first post is a poll opens nothing by itself", (tester) async {
@@ -648,7 +698,7 @@ void main() {
         extra: {
           // The forum refuses a vote for the last option, as it would on a poll that closed meanwhile.
           'POST /forum/threads/poll/poll/vote': (o) => (o.data as Map)['optionId'] == 'o4'
-              ? (400, '{"message":"This discussion is closed, and so is its poll."}')
+              ? (400, '{"message":"This discussion and its poll are closed."}')
               : moves(o),
         },
       );
@@ -671,7 +721,7 @@ void main() {
 
       // A refusal leaves the vote where it was, and says why.
       await tapKey(tester, 'poll-option:o4');
-      expect(find.text('This discussion is closed, and so is its poll.'), findsOneWidget);
+      expect(find.text('This discussion and its poll are closed.'), findsOneWidget);
       expect(post('poll').poll!.myOptionId, 'o2');
     });
 
@@ -705,41 +755,45 @@ void main() {
       await tapKey(tester, 'reply-send');
     }
 
-    testWidgets('the box continues the newest reply, and the reply sent shows at once', (tester) async {
+    testWidgets('the box adds a comment to the post itself, and the comment sent shows at once', (tester) async {
       await pumpHome(tester);
-      expect(find.text('Reply to Priya Nambiar...'), findsOneWidget);
-      expect(find.text('Great tips everyone.'), findsNothing, reason: 'the newest reply is behind "+8 replies"');
+      await tapKey(tester, 'comments:iot');
+      expect(find.text('Add a comment...'), findsOneWidget);
+      final reads = api.to('GET', '/forum/threads/slug-iot/replies').length;
 
       await typeAndSend(tester, 'Thanks all, very helpful.');
       final sent = api.to('POST', '/forum/threads/iot/replies').single.data as Map;
       expect(sent['bodyHtml'], '<p>Thanks all, very helpful.</p>');
-      expect(sent['parentId'], 'r10', reason: 'under the reply the box named');
+      expect(sent['parentId'], isNull, reason: 'a comment on the post, as LinkedIn\'s box');
       expect(post('iot').comments, 13);
       expect(
         find.descendant(of: find.byKey(const ValueKey('comments:iot')), matching: find.text('13')),
         findsOneWidget,
       );
-      // The replies were read again, and the whole thread is showing so the new reply is there to see.
-      expect(api.to('GET', '/forum/threads/slug-iot/replies'), hasLength(2));
-      expect(find.text('Great tips everyone.'), findsOneWidget);
+      // The comments were read again, so the new one is there to see.
+      expect(api.to('GET', '/forum/threads/slug-iot/replies'), hasLength(reads + 1));
       expect(find.textContaining('replies in this thread'), findsNothing);
       expect(tester.widget<TextField>(find.byKey(const ValueKey('reply-input'))).controller!.text, isEmpty);
     });
 
     testWidgets('Reply on a reply addresses that person and sends under that reply', (tester) async {
       await pumpHome(tester);
+      await tapKey(tester, 'comments:iot');
       await tapKey(tester, 'reply-reply:r1');
       expect(find.text('Reply to Arvind Swamy...'), findsOneWidget);
+      expect(find.text('Replying to Arvind Swamy'), findsOneWidget);
       await typeAndSend(tester, 'Which supervisor version?');
       expect((api.to('POST', '/forum/threads/iot/replies').single.data as Map)['parentId'], 'r1');
-      // Back to the thread's newest reply afterwards.
-      expect(find.text('Reply to Priya Nambiar...'), findsOneWidget);
+      // Back to a comment on the post afterwards.
+      expect(find.text('Add a comment...'), findsOneWidget);
+      expect(find.text('Replying to Arvind Swamy'), findsNothing);
     });
 
     testWidgets('a reply is plain text: markup is escaped and line breaks are kept; an empty box sends nothing', (
       tester,
     ) async {
       await pumpHome(tester);
+      await tapKey(tester, 'comments:iot');
       await typeAndSend(tester, '   ');
       expect(api.to('POST', '/forum/threads/iot/replies'), isEmpty);
 
@@ -755,11 +809,12 @@ void main() {
         tester,
         extra: {
           'POST /forum/threads/iot/replies': (_) =>
-              (403, '{"statusCode":403,"message":"This discussion is locked, so it is not taking new replies."}'),
+              (403, '{"statusCode":403,"message":"This discussion is locked and does not accept new replies."}'),
         },
       );
+      await tapKey(tester, 'comments:iot');
       await typeAndSend(tester, 'Anyone there?');
-      expect(find.text('This discussion is locked, so it is not taking new replies.'), findsOneWidget);
+      expect(find.text('This discussion is locked and does not accept new replies.'), findsOneWidget);
       expect(tester.widget<TextField>(find.byKey(const ValueKey('reply-input'))).controller!.text, 'Anyone there?');
       expect(post('iot').comments, 12);
     });
@@ -771,6 +826,7 @@ void main() {
       );
       Finder count(String id, String text) =>
           find.descendant(of: find.byKey(ValueKey('reply-like:$id')), matching: find.text(text));
+      await tapKey(tester, 'comments:iot');
       expect(count('r1', '3'), findsOneWidget);
       await tapKey(tester, 'reply-like:r1');
       expect(api.to('POST', '/forum/replies/r1/vote').single.data, {'value': 1, 'reaction': 'LIKE'});
@@ -785,31 +841,38 @@ void main() {
       expect(count('r2', '3'), findsOneWidget);
     });
 
-    testWidgets('"+8 replies in this thread" opens the rest of the discussion', (tester) async {
+    testWidgets('the sheet shows the whole discussion, and its order can be switched', (tester) async {
       await pumpHome(tester);
-      expect(find.text('Answer 3'), findsNothing);
-      await tapKey(tester, 'more-replies');
-      expect(find.text('Answer 3'), findsOneWidget);
-      expect(find.text('Pilot on one floor first.'), findsOneWidget, reason: 'the other threads too');
+      await tapKey(tester, 'comments:iot');
+      expect(find.textContaining('Answer 3'), findsOneWidget);
+      expect(find.textContaining('Pilot on one floor first.'), findsOneWidget, reason: 'the other threads too');
       expect(find.textContaining('replies in this thread'), findsNothing);
+
+      await tapKey(tester, 'comments-sort');
+      await tester.tap(find.text('Most Recent').last);
+      await settle(tester);
+      expect(find.text('Most Recent'), findsOneWidget);
+      expect(find.textContaining('Pilot on one floor first.'), findsOneWidget);
     });
 
     testWidgets(
       "a reply's three dots copy its link or open the discussion at it, and offer Delete on the reader's own only",
       (tester) async {
         await pumpHome(tester);
+        await tapKey(tester, 'comments:iot');
         await tapKey(tester, 'reply-more:r1');
-        expect(find.text('Delete reply'), findsNothing, reason: "Arvind's reply is not the reader's");
+        expect(find.text('Delete Reply'), findsNothing, reason: "Arvind's reply is not the reader's");
         expect(find.text('Report'), findsOneWidget);
-        await tester.tap(find.text('Copy link'));
+        await tester.tap(find.text('Copy Link'));
         await settle(tester);
         expect(copied, 'https://icr.org.in/community/slug-iot#reply-r1');
-        expect(find.text('Link copied'), findsOneWidget);
+        expect(find.text('Link copied.'), findsOneWidget);
 
         await tapKey(tester, 'reply-more:r1');
-        await tester.tap(find.text('Open discussion'));
+        await tester.tap(find.text('Open Discussion'));
         await settle(tester);
         expect(find.byType(ThreadScreen), findsOneWidget);
+        expect(find.byType(CommentsSheet), findsNothing, reason: 'the sheet goes, so the page is not under it');
         expect(launched, isEmpty);
       },
     );
@@ -817,22 +880,20 @@ void main() {
     testWidgets('the reader can take back their own reply after confirming, and not by accident', (tester) async {
       await pumpHome(tester);
       await tapKey(tester, 'comments:audit');
-      // The thread shows its first reply; the reader's own is behind "+1 reply in this thread".
-      await tapIn(tester, 'audit', 'more-replies');
-      expect(find.text('Great photos.'), findsOneWidget);
+      expect(find.textContaining('Great photos.'), findsOneWidget);
       expect(post('audit').comments, 2);
 
       await tapKey(tester, 'reply-more:a2');
-      expect(find.text('Delete reply'), findsOneWidget);
-      await tester.tap(find.text('Delete reply'));
+      expect(find.text('Delete Reply'), findsOneWidget);
+      await tester.tap(find.text('Delete Reply'));
       await settle(tester);
-      expect(find.text('Delete your reply?'), findsOneWidget);
+      expect(find.text('Delete Your Reply?'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await settle(tester);
       expect(api.to('DELETE', '/forum/replies/a2'), isEmpty);
 
       await tapKey(tester, 'reply-more:a2');
-      await tester.tap(find.text('Delete reply'));
+      await tester.tap(find.text('Delete Reply'));
       await settle(tester);
       await tester.tap(find.text('Delete'));
       await settle(tester);
@@ -877,7 +938,7 @@ void main() {
       expect(feed.hasMore, isFalse);
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -6000));
       await settle(tester);
-      expect(find.text("You're all caught up"), findsOneWidget);
+      expect(find.text("No more discussions."), findsOneWidget);
     });
 
     testWidgets('no sponsored placement sits between the posts (owner, 6 Nov 2026)', (tester) async {
@@ -895,12 +956,12 @@ void main() {
           'GET /forum/threads': (o) => failing ? (500, '{"statusCode":500,"message":"The forum is down."}') : ok(o),
         },
       );
-      expect(find.text("Couldn't load the feed"), findsOneWidget);
+      expect(find.text("Unable to Load the Feed"), findsOneWidget);
       expect(find.text('The forum is down.'), findsOneWidget);
       failing = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester);
-      expect(find.text("Couldn't load the feed"), findsNothing);
+      expect(find.text("Unable to Load the Feed"), findsNothing);
       expect(feed.posts, hasLength(6));
     });
 
@@ -913,8 +974,8 @@ void main() {
       await pumpHome(tester, custom: answered);
       await tester.tap(find.text('Unanswered'));
       await settle(tester);
-      expect(find.text('Every question has an answer'), findsOneWidget);
-      expect(find.text('New questions without replies will show up here.'), findsOneWidget);
+      expect(find.text('No Unanswered Questions'), findsOneWidget);
+      expect(find.text('New questions without replies will appear here.'), findsOneWidget);
 
       await tester.tap(find.text('All Feed'));
       await settle(tester);

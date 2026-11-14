@@ -161,3 +161,41 @@ Run: `powershell -File tool\seed\run.ps1` (once the lead adds `marketplace` to i
 ## Demo content
 
 `DemoMarketplaceRepository` (`--dart-define=FEED_SOURCE=demo`): the design's ten cards (`phoneCards`) or nine (`tabletCards`), each drawn from its lockup picture (`assets/images/demo/marketplace/lockup_*.png`), counts 3 and 2 new, Vikasha Aero Tech's profile with its six services, four compliances and two audited proofs.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The client's marked-up manual (13 Nov 2026) asks for crisp, international wording: Title Case for the names of things
+a person taps or reads as a label, plain sentences with a full stop, no dash used as punctuation, "Unable to load" for
+"Couldn't load", "View More" for the link that shows more of a list, and "Marketplace", never "Supplier Mart". Wording
+only: the supplier card, its layout and every colour are as they were (the card's own words did not change). The
+supplier sheet's changes are listed here too.
+
+The lead's rulings of the same day are applied too: an empty-state, locked-state or error *title* is a heading (Title Case, no full stop) and the line under it a sentence; the retry button reads "Try Again".
+
+| Where | Was | Now |
+|---|---|---|
+| Buttons, headings, labels and chips to Title Case (60 strings) | Find work · By ratings · Verified only · Sort suppliers · Minimum rating · Any rating · Clear all · Trust level · Any level · Certified & up · 4.5★ & up · Browse all · Company size · GST registered · Only my saved suppliers · Show suppliers · Show 62 suppliers · Clear filters · Show all suppliers · Top rated · Most reviewed · Most projects · Most experienced · Recent searches · Try searching · Sub-categories · All products · All services · Request a quote · About this service · About this product · Supplier terms · Sold by · In stock · Made to order · Out of stock · Price on request · Products & services · Good to know · Team size · New work · Show less · Read full company charter · Head office · Rate this supplier · Send rating · Verified buyer · Required service · Project scope / area · Target timeline · Brief project notes · Submit quote request · Request sent · View my request · Create a company | Find Work · By Ratings · Verified Only · Sort Suppliers · Minimum Rating · Any Rating · Clear All · Trust Level · Any Level · Certified & Up · 4.5★ & Up · Browse All · Company Size · GST Registered · Only My Saved Suppliers · Show Suppliers · Show 62 Suppliers · Clear Filters · Show All Suppliers · Top Rated · Most Reviewed · Most Projects · Most Experienced · Recent Searches · Try Searching · Sub-Categories · All Products · All Services · Request a Quote · About This Service · About This Product · Supplier Terms · Sold By · In Stock · Made to Order · Out of Stock · Price on Request · Products & Services · Good to Know · Team Size · New Work · Show Less · Read Full Company Charter · Head Office · Rate This Supplier · Send Rating · Verified Buyer · Required Service · Project Scope / Area · Target Timeline · Brief Project Notes · Submit Quote Request · Request Sent · View My Request · Create a Company |
+| Search fields | Search suppliers, services, RFQs... · Search categories | Search Suppliers, Services, RFQs · Search Categories |
+| More of a list | Load more suppliers · Load more products · Load more services | View More |
+| Empty and error titles (the lead's ruling) | Couldn't load suppliers · Couldn't load this page · No saved suppliers yet · No suppliers match · No suppliers listed yet · No category matches · No products in Engineering Services yet · No services match "zzz" · Nothing matches · Nothing listed yet · No compliances on file | Unable to Load Suppliers · Unable to Load This Page · No Saved Suppliers Yet · No Suppliers Match · No Suppliers Listed Yet · No Category Matches · No Products in Engineering Services Yet · No Services Match "zzz" · No Matches Found · No Products or Services Listed Yet · No Compliances on File |
+| Retry | Try again | Try Again |
+| A page the phone cannot open (a snackbar) | Couldn't open icr.org.in/quote | Unable to open icr.org.in/quote |
+| Empty lists | Save a supplier from its profile and it will be here. · Try other words, or clear the filters. · Suppliers show up here as they join. · Try other words. · No cities to pick from yet. · No categories to pick from yet. | Save a supplier from its profile and it will appear here. · Try different words or clear the filters. · Suppliers will appear here as they join. · Try different words. · No cities available yet. · No categories available yet. |
+| Share text and the WhatsApp greeting | … on ICR Supplier Mart · Hello X, I found you on ICR Supplier Mart. | … on ICR Marketplace · Hello X, I found you on ICR Marketplace. |
+| A product's or service's supplier, while it loads | Reading the supplier... | Loading supplier… |
+| Offices sheet title | Vikasha Aero Tech offices | Vikasha Aero Tech Offices |
+| Supplier with nothing listed (the body) | …Request a quote and tell them what you need. | …Request a quote and describe what you need. |
+| Ratings | 12 Enterprise Reviews, none written up yet. · No ratings yet. Be the first to rate X. · Thanks, your rating is saved. · Pick one to five stars first. · What went well, or what should change (optional) | 12 Enterprise Reviews. No written reviews yet. · No ratings yet. You can rate X below. · Your rating is saved. · Select one to five stars first. · What went well or what should change (Optional) |
+| Quote form | Your mobile number · X may answer by phone. It is saved to your profile, not shown on the request. · Enter how many you need. · Add a mobile number so the supplier can reach you. · This is your own company's listing: a company cannot ask itself for a quote. | Mobile Number · X may reply by phone. It is saved to your profile and not shown on the request. · Enter the quantity you need. · Add a mobile number so the supplier can contact you. · This is your own company's listing. A company cannot request a quote from itself. |
+| Quote sent | X has your request and will answer on it. You will be told when a quote comes in. | X has received your request. You will be notified when a quote arrives. |
+
+Left as they were: the supplier card (name, rating line, headline, tags); the design's words on the sheet ("Enterprise
+Track Record", "About Organization", "PAN-INDIA PRESENCE", "View Hubs", "Call HQ", "Compliances & Audited Proofs",
+"Request for Quote (RFQ)", "Get Quote", "Book Service"); "Post RFQ", "My RFQ’s", "Alerts"; the quote request's title,
+its timeline options ("Immediate", "Within 30 days", "AMC contract") and "Not sure: a general enquiry", which are
+stored with the request; the example searches ("Housekeeping in Bangalore"…), which are typed into a search over
+English data; the buyer-facing term lines ("1-year warranty", "Free delivery over ₹5,000"); the compliance statuses
+("Active", "Certified", "Insured", "Member", "On file"), which the tone is read from; tooltips.
+
+Goldens re-recorded (wording only, each diff looked at first): `marketplace.png`, `marketplace_3col.png`,
+`supplier_overview.png`, `supplier_services.png`, `supplier_compliances.png`.

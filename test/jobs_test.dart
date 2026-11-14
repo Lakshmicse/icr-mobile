@@ -150,9 +150,9 @@ void main() {
 
     test('posted ago counts days, then months', () {
       final now = DateTime(2026, 10, 22);
-      expect(postedAgo(now.subtract(const Duration(days: 3)), now), 'Posted 3d ago');
-      expect(postedAgo(now, now), 'Posted today');
-      expect(postedAgo(now.subtract(const Duration(days: 45)), now), 'Posted 1mo ago');
+      expect(postedAgo(now.subtract(const Duration(days: 3)), now), 'Posted 3 Days Ago');
+      expect(postedAgo(now, now), 'Posted Today');
+      expect(postedAgo(now.subtract(const Duration(days: 45)), now), 'Posted 1 Month Ago');
     });
 
     test('a description becomes paragraphs, headings and items', () {
@@ -168,7 +168,7 @@ void main() {
       expect(plain.map((b) => b.text), ['First paragraph.', 'Second one.']);
     });
 
-    test('the count after "Posted 3d ago" is applicants, else views, else openings', () {
+    test('the count after "Posted 3 Days Ago" is applicants, else views, else openings', () {
       Job job({int? applicants, int? views, int? openings}) => Job(
         id: 'a',
         title: 't',
@@ -177,11 +177,11 @@ void main() {
         views: views,
         openings: openings,
       );
-      expect(applicantsOrOpenings(job(applicants: 142, views: 900, openings: 2)), '142 applicants');
-      expect(applicantsOrOpenings(job(applicants: 1)), '1 applicant');
-      expect(applicantsOrOpenings(job(views: 310, openings: 2)), '310 views');
-      expect(applicantsOrOpenings(job(openings: 2)), '2 openings');
-      expect(applicantsOrOpenings(job(openings: 1)), '1 opening');
+      expect(applicantsOrOpenings(job(applicants: 142, views: 900, openings: 2)), '142 Applicants');
+      expect(applicantsOrOpenings(job(applicants: 1)), '1 Applicant');
+      expect(applicantsOrOpenings(job(views: 310, openings: 2)), '310 Views');
+      expect(applicantsOrOpenings(job(openings: 2)), '2 Openings');
+      expect(applicantsOrOpenings(job(openings: 1)), '1 Opening');
       expect(applicantsOrOpenings(job()), isNull);
     });
 
@@ -630,12 +630,12 @@ void main() {
       final candidate = await read({});
       expect(candidate.applicants, isNull);
       expect(candidate.views, isNull);
-      expect(applicantsOrOpenings(candidate), '2 openings');
+      expect(applicantsOrOpenings(candidate), '2 Openings');
       final team = await read({
         'viewCount': 310,
         '_count': {'applications': 12},
       });
-      expect(applicantsOrOpenings(team), '12 applicants');
+      expect(applicantsOrOpenings(team), '12 Applicants');
     });
 
     test('maps what a job asks for: degrees, credentials and the hiring contact', () async {
@@ -682,7 +682,7 @@ void main() {
       expect(people.photos[1]?.url, 'http://api.test/uploads/priya.png');
       expect(people.total, 5);
       expect(people.others, 4);
-      expect(people.text, 'Nikhil M. and 4 others from ICR work at this organization.');
+      expect(people.text, 'Nikhil M. and 4 others from ICR work at this company.');
       expect(people.initials, ['NM', 'PS']);
     });
 
@@ -724,7 +724,7 @@ void main() {
         },
       });
       final mine = await _repo(api).myJobs();
-      expect(mine.applications, hasLength(1), reason: 'a withdrawn application is not one of "My jobs"');
+      expect(mine.applications, hasLength(1), reason: 'a withdrawn application is not one of "My Jobs"');
       final app = mine.applications.single;
       expect(app.id, 'app1');
       expect(app.job.title, 'Energy Lead');
@@ -938,7 +938,7 @@ void main() {
       section = jobs.sections.single;
       expect(repo.calls.where((c) => c.startsWith('more')), ['more alert 2']);
       expect(jobs.visible(section), hasLength(7));
-      expect(jobs.actionLabel(section), 'Show Less', reason: 'everything is on show');
+      expect(jobs.actionLabel(section), 'View Less', reason: 'everything is on show');
 
       await jobs.act(section);
       section = jobs.sections.single;
@@ -1234,6 +1234,44 @@ void main() {
       });
       expect((open.genderPreference, open.diversityOnly), ('ANY', false));
       expect(open.diversityCategories, isEmpty);
+    });
+  });
+
+  group('where the member sits on a company\'s hiring team (GET /me/companies)', () {
+    // Acting for BrightCore as its admin, and a hiring manager at Moon Studio: the seat is read per company, from
+    // every membership, not from the company being acted for.
+    _Api memberships() => _Api({
+      'GET /me/companies': (_) => {
+        'companies': [
+          {'companyId': 'bright', 'name': 'BrightCore', 'role': 'COMPANY_ADMIN'},
+          {'companyId': 'moon', 'name': 'Moon studio', 'role': 'HIRING_MANAGER'},
+          {'companyId': 'acme', 'name': 'Acme', 'role': 'PROFESSIONAL'},
+          {'companyId': 'rec', 'name': 'Rec Co', 'role': 'RECRUITER'},
+        ],
+      },
+    });
+
+    test('a hiring manager there sits on it, though they post nothing', () async {
+      final seat = await _repo(memberships()).hiringTeamSeatAt(const JobCompany(id: 'moon', name: 'Moon studio'));
+      expect(seat, HiringTeamSeat.hiringManager);
+      expect(seat.onTeam, isTrue);
+    });
+
+    test('an admin or recruiter there posts its jobs', () async {
+      final repo = _repo(memberships());
+      expect(await repo.hiringTeamSeatAt(const JobCompany(id: 'bright', name: 'BrightCore')), HiringTeamSeat.poster);
+      expect(await repo.hiringTeamSeatAt(const JobCompany(id: 'rec', name: 'Rec Co')), HiringTeamSeat.poster);
+    });
+
+    test('any other member, or a company they do not belong to, is not on it', () async {
+      final repo = _repo(memberships());
+      expect(await repo.hiringTeamSeatAt(const JobCompany(id: 'acme', name: 'Acme')), HiringTeamSeat.none);
+      expect(await repo.hiringTeamSeatAt(const JobCompany(id: 'other', name: 'Other')), HiringTeamSeat.none);
+    });
+
+    test('memberships that cannot be read leave the job open (the API still refuses)', () async {
+      final seat = await _repo(_Api({})).hiringTeamSeatAt(const JobCompany(id: 'moon', name: 'Moon studio'));
+      expect(seat, HiringTeamSeat.none);
     });
   });
 }

@@ -197,7 +197,7 @@ class SavedJobCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (closed) ...[
-            const AccountChip(label: 'No longer open', color: AppColors.amber50, ink: AppColors.amber800),
+            const AccountChip(label: 'No Longer Open', color: AppColors.amber50, ink: AppColors.amber800),
             const SizedBox(height: 6),
           ],
           Text(job.title, style: AccountText.itemTitle, maxLines: 2, overflow: TextOverflow.ellipsis),
@@ -205,10 +205,7 @@ class SavedJobCard extends StatelessWidget {
           if (job.jobTitle != null)
             Text(job.companyName, style: AccountText.body, maxLines: 1, overflow: TextOverflow.ellipsis)
           else
-            Text(
-              'This job has closed. See what else ${job.companyName} is hiring for, or remove it.',
-              style: AccountText.meta,
-            ),
+            Text('This job has closed. View other jobs at ${job.companyName}, or remove it.', style: AccountText.meta),
           if (job.facts.isNotEmpty) _Facts([job.facts], maxLines: 1),
           _Facts([?job.salary, ?savedAgo(job, now: now)]),
         ],
@@ -272,7 +269,7 @@ class SavedMentorCard extends StatelessWidget {
             children: [
               if (m.rating > 0) _Rating(rating: m.rating, count: m.ratingCount),
               if (m.topMentor)
-                const AccountChip(label: 'Top mentor', color: AppColors.amber50, ink: AppColors.amber800),
+                const AccountChip(label: 'Top Mentor', color: AppColors.amber50, ink: AppColors.amber800),
               if (m.city != null) Text(m.city!, style: AccountText.meta),
               if (price != null) Text(price, style: AccountText.meta),
             ],
@@ -502,10 +499,10 @@ class SavedEmpty extends StatelessWidget {
           AccountButton(
             key: const ValueKey('saved.browse'),
             label: switch (kind) {
-              SavedKind.jobs => 'Browse jobs',
-              SavedKind.mentors => 'Find mentors',
-              SavedKind.suppliers => 'Open the Marketplace',
-              SavedKind.councils => 'See councils',
+              SavedKind.jobs => 'Browse Jobs',
+              SavedKind.mentors => 'Find Mentors',
+              SavedKind.suppliers => 'Open Marketplace',
+              SavedKind.councils => 'View Councils',
               SavedKind.discussions => 'Open Forums',
             },
             onPressed: onBrowse,

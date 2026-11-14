@@ -40,12 +40,12 @@ class SearchSuggestions extends StatelessWidget {
     final children = <Widget>[];
     if (q.length < 2) {
       if (market.recentSearches.isNotEmpty) {
-        children.add(const _Heading('Recent searches'));
+        children.add(const _Heading('Recent Searches'));
         for (final r in market.recentSearches) {
           children.add(_Row(key: ValueKey('recent-$r'), icon: LucideIcons.history, title: r, onTap: () => onSearch(r)));
         }
       }
-      children.add(const _Heading('Try searching'));
+      children.add(const _Heading('Try Searching'));
       for (final e in examples) {
         children.add(_Row(key: ValueKey('try-$e'), icon: LucideIcons.trendingUp, title: e, onTap: () => onSearch(e)));
       }

@@ -142,8 +142,8 @@ void main() {
   group('the chips', () {
     testWidgets('Demonstrate skills opens its website page', (tester) async {
       final board = await pumpBoard(tester);
-      await scrollTo(tester, find.text('Demonstrate skills'));
-      await tester.tap(find.text('Demonstrate skills'));
+      await scrollTo(tester, find.text('Demonstrate Skills'));
+      await tester.tap(find.text('Demonstrate Skills'));
       await tester.pump();
       expect(board.links.paths, ['/learning/assessment']);
     });
@@ -151,8 +151,8 @@ void main() {
     testWidgets('Demonstrate skills hands over to the assessments in the app when they are wired', (tester) async {
       var opened = 0;
       final board = await pumpBoard(tester, navigation: JobsNavigation(onDemonstrateSkills: () => opened++));
-      await scrollTo(tester, find.text('Demonstrate skills'));
-      await tester.tap(find.text('Demonstrate skills'));
+      await scrollTo(tester, find.text('Demonstrate Skills'));
+      await tester.tap(find.text('Demonstrate Skills'));
       await tester.pump();
       expect(opened, 1);
       expect(board.links.opened, isEmpty);
@@ -161,16 +161,16 @@ void main() {
     testWidgets('a page the phone cannot open is said so', (tester) async {
       final board = await pumpBoard(tester);
       board.links.opens = false;
-      await scrollTo(tester, find.text('Demonstrate skills'));
-      await tester.tap(find.text('Demonstrate skills'));
+      await scrollTo(tester, find.text('Demonstrate Skills'));
+      await tester.tap(find.text('Demonstrate Skills'));
       await tester.pump();
-      expect(find.text("Couldn't open icr.org.in/learning/assessment"), findsOneWidget);
+      expect(find.text('Unable to open icr.org.in/learning/assessment'), findsOneWidget);
     });
 
     testWidgets('Post a job opens the composer for a member on a hiring team', (tester) async {
       final board = await pumpBoard(tester, hiring: DemoHiringRepository());
       expect(board.jobs.canHire, isTrue);
-      await tester.tap(find.text('Post a job'));
+      await tester.tap(find.text('Post a Job'));
       await tester.pumpAndSettle();
       expect(find.byType(PostJobScreen), findsOneWidget);
       expect(find.byKey(const ValueKey('hirers-only-dialog')), findsNothing);
@@ -182,7 +182,7 @@ void main() {
     ) async {
       final board = await pumpBoard(tester);
       expect(board.jobs.canHire, isFalse);
-      await tester.tap(find.text('Post a job'));
+      await tester.tap(find.text('Post a Job'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('hirers-only-dialog')), findsOneWidget);
       expect(find.byType(PostJobScreen), findsNothing);
@@ -192,7 +192,7 @@ void main() {
       expect(find.byKey(const ValueKey('hirers-only-dialog')), findsNothing);
       expect(board.links.opened, isEmpty);
 
-      await tester.tap(find.text('Post a job'));
+      await tester.tap(find.text('Post a Job'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('hirers-only-create')));
       await tester.pumpAndSettle();
@@ -204,7 +204,7 @@ void main() {
     testWidgets('Create a company hands over to the app when it is wired', (tester) async {
       var made = 0;
       final board = await pumpBoard(tester, navigation: JobsNavigation(onCreateCompany: () => made++));
-      await tester.tap(find.text('Post a job'));
+      await tester.tap(find.text('Post a Job'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('hirers-only-create')));
       await tester.pumpAndSettle();
@@ -219,11 +219,13 @@ void main() {
       // (owner's report, 3 Nov 2026: Hire opened "create a company" for a member who had a company).
       final board = await pumpBoard(
         tester,
-        hiring: DemoHiringRepository(access: const HiringAccess(userId: 'me', role: 'PROFESSIONAL', companiesHeld: 2)),
+        hiring: DemoHiringRepository(
+          access: const HiringAccess(userId: 'me', role: 'PROFESSIONAL', companiesHeld: 2),
+        ),
       );
-      await tester.tap(find.text('Post a job'));
+      await tester.tap(find.text('Post a Job'));
       await tester.pumpAndSettle();
-      expect(find.text("You're using your personal account"), findsOneWidget);
+      expect(find.text('You Are Using Your Personal Account'), findsOneWidget);
       expect(find.byKey(const ValueKey('hirers-only-create')), findsNothing, reason: 'they have a company already');
       await tester.tap(find.byKey(const ValueKey('hirers-only-switch')));
       await tester.pumpAndSettle();
@@ -236,11 +238,13 @@ void main() {
     ) async {
       final board = await pumpBoard(
         tester,
-        hiring: DemoHiringRepository(access: const HiringAccess(userId: 'me', role: 'VENDOR', companyId: 'c')),
+        hiring: DemoHiringRepository(
+          access: const HiringAccess(userId: 'me', role: 'VENDOR', companyId: 'c'),
+        ),
       );
-      await tester.tap(find.text('Post a job'));
+      await tester.tap(find.text('Post a Job'));
       await tester.pumpAndSettle();
-      expect(find.text('Jobs are posted by the hiring team'), findsOneWidget);
+      expect(find.text('Jobs Are Posted by the Hiring Team'), findsOneWidget);
       expect(find.byKey(const ValueKey('hirers-only-create')), findsNothing);
       expect(find.byKey(const ValueKey('hirers-only-switch')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('hirers-only-later')));
@@ -254,48 +258,48 @@ void main() {
     ) async {
       final hiring = _SwitchingHiring();
       await pumpBoard(tester, hiring: hiring);
-      await tester.tap(find.text('Post a job'));
+      await tester.tap(find.text('Post a Job'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('hirers-only-dialog')), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('hirers-only-later')));
       await tester.pumpAndSettle();
       hiring.who = const HiringAccess(userId: 'me', role: 'COMPANY_ADMIN', companyId: 'c');
-      await tester.tap(find.text('Post a job'));
+      await tester.tap(find.text('Post a Job'));
       await tester.pumpAndSettle();
       expect(find.byType(PostJobScreen), findsOneWidget);
     });
 
     testWidgets('Post a job says so when the account cannot be checked, and opens nothing', (tester) async {
       final board = await pumpBoard(tester, hiring: _UnreachableHiring());
-      await tester.tap(find.text('Post a job'));
+      await tester.tap(find.text('Post a Job'));
       await tester.pumpAndSettle();
-      expect(find.text("Couldn't check your account. Try again in a moment."), findsOneWidget);
+      expect(find.text('Unable to check your account. Try again in a moment.'), findsOneWidget);
       expect(find.byKey(const ValueKey('hirers-only-dialog')), findsNothing);
       expect(find.byType(PostJobScreen), findsNothing);
       expect(board.links.opened, isEmpty);
     });
 
-    testWidgets('My jobs offers "Jobs you posted" to a hiring team only', (tester) async {
+    testWidgets('My jobs offers "Jobs You Posted" to a hiring team only', (tester) async {
       await pumpBoard(tester);
-      await tester.tap(find.text('My jobs'));
+      await tester.tap(find.text('My Jobs'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('my-jobs-posted')), findsNothing);
     });
 
-    testWidgets("My jobs 'Jobs you posted' opens the company's postings in the app", (tester) async {
+    testWidgets("My jobs 'Jobs You Posted' opens the company's postings in the app", (tester) async {
       final board = await pumpBoard(tester, hiring: DemoHiringRepository());
-      await tester.tap(find.text('My jobs'));
+      await tester.tap(find.text('My Jobs'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('my-jobs-posted')));
       await tester.pumpAndSettle();
       expect(find.byType(EmployerJobsScreen), findsOneWidget);
-      expect(find.text('Jobs you posted'), findsWidgets);
+      expect(find.text('Jobs You Posted'), findsWidgets);
       expect(board.links.opened, isEmpty);
     });
 
-    testWidgets('the career hub lists "Jobs you posted" for a hiring team, and not for anyone else', (tester) async {
+    testWidgets('the career hub lists "Jobs You Posted" for a hiring team, and not for anyone else', (tester) async {
       await pumpBoard(tester);
-      await tester.tap(find.text('My jobs'));
+      await tester.tap(find.text('My Jobs'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('my-jobs-hub')));
       await tester.pumpAndSettle();
@@ -304,9 +308,9 @@ void main() {
       expect(find.byKey(const ValueKey('go-posted')), findsNothing);
     });
 
-    testWidgets("the career hub's 'Jobs you posted' opens the postings", (tester) async {
+    testWidgets("the career hub's 'Jobs You Posted' opens the postings", (tester) async {
       await pumpBoard(tester, hiring: DemoHiringRepository());
-      await tester.tap(find.text('My jobs'));
+      await tester.tap(find.text('My Jobs'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('my-jobs-hub')));
       await tester.pumpAndSettle();
@@ -319,7 +323,7 @@ void main() {
 
     testWidgets('My jobs lists the applications, with where each stands, and a row opens its job', (tester) async {
       final board = await pumpBoard(tester);
-      await tester.tap(find.text('My jobs'));
+      await tester.tap(find.text('My Jobs'));
       await tester.pumpAndSettle();
 
       expect(board.repo.calls, contains('myJobs'));
@@ -329,7 +333,7 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('my-jobs-saved')));
       await tester.pump();
-      expect(find.text('Jobs you bookmark show up here.'), findsOneWidget);
+      expect(find.text('Jobs you save will appear here.'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('my-jobs-applied')));
       await tester.pump();
 
@@ -342,7 +346,7 @@ void main() {
       tester,
     ) async {
       final board = await pumpBoard(tester);
-      await tester.tap(find.text('My jobs'));
+      await tester.tap(find.text('My Jobs'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('my-jobs-see-all')));
       await tester.pumpAndSettle();
@@ -350,17 +354,17 @@ void main() {
       await tester.tap(find.byIcon(Symbols.arrow_back).last);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('My jobs'));
+      await tester.tap(find.text('My Jobs'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('my-jobs-saved')));
       await tester.pump();
-      await tester.tap(find.text('See all saved jobs'));
+      await tester.tap(find.text('View All Saved Jobs'));
       await tester.pumpAndSettle();
       expect(find.byType(SavedJobsScreen), findsOneWidget);
       await tester.tap(find.byIcon(Symbols.arrow_back).last);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('My jobs'));
+      await tester.tap(find.text('My Jobs'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('my-jobs-hub')));
       await tester.pumpAndSettle();
@@ -371,7 +375,7 @@ void main() {
     testWidgets('the My jobs count is the open applications; the Alerts badge the new matches', (tester) async {
       await pumpBoard(tester);
       expect(find.text('3'), findsOneWidget);
-      expect(find.text('2 new'), findsOneWidget);
+      expect(find.text('2 New'), findsOneWidget);
     });
 
     testWidgets('Alerts runs the saved search and the badge goes', (tester) async {
@@ -379,7 +383,7 @@ void main() {
       await tester.tap(find.text('Alerts'));
       await tester.pumpAndSettle();
       expect(board.repo.calls, contains('runAlert'));
-      expect(find.text('2 new'), findsNothing);
+      expect(find.text('2 New'), findsNothing);
       expect(board.jobs.newAlerts, 0);
     });
 
@@ -407,7 +411,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(board.repo.calls, isNot(contains('runAlert')));
       expect(find.byType(JobAlertsScreen), findsOneWidget);
-      expect(find.text('New job alert'), findsOneWidget);
+      expect(find.text('New Job Alert'), findsOneWidget);
       expect(board.links.opened, isEmpty);
     });
   });
@@ -443,7 +447,7 @@ void main() {
         ' Pune ',
       );
       await tester.pump();
-      await tester.tap(find.text('Show jobs'));
+      await tester.tap(find.text('Show Jobs'));
       await tester.pumpAndSettle();
 
       final filters = board.repo.searches.last.filters;
@@ -455,7 +459,7 @@ void main() {
         findsOneWidget,
         reason: 'Easy Apply, remote, contract, Pune and the search\'s country',
       );
-      expect(find.textContaining('Jobs matching your filters'), findsOneWidget);
+      expect(find.textContaining('Jobs Matching Your Filters'), findsOneWidget);
     });
 
     testWidgets('Clear all in the sheet takes the filters off and keeps Easy Apply', (tester) async {
@@ -464,7 +468,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.textContaining('Filters ('));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Clear all'));
+      await tester.tap(find.text('Clear All'));
       await tester.pumpAndSettle();
       expect(board.jobs.filters.workModes, isEmpty);
       expect(board.jobs.filters.easyApply, isFalse);
@@ -507,42 +511,42 @@ void main() {
         ),
       ]);
       await pumpBoard(tester, repo: repo);
-      expect(find.text('No Easy Apply jobs here'), findsOneWidget);
-      await tester.tap(find.text('Show all jobs'));
+      expect(find.text('No Easy Apply Jobs'), findsOneWidget);
+      await tester.tap(find.text('Show All Jobs'));
       await tester.pumpAndSettle();
       expect(find.text('On their site'), findsOneWidget);
     });
 
-    testWidgets('Date posted offers the periods, sets the search and shows what it is set to', (tester) async {
+    testWidgets('Date Posted offers the periods, sets the search and shows what it is set to', (tester) async {
       final board = await pumpBoard(tester);
-      await tester.tap(find.text('Date posted'));
+      await tester.tap(find.text('Date Posted'));
       await tester.pumpAndSettle();
-      for (final label in ['Any time', 'Past 24 hours', 'Past week', 'Past month']) {
+      for (final label in ['Any Time', 'Past 24 Hours', 'Past Week', 'Past Month']) {
         expect(find.text(label), findsOneWidget);
       }
-      await tester.tap(find.text('Past week'));
+      await tester.tap(find.text('Past Week'));
       await tester.pumpAndSettle();
       expect(board.repo.searches.last.filters.postedWithinDays, 7);
-      expect(find.text('Past week'), findsOneWidget, reason: 'on the chip now');
-      expect(find.text('Date posted'), findsNothing);
+      expect(find.text('Past Week'), findsOneWidget, reason: 'on the chip now');
+      expect(find.text('Date Posted'), findsNothing);
 
-      await tester.tap(find.text('Past week'));
+      await tester.tap(find.text('Past Week'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('posted-0')));
       await tester.pumpAndSettle();
       expect(board.jobs.filters.postedWithinDays, isNull);
-      expect(find.text('Date posted'), findsOneWidget);
+      expect(find.text('Date Posted'), findsOneWidget);
     });
 
     testWidgets('In my network says it is not in the app and offers the website\'s network', (tester) async {
       final board = await pumpBoard(tester);
-      await scrollTo(tester, find.text('In my network'));
-      await tester.tap(find.text('In my network'));
+      await scrollTo(tester, find.text('In My Network'));
+      await tester.tap(find.text('In My Network'));
       await tester.pumpAndSettle();
-      expect(find.text("Jobs at companies in your network aren't in the app yet."), findsOneWidget);
+      expect(find.text('Jobs at companies in your network are not available in the app yet.'), findsOneWidget);
       expect(board.links.opened, isEmpty, reason: 'nothing leaves the app until the member asks');
 
-      await tester.tap(find.text('Open network'));
+      await tester.tap(find.text('Open Network'));
       await tester.pump();
       expect(board.links.paths, ['/network']);
     });
@@ -554,7 +558,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(board.repo.searches.last.filters.search, 'stp');
       expect(board.repo.searches.last.scope?.label, 'Facilities & Real Estate');
-      expect(find.text('Jobs matching "stp"'), findsOneWidget);
+      expect(find.text('Jobs Matching "stp"'), findsOneWidget);
     });
 
     testWidgets('a search with no results says so, and Clear filters brings the board back', (tester) async {
@@ -563,10 +567,10 @@ void main() {
       await tester.enterText(find.byType(TextField).first, 'zzz');
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pumpAndSettle();
-      expect(find.text('No jobs match'), findsOneWidget);
+      expect(find.text('No Matching Jobs'), findsOneWidget);
       await board.jobs.setSearch('');
       await tester.pumpAndSettle();
-      expect(find.text('No jobs match'), findsNothing);
+      expect(find.text('No Matching Jobs'), findsNothing);
     });
   });
 
@@ -601,7 +605,7 @@ void main() {
       expect(find.byType(JobRow), findsNWidgets(6));
       expect(find.text('Page 2'), findsOneWidget);
 
-      await tester.tap(find.text('Show Less'));
+      await tester.tap(find.text('View Less'));
       await tester.pumpAndSettle();
       expect(find.byType(JobRow), findsNWidgets(3));
       expect(find.text('View More'), findsOneWidget);
@@ -655,9 +659,9 @@ void main() {
         );
       });
       await pumpBoard(tester, repo: repo);
-      expect(find.text("Couldn't load jobs"), findsOneWidget);
+      expect(find.text('Unable to Load Jobs'), findsOneWidget);
       fail = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('Job a'), findsOneWidget);
     });
@@ -692,9 +696,9 @@ void main() {
       await openFirstJob(tester);
       expect(find.text('Global Infra Solutions'), findsWidgets);
       expect(find.text('Commercial Real Estate Services'), findsOneWidget);
-      expect(find.text('Accepting applications'), findsOneWidget);
-      expect(find.text('Posted 3d ago'), findsOneWidget);
-      expect(find.text('2 openings'), findsOneWidget);
+      expect(find.text('Accepting Applications'), findsOneWidget);
+      expect(find.text('Posted 3 Days Ago'), findsOneWidget);
+      expect(find.text('2 Openings'), findsOneWidget);
       expect(find.text('₹18L - ₹25L / yr'), findsOneWidget);
       expect(find.text('95% Profile Match'), findsOneWidget);
     });
@@ -711,8 +715,8 @@ void main() {
         );
       await pumpBoard(tester, repo: repo);
       await openFirstJob(tester);
-      expect(find.text('142 applicants'), findsOneWidget);
-      expect(find.text('2 openings'), findsNothing);
+      expect(find.text('142 Applicants'), findsOneWidget);
+      expect(find.text('2 Openings'), findsNothing);
     });
 
     testWidgets('Share hands the title and link to the share sheet', (tester) async {
@@ -759,10 +763,10 @@ void main() {
 
       await tester.tap(find.byIcon(LucideIcons.ellipsis));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Copy link'));
+      await tester.tap(find.text('Copy Link'));
       await tester.pumpAndSettle();
       expect(copied, ['https://icr.org.in/jobs']);
-      expect(find.text('Link copied'), findsOneWidget);
+      expect(find.text('Link copied.'), findsOneWidget);
 
       // The sheet is the job's page: no row sends the member to the website for the same job.
       await tester.tap(find.byIcon(LucideIcons.ellipsis));
@@ -885,10 +889,10 @@ void main() {
       final board = await pumpBoard(tester);
       await openFirstJob(tester);
       await openApplyForm(tester);
-      expect(find.text('Mobile number'), findsNothing, reason: 'the profile has one');
+      expect(find.text('Mobile Number'), findsNothing, reason: 'the profile has one');
       await tester.ensureVisible(noteField());
       await tester.enterText(noteField(), '  Keen to lead this.  ');
-      await tester.tap(find.text('Submit application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pumpAndSettle();
 
       final sent = board.repo.applications.single;
@@ -906,15 +910,15 @@ void main() {
       await pumpBoard(tester, repo: repo);
       await openFirstJob(tester);
       await openApplyForm(tester);
-      expect(find.text('Mobile number'), findsOneWidget);
+      expect(find.text('Mobile Number'), findsOneWidget);
 
-      await tester.tap(find.text('Submit application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pump();
       expect(find.text('Add the mobile number the employer can reach you on.'), findsOneWidget);
       expect(repo.applications, isEmpty);
 
       await tester.enterText(phoneField(), '+91 98765 43210');
-      await tester.tap(find.text('Submit application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pumpAndSettle();
       expect(repo.applications.single.phone, '+91 98765 43210');
     });
@@ -925,16 +929,16 @@ void main() {
       await pumpBoard(tester, repo: repo);
       await openFirstJob(tester);
       await openApplyForm(tester);
-      expect(find.text('Mobile number'), findsNothing);
+      expect(find.text('Mobile Number'), findsNothing);
 
-      await tester.tap(find.text('Submit application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pumpAndSettle();
       expect(find.text('Add a mobile number so the employer can reach you.'), findsOneWidget);
-      expect(find.text('Mobile number'), findsOneWidget, reason: 'the field is there now');
+      expect(find.text('Mobile Number'), findsOneWidget, reason: 'the field is there now');
 
       repo.applyError = null;
       await tester.enterText(phoneField(), '+91 98765 43210');
-      await tester.tap(find.text('Submit application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pumpAndSettle();
       expect(repo.applications.last.phone, '+91 98765 43210');
       expect(inBar(find.text('Applied')), findsOneWidget);
@@ -945,10 +949,10 @@ void main() {
       await pumpBoard(tester, repo: repo);
       await openFirstJob(tester);
       await openApplyForm(tester);
-      await tester.tap(find.text('Submit application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pumpAndSettle();
       expect(find.text('You have already applied to this job.'), findsOneWidget);
-      expect(find.text('Submit application'), findsOneWidget);
+      expect(find.text('Submit Application'), findsOneWidget);
       expect(inBar(find.text('Applied')), findsNothing);
     });
 
@@ -962,14 +966,14 @@ void main() {
         );
       final board = await pumpBoard(tester, repo: repo);
       await openFirstJob(tester);
-      expect(inBar(find.text('Apply on company site')), findsOneWidget);
+      expect(inBar(find.text('Apply on Company Site')), findsOneWidget);
       expect(inBar(find.text('Easy Apply')), findsNothing);
 
-      await tester.tap(inBar(find.text('Apply on company site')));
+      await tester.tap(inBar(find.text('Apply on Company Site')));
       await tester.pumpAndSettle();
       expect(board.links.opened.single.toString(), 'https://careers.example.com/ext');
       expect(repo.applications, isEmpty);
-      expect(find.text('Submit application'), findsNothing);
+      expect(find.text('Submit Application'), findsNothing);
     });
 
     testWidgets('a job with screening questions asks them in the form, and sends the answers', (tester) async {
@@ -988,7 +992,7 @@ void main() {
       await openApplyForm(tester);
       expect(find.text('1. Can you work night shifts?'), findsOneWidget);
 
-      await tester.tap(find.text('Submit application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pump();
       expect(find.text('Answer the 2 questions above in the format they ask for.'), findsOneWidget);
       expect(repo.applications, isEmpty);
@@ -999,7 +1003,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('3 years').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Submit application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pumpAndSettle();
       expect(repo.applications.single.answers, {'q1': 'true', 'q2': '3'});
     });
@@ -1023,18 +1027,18 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.ensureVisible(find.text('Submit application'));
-      await tester.tap(find.text('Submit application'));
+      await tester.ensureVisible(find.text('Submit Application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pump();
       expect(
-        find.text('Choose the group that applies to you, or this role cannot take your application.'),
+        find.text('Select the group that applies to you, or this role cannot accept your application.'),
         findsOneWidget,
       );
       expect(repo.applications, isEmpty);
 
       await tester.tap(find.byKey(const ValueKey('apply-diversity-WOMEN_RETURNING')));
       await tester.pump();
-      await tester.tap(find.text('Submit application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pumpAndSettle();
       expect(repo.applications.single.diversityIdentities, ['WOMEN_RETURNING']);
     });
@@ -1051,15 +1055,15 @@ void main() {
       await openFirstJob(tester);
       await openApplyForm(tester);
       expect(find.text('This role accepts applications only from women.'), findsOneWidget);
-      await tester.ensureVisible(find.text('Submit application'));
-      await tester.tap(find.text('Submit application'));
+      await tester.ensureVisible(find.text('Submit Application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pump();
-      expect(find.text('Choose your gender: this role is open to one gender only.'), findsOneWidget);
+      expect(find.text('Select your gender. This role is open to one gender only.'), findsOneWidget);
       expect(repo.applications, isEmpty);
 
       await tester.tap(find.byKey(const ValueKey('apply-gender-WOMAN')));
       await tester.pump();
-      await tester.tap(find.text('Submit application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pumpAndSettle();
       expect(repo.applications.single.gender, 'WOMAN');
     });
@@ -1081,11 +1085,11 @@ void main() {
       await tester.ensureVisible(find.byKey(const ValueKey('apply-gender-MAN')));
       await tester.tap(find.byKey(const ValueKey('apply-gender-MAN')));
       await tester.pump();
-      await tester.ensureVisible(find.text('Submit application'));
-      await tester.tap(find.text('Submit application'));
+      await tester.ensureVisible(find.text('Submit Application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pumpAndSettle();
       expect(find.text('This role accepts applications only from women.'), findsWidgets);
-      expect(find.text('Submit application'), findsOneWidget, reason: 'the form stays open');
+      expect(find.text('Submit Application'), findsOneWidget, reason: 'the form stays open');
     });
 
     testWidgets('a LinkedIn link is optional, checked as the API checks it, and sent when good', (tester) async {
@@ -1094,14 +1098,14 @@ void main() {
       await openFirstJob(tester);
       await openApplyForm(tester);
       await tester.enterText(find.byKey(const ValueKey('apply-linkedin')), 'example.com/in/me');
-      await tester.ensureVisible(find.text('Submit application'));
-      await tester.tap(find.text('Submit application'));
+      await tester.ensureVisible(find.text('Submit Application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pump();
       expect(find.text('Enter your LinkedIn profile link, such as linkedin.com/in/your-name.'), findsOneWidget);
       expect(repo.applications, isEmpty);
 
       await tester.enterText(find.byKey(const ValueKey('apply-linkedin')), 'linkedin.com/in/pooja-p');
-      await tester.tap(find.text('Submit application'));
+      await tester.tap(find.text('Submit Application'));
       await tester.pumpAndSettle();
       expect(repo.applications.single.linkedinUrl, 'linkedin.com/in/pooja-p');
     });
@@ -1113,7 +1117,7 @@ void main() {
       expect(inBar(find.text('Applied')), findsOneWidget);
       await tester.tap(inBar(find.text('Applied')), warnIfMissed: false);
       await tester.pumpAndSettle();
-      expect(find.text('Submit application'), findsNothing);
+      expect(find.text('Submit Application'), findsNothing);
       expect(repo.applications, isEmpty);
     });
   });

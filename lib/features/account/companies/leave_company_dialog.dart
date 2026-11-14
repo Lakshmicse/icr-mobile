@@ -58,7 +58,12 @@ class _LeaveCompanyDialogState extends State<LeaveCompanyDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Colors.white,
-      title: Text('Leave ${widget.company.name}?', style: AccountText.cardTitle, maxLines: 3, overflow: TextOverflow.ellipsis),
+      title: Text(
+        'Leave ${widget.company.name}?',
+        style: AccountText.cardTitle,
+        maxLines: 3,
+        overflow: TextOverflow.ellipsis,
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -83,10 +88,7 @@ class _LeaveCompanyDialogState extends State<LeaveCompanyDialog> {
                 key: const Key('leave.error'),
                 margin: const EdgeInsets.only(top: 6),
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF1F2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                decoration: BoxDecoration(color: const Color(0xFFFFF1F2), borderRadius: BorderRadius.circular(10)),
                 child: Text(_error!, style: AccountText.error.copyWith(fontSize: 14)),
               ),
           ],
@@ -104,7 +106,7 @@ class _LeaveCompanyDialogState extends State<LeaveCompanyDialog> {
           style: TextButton.styleFrom(foregroundColor: AppColors.rose600),
           child: _pending
               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('Leave company'),
+              : const Text('Leave Company'),
         ),
       ],
     );

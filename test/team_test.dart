@@ -96,25 +96,25 @@ void main() {
       tester,
     ) async {
       await pump(tester);
-      expect(find.text('Team'), findsOneWidget);
-      expect(find.text('Your hiring team across offices.'), findsOneWidget);
+      expect(find.text('Team Management'), findsOneWidget);
+      expect(find.text('Manage your team and access across offices.'), findsOneWidget);
       expect(find.text('Members 6'), findsOneWidget);
       expect(find.text('Requests 1'), findsOneWidget);
       expect(find.text('Pending 2'), findsOneWidget, reason: 'one add from ICR and one email invite');
       expect(find.text('Asha Rao'), findsOneWidget);
       expect(find.text('asha@techcorp.example'), findsOneWidget);
       expect(find.text('Company Admin'), findsOneWidget);
-      expect(find.text('Inbox: All topics'), findsOneWidget);
+      expect(find.text('Inbox Permissions: All Topics'), findsOneWidget);
       expect(find.byKey(const Key('team.member.inbox.u-hema')), findsOneWidget);
-      expect(tester.widget<Text>(find.byKey(const Key('team.member.inbox.u-hema'))).data, 'Inbox: None');
-      expect(tester.widget<Text>(find.byKey(const Key('team.member.inbox.u-bina'))).data, 'Inbox: Careers');
+      expect(tester.widget<Text>(find.byKey(const Key('team.member.inbox.u-hema'))).data, 'Inbox Permissions: None');
+      expect(tester.widget<Text>(find.byKey(const Key('team.member.inbox.u-bina'))).data, 'Inbox Permissions: Careers');
       await reveal(tester, find.byKey(const Key('team.member.u-dev')));
       expect(
         find.descendant(of: find.byKey(const Key('team.member.u-dev')), matching: find.text('Deactivated')),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: find.byKey(const Key('team.member.u-asha')), matching: find.text('Company-wide')),
+        find.descendant(of: find.byKey(const Key('team.member.u-asha')), matching: find.text('Company-Wide')),
         findsOneWidget,
         reason: 'no office reads Company-wide',
       );
@@ -133,7 +133,7 @@ void main() {
       expect(teamTabOf('anything'), TeamTab.members);
       await pump(tester, tab: TeamTab.requests);
       expect(find.byKey(const Key('team.requests')), findsOneWidget);
-      expect(find.text('Asked to join (1)'), findsOneWidget);
+      expect(find.text('Pending Access Requests (1)'), findsOneWidget);
       expect(find.text('Pooja Pillai'), findsOneWidget);
       expect(find.text('“I run facilities at your Pune site.”'), findsOneWidget);
       expect(find.byKey(const Key('team.members')), findsNothing);
@@ -152,7 +152,7 @@ void main() {
         tester,
         repository: DemoTeamRepository(members: const [], requests: const [], adds: const [], invites: const []),
       );
-      expect(find.text('No team members yet'), findsOneWidget);
+      expect(find.text('No Team Members Yet'), findsOneWidget);
       expect(find.text('Invite office admins, recruiters and hiring managers.'), findsOneWidget);
       await tapTab(tester, TeamTab.requests);
       expect(find.byKey(const Key('team.requests.empty')), findsOneWidget);
@@ -190,7 +190,7 @@ void main() {
     testWidgets('a role that does not run a team gets a calm note, never a 403', (tester) async {
       await pump(tester, role: 'RECRUITER', userId: 'u-rahul');
       expect(find.byKey(const Key('team.noAccess')), findsOneWidget);
-      expect(find.text('This page is for your company’s team admins'), findsOneWidget);
+      expect(find.text('This Page Is for Your Company’s Team Admins'), findsOneWidget);
       expect(repo.calls, isEmpty);
       expect(find.byKey(const Key('team.add')), findsNothing);
     });
@@ -245,7 +245,7 @@ void main() {
     testWidgets('Decline asks first; backing out sends nothing, confirming declines', (tester) async {
       await pump(tester, tab: TeamTab.requests);
       await tapKey(tester, 'team.decline.u-pooja');
-      expect(find.text('Decline Pooja Pillai’s request?'), findsOneWidget);
+      expect(find.text('Decline Pooja Pillai’s Request?'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
       expect(repo.count('decline'), 0);
@@ -264,7 +264,7 @@ void main() {
       tester,
     ) async {
       await pump(tester, tab: TeamTab.pending);
-      expect(find.text('Waiting to accept (1)'), findsOneWidget);
+      expect(find.text('Waiting to Accept (1)'), findsOneWidget);
       expect(find.text('Added by Asha Rao 3d ago · waiting for them to accept'), findsOneWidget);
       expect(
         find.descendant(of: find.byKey(const Key('team.add.u-kiran')), matching: find.text('Recruiter')),
@@ -276,13 +276,13 @@ void main() {
       );
       await tapKey(tester, 'team.cancelAdd.u-kiran');
       expect(repo.count('cancelAdd'), 1);
-      expect(find.text('Waiting to accept (1)'), findsNothing);
+      expect(find.text('Waiting to Accept (1)'), findsNothing);
       expect(find.text('Pending 1'), findsOneWidget);
     });
 
     testWidgets('an open email invite shows its address, role, office and expiry; Revoke ends it', (tester) async {
       await pump(tester, tab: TeamTab.pending);
-      expect(find.text('Pending invites (1)'), findsOneWidget);
+      expect(find.text('Pending Invitations (1)'), findsOneWidget);
       expect(find.text('hr@partner.example'), findsOneWidget);
       expect(find.textContaining('expires '), findsOneWidget);
       await tapKey(tester, 'team.revoke.inv-1');
@@ -322,7 +322,7 @@ void main() {
       expect(repo.sent['updateMember'], {'id': 'u-rahul', 'branchId': 'b-pune'});
 
       await tapKey(tester, 'team.edit.u-rahul');
-      await pickFrom(tester, 'edit.office', 'Company-wide');
+      await pickFrom(tester, 'edit.office', 'Company-Wide');
       await save(tester);
       final sent = repo.sent['updateMember']! as Map;
       expect(sent.containsKey('branchId'), isTrue);
@@ -344,7 +344,7 @@ void main() {
         ..failures['updateMember'] = ApiError('Recruiter accounts need an office. Choose one for this member.');
       await pump(tester, repository: r);
       await tapKey(tester, 'team.edit.u-rahul');
-      await pickFrom(tester, 'edit.office', 'Company-wide');
+      await pickFrom(tester, 'edit.office', 'Company-Wide');
       await save(tester);
       expect(find.text('Recruiter accounts need an office. Choose one for this member.'), findsOneWidget);
       expect(find.byKey(const Key('edit.role')), findsOneWidget, reason: 'the sheet stays open');
@@ -354,11 +354,8 @@ void main() {
     testWidgets('Remove asks first; backing out removes nothing, confirming ends their place', (tester) async {
       await pump(tester);
       await tapKey(tester, 'team.remove.u-rahul');
-      expect(find.text('Remove Rahul Menon from the team?'), findsOneWidget);
-      expect(
-        find.textContaining('Their ICR account, and any other company they belong to, stay theirs.'),
-        findsOneWidget,
-      );
+      expect(find.text('Remove Rahul Menon from the Team?'), findsOneWidget);
+      expect(find.textContaining('Their ICR account and their other companies are not affected.'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
       expect(repo.count('removeMember'), 0);
@@ -366,6 +363,13 @@ void main() {
       await tester.tap(find.byKey(const Key('confirm.ok')));
       await tester.pumpAndSettle();
       expect(repo.count('removeMember'), 1);
+      // The rows' "Inbox Permissions" lines run to two lines on a phone, so the tabs are scrolled back into view.
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('team.tab.members')),
+        -250,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       expect(find.text('Members 5'), findsOneWidget);
       expect(find.byKey(const Key('team.member.u-rahul')), findsNothing);
     });
@@ -461,7 +465,7 @@ void main() {
     testWidgets('type a name, pick the person, name their role and office, ask: the add is pending', (tester) async {
       await pump(tester);
       await tapKey(tester, 'team.add');
-      expect(find.text('Add someone on ICR'), findsWidgets);
+      expect(find.text('Add Existing ICR Member'), findsWidgets);
       expect(saveEnabled(tester), isFalse, reason: 'nobody picked yet');
       await tester.enterText(find.byKey(const Key('add.search')), 'M');
       await tester.pumpAndSettle();
@@ -489,7 +493,7 @@ void main() {
       await tester.enterText(find.byKey(const Key('add.search')), 'Zzz');
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('add.none')), findsOneWidget);
-      expect(find.text('Nobody found'), findsOneWidget);
+      expect(find.text('No members found.'), findsOneWidget);
       await tester.enterText(find.byKey(const Key('add.search')), 'Meera');
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('add.hit.u-meera')));
@@ -535,7 +539,7 @@ void main() {
   group('invite by email', () {
     Future<void> openInvite(WidgetTester tester) async {
       await tapKey(tester, 'team.invite');
-      expect(find.text('Invite a team member'), findsOneWidget);
+      expect(find.text('Invite a Team Member'), findsOneWidget);
       expect(saveEnabled(tester), isFalse, reason: 'no address yet');
     }
 
@@ -546,7 +550,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(repo.count('lookup'), 1);
       expect(find.byKey(const Key('invite.notOnIcr')), findsOneWidget);
-      expect(find.text('Not on ICR yet. They will get an email to join ICR and your team.'), findsOneWidget);
+      expect(find.text('Not on ICR yet. They will receive an email to join ICR and your team.'), findsOneWidget);
       await pickFrom(tester, 'invite.role', 'Hiring Manager');
       await pickFrom(tester, 'invite.office', 'Head Office');
       await save(tester);
@@ -585,7 +589,7 @@ void main() {
       expect(find.text('Meera Joshi'), findsOneWidget);
       expect(find.text('On ICR'), findsOneWidget);
       expect(find.byKey(const Key('invite.addsPending')), findsOneWidget);
-      expect(find.text('Ask them to join'), findsOneWidget);
+      expect(find.text('Ask Them to Join'), findsOneWidget);
       await pickFrom(tester, 'invite.role', 'Buyer');
       await save(tester);
       expect(repo.sent['addMember'], {'userId': 'u-meera', 'role': 'BUYER', 'branchId': null});
@@ -606,7 +610,7 @@ void main() {
       await tester.pumpAndSettle();
       await pickFrom(tester, 'invite.role', 'Company Admin');
       expect(find.byKey(const Key('invite.adminNeedsInvite')), findsOneWidget);
-      expect(find.text('Send invite'), findsOneWidget);
+      expect(find.text('Send Invite'), findsOneWidget);
       await save(tester);
       expect(repo.sent['invite'], containsPair('role', 'COMPANY_ADMIN'));
       expect(repo.count('addMember'), 0);
@@ -815,11 +819,11 @@ void main() {
   });
 
   group('learning roles, at a learning-partner company (the website\'s TeamPanel, 6 Nov 2026)', () {
-    const memberLabel = 'Member (learning roles only)';
+    const memberLabel = 'Member (Learning Roles Only)';
 
     Future<void> openInvite(WidgetTester tester) async {
       await tapKey(tester, 'team.invite');
-      expect(find.text('Invite a team member'), findsOneWidget);
+      expect(find.text('Invite a Team Member'), findsOneWidget);
     }
 
     /// Picks a row that may sit below the picker sheet's fold (Member is the seventh role).
@@ -844,14 +848,14 @@ void main() {
       await tester.enterText(find.byKey(const Key('invite.email')), 'trainer@example.com');
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('invite.learningRoles')), findsOneWidget);
-      expect(find.text('Learning roles'), findsOneWidget);
-      expect(find.text('Tick any number. Each opens its pages in the Learning console.'), findsOneWidget);
+      expect(find.text('Learning Roles'), findsOneWidget);
+      expect(find.text('Select any number. Each opens its pages in the Learning console.'), findsOneWidget);
       await pickRole(tester, 'invite.role', memberLabel);
       expect(find.byKey(const Key('invite.office')), findsNothing, reason: 'a Member has no office');
-      expect(find.text('Pick at least one learning role for a member.'), findsOneWidget);
+      expect(find.text('Select at least one learning role for a member.'), findsOneWidget);
       expect(saveEnabled(tester), isFalse);
       await tapKey(tester, 'learning.TRAINER');
-      expect(find.text('Pick at least one learning role for a member.'), findsNothing);
+      expect(find.text('Select at least one learning role for a member.'), findsNothing);
       expect(saveEnabled(tester), isTrue);
       await save(tester);
       expect(repo.sent['invite'], {
@@ -898,7 +902,7 @@ void main() {
 
     testWidgets('"Add a trainer" opens the invite form on Member with Trainer ticked', (tester) async {
       await pump(tester, learningPartner: true, inviteLearningRole: 'TRAINER');
-      expect(find.text('Invite a team member'), findsOneWidget);
+      expect(find.text('Invite a Team Member'), findsOneWidget);
       expect(find.text(memberLabel), findsOneWidget);
       final trainer = find.descendant(of: find.byKey(const Key('learning.TRAINER')), matching: find.byType(Checkbox));
       expect(tester.widget<Checkbox>(trainer).value, isTrue);

@@ -13,10 +13,12 @@ import '../account_repository.dart';
 import '../account_rules.dart' show displayLink;
 import '../api_account_repository.dart';
 import '../demo_account_repository.dart';
+import '../profile/intro_line.dart' show introLine;
 import '../profile/my_profile_screen.dart' show ShareText, shareWithPhone;
 import '../profile/profile_kit.dart';
 import '../widgets/account_kit.dart';
 import 'member_profile_controller.dart';
+import '../../../core/util/screen_trail.dart';
 
 /// Another member's public page (`/members/<id or slug>`): their cover and
 /// photo, headline and place, who follows them, and what they chose to show:
@@ -82,7 +84,9 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   @override
   void initState() {
     super.initState();
-    final repo = widget.repository ?? (AppConfig.demo ? DemoAccountRepository() : ApiAccountRepository(api: context.read<ApiClient>()));
+    final repo =
+        widget.repository ??
+        (AppConfig.demo ? DemoAccountRepository() : ApiAccountRepository(api: context.read<ApiClient>()));
     _c = MemberProfileController(repo, widget.userId)..load();
   }
 
@@ -109,7 +113,9 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       widget.share('${m.fullName} on ICR\n${AppConfig.sitePage(m.sitePath)}', '${m.fullName} on ICR');
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => SitePlace(path: '/members/${widget.userId}', child: _buildPage(context));
+
+  Widget _buildPage(BuildContext context) {
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) {
@@ -123,7 +129,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
               if (m != null)
                 IconButton(
                   key: const Key('member.share'),
-                  tooltip: 'Share profile',
+                  tooltip: 'Share Profile',
                   onPressed: () => _share(m),
                   icon: const Icon(Symbols.ios_share, size: 22, color: AppColors.onSurfaceVariant),
                 ),
@@ -140,8 +146,10 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       if (_c.loading) return const AccountLoading();
       final gone = _c.loadStatus == 404;
       return AccountError(
-        title: gone ? 'This profile is not available' : 'Something went wrong',
-        message: gone ? 'It may be private, or the member may have left ICR.' : (_c.loadError ?? 'Try again in a moment.'),
+        title: gone ? 'This Profile Is Not Available' : 'Something Went Wrong',
+        message: gone
+            ? 'It may be private, or the member may have left ICR.'
+            : (_c.loadError ?? 'Try again in a moment.'),
         onRetry: _c.load,
       );
     }
@@ -154,11 +162,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
           if (_c.actionError != null) _ErrorBanner(message: _c.actionError!, onClose: _c.dismissError),
           _header(m),
           if (m.isOwner) _ownerNote(),
-          if (m.about != null)
-            AccountCard(
-              title: 'About',
-              child: ClampedText(m.about!),
-            ),
+          if (m.about != null) AccountCard(title: 'About', child: ClampedText(m.about!)),
           if (m.experience.isNotEmpty) _experience(m),
           if (m.education.isNotEmpty) _education(m),
           if (m.credentials.isNotEmpty) _credentials(m),
@@ -173,7 +177,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   }
 
   Widget _header(MemberProfile m) {
-    final place = [?m.city, ?m.companyName].join(' · ');
+    final place = m.city?.trim() ?? '';
     final since = monthYear(m.memberSince);
     return ProfileHeader(
       name: m.fullName,
@@ -181,6 +185,9 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       avatarUrl: m.avatarUrl,
       coverImage: m.coverImage,
       headline: m.headline,
+      // LinkedIn's line: their current company and their newest school. A choice
+      // made in their own Edit Intro stays on their phone, so others see the default.
+      affiliation: introLine(roles: m.experience, education: m.education, actingFor: m.companyName),
       place: place.isEmpty ? null : place,
       facts: [
         '${_count(m.follow.followers)} ${m.follow.followers == 1 ? 'follower' : 'followers'}',
@@ -188,14 +195,22 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
         if (since.isNotEmpty) 'Member since $since',
       ],
       chips: [
-        if (m.mentorProfileId != null) const AccountChip(label: 'Mentor', color: Color(0xFFE7EEFF), ink: AppColors.primary, icon: Symbols.school),
-        if (m.readyForNextRole) const AccountChip(label: 'Ready for a new role', color: Color(0xFFECFDF5), ink: Color(0xFF047857)),
+        if (m.mentorProfileId != null)
+          const AccountChip(label: 'Mentor', color: Color(0xFFE7EEFF), ink: AppColors.primary, icon: Symbols.school),
+        if (m.readyForNextRole)
+          const AccountChip(label: 'Ready for a New Role', color: Color(0xFFECFDF5), ink: Color(0xFF047857)),
         if (m.yearsExperience != null) AccountChip(label: '${m.yearsExperience} yrs experience'),
       ],
       actions: m.isOwner
           ? [
               if (widget.onEditProfile != null)
-                PillAction(key: const Key('member.edit'), label: 'Edit profile', icon: Symbols.edit, filled: true, onPressed: widget.onEditProfile),
+                PillAction(
+                  key: const Key('member.edit'),
+                  label: 'Edit Profile',
+                  icon: Symbols.edit,
+                  filled: true,
+                  onPressed: widget.onEditProfile,
+                ),
             ]
           : [
               PillAction(
@@ -216,7 +231,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
               if (m.mentorProfileId != null)
                 PillAction(
                   key: const Key('member.mentor'),
-                  label: 'Mentor profile',
+                  label: 'Mentor Profile',
                   icon: Symbols.school,
                   onPressed: () {
                     final open = widget.onOpenMentor;
@@ -237,15 +252,17 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     key: const Key('member.ownerNote'),
     margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
     padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: const Color(0xFFE7EEFF),
-      borderRadius: BorderRadius.circular(10),
-    ),
+    decoration: BoxDecoration(color: const Color(0xFFE7EEFF), borderRadius: BorderRadius.circular(10)),
     child: Row(
       children: [
         const Icon(Symbols.visibility, size: 18, color: AppColors.primary),
         const SizedBox(width: 8),
-        Expanded(child: Text('This is how other members see your profile.', style: AccountText.body.copyWith(color: AppColors.primary))),
+        Expanded(
+          child: Text(
+            'This is how other members see your profile.',
+            style: AccountText.body.copyWith(color: AppColors.primary),
+          ),
+        ),
       ],
     ),
   );
@@ -283,13 +300,17 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final (i, e) in m.education.indexed) ItemRow(divider: i > 0, child: EducationTile(education: e)),
+        for (final (i, e) in m.education.indexed)
+          ItemRow(
+            divider: i > 0,
+            child: EducationTile(education: e),
+          ),
       ],
     ),
   );
 
   Widget _credentials(MemberProfile m) => AccountCard(
-    title: 'Licenses & certifications',
+    title: 'Licenses and Certifications',
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -350,7 +371,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     }
 
     return AccountCard(
-      title: 'Chapters & councils',
+      title: 'Chapters & Councils',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -378,7 +399,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   Widget _activity(MemberProfile m) {
     if (m.threads == 0 && m.replies == 0 && _c.posts.isEmpty) return const SizedBox.shrink();
     return AccountCard(
-      title: 'Community activity',
+      title: 'Community Activity',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -413,7 +434,8 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                       [
                         ?p.category,
                         '${p.replyCount} ${p.replyCount == 1 ? 'reply' : 'replies'}',
-                        if (p.createdAt != null && DateTime.tryParse(p.createdAt!) != null) timeAgo(DateTime.parse(p.createdAt!), now: widget.now),
+                        if (p.createdAt != null && DateTime.tryParse(p.createdAt!) != null)
+                          timeAgo(DateTime.parse(p.createdAt!), now: widget.now),
                       ].join(' · '),
                       style: AccountText.meta,
                     ),
@@ -423,7 +445,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
           ] else if (_c.postsFailed)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Text("Couldn't load their discussions.", style: AccountText.meta),
+              child: Text('Unable to load their discussions.', style: AccountText.meta),
             ),
         ],
       ),
@@ -440,6 +462,8 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   );
 }
 
+/// A credential on a public profile: the name and code, the issuer and date. No
+/// "Verified" chip: ICR does not validate them, it displays them (owner, 12 Nov 2026).
 class _PublicCredential extends StatelessWidget {
   const _PublicCredential({required this.credential});
 
@@ -455,11 +479,8 @@ class _PublicCredential extends StatelessWidget {
         Container(
           width: 44,
           height: 44,
-          decoration: BoxDecoration(
-            color: c.verified ? AppColors.emerald50 : AppColors.slate50,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(Symbols.workspace_premium, size: 23, color: c.verified ? AppColors.emerald700 : AppColors.slate500),
+          decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10)),
+          child: const Icon(Symbols.workspace_premium, size: 23, color: AppColors.slate500),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -469,10 +490,6 @@ class _PublicCredential extends StatelessWidget {
               Text(c.code == null ? c.name : '${c.name} (${c.code})', style: AccountText.itemTitle),
               if (c.issuer != null) Text(c.issuer!, style: AccountText.body.copyWith(fontWeight: FontWeight.w500)),
               if (issued.isNotEmpty) Text('Issued $issued', style: AccountText.meta),
-              if (c.verified) ...[
-                const SizedBox(height: 6),
-                const AccountChip(label: 'Verified', color: Color(0xFFECFDF5), ink: Color(0xFF047857), icon: Symbols.verified),
-              ],
             ],
           ),
         ),
@@ -493,14 +510,15 @@ class _ErrorBanner extends StatelessWidget {
       key: const Key('member.error'),
       margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF1F2),
-        borderRadius: BorderRadius.circular(10),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFFFFF1F2), borderRadius: BorderRadius.circular(10)),
       child: Row(
         children: [
           Expanded(child: Text(message, style: AccountText.error.copyWith(fontSize: 14))),
-          IconButton(tooltip: 'Dismiss', onPressed: onClose, icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.slate500)),
+          IconButton(
+            tooltip: 'Dismiss',
+            onPressed: onClose,
+            icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.slate500),
+          ),
         ],
       ),
     );

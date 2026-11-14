@@ -10,6 +10,7 @@ import 'package:icr_mobile/features/feed/api_feed_repository.dart';
 import 'package:icr_mobile/features/feed/demo_feed_repository.dart';
 import 'package:icr_mobile/features/feed/feed_controller.dart';
 import 'package:icr_mobile/features/feed/feed_models.dart';
+import 'package:icr_mobile/features/feed/forum_json.dart';
 import 'package:icr_mobile/features/feed/feed_repository.dart';
 import 'helpers/feed_fixtures.dart';
 
@@ -615,6 +616,63 @@ void main() {
       expect(api.to('GET', '/members/me/following'), hasLength(2));
       // By id: the page is laid out newest first, so the fixture's order is not the feed's.
       expect({for (final p in posts) p.id: p.showFollow}, {'x': false, 'y': false, 'z': true});
+    });
+
+    test(
+      "a discussion's photos are the forum's own list, once each, then a pictured file and pictures in the body",
+      () {
+        // Portal main (Nov 2026): a card carries `images`, a discussion `imageIds`; an older server has neither.
+        expect(
+          ForumJson.photoPaths({
+            'images': ['a.jpg', 'b.png'],
+            'attachment': {'uploadId': 'b.png'},
+            'bodyHtml': '<p>Hi</p><p><img src="/uploads/c.webp" alt=""></p><p><img src="/uploads/a.jpg"></p>',
+          }),
+          ['/uploads/a.jpg', '/uploads/b.png', '/uploads/c.webp'],
+        );
+        expect(
+          ForumJson.photoPaths({
+            'imageIds': ['d.jpg'],
+            'bodyHtml': '',
+          }),
+          ['/uploads/d.jpg'],
+        );
+        expect(
+          ForumJson.photoPaths({
+            'attachment': {'uploadId': 'brief.pdf'},
+            'bodyHtml': '<p>No photos</p>',
+          }),
+          isEmpty,
+        );
+        expect(
+          ForumJson.photoPaths({
+            'attachment': {'uploadId': 'site.jpg'},
+          }),
+          ['/uploads/site.jpg'],
+        );
+      },
+    );
+
+    test('a discussion\'s videos are read from its body, after its photos', () async {
+      expect(ForumJson.videoSources('<p>x</p><p><video src="/uploads/a.mp4" controls></video></p>'), [
+        '/uploads/a.mp4',
+      ]);
+      expect(ForumJson.videoSources('<p>no media</p>'), isEmpty);
+      final api = FakeForum({
+        'GET /members/me/following': (_) => page(const []),
+        'GET /forum/threads': (_) => page([threadCard('v')]),
+        'GET /forum/threads/slug-v': (_) => {
+          ...threadCard('v'),
+          'bodyHtml':
+              '<p>Walk-down</p><p><img src="/uploads/one.jpg" alt=""></p><p><video src="/uploads/clip.mp4" controls></video></p>',
+          'attachment': null,
+        },
+      });
+      final repo = repositoryOn(api);
+      final post = (await repo.load(FeedFilter.all)).posts.single;
+      final detail = (await repo.detail(post))!;
+      expect(detail.images.map((i) => Uri.parse(i.url!).path), ['/uploads/one.jpg']);
+      expect(detail.videos.map((v) => Uri.parse(v).path), ['/uploads/clip.mp4']);
     });
 
     test('a topic is tinted green for the sustainability families and blue for the rest and for polls', () async {

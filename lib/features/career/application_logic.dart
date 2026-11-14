@@ -14,12 +14,12 @@ import 'career_models.dart';
 enum AppStatus {
   applied('Applied'),
   viewed('Viewed'),
-  inReview('In review'),
+  inReview('In Review'),
   interviewing('Interviewing'),
   offer('Offer'),
-  offerDeclined('Offer declined'),
+  offerDeclined('Offer Declined'),
   hired('Hired'),
-  notSelected('Not selected'),
+  notSelected('Not Selected'),
   withdrawn('Withdrawn');
 
   const AppStatus(this.label);
@@ -103,9 +103,9 @@ DateTime lastActivityAt(CareerApplication app) {
 }
 
 enum ApplicationsSort {
-  recent('Recent activity'),
-  applied('Date applied'),
-  match('Best match');
+  recent('Recent Activity'),
+  applied('Date Applied'),
+  match('Best Match');
 
   const ApplicationsSort(this.label);
   final String label;
@@ -177,7 +177,7 @@ List<ProgressStep>? progressOf(CareerApplication app) {
         ? (_reachedAt(app, 'HIRED') ?? offer?.respondedAt)
         : (offer?.sentAt ?? _reachedAt(app, 'OFFER', 'OFFER_SENT')),
   ];
-  const labels = ['Applied', 'Viewed', 'In review', 'Interview', 'Offer'];
+  const labels = ['Applied', 'Viewed', 'In Review', 'Interview', 'Offer'];
   final lockedViewed = app.visibilityLocked && current == 0;
   return [
     for (var i = 0; i < labels.length; i++)

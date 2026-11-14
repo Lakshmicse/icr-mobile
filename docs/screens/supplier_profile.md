@@ -63,3 +63,7 @@ Goldens (2x of the frame, 4x measured by ink boxes with `--dart-define=GOLDEN_SC
 ## Left
 
 - Nothing in the sheet itself. *Request for Quote (RFQ)*, a service's *Get Quote* and a product's *Get Quote* open the Marketplace's own quote form (`POST /rfq`, private to the supplier) unless the lead wires `onRequestQuote`; a row opens the service or product page (`marketplace.md`, "Slice 4"). The tab-state difference (the PNGs fill "Overview" on all three) and the licence-number typewriter face are noted above.
+
+## 13 Nov 2026: copy refined to the client's standard
+
+The sheet's wording was refined with the Marketplace's (Title Case for tabs, buttons and headings: "Products & Services", "Good to Know", "Team Size", "New Work", "Read Full Company Charter", "Show Less", "Head Office", "Rate This Supplier", "Verified Buyer"; "No Products or Services Listed Yet", "No Compliances on File"; "Try Again"; the rating sentences). The old → new table is in `marketplace.md`, under the same heading. The design's own words ("Enterprise Track Record", "About Organization", "View Hubs", "Call HQ", "Request for Quote (RFQ)") are as they were.

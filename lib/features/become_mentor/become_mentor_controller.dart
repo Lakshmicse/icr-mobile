@@ -178,7 +178,7 @@ class BecomeMentorController extends ChangeNotifier {
     if (staleCertifications.isNotEmpty)
       Need(
         FixTarget.certifications,
-        'Remove ${staleCertifications.join(', ')} from your certifications — no longer on your profile.',
+        'Remove ${staleCertifications.join(', ')} from your certifications (no longer on your profile).',
       ),
   ];
 
@@ -196,15 +196,15 @@ class BecomeMentorController extends ChangeNotifier {
   bool get ready => needed.isEmpty && _declared;
 
   List<Step> get steps => [
-    Step('Your profile', hasProfile && profileNeeds.isEmpty),
-    Step('Code of conduct', conductAccepted || (status.canSubmit && _declared)),
-    if (trainingRequired) Step('Mentor training', readiness.data?.trainingComplete ?? false),
+    Step('Your Profile', hasProfile && profileNeeds.isEmpty),
+    Step('Code of Conduct', conductAccepted || (status.canSubmit && _declared)),
+    if (trainingRequired) Step('Mentor Training', readiness.data?.trainingComplete ?? false),
     Step(
       status.listed
-          ? 'Listed in the directory'
+          ? 'Listed in the Directory'
           : status == MentorStatus.pending
-          ? 'ICR review — in progress'
-          : 'ICR review',
+          ? 'ICR Review (In Progress)'
+          : 'ICR Review',
       status.listed,
     ),
   ];
@@ -226,7 +226,7 @@ class BecomeMentorController extends ChangeNotifier {
     await conduct.ensure();
     final version = conduct.data?.version;
     if (version == null || version.isEmpty) {
-      throw ApiError('The code of conduct has not loaded yet — try again in a moment.');
+      throw ApiError('The code of conduct has not loaded yet. Try again in a moment.');
     }
     final created = !hasProfile;
     if (created) {

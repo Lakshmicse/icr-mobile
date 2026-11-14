@@ -111,7 +111,7 @@ class RoundtableRow extends StatelessWidget {
               top: 26,
               child: Semantics(
                 button: true,
-                label: 'Add to calendar',
+                label: 'Add to Calendar',
                 child: InkResponse(
                   onTap: onCalendar,
                   radius: 20,

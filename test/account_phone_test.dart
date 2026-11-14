@@ -18,7 +18,14 @@ void main() {
   setUpAll(loadAppFonts);
 
   MyProfile profile({String? phone}) => MyProfile.fromJson({
-    'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'Anita', 'lastName': 'Rao', 'role': 'PROFESSIONAL', 'phone': ?phone},
+    'user': {
+      'id': 'me',
+      'email': 'a@b.co',
+      'firstName': 'Anita',
+      'lastName': 'Rao',
+      'role': 'PROFESSIONAL',
+      'phone': ?phone,
+    },
   });
 
   group('the phone rules', () {
@@ -58,7 +65,7 @@ void main() {
               child: AccountPhoneField(
                 fieldKey: const Key('n'),
                 countryKey: const Key('c'),
-                label: 'Mobile number',
+                label: 'Mobile Number',
                 value: value,
                 onChanged: sent.add,
               ),
@@ -105,13 +112,13 @@ void main() {
       expect(tester.widget<TextField>(find.byKey(const Key('n'))).controller!.text, '7700900123');
     });
 
-    testWidgets('"Other country" takes the number with its code', (tester) async {
+    testWidgets('"Other Country" takes the number with its code', (tester) async {
       final sent = await pumpField(tester);
       await tester.tap(find.byKey(const Key('c')));
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const Key('accountPicker.search')), 'Other');
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ListTile, 'Other country'));
+      await tester.tap(find.widgetWithText(ListTile, 'Other Country'));
       await tester.pumpAndSettle();
       expect(find.text('Other'), findsOneWidget);
       await tester.enterText(find.byKey(const Key('n')), '+31 970 1234567');
@@ -124,7 +131,13 @@ void main() {
         MaterialApp(
           theme: buildAppTheme(),
           home: Scaffold(
-            body: AccountPhoneField(label: 'Mobile', value: '', onChanged: (_) {}, error: 'Enter a 10-digit Indian mobile number.', helper: 'ignored'),
+            body: AccountPhoneField(
+              label: 'Mobile',
+              value: '',
+              onChanged: (_) {},
+              error: 'Enter a 10-digit Indian mobile number.',
+              helper: 'ignored',
+            ),
           ),
         ),
       );
@@ -144,7 +157,9 @@ void main() {
               body: Center(
                 child: ElevatedButton(
                   key: const Key('go'),
-                  onPressed: () async => results.add(await askForPhone(context, repository: repo, reason: 'So the employer can call you.')),
+                  onPressed: () async => results.add(
+                    await askForPhone(context, repository: repo, reason: 'So the employer can call you.'),
+                  ),
                   child: const Text('Apply'),
                 ),
               ),
@@ -161,28 +176,32 @@ void main() {
       await tester.tap(find.byKey(const Key('go')));
       await tester.pumpAndSettle();
       expect(results, ['']);
-      expect(find.text('Add your mobile number'), findsNothing);
+      expect(find.text('Add Your Mobile Number'), findsNothing);
       expect(repo.calls, ['myProfile']);
     });
 
-    testWidgets('with none, the sheet asks, says who needs it, and returns the number to send with the action', (tester) async {
+    testWidgets('with none, the sheet asks, says who needs it, and returns the number to send with the action', (
+      tester,
+    ) async {
       final repo = DemoAccountRepository(profile: profile());
       final results = <String?>[];
       await pumpHost(tester, repo, results);
       await tester.tap(find.byKey(const Key('go')));
       await tester.pumpAndSettle();
-      expect(find.text('Add your mobile number'), findsOneWidget);
+      expect(find.text('Add Your Mobile Number'), findsOneWidget);
       expect(find.text('So the employer can call you.'), findsOneWidget);
       await tester.enterText(find.byKey(const Key('phoneNeeded.number')), '98765 43210');
       await tester.pump();
       await tester.tap(find.byKey(const Key('sheet.save')));
       await tester.pumpAndSettle();
       expect(results, ['+919876543210']);
-      expect(find.text('Add your mobile number'), findsNothing);
+      expect(find.text('Add Your Mobile Number'), findsNothing);
       expect(repo.count('updateMe'), 0, reason: 'the action saves it, with itself');
     });
 
-    testWidgets('a missing or unreadable number is refused in the website\'s words and the sheet stays', (tester) async {
+    testWidgets('a missing or unreadable number is refused in the website\'s words and the sheet stays', (
+      tester,
+    ) async {
       final repo = DemoAccountRepository(profile: profile());
       final results = <String?>[];
       await pumpHost(tester, repo, results);
@@ -216,23 +235,27 @@ void main() {
       await pumpHost(tester, repo, results);
       await tester.tap(find.byKey(const Key('go')));
       await tester.pumpAndSettle();
-      expect(find.text('Add your mobile number'), findsOneWidget);
+      expect(find.text('Add Your Mobile Number'), findsOneWidget);
     });
   });
 
   group('inline in a form', () {
-    testWidgets('PhoneNeededField shows only while the profile has no number; payload carries it with the action', (tester) async {
+    testWidgets('PhoneNeededField shows only while the profile has no number; payload carries it with the action', (
+      tester,
+    ) async {
       final controller = PhoneNeededController(lookup: () async => null);
       await tester.runAsync(controller.load);
       usePhone(tester);
       await tester.pumpWidget(
         MaterialApp(
           theme: buildAppTheme(),
-          home: Scaffold(body: PhoneNeededField(controller: controller, reason: 'So your mentor can reach you.')),
+          home: Scaffold(
+            body: PhoneNeededField(controller: controller, reason: 'So your mentor can reach you.'),
+          ),
         ),
       );
       expect(controller.needed, isTrue);
-      expect(find.text('Mobile number *'), findsOneWidget);
+      expect(find.text('Mobile Number *'), findsOneWidget);
       expect(find.textContaining('So your mentor can reach you.'), findsOneWidget);
       expect(controller.check(), isFalse);
       await tester.pump();
@@ -248,7 +271,12 @@ void main() {
       await tester.runAsync(controller.load);
       usePhone(tester);
       await tester.pumpWidget(
-        MaterialApp(theme: buildAppTheme(), home: Scaffold(body: PhoneNeededField(controller: controller, reason: 'x'))),
+        MaterialApp(
+          theme: buildAppTheme(),
+          home: Scaffold(
+            body: PhoneNeededField(controller: controller, reason: 'x'),
+          ),
+        ),
       );
       expect(controller.needed, isFalse);
       expect(find.byKey(const Key('phoneNeeded.number')), findsNothing);

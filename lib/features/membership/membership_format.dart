@@ -29,7 +29,7 @@ String dayLabel(DateTime d) => '${d.day} ${_months[d.month - 1]} ${d.year}';
 /// "Renewed", "Changed plan", "Cancelled", "Ended", or null while the term runs.
 String? termEndLabel(String? end) => switch (end) {
   'RENEWED' => 'Renewed',
-  'CHANGED_PLAN' => 'Changed plan',
+  'CHANGED_PLAN' => 'Changed Plan',
   'CANCELLED' => 'Cancelled',
   'ENDED' => 'Ended',
   _ => null,

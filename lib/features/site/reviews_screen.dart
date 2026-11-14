@@ -115,7 +115,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     if (_items.isEmpty && _loading) return const Center(child: CircularProgressIndicator());
     if (_items.isEmpty && _error != null) {
       return Center(
-        child: TextButton(onPressed: _more, child: Text('$_error Try again')),
+        child: TextButton(onPressed: _more, child: Text('$_error Try Again')),
       );
     }
     if (_items.isEmpty) {
@@ -127,7 +127,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             children: [
               const Icon(Icons.star_border, size: 40, color: AppColors.icon),
               const SizedBox(height: 8),
-              Text('No reviews yet', style: AppText.plexSans(16, FontWeight.w600, AppColors.onSurface)),
+              Text('No Reviews Yet', style: AppText.plexSans(16, FontWeight.w600, AppColors.onSurface)),
               const SizedBox(height: 4),
               Text(
                 'Reviews will appear here once submitted.',

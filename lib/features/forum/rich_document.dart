@@ -286,9 +286,10 @@ String? normaliseLink(String raw) {
   return withScheme;
 }
 
-/// HTML tags the editor cannot hold: quotes, code and rules read as plain paragraphs once the post is edited.
+/// HTML tags the editor cannot hold: quotes, code and rules read as plain paragraphs once the post is edited. A
+/// picture or video is not one of them: the composer carries a body's `<img>` and `<video>` as its media (11 Nov 2026).
 bool htmlHasFormattingEditorLoses(String html) =>
-    RegExp(r'<(blockquote|pre|code|hr|table|img)\b', caseSensitive: false).hasMatch(html);
+    RegExp(r'<(blockquote|pre|code|hr|table)\b', caseSensitive: false).hasMatch(html);
 
 /// The document being edited: the same lists as a [RichDoc], changed in place by the field and the toolbar.
 class RichBuffer {

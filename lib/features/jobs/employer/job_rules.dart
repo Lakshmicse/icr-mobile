@@ -171,7 +171,7 @@ List<JobBlocker> jobPublishBlockers(JobFacts job) {
     }
   }
   if (job.country == null || !jobCountries.contains(job.country)) {
-    out.add(const JobBlocker('country', 'Pick the country this role is based in.'));
+    out.add(const JobBlocker('country', 'Select the country this role is based in.'));
   }
   final sMin = job.salaryMin;
   final sMax = job.salaryMax;

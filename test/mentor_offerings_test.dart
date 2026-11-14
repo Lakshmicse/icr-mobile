@@ -10,6 +10,12 @@ import 'helpers/fonts.dart';
 import 'mentor_offerings_fakes.dart';
 import 'mentoring_fakes.dart';
 
+/// The Offerings panel's own tabs (owner, 7 Nov 2026): 1:1 mentoring, Group mentoring, Resources.
+Future<void> openOfferingsTab(WidgetTester tester, String label) async {
+  await tester.tap(find.text(label));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   setUpAll(loadAppFonts);
   setUp(() => mentoringNow = () => offeringsNow);
@@ -29,22 +35,26 @@ void main() {
       expect(rupeesOf(null), '');
     });
 
-    test('a service is free, or ₹499 to ₹50,000; its strikethrough is higher and at most 50% off', () {
-      String? p(String price, {bool free = false, String compare = ''}) =>
-          servicePriceProblem(free: free, price: price, compareAt: compare);
-      expect(p('', free: true), isNull);
-      expect(p(''), 'Enter the price in rupees, or switch on Free.');
-      expect(p('100'), 'Priced services start at ₹499.');
-      expect(p('498.99'), 'Priced services start at ₹499.');
-      expect(p('499'), isNull);
-      expect(p('50000'), isNull);
-      expect(p('50001'), 'Prices go up to ₹50,000.');
-      expect(p('499', compare: '499'), 'The compare-at price must be higher than the price.');
-      expect(p('499', compare: '300'), 'The compare-at price must be higher than the price.');
-      expect(p('499', compare: '999'), startsWith('Discounts are capped at 50%'));
-      expect(p('499', compare: '998'), isNull, reason: 'half, to the paisa, is allowed');
-      expect(p('499', compare: 'lots'), 'Enter the strikethrough price in rupees, or leave it empty.');
-    });
+    test(
+      'a service is free, or priced up to ₹50,000 (no floor of the app\'s own); its strikethrough is higher and at most 50% off',
+      () {
+        String? p(String price, {bool free = false, String compare = ''}) =>
+            servicePriceProblem(free: free, price: price, compareAt: compare);
+        expect(p('', free: true), isNull);
+        expect(p(''), 'Enter the price in rupees, or turn on Free.');
+        // The ₹499 floor is the API's rule, not the app's (owner, 7 Nov 2026).
+        expect(p('100'), isNull);
+        expect(p('498.99'), isNull);
+        expect(p('499'), isNull);
+        expect(p('50000'), isNull);
+        expect(p('50001'), 'Prices go up to ₹50,000.');
+        expect(p('499', compare: '499'), 'The compare-at price must be higher than the price.');
+        expect(p('499', compare: '300'), 'The compare-at price must be higher than the price.');
+        expect(p('499', compare: '999'), startsWith('Discounts are capped at 50%'));
+        expect(p('499', compare: '998'), isNull, reason: 'half, to the paisa, is allowed');
+        expect(p('499', compare: 'lots'), 'Enter the strikethrough price in rupees, or leave it empty.');
+      },
+    );
 
     test('lengths, seats and titles carry the DTO\'s bounds', () {
       expect(minutesProblem('14'), 'A session runs 15 to 480 minutes.');
@@ -52,10 +62,10 @@ void main() {
       expect(minutesProblem('480'), isNull);
       expect(minutesProblem('481', what: 'A 1:1 call'), 'A 1:1 call runs 15 to 480 minutes.');
       expect(minutesProblem(''), 'A session runs 15 to 480 minutes.');
-      expect(seatsProblem('1'), 'Seats: a number from 2 to 500.');
+      expect(seatsProblem('1'), 'Enter seats as a number from 2 to 500.');
       expect(seatsProblem('500'), isNull);
-      expect(seatsProblem('501'), 'Seats: a number from 2 to 500.');
-      expect(serviceTitleProblem('abc'), 'Give it a title: at least 4 characters.');
+      expect(seatsProblem('501'), 'Enter seats as a number from 2 to 500.');
+      expect(serviceTitleProblem('abc'), 'Enter a title of at least 4 characters.');
       expect(serviceTitleProblem('abcd'), isNull);
       expect(serviceTitleProblem('x' * 121), 'Keep the title under 120 characters.');
       expect(blurbProblem('x' * 601, max: maxServiceBlurb), 'Keep the description under 600 characters.');
@@ -70,26 +80,29 @@ void main() {
       expect(p('500'), isNull);
       expect(p('500000'), isNull);
       expect(p('500001'), 'An ongoing plan is either free, or priced between ₹500 and ₹5,00,000 per term.');
-      expect(p('1000', compare: '1000'), 'The strikethrough price has to be higher than the price you are charging.');
+      expect(p('1000', compare: '1000'), 'The strikethrough price must be higher than the price you charge.');
       expect(p('1000', compare: '1500'), isNull, reason: 'an ongoing plan has no discount cap');
     });
 
-    test('a programme is free or ₹499 and up, and its strikethrough follows a session\'s rule', () {
-      String? p(String price, {bool free = false, String compare = ''}) =>
-          programmePriceProblem(free: free, price: price, compareAt: compare);
-      expect(p('498'), '1:1 mentoring is either free or priced at ₹499 or more.');
-      expect(p('499'), isNull);
-      expect(p('5999'), isNull);
-      expect(p('6000', compare: '6000'), 'The strikethrough price has to be higher than the price you are charging.');
-      expect(p('1000', compare: '2500'), 'A discount can be at most 50% off the strikethrough price.');
-      expect(p('1000', compare: '2000'), isNull);
-    });
+    test(
+      'a programme is free or priced (no floor of the app\'s own), and its strikethrough follows a session\'s rule',
+      () {
+        String? p(String price, {bool free = false, String compare = ''}) =>
+            programmePriceProblem(free: free, price: price, compareAt: compare);
+        expect(p('498'), isNull, reason: 'the ₹499 floor is the API\'s rule (owner, 7 Nov 2026)');
+        expect(p('499'), isNull);
+        expect(p('5999'), isNull);
+        expect(p('6000', compare: '6000'), 'The strikethrough price must be higher than the price you charge.');
+        expect(p('1000', compare: '2500'), 'A discount can be at most 50% off the strikethrough price.');
+        expect(p('1000', compare: '2000'), isNull);
+      },
+    );
 
     test('a syllabus is 2 to 24 sessions, each with a title and sane numbers', () {
-      expect(modulesProblem([ModuleDraft(title: 'One')]), 'A structured program runs between 2 and 24 sessions.');
+      expect(modulesProblem([ModuleDraft(title: 'One')]), 'A structured programme runs between 2 and 24 sessions.');
       expect(
         modulesProblem([ModuleDraft(title: 'One'), ModuleDraft(title: 'ab')]),
-        'Session 2: a title of at least 3 characters.',
+        'Session 2: enter a title of at least 3 characters.',
       );
       expect(
         modulesProblem([ModuleDraft(title: 'One'), ModuleDraft(title: 'Two', minutes: '5')]),
@@ -107,19 +120,16 @@ void main() {
       expect(inclusionsProblem(List.filled(9, 'x')), 'List up to 8 things the plan includes.');
       expect(inclusionsProblem(['x' * 81]), 'Keep each line under 80 characters.');
       expect(inclusionsProblem(['one', '', '  ', 'two']), isNull, reason: 'blank lines are dropped');
-      expect(planTitleProblem('ab'), 'Give it a title: at least 3 characters.');
+      expect(planTitleProblem('ab'), 'Enter a title of at least 3 characters.');
       expect(planTitleProblem('x' * 81), 'Keep the title under 80 characters.');
     });
 
     test('a group session needs a title, a place, days that do not overlap, seats, and seats for a price', () {
-      expect(groupTitleProblem('abcd'), 'Give it a title: at least 5 characters.');
+      expect(groupTitleProblem('abcd'), 'Enter a title of at least 5 characters.');
       expect(groupTitleProblem('abcde'), isNull);
       expect(groupPlaceProblem(inPerson: true, location: ' ', link: ''), 'Add the venue where people will meet.');
       expect(groupPlaceProblem(inPerson: true, location: 'Bengaluru', link: ''), isNull);
-      expect(
-        groupPlaceProblem(inPerson: false, location: '', link: ''),
-        'Add the joining link people will use to get in.',
-      );
+      expect(groupPlaceProblem(inPerson: false, location: '', link: ''), 'Add the joining link people will use.');
       expect(groupPlaceProblem(inPerson: false, location: '', link: '', standingLink: true), isNull);
       expect(
         groupPlaceProblem(inPerson: false, location: '', link: 'not a link'),
@@ -128,8 +138,8 @@ void main() {
       expect(groupPlaceProblem(inPerson: false, location: '', link: 'meet.google.com/abc'), isNull);
 
       final now = DateTime(2026, 10, 26, 10);
-      expect(daysProblem([], now), 'Give the session at least one day.');
-      expect(daysProblem([(DateTime(2026, 10, 26, 9), 60)], now), 'Pick a time in the future.');
+      expect(daysProblem([], now), 'Add at least one day to the session.');
+      expect(daysProblem([(DateTime(2026, 10, 26, 9), 60)], now), 'Select a time in the future.');
       expect(daysProblem([(DateTime(2026, 10, 27, 9), 10)], now), 'A day runs 15 to 480 minutes.');
       expect(
         daysProblem([(DateTime(2026, 10, 27, 9), 60), (DateTime(2026, 10, 27, 9, 30), 60)], now),
@@ -146,15 +156,16 @@ void main() {
       );
 
       expect(capacityProblem(''), isNull, reason: 'empty is no limit');
-      expect(capacityProblem('1'), startsWith('Seats: a number from 2 to 50'));
-      expect(capacityProblem('51'), startsWith('Seats: a number from 2 to 50'));
+      expect(capacityProblem('1'), startsWith('Enter seats as a number from 2 to 50'));
+      expect(capacityProblem('51'), startsWith('Enter seats as a number from 2 to 50'));
       expect(capacityProblem('50'), isNull);
       expect(seatPriceProblem(price: '', capacity: ''), isNull);
-      expect(seatPriceProblem(price: '100', capacity: '25'), 'Priced seats start at ₹499.');
+      expect(seatPriceProblem(price: '100', capacity: '25'), isNull, reason: 'no price floor');
+      expect(seatPriceProblem(price: '100', capacity: ''), 'A paid session needs a number of seats.');
       expect(seatPriceProblem(price: '499', capacity: ''), 'A paid session needs a number of seats.');
       expect(seatPriceProblem(price: '499', capacity: '25'), isNull);
       expect(seatPriceProblem(price: '50001', capacity: '25'), 'Prices go up to ₹50,000.');
-      expect(cancelReasonProblem('ab'), 'Write at least 3 characters.');
+      expect(cancelReasonProblem('ab'), 'Enter at least 3 characters.');
       expect(cancelReasonProblem('abc'), isNull);
     });
 
@@ -177,7 +188,7 @@ void main() {
         'A resource is a PDF or an image (PNG, JPG, WebP).',
       );
       expect(uploadProblem(pdfFile(name: 'noext'), imageOnly: false), isNotNull);
-      expect(uploadProblem(pdfFile(bytes: maxUploadBytes + 1), imageOnly: false), 'That file is over 10 MB.');
+      expect(uploadProblem(pdfFile(bytes: maxUploadBytes + 1), imageOnly: false), 'The file is larger than 10 MB.');
       expect(mimeOfName('a.JPG'), 'image/jpeg');
       expect(mimeOfName('a.zip'), isNull);
     });
@@ -274,7 +285,7 @@ void main() {
             billing: 3,
             access: 3,
             sessionMin: 60,
-            inclusions: ['Notes after every session'],
+            inclusions: ['Notes After Every Session'],
             modules: [
               moduleJson(1, 'Where you are', outline: 'Scope and gaps'),
               moduleJson(2, 'The business case'),
@@ -291,7 +302,7 @@ void main() {
       expect(plans[1].accessMonths, 3);
       expect(plans[1].steps.map((s) => s.title), ['Where you are', 'The business case']);
       expect(plans[1].steps.first.outline, 'Scope and gaps');
-      expect(plans[1].inclusions, ['Notes after every session']);
+      expect(plans[1].inclusions, ['Notes After Every Session']);
     });
 
     test('a hosted session: days, seats, price, and a roster with each person\'s question', () async {
@@ -354,16 +365,18 @@ void main() {
   });
 
   group('the storefront and its gates', () {
-    testWidgets('a live storefront reads as live, with what it holds', (tester) async {
+    testWidgets('a live storefront draws no storefront card: the three tabs stand alone (owner, 7 Nov 2026)', (
+      tester,
+    ) async {
       await pumpOfferings(tester, OfferingsWorld());
-      expect(find.text('Storefront'), findsOneWidget);
-      expect(find.text('Live'), findsWidgets);
-      expect(find.text('Not suspended'), findsOneWidget);
-      expect(find.text('Paid selling switched on'), findsOneWidget);
-      expect(find.text('Seller terms 2026.1 accepted'), findsOneWidget);
-      expect(find.text('2 of 10 service listings used'), findsOneWidget);
+      expect(find.text('Storefront'), findsNothing);
+      expect(find.text('Not suspended'), findsNothing);
+      expect(find.text('Seller Terms 2026.1 accepted'), findsNothing);
       expect(find.byKey(const ValueKey('accept-terms')), findsNothing);
       expect(find.byKey(const ValueKey('gate-reason')), findsNothing);
+      for (final tab in ['1:1 Mentoring', 'Group Mentoring', 'Resources']) {
+        expect(find.text(tab), findsWidgets, reason: tab);
+      }
     });
 
     testWidgets('when the seller terms are the one thing missing, the API\'s sentence shows and they can be accepted', (
@@ -372,15 +385,17 @@ void main() {
       final w = OfferingsWorld(optedIn: false, accepted: null, services: []);
       final changes = <String>[];
       final (api, rec) = await pumpOfferings(tester, w, changes: changes);
-      expect(find.text('Not open'), findsOneWidget);
+      // No Storefront card, pill or checklist (owner, 9 Nov 2026): the API's sentence and the terms alone.
+      expect(find.text('Not open'), findsNothing);
+      expect(find.text('Storefront'), findsNothing);
       expect(find.text('Accept the seller terms to open your storefront.'), findsOneWidget);
-      expect(find.text('Accept seller terms (2026.1)'), findsOneWidget);
+      expect(find.text('Accept Seller Terms (2026.1)'), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('accept-terms')));
       await tester.pumpAndSettle();
-      expect(find.text('Seller terms 2026.1'), findsOneWidget);
+      expect(find.text('Seller Terms 2026.1'), findsOneWidget);
       // The accept button waits for the tick.
-      await tester.tap(inDialog('Accept and open'), warnIfMissed: false);
+      await tester.tap(inDialog('Accept and Open'), warnIfMissed: false);
       await tester.pumpAndSettle();
       expect(
         api.count('POST /mentor-services/mine/terms'),
@@ -392,12 +407,12 @@ void main() {
       expect(rec.sites, ['/terms']);
       await tester.tap(find.byKey(const ValueKey('terms-read')));
       await tester.pump();
-      await tester.tap(inDialog('Accept and open'));
+      await tester.tap(inDialog('Accept and Open'));
       await settle(tester);
       expect(api.bodyOf('POST /mentor-services/mine/terms'), {'version': '2026.1'});
       expect(find.text('Your storefront is open.'), findsOneWidget);
       expect(find.byKey(const ValueKey('accept-terms')), findsNothing);
-      expect(find.text('Seller terms 2026.1 accepted'), findsOneWidget);
+      expect(find.text('Storefront'), findsNothing, reason: 'the card goes once the storefront is live');
       expect(changes, ['changed'], reason: 'the desk is told so its overview can read again');
     });
 
@@ -405,7 +420,7 @@ void main() {
       final (api, _) = await pumpOfferings(tester, OfferingsWorld(optedIn: false, accepted: null));
       await tester.tap(find.byKey(const ValueKey('accept-terms')));
       await tester.pumpAndSettle();
-      await tester.tap(inDialog('Not now'));
+      await tester.tap(inDialog('Not Now'));
       await tester.pumpAndSettle();
       expect(api.count('POST /mentor-services/mine/terms'), 0);
     });
@@ -423,11 +438,11 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('terms-read')));
       await tester.pump();
-      await tester.tap(inDialog('Accept and open'));
+      await tester.tap(inDialog('Accept and Open'));
       await settle(tester);
       expect(api.count('POST /mentor-services/mine/terms'), 1);
       expect(find.text('Only listed (approved) mentors can sell services.'), findsOneWidget);
-      expect(find.text('Not open'), findsOneWidget);
+      expect(find.text('Not open'), findsNothing);
     });
 
     testWidgets('a suspended storefront says so and offers no way round it', (tester) async {
@@ -444,11 +459,13 @@ void main() {
       expect(find.text('Accept the seller terms to open your storefront.'), findsWidgets);
       expect(find.byKey(const ValueKey('offering-title')), findsNothing, reason: 'no form opens');
       await tapKey(tester, 'add-programme');
-      await tapKey(tester, 'add-resource');
       await tapKey(tester, 'add-plan');
+      await openOfferingsTab(tester, 'Resources');
+      await tapKey(tester, 'add-resource');
       expect(api.count('POST /mentor-services/mine'), 0);
       expect(api.count('POST /mentor-plans'), 0);
       // A group session is hosted by approved mentors, free or not: its form opens.
+      await openOfferingsTab(tester, 'Group Mentoring');
       await tapKey(tester, 'add-group');
       expect(find.byKey(const ValueKey('group-title')), findsOneWidget);
     });
@@ -466,13 +483,13 @@ void main() {
               fail ? refuse('Create your mentor profile first.', status: 404) : w.storefront,
         },
       );
-      expect(find.text("Couldn't load your storefront"), findsOneWidget);
+      expect(find.text('Unable to Load Your Storefront'), findsOneWidget);
       expect(find.text('Create your mentor profile first.'), findsOneWidget);
-      expect(find.text('Ongoing plans'), findsOneWidget, reason: 'plans and sessions are their own reads');
+      expect(find.text('Ongoing Plans'), findsOneWidget, reason: 'plans and sessions are their own reads');
       expect(find.text('Monthly leadership coaching'), findsOneWidget);
       fail = false;
-      await tapText(tester, 'Try again');
-      expect(find.text("Couldn't load your storefront"), findsNothing);
+      await tapText(tester, 'Try Again');
+      expect(find.text('Unable to Load Your Storefront'), findsNothing);
       expect(find.text('Career clarity call'), findsOneWidget);
       expect(api.count('GET /mentor-services/mine'), 2);
     });
@@ -524,22 +541,24 @@ void main() {
         ],
       );
       await pumpOfferings(tester, w);
-      expect(find.text('1:1 mentoring'), findsOneWidget);
+      expect(find.text('1:1 Mentoring'), findsNWidgets(2), reason: 'the tab and the section');
       expect(find.text('Career clarity call'), findsOneWidget);
-      expect(find.text('1:1 session · Free'), findsOneWidget);
-      expect(find.text('1:1 session · ₹1,499 (was ₹1,999)'), findsOneWidget);
+      expect(find.text('1:1 Session · Free'), findsOneWidget);
+      expect(find.text('1:1 Session · ₹1,499 (was ₹1,999)'), findsOneWidget);
       expect(find.text('4 sales · 4.7 from 3 reviews'), findsOneWidget);
       expect(find.text('45 min'), findsOneWidget);
+      await openOfferingsTab(tester, 'Resources');
       expect(find.text('Resource · ₹499'), findsOneWidget);
       expect(find.text('bank.pdf'), findsOneWidget);
-      expect(find.text('Older listings'), findsOneWidget);
+      expect(find.text('Older Listings'), findsOneWidget);
       expect(find.text('An older seat'), findsOneWidget);
-      expect(find.text('Group seat · ₹299'), findsOneWidget);
+      expect(find.text('Group Seat · ₹299'), findsOneWidget);
       expect(find.text('1 hr · 12 seats'), findsOneWidget);
       expect(find.text('Written consultations are no longer sold.'), findsOneWidget);
       expect(find.text('Paused'), findsNWidgets(2));
       expect(inRow('service-svc-query', 'Resume'), findsNothing, reason: 'a retired type cannot be switched back on');
       expect(inRow('service-svc-query', 'Delete'), findsOneWidget);
+      await openOfferingsTab(tester, 'Group Mentoring');
       expect(find.byKey(const ValueKey('add-group')), findsOneWidget);
     });
 
@@ -550,29 +569,22 @@ void main() {
       final changes = <String>[];
       final (api, _) = await pumpOfferings(tester, w, changes: changes);
       expect(
-        find.text('Nothing listed yet. A session is booked in one go; a programme is a fixed run of sessions.'),
+        find.text('Nothing listed yet. A session is a single booking. A programme is a fixed series of sessions.'),
         findsOneWidget,
       );
       await tapKey(tester, 'add-session');
-      expect(find.text('Add a 1:1 session'), findsWidgets);
+      expect(find.text('Add a 1:1 Session'), findsWidgets);
 
       await submit(tester, 'Add');
-      expect(find.text('Give it a title: at least 4 characters.'), findsOneWidget);
+      expect(find.text('Enter a title of at least 4 characters.'), findsOneWidget);
       await typeKey(tester, 'offering-title', 'Career clarity call');
       await typeKey(tester, 'offering-blurb', 'A call to map where you are.');
       await submit(tester, 'Add');
-      expect(find.text('Enter the price in rupees, or switch on Free.'), findsOneWidget);
-      await typeKey(tester, 'offering-price', '300');
-      await submit(tester, 'Add');
-      expect(find.text('Priced services start at ₹499.'), findsOneWidget);
+      expect(find.text('Enter the price in rupees, or turn on Free.'), findsOneWidget);
+      // No ₹499 floor of the app's own (owner, 7 Nov 2026): the API answers for its rule.
       await typeKey(tester, 'offering-price', '1499');
-      await typeKey(tester, 'offering-compare', '1000');
-      await submit(tester, 'Add');
-      expect(find.text('The compare-at price must be higher than the price.'), findsOneWidget);
-      await typeKey(tester, 'offering-compare', '2999');
-      await submit(tester, 'Add');
-      expect(find.textContaining('Discounts are capped at 50%'), findsOneWidget);
-      await typeKey(tester, 'offering-compare', '1999');
+      // No strikethrough price field (owner, 9 Nov 2026).
+      expect(find.byKey(const ValueKey('offering-compare')), findsNothing);
       await typeKey(tester, 'offering-minutes', '10');
       await submit(tester, 'Add');
       expect(find.text('A 1:1 call runs 15 to 480 minutes.'), findsOneWidget);
@@ -584,12 +596,12 @@ void main() {
         'title': 'Career clarity call',
         'blurb': 'A call to map where you are.',
         'pricePaisa': 149900,
-        'compareAtPaisa': 199900,
+        'compareAtPaisa': null,
         'durationMin': 45,
         'active': true,
       });
       expect(find.text('Added.'), findsOneWidget);
-      expect(find.text('1:1 session · ₹1,499 (was ₹1,999)'), findsOneWidget);
+      expect(find.text('1:1 Session · ₹1,499'), findsOneWidget);
       expect(changes, ['changed']);
     });
 
@@ -604,7 +616,7 @@ void main() {
       expect(body['pricePaisa'], 0);
       expect(body['compareAtPaisa'], isNull);
       expect(body['durationMin'], 30);
-      expect(find.text('1:1 session · Free'), findsOneWidget);
+      expect(find.text('1:1 Session · Free'), findsOneWidget);
     });
 
     testWidgets('a refusal keeps the form open with what was typed, and the API\'s sentence', (tester) async {
@@ -632,6 +644,7 @@ void main() {
           OfferingsWorld(services: []),
           pickFile: ({required bool imageOnly}) async => next,
         );
+        await openOfferingsTab(tester, 'Resources');
         await tapKey(tester, 'add-resource');
         await typeKey(tester, 'offering-title', 'Interview question bank');
         await tapKey(tester, 'offering-free');
@@ -661,21 +674,8 @@ void main() {
       },
     );
 
-    testWidgets('a resource saved paused needs no file yet', (tester) async {
-      final (api, _) = await pumpOfferings(tester, OfferingsWorld(services: []));
-      await tapKey(tester, 'add-resource');
-      await typeKey(tester, 'offering-title', 'Interview question bank');
-      await tapKey(tester, 'offering-free');
-      await tapKey(tester, 'offering-active');
-      await submit(tester, 'Add');
-      expect((api.bodyOf('POST /mentor-services/mine') as Map)['active'], isFalse);
-      expect(
-        find.text('Upload the file before publishing a resource.'),
-        findsOneWidget,
-        reason: 'the row says why it cannot go live',
-      );
-      expect(inRow('service-new-1', 'Resume'), findsNothing);
-    });
+    // "A resource saved paused needs no file yet" went with the form's Live switch (owner, 7 Nov 2026): a new
+    // listing goes live, and is paused from its row once posted.
 
     testWidgets('a refused upload says why and the form keeps going', (tester) async {
       final (api, _) = await pumpOfferings(
@@ -683,6 +683,7 @@ void main() {
         OfferingsWorld(services: []),
         extra: {'POST /uploads': (_) => refuse('application/zip is not an accepted file type for this upload.')},
       );
+      await openOfferingsTab(tester, 'Resources');
       await tapKey(tester, 'add-resource');
       await tapKey(tester, 'offering-file');
       expect(api.count('POST /uploads'), 1);
@@ -714,23 +715,23 @@ void main() {
       final w = OfferingsWorld();
       final (api, _) = await pumpOfferings(tester, w);
       await tapIn(tester, 'service-svc-strategy', 'Edit');
-      expect(find.text('Edit 1:1 session'), findsOneWidget);
+      expect(find.text('Edit 1:1 Session'), findsOneWidget);
       expect(
         tester.widget<TextField>(find.byKey(const ValueKey('offering-title'))).controller!.text,
         'Strategy session',
       );
       expect(tester.widget<TextField>(find.byKey(const ValueKey('offering-price'))).controller!.text, '1499');
-      expect(tester.widget<TextField>(find.byKey(const ValueKey('offering-compare'))).controller!.text, '1999');
+      expect(find.byKey(const ValueKey('offering-compare')), findsNothing, reason: 'no strikethrough field');
       expect(tester.widget<TextField>(find.byKey(const ValueKey('offering-minutes'))).controller!.text, '45');
       await typeKey(tester, 'offering-title', 'Facilities strategy session');
-      await typeKey(tester, 'offering-compare', '');
       await submit(tester, 'Save');
+      // The strikethrough the listing already carries is kept as it is.
       expect(api.bodyOf('PATCH /mentor-services/mine/svc-strategy'), {
         'type': 'ONE_ON_ONE',
         'title': 'Facilities strategy session',
         'blurb': 'A call to map where you are.',
         'pricePaisa': 149900,
-        'compareAtPaisa': null,
+        'compareAtPaisa': 199900,
         'durationMin': 45,
         'active': true,
       });
@@ -794,9 +795,10 @@ void main() {
           'PATCH /mentor-services/mine/svc-resource': (_) => refuse('Upload the file before publishing a resource.'),
         },
       );
+      await openOfferingsTab(tester, 'Resources');
       await tapIn(tester, 'service-svc-resource', 'Resume');
       expect(api.count('PATCH /mentor-services/mine/svc-resource'), 1);
-      expect(find.text('Edit resource'), findsOneWidget, reason: 'the form opens so the file can be chosen again');
+      expect(find.text('Edit Resource'), findsOneWidget, reason: 'the form opens so the file can be chosen again');
       expect(find.text('Upload the file before publishing a resource.'), findsWidgets);
     });
 
@@ -804,7 +806,7 @@ void main() {
       final (api, _) = await pumpOfferings(tester, OfferingsWorld());
       await tapIn(tester, 'service-svc-discovery', 'Delete');
       expect(find.text('Delete "Career clarity call"?'), findsOneWidget);
-      await tester.tap(inDialog('Keep it'));
+      await tester.tap(inDialog('Keep It'));
       await tester.pumpAndSettle();
       expect(api.count('DELETE /mentor-services/mine/svc-discovery'), 0);
       await tapIn(tester, 'service-svc-discovery', 'Delete');
@@ -813,7 +815,6 @@ void main() {
       expect(api.count('DELETE /mentor-services/mine/svc-discovery'), 1);
       expect(find.text('Deleted.'), findsOneWidget);
       expect(find.text('Career clarity call'), findsNothing);
-      expect(find.text('1 of 10 service listings used'), findsOneWidget);
     });
 
     testWidgets('an older group seat keeps its seats field and cannot be created new', (tester) async {
@@ -823,12 +824,13 @@ void main() {
         ],
       );
       final (api, _) = await pumpOfferings(tester, w);
+      await openOfferingsTab(tester, 'Resources');
       await tapIn(tester, 'service-svc-seat', 'Edit');
-      expect(find.text('Edit group seat'), findsOneWidget);
+      expect(find.text('Edit Group Seat'), findsOneWidget);
       expect(tester.widget<TextField>(find.byKey(const ValueKey('offering-seats'))).controller!.text, '12');
       await typeKey(tester, 'offering-seats', '1');
       await submit(tester, 'Save');
-      expect(find.text('Seats: a number from 2 to 500.'), findsOneWidget);
+      expect(find.text('Enter seats as a number from 2 to 500.'), findsOneWidget);
       await typeKey(tester, 'offering-seats', '20');
       await submit(tester, 'Save');
       final body = api.bodyOf('PATCH /mentor-services/mine/svc-seat') as Map;

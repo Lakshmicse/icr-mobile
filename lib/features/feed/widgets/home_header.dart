@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/util/app_actions.dart';
 import '../../../core/widgets/workspace_embed.dart';
 import '../../notifications/notifications_bell.dart';
+import '../../notifications/unread_counts.dart';
 import '../feed_models.dart';
 import '../feed_styles.dart';
 import 'feed_avatar.dart';
@@ -98,12 +99,16 @@ class HomeHeader extends StatelessWidget {
             dot: messagesUnread(context) > 0,
             onTap: onMessages ?? () => AppActions.openMessages?.call(context),
           ),
-          _HeaderButton(
-            key: const ValueKey('home-bell'),
-            label: unread > 0 ? 'Notifications, $unread unread' : 'Notifications',
-            icon: LucideIcons.bell,
-            dot: unread > 0,
-            onTap: onBellTap,
+          // The app's live count, not the one the feed read when it loaded: the dot goes once everything is read.
+          LiveUnread(
+            fallback: unread,
+            builder: (context, unread) => _HeaderButton(
+              key: const ValueKey('home-bell'),
+              label: unread > 0 ? 'Notifications, $unread unread' : 'Notifications',
+              icon: LucideIcons.bell,
+              dot: unread > 0,
+              onTap: onBellTap,
+            ),
           ),
           const SizedBox(width: 2),
         ],

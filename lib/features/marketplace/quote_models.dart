@@ -111,7 +111,7 @@ class QuoteSent {
 /// Why a typed quantity is refused (the API's rule: a whole number, one to a million), or null.
 String? quantityIssue(String raw) {
   final text = raw.trim();
-  if (text.isEmpty) return 'Enter how many you need.';
+  if (text.isEmpty) return 'Enter the quantity you need.';
   if (!RegExp(r'^\d+$').hasMatch(text)) return 'Enter a whole number.';
   final n = int.parse(text);
   if (n < 1 || n > QuoteLimits.maxQuantity) return 'Enter a number from 1 to ${_grouped(QuoteLimits.maxQuantity)}.';
@@ -131,7 +131,7 @@ String _grouped(int n) {
 /// Why a typed mobile number is refused before it is sent (at least eight digits); the API judges the rest.
 String? mobileIssue(String raw) {
   final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
-  if (raw.trim().isEmpty) return 'Add a mobile number so the supplier can reach you.';
+  if (raw.trim().isEmpty) return 'Add a mobile number so the supplier can contact you.';
   if (digits.length < 8) return 'Enter a valid mobile number, with its country code if it is not Indian.';
   return null;
 }

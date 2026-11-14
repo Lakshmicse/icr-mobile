@@ -7,7 +7,7 @@ import '../phone/phone_field.dart';
 import '../profile/profile_controller.dart';
 import '../widgets/account_kit.dart';
 
-/// Contact info: the work email, a second number and the five links, saved
+/// Contact Information: the work email, a second number and the five links, saved
 /// together the way the website's Contact info dialog does. The sign-in email
 /// and the main mobile number are not here: the email is the login, and the
 /// number is confirmed in its own sheet. True when something was saved.
@@ -77,7 +77,8 @@ class _ContactSheetState extends State<ContactSheet> {
       _error = null;
     });
     try {
-      final linksChanged = _links != null && _link.entries.any((e) => normalizeLink(e.value.text) != (_links.toMap()[e.key] ?? ''));
+      final linksChanged =
+          _links != null && _link.entries.any((e) => normalizeLink(e.value.text) != (_links.toMap()[e.key] ?? ''));
       await widget.controller.saveContact(
         workEmail: _workEmail.text,
         altPhone: _altPhone,
@@ -97,7 +98,7 @@ class _ContactSheetState extends State<ContactSheet> {
     final lp = _linkProblems;
     final showAll = _tried;
     return EditSheet(
-      title: 'Contact info',
+      title: 'Contact Information',
       saving: _saving,
       error: _error,
       dirty: _snapshot() != _initial,
@@ -108,11 +109,11 @@ class _ContactSheetState extends State<ContactSheet> {
           label: 'Email',
           controller: _email,
           enabled: false,
-          helper: 'Your sign-in. Contact support to change it.',
+          helper: 'Your sign-in email. Contact support to change it.',
         ),
         AccountField(
           fieldKey: const Key('contact.workEmail'),
-          label: 'Work email',
+          label: 'Work Email',
           controller: _workEmail,
           keyboardType: TextInputType.emailAddress,
           textCapitalization: TextCapitalization.none,
@@ -124,10 +125,10 @@ class _ContactSheetState extends State<ContactSheet> {
         AccountPhoneField(
           fieldKey: const Key('contact.altPhone'),
           countryKey: const Key('contact.altPhone.country'),
-          label: 'Alternative contact number',
+          label: 'Alternate Mobile Number',
           value: _altPhone,
           error: _altProblem,
-          helper: 'Optional. A second number; your main one is confirmed separately.',
+          helper: 'Optional. A second number. Your main number is verified separately.',
           onChanged: (v) => setState(() => _altPhone = v),
         ),
         const Divider(height: 24, color: Color(0xFFF1F5F9)),

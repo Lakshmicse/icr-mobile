@@ -34,6 +34,7 @@ class OfflineFeed implements FeedRepository {
     topicTone: p.topicTone,
     tags: p.tags,
     images: [for (final i in p.images) ?_offline(i)],
+    videos: p.videos,
     imageCaption: p.imageCaption,
     morePhotos: p.morePhotos,
     reactions: p.reactions,
@@ -80,6 +81,12 @@ class OfflineFeed implements FeedRepository {
   Future<FeedPage> load(FeedFilter filter, {int page = 1, String? search, String? tag}) async {
     final loaded = await inner.load(filter, page: page, search: search, tag: tag);
     return FeedPage(posts: loaded.posts.map(_post).toList(), hasMore: loaded.hasMore);
+  }
+
+  @override
+  Future<FeedPost?> quoted(String slug) async {
+    final p = await inner.quoted(slug);
+    return p == null ? null : _post(p);
   }
 
   @override

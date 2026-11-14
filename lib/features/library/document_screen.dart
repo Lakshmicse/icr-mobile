@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
+import '../../core/widgets/title_bar.dart' show BarEditButton;
 import '../chapters/community_kit.dart';
 import 'document_controller.dart';
 import 'library_format.dart';
@@ -121,7 +122,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
     if (!mounted) return;
     final bytes = out.file;
     if (bytes == null) {
-      if (!out.locked) showMessage(context, out.error ?? 'Could not open that file.');
+      if (!out.locked) showMessage(context, out.error ?? 'Unable to open this file.');
       return;
     }
     await Navigator.of(context).push(
@@ -143,7 +144,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
   Future<DocumentBytes?> _fetch(DocumentController c, LibraryFile file) async {
     final out = await c.download(file);
     if (!mounted) return null;
-    if (out.file == null && !out.locked) showMessage(context, out.error ?? 'Could not download that file.');
+    if (out.file == null && !out.locked) showMessage(context, out.error ?? 'Unable to download this file.');
     return out.file;
   }
 
@@ -176,13 +177,78 @@ class _DocumentScreenState extends State<DocumentScreen> {
     );
   }
 
+  // The Edit sheet's fields, kept for the screen's life: disposing them as the sheet closed met its exit animation.
+  final _editTitle = TextEditingController();
+  final _editDescription = TextEditingController();
+
+  @override
+  void dispose() {
+    _editTitle.dispose();
+    _editDescription.dispose();
+    super.dispose();
+  }
+
+  /// The uploader's Edit: a sheet with the title and the description, saved through `PATCH /documents/:id`
+  /// (the owner's document, 12 Nov 2026: My Uploads is "to edit, delete the documents he has uploaded").
+  Future<void> _edit(DocumentController c) async {
+    final d = c.document;
+    if (d == null) return;
+    final title = _editTitle..text = d.title;
+    final description = _editDescription..text = d.description ?? '';
+    final save = await showCommunitySheet<bool>(
+      context,
+      title: 'Edit Document',
+      body: (sheet, setState) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              key: const ValueKey('edit-title'),
+              controller: title,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(labelText: 'Title'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              key: const ValueKey('edit-description'),
+              controller: description,
+              minLines: 2,
+              maxLines: 5,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                hintText: 'Describe the document and who it is for.',
+              ),
+            ),
+          ],
+        ),
+      ),
+      footer: (sheet) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: CommunityButton(label: 'Save', onPressed: () => Navigator.of(sheet).pop(true)),
+      ),
+    );
+    final newTitle = title.text.trim();
+    final newDescription = description.text.trim();
+    if (save != true || !mounted) return;
+    if (newTitle.isEmpty) return showMessage(context, 'Enter a title.');
+    final problem = await c.update(
+      title: newTitle == d.title ? null : newTitle,
+      description: newDescription == (d.description ?? '') ? null : newDescription,
+    );
+    if (!mounted) return;
+    showMessage(context, problem ?? 'Saved.');
+  }
+
   Future<void> _delete(DocumentController c) async {
     final d = c.document;
     if (d == null) return;
     final sure = await confirmDialog(
       context,
       title: 'Delete “${d.title}”?',
-      body: 'It leaves the library for everyone, and its ${filesLabel(d.fileCount)} with it. This cannot be undone.',
+      body:
+          'It will be removed from the library for everyone, with its ${filesLabel(d.fileCount)}. This cannot be undone.',
       action: 'Delete',
     );
     if (!sure || !mounted) return;
@@ -200,7 +266,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
     final sure = await confirmDialog(
       context,
       title: 'Remove ${file.fileName}?',
-      body: 'The rest of the document stays.',
+      body: 'The rest of the document will remain.',
       action: 'Remove',
     );
     if (!sure || !mounted) return;
@@ -226,6 +292,8 @@ class _DocumentScreenState extends State<DocumentScreen> {
       title: 'Document',
       onBack: widget.onBack,
       onBell: _bell,
+      // The uploader's pencil, left of the bell (owner, 12 Nov 2026).
+      actions: [if (c.mayChange && c.document != null) BarEditButton(onTap: () => _edit(c))],
       onRefresh: c.refresh,
       children: _body(c),
     );
@@ -238,9 +306,9 @@ class _DocumentScreenState extends State<DocumentScreen> {
       return [
         CommunityNotice(
           icon: LucideIcons.fileX,
-          title: "Couldn't load this document",
+          title: 'Unable to Load This Document',
           body: c.error ?? 'Something went wrong.',
-          action: 'Try again',
+          action: 'Try Again',
           onAction: c.refresh,
         ),
       ];
@@ -300,12 +368,12 @@ class _DocumentScreenState extends State<DocumentScreen> {
       const SizedBox(height: 14),
       const Divider(height: 1, thickness: 1, color: CommunityColors.tileRule),
       const SizedBox(height: 14),
-      const CommunitySectionHeading(title: 'About this document'),
+      const CommunitySectionHeading(title: 'About This Document'),
       const SizedBox(height: 8),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Text(
-          d.description ?? 'The person who shared this did not add a description.',
+          d.description ?? 'No description added.',
           style: d.description == null ? CommunityText.small : CommunityText.body,
         ),
       ),
@@ -332,7 +400,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
           child: CommunityButton(
-            label: 'Add files',
+            label: 'Add Files',
             icon: LucideIcons.filePlus,
             outlined: true,
             expand: true,
@@ -466,14 +534,14 @@ class _LockCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Not included in your plan',
+                  'Not Included in Your Plan',
                   style: CommunityText.cardTitle.copyWith(color: CommunityColors.amber700),
                 ),
                 const SizedBox(height: 3),
                 Text(message, style: CommunityText.body),
                 if (onPlans != null) ...[
                   const SizedBox(height: 8),
-                  CommunityButton(label: 'See plans', height: 32, onPressed: onPlans),
+                  CommunityButton(label: 'View Plans', height: 32, onPressed: onPlans),
                 ],
               ],
             ),
@@ -547,7 +615,7 @@ class _FileRow extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    "${f.fileType.label} files can't be previewed in the app. Download it to read it.",
+                    "${f.fileType.label} files can't be previewed in the app. Download the file to read it.",
                     style: CommunityText.small,
                   ),
                 ),

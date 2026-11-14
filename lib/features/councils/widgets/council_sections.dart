@@ -38,12 +38,12 @@ class CouncilOverviewSection extends StatelessWidget {
           const SizedBox(height: 14),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text('Industries covered', style: CommunityText.personName),
+            child: Text('Industries Covered', style: CommunityText.personName),
           ),
           const SizedBox(height: 2),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text('The sectors and specialisations this council represents', style: CommunityText.personLine),
+            child: Text('The sectors and specialisations this council represents.', style: CommunityText.personLine),
           ),
           const SizedBox(height: 8),
           Padding(
@@ -140,7 +140,7 @@ class CouncilEventsSection extends StatelessWidget {
             child: SectionEmpty(
               past
                   ? 'No past events. Past sessions will appear here.'
-                  : 'No upcoming events. Check back soon: sessions are planned regularly.',
+                  : 'No upcoming events. Sessions are planned regularly. Check back soon.',
             ),
           )
         else
@@ -286,7 +286,7 @@ class _CouncilMembersSectionState extends State<CouncilMembersSection> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
               child: CommunityButton(
-                label: 'Show more members',
+                label: 'View More',
                 outlined: true,
                 expand: true,
                 height: 36,

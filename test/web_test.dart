@@ -315,6 +315,19 @@ void main() {
         // The supplier's side of the requirements board (the website's Find Work & Bid) and its tabs.
         'https://icr.org.in/manage/bids',
         'https://icr.org.in/manage/bids?tab=submitted',
+        // The pages built from the website on 12 Nov 2026: the company workspace and its tabs (and the old
+        // verification page it replaced), the catalogue, talent search, sourcing projects, the partner console.
+        'https://icr.org.in/company',
+        'https://icr.org.in/company?tab=verification',
+        'https://icr.org.in/manage/verification',
+        'https://icr.org.in/manage/products',
+        'https://icr.org.in/manage/services',
+        'https://icr.org.in/talent',
+        'https://icr.org.in/manage/projects',
+        'https://icr.org.in/manage/projects/p1',
+        'https://icr.org.in/admin/learning/courses',
+        'https://icr.org.in/admin/learning/batches?course=c1',
+        'https://icr.org.in/admin/learning/enrolments',
       ]) {
         expect(takes(url), isTrue, reason: url);
       }
@@ -362,11 +375,9 @@ void main() {
 
     test('what is left for the web view is what the app has no screen for, each on purpose', () {
       for (final url in [
-        // The company workspace: the KYC dossier with its document uploads, and the office admin.
-        'https://icr.org.in/company',
-        'https://icr.org.in/company?tab=verification',
+        // The company workspace (`/company`) and talent search (`/talent`) are the app's own since 12 Nov 2026; member
+        // articles are still the website's.
         'https://icr.org.in/manage/articles',
-        'https://icr.org.in/talent',
         // An emailed team invitation is accepted by its token on the website.
         'https://icr.org.in/invite/some-token',
         'https://icr.org.in/events/rsm-summit-2026/extra',
@@ -602,7 +613,7 @@ void main() {
       await pump(tester, launchOk: false);
       await request('https://www.payu.in/_payment');
       await tester.pumpAndSettle();
-      expect(find.textContaining("Couldn't open www.payu.in"), findsOneWidget);
+      expect(find.textContaining('Unable to open www.payu.in'), findsOneWidget);
     });
 
     testWidgets('the page names itself in the bar when it has loaded', (tester) async {
@@ -732,7 +743,7 @@ void main() {
         WebResourceError(errorCode: -2, description: 'net::ERR_INTERNET_DISCONNECTED', isForMainFrame: true),
       );
       await tester.pump();
-      expect(find.text("This page didn't load."), findsOneWidget);
+      expect(find.text('Unable to Load This Page'), findsOneWidget);
       await tester.tap(find.byKey(const Key('web.retry')));
       expect(web.reloaded, 1);
     });

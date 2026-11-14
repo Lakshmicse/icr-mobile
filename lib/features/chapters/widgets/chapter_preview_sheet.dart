@@ -120,9 +120,9 @@ class _ChapterPreviewSheetState extends State<ChapterPreviewSheet> {
       if (_loading) return const CommunityLoading(height: 280);
       return CommunityNotice(
         icon: LucideIcons.cloudOff,
-        title: "Couldn't load this chapter",
+        title: 'Unable to Load This Chapter',
         body: _error ?? 'Something went wrong.',
-        action: 'Try again',
+        action: 'Try Again',
         onAction: _read,
         padding: const EdgeInsets.fromLTRB(32, 16, 32, 32),
       );
@@ -212,10 +212,10 @@ class _ChapterPreviewSheetState extends State<ChapterPreviewSheet> {
                       for (final p in detail.leads.take(3)) PersonRow(person: p),
                     ],
                     const SizedBox(height: 10),
-                    const CommunitySectionHeading(title: 'Upcoming events'),
+                    const CommunitySectionHeading(title: 'Upcoming Events'),
                     const SizedBox(height: 2),
                     if (detail.upcomingEvents.isEmpty)
-                      const SectionEmpty('Nothing scheduled yet. Check back soon.')
+                      const SectionEmpty('No events scheduled yet. Check back soon.')
                     else
                       for (final (i, e) in detail.upcomingEvents.take(3).indexed) ...[
                         if (i > 0)
@@ -242,7 +242,7 @@ class _ChapterPreviewSheetState extends State<ChapterPreviewSheet> {
                         ? Row(
                             children: [
                               CommunityPill(
-                                label: c.role == ChapterRole.lead ? 'Chapter lead' : 'Joined',
+                                label: c.role == ChapterRole.lead ? 'Chapter Lead' : 'Joined',
                                 icon: LucideIcons.check,
                                 fill: CommunityColors.green50,
                                 style: CommunityText.pill.copyWith(color: CommunityColors.green700),
@@ -290,7 +290,7 @@ class _ChapterPreviewSheetState extends State<ChapterPreviewSheet> {
                   ),
                   const SizedBox(width: 6),
                   CommunityButton(
-                    label: 'View full details',
+                    label: 'View Full Details',
                     icon: LucideIcons.arrowRight,
                     outlined: true,
                     height: 36,

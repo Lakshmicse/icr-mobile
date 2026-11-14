@@ -119,7 +119,7 @@ void main() {
       await settle(tester, 14);
       expect(find.byKey(const ValueKey('services-loading')), findsOneWidget);
       expect(
-        find.text('The list of services could not load.'),
+        find.text('Unable to load the list of services.'),
         findsNothing,
         reason: 'it has not failed, it is on its way',
       );
@@ -127,8 +127,8 @@ void main() {
       repo.categoryGate!.completeError(ApiError('The server said no.', statusCode: 500));
       await settle(tester, 14);
       expect(find.byKey(const ValueKey('services-loading')), findsNothing);
-      expect(find.text('The list of services could not load.'), findsOneWidget);
-      expect(find.text('Try again'), findsOneWidget);
+      expect(find.text('Unable to load the list of services.'), findsOneWidget);
+      expect(find.text('Try Again'), findsOneWidget);
     });
 
     testWidgets('arrives, and the picker replaces the sentence', (tester) async {
@@ -173,8 +173,8 @@ void main() {
         await settle(tester, 16);
         expect(find.byKey(const ValueKey('role-cannot-post')), findsOneWidget, reason: entry.key);
         expect(find.textContaining(entry.value), findsOneWidget, reason: entry.key);
-        expect(find.text('Create a company page'), findsNothing, reason: entry.key);
-        expect(find.text('Requirements are posted by buyers and companies'), findsNothing, reason: entry.key);
+        expect(find.text('Create a Company Page'), findsNothing, reason: entry.key);
+        expect(find.text('Requirements Are Posted by Buyers and Companies'), findsNothing, reason: entry.key);
       }
     });
 
@@ -183,8 +183,8 @@ void main() {
       await pumpScreen(tester, MyRfqsScreen(key: UniqueKey(), repository: repo, links: RecordingRfqLinks()));
       await settle(tester, 16);
       expect(find.byKey(const ValueKey('role-cannot-post')), findsNothing);
-      expect(find.text('Requirements are posted by buyers and companies'), findsOneWidget);
-      expect(find.text('Create a company page'), findsOneWidget);
+      expect(find.text('Requirements Are Posted by Buyers and Companies'), findsOneWidget);
+      expect(find.text('Create a Company Page'), findsOneWidget);
     });
 
     testWidgets('the composer says so before the form, and draws no Send', (tester) async {

@@ -6,11 +6,11 @@ library;
 
 enum ChecklistItemId {
   scope('Scope of work', 'What the service includes'),
-  size('Size or quantity', 'Area, headcount, units'),
-  frequency('Frequency', 'Daily, weekly, one-off'),
-  start('Start date', 'When the service should begin'),
-  hours('Working hours', 'Shifts, days, timings'),
-  sites('Number of sites', 'One site or several');
+  size('Area / quantity', 'Area, headcount, units'),
+  frequency('Service frequency', 'Daily, weekly, one-off'),
+  start('Expected start date', 'When the service should begin'),
+  hours('Operating hours', 'Shifts, days, timings'),
+  sites('Number of locations', 'One site or several');
 
   const ChecklistItemId(this.label, this.hint);
 
@@ -51,7 +51,7 @@ final _rules = <ChecklistItemId, RegExp>{
   ),
 };
 
-/// A prompt line [withPromptLine] added and the buyer has not answered yet ("Start date: "). Its label would
+/// A prompt line [withPromptLine] added and the buyer has not answered yet ("Expected start date: "). Its label would
 /// otherwise tick its own item.
 final _unansweredPrompt = RegExp(r'^[^\n:]{1,60}:[ \t]*$', multiLine: true);
 
@@ -72,7 +72,7 @@ String withPromptLine(String text, String label) {
 final _labelOnly = RegExp(r'^[^\n:]{1,60}:[ \t]*$');
 final _labelled = RegExp(r'^[^\n:]{1,60}:');
 
-/// The text without the prompt lines nobody answered ("Frequency:" with nothing after it). A label-only line
+/// The text without the prompt lines nobody answered ("Service frequency:" with nothing after it). A label-only line
 /// still introduces content when the line below it is not another label ("Scope of work:" over a list), so only
 /// one followed by nothing, a blank line or another label goes. Used before a requirement is sent.
 String withoutEmptyPrompts(String text) {

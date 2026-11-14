@@ -266,7 +266,7 @@ class ApiMentorshipRepository implements MentorshipRepository {
     return MentorCohort(
       id: json['id'] as String,
       slug: slug,
-      name: json['name'] as String? ?? 'Cohort programme',
+      name: json['name'] as String? ?? 'Cohort Programme',
       registeredLabel: '$count Registered',
       // The API does not say who registered: the organiser's circle, then one
       // for everyone else ("+31").

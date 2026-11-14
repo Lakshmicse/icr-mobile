@@ -102,12 +102,12 @@ const learningSection = WorkspaceSection(
   items: [
     WorkspaceItem('Learning', Icons.menu_book_outlined, '/learning'),
     // The hub with its "My courses" chip on: what the member holds a place on or opened.
-    WorkspaceItem('My courses', Icons.school_outlined, '/learning?mine=1'),
-    WorkspaceItem('My attempts', Icons.history, '/learning/attempts'),
+    WorkspaceItem('My Courses', Icons.school_outlined, '/learning?mine=1'),
+    WorkspaceItem('My Attempts', Icons.history, '/learning/attempts'),
     WorkspaceItem('Certificates & Badges', Icons.workspace_premium_outlined, '/learning/certificates'),
     WorkspaceItem('Assess your knowledge', Icons.quiz_outlined, '/learning/assessment'),
     WorkspaceItem('Mock exams', Icons.assignment_outlined, '/learning/mock-tests'),
-    WorkspaceItem('Flash cards', Icons.style_outlined, '/learning/flash-cards'),
+    WorkspaceItem('Flashcards', Icons.style_outlined, '/learning/flash-cards'),
     WorkspaceItem('Knowledge Center', Icons.functions, '/learning/formulas'),
   ],
 );

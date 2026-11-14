@@ -79,8 +79,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text("This page couldn't be read."), findsOneWidget);
-      await tester.tap(find.text('Try again'));
+      expect(find.text("Unable to load this page."), findsOneWidget);
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('legal.body')), findsOneWidget);
       expect(tries, 2);
@@ -165,7 +165,7 @@ void main() {
       await pump(tester, BlogPostScreen(slug: 'nope', repository: repo));
       await tester.pumpAndSettle();
       expect(find.text('Post not found'), findsOneWidget);
-      expect(find.text('Try again'), findsOneWidget);
+      expect(find.text('Try Again'), findsOneWidget);
     });
   });
 
@@ -214,14 +214,14 @@ void main() {
         await tester.pump();
         expect(copied, 'Y9QTMANV');
 
-        await tester.tap(find.text('Share invitation'));
+        await tester.tap(find.text('Share Invitation'));
         expect(shared.single, 'Bharat Buyer is inviting you to join ICR');
       },
     );
   });
 
   group('Advertise (/advertise)', () {
-    testWidgets('describes both placements with the person\'s own price and opens the contact form for "Talk to us"', (
+    testWidgets('describes both placements with the person\'s own price and opens the contact form for "Talk to Us"', (
       tester,
     ) async {
       String? subject;
@@ -233,26 +233,26 @@ void main() {
               offers: const [
                 PlacementOffer(
                   sku: 'DIRECTORY',
-                  title: 'Featured in Supplier Mart',
+                  title: 'Featured in Marketplace',
                   body: 'Ahead of other suppliers.',
                   monthlyPaisa: 200000,
                 ),
-                PlacementOffer(sku: 'HERO', title: 'Homepage hero', body: 'A banner in the hero.'),
+                PlacementOffer(sku: 'HERO', title: 'Homepage Hero', body: 'A banner in the hero.'),
               ],
-              mine: [MyPlacement(label: 'Featured in Supplier Mart', status: 'ACTIVE', endsAt: DateTime(2026, 12, 1))],
+              mine: [MyPlacement(label: 'Featured in Marketplace', status: 'ACTIVE', endsAt: DateTime(2026, 12, 1))],
             ),
           ),
           onTalk: (s) => subject = s,
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Featured in Supplier Mart'), findsWidgets);
+      expect(find.text('Featured in Marketplace'), findsWidgets);
       expect(find.textContaining('₹2,000', findRichText: true), findsOneWidget);
-      expect(find.textContaining('a month + GST', findRichText: true), findsOneWidget);
-      expect(find.text('Homepage hero'), findsOneWidget);
+      expect(find.textContaining('per month + GST', findRichText: true), findsOneWidget);
+      expect(find.text('Homepage Hero'), findsOneWidget);
       expect(find.textContaining('ACTIVE'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('talk:HERO')));
-      expect(subject, 'Advertise: Homepage hero');
+      expect(subject, 'Advertise: Homepage Hero');
     });
   });
 
@@ -272,12 +272,12 @@ void main() {
       await pump(tester, PartnerApplyScreen(repository: repo));
       await tester.pumpAndSettle();
       // The website's dialog: its title and introduction, the company to apply as, and one optional box.
-      expect(find.text('Apply to become a learning partner'), findsOneWidget);
+      expect(find.text('Apply to Become a Learning Partner'), findsOneWidget);
       expect(find.textContaining('Partners apply as a company.'), findsOneWidget);
-      expect(find.text('Apply as'), findsOneWidget);
+      expect(find.text('Apply As'), findsOneWidget);
       expect(find.text('Northwind Facilities'), findsOneWidget);
       expect(find.text('Only companies you are an admin of are listed.'), findsOneWidget);
-      expect(find.text('What courses would you like to offer? (optional)'), findsOneWidget);
+      expect(find.text('What courses would you like to offer? (Optional)'), findsOneWidget);
       expect(find.text('Subjects, accreditations, the courses you run today…'), findsOneWidget);
       expect(
         find.byType(TextField),
@@ -288,10 +288,10 @@ void main() {
       await tapKey(tester, const Key('partner.send'));
       expect(repo.sent.single, {'companyId': 'c1', 'proposalNotes': 'Weekend batches for site engineers'});
       // The sent state, in the website's words.
-      expect(find.text('Application sent'), findsOneWidget);
+      expect(find.text('Application Sent'), findsOneWidget);
       expect(find.text("Northwind Facilities's application is with ICR."), findsOneWidget);
-      expect(find.textContaining('Our team reviews every application by hand.'), findsOneWidget);
-      expect(find.text('Go to dashboard'), findsOneWidget);
+      expect(find.textContaining('Our team reviews every application.'), findsOneWidget);
+      expect(find.text('Go to Dashboard'), findsOneWidget);
       expect(find.text('Close'), findsOneWidget);
       expect(find.byKey(const Key('partner.send')), findsNothing, reason: 'it cannot be sent twice');
     });
@@ -331,12 +331,12 @@ void main() {
       expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, 'HVAC');
     });
 
-    testWidgets('a failure the API gave no sentence for reads "Could not send the application."', (tester) async {
+    testWidgets('a failure the API gave no sentence for reads "Unable to send the application."', (tester) async {
       final repo = _Partner([const PartnerCompany(id: 'c1', name: 'Northwind')])..crash = true;
       await pump(tester, PartnerApplyScreen(repository: repo));
       await tester.pumpAndSettle();
       await tapKey(tester, const Key('partner.send'));
-      expect(find.text('Could not send the application.'), findsOneWidget);
+      expect(find.text('Unable to send the application.'), findsOneWidget);
     });
 
     testWidgets("a failed read of the companies says so in the website's sentence, and Try again reads them again", (
@@ -345,9 +345,9 @@ void main() {
       final repo = _Partner([const PartnerCompany(id: 'c1', name: 'Northwind')])..readFails = true;
       await pump(tester, PartnerApplyScreen(repository: repo));
       await tester.pumpAndSettle();
-      expect(find.text('Could not load your companies. Try again in a moment.'), findsOneWidget);
+      expect(find.text('Unable to load your companies. Try again.'), findsOneWidget);
       repo.readFails = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('Northwind'), findsOneWidget);
     });
@@ -358,14 +358,14 @@ void main() {
       var created = 0;
       await pump(tester, PartnerApplyScreen(repository: _Partner(const []), onCreateCompany: () => created++));
       await tester.pumpAndSettle();
-      expect(find.text('Apply to become a learning partner'), findsOneWidget);
+      expect(find.text('Apply to Become a Learning Partner'), findsOneWidget);
       expect(
         find.text('You are not an admin of any company on ICR yet. Register your company to apply.'),
         findsOneWidget,
         reason: "the website's note",
       );
       expect(find.byType(TextField), findsNothing, reason: 'the website shows no box until a company is listed');
-      await tester.tap(find.text('Register a new company'));
+      await tester.tap(find.text('Register a New Company'));
       await tester.pumpAndSettle();
       expect(created, 1);
     });
@@ -472,7 +472,7 @@ void main() {
       ]);
       await pump(tester, PartnerApplyScreen(repository: repo));
       await tester.pumpAndSettle();
-      expect(find.text('More info requested'), findsOneWidget);
+      expect(find.text('More Info Requested'), findsOneWidget);
       expect(find.text('Send your accreditation.'), findsOneWidget);
       await tapKey(tester, const Key('partner.send'));
       expect(repo.sent.single['companyId'], 'c1');
@@ -559,7 +559,7 @@ void main() {
         chip({
           'application': {'status': 'INFO_REQUESTED'},
         }),
-        'More info requested',
+        'More Info Requested',
       );
       expect(
         chip({

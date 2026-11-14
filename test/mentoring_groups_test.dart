@@ -266,19 +266,19 @@ void main() {
   group('the browser', () {
     testWidgets('lists open sessions with who hosts them, when, and the seats and price', (tester) async {
       final (api, _) = await pumpGroups(tester, GroupsWorld());
-      expect(find.text('Group sessions'), findsOneWidget);
+      expect(find.text('Group Sessions'), findsOneWidget);
       expect(find.text('From site to portfolio: an open clinic'), findsOneWidget);
       expect(find.text('Panel interview masterclass'), findsOneWidget);
       expect(find.text('Free · 22 of 25 seats left'), findsNWidgets(2));
-      expect(find.text('₹299 a seat · 15 of 15 seats left'), findsOneWidget);
+      expect(find.text('₹299 per seat · 15 of 15 seats left'), findsOneWidget);
       expect(find.text('Free · Full, with a waitlist (0 waiting)'), findsOneWidget);
-      expect(find.text('Seat held'), findsOneWidget);
+      expect(find.text('Seat Held'), findsOneWidget);
       expect(api.queryOf('GET /mentorship/group-sessions'), {'page': 1, 'limit': 12});
     });
 
     testWidgets('My seats shows only the sessions the member holds a seat at', (tester) async {
       final (api, _) = await pumpGroups(tester, GroupsWorld());
-      await tester.tap(find.text('My seats'));
+      await tester.tap(find.text('My Seats'));
       await settle(tester);
       expect(api.queryOf('GET /mentorship/group-sessions')!['registered'], true);
       expect(find.text('Reading an SLA'), findsOneWidget);
@@ -291,7 +291,7 @@ void main() {
         s['myStatus'] = null;
       }
       await pumpGroups(tester, w, registeredOnly: true);
-      expect(find.text('No seats held'), findsOneWidget);
+      expect(find.text('No Seats Held'), findsOneWidget);
     });
 
     testWidgets('the filters ask the API: how they meet, seats free, and words', (tester) async {
@@ -299,7 +299,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('mode-PHONE')));
       await settle(tester);
       expect(api.queryOf('GET /mentorship/group-sessions')!['mode'], 'PHONE');
-      expect(find.text('No sessions match'), findsOneWidget);
+      expect(find.text('No Matching Sessions'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('mode-PHONE')));
       await settle(tester);
       expect(api.queryOf('GET /mentorship/group-sessions')!.containsKey('mode'), isFalse);
@@ -313,7 +313,7 @@ void main() {
       expect(api.queryOf('GET /mentorship/group-sessions')!['search'], 'panel');
       expect(find.text('Panel interview masterclass'), findsOneWidget);
       expect(find.text('From site to portfolio: an open clinic'), findsNothing);
-      await tester.tap(find.byTooltip('Clear search'));
+      await tester.tap(find.byTooltip('Clear Search'));
       await settle(tester);
       expect(find.text('From site to portfolio: an open clinic'), findsOneWidget);
     });
@@ -341,14 +341,14 @@ void main() {
               fail ? refuse('Sessions are unavailable.', status: 503) : page(w.sessions),
         },
       );
-      expect(find.text("Couldn't load the sessions"), findsOneWidget);
+      expect(find.text('Unable to Load Sessions'), findsOneWidget);
       fail = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester);
       expect(api.count('GET /mentorship/group-sessions'), 2);
       await tester.tap(find.text('From site to portfolio: an open clinic'));
       await settle(tester);
-      expect(find.text('Your seat'), findsOneWidget);
+      expect(find.text('Your Seat'), findsOneWidget);
     });
   });
 
@@ -369,31 +369,31 @@ void main() {
     ) async {
       final (api, rec) = await pumpGroup(tester, GroupsWorld(), 'g-clinic');
       expect(find.byKey(const ValueKey('seat-free')), findsOneWidget);
-      expect(find.text('Join the session'), findsNothing, reason: 'the call is for people with a seat');
+      expect(find.text('Join Session'), findsNothing, reason: 'the call is for people with a seat');
       await tester.enterText(find.byKey(const ValueKey('seat-question')), 'How do I present a case to finance?');
-      await tapText(tester, 'Reserve my seat');
+      await tapText(tester, 'Reserve My Seat');
       expect(api.bodyOf('POST /mentorship/group-sessions/g-clinic/register'), {
         'question': 'How do I present a case to finance?',
       });
       expect(find.text('Your seat is booked.'), findsOneWidget);
       expect(find.byKey(const ValueKey('seat-held')), findsOneWidget);
-      expect(find.text('Who is going (1)'), findsOneWidget);
+      expect(find.text('Attendees (1)'), findsOneWidget);
       // Six days ahead the call is drawn greyed with the time its room opens…
-      expect(find.text('Join the session from 9:45 AM'), findsOneWidget);
+      expect(find.text('Join Session from 9:45 AM'), findsOneWidget);
       // …and turns pressable on its own once the room opens, 15 minutes before 10:00.
       mentoringNow = () => _now.add(const Duration(days: 6, minutes: -10));
       await tester.pump(const Duration(seconds: 30));
       final urls = launches(tester);
-      await tapText(tester, 'Join the session');
+      await tapText(tester, 'Join Session');
       expect(urls, ['https://meet.google.com/icr-demo']);
-      await tapText(tester, 'Room chat');
+      await tapText(tester, 'Room Chat');
       expect(api.count('POST /mentorship/group-sessions/g-clinic/conversation'), 1);
       expect(rec.opened, ['conversation:room-1']);
     });
 
     testWidgets('a seat is given up, and the open card comes back', (tester) async {
       final (api, _) = await pumpGroup(tester, GroupsWorld(), 'g-mine');
-      await tapText(tester, 'Give up my seat');
+      await tapText(tester, 'Give Up My Seat');
       expect(api.count('DELETE /mentorship/group-sessions/g-mine/register'), 1);
       expect(find.text('You gave up your seat.'), findsOneWidget);
       expect(find.byKey(const ValueKey('seat-held')), findsNothing);
@@ -401,12 +401,12 @@ void main() {
 
     testWidgets('a full session offers the waitlist, and leaving it is one tap', (tester) async {
       final (api, _) = await pumpGroup(tester, GroupsWorld(), 'g-full');
-      expect(find.text('It is full, but you can join the waitlist.'), findsOneWidget);
-      await tapText(tester, 'Join the waitlist');
+      expect(find.text('This session is full. You can join the waitlist.'), findsOneWidget);
+      await tapText(tester, 'Join Waitlist');
       expect(api.count('POST /mentorship/group-sessions/g-full/register'), 1);
       expect(find.text('You are on the waitlist.'), findsOneWidget);
       expect(find.byKey(const ValueKey('seat-waitlisted')), findsOneWidget);
-      await tapText(tester, 'Leave the waitlist');
+      await tapText(tester, 'Leave Waitlist');
       expect(api.count('DELETE /mentorship/group-sessions/g-full/register'), 1);
       expect(find.byKey(const ValueKey('seat-waitlisted')), findsNothing);
     });
@@ -431,7 +431,7 @@ void main() {
               refuse('Registration closed an hour before the session.'),
         },
       );
-      await tapText(tester, 'Reserve my seat');
+      await tapText(tester, 'Reserve My Seat');
       expect(find.text('Registration closed an hour before the session.'), findsOneWidget);
       expect(find.byKey(const ValueKey('seat-free')), findsOneWidget);
     });
@@ -454,8 +454,8 @@ void main() {
       expect(find.text('₹269.10'), findsOneWidget);
       expect(find.text('₹299'), findsOneWidget, reason: 'the list price, struck through');
       expect(find.text('10% member discount from Gold.'), findsOneWidget);
-      await tapText(tester, 'Reserve a seat · ₹269.10');
-      expect(find.text('Reserve your seat'), findsOneWidget);
+      await tapText(tester, 'Reserve a Seat · ₹269.10');
+      expect(find.text('Reserve Your Seat'), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('seat-sheet-question')), 'Will there be a mock panel?');
       expect(find.byKey(const ValueKey('pay-handoff')), findsOneWidget);
       await tester.tap(find.text('Pay ₹269.10').last);
@@ -467,7 +467,7 @@ void main() {
 
     testWidgets('with a simulated gateway the seat is bought in the app', (tester) async {
       final (api, rec) = await pumpGroup(tester, GroupsWorld(live: false), 'g-paid');
-      await tapText(tester, 'Reserve a seat · ₹299');
+      await tapText(tester, 'Reserve a Seat · ₹299');
       await tester.enterText(find.byKey(const ValueKey('seat-sheet-question')), 'Will there be a mock panel?');
       await tester.tap(find.text('Pay ₹299'));
       await settle(tester);
@@ -477,7 +477,7 @@ void main() {
       expect(find.text('Your seat is booked.'), findsOneWidget);
       expect(find.byKey(const ValueKey('seat-held')), findsOneWidget);
       expect(find.text('A paid seat is cancelled from your purchases.'), findsOneWidget);
-      expect(find.text('Give up my seat'), findsNothing, reason: 'money moved: a cancel goes through the purchase');
+      expect(find.text('Give Up My Seat'), findsNothing, reason: 'money moved: a cancel goes through the purchase');
       expect(rec.sites, isEmpty);
     });
 
@@ -488,11 +488,11 @@ void main() {
         'g-paid',
         extra: {'POST /mentorship/group-sessions/g-paid/seat/checkout': (_) => refuse('This session is sold out.')},
       );
-      await tapText(tester, 'Reserve a seat · ₹299');
+      await tapText(tester, 'Reserve a Seat · ₹299');
       await tester.tap(find.text('Pay ₹299'));
       await settle(tester);
       expect(find.text('This session is sold out.'), findsOneWidget);
-      expect(find.text('Reserve your seat'), findsOneWidget);
+      expect(find.text('Reserve Your Seat'), findsOneWidget);
     });
 
     testWidgets(
@@ -504,16 +504,16 @@ void main() {
         row['myStatus'] = 'ATTENDED';
         final (api, _) = await pumpGroup(tester, w, 'g-mine');
         expect(find.text('You attended this session.'), findsOneWidget);
-        await tapText(tester, 'Rate this session');
-        await tester.tap(find.text('Send review'));
+        await tapText(tester, 'Rate This Session');
+        await tester.tap(find.text('Send Review'));
         await tester.pump();
-        expect(find.text('Choose a rating from one to five stars.'), findsOneWidget);
+        expect(find.text('Select a rating from one to five stars.'), findsOneWidget);
         await tester.tap(find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.star_outline_rounded).at(3));
         await tester.pump();
         await tester.enterText(find.byKey(const ValueKey('review-comment')), 'Practical and well paced');
         await tester.tap(find.byType(Switch));
         await tester.pump();
-        await tester.tap(find.text('Send review'));
+        await tester.tap(find.text('Send Review'));
         await settle(tester);
         expect(api.bodyOf('POST /mentorship/group-sessions/g-mine/feedback'), {
           'rating': 4,
@@ -521,7 +521,7 @@ void main() {
           'anonymous': true,
         });
         expect(find.byKey(const ValueKey('my-group-rating')), findsOneWidget);
-        expect(find.text('Rate this session'), findsNothing);
+        expect(find.text('Rate This Session'), findsNothing);
       },
     );
 
@@ -532,10 +532,10 @@ void main() {
       row['myStatus'] = 'ATTENDED';
       row['_purchaseId'] = 'pur-1';
       final (api, _) = await pumpGroup(tester, w, 'g-paid');
-      await tapText(tester, 'Rate this session');
+      await tapText(tester, 'Rate This Session');
       await tester.tap(find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.star_outline_rounded).last);
       await tester.pump();
-      await tester.tap(find.text('Send review'));
+      await tester.tap(find.text('Send Review'));
       await settle(tester);
       expect(api.count('POST /mentor-services/purchases/pur-1/review'), 1);
       expect(find.text('You reviewed this seat. Thank you.'), findsOneWidget);
@@ -543,11 +543,11 @@ void main() {
 
     testWidgets('a concern about a session is private to ICR and needs ten characters', (tester) async {
       final (api, _) = await pumpGroup(tester, GroupsWorld(), 'g-mine');
-      await tapText(tester, 'Report a concern');
+      await tapText(tester, 'Report a Concern');
       await tester.enterText(find.byKey(const ValueKey('group-concern-detail')), 'short');
       await tester.tap(find.text('Send to ICR'));
       await tester.pump();
-      expect(find.text('Tell ICR what happened: at least 10 characters.'), findsOneWidget);
+      expect(find.text('Describe what happened in at least 10 characters.'), findsOneWidget);
       await tester.tap(find.text('Safety'));
       await tester.enterText(
         find.byKey(const ValueKey('group-concern-detail')),
@@ -575,11 +575,11 @@ void main() {
               fail ? refuse('Session not found', status: 404) : w.detailOf('g-clinic'),
         },
       );
-      expect(find.text("Couldn't load this session"), findsOneWidget);
+      expect(find.text('Unable to Load This Session'), findsOneWidget);
       fail = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester);
-      expect(find.text('Your seat'), findsOneWidget);
+      expect(find.text('Your Seat'), findsOneWidget);
       expect(api.count('GET /mentorship/group-sessions/g-clinic'), 2);
     });
   });
@@ -620,7 +620,7 @@ void main() {
       expect(api.queryOf('GET /mentorship/programmes')!['status'], 'OPEN');
       expect(find.byKey(const ValueKey('programme-circle')), findsOneWidget);
       expect(find.byKey(const ValueKey('programme-masterclass')), findsNothing);
-      await tester.tap(find.text('Under way'));
+      await tester.tap(find.text('In Progress'));
       await settle(tester);
       expect(api.queryOf('GET /mentorship/programmes')!['status'], 'RUNNING');
       expect(find.byKey(const ValueKey('programme-masterclass')), findsOneWidget);
@@ -655,13 +655,13 @@ void main() {
 
     testWidgets('applying sends the side and why, and the application shows, with Withdraw', (tester) async {
       final (api, _) = await pumpProgramme(tester, GroupsWorld());
-      await tapText(tester, 'Apply to join');
+      await tapText(tester, 'Apply to Join');
       await tester.tap(find.byKey(const ValueKey('role-MENTOR')));
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('role-MENTEE')));
       await tester.pump();
       await tester.enterText(find.byKey(const ValueKey('apply-motivation')), 'I want a steadier rhythm of mentoring.');
-      await tester.tap(find.text('Send application'));
+      await tester.tap(find.text('Send Application'));
       await settle(tester);
       expect(api.bodyOf('POST /mentorship/programmes/circle/enrol'), {
         'role': 'MENTEE',
@@ -670,6 +670,10 @@ void main() {
       expect(find.text('Application sent. The organisers will be in touch.'), findsOneWidget);
       expect(find.byKey(const ValueKey('enrolment-MENTEE')), findsOneWidget);
       await tapText(tester, 'Withdraw');
+      // Withdraw asks first (owner, 7 Nov 2026).
+      expect(api.count('POST /mentorship/programmes/enrolments/e-new/withdraw'), 0);
+      await tester.tap(find.byKey(const ValueKey('withdraw-yes')));
+      await settle(tester);
       expect(api.count('POST /mentorship/programmes/enrolments/e-new/withdraw'), 1);
       expect(find.byKey(const ValueKey('enrolment-MENTEE')), findsNothing);
     });
@@ -687,15 +691,15 @@ void main() {
           ),
         },
       );
-      await tapText(tester, 'Apply to join');
+      await tapText(tester, 'Apply to Join');
       await tester.tap(find.byKey(const ValueKey('role-MENTOR')));
       await tester.pump();
-      await tester.tap(find.text('Send application'));
+      await tester.tap(find.text('Send Application'));
       await settle(tester);
       expect(api.count('POST /mentorship/programmes/circle/enrol'), 1);
       expect(find.byKey(const ValueKey('apply-fix')), findsOneWidget);
       expect(find.textContaining('Mentors join a programme from an approved mentor profile'), findsOneWidget);
-      await tester.tap(find.text('Set up my mentor profile'));
+      await tester.tap(find.text('Set Up My Mentor Profile'));
       await tester.pump();
       expect(become, 1);
     });
@@ -717,18 +721,18 @@ void main() {
           },
         },
       );
-      await tapText(tester, 'Apply to join');
-      await tester.tap(find.text('Send application'));
+      await tapText(tester, 'Apply to Join');
+      await tester.tap(find.text('Send Application'));
       await settle(tester);
-      expect(find.text('Tell us what you are after'), findsOneWidget);
-      await tester.tap(find.text('Tell us what you are after'));
+      expect(find.text('Add My Mentoring Goals'), findsOneWidget);
+      await tester.tap(find.text('Add My Mentoring Goals'));
       await settle(tester);
-      await tester.tap(find.text('Mid career'));
+      await tester.tap(find.text('Mid Career'));
       await tester.tap(find.text('Save'));
       await settle(tester);
       expect(api.count('PUT /mentorship/mentees/me'), 1);
       expect((api.bodyOf('PUT /mentorship/mentees/me') as Map)['careerStage'], 'MID_CAREER');
-      await tester.tap(find.text('Send application'));
+      await tester.tap(find.text('Send Application'));
       await settle(tester);
       expect(api.count('POST /mentorship/programmes/circle/enrol'), 2);
       expect(find.text('Application sent. The organisers will be in touch.'), findsOneWidget);
@@ -741,10 +745,10 @@ void main() {
         w,
         extra: {'GET /mentorship/programmes/circle': (_) => programmeJson('circle', detail: true, mentors: 4)},
       );
-      await tapText(tester, 'Apply to join');
+      await tapText(tester, 'Apply to Join');
       await tester.tap(find.byKey(const ValueKey('role-MENTOR')));
       await tester.pump();
-      expect(find.text('The mentor side is full.'), findsOneWidget);
+      expect(find.text('All mentor places are taken.'), findsOneWidget);
     });
 
     testWidgets('a programme that is not open takes no applications', (tester) async {
@@ -755,7 +759,7 @@ void main() {
         extra: {'GET /mentorship/programmes/circle': (_) => programmeJson('circle', status: 'RUNNING', detail: true)},
       );
       expect(find.text('This programme is not taking applications.'), findsOneWidget);
-      expect(find.text('Apply to join'), findsNothing);
+      expect(find.text('Apply to Join'), findsNothing);
     });
   });
 }

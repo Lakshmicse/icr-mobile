@@ -193,22 +193,22 @@ void main() {
       final tabs = tester.widget<SegmentTabs>(find.byType(SegmentTabs)).labels;
       expect(tabs, ['Mentoring', 'Requests', 'Calendar', 'Purchases', 'Goals', 'Saved', 'Certificates']);
       expect(tabs, isNot(contains('Reports')), reason: 'only once a concern was raised');
-      expect(find.text('At a glance'), findsOneWidget);
-      expect(find.text('Active mentors'), findsOneWidget);
+      expect(find.text('At a Glance'), findsOneWidget);
+      expect(find.text('Active Mentors'), findsOneWidget);
       expect(find.text('1 request pending'), findsOneWidget);
-      expect(find.text('Sessions completed'), findsOneWidget);
+      expect(find.text('Sessions Completed'), findsOneWidget);
       expect(find.text('1h 30m with your mentors'), findsOneWidget);
-      expect(find.text('Needs you'), findsOneWidget);
+      expect(find.text('Action Needed'), findsOneWidget);
       expect(find.text('1 request waiting'), findsOneWidget);
-      expect(find.text('My mentors'), findsOneWidget);
+      expect(find.text('My Mentors'), findsOneWidget);
       expect(find.text('Anand Iyer'), findsWidgets);
-      expect(find.text('Free mentorship'), findsOneWidget);
-      expect(find.text('Every two weeks'), findsOneWidget);
-      expect(find.text('Up next'), findsOneWidget);
+      expect(find.text('Free Mentorship'), findsOneWidget);
+      expect(find.text('Every Two Weeks'), findsOneWidget);
+      expect(find.text('Up Next'), findsOneWidget);
       expect(find.text('1:1 with Anand Iyer'), findsOneWidget);
       expect(find.text('Agenda: Reviewing the scorecard draft'), findsOneWidget);
-      expect(find.text('Development goals'), findsOneWidget);
-      expect(find.text('Find another'), findsOneWidget);
+      expect(find.text('Development Goals'), findsOneWidget);
+      expect(find.text('Find Another'), findsOneWidget);
     });
 
     testWidgets('a member with no mentor yet is told to ask one, and nothing needs them', (tester) async {
@@ -216,11 +216,14 @@ void main() {
         tester,
         menteeRoutes(pairings: [], sent: [], upcoming: [], summary: summaryJson(asMentee: 0, outgoing: 0)),
       );
-      expect(find.text('No mentor yet'), findsOneWidget);
-      expect(find.text('Needs you'), findsNothing);
-      expect(find.text('nothing booked'), findsOneWidget);
-      expect(find.text('Nothing booked. Your mentor confirms a time once you ask for one.'), findsOneWidget);
-      await tester.tap(find.text('Find a mentor'));
+      expect(find.text('No Mentor Yet'), findsOneWidget);
+      expect(find.text('Action Needed'), findsNothing);
+      expect(find.text('No session booked'), findsOneWidget);
+      expect(
+        find.text('No session has been scheduled yet. Your mentor will confirm a time once you request one.'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Find a Mentor'));
       expect(rec.opened, ['directory']);
     });
 
@@ -299,31 +302,31 @@ void main() {
       // The programme leads its mentor's row, with the sessions used.
       expect(find.text('Site to portfolio: a 3-session programme'), findsWidgets);
       expect(find.text('with Anand Iyer'), findsWidgets);
-      expect(find.text('Sessions used'), findsOneWidget);
+      expect(find.text('Sessions Used'), findsOneWidget);
       expect(find.text('1 of 3'), findsOneWidget);
-      expect(find.text('Your plans'), findsOneWidget);
+      expect(find.text('Your Plans'), findsOneWidget);
       expect(find.text('2 of 3'), findsOneWidget);
 
       // The six signals mentors match on: the objective and the phone number are missing.
-      expect(find.text('Your matching profile'), findsOneWidget);
+      expect(find.text('Your Matching Profile'), findsOneWidget);
       expect(find.text('67%'), findsOneWidget);
-      expect(find.text('4 of 6 signals mentors match on'), findsOneWidget);
-      expect(find.text('Your objective, in your own words'), findsOneWidget);
-      expect(find.text('Phone number'), findsOneWidget);
+      expect(find.text('4 of 6 mentor matching criteria completed'), findsOneWidget);
+      expect(find.text('Your Objective'), findsOneWidget);
+      expect(find.text('Mobile Number'), findsOneWidget);
 
       // A paid call the member bought is on Up next; one they sell is not.
       expect(find.text('CV review call'), findsOneWidget);
       expect(find.text('Paid'), findsOneWidget);
       expect(find.text('A call I sell'), findsNothing);
 
-      expect(find.text('Recommended for you'), findsOneWidget);
+      expect(find.text('Recommended for You'), findsOneWidget);
       expect(find.text('87% match'), findsOneWidget);
-      expect(find.text('Saved mentors'), findsOneWidget);
+      expect(find.text('Saved Mentors'), findsOneWidget);
 
       await tester.tap(find.text('Divya Rao').last);
       expect(rec.opened, ['mentor:mp-divya']);
 
-      await tester.tap(find.text('Finish in My goals'));
+      await tester.tap(find.text('Complete in Goals'));
       await settle(tester);
       final tabs = tester.widget<SegmentTabs>(find.byType(SegmentTabs));
       expect(tabs.labels[tabs.selected], 'Goals');
@@ -335,12 +338,12 @@ void main() {
       routes['GET /mentorship/mine'] = (_) =>
           fail ? refuse("We couldn't reach the mentoring service.", status: 500) : page([pairingJson('pair-anand')]);
       final (api, _) = await pumpMyMentoring(tester, routes);
-      expect(find.text("Couldn't load your mentoring"), findsOneWidget);
+      expect(find.text('Unable to Load Your Mentoring'), findsOneWidget);
       expect(find.text("We couldn't reach the mentoring service."), findsOneWidget);
       fail = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester);
-      expect(find.text("Couldn't load your mentoring"), findsNothing);
+      expect(find.text('Unable to Load Your Mentoring'), findsNothing);
       expect(find.text('Anand Iyer'), findsWidgets);
       expect(api.count('GET /mentorship/mine'), 2);
     });

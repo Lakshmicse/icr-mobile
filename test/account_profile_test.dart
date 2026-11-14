@@ -6,6 +6,7 @@ import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/account/account_models.dart';
 import 'package:icr_mobile/features/account/demo_account_repository.dart';
 import 'package:icr_mobile/features/account/profile/my_profile_screen.dart';
+import 'package:icr_mobile/features/account/profile/sheets/contact_info_sheet.dart';
 import 'package:icr_mobile/features/account/widgets/account_kit.dart' show CoverBand;
 import 'package:icr_mobile/features/account/widgets/photo_picker.dart';
 
@@ -31,7 +32,6 @@ void main() {
     PhotoPicker? pickPhoto,
     void Function(String userId)? onOpenPublic,
     VoidCallback? onSettings,
-    VoidCallback? onSecurity,
     List<String>? shared,
     VoidCallback? onChanged,
     double width = 390,
@@ -47,7 +47,6 @@ void main() {
           pickPhoto: pickPhoto ?? () async => photo(),
           onOpenPublicProfile: onOpenPublic,
           onOpenSettings: onSettings,
-          onOpenSecurity: onSecurity,
           onProfileChanged: onChanged,
           now: DateTime.utc(2026, 10, 26),
           share: (text, subject) async => shared?.add('$subject|$text'),
@@ -85,12 +84,13 @@ void main() {
       expect(find.text('Profile'), findsOneWidget);
       expect(find.text('Nikhil Majjagi'), findsOneWidget);
       expect(find.text('Lead Operations Manager'), findsWidgets);
-      expect(find.textContaining('Bengaluru, Karnataka · TechCorp'), findsOneWidget);
+      expect(find.text('TechCorp · RV College of Engineering'), findsOneWidget);
+      expect(find.text('Bengaluru, Karnataka'), findsOneWidget);
       expect(find.text('12 years in the profession'), findsOneWidget);
       expect(find.text('Professional'), findsOneWidget);
       expect(find.text('About'), findsOneWidget);
       expect(find.textContaining('Operations leader running Grade-A tech parks'), findsOneWidget);
-      for (final title in ['Experience', 'Education', 'Licenses & certifications', 'Skills', 'Languages']) {
+      for (final title in ['Experience', 'Education', 'Licenses and Certifications', 'Skills', 'Languages']) {
         await tester.scrollUntilVisible(find.text(title), 300, scrollable: find.byType(Scrollable).first);
         expect(find.text(title), findsOneWidget);
       }
@@ -104,7 +104,10 @@ void main() {
         ..failures['myProfile'] = ApiError('The server is busy.', statusCode: 503);
       usePhone(tester);
       await tester.pumpWidget(
-        MaterialApp(theme: buildAppTheme(), home: MyProfileScreen(repository: repo)),
+        MaterialApp(
+          theme: buildAppTheme(),
+          home: MyProfileScreen(repository: repo),
+        ),
       );
       await tester.pump();
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -119,11 +122,15 @@ void main() {
       final repo = DemoAccountRepository()..failures['education'] = ApiError('Could not read.', statusCode: 500);
       await pump(tester, repo: repo);
       await tester.scrollUntilVisible(find.text('Education'), 300, scrollable: find.byType(Scrollable).first);
-      expect(find.text("Couldn't load your education."), findsOneWidget);
+      expect(find.text('Unable to Load Your Education'), findsOneWidget);
       expect(find.text('Nikhil Majjagi'), findsOneWidget, reason: 'the rest of the page is fine');
       repo.failures.remove('education');
       await tapKey(tester, 'retry.education');
-      await tester.scrollUntilVisible(find.text('RV College of Engineering'), 200, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.text('RV College of Engineering'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('RV College of Engineering'), findsOneWidget);
     });
 
@@ -150,7 +157,11 @@ void main() {
       await tester.pump();
       expect(shared.single, 'Nikhil Majjagi on ICR|Nikhil Majjagi on ICR\nhttps://icr.org.in/members/nikhil-majjagi');
 
-      await tester.scrollUntilVisible(find.byKey(const Key('profile.copyLink')), 300, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('profile.copyLink')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.ensureVisible(find.byKey(const Key('profile.copyLink')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('profile.copyLink')));
@@ -160,38 +171,38 @@ void main() {
       expect(copied, ['https://icr.org.in/members/nikhil-majjagi']);
     });
 
-    testWidgets('View public profile opens the member page for this person; the gear and security row call out', (tester) async {
+    testWidgets('View public profile opens the member page for this person; the gear calls out', (tester) async {
       final opened = <String>[];
       var settings = 0;
-      var security = 0;
-      await pump(tester, onOpenPublic: opened.add, onSettings: () => settings++, onSecurity: () => security++);
+      await pump(tester, onOpenPublic: opened.add, onSettings: () => settings++);
       await tapKey(tester, 'profile.viewPublic');
       await tester.tap(find.byKey(const Key('profile.settings')));
       await tester.pump();
-      await tester.scrollUntilVisible(find.byKey(const Key('profile.security')), 300, scrollable: find.byType(Scrollable).first);
-      await tester.tap(find.byKey(const Key('profile.security')));
-      await tester.pump();
+      // The page's last control now: pulled fully into view before the tap.
+      await tester.drag(find.byType(ListView).first, const Offset(0, -6000));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('profile.openPublic')));
       await tester.pump();
       expect(opened, ['me', 'me']);
       expect(settings, 1);
-      expect(security, 1);
     });
 
-    testWidgets('with nothing wired the gear opens Settings and the security row opens Sign-in & security', (tester) async {
-      await pump(tester);
-      await tester.tap(find.byKey(const Key('profile.settings')));
-      await tester.pumpAndSettle();
-      expect(find.text('Settings'), findsOneWidget);
-      expect(find.text('Sign-in & security'), findsOneWidget);
-      await tester.pageBack();
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(find.byKey(const Key('profile.security')), 300, scrollable: find.byType(Scrollable).first);
-      await tester.tap(find.byKey(const Key('profile.security')));
-      await tester.pumpAndSettle();
-      expect(find.text('Sign-in & security'), findsWidgets);
-      expect(find.text('Contact info'), findsOneWidget);
-    });
+    testWidgets(
+      'with nothing wired the gear opens Settings, where Sign-In & Security lives; the profile has no row for it',
+      (tester) async {
+        await pump(tester);
+        await tester.tap(find.byKey(const Key('profile.settings')));
+        await tester.pumpAndSettle();
+        expect(find.text('Settings'), findsOneWidget);
+        expect(find.text('Sign-In & Security'), findsOneWidget);
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+        await tester.drag(find.byType(ListView).first, const Offset(0, -6000));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('profile.security')), findsNothing);
+        expect(find.text('Sign-In & Security'), findsNothing);
+      },
+    );
 
     testWidgets('fits a 320 x 568 phone', (tester) async {
       await pump(tester, width: 320, height: 568);
@@ -201,27 +212,174 @@ void main() {
     });
   });
 
-  group('the intro', () {
-    testWidgets('the pencil opens it with what the profile says; Save sends the name, headline and years, then the résumé', (tester) async {
-      final repo = await pump(tester);
-      await tapKey(tester, 'profile.editIntro');
-      expect(find.text('Edit intro'), findsOneWidget);
-      expect(tester.widget<TextField>(find.byKey(const Key('intro.firstName'))).controller!.text, 'Nikhil');
-      expect(tester.widget<TextField>(find.byKey(const Key('intro.headline'))).controller!.text, 'Lead Operations Manager');
-      expect(tester.widget<TextField>(find.byKey(const Key('intro.years'))).controller!.text, '12');
+  group('contact info', () {
+    Future<void> openContactInfo(WidgetTester tester) => tapKey(tester, 'profile.contactInfo');
 
-      await type(tester, 'intro.firstName', 'Nikhil K');
-      await type(tester, 'intro.headline', 'Head of Operations');
-      await type(tester, 'intro.years', '13');
-      await save(tester);
-
-      expect(repo.sent['updateMe'], {'firstName': 'Nikhil K', 'lastName': 'Majjagi', 'designation': 'Head of Operations', 'yearsExperience': 13});
-      expect(repo.sent['updateResume'], {'jobTitle': 'Head of Operations'});
-      expect(find.text('Edit intro'), findsNothing);
-      expect(find.text('Nikhil K Majjagi'), findsOneWidget);
-      expect(find.text('Head of Operations'), findsWidgets);
-      expect(find.text('Intro saved.'), findsOneWidget);
+    testWidgets('"Contact Information" sits after the place and opens how to reach the person, read-only', (
+      tester,
+    ) async {
+      await pump(tester);
+      expect(find.text('Bengaluru, Karnataka'), findsOneWidget);
+      expect(find.text('Contact Information'), findsOneWidget);
+      await openContactInfo(tester);
+      final sheet = find.byType(ContactInfoSheet);
+      expect(sheet, findsOneWidget);
+      Finder inSheet(String text) => find.descendant(of: sheet, matching: find.text(text));
+      expect(inSheet('Nikhil’s Profile'), findsOneWidget);
+      expect(inSheet('Email'), findsOneWidget);
+      expect(inSheet('nikhil@techcorp.example'), findsOneWidget);
+      expect(inSheet('Mobile Number'), findsOneWidget);
+      expect(inSheet('+91 9876543210'), findsOneWidget);
+      expect(inSheet('Verified'), findsOneWidget);
+      expect(inSheet('Edit'), findsOneWidget, reason: 'a verified number is changed, not verified again');
+      expect(inSheet('Add Your Work Email'), findsOneWidget);
+      expect(inSheet('LinkedIn'), findsOneWidget);
+      expect(inSheet('linkedin.com/in/nikhil-majjagi'), findsOneWidget);
+      expect(find.descendant(of: sheet, matching: find.byType(TextField)), findsNothing);
+      await tapKey(tester, 'contactInfo.close');
+      expect(find.byType(ContactInfoSheet), findsNothing);
     });
+
+    testWidgets('the pencil opens the edit sheet; a save comes back to the profile with what was saved', (
+      tester,
+    ) async {
+      final repo = await pump(tester);
+      await openContactInfo(tester);
+      await tapKey(tester, 'contactInfo.edit');
+      expect(find.byType(ContactInfoSheet), findsNothing);
+      expect(find.byKey(const Key('contact.workEmail')), findsOneWidget, reason: 'the edit sheet is open');
+      await type(tester, 'contact.workEmail', 'nikhil@work.example.com');
+      await save(tester);
+      expect(repo.sent['updateMe'], {'workEmail': 'nikhil@work.example.com'});
+      expect(find.text('Contact information saved.'), findsOneWidget);
+      await openContactInfo(tester);
+      expect(
+        find.descendant(of: find.byType(ContactInfoSheet), matching: find.text('nikhil@work.example.com')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: find.byType(ContactInfoSheet), matching: find.text('Not Verified')),
+        findsOneWidget,
+        reason: 'a newly typed work email is not confirmed',
+      );
+    });
+
+    testWidgets('"Add Your Work Email" opens the edit sheet; the profile address opens the public page', (
+      tester,
+    ) async {
+      final opened = <String>[];
+      await pump(tester, onOpenPublic: opened.add);
+      await openContactInfo(tester);
+      await tapKey(tester, 'contactInfo.addWorkEmail');
+      expect(find.byKey(const Key('contact.workEmail')), findsOneWidget, reason: 'the edit sheet is open');
+      await tapKey(tester, 'sheet.cancel');
+      await openContactInfo(tester);
+      await tester.tap(find.text('Nikhil’s Profile').last);
+      await tester.pumpAndSettle();
+      expect(opened, isEmpty, reason: 'the label is not the link');
+      await tester.tap(find.textContaining('/members/nikhil-majjagi'));
+      await tester.pumpAndSettle();
+      expect(opened, ['me']);
+      expect(find.byType(ContactInfoSheet), findsNothing);
+    });
+
+    testWidgets('with no number "Add Your Mobile Number" opens the number sheet', (tester) async {
+      final repo = DemoAccountRepository(
+        profile: MyProfile.fromJson({
+          'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'Anita', 'lastName': 'Rao', 'role': 'PROFESSIONAL'},
+          'resume': {'jobTitle': 'Analyst', 'location': 'Pune, Maharashtra'},
+        }),
+      );
+      await pump(tester, repo: repo);
+      await openContactInfo(tester);
+      expect(find.text('Anita’s Profile'), findsOneWidget);
+      await tapKey(tester, 'contactInfo.addPhone');
+      expect(find.byType(ContactInfoSheet), findsNothing);
+      expect(find.text('Mobile Number'), findsWidgets);
+      expect(find.byKey(const Key('phone.number')), findsOneWidget);
+    });
+
+    testWidgets('a confirmed work email, an unconfirmed +91 number, a second number and the birthday', (tester) async {
+      final repo = DemoAccountRepository(
+        profile: MyProfile.fromJson({
+          'user': {
+            'id': 'me',
+            'email': 'a@b.co',
+            'firstName': 'Anita',
+            'lastName': 'Rao',
+            'role': 'PROFESSIONAL',
+            'workEmail': 'anita@acme.example.com',
+            'workEmailVerified': true,
+            'phone': '+919812345678',
+            'phoneVerified': false,
+            'altPhone': '+919800000000',
+            'birthMonth': 10,
+            'birthDay': 26,
+          },
+        }),
+      );
+      await pump(tester, repo: repo);
+      await openContactInfo(tester);
+      final sheet = find.byType(ContactInfoSheet);
+      Finder inSheet(String text) => find.descendant(of: sheet, matching: find.text(text));
+      expect(inSheet('anita@acme.example.com'), findsOneWidget);
+      expect(inSheet('Verified'), findsOneWidget, reason: 'the work email');
+      expect(inSheet('Not Verified'), findsOneWidget, reason: 'the +91 number a code can reach');
+      expect(inSheet('Verify'), findsOneWidget);
+      expect(inSheet('Alternate Mobile Number'), findsOneWidget);
+      expect(inSheet('+91 9800000000'), findsOneWidget);
+      expect(inSheet('Birthday'), findsOneWidget);
+      expect(inSheet('26 October'), findsOneWidget);
+    });
+
+    testWidgets('a header with no place still offers Contact Information, and the sheet fits a 320 x 568 phone', (
+      tester,
+    ) async {
+      final repo = DemoAccountRepository(
+        profile: MyProfile.fromJson({
+          'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'Anita', 'lastName': 'Rao', 'role': 'PROFESSIONAL'},
+        }),
+      );
+      await pump(tester, repo: repo, width: 320, height: 568);
+      expect(find.byKey(const Key('profile.contactInfo')), findsOneWidget);
+      await openContactInfo(tester);
+      expect(find.byType(ContactInfoSheet), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('the intro', () {
+    testWidgets(
+      'the pencil opens it with what the profile says; Save sends the name, headline and years, then the résumé',
+      (tester) async {
+        final repo = await pump(tester);
+        await tapKey(tester, 'profile.editIntro');
+        expect(find.text('Edit Intro'), findsOneWidget);
+        expect(tester.widget<TextField>(find.byKey(const Key('intro.firstName'))).controller!.text, 'Nikhil');
+        expect(
+          tester.widget<TextField>(find.byKey(const Key('intro.headline'))).controller!.text,
+          'Lead Operations Manager',
+        );
+        expect(tester.widget<TextField>(find.byKey(const Key('intro.years'))).controller!.text, '12');
+
+        await type(tester, 'intro.firstName', 'Nikhil K');
+        await type(tester, 'intro.headline', 'Head of Operations');
+        await type(tester, 'intro.years', '13');
+        await save(tester);
+
+        expect(repo.sent['updateMe'], {
+          'firstName': 'Nikhil K',
+          'lastName': 'Majjagi',
+          'designation': 'Head of Operations',
+          'yearsExperience': 13,
+        });
+        expect(repo.sent['updateResume'], {'jobTitle': 'Head of Operations'});
+        expect(find.text('Edit Intro'), findsNothing);
+        expect(find.text('Nikhil K Majjagi'), findsOneWidget);
+        expect(find.text('Head of Operations'), findsWidgets);
+        expect(find.text('Intro saved.'), findsOneWidget);
+      },
+    );
 
     testWidgets('a saved intro and a changed cover tell the app, so the profile menu reads them again', (tester) async {
       var changed = 0;
@@ -236,7 +394,9 @@ void main() {
       expect(changed, 2);
     });
 
-    testWidgets('a blank first name, a one-letter headline and years out of range are refused before any call', (tester) async {
+    testWidgets('a blank first name, a one-letter headline and years out of range are refused before any call', (
+      tester,
+    ) async {
       final repo = await pump(tester);
       await tapKey(tester, 'profile.editIntro');
       await type(tester, 'intro.firstName', '  ');
@@ -263,13 +423,14 @@ void main() {
     });
 
     testWidgets("the API's refusal shows above the buttons and what was typed stays", (tester) async {
-      final repo = DemoAccountRepository()..failures['updateMe'] = ApiError('That name is not allowed.', statusCode: 400);
+      final repo = DemoAccountRepository()
+        ..failures['updateMe'] = ApiError('That name is not allowed.', statusCode: 400);
       await pump(tester, repo: repo);
       await tapKey(tester, 'profile.editIntro');
       await type(tester, 'intro.firstName', 'Niks');
       await save(tester);
       expect(find.text('That name is not allowed.'), findsOneWidget);
-      expect(find.text('Edit intro'), findsOneWidget, reason: 'the sheet stays open');
+      expect(find.text('Edit Intro'), findsOneWidget, reason: 'the sheet stays open');
       expect(tester.widget<TextField>(find.byKey(const Key('intro.firstName'))).controller!.text, 'Niks');
     });
 
@@ -278,21 +439,21 @@ void main() {
       await tapKey(tester, 'profile.editIntro');
       await tester.tap(find.byKey(const Key('sheet.cancel')));
       await tester.pumpAndSettle();
-      expect(find.text('Edit intro'), findsNothing);
+      expect(find.text('Edit Intro'), findsNothing);
 
       await tapKey(tester, 'profile.editIntro');
       await type(tester, 'intro.firstName', 'Niks');
       await tester.tap(find.byKey(const Key('sheet.cancel')));
       await tester.pumpAndSettle();
-      expect(find.text('Discard your changes?'), findsOneWidget);
+      expect(find.text('Discard Your Changes?'), findsOneWidget);
       await tester.tap(find.text('Cancel').last);
       await tester.pumpAndSettle();
-      expect(find.text('Edit intro'), findsOneWidget);
+      expect(find.text('Edit Intro'), findsOneWidget);
       await tester.tap(find.byKey(const Key('sheet.cancel')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('confirm.ok')));
       await tester.pumpAndSettle();
-      expect(find.text('Edit intro'), findsNothing);
+      expect(find.text('Edit Intro'), findsNothing);
       expect(find.text('Nikhil Majjagi'), findsOneWidget, reason: 'nothing was saved');
     });
 
@@ -301,7 +462,7 @@ void main() {
       await tapKey(tester, 'profile.editIntro');
       await save(tester);
       expect(repo.count('updateMe'), 0);
-      expect(find.text('Edit intro'), findsNothing);
+      expect(find.text('Edit Intro'), findsNothing);
     });
 
     testWidgets('the location is a city from the list', (tester) async {
@@ -317,19 +478,21 @@ void main() {
 
   group('the photo and the cover', () {
     testWidgets('tapping the photo opens its sheet; Upload sends the file, then sets it as the avatar', (tester) async {
-      final repo = DemoAccountRepository(profile: MyProfile.fromJson({
-        'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'Anita', 'lastName': 'Rao', 'role': 'PROFESSIONAL'},
-        'resume': {'jobTitle': 'Analyst'},
-      }));
+      final repo = DemoAccountRepository(
+        profile: MyProfile.fromJson({
+          'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'Anita', 'lastName': 'Rao', 'role': 'PROFESSIONAL'},
+          'resume': {'jobTitle': 'Analyst'},
+        }),
+      );
       await pump(tester, repo: repo);
       await tapKey(tester, 'profile.avatar');
-      expect(find.text('Profile photo'), findsOneWidget);
-      expect(find.text('Upload photo'), findsOneWidget);
+      expect(find.text('Profile Photo'), findsOneWidget);
+      expect(find.text('Upload Photo'), findsOneWidget);
       await tester.tap(find.byKey(const Key('photo.choose')));
       await tester.pumpAndSettle();
       expect(repo.calls, contains('upload'));
       expect((repo.sent['updateMe'] as Map)['avatarUrl'], startsWith('/uploads/file-1-me.png'));
-      expect(find.text('Change photo'), findsOneWidget);
+      expect(find.text('Change Photo'), findsOneWidget);
       await tester.tap(find.byKey(const Key('sheet.save')));
       await tester.pumpAndSettle();
     });
@@ -339,7 +502,7 @@ void main() {
       await tapKey(tester, 'profile.avatar');
       await tester.tap(find.byKey(const Key('sheet.delete')));
       await tester.pumpAndSettle();
-      expect(find.text('Remove your profile photo?'), findsOneWidget);
+      expect(find.text('Remove Your Profile Photo?'), findsOneWidget);
       await tester.tap(find.text('Cancel').last);
       await tester.pumpAndSettle();
       expect(repo.count('updateMe'), 0);
@@ -348,20 +511,26 @@ void main() {
       await tester.tap(find.byKey(const Key('confirm.ok')));
       await tester.pumpAndSettle();
       expect(repo.sent['updateMe'], {'avatarUrl': ''});
-      expect(find.text('Upload photo'), findsOneWidget);
+      expect(find.text('Upload Photo'), findsOneWidget);
     });
 
-    testWidgets('a picture that is too big is refused before it is sent; backing out of the picker does nothing', (tester) async {
-      final repo = await pump(tester, pickPhoto: () async => PickedPhoto(bytes: List.filled(5 * 1024 * 1024 + 1, 1), name: 'big.jpg'));
+    testWidgets('a picture that is too big is refused before it is sent; backing out of the picker does nothing', (
+      tester,
+    ) async {
+      final repo = await pump(
+        tester,
+        pickPhoto: () async => PickedPhoto(bytes: List.filled(5 * 1024 * 1024 + 1, 1), name: 'big.jpg'),
+      );
       await tapKey(tester, 'profile.avatar');
       await tester.tap(find.byKey(const Key('photo.choose')));
       await tester.pumpAndSettle();
-      expect(find.text('That file is too big. Choose one under 5 MB.'), findsOneWidget);
+      expect(find.text('The file is too large. Choose one under 5 MB.'), findsOneWidget);
       expect(repo.count('upload'), 0);
     });
 
     testWidgets('a refused upload shows the API sentence', (tester) async {
-      final repo = DemoAccountRepository()..failures['upload'] = ApiError('image/gif is not an accepted file type for this upload.', statusCode: 400);
+      final repo = DemoAccountRepository()
+        ..failures['upload'] = ApiError('image/gif is not an accepted file type for this upload.', statusCode: 400);
       await pump(tester, repo: repo);
       await tapKey(tester, 'profile.avatar');
       await tester.tap(find.byKey(const Key('photo.choose')));
@@ -396,7 +565,7 @@ void main() {
   group('about, skills and languages', () {
     testWidgets('About: the pencil opens the summary; Save sends it trimmed', (tester) async {
       final repo = await pump(tester);
-      await tester.tap(find.byTooltip('Edit about'));
+      await tester.tap(find.byTooltip('Edit About'));
       await tester.pumpAndSettle();
       expect(find.textContaining('/ 2,000'), findsOneWidget);
       await type(tester, 'about.summary', '  Running campuses for a decade.  ');
@@ -406,13 +575,15 @@ void main() {
       expect(find.text('About saved.'), findsOneWidget);
     });
 
-    testWidgets('an empty About offers "Add a summary"', (tester) async {
-      final repo = DemoAccountRepository(profile: MyProfile.fromJson({
-        'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'Anita', 'lastName': 'Rao', 'role': 'PROFESSIONAL'},
-        'resume': {'jobTitle': 'Analyst'},
-      }));
+    testWidgets('an empty About offers "Add a Summary"', (tester) async {
+      final repo = DemoAccountRepository(
+        profile: MyProfile.fromJson({
+          'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'Anita', 'lastName': 'Rao', 'role': 'PROFESSIONAL'},
+          'resume': {'jobTitle': 'Analyst'},
+        }),
+      );
       await pump(tester, repo: repo);
-      await tester.tap(find.text('Add a summary'));
+      await tester.tap(find.text('Add a Summary'));
       await tester.pumpAndSettle();
       await type(tester, 'about.summary', 'Hello.');
       await save(tester);
@@ -421,22 +592,30 @@ void main() {
 
     testWidgets('a long summary shows See more and See less', (tester) async {
       final long = List.filled(40, 'Long summary words.').join(' ');
-      final repo = DemoAccountRepository(profile: MyProfile.fromJson({
-        'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'Anita', 'lastName': 'Rao', 'role': 'PROFESSIONAL'},
-        'resume': {'jobTitle': 'Analyst', 'summary': long},
-      }));
+      final repo = DemoAccountRepository(
+        profile: MyProfile.fromJson({
+          'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'Anita', 'lastName': 'Rao', 'role': 'PROFESSIONAL'},
+          'resume': {'jobTitle': 'Analyst', 'summary': long},
+        }),
+      );
       await pump(tester, repo: repo);
-      await tester.scrollUntilVisible(find.byKey(const Key('clamp.toggle')), 200, scrollable: find.byType(Scrollable).first);
-      expect(find.text('See more'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('clamp.toggle')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('View More'), findsOneWidget);
       await tester.tap(find.byKey(const Key('clamp.toggle')));
       await tester.pump();
-      expect(find.text('See less'), findsOneWidget);
+      expect(find.text('View Less'), findsOneWidget);
     });
 
-    testWidgets('Skills: a suggestion adds in one tap, a typed one with Enter, a chip removes; Save sends the list', (tester) async {
+    testWidgets('Skills: a suggestion adds in one tap, a typed one with Enter, a chip removes; Save sends the list', (
+      tester,
+    ) async {
       final repo = await pump(tester);
-      await tester.scrollUntilVisible(find.byTooltip('Edit skills'), 300, scrollable: find.byType(Scrollable).first);
-      await tester.tap(find.byTooltip('Edit skills'));
+      await tester.scrollUntilVisible(find.byTooltip('Edit Skills'), 300, scrollable: find.byType(Scrollable).first);
+      await tester.tap(find.byTooltip('Edit Skills'));
       await tester.pumpAndSettle();
       expect(find.text('5 of 50'), findsOneWidget);
       await tester.tap(find.byKey(const Key('suggest.HVAC')));
@@ -455,8 +634,8 @@ void main() {
 
     testWidgets('Skills: a skill is added once, whatever its case', (tester) async {
       await pump(tester);
-      await tester.scrollUntilVisible(find.byTooltip('Edit skills'), 300, scrollable: find.byType(Scrollable).first);
-      await tester.tap(find.byTooltip('Edit skills'));
+      await tester.scrollUntilVisible(find.byTooltip('Edit Skills'), 300, scrollable: find.byType(Scrollable).first);
+      await tester.tap(find.byTooltip('Edit Skills'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const Key('chips.input')), 'vendor slas');
       await tester.tap(find.byKey(const Key('chips.add')));
@@ -465,34 +644,38 @@ void main() {
     });
 
     testWidgets('Languages: at most eight, then the box says so', (tester) async {
-      final repo = DemoAccountRepository(profile: MyProfile.fromJson({
-        'user': {
-          'id': 'me',
-          'email': 'a@b.co',
-          'firstName': 'Anita',
-          'lastName': 'Rao',
-          'role': 'PROFESSIONAL',
-          'languages': ['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Marathi', 'Bengali', 'Urdu'],
-        },
-        'resume': {'jobTitle': 'Analyst'},
-      }));
+      final repo = DemoAccountRepository(
+        profile: MyProfile.fromJson({
+          'user': {
+            'id': 'me',
+            'email': 'a@b.co',
+            'firstName': 'Anita',
+            'lastName': 'Rao',
+            'role': 'PROFESSIONAL',
+            'languages': ['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Marathi', 'Bengali', 'Urdu'],
+          },
+          'resume': {'jobTitle': 'Analyst'},
+        }),
+      );
       await pump(tester, repo: repo);
-      await tester.scrollUntilVisible(find.byTooltip('Edit languages'), 300, scrollable: find.byType(Scrollable).first);
-      await tester.tap(find.byTooltip('Edit languages'));
+      await tester.scrollUntilVisible(find.byTooltip('Edit Languages'), 300, scrollable: find.byType(Scrollable).first);
+      await tester.tap(find.byTooltip('Edit Languages'));
       await tester.pumpAndSettle();
-      expect(find.text('That is the most you can add'), findsOneWidget);
+      expect(find.text('Maximum number added'), findsOneWidget);
       expect(tester.widget<TextField>(find.byKey(const Key('chips.input'))).enabled, isFalse);
     });
 
     testWidgets('Languages: a pick saves through PATCH /users/me', (tester) async {
       final repo = await pump(tester);
-      await tester.scrollUntilVisible(find.byTooltip('Edit languages'), 300, scrollable: find.byType(Scrollable).first);
-      await tester.tap(find.byTooltip('Edit languages'));
+      await tester.scrollUntilVisible(find.byTooltip('Edit Languages'), 300, scrollable: find.byType(Scrollable).first);
+      await tester.tap(find.byTooltip('Edit Languages'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('suggest.Tamil')));
       await tester.pump();
       await save(tester);
-      expect(repo.sent['updateMe'], {'languages': ['English', 'Hindi', 'Kannada', 'Tamil']});
+      expect(repo.sent['updateMe'], {
+        'languages': ['English', 'Hindi', 'Kannada', 'Tamil'],
+      });
       expect(find.text('Tamil'), findsOneWidget);
     });
   });
@@ -500,9 +683,9 @@ void main() {
   group('the checklist and Add section', () {
     testWidgets('a missing item opens the sheet that finishes it', (tester) async {
       final repo = await pump(tester);
-      expect(find.text('Profile strength 85%'), findsOneWidget);
+      expect(find.text('Profile Strength 85%'), findsOneWidget);
       await tapKey(tester, 'missing.Add your education');
-      expect(find.text('Add education'), findsWidgets);
+      expect(find.text('Add Education'), findsWidgets);
       expect(find.byKey(const Key('edu.institution')), findsOneWidget);
       expect(repo.count('saveEducation'), 0);
     });
@@ -510,21 +693,23 @@ void main() {
     testWidgets('Add section lists what can be added and opens the one chosen', (tester) async {
       await pump(tester);
       await tapKey(tester, 'profile.addSection');
-      expect(find.text('Add profile section'), findsOneWidget);
-      for (final item in ['About', 'Experience', 'Education', 'Career break', 'Credential', 'Skills', 'Languages']) {
+      expect(find.text('Add Profile Section'), findsOneWidget);
+      for (final item in ['About', 'Experience', 'Education', 'Career Break', 'Credential', 'Skills', 'Languages']) {
         expect(find.text(item), findsWidgets);
       }
-      await tester.tap(find.text('Career break'));
+      await tester.tap(find.text('Career Break'));
       await tester.pumpAndSettle();
-      expect(find.text('Add career break'), findsOneWidget);
+      expect(find.text('Add Career Break'), findsOneWidget);
     });
 
     testWidgets('a complete profile has no checklist', (tester) async {
-      final repo = DemoAccountRepository(profile: MyProfile.fromJson({
-        'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'Anita', 'lastName': 'Rao', 'role': 'PROFESSIONAL'},
-        'resume': {'jobTitle': 'Analyst'},
-        'completeness': {'score': 100, 'missing': []},
-      }));
+      final repo = DemoAccountRepository(
+        profile: MyProfile.fromJson({
+          'user': {'id': 'me', 'email': 'a@b.co', 'firstName': 'Anita', 'lastName': 'Rao', 'role': 'PROFESSIONAL'},
+          'resume': {'jobTitle': 'Analyst'},
+          'completeness': {'score': 100, 'missing': []},
+        }),
+      );
       await pump(tester, repo: repo);
       expect(find.byKey(const Key('profile.completion')), findsNothing);
     });

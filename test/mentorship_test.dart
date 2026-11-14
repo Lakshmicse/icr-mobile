@@ -284,6 +284,7 @@ Future<void> _pumpFind(
   String? company,
   bool companyOnAccount = false,
   double height = 2400,
+  bool autoLoad = false,
 }) async {
   _tall(tester, height: height);
   await tester.pumpWidget(
@@ -300,6 +301,7 @@ Future<void> _pumpFind(
           company: company,
           companyOnAccount: companyOnAccount,
           openSite: calls.openSite,
+          autoLoad: autoLoad,
         ),
       ),
     ),
@@ -375,7 +377,7 @@ void main() {
       expect(pills, [
         '1:1 Diagnostic Call • 30 Mins • Free',
         '1:1 Session • 45 Mins • ₹1,499',
-        'Async Query • 24 Hrs TAT • Free',
+        'Async Query • 24-Hr Reply • Free',
       ]);
       expect(DemoMentorshipRepository.services.map((s) => s.buttonLabel), [
         'Book Diagnostic (Free)',
@@ -620,7 +622,7 @@ void main() {
       expect(o.services.map((s) => s.pill), [
         '1:1 Session • 30 Mins • Free',
         '1:1 Session • 45 Mins • ₹1,499',
-        'Async Query • 24 Hrs TAT • Free',
+        'Async Query • 24-Hr Reply • Free',
       ]);
       expect(o.services.map((s) => s.featured), [true, false, false]);
       expect(o.services.first.mentorId, 'm1');
@@ -891,36 +893,35 @@ void main() {
   });
 
   group('the mentor card', () {
-    testWidgets('wraps its role line where the design wraps it', (tester) async {
-      tester.view.physicalSize = const Size(780, 2400);
-      tester.view.devicePixelRatio = 2;
-      addTearDown(tester.view.reset);
+    testWidgets('a long name takes a second line instead of being cut; the role and expertise are smaller type', (
+      tester,
+    ) async {
+      const long = Mentor(
+        id: 'm-long',
+        name: 'Venkatanarasimha Subramanian Iyer',
+        headline: 'Workplace Operations Manager @ Google',
+        expertise: ['Workplace Safety', 'Budgeting & Costing'],
+      );
       await tester.pumpWidget(
         MaterialApp(
           theme: buildAppTheme(),
           home: Scaffold(
-            body: SingleChildScrollView(
-              child: MentorGrid(mentors: DemoMentorshipRepository.mentors, onOpen: (_) {}),
+            body: Center(
+              child: SizedBox(
+                width: 171,
+                child: MentorCard(mentor: long, onTap: () {}),
+              ),
             ),
           ),
         ),
       );
-
-      String firstLine(String text) {
-        final paragraph = tester.renderObject<RenderParagraph>(find.text(text).first);
-        // Far to the right of the first line: the offset where that line ends.
-        final end = paragraph.getPositionForOffset(const Offset(1000, 2)).offset;
-        return text.substring(0, end).trim();
-      }
-
-      // The design keeps the "@" at the end of a line when it fits, and
-      // carries it to the next line when it does not (at the app's 14 sp
-      // "Chief Technology Officer @" no longer fits, so the "@" goes down).
-      expect(firstLine('VP Facility Ops @ Infosys'), 'VP Facility Ops @ Infosys');
-      expect(firstLine('Chief Technology Officer @ Cisco'), 'Chief Technology Officer');
-      expect(firstLine('Director of Sustainability @ Google'), 'Director of Sustainability');
-      expect(firstLine('Product Manager @ Amazon'), 'Product Manager @');
-      expect(firstLine('Operations Manager @ SpaceX'), 'Operations Manager @');
+      final name = find.text('Venkatanarasimha Subramanian Iyer');
+      final paragraph = tester.renderObject<RenderParagraph>(name);
+      expect(paragraph.didExceedMaxLines, isFalse, reason: 'the whole name shows');
+      expect(tester.getSize(name).height, greaterThan(MentorshipText.mentorName.fontSize! * 2));
+      expect(MentorshipText.mentorRole.fontSize, lessThan(MentorshipText.mentorName.fontSize!));
+      expect(MentorshipText.expertise.fontSize, lessThan(MentorshipText.mentorRole.fontSize!));
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('opens the mentor on tap', (tester) async {
@@ -950,7 +951,7 @@ void main() {
       expect(find.text('Top Mentors in Your Network'), findsNWidgets(2));
       expect(find.text('Explore by Companies'), findsOneWidget);
       expect(find.text('Explore by Expertise'), findsOneWidget);
-      expect(find.text('Learn from top topics'), findsOneWidget);
+      expect(find.text('Learn from mentors on top topics.'), findsOneWidget);
       expect(find.text('Featured Advisory Sessions'), findsOneWidget);
     });
 
@@ -1119,7 +1120,7 @@ void main() {
       await tester.tap(find.text('8+ Domains').first);
       await tester.pumpAndSettle();
       // The sheet, not the directory on the lit chip (which is what the pill used to open).
-      expect(find.text('All domains'), findsOneWidget);
+      expect(find.text('All Domains'), findsOneWidget);
       expect(find.text('${DemoMentorshipRepository.categoryList.length} domains'), findsOneWidget);
       expect(find.byType(FindMentorsScreen), findsNothing);
       for (final c in DemoMentorshipRepository.categoryList) {
@@ -1156,13 +1157,13 @@ void main() {
 
     testWidgets('an empty directory offers "Apply as Mentor" to someone who could still apply', (tester) async {
       await _pumpLanding(tester, _Repo(transform: _emptyDirectory), _Calls());
-      expect(find.text('No mentors are listed yet'), findsOneWidget);
+      expect(find.text('No Mentors Listed Yet'), findsOneWidget);
       expect(find.text('Apply as Mentor'), findsOneWidget);
     });
 
     testWidgets('an empty directory offers no application to a mentor, an applicant or ICR staff', (tester) async {
       await _pumpLanding(tester, _Repo(transform: _emptyDirectory), _Calls(), offerMentoring: false);
-      expect(find.text('No mentors are listed yet'), findsOneWidget);
+      expect(find.text('No Mentors Listed Yet'), findsOneWidget);
       expect(find.text('Apply as Mentor'), findsNothing);
     });
 
@@ -1170,7 +1171,7 @@ void main() {
       final calls = _Calls();
       await _pumpLanding(tester, _Repo(), calls);
       expect(find.text('UPCOMING COHORT'), findsOneWidget);
-      await tester.tap(find.text('Know More'));
+      await tester.tap(find.text('Learn More'));
       expect(calls.sites, ['/mentorship/programmes']);
     });
 
@@ -1223,8 +1224,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text("Couldn't load mentors"), findsOneWidget);
-      await tester.tap(find.text('Try again'));
+      expect(find.text('Unable to Load Mentors'), findsOneWidget);
+      await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
       expect(find.text('Top Mentors in Your Network'), findsNWidgets(2));
     });
@@ -1248,6 +1249,7 @@ void main() {
             category: 'Operations & FM',
             controller: controller,
             openSite: calls.openSite,
+            autoLoad: false,
           ),
         ),
       );
@@ -1256,10 +1258,12 @@ void main() {
       expect(find.text('48 matches'), findsOneWidget);
       expect(find.text('Filters (2)'), findsOneWidget);
       expect(find.text('Sort:'), findsOneWidget);
-      expect(find.text('Top rated'), findsOneWidget);
+      expect(find.text('Top Rated'), findsOneWidget);
       expect(find.text('Exp: 10+ Yrs'), findsOneWidget);
       expect(find.text('Showing 8 of 48 mentors in this category'), findsOneWidget);
-      expect(find.text('Load more mentors'), findsOneWidget);
+      // The pages come by scrolling (owner, 9 Nov 2026): no button, and an "All" chip leads the domains.
+      expect(find.text('Load more mentors'), findsNothing);
+      expect(find.text('All'), findsOneWidget);
       expect(find.byType(MentorCard), findsNWidgets(8));
     });
 
@@ -1286,12 +1290,12 @@ void main() {
       expect(chip.left, lessThan(tester.getRect(find.text('Filters (2)')).left));
     });
 
-    testWidgets('a search with no answer says so, and "Clear filters" brings the list back', (tester) async {
+    testWidgets('a search with no answer says so, and "Clear Filters" brings the list back', (tester) async {
       final repo = _Repo();
       await _pumpFind(tester, repo, _Calls());
       await _submit(tester, find.byType(TextField).first, 'zzz');
-      expect(find.text('No mentors match'), findsOneWidget);
-      await tester.tap(find.text('Clear filters'));
+      expect(find.text('No Matching Mentors'), findsOneWidget);
+      await tester.tap(find.text('Clear Filters'));
       await tester.pumpAndSettle();
       expect(find.text('48 matches'), findsOneWidget);
       expect(repo.lastFilters.count, 0);
@@ -1319,7 +1323,7 @@ void main() {
       final repo = _Repo();
       await _pumpFind(tester, repo, _Calls(), search: 'lisa');
       expect(find.text('1 match'), findsOneWidget);
-      await tester.tap(find.byTooltip('Clear search'));
+      await tester.tap(find.byTooltip('Clear Search'));
       await tester.pumpAndSettle();
       expect(repo.lastFilters.search, isEmpty);
       expect(find.text('48 matches'), findsOneWidget);
@@ -1348,9 +1352,9 @@ void main() {
       await tester.tap(find.text('Filters (1)'));
       await tester.pumpAndSettle();
       expect(find.text('Experience'), findsOneWidget);
-      await tester.tap(find.text('10+ years'));
+      await tester.tap(find.text('10+ Years'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Show mentors'));
+      await tester.tap(find.text('Show Mentors'));
       await tester.pumpAndSettle();
 
       expect(repo.lastFilters.minExperience, 10);
@@ -1363,9 +1367,9 @@ void main() {
       await _pumpFind(tester, repo, _Calls(), category: 'Operations & FM');
       await tester.tap(find.text('Filters (1)'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('5+ years'));
+      await tester.tap(find.text('5+ Years'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Show mentors'));
+      await tester.tap(find.text('Show Mentors'));
       await tester.pumpAndSettle();
       expect(find.text('Exp: 5+ Yrs'), findsOneWidget);
 
@@ -1385,25 +1389,25 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byType(SwitchListTile));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Show mentors'));
+      await tester.tap(find.text('Show Mentors'));
       await tester.pumpAndSettle();
 
       expect(repo.lastFilters.availableOnly, isTrue);
-      expect(find.text('Free slot'), findsOneWidget);
+      expect(find.text('Free Slot'), findsOneWidget);
       expect(find.text('Filters (1)'), findsOneWidget);
 
-      await tester.tap(find.text('Free slot'));
+      await tester.tap(find.text('Free Slot'));
       await tester.pumpAndSettle();
       expect(repo.lastFilters.availableOnly, isFalse);
     });
 
-    testWidgets('"Clear all" in the sheet takes off every filter the chip counts', (tester) async {
+    testWidgets('"Clear All" in the sheet takes off every filter the chip counts', (tester) async {
       final repo = _Repo();
       await _pumpFind(tester, repo, _Calls(), category: 'Operations & FM', company: 'Infosys');
       expect(find.text('Filters (2)'), findsOneWidget);
       await tester.tap(find.text('Filters (2)'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Clear all'));
+      await tester.tap(find.text('Clear All'));
       await tester.pumpAndSettle();
       expect(repo.lastFilters.count, 0);
       expect(find.text('Filters'), findsOneWidget);
@@ -1413,18 +1417,18 @@ void main() {
     testWidgets('the sort menu orders the directory by what is chosen', (tester) async {
       final repo = _Repo();
       await _pumpFind(tester, repo, _Calls());
-      expect(find.text('Top rated'), findsOneWidget);
-      await tester.tap(find.text('Top rated'));
+      expect(find.text('Top Rated'), findsOneWidget);
+      await tester.tap(find.text('Top Rated'));
       await tester.pumpAndSettle();
-      for (final label in ['Most mentees helped', 'Most sessions', 'Most experienced', 'Newest']) {
+      for (final label in ['Most Mentees Helped', 'Most Sessions', 'Most Experienced', 'Newest']) {
         expect(find.text(label), findsOneWidget, reason: label);
       }
-      await tester.tap(find.text('Most sessions'));
+      await tester.tap(find.text('Most Sessions'));
       await tester.pumpAndSettle();
 
       expect(repo.lastFilters.sort, MentorSort.sessionsCompleted);
-      expect(find.text('Most sessions'), findsOneWidget); // the chip now says so
-      expect(find.text('Top rated'), findsNothing);
+      expect(find.text('Most Sessions'), findsOneWidget); // the chip now says so
+      expect(find.text('Top Rated'), findsNothing);
     });
 
     testWidgets('the company chip stays out of the search box, and its cross takes it off', (tester) async {
@@ -1441,16 +1445,37 @@ void main() {
       expect(find.text('48 matches'), findsOneWidget);
     });
 
-    testWidgets('"Load more mentors" appends the next page and moves the bar on', (tester) async {
+    testWidgets('scrolling to the end fetches the next page and moves the bar on (owner, 9 Nov 2026)', (tester) async {
       final repo = _Repo();
-      await _pumpFind(tester, repo, _Calls(), category: 'Operations & FM', height: 4600);
-      expect(find.byType(MentorCard), findsNWidgets(8));
+      // A screen the first page overflows: nothing is fetched until the person scrolls.
+      await _pumpFind(tester, repo, _Calls(), category: 'Operations & FM', height: 500, autoLoad: true);
+      final before = repo.searches.length;
+      expect(find.text('Load more mentors'), findsNothing);
 
-      await tester.tap(find.text('Load more mentors'));
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -4000));
       await tester.pumpAndSettle();
-      expect(repo.searches.last.$2, 2); // page 2 of the directory
-      expect(find.byType(MentorCard), findsNWidgets(16));
-      expect(find.text('Showing 16 of 48 mentors in this category'), findsOneWidget);
+      expect(repo.searches.length, greaterThan(before));
+      expect(repo.searches.last.$2, greaterThanOrEqualTo(2), reason: 'a real next page of the directory');
+      // The list builds only the rows on screen, so the foot's count is the proof, not the cards.
+      expect(find.text('Showing 8 of 48 mentors in this category'), findsNothing, reason: 'more than one page');
+    });
+
+    testWidgets('a first page shorter than the screen is followed by the next without a tap', (tester) async {
+      final repo = _Repo();
+      await _pumpFind(tester, repo, _Calls(), category: 'Operations & FM', height: 2400, autoLoad: true);
+      expect(repo.searches.last.$2, greaterThanOrEqualTo(2));
+      expect(find.byType(MentorCard).evaluate().length, greaterThan(8));
+      expect(find.byKey(const ValueKey('mentors-loading-more')), findsNothing, reason: 'settled');
+    });
+
+    testWidgets('the "All" chip clears the domain', (tester) async {
+      final repo = _Repo();
+      await _pumpFind(tester, repo, _Calls(), category: 'Operations & FM');
+      expect(find.text('Showing 8 of 48 mentors in this category'), findsOneWidget);
+      await tester.tap(find.text('All'));
+      await tester.pumpAndSettle();
+      expect(repo.searches.last.$1.category, isNull);
+      expect(find.text('Showing 8 of 48 mentors'), findsOneWidget);
     });
 
     testWidgets('a card opens that mentor\'s profile', (tester) async {

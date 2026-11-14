@@ -44,11 +44,11 @@ class MentionSuggestions extends StatelessWidget {
         } else if (controller.loading || controller.resultsFor == null) {
           body = const _Note(key: ValueKey('mention-loading'), text: 'Searching people…', spinner: true);
         } else if (controller.failed) {
-          body = const _Note(key: ValueKey('mention-failed'), text: "Couldn't search people just now.");
+          body = const _Note(key: ValueKey('mention-failed'), text: 'Unable to search people. Try again.');
         } else if ((controller.query?.search.length ?? 0) < 2) {
           body = const _Note(key: ValueKey('mention-hint'), text: 'Type a name to tag someone.');
         } else {
-          body = const _Note(key: ValueKey('mention-empty'), text: 'No one found');
+          body = const _Note(key: ValueKey('mention-empty'), text: 'No one found.');
         }
         // Taps in the list belong to the field's own tap region, so the field keeps its focus (and the keyboard).
         return TextFieldTapRegion(
@@ -215,7 +215,11 @@ class MentionText extends StatefulWidget {
     this.onOpen,
     this.maxLines,
     this.overflow,
+    this.lead,
   });
+
+  /// Drawn before the words, on their first line: the name of the person a comment answers.
+  final InlineSpan? lead;
 
   final String text;
   final TextStyle style;
@@ -246,8 +250,20 @@ class _MentionTextState extends State<MentionText> {
     final text = widget.text;
     final tagged = widget.mentions.isNotEmpty && widget.onOpen != null;
     final linked = LinkSpans.hasLink(text);
+    final lead = widget.lead;
     if (!tagged && !linked) {
-      return Text(text, style: widget.style, maxLines: widget.maxLines, overflow: widget.overflow);
+      if (lead == null) return Text(text, style: widget.style, maxLines: widget.maxLines, overflow: widget.overflow);
+      return Text.rich(
+        TextSpan(
+          style: widget.style,
+          children: [
+            lead,
+            TextSpan(text: text),
+          ],
+        ),
+        maxLines: widget.maxLines,
+        overflow: widget.overflow,
+      );
     }
     // Mentions are placed on the whole text (a namesake is told apart by order), then each plain run between
     // addresses takes the ones that fall inside it.
@@ -277,7 +293,7 @@ class _MentionTextState extends State<MentionText> {
             );
           }();
     return Text.rich(
-      TextSpan(style: widget.style, children: children),
+      TextSpan(style: widget.style, children: [?lead, ...children]),
       maxLines: widget.maxLines,
       overflow: widget.overflow,
     );

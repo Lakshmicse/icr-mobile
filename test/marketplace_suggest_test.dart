@@ -54,11 +54,11 @@ void main() {
       await pumpMart(tester, repo: repoWithMatches());
       expect(find.byType(SupplierCard), findsWidgets);
       await focusBox(tester);
-      expect(find.text('Try searching'), findsOneWidget);
+      expect(find.text('Try Searching'), findsOneWidget);
       expect(find.text('Housekeeping in Bangalore'), findsOneWidget);
       expect(find.text('Fire safety companies'), findsOneWidget);
       expect(find.text('Facility management Mumbai'), findsOneWidget);
-      expect(find.text('Recent searches'), findsNothing);
+      expect(find.text('Recent Searches'), findsNothing);
       expect(find.byType(SupplierCard), findsNothing);
     });
 
@@ -72,7 +72,7 @@ void main() {
         tester.widget<TextField>(find.byKey(const ValueKey('market-search'))).controller!.text,
         'Fire safety companies',
       );
-      expect(find.text('Try searching'), findsNothing);
+      expect(find.text('Try Searching'), findsNothing);
       expect(find.byType(SupplierCard), findsWidgets);
     });
 
@@ -88,7 +88,7 @@ void main() {
       // Typed words are still in the box: clear it to see the recent ones.
       await tester.enterText(find.byKey(const ValueKey('market-search')), '');
       await tester.pumpAndSettle();
-      expect(find.text('Recent searches'), findsOneWidget);
+      expect(find.text('Recent Searches'), findsOneWidget);
       final duct = tester.getTopLeft(find.byKey(const ValueKey('recent-duct'))).dy;
       final pest = tester.getTopLeft(find.byKey(const ValueKey('recent-pest'))).dy;
       expect(pest, lessThan(duct), reason: 'the newest first');
@@ -106,7 +106,7 @@ void main() {
       await type(tester, 'd');
       expect(mart.repo.searches, hasLength(before));
       expect(find.byKey(const ValueKey('search-for')), findsNothing, reason: 'one letter is too little to search for');
-      expect(find.text('Try searching'), findsOneWidget);
+      expect(find.text('Try Searching'), findsOneWidget);
 
       await type(tester, 'duct');
       expect(mart.repo.searches.last.filters.search, 'duct');

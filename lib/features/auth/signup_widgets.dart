@@ -75,20 +75,12 @@ class AuthHelperLine extends StatelessWidget {
 
 /// The code a non-production API handed back instead of sending it, shown
 /// where it is typed, as the website's `DevCodeNote`: "Test mode: your code is
-/// 123456." and "Use code", which fills the field. Draws nothing without a code.
-///
-/// [name] tells two notes on one screen apart: the emailed code's is
-/// `signup.devCode` / `signup.useCode`, the texted one's `signup.phoneDevCode`
-/// / `signup.phoneUseCode`.
+/// 123456." and "Use Code", which fills the field. Draws nothing without a code.
 class DevCodeNote extends StatelessWidget {
-  const DevCodeNote({super.key, required this.code, required this.onUse, this.name = ''});
+  const DevCodeNote({super.key, required this.code, required this.onUse});
 
   final String? code;
   final ValueChanged<String> onUse;
-  final String name;
-
-  String _key(String part) =>
-      name.isEmpty ? 'signup.$part' : 'signup.$name${part[0].toUpperCase()}${part.substring(1)}';
 
   static const _warning = Color(0xFFB45309);
   static const _warningDark = Color(0xFFFBBF24);
@@ -101,7 +93,7 @@ class DevCodeNote extends StatelessWidget {
     final ink = p.isDark ? _warningDark : _warning;
     final style = AuthType.small(p).copyWith(color: ink);
     return Padding(
-      key: Key(_key('devCode')),
+      key: const Key('signup.devCode'),
       padding: const EdgeInsets.only(top: 4),
       child: Row(
         children: [
@@ -122,8 +114,8 @@ class DevCodeNote extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           AuthLink(
-            key: Key(_key('useCode')),
-            label: 'Use code',
+            key: const Key('signup.useCode'),
+            label: 'Use Code',
             style: AuthType.link(p).copyWith(fontSize: 14),
             onTap: () => onUse(value),
           ),
@@ -134,7 +126,7 @@ class DevCodeNote extends StatelessWidget {
 }
 
 /// The advisory password meter (the website's `PasswordStrength`): four
-/// segments, the bucket's name, "A guide, not a gate", and the four rules
+/// segments, the bucket's name, a line saying it is guidance, and the four rules
 /// ticked as they are met. Only eight characters blocks the button.
 class PasswordStrengthMeter extends StatelessWidget {
   const PasswordStrengthMeter({super.key, required this.value});
@@ -191,7 +183,7 @@ class PasswordStrengthMeter extends StatelessWidget {
               Flexible(
                 flex: 6,
                 child: Text(
-                  'A guide, not a gate — only 8 characters are required.',
+                  'This is guidance. Only 8 characters are required.',
                   textAlign: TextAlign.right,
                   style: AuthType.small(p).copyWith(fontSize: 13, height: 15 / 11.5),
                 ),
@@ -227,7 +219,7 @@ class PasswordStrengthMeter extends StatelessWidget {
   }
 }
 
-/// "I'm working | Between roles": two halves of one outlined box, the chosen
+/// "I'm Working | Between Roles": two halves of one outlined box, the chosen
 /// one filled with the accent.
 class AuthSegmented<T> extends StatelessWidget {
   const AuthSegmented({
@@ -590,7 +582,7 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
             ),
           Expanded(
             child: shown.isEmpty
-                ? Center(child: Text('Nothing matches “$_query”.', style: AuthType.small(p)))
+                ? Center(child: Text('No results for “$_query”.', style: AuthType.small(p)))
                 : ListView.builder(
                     itemCount: shown.length,
                     itemBuilder: (context, i) {

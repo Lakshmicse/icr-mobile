@@ -8,19 +8,18 @@ import 'workspaces.dart';
 /// Mentorship, Learning and Jobs, each opening its pages as tabs. What each row holds follows the website's sidebar for
 /// the role (`personasFor` in `personas.ts`, overrides included; owner, 5 Nov 2026: "as per the user access"):
 ///
-/// * **Company** — the company's own pages (My Company, its products, services, offices and certifications, Team, the
-///   operations consoles) for the roles that run them, and "My companies" for every member, where they switch,
-///   join or create one.
-/// * **Marketplace** — the website's Buy, Sell and Find companies: My Requirements for a company that buys, Find Work
-///   & Bid and Advertise for one that sells, and the public boards for everyone.
+/// * **Company** — the company's own pages (My Company, its offices and certifications, Team, the operations consoles)
+///   for the roles that run them, and "My companies" for every member, where they switch, join or create one.
+/// * **Marketplace** — the website's Buy, Sell and Find companies: My Requirements for a company that buys, My
+///   Products and My Services for one that sells, and the public boards for everyone.
 /// * **Mentorship**, **Learning** — the member's own.
 /// * **Jobs** — the hiring team's pages for the roles that hire (Interviews alone for a hiring manager), the job board,
 ///   and the member's own career pages.
-/// * **Account** (6 Nov 2026) — the member's membership pages, Refer & Earn and My companies, the website's
-///   Account workspace.
+/// * **Account** (6 Nov 2026) — the member's membership pages and Refer & Earn, the website's Account workspace.
 ///
-/// The Company row is only for someone acting for a company; a member acting as themselves gets the website's
-/// "Do more on ICR" doors instead ([startDoorsFor]).
+/// The Company row holds the company the member runs, and "My companies" for everyone (owner, 7 Nov 2026: "Company
+/// is displayed under account. Should be under Company"); a member acting as themselves also gets the website's
+/// "Do more on ICR" doors ([startDoorsFor]).
 ///
 /// ICR staff get their consoles instead of the member's rows (Engage, Learn, Content, Admin; the website leaves the
 /// member's workspaces out for them). Only pages the app shows as its own screens are listed ([opens]): a page that
@@ -52,7 +51,6 @@ List<Workspace> workspacesFor(SessionUser user, {required bool Function(String p
   final forCompany = user.companyId != null;
   final hires = forCompany && const ['RECRUITER', 'BRANCH_ADMIN', 'COMPANY_ADMIN'].contains(role);
   final sells = forCompany && const ['VENDOR', 'COMPANY_ADMIN'].contains(role);
-  final buys = forCompany && const ['BUYER', 'VENDOR', 'COMPANY_ADMIN'].contains(role);
   final runsCompany =
       forCompany && const ['COMPANY_ADMIN', 'VENDOR', 'BUYER', 'RECRUITER', 'BRANCH_ADMIN'].contains(role);
   // Staff of a partner institute: anyone given a learning role there, and the admin of a company ICR approved as a
@@ -63,17 +61,33 @@ List<Workspace> workspacesFor(SessionUser user, {required bool Function(String p
   // The member's rows, as the owner's table lays them out (6 Nov 2026): what every user has, what a mentor adds,
   // and what a company and a partner institute add — each row only with what the role may do.
   if (!staff) {
+    // The rows' words are the owner's document "Mobile Profile Screen Text Changes" (12 Nov 2026), title case
+    // throughout. The search pages (jobs, mentors, suppliers) left the rows: the tabs are those searches.
     add('jobs', 'Jobs', LucideIcons500.briefcase, 'Your applications, saved jobs and the board', _orange, [
-      // The company's hiring, for the roles that hire: post, edit and delete jobs; the team; projects.
+      // The company's hiring, for the roles that hire: the jobs, the hiring team, candidates, projects.
       if (hires) ...const [
-        WorkspaceItem('Post & manage jobs', Icons.work_outline, '/manage/jobs'),
-        WorkspaceItem('Assign team & add members', Icons.groups_outlined, '/manage/team'),
-        WorkspaceItem('Create a project', Icons.folder_special_outlined, '/manage/projects'),
+        WorkspaceItem('Manage Jobs', Icons.work_outline, '/manage/jobs'),
+        WorkspaceItem('Manage Hiring Team', Icons.groups_outlined, '/manage/team'),
+        WorkspaceItem('Source Candidates', Icons.person_search_outlined, '/talent'),
+        WorkspaceItem('Projects', Icons.folder_special_outlined, '/manage/projects'),
       ],
       if (role == 'HIRING_MANAGER' && forCompany) _interviews,
-      const WorkspaceItem('My applications', Icons.assignment_ind_outlined, '/career/applications'),
-      const WorkspaceItem('My saved jobs', Icons.bookmark_border, '/career/saved'),
-      const WorkspaceItem('Search jobs', Icons.search, '/jobs'),
+      const WorkspaceItem('My Applications', Icons.assignment_ind_outlined, '/career/applications'),
+      const WorkspaceItem('My Saved Jobs', Icons.bookmark_border, '/career/saved'),
+    ]);
+
+    // The Company row, second, under Jobs (owner, 12 Nov 2026): "My companies" for everyone — where a member
+    // switches to, joins or creates one (owner, 7 Nov 2026: it sat under Account) — then the company the member
+    // runs: its dashboard and its team. Owner, 14 Nov 2026: Company is My Companies, Dashboard and Manage Team;
+    // View Enquiries & RFQs and Bid for Enquiries & RFQs left it, since requirements are the Marketplace row's (My
+    // Requirements, Enquiries and RFQ), as are the products and services.
+    add('company', 'Company', LucideIcons500.building, 'Your company, and the companies you belong to', _blue, [
+      _yourCompanies,
+      if (runsCompany) ...[
+        const WorkspaceItem('Dashboard', Icons.dashboard_outlined, '/company'),
+        const WorkspaceItem('Manage Team', Icons.groups_outlined, '/manage/team'),
+        if (role == 'RECRUITER' || role == 'BRANCH_ADMIN') _myLocations,
+      ],
     ]);
 
     add(
@@ -83,94 +97,74 @@ List<Workspace> workspacesFor(SessionUser user, {required bool Function(String p
       'Your courses, attempts and certificates',
       _violet,
       const [
-        WorkspaceItem('My courses', Icons.school_outlined, '/learning?mine=1'),
-        WorkspaceItem('My attempts', Icons.history, '/learning/attempts'),
-        WorkspaceItem('My certificates', Icons.workspace_premium_outlined, '/learning/certificates'),
+        WorkspaceItem('My Courses', Icons.school_outlined, '/learning?mine=1'),
+        WorkspaceItem('My Attempts', Icons.history, '/learning/attempts'),
+        WorkspaceItem('My Certificates', Icons.workspace_premium_outlined, '/learning/certificates'),
       ],
     );
 
     add('mentorship', 'Mentorship', LucideIcons500.users, 'Your sessions and mentors', _blue, [
-      const WorkspaceItem('My sessions', Icons.event_note_outlined, '/mentorship/my?tab=calendar'),
-      const WorkspaceItem('Search mentors', Icons.travel_explore, '/mentorship/mentors'),
-      // A mentor's own desk and offerings; an applicant's profile while it is reviewed.
-      if (actsAsMentor(user)) ...const [
-        WorkspaceItem('Mentor dashboard', Icons.volunteer_activism_outlined, '/mentorship/mentor'),
-        WorkspaceItem('Mentor offerings', Icons.storefront_outlined, '/mentorship/mentor?tab=services'),
-      ] else if (user.mentorStatus != null)
-        const WorkspaceItem('My mentor profile', Icons.how_to_reg_outlined, '/mentorship/become-a-mentor')
+      // A mentor's own desk first; then everyone's engagements (My mentoring: pairings, requests, goals) and
+      // sessions; an applicant's profile while it is reviewed.
+      if (actsAsMentor(user))
+        const WorkspaceItem('Mentor Dashboard', Icons.volunteer_activism_outlined, '/mentorship/mentor'),
+      const WorkspaceItem('Mentor Engagements', Icons.handshake_outlined, '/mentorship/my'),
+      const WorkspaceItem('Mentoring Sessions', Icons.event_note_outlined, '/mentorship/my?tab=calendar'),
+      if (!actsAsMentor(user) && user.mentorStatus != null)
+        const WorkspaceItem('My Mentor Profile', Icons.how_to_reg_outlined, '/mentorship/become-a-mentor')
       // The website's sidebar offers "Become a mentor" to anyone who may apply (`canOfferToMentor`); someone
       // acting for a company has no "Do more on ICR" door for it, so it sits here for them.
-      else if (forCompany && canOfferToMentor(user))
-        const WorkspaceItem('Become a mentor', Icons.volunteer_activism_outlined, '/mentorship/become-a-mentor'),
+      else if (!actsAsMentor(user) && forCompany && canOfferToMentor(user))
+        const WorkspaceItem('Become a Mentor', Icons.volunteer_activism_outlined, '/mentorship/become-a-mentor'),
     ]);
 
-    add('marketplace', 'Marketplace', LucideIcons500.shoppingBag, 'Requirements and suppliers', _teal, const [
-      WorkspaceItem('Post a requirement', Icons.request_quote_outlined, '/rfq/new'),
-      WorkspaceItem('Search suppliers', Icons.storefront_outlined, '/vendors'),
+    add('marketplace', 'Marketplace', LucideIcons500.shoppingBag, 'Requirements and suppliers', _teal, [
+      // The member's own requirements (posted from that page), a seller's catalogue, and everything posted on ICR.
+      const WorkspaceItem('My Requirements', Icons.request_quote_outlined, '/manage/requirements'),
+      if (sells) ..._myCatalogue,
+      const WorkspaceItem('Enquiries and RFQ', Icons.list_alt_outlined, '/rfq'),
     ]);
-
-    // The Company row only for someone acting for a company they run (owner, 6 Nov 2026); a member acting as
-    // themselves gets the doors a company opens instead ([startDoorsFor]), and reaches My companies under Account.
-    if (runsCompany) {
-      add('company', 'Company', LucideIcons500.building, 'Your company: team, catalogue, enquiries', _blue, [
-        if (role == 'BUYER') _myOrganisation,
-        const WorkspaceItem('Add members', Icons.group_add_outlined, '/manage/team'),
-        if (role == 'RECRUITER' || role == 'BRANCH_ADMIN') _myLocations,
-        if (sells) ...const [
-          WorkspaceItem('Add services', Icons.handyman_outlined, '/manage/services'),
-          WorkspaceItem('Add products', Icons.inventory_2_outlined, '/manage/products'),
-        ],
-        if (buys) const WorkspaceItem('View enquiries & RFQs', Icons.request_quote_outlined, '/manage/requirements'),
-        if (sells) const WorkspaceItem('Bid for enquiries & RFQs', Icons.gavel_outlined, '/manage/bids'),
-      ]);
-    }
 
     if (partnerStaff) {
       add(
         'partner',
-        'Partner Institute',
+        'Learning Partner',
         LucideIcons500.school,
         'Courses, batches and the teaching team',
         _violet,
         const [
-          WorkspaceItem('Publish a course', Icons.menu_book_outlined, '/admin/learning/courses'),
-          WorkspaceItem('Publish a batch', Icons.event_outlined, '/admin/learning/batches'),
+          WorkspaceItem('Manage Courses', Icons.menu_book_outlined, '/admin/learning/courses'),
+          WorkspaceItem('Manage Team', Icons.group_add_outlined, '/manage/team'),
+          WorkspaceItem('Manage Batches', Icons.event_outlined, '/admin/learning/batches'),
+          WorkspaceItem('Enrolment', Icons.how_to_reg_outlined, '/admin/learning/enrolments'),
           // The enquiries from its course pages and its own page (the website's Enquiries console), native.
           WorkspaceItem('Enquiries', Icons.mark_email_unread_outlined, '/admin/learning/enquiries'),
-          WorkspaceItem('Add a team member', Icons.group_add_outlined, '/manage/team'),
-          // The team page's invite, opened with the learning role ticked (a trainer; a programme specialist is a
-          // Course Admin on the website's list of learning roles).
-          WorkspaceItem('Add a trainer', Icons.co_present_outlined, '/manage/team?invite=TRAINER'),
-          WorkspaceItem(
-            'Add a programme specialist',
-            Icons.person_add_alt_outlined,
-            '/manage/team?invite=COURSE_ADMIN',
-          ),
         ],
       );
     }
 
-    // Account among the main rows (owner, 6 Nov 2026): the member's membership pages and Refer & Earn as its tabs,
-    // and where a member switches to, joins or creates a company, whichever hat they wear.
-    add('account', 'Account', LucideIcons500.user, 'Your membership, Refer & Earn, and your companies', _blue, [
+    // Account among the main rows (owner, 6 Nov 2026): the member's membership pages and Refer & Earn as its tabs.
+    add('account', 'Account', LucideIcons500.user, 'Your membership and Refer & Earn', _blue, [
       ...myAccountSection.items,
       ...referralsSection.items,
-      _yourCompanies,
     ]);
   }
 
-  // ICR's own operator keeps the company and market consoles.
+  // ICR's own operator keeps the company and market consoles. The catalogue (My Products, My Services) is the
+  // Marketplace's, as it is for a member (owner, 14 Nov 2026: "My Products and My Services should be under
+  // Marketplace").
   if (role == 'SUPER_ADMIN') {
-    add('company', 'Company', LucideIcons500.building, 'Companies, catalogues and operations', _blue, [
+    add('company', 'Company', LucideIcons500.building, 'Companies, offices and operations', _blue, [
       ..._myBusiness,
       _team,
       ..._operations,
     ]);
     add('marketplace', 'Marketplace', LucideIcons500.shoppingBag, 'Requirements, suppliers and products', _teal, const [
       WorkspaceItem('My Requirements', Icons.request_quote_outlined, '/manage/requirements'),
+      ..._myCatalogue,
       WorkspaceItem('Browse RFQs', Icons.request_quote_outlined, '/rfq'),
       WorkspaceItem('Tenders', Icons.gavel_outlined, '/tenders'),
-      WorkspaceItem('Find Work & Bid', Icons.gavel_outlined, '/manage/bids'),
+      WorkspaceItem("Enquiries and RFQ's", Icons.gavel_outlined, '/manage/bids'),
       WorkspaceItem('Advertise', Icons.campaign_outlined, '/advertise'),
       WorkspaceItem('Supplier Mart', Icons.storefront_outlined, '/vendors'),
       _companies,
@@ -194,7 +188,12 @@ List<Workspace> workspacesFor(SessionUser user, {required bool Function(String p
       LucideIcons500.bookOpen,
       'Mock exams, assessments, courses and the question banks',
       _violet,
-      role == 'PARTNER_ADMIN' ? _partnerLearning : _learningCenter,
+      role == 'PARTNER_ADMIN'
+          ? _partnerLearning
+          : [
+              for (final item in _learningCenter)
+                if (!partnerConsolePaths.contains(item.path)) item,
+            ],
     );
   }
   if (role == 'SUPER_ADMIN') {
@@ -255,28 +254,28 @@ List<StartDoor> startDoorsFor(SessionUser user) {
   return [
     const StartDoor(
       'create-company',
-      'Create a company',
-      'Buying, selling and hiring start with a company page',
+      'Create a Company',
+      'Buying, selling and hiring start with a company page.',
       LucideIcons500.building2,
       '/account/companies/new',
     ),
     const StartDoor(
       'hire',
-      'Hire people',
+      'Hire Talent',
       'Create your company page, then post a job.',
       LucideIcons500.userPlus,
       '/account/companies/new?role=COMPANY_ADMIN',
     ),
     const StartDoor(
       'sell',
-      'Sell to FM buyers',
+      'Sell to FM Buyers',
       'Create your company page, then list your services.',
       LucideIcons500.store,
       '/account/companies/new?role=VENDOR',
     ),
     const StartDoor(
       'source',
-      'Find suppliers',
+      'Marketplace',
       'Search verified suppliers and ask for quotes.',
       LucideIcons500.search,
       '/vendors',
@@ -284,7 +283,7 @@ List<StartDoor> startDoorsFor(SessionUser user) {
     if (canOfferToMentor(user))
       const StartDoor(
         'mentor',
-        'Become a mentor',
+        'Become a Mentor',
         'Share your expertise with the next generation.',
         LucideIcons500.handshake,
         '/mentorship/become-a-mentor',
@@ -303,16 +302,19 @@ const _orange = Color(0xFFEA580C);
 const _myLocations = WorkspaceItem('My Locations', Icons.place_outlined, '/manage/locations');
 const _team = WorkspaceItem('Team', Icons.groups_outlined, '/manage/team');
 const _companies = WorkspaceItem('Companies', Icons.business_outlined, '/companies');
-const _yourCompanies = WorkspaceItem('My companies', Icons.apartment_outlined, '/account/companies');
-const _myOrganisation = WorkspaceItem('My Organization', Icons.business_outlined, '/company');
+const _yourCompanies = WorkspaceItem('My Companies', Icons.apartment_outlined, '/account/companies');
 const _interviews = WorkspaceItem('Interviews', Icons.event_note_outlined, '/manage/interviews');
 
 const _myBusiness = [
   WorkspaceItem('My Company', Icons.storefront_outlined, '/company'),
-  WorkspaceItem('My Products', Icons.inventory_2_outlined, '/manage/products'),
-  WorkspaceItem('My Services', Icons.handyman_outlined, '/manage/services'),
   _myLocations,
   WorkspaceItem('My Certifications', Icons.workspace_premium_outlined, '/manage/certifications'),
+];
+
+/// A seller's catalogue: the Marketplace row's, never the Company row's (owner, 12 and 14 Nov 2026).
+const _myCatalogue = [
+  WorkspaceItem('My Products', Icons.inventory_2_outlined, '/manage/products'),
+  WorkspaceItem('My Services', Icons.handyman_outlined, '/manage/services'),
 ];
 
 const _operations = [
@@ -358,9 +360,14 @@ const _learningCenter = [
   WorkspaceItem('Get Involved', Icons.emoji_events_outlined, '/get-involved'),
 ];
 
+/// The pages the app draws as a partner institute's console (`lib/features/partner_console`). ICR's own Learning Center
+/// has pages at the same addresses (every institute's batches and enrolments), which stay the staff console's: the
+/// app's screens are the institute's, and would only tell ICR staff so.
+const partnerConsolePaths = {'/admin/learning/courses', '/admin/learning/batches', '/admin/learning/enrolments'};
+
 /// A partner institute's own pages.
 const _partnerLearning = [
-  WorkspaceItem('Courses', Icons.co_present_outlined, '/admin/learning'),
+  WorkspaceItem('Courses', Icons.co_present_outlined, '/admin/learning/courses'),
   WorkspaceItem('Batches', Icons.co_present_outlined, '/admin/learning/batches'),
   WorkspaceItem('Team', Icons.groups_outlined, '/admin/learning/team'),
   WorkspaceItem('Enrolments', Icons.how_to_reg_outlined, '/admin/learning/enrolments'),

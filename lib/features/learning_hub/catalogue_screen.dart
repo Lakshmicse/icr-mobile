@@ -32,7 +32,7 @@ class CatalogueScreen extends StatelessWidget {
           child: Column(
             children: [
               TitleBar(
-                title: 'Catalogue',
+                title: 'Explore Learning Resources',
                 onBack: onBack,
                 unread: unread,
                 onBell: onBell ?? () => openNotifications(context),

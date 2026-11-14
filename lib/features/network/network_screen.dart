@@ -73,7 +73,7 @@ class NetworkScreen extends StatefulWidget {
   /// `/community/<slug>` or `/blogs/<slug>`). The website's page when left out.
   final void Function(NetworkPost post)? onOpenPost;
 
-  /// "Write an article". The website's article composer when left out.
+  /// "Write an Article". The website's article composer when left out.
   final VoidCallback? onWriteArticle;
 
   final Future<void> Function(BuildContext context, Uri uri) opener;
@@ -132,7 +132,10 @@ class _NetworkScreenState extends State<NetworkScreen> {
           children: [
             Text('Unfollow ${person.name}?', style: CommunityText.sheetTitle),
             const SizedBox(height: 6),
-            Text("Their articles and discussions leave your feed. They aren't told.", style: CommunityText.body),
+            Text(
+              'Their articles and discussions will no longer appear in your feed. They will not be notified.',
+              style: CommunityText.body,
+            ),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -184,9 +187,9 @@ class _NetworkScreenState extends State<NetworkScreen> {
       return [
         CommunityNotice(
           icon: LucideIcons.users,
-          title: "Couldn't load your network",
+          title: 'Unable to Load Your Network',
           body: network.error!,
-          action: 'Retry',
+          action: 'Try Again',
           onAction: network.refresh,
         ),
       ];
@@ -198,7 +201,7 @@ class _NetworkScreenState extends State<NetworkScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Your network', style: AppText.workSans(16, FontWeight.w700, AppColors.slate900, lineHeight: 21)),
+            Text('Your Network', style: AppText.workSans(16, FontWeight.w700, AppColors.slate900, lineHeight: 21)),
             const SizedBox(height: 3),
             Text('Articles and discussions from the people you follow.', style: CommunityText.sectionSubtitle),
           ],
@@ -252,9 +255,9 @@ class _NetworkScreenState extends State<NetworkScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14),
         child: CommunityHostCard(
           icon: LucideIcons.penLine,
-          title: 'Be worth following',
-          body: 'Members who follow you hear when you publish something new.',
-          action: 'Write an article',
+          title: 'Publish for Your Followers',
+          body: 'Members who follow you are notified when you publish something new.',
+          action: 'Write an Article',
           onAction: widget.onWriteArticle ?? () => _site('/manage/articles'),
         ),
       ),
@@ -269,12 +272,12 @@ class _NetworkScreenState extends State<NetworkScreen> {
           return [
             const CommunityNotice(
               icon: LucideIcons.rss,
-              title: 'Follow someone to start your feed',
-              body: 'When you follow a member, what they publish shows up here.',
+              title: 'Follow Members to Start Your Feed',
+              body: 'When you follow a member, what they publish will appear here.',
               padding: EdgeInsets.fromLTRB(32, 12, 32, 16),
             ),
             if (network.suggestions.isNotEmpty) ...[
-              const CommunitySectionHeading(title: 'People worth following'),
+              const CommunitySectionHeading(title: 'Who to Follow'),
               const SizedBox(height: 8),
               ..._people(network, network.suggestions.take(8).toList()),
             ],
@@ -284,7 +287,7 @@ class _NetworkScreenState extends State<NetworkScreen> {
           if (network.feed.isEmpty)
             const CommunityNotice(
               icon: LucideIcons.rss,
-              title: 'Nothing new yet',
+              title: 'No New Posts Yet',
               body: 'The people you follow have not published anything recently.',
               padding: EdgeInsets.fromLTRB(32, 12, 32, 16),
             )
@@ -306,8 +309,8 @@ class _NetworkScreenState extends State<NetworkScreen> {
           if (network.suggestions.isNotEmpty) ...[
             const SizedBox(height: 20),
             CommunitySectionHeading(
-              title: 'Who to follow',
-              action: 'See all',
+              title: 'Who to Follow',
+              action: 'View More',
               onAction: () => network.setTab(NetworkTab.suggestions),
             ),
             const SizedBox(height: 8),
@@ -319,8 +322,8 @@ class _NetworkScreenState extends State<NetworkScreen> {
           return const [
             CommunityNotice(
               icon: LucideIcons.users,
-              title: 'No suggestions right now',
-              body: 'As you follow people, the people they follow show up here.',
+              title: 'No Suggestions Yet',
+              body: 'As you follow people, the people they follow will appear here.',
             ),
           ];
         }
@@ -330,9 +333,9 @@ class _NetworkScreenState extends State<NetworkScreen> {
           return [
             CommunityNotice(
               icon: LucideIcons.userPlus,
-              title: "You don't follow anyone yet",
+              title: 'Not Following Anyone Yet',
               body: 'Follow members to read what they publish.',
-              action: 'Find people',
+              action: 'Find People',
               onAction: () => network.setTab(NetworkTab.suggestions),
             ),
           ];
@@ -343,8 +346,8 @@ class _NetworkScreenState extends State<NetworkScreen> {
           return const [
             CommunityNotice(
               icon: LucideIcons.users,
-              title: 'No followers yet',
-              body: 'Members who follow you show up here.',
+              title: 'No Followers Yet',
+              body: 'Members who follow you will appear here.',
             ),
           ];
         }
@@ -388,7 +391,7 @@ class _NetworkScreenState extends State<NetworkScreen> {
             )
           : CommunityButton(
               key: const ValueKey('show-more'),
-              label: 'Show more',
+              label: 'View More',
               outlined: true,
               onPressed: () => _loadMore(network),
             ),
@@ -460,7 +463,7 @@ class _PersonRow extends StatelessWidget {
             const SizedBox(width: 8),
             CommunityButton(
               key: ValueKey('follow-${p.id}'),
-              label: following ? 'Following' : (followBackLabel ? 'Follow back' : 'Follow'),
+              label: following ? 'Following' : (followBackLabel ? 'Follow Back' : 'Follow'),
               icon: following ? LucideIcons.userCheck : LucideIcons.userPlus,
               outlined: following,
               busy: busy,

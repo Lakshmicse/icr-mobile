@@ -16,11 +16,16 @@ class DemoAssistantRepository implements AssistantRepository {
     r'^(hi+|hello|hey|hiya|namaste|namaskar|good (morning|afternoon|evening)|greetings)\b[\s!.,]*(saathi|there|icr)?[\s!.,]*$',
     caseSensitive: false,
   );
-  static final _thanks = RegExp(r'^(ok(ay)?[\s,]*)?(thanks|thank you|thankyou|thx|ty|great|cool|perfect|got it)\b', caseSensitive: false);
+  static final _thanks = RegExp(
+    r'^(ok(ay)?[\s,]*)?(thanks|thank you|thankyou|thx|ty|great|cool|perfect|got it)\b',
+    caseSensitive: false,
+  );
 
   @override
   Stream<AssistantEvent> ask(List<AssistantMessage> history, AssistantContext context) async* {
-    final text = history.lastWhere((m) => m.role == ChatRole.user, orElse: () => const AssistantMessage.user('')).content;
+    final text = history
+        .lastWhere((m) => m.role == ChatRole.user, orElse: () => const AssistantMessage.user(''))
+        .content;
     asked.add((text: text, context: context));
     final (reply, actions) = _answer(text.trim(), context);
     for (final word in reply.split(' ')) {
@@ -36,7 +41,10 @@ class DemoAssistantRepository implements AssistantRepository {
       return (
         "Hello! I'm Saathi, your guide to ICR. Ask me about jobs, suppliers and quotes, mentors, courses, events or "
             "membership, and I'll point you to the right page.",
-        const [QuickAction(label: 'Browse jobs', href: '/jobs'), QuickAction(label: 'Find a mentor', href: '/mentorship/mentors')],
+        const [
+          QuickAction(label: 'Browse jobs', href: '/jobs'),
+          QuickAction(label: 'Find a mentor', href: '/mentorship/mentors'),
+        ],
       );
     }
     if (_thanks.hasMatch(text)) return ("You're welcome! Anything else I can help you find?", const []);
@@ -54,35 +62,54 @@ class DemoAssistantRepository implements AssistantRepository {
       return (
         'Jobs are posted for a company: from your company\'s Hire workspace, choose Post a job, fill in the title, '
             'description and skills, and publish. Applicants land in your pipeline.',
-        const [QuickAction(label: 'Post a job', href: '/manage/jobs/new'), QuickAction(label: 'Job Portal plans', href: '/pricing/corporate')],
+        const [
+          QuickAction(label: 'Post a job', href: '/manage/jobs/new'),
+          QuickAction(label: 'Job Portal plans', href: '/pricing/corporate'),
+        ],
       );
     }
     if (lower.contains('job')) {
       return (
         'The Jobs board lists facility-management roles across India. Filter by city, function and experience, save '
             'the ones you like, and apply with your ICR résumé.',
-        const [QuickAction(label: 'Browse jobs', href: '/jobs'), QuickAction(label: 'Job alerts', href: '/career/alerts')],
+        const [
+          QuickAction(label: 'Browse jobs', href: '/jobs'),
+          QuickAction(label: 'Job alerts', href: '/career/alerts'),
+        ],
       );
     }
-    if (lower.contains('supplier') || lower.contains('quote') || lower.contains('requirement') || lower.contains('sell')) {
+    if (lower.contains('supplier') ||
+        lower.contains('quote') ||
+        lower.contains('requirement') ||
+        lower.contains('sell')) {
       return (
         'Supplier Mart is where buyers find verified suppliers. Post a requirement to receive quotes, or list your '
             'business to be found and bid on requirements.',
-        const [QuickAction(label: 'Post a requirement', href: '/rfq/new'), QuickAction(label: 'Supplier Mart', href: '/vendors')],
+        const [
+          QuickAction(label: 'Post a requirement', href: '/rfq/new'),
+          QuickAction(label: 'Supplier Mart', href: '/vendors'),
+        ],
       );
     }
     if (lower.contains('course') || lower.contains('learn') || lower.contains('certif')) {
       return (
         'The Learning Center has certification courses, assessment levels, mock exams and flash cards. Many open '
             'with your membership; the rest can be bought one at a time.',
-        const [QuickAction(label: 'Learning Center', href: '/learning'), QuickAction(label: 'Flash cards', href: '/learning/flash-cards')],
+        const [
+          QuickAction(label: 'Learning Center', href: '/learning'),
+          QuickAction(label: 'Flash cards', href: '/learning/flash-cards'),
+        ],
       );
     }
     if (lower.contains('what can i do')) {
       return (
         'On ICR you can find a job or hire, buy from or sell to verified suppliers, find a mentor or mentor others, '
             'learn and get certified, join discussions, chapters and councils, and attend events.',
-        const [QuickAction(label: 'Jobs', href: '/jobs'), QuickAction(label: 'Supplier Mart', href: '/vendors'), QuickAction(label: 'Mentorship', href: '/mentorship')],
+        const [
+          QuickAction(label: 'Jobs', href: '/jobs'),
+          QuickAction(label: 'Supplier Mart', href: '/vendors'),
+          QuickAction(label: 'Mentorship', href: '/mentorship'),
+        ],
       );
     }
     return (

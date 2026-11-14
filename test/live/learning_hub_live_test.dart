@@ -330,7 +330,7 @@ void main() {
       hub.setSearch('flash');
       expect(hub.doors, [LearningDoor.flashCards]);
       // The search hides the catalogue (the doors) and narrows the grids and the rail, so a word that names only a
-      // door and no course, programme, deck or institute is "No matches".
+      // door and no course, programme, deck or institute is "No Matches Found".
       expect(hub.nothingMatches, isTrue);
 
       hub.setSearch('zzzzzz');
@@ -434,13 +434,13 @@ void main() {
     tester,
   ) async {
     final hub = await _pumpHub(tester, bharat);
-    // ICR Courses opens from the Catalogue heading's View More; its "My courses" chip narrows to the places held.
+    // ICR Courses opens from the Catalogue heading's View More; its "My Courses" chip narrows to the places held.
     await _settle(tester, until: () => find.text('View More').evaluate().isNotEmpty);
-    await tester.ensureVisible(find.text('Catalogue'));
+    await tester.ensureVisible(find.text('Explore Learning Resources'));
     await tester.pumpAndSettle();
     await _tapOnline(tester, find.text('View More').first);
     await _settle(tester, until: () => find.byType(LearningScreen).evaluate().isNotEmpty);
-    await _tapOnline(tester, find.text('My courses'));
+    await _tapOnline(tester, find.text('My Courses'));
     await _settle(tester, until: () => find.byType(CourseCard).evaluate().length == hub.coursesHeld);
     expect(find.byType(LearningScreen), findsOneWidget);
     expect(find.byType(CourseCard).evaluate().length, hub.coursesHeld, reason: 'only the places held');
@@ -449,11 +449,11 @@ void main() {
 
     await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Catalogue'));
+    await tester.ensureVisible(find.text('Explore Learning Resources'));
     await tester.pumpAndSettle();
     await _tapOnline(tester, find.text('View More').first);
     await _settle(tester, until: () => find.byType(LearningScreen).evaluate().isNotEmpty);
-    expect(find.text('ICR Courses'), findsOneWidget, reason: 'the grid is titled by its door');
+    expect(find.text('ICR Programmes'), findsOneWidget, reason: 'the grid is titled by its door');
     expect(hub.learning.mineOnly, isFalse);
     expect(find.text('Professional development'), findsOneWidget);
     expect(find.text('Certification programmes'), findsOneWidget);
@@ -482,7 +482,7 @@ void main() {
     await tester.enterText(find.byKey(const ValueKey('institute-enquiry-message')), 'Hi');
     await tester.tap(find.byKey(const ValueKey('institute-enquiry-send')));
     await tester.pumpAndSettle();
-    expect(find.text('Say a little more about what you would like to know.'), findsOneWidget);
+    expect(find.text('Add more detail to your message.'), findsOneWidget);
 
     await tester.enterText(
       find.byKey(const ValueKey('institute-enquiry-message')),

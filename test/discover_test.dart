@@ -132,7 +132,7 @@ void main() {
     await tester.tap(find.text('Jobs'));
     await tester.pumpAndSettle();
     expect(find.text('Chapters'), findsNothing);
-    expect(find.text('Jobs is coming to the app'), findsOneWidget);
+    expect(find.text('Jobs Is Coming to the App'), findsOneWidget);
   });
 
   testWidgets('each door names the page it opens on the website', (tester) async {
@@ -148,7 +148,7 @@ void main() {
         ),
       ),
     );
-    for (final label in ['Chapters', 'Events', 'Post requirement', 'Hire']) {
+    for (final label in ['Chapters', 'Events', 'Post Requirement', 'Hire']) {
       await tester.tap(find.text(label));
     }
     // Hire opens Post a job (owner, 3 Nov 2026).
@@ -156,7 +156,7 @@ void main() {
   });
 
   test("the business doors are the website's Discover actions (DISCOVER_BUSINESS) and gate nothing themselves", () {
-    // Hire = Post a Job, Sell = Sell on Supplier Mart, Post requirement = Post RFQ / Requirement, Advertise =
+    // Hire = Post a Job, Sell = Sell on Supplier Mart, Post Requirement = Post RFQ / Requirement, Advertise =
     // Advertise Commercial Space: the same four pages the website lists for every visitor. Whether the member may
     // use one is the page's own answer (the job composer asks for a company, the requirement form for a buyer), as on
     // the website; the sheet is the same for a member with a company, one without and a visitor.
@@ -165,7 +165,7 @@ void main() {
         for (final r in DiscoverSheet.business)
           for (final d in [r.left, r.right]) d.label: d.sitePath,
       },
-      {'Hire': '/manage/jobs/new', 'Sell': '/vendors', 'Post requirement': '/rfq/new', 'Advertise': '/advertise'},
+      {'Hire': '/manage/jobs/new', 'Sell': '/vendors', 'Post Requirement': '/rfq/new', 'Advertise': '/advertise'},
     );
     // None of them offers a role that only an invite gives.
     for (final r in DiscoverSheet.business) {
@@ -218,7 +218,7 @@ void main() {
         'For Business',
         'Hire',
         'Sell',
-        'Post requirement',
+        'Post Requirement',
         'Advertise',
       ];
       // Top to bottom, left to right.
@@ -266,7 +266,7 @@ void main() {
         'Digital Library': 'https://icr.org.in/documents',
         'Hire': 'https://icr.org.in/manage/jobs/new',
         'Sell': 'https://icr.org.in/vendors',
-        'Post requirement': 'https://icr.org.in/rfq/new',
+        'Post Requirement': 'https://icr.org.in/rfq/new',
         'Advertise': 'https://icr.org.in/advertise',
       };
       for (final entry in doors.entries) {

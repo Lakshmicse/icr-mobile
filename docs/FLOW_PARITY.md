@@ -73,6 +73,7 @@ the app was changed. What the website does is what the app now does; where the w
 | 4 | Saving a post gives no confirmation | toasts "Saved" / "Removed from saved discussions" | the same |
 | 5 | Councils: Meeting link, Manage and Member all open the same page | no such controls: the sidebar's "Your councils" lists each council → its page; a seat is left where it is shown | the real cause was round 2's routing of `/councils/<slug>` to the app's councils directory. Now: a card opens the council's own page in the app (row 14, native since the same day); Meeting link / Room Link open the council's next session, or say there is none; Manage → and the seat pill open the Your councils sheet with Leave |
 | 6 | Divya can Easy Apply to Moon Studio's job, which she posts | no Apply, "You post jobs for {company}…" (`postsForCompany`); the API refuses `ownCompanyJob` | the same sentence in the bar, no match card; read from every membership (`GET /me/companies`) |
+| 6b | A hiring manager at Moon studio can Easy Apply to its jobs (14 Nov 2026) | no Apply, "You're a hiring manager at {company}, so you can't apply to its jobs." (`hiringManagerForCompany`); the API refuses `hiringManagerOwnJob` and the job-contact message (`ownJob`) | the same sentence in the bar, no match card, no "Meet the hiring team" (`HiringTeamSeat.hiringManager`) — needs the portal change deployed for the API to refuse |
 | 7 | No way to schedule an interview; the pipeline went straight to Hired | the row menu offers "Schedule interview" at Applied / In review / Interview / Offer | the row's ⋮ menu offers it too (the application's page always had it, at three stages; now four) |
 | 8 | A supplier (Ride Bob) cannot browse RFQs | Find Work & Bid in the Company workspace; the public `/rfq` board | a "Find work" chip on the Marketplace and on My RFQ's opens the supplier board; `/manage/bids` and its tabs open the board and My bids in the app |
 | 9 | The Paytm receipt shows "Icr" and no logo | not the website's: PayU's merchant profile | not the app's either — see Backend notes |
@@ -263,3 +264,68 @@ Also that evening: ICR's own notifications (no person or company behind them) ca
   signed-in reader once. `recordView` now counts a signed-in reader once (the `ForumThreadView` row's first write, in one transaction
   with the increment), never the author, and an anonymous read not at all; the `forum_views_per_reader` migration recounted every
   thread from those rows. The app changes nothing: it already counted once per opening and shows the API's number.
+
+## The drawer in the owner's words; a repost without its box (12 Nov 2026)
+
+- The owner's document "Mobile Profile Screen Text Changes" (six drawer screenshots with the wording wanted under each row,
+  then "My Uploads / My Forum / Settings … reduce the font size and keep the font color in dark grey", and "Enable My Uploads
+  (to edit, delete the documents he has uploaded in the digital library), My Forum (all the discussion and poll posted by the
+  user for edit, delete)"): `role_workspaces.dart` carries the new words (`docs/screens/profile_menu.md` has the table), the
+  drawer's lower block is My Uploads, My Forum, Settings (`profile_drawer.dart`), the library gained Edit for the uploader
+  (`document_screen.dart`, `LibraryRepository.update`), and `/documents?mine=1` and `/community?mine=1` are the two pages
+  (`inAppScreens`; `ForumsController` takes an `initialView`, `ForumsScreen` a `title`).
+- The owner then asked for the pages the rows name but the app lacks to be built "as the Web": Source Candidates, Projects,
+  My Products, My Services, the company Dashboard, and the partner's Manage Courses, Manage Batches and Enrolment. All
+  are native now (`lib/features/{talent,projects,catalog,company,partner_console}/`, each with its `docs/screens/*.md`),
+  opened by their drawer rows, by any link to their website pages (`inAppScreens`, `appSitePage`) and, for the partner
+  console, by `admin.learning` notifications. `docs/WEBSITE_HANDOFFS.md` lists each path.
+- Twelve documents of website text changes (01 home … 12 digital library, "do those changes same as it is web changes if
+  exist in the Android app"; build 14 kept aside first): each applied where the app shows the same element, the rest
+  listed as website-only. Notable app changes: sign-in and sign-up show "Sign in using" / "Sign up using" over two
+  provider pills; Contact asks for a phone and lost its direct-contact card; the drawer reads "Explore more on ICR",
+  "Hire Talent", "Marketplace" and "Enquiries and RFQ's"; requirements say responses, Active and Awarded; the learning
+  doors are Knowledge Assessments, Flashcards, Knowledge Centre and ICR / Partner Programmes; the forum and library say
+  My Contributions; Messaging is Messages. Each screen's doc records its old → new table.
+- A repost's quoted post lost its rounded box (owner: "Remove the border like this?"): a hairline above it now marks where
+  the repost's own words end (`post_card.dart`, `_QuotedPost`).
+
+
+## Managing Chapters, Councils and Events from the app (13 Nov 2026)
+
+Owner: "the roles for the Chapters admin, Councils Admin, Events Admin — admin has the access to give access to the
+particular user, so here we need the Manage button, the pencil icon, beside the notifications icon, and the bottom
+navigation bar should be in all the pages same as home screen; the manage options should come for the Chapters, Councils
+and Events. First check the Web who can manage."
+
+**Who may, on the website** (`/admin/community`, `packages/shared/src/permissions.ts`): whoever holds the key
+`chapters:manage`, `councils:manage` or `events:manage` — a Super Admin (every key, implicitly), or a member a Super
+Admin gave the Chapters Admin, Councils Admin, Events Admin or Community Manager role on the website's Roles page. A role
+may be given over some chapters or councils only (`UserDto.scopedPermissions`): it edits those records and cannot create
+or retire one. The API is the judge on every call; the app only decides what to draw.
+
+**In the app:**
+- `SessionUser.permissions` / `scopedPermissions` (from `/auth/me` and the login answer), asked through
+  `holdsPermission` / `holdsPermissionEverywhere` (`lib/core/auth/session_user.dart`), the website's `hasPermission` /
+  `hasPermissionEverywhere`. A role given while the person is signed in reaches the app the next time it reads
+  `/auth/me` (an app start, or signing in again).
+- **The pencil** (`BarEditButton`, left of the bell) for those people only: on the Chapters board → Manage Chapters, on
+  the Councils board → Manage Councils, on the Events board → Manage Events; on one chapter's or council's page → that
+  record's manage page (`ManagePencil` asks per record, so a role over some chapters shows it on those alone); on an
+  event's sheet, a pencil beside Share → that event's manage page. Wiring: `lib/app_community_manage.dart`.
+- **The manage pages** are the website's console, native: `lib/features/community_manage/` (Chapters · Applications,
+  Councils · Proposals, and a record's details, sponsors, resources, updates, leadership, members and Retire) and
+  `lib/features/events_manage/` (Events · Event Partners, and an event's Details, Guest List, Speakers, Sponsors,
+  Tickets with refunds through the approval rule, Attendance). `docs/screens/community_manage.md` and
+  `events_manage.md` list every endpoint and what differs from the website.
+- **The bottom bar** stands under every Chapters, Councils and Events page now (boards, a chapter's and a council's
+  page, the manage pages), as it already did under Events: `communityFrame` = `ShellPage(tab: AppTab.home)`. Forms are
+  sheets over it, so the keyboard never meets the bar.
+- The website's `/admin/community?tab=…` (what a staff notification about a chapter application, a council proposal or
+  a company asking to host events links to) opens the matching manage page on that request (`communityConsoleRoute`).
+
+**Not in the app:** a partner company's own events page (`/manage/events`, the website's `HostEventsWorkspace` for an
+approved event partner's admins) — the staff console only; the Approvals page a refund above the limit waits on; the
+translations panel; picture cropping.
+
+**Found in the portal, not the app's to fix:** the council form's five About fields are never saved — `CreateCouncilDto`
+and `UpdateCouncilDto` have no `aboutHtml`, so the API drops it without a word (the website's dialog loses it too).

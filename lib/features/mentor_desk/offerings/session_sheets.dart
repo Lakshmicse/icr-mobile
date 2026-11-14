@@ -82,9 +82,9 @@ class _SessionSheetState extends State<SessionSheet> {
               child: EmptyNote(
                 icon: LucideIcons.cloudOff,
                 compact: true,
-                title: "Couldn't open this session",
+                title: 'Unable to Open This Session',
                 body: _error ?? 'Try again.',
-                action: 'Try again',
+                action: 'Try Again',
                 onAction: _load,
               ),
             )
@@ -126,7 +126,7 @@ class _SessionSheetState extends State<SessionSheet> {
         MetaLine(icon: LucideIcons.video, text: groupModes[d.mode] ?? d.mode),
         if (d.inPerson && d.location != null) MetaLine(icon: LucideIcons.mapPin, text: d.location!),
         if (!d.inPerson && d.meetingLink != null) MetaLine(icon: LucideIcons.link, text: d.meetingLink!),
-        MetaLine(icon: LucideIcons.indianRupee, text: d.pricePaisa == null ? 'Free' : '${inr(d.pricePaisa!)} a seat'),
+        MetaLine(icon: LucideIcons.indianRupee, text: d.pricePaisa == null ? 'Free' : '${inr(d.pricePaisa!)} per seat'),
         MetaLine(
           icon: LucideIcons.users,
           text:
@@ -157,9 +157,9 @@ class _SessionSheetState extends State<SessionSheet> {
               ],
             ),
           ),
-        SectionTitle(title: 'Who is coming (${seated.length})', top: 14),
+        SectionTitle(title: 'Attendees (${seated.length})', top: 14),
         if (d.draft)
-          Text('A draft: nobody can register until you publish it.', style: MentoringText.body)
+          Text('This is a draft. Nobody can register until you publish it.', style: MentoringText.body)
         else if (seated.isEmpty && waiting.isEmpty)
           Text('Nobody has registered yet.', style: MentoringText.body),
         for (final r in seated) _RosterRow(person: r),
@@ -189,7 +189,7 @@ class _SessionSheetState extends State<SessionSheet> {
             if (d.startedBy(now))
               SolidButton(
                 key: const ValueKey('session-attendance'),
-                label: 'Record who came',
+                label: 'Record Attendance',
                 icon: LucideIcons.clipboardCheck,
                 onPressed: () async {
                   final saved = await showFormSheet(context, (_) => AttendanceForm(controller: c, session: d));
@@ -202,18 +202,18 @@ class _SessionSheetState extends State<SessionSheet> {
             if (!d.closed)
               QuietButton(
                 key: const ValueKey('session-cancel'),
-                label: 'Cancel session',
+                label: 'Cancel Session',
                 danger: true,
                 onPressed: () async {
                   final done = await showTextSheet(
                     context,
-                    title: 'Cancel this session?',
+                    title: 'Cancel This Session?',
                     subtitle:
-                        '${d.seatsTaken == 0 ? 'Nobody is registered.' : 'Everyone registered is told, with your reason.'}'
+                        '${d.seatsTaken == 0 ? 'Nobody is registered.' : 'Everyone registered is notified, with your reason.'}'
                         '${d.paid && d.seatsTaken > 0 ? ' Paid seats are refunded.' : ''}',
                     label: 'Reason',
                     hint: 'I have to travel that week',
-                    submitLabel: 'Cancel session',
+                    submitLabel: 'Cancel Session',
                     minLength: minCancelReason,
                     maxLength: maxCancelReason,
                     danger: true,
@@ -235,10 +235,10 @@ class _SessionSheetState extends State<SessionSheet> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
-        title: const Text('Publish this session?'),
-        content: const Text('It opens for registration now. Check the date, the place and the seats first.'),
+        title: const Text('Publish This Session?'),
+        content: const Text('It opens for registration now. Check the date, the venue and the seats first.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Not yet')),
+          TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Not Yet')),
           TextButton(onPressed: () => Navigator.pop(dialog, true), child: const Text('Publish')),
         ],
       ),
@@ -315,7 +315,10 @@ class _AttendanceFormState extends State<AttendanceForm> {
     if (_minutes.text.trim().isNotEmpty) {
       minutes = int.tryParse(_minutes.text.trim());
       if (minutes == null || minutes < minSessionMinutes || minutes > maxSessionMinutes) {
-        setState(() => _problem = 'Minutes it ran: $minSessionMinutes to $maxSessionMinutes, or leave it empty.');
+        setState(
+          () =>
+              _problem = 'Enter the minutes it ran, from $minSessionMinutes to $maxSessionMinutes, or leave it empty.',
+        );
         return;
       }
     }
@@ -351,9 +354,9 @@ class _AttendanceFormState extends State<AttendanceForm> {
   @override
   Widget build(BuildContext context) {
     return MentoringForm(
-      title: 'Who came?',
-      subtitle: 'Tick everyone who was there. Anyone left unticked is marked a no-show.',
-      submitLabel: 'Record attendance',
+      title: 'Who Attended?',
+      subtitle: 'Select everyone who attended. Anyone not selected is marked as a no-show.',
+      submitLabel: 'Record Attendance',
       busy: _busy,
       problem: _problem,
       onSubmit: _submit,
@@ -370,7 +373,7 @@ class _AttendanceFormState extends State<AttendanceForm> {
           ),
         const SizedBox(height: 8),
         FieldBlock(
-          label: 'Minutes it actually ran (optional)',
+          label: 'Actual Minutes (Optional)',
           child: TextField(
             key: const ValueKey('attendance-minutes'),
             controller: _minutes,
@@ -380,7 +383,7 @@ class _AttendanceFormState extends State<AttendanceForm> {
           ),
         ),
         FieldBlock(
-          label: 'A note (optional)',
+          label: 'Note (Optional)',
           child: TextField(
             key: const ValueKey('attendance-note'),
             controller: _note,

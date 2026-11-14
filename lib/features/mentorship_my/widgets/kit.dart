@@ -163,7 +163,7 @@ class LoadedList extends StatelessWidget {
     required this.error,
     required this.onRefresh,
     required this.children,
-    this.errorTitle = "Couldn't load this",
+    this.errorTitle = 'Unable to Load This',
     this.padding = const EdgeInsets.fromLTRB(16, 12, 16, 28),
   });
 
@@ -195,7 +195,7 @@ class LoadedList extends StatelessWidget {
             icon: LucideIcons.cloudOff,
             title: errorTitle,
             body: error!,
-            action: 'Try again',
+            action: 'Try Again',
             onAction: onRefresh,
           ),
         ],
@@ -763,4 +763,26 @@ class Callout extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "Withdraw This Request?" — a Withdraw acts only after a yes (owner, 7 Nov 2026: "sometimes user might have
+/// clicked withdraw by mistake"). True when the member confirmed.
+Future<bool> confirmWithdraw(BuildContext context, {String? title, required String body}) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (dialog) => AlertDialog(
+      key: const ValueKey('withdraw-confirm'),
+      title: Text(title ?? 'Withdraw This Request?'),
+      content: Text(body),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Keep It')),
+        TextButton(
+          key: const ValueKey('withdraw-yes'),
+          onPressed: () => Navigator.pop(dialog, true),
+          child: const Text('Withdraw'),
+        ),
+      ],
+    ),
+  );
+  return ok == true && context.mounted;
 }

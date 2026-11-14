@@ -1,6 +1,6 @@
-import '../feed/feed_models.dart';
 import '../learning_assess/assess_models.dart';
 import '../learning_study/study_models.dart';
+import 'learning_links.dart';
 
 /// How a member came to hold something: a place on their plan (a whole course, exam or deck), ICR credits (a
 /// level or set), or buying it.
@@ -38,6 +38,13 @@ class OpenedItem {
 
   /// The tile's name: the course's, as in the catalogue; a level or set held on its own is named after it
   /// ("AEE CBCP · Set 1"); a deck its own.
+  /// The website page it stands for (shared from its card).
+  Uri get link => deck != null
+      ? LearningLinks.deck(deck!)
+      : paper == null
+      ? LearningLinks.group(group!)
+      : LearningLinks.paper(group!, paper!);
+
   String get title => deck != null
       ? deck!.title
       : paper == null
@@ -132,8 +139,8 @@ List<OpenedItem> openedLearning({
 List<OpenedShelf> openedShelvesOf(List<OpenedItem> items) => [
   for (final (kind, title) in [
     (OpenedKind.mock, 'Mock Exams'),
-    (OpenedKind.course, 'Assess Your Knowledge'),
-    (OpenedKind.deck, 'Flash Cards'),
+    (OpenedKind.course, 'Knowledge Assessments'),
+    (OpenedKind.deck, 'Flashcards'),
   ])
     if (items.any((i) => i.kind == kind))
       OpenedShelf(kind: kind, title: title, items: items.where((i) => i.kind == kind).toList()),

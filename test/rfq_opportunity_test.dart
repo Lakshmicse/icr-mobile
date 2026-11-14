@@ -83,17 +83,17 @@ void main() {
     testWidgets('names the buyer, how well the requirement fits and what the supplier can do', (tester) async {
       await open(tester, hvac);
       expect(find.text('Alpha Tech Parks'), findsOneWidget);
-      expect(find.text('Verified buyer • GST on file'), findsOneWidget);
+      expect(find.text('Verified Buyer • GST on file'), findsOneWidget);
       expect(find.text('Annual HVAC AMC — Alpha Tech Park, Hyderabad'), findsOneWidget);
-      expect(find.text('Reply to this enquiry'), findsOneWidget);
+      expect(find.text('Submit Your Bid'), findsOneWidget);
       expect(find.text("Replying to an enquiry doesn't use your monthly bids."), findsOneWidget);
-      expect(find.text('Strong match'), findsOneWidget);
-      expect(find.text('In a category you list'), findsOneWidget);
+      expect(find.text('Excellent Match'), findsOneWidget);
+      expect(find.text('Matches your listed services'), findsOneWidget);
       expect(find.descendant(of: key('match-category'), matching: find.text('+50')), findsOneWidget);
       expect(find.descendant(of: key('match-location'), matching: find.text('+0')), findsNothing);
-      expect(find.text('Reply now'), findsOneWidget);
-      expect(find.text('At a glance'), findsOneWidget);
-      expect(find.text('Contact the buyer'), findsOneWidget);
+      expect(find.text('Reply Now'), findsOneWidget);
+      expect(find.text('Requirement Overview'), findsOneWidget);
+      expect(find.text('Connect with the Buyer'), findsOneWidget);
       expect(repo.seen, [(AlertSide.supplier, hvac)]);
     });
 
@@ -107,17 +107,17 @@ void main() {
     testWidgets('a failed load says so and Try again reads it again', (tester) async {
       repo.failReads = true;
       await open(tester, hvac, height: 900);
-      expect(find.text("Couldn't load this requirement"), findsOneWidget);
+      expect(find.text("Unable to Load This Requirement"), findsOneWidget);
       repo.failReads = false;
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settle(tester, 12);
-      expect(find.text('Reply to this enquiry'), findsOneWidget);
+      expect(find.text('Submit Your Bid'), findsOneWidget);
     });
 
     testWidgets('pulling the page down reads it again', (tester) async {
       await open(tester, hvac, height: 900);
       final before = repo.calls.where((c) => c == 'opportunity').length;
-      await tester.fling(find.text('Reply to this enquiry'), const Offset(0, 300), 1000);
+      await tester.fling(find.text('Submit Your Bid'), const Offset(0, 300), 1000);
       await settle(tester, 14);
       expect(repo.calls.where((c) => c == 'opportunity').length, greaterThan(before));
     });
@@ -128,16 +128,16 @@ void main() {
         statusCode: 403,
       );
       await open(tester, hvac, height: 900);
-      expect(find.text('Not open to your plan yet'), findsOneWidget);
+      expect(find.text('Not Open to Your Plan Yet'), findsOneWidget);
       expect(find.textContaining('The Business plan sees it now'), findsOneWidget);
-      await tester.tap(find.text('See plans'));
+      await tester.tap(find.text('See Plans'));
       expect(plans, 1);
     });
 
-    testWidgets('with no plans screen wired, "See plans" opens the website\'s pricing page', (tester) async {
+    testWidgets('with no plans screen wired, "See Plans" opens the website\'s pricing page', (tester) async {
       repo.requirementError = ApiError('This requirement opens to your plan on 27 Oct 2026.', statusCode: 403);
       await open(tester, hvac, wirePlans: false, height: 900);
-      await tester.tap(find.text('See plans'));
+      await tester.tap(find.text('See Plans'));
       await settle(tester);
       expect(links.opened.single.path, '/pricing/supplier');
     });
@@ -145,8 +145,8 @@ void main() {
     testWidgets('a private or missing requirement is simply not available', (tester) async {
       repo.requirementError = ApiError('RFQ not found', statusCode: 404);
       await open(tester, facade, height: 900);
-      expect(find.text('This requirement is not available'), findsOneWidget);
-      expect(find.text('Reply to this enquiry'), findsNothing);
+      expect(find.text('This Requirement Is Not Available'), findsOneWidget);
+      expect(find.text('Submit Your Bid'), findsNothing);
     });
   });
 
@@ -171,12 +171,12 @@ void main() {
         'leadTimeDays': 7,
         'message': 'We can start in a week and cover both plants.',
       });
-      expect(find.text('Your reply'), findsOneWidget);
+      expect(find.text('Your Reply'), findsOneWidget);
       expect(find.text('Your reply was sent.'), findsOneWidget);
       expect(find.text('₹17,00,000'), findsWidgets);
       expect(find.text('7 days'), findsOneWidget);
       expect(find.text('Replied'), findsOneWidget);
-      expect(find.text('View your reply'), findsOneWidget);
+      expect(find.text('View Your Reply'), findsOneWidget);
       expect(key('reply-send'), findsNothing);
     });
 
@@ -225,7 +225,7 @@ void main() {
       await tapKey(tester, 'attach-add');
       await type(tester, 'file-title-0', '');
       await tapKey(tester, 'reply-send');
-      expect(find.text('Give every file a title'), findsWidgets);
+      expect(find.text('Enter a title for every file'), findsWidgets);
       expect(repo.placed, isEmpty);
     });
   });
@@ -235,11 +235,11 @@ void main() {
       tester,
     ) async {
       await open(tester, guarding);
-      expect(find.text('Submit your quote'), findsOneWidget);
-      expect(find.text('You\'ve been shortlisted: submit your detailed quote below.'), findsOneWidget);
+      expect(find.text('Submit Your Quote'), findsOneWidget);
+      expect(find.text('You have been shortlisted. Submit your detailed quote below.'), findsOneWidget);
       expect(find.text('Your plan includes unlimited bids.'), findsOneWidget);
-      expect(find.text('Your price'), findsOneWidget);
-      expect(find.textContaining('Message to buyer'), findsOneWidget);
+      expect(find.text('Your Price'), findsOneWidget);
+      expect(find.textContaining('Message to Buyer'), findsOneWidget);
       await tapKey(tester, 'reply-send');
       expect(find.text('Enter your price'), findsOneWidget);
       expect(repo.placed, isEmpty);
@@ -252,14 +252,14 @@ void main() {
         'leadTimeDays': 30,
         'message': 'Twenty-four guards from the first of next month.',
       });
-      expect(find.text('Your quote'), findsOneWidget);
+      expect(find.text('Your Submitted Quote'), findsOneWidget);
       expect(find.text('Your quote was submitted.'), findsOneWidget);
-      expect(find.text('Submitted'), findsOneWidget);
+      expect(find.text('Bid Submitted'), findsOneWidget);
     });
 
     testWidgets('the stages show to the supplier as a timeline, with no owner\'s button', (tester) async {
       await open(tester, guarding);
-      expect(find.text('Tender stage'), findsOneWidget);
+      expect(find.text('Tender Stage'), findsOneWidget);
       expect(key('stage-advance'), findsNothing);
       expect(find.text('Review the quotes and award one.'), findsNothing);
     });
@@ -293,8 +293,8 @@ void main() {
         '41,00,000',
         reason: 'the form keeps what was typed',
       );
-      expect(find.text('Your quote'), findsNothing);
-      await tester.tap(find.descendant(of: key('reply-error'), matching: find.text('See plans')));
+      expect(find.text('Your Submitted Quote'), findsNothing);
+      await tester.tap(find.descendant(of: key('reply-error'), matching: find.text('See Plans')));
       expect(plans, 1);
     });
 
@@ -320,9 +320,9 @@ void main() {
     testWidgets('a company with no supplier listing starts selling in one tap, then sees the form', (tester) async {
       repo.vendorAccess = const VendorAccess();
       await open(tester, hvac);
-      expect(find.text('Start selling to reply to requirements'), findsOneWidget);
+      expect(find.text('Start Selling to Reply to Requirements'), findsOneWidget);
       expect(key('reply-send'), findsNothing);
-      await tester.tap(find.text('Start selling'));
+      await tester.tap(find.text('Start Selling'));
       await settle(tester, 12);
       expect(repo.calls, contains('startSelling'));
       expect(key('reply-send'), findsOneWidget);
@@ -339,20 +339,20 @@ void main() {
     ) async {
       repo.accessError = ApiError('Insufficient role permissions', statusCode: 403);
       await open(tester, hvac);
-      expect(find.text('Responses come from suppliers'), findsOneWidget);
+      expect(find.text('Responses Come from Suppliers'), findsOneWidget);
       expect(key('reply-send'), findsNothing);
       expect(key('match-card'), findsNothing);
       expect(key('contact-buyer'), findsNothing);
-      expect(find.text('At a glance'), findsOneWidget, reason: 'the requirement itself is still readable');
+      expect(find.text('Requirement Overview'), findsOneWidget, reason: 'the requirement itself is still readable');
     });
 
     testWidgets('a company\'s own requirement is not bid on: the page says so and opens it as its owner', (
       tester,
     ) async {
       await open(tester, DemoRfqRepository.securityId);
-      expect(find.text('This is your company\'s own requirement'), findsOneWidget);
+      expect(find.text('This Is Your Company\'s Own Requirement'), findsOneWidget);
       expect(key('reply-send'), findsNothing);
-      await tester.tap(find.text('Open as owner'));
+      await tester.tap(find.text('Open as Owner'));
       await settle(tester, 14);
       expect(find.byType(RfqDetailScreen), findsOneWidget);
     });
@@ -361,17 +361,17 @@ void main() {
   group('an invitation', () {
     testWidgets('is said at the top of the form, and Decline asks first', (tester) async {
       await open(tester, facade);
-      expect(find.text('Private invite'), findsOneWidget);
+      expect(find.text('Private Invite'), findsOneWidget);
       expect(find.text('You\'ve been invited to reply to this enquiry.'), findsOneWidget);
       await tapKey(tester, 'reply-decline');
-      expect(find.text('Decline this invitation?'), findsOneWidget);
-      await tester.tap(find.text('Keep it'));
+      expect(find.text('Decline This Invitation?'), findsOneWidget);
+      await tester.tap(find.text('Keep It'));
       await settle(tester, 10);
       expect(repo.calls, isNot(contains('declineInvite')));
       await tapKey(tester, 'reply-decline');
       await tester.tap(find.text('Decline').last);
       await settle(tester, 12);
-      expect(find.text('Invitation declined'), findsOneWidget);
+      expect(find.text('Invitation Declined'), findsOneWidget);
       expect(find.text('You\'ve declined this quote request. The buyer has been notified.'), findsOneWidget);
       expect(key('reply-send'), findsNothing);
     });
@@ -395,8 +395,8 @@ void main() {
   group('pre-qualification', () {
     testWidgets('an RFQ in pre-qualification asks for the criteria answers, validated as the API does', (tester) async {
       await open(tester, housekeeping);
-      expect(find.text('Submit pre-qualification response'), findsOneWidget);
-      expect(find.text('Respond to the criteria'), findsOneWidget);
+      expect(find.text('Submit Pre-Qualification Response'), findsOneWidget);
+      expect(find.text('Respond to the Criteria'), findsOneWidget);
       await type(tester, 'pq-years', 'many');
       await type(tester, 'pq-turnover', 'lots');
       await tapKey(tester, 'pq-send');
@@ -423,7 +423,7 @@ void main() {
       expect(body['presence'], 'PAN_INDIA');
       expect(body['employeeCount'], '201-500');
       expect(body['statutoryCompliance'], ['GST', 'PF']);
-      expect(find.text('Under evaluation'), findsOneWidget);
+      expect(find.text('Under Evaluation'), findsOneWidget);
       expect(find.textContaining('The buyer is screening pre-qualification responses'), findsOneWidget);
     });
 
@@ -447,16 +447,16 @@ void main() {
     ) async {
       await sendReply(tester);
       await open(tester, hvac);
-      expect(find.text('Your reply'), findsOneWidget);
-      expect(find.text('Sent 25 Oct 2026'), findsOneWidget);
+      expect(find.text('Your Reply'), findsOneWidget);
+      expect(find.text('Submitted on 25 Oct 2026'), findsOneWidget);
       expect(find.text('₹17,00,000'), findsWidgets);
       expect(find.text('We can start in a week.'), findsOneWidget);
-      expect(find.text('View your reply'), findsOneWidget);
+      expect(find.text('View Your Reply'), findsOneWidget);
       expect(key('reply-send'), findsNothing);
       expect(find.text('Your reply was sent.'), findsNothing, reason: 'only straight after sending');
     });
 
-    testWidgets('"See all your bids" opens My Bids', (tester) async {
+    testWidgets('"View All My Bids" opens My Bids', (tester) async {
       await sendReply(tester);
       await open(tester, hvac);
       await tapKey(tester, 'see-all-bids', frames: 14);
@@ -467,7 +467,7 @@ void main() {
       await sendReply(tester);
       await open(tester, hvac);
       await tapKey(tester, 'reply-edit');
-      expect(find.text('Change your reply'), findsOneWidget);
+      expect(find.text('Change Your Reply'), findsOneWidget);
       expect(tester.widget<TextField>(key('reply-amount')).controller!.text, '1700000');
       expect(tester.widget<TextField>(key('reply-message')).controller!.text, 'We can start in a week.');
       await type(tester, 'reply-amount', '16,50,000');
@@ -504,8 +504,8 @@ void main() {
       await sendReply(tester);
       await open(tester, hvac);
       await tapKey(tester, 'reply-withdraw');
-      expect(find.text('Withdraw your reply?'), findsOneWidget);
-      await tester.tap(find.text('Keep it'));
+      expect(find.text('Withdraw Your Reply?'), findsOneWidget);
+      await tester.tap(find.text('Keep It'));
       await settle(tester, 10);
       expect(repo.withdrawn, isEmpty);
       await tapKey(tester, 'reply-withdraw');
@@ -522,7 +522,7 @@ void main() {
       repo.bidChanges = false;
       await sendReply(tester);
       await open(tester, hvac);
-      expect(find.text('Your reply'), findsOneWidget);
+      expect(find.text('Your Reply'), findsOneWidget);
       expect(key('reply-edit'), findsNothing);
       expect(key('reply-withdraw'), findsNothing);
       // Two missing buttons are not left unexplained: the sentence names the way (the buyer) and the cause.
@@ -630,7 +630,7 @@ void main() {
   });
 
   group('the buyer', () {
-    testWidgets('Message the buyer opens the thread through the lead callback', (tester) async {
+    testWidgets('Message buyer opens the thread through the lead callback', (tester) async {
       await open(tester, hvac);
       await tapKey(tester, 'contact-message');
       expect(threads, ['demo-thread-buyer-$hvac']);
@@ -664,7 +664,7 @@ void main() {
       repo.refuseNextWrite = 'Buyer contact details come with the Business plan.';
       await tapKey(tester, 'contact-reveal');
       expect(find.text('Buyer contact details come with the Business plan.'), findsOneWidget);
-      await tester.tap(find.descendant(of: key('contact-error'), matching: find.text('See plans')));
+      await tester.tap(find.descendant(of: key('contact-error'), matching: find.text('See Plans')));
       expect(plans, 1);
     });
   });
@@ -676,7 +676,7 @@ void main() {
         find.text('Quarterly preventive maintenance of two 400 TR chiller plants and 60 AHUs, with breakdown cover.'),
         findsOneWidget,
       );
-      expect(find.text('Budget'), findsOneWidget);
+      expect(find.text('Estimated Budget'), findsOneWidget);
       expect(find.text('₹18,00,000'), findsOneWidget);
     });
   });

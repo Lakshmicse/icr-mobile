@@ -6,12 +6,19 @@ import 'marketplace_repository.dart';
 
 /// What a catalogue board lists.
 enum CatalogKind {
-  products('Products'),
-  services('Services');
+  products('Products', 'Products Marketplace', 'Search by product, category or supplier...'),
+  services('Services', 'Services Marketplace', 'Search by service, category or supplier...');
 
-  const CatalogKind(this.label);
+  const CatalogKind(this.label, this.title, this.searchHint);
 
+  /// The plain noun ("Products"): counts, empty states and "Load more" read it in lower case.
   final String label;
+
+  /// The board's heading, as the website's Products page is headed (owner's wording, Nov 2026).
+  final String title;
+
+  /// The board's search hint, as the website's Products page words it.
+  final String searchHint;
 }
 
 /// A catalogue board's state: the products (or services) of the marketplace,

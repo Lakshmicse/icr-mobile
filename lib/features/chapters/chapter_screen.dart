@@ -7,6 +7,9 @@ import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
 import '../../core/util/links.dart';
+import '../../core/util/screen_trail.dart';
+import '../../core/widgets/manage_pencil.dart';
+import '../shell/app_shell.dart';
 import 'chapter_controller.dart';
 import 'chapter_format.dart';
 import 'chapter_models.dart';
@@ -35,7 +38,15 @@ class ChapterHandoffs {
     this.opener = openUrl,
     this.share = shareChapterLink,
     this.downloader = const SystemResourceDownloader(),
+    this.manage,
+    this.pageWrap = plainPage,
   });
+
+  /// The pencil beside the bell, for the staff who may manage the chapter; no pencil without it.
+  final RecordManage? manage;
+
+  /// Frames a chapter's page pushed from here (the app's bottom bar under it).
+  final PageWrap pageWrap;
 
   /// A meetup was tapped, or its ticket asked for: the Events sheet, by the event's slug (else its id).
   final ValueChanged<String> onOpenEvent;
@@ -87,6 +98,8 @@ Widget chapterPage({
         opener: handoffs.opener,
         share: handoffs.share,
         downloader: handoffs.downloader,
+        manage: handoffs.manage,
+        pageWrap: handoffs.pageWrap,
       ),
     ),
   );
@@ -102,15 +115,20 @@ Future<void> openChapterPage(
   ValueChanged<ChapterSummary>? onChanged,
   DateTime Function()? clock,
 }) {
-  return Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (route) => chapterPage(
-        repository: repository,
-        idOrSlug: idOrSlug,
-        handoffs: handoffs,
-        onChanged: onChanged,
-        clock: clock,
-        onBack: () => Navigator.of(route).pop(),
+  // Through the shell, so the bottom bar under the page (the handoffs' frame) still reaches its tabs.
+  return AppShell.push<void>(
+    context,
+    (route) => SitePlace(
+      path: '/chapters/$idOrSlug',
+      child: handoffs.pageWrap(
+        chapterPage(
+          repository: repository,
+          idOrSlug: idOrSlug,
+          handoffs: handoffs,
+          onChanged: onChanged,
+          clock: clock,
+          onBack: () => Navigator.of(route).pop(),
+        ),
       ),
     ),
   );
@@ -132,9 +150,17 @@ class ChapterScreen extends StatefulWidget {
     this.opener = openUrl,
     this.share = shareChapterLink,
     this.downloader = const SystemResourceDownloader(),
+    this.manage,
+    this.pageWrap = plainPage,
   });
 
   final VoidCallback onBack;
+
+  /// The pencil beside the bell, for the staff who may manage this chapter; no pencil without it.
+  final RecordManage? manage;
+
+  /// Frames a nearby chapter's page pushed from here.
+  final PageWrap pageWrap;
 
   /// A meetup was tapped, or its ticket asked for: the shell shows the event (its slug, else its id).
   final ValueChanged<String> onOpenEvent;
@@ -165,6 +191,8 @@ class ChapterScreen extends StatefulWidget {
     opener: opener,
     share: share,
     downloader: downloader,
+    manage: manage,
+    pageWrap: pageWrap,
   );
 
   @override
@@ -240,6 +268,10 @@ class _ChapterScreenState extends State<ChapterScreen> {
       title: page.chapter?.name ?? 'Chapter',
       onBack: widget.onBack,
       onBell: _bell,
+      actions: [
+        if (widget.manage != null && page.chapter != null)
+          ManagePencil(manage: widget.manage!, id: page.chapter!.id, label: 'Manage chapter'),
+      ],
       unread: page.unread,
       onRefresh: page.refresh,
       controller: _scroll,
@@ -254,9 +286,9 @@ class _ChapterScreenState extends State<ChapterScreen> {
       return [
         CommunityNotice(
           icon: LucideIcons.cloudOff,
-          title: "Couldn't load this chapter",
+          title: 'Unable to Load This Chapter',
           body: page.error ?? 'Something went wrong.',
-          action: 'Try again',
+          action: 'Try Again',
           onAction: page.refresh,
         ),
       ];
@@ -282,19 +314,19 @@ class _ChapterScreenState extends State<ChapterScreen> {
           CommunityStatGrid(
             tiles: [
               CommunityStatTile(
-                label: 'Active members',
+                label: 'Active Members',
                 value: groupThousands(stats.memberCount),
                 note: stats.leadershipCount > 0 ? '${stats.leadershipCount} on committee' : null,
               ),
-              CommunityStatTile(label: 'Member companies', value: groupThousands(stats.memberCompanyCount)),
+              CommunityStatTile(label: 'Member Companies', value: groupThousands(stats.memberCompanyCount)),
               CommunityStatTile(
-                label: 'Upcoming events',
+                label: 'Upcoming Events',
                 value: groupThousands(stats.upcomingEventCount),
                 blue: true,
                 note: stats.upcomingEventCount > 0 ? 'RSVP open' : null,
               ),
               CommunityStatTile(
-                label: 'Hosted sessions',
+                label: 'Hosted Sessions',
                 value: groupThousands(stats.pastEventCount),
                 note: detail.foundedYear == null ? null : 'since ${detail.foundedYear}',
               ),
@@ -347,7 +379,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
           ),
           ChapterSectionFrame(
             sectionKey: _keys['events'],
-            title: 'Events & meetups',
+            title: 'Events & Meetups',
             count: stats.upcomingEventCount,
             child: EventsSection(
               onOpenEvent: (e) => widget.onOpenEvent(e.key),
@@ -379,7 +411,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
             ),
           if (page.nearby.isNotEmpty)
             ChapterSectionFrame(
-              title: 'Other chapters in ${c.country}',
+              title: 'Other Chapters in ${c.country}',
               child: NearbySection(chapters: page.nearby, onOpen: (n) => _openNearby(page, n)),
             ),
         ],
@@ -483,7 +515,7 @@ class _Hero extends StatelessWidget {
                   Flexible(child: Text(c.name, style: CommunityText.cardTitleLarge)),
                   const SizedBox(width: 6),
                   const Tooltip(
-                    message: 'Official ICR chapter',
+                    message: 'Official ICR Chapter',
                     child: Icon(LucideIcons.badgeCheck, size: 18, color: AppColors.primary),
                   ),
                 ],
@@ -525,7 +557,7 @@ class _Hero extends StatelessWidget {
                         ? Row(
                             children: [
                               CommunityPill(
-                                label: c.role == ChapterRole.lead ? 'Chapter lead' : 'Joined',
+                                label: c.role == ChapterRole.lead ? 'Chapter Lead' : 'Joined',
                                 icon: LucideIcons.check,
                                 fill: CommunityColors.green50,
                                 style: CommunityText.pill.copyWith(color: CommunityColors.green700),
@@ -577,7 +609,7 @@ class _Hero extends StatelessWidget {
                       children: [
                         const Icon(LucideIcons.handHeart, size: 13, color: AppColors.primary),
                         const SizedBox(width: 6),
-                        Text('Volunteer with this chapter', style: CommunityText.link),
+                        Text('Volunteer with This Chapter', style: CommunityText.link),
                       ],
                     ),
                   ),

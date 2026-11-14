@@ -245,7 +245,7 @@ Future<void> settle(
 /// so), so what is left is a screen that really cannot load.
 Future<void> retryWhileFailed(WidgetTester tester, {int times = 3, String? what}) async {
   for (var i = 0; i < times; i++) {
-    final again = find.text('Try again');
+    final again = find.text('Try Again');
     if (again.evaluate().isEmpty) return;
     // ignore: avoid_print
     print(

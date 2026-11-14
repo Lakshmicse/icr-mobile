@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/feed/feed_models.dart';
 import 'package:icr_mobile/features/forum/composer_controller.dart';
+import 'package:icr_mobile/features/forum/forum_file_picker.dart';
 import 'package:icr_mobile/features/forum/forum_models.dart';
 import 'package:icr_mobile/features/forum/new_thread_screen.dart';
 import 'package:icr_mobile/features/forum/rich_text_controller.dart';
@@ -101,9 +102,9 @@ void main() {
     test('a new discussion needs a topic, a title of 8 to 160 characters and details', () {
       final c = make();
       expect(c.problems, [
-        'Choose the topic this belongs to.',
+        'Select a category.',
         'The title needs at least 8 characters.',
-        'Add some details so people know what you mean.',
+        'Add details to explain your post.',
       ]);
       expect(c.canSend, isFalse);
       c.setTitle('Short');
@@ -127,7 +128,7 @@ void main() {
       c.setPollOption(0, 'Chillers');
       expect(c.pollProblem, 'A poll needs at least 2 options.');
       c.setPollOption(1, '  chillers ');
-      expect(c.pollProblem, 'Two options read the same: make each one different.');
+      expect(c.pollProblem, 'Two options are the same. Make each option different.');
       c.setPollOption(1, 'VRF');
       expect(c.pollProblem, isNull);
       expect(c.filledOptions, ['Chillers', 'VRF']);
@@ -235,6 +236,7 @@ void main() {
       ForumThread? editing,
       ComposerMode mode = ComposerMode.discussion,
       Future<ForumFile?> Function()? pickFile,
+      Future<List<ForumFile>> Function()? pickMedia,
       String? topicSlug,
     }) async {
       tester.view.physicalSize = const Size(780, 2400);
@@ -259,6 +261,7 @@ void main() {
                       mode: mode,
                       topicSlug: topicSlug,
                       pickFile: pickFile,
+                      pickMedia: pickMedia,
                     );
                     holder.closed = true;
                   },
@@ -298,7 +301,7 @@ void main() {
       'it opens as the website\'s Create a post form: the two kinds, Category, Sub-category, Title, Details, Tags, file',
       (tester) async {
         await pumpComposer(tester);
-        expect(find.text('New discussion'), findsOneWidget);
+        expect(find.text('New Discussion'), findsOneWidget);
         // The two kinds, side by side as the composer first drew them.
         expect(find.text('Discussion'), findsOneWidget);
         expect(find.text('Ask or share'), findsOneWidget);
@@ -310,10 +313,10 @@ void main() {
         expect(pollBox.left, greaterThan(discussionBox.right));
         // Category (required) and Sub-category are both on the form; the fields carry the words, no section headers.
         expect(find.text('Category *'), findsOneWidget);
-        expect(find.text('Sub-category (optional)'), findsOneWidget);
-        expect(find.text('Title'), findsOneWidget);
-        expect(find.text('Details'), findsOneWidget);
-        expect(find.text('Tags'), findsOneWidget);
+        expect(find.text('Sub-category (Optional)'), findsOneWidget);
+        expect(find.text('Discussion Title'), findsOneWidget);
+        expect(find.text('Discussion Details'), findsOneWidget);
+        expect(find.text('Add Tags'), findsOneWidget);
         for (final gone in [
           'TOPIC',
           'YOUR POST',
@@ -328,16 +331,11 @@ void main() {
         expect(key('composer-title'), findsOneWidget);
         expect(key('composer-body'), findsOneWidget);
         expect(key('composer-tag'), findsOneWidget);
-        expect(find.text('Attach a file'), findsOneWidget);
+        expect(find.text('Attach File'), findsOneWidget);
         // The website's helper lines.
-        expect(find.text('Specific titles get answered. "Pricing question" does not.'), findsOneWidget);
-        expect(find.text('Tags are how someone finds this in six months.'), findsOneWidget);
-        expect(
-          find.text(
-            'Give enough context that someone can actually help — portfolio size, what you have tried, what constraints you are under.',
-          ),
-          findsOneWidget,
-        );
+        expect(find.text('Use a specific title to attract relevant responses.'), findsOneWidget);
+        expect(find.text('Add relevant keywords to help members find your post.'), findsOneWidget);
+        expect(find.text('Describe your topic, question or experience...'), findsOneWidget);
         // The editor: its toolbar and its count.
         for (final tool in ['bold', 'italic', 'heading', 'bullets', 'numbers', 'link']) {
           expect(key('rich-$tool'), findsOneWidget, reason: tool);
@@ -366,7 +364,7 @@ void main() {
       expect(subEnabled(), isTrue);
       await tester.tap(key('composer-subtopic'));
       await tester.pumpAndSettle();
-      expect(find.text('Sub-category (optional)'), findsWidgets);
+      expect(find.text('Sub-category (Optional)'), findsWidgets);
       await tester.tap(key('topic-option:BMS'));
       await tester.pumpAndSettle();
       expect(find.text('Building Management Systems'), findsOneWidget);
@@ -401,7 +399,7 @@ void main() {
       // Nothing matching says so.
       await tester.enterText(key('topic-search'), 'zzzz');
       await tester.pumpAndSettle();
-      expect(find.text('No matching categories'), findsOneWidget);
+      expect(find.text('No matching categories.'), findsOneWidget);
       // Picking the hit fills the category and the sub-category.
       await tester.enterText(key('topic-search'), 'building');
       await tester.pumpAndSettle();
@@ -422,10 +420,10 @@ void main() {
       expect(api.count('POST', '/forum/threads'), 0);
       // The fields turn red and ONE message says what is first missing, under the form: no line under each field.
       // (The website's helper lines stay grey under their fields.)
-      expect(find.text('Choose the topic this belongs to.'), findsOneWidget);
+      expect(find.text('Select a category.'), findsOneWidget);
       expect(key('composer-problem'), findsOneWidget);
       expect(find.text('The title needs at least 8 characters.'), findsNothing);
-      expect(find.text('Add some details so people know what you mean.'), findsNothing);
+      expect(find.text('Add details to explain your post.'), findsNothing);
       expect(holder.closed, isFalse);
     });
 
@@ -478,24 +476,21 @@ void main() {
       await pumpComposer(tester);
       await tester.tap(key('mode:poll'));
       await tester.pumpAndSettle();
-      expect(find.text('New poll'), findsOneWidget);
+      expect(find.text('New Poll'), findsOneWidget);
       // The poll is the same form: the website's words for a poll, in the same fields and the same type.
-      expect(find.text('Poll question'), findsOneWidget);
-      expect(find.text('Title'), findsNothing);
-      expect(find.text('One clear question. Members pick one option.'), findsOneWidget);
+      expect(find.text('Your Poll Question'), findsOneWidget);
+      expect(find.text('Discussion Title'), findsNothing);
+      expect(find.text('Keep your question clear and focused.'), findsOneWidget);
       expect(find.text('Category *'), findsOneWidget);
-      expect(find.text('Sub-category (optional)'), findsOneWidget);
-      expect(find.text('Options'), findsOneWidget);
+      expect(find.text('Sub-category (Optional)'), findsOneWidget);
+      expect(find.text('Answer Options'), findsOneWidget);
       expect(find.text('2 of 4'), findsOneWidget);
-      expect(find.text('Add option'), findsOneWidget);
-      expect(find.text('Members pick one; results show once they have voted.'), findsOneWidget);
-      expect(find.text('Details (optional)'), findsOneWidget);
-      expect(
-        find.text('Add context for voters — why you are asking, and anything the options leave out.'),
-        findsOneWidget,
-      );
-      expect(find.text('Option 1'), findsOneWidget);
-      expect(find.text('Option 2'), findsOneWidget);
+      expect(find.text('Add Option'), findsOneWidget);
+      expect(find.text('Members can select one option. Results are visible after voting.'), findsOneWidget);
+      expect(find.text('Additional Context (Optional)'), findsOneWidget);
+      expect(find.text('Provide context to help members understand your question.'), findsOneWidget);
+      expect(find.text('Enter option 1'), findsOneWidget);
+      expect(find.text('Enter option 2'), findsOneWidget);
       expect(key('rich-bold'), findsOneWidget, reason: 'the poll has the same editor');
       expect(key('poll-field:0'), findsOneWidget);
       expect(key('poll-field:1'), findsOneWidget);
@@ -521,7 +516,7 @@ void main() {
       expect(key('poll-problem'), findsNothing);
       await post(tester);
       expect(api.count('POST', '/forum/threads'), 0);
-      expect(find.text('Two options read the same: make each one different.'), findsOneWidget);
+      expect(find.text('Two options are the same. Make each option different.'), findsOneWidget);
       await tester.enterText(key('poll-field:1'), 'Split units');
       await tester.enterText(key('poll-field:2'), 'VRF');
       await tester.pump();
@@ -578,12 +573,63 @@ void main() {
     testWidgets('topics that fail to load say so and Try again reads them', (tester) async {
       final refusals = <String, (int, String)>{'GET /categories/tree': (500, 'No taxonomy')};
       await pumpComposer(tester, custom: routes(refusals: refusals));
-      expect(find.textContaining("Couldn't load the categories"), findsOneWidget);
+      expect(find.textContaining('Unable to load categories'), findsOneWidget);
       refusals.clear();
       await tester.tap(key('topics-retry'));
       await settle(tester);
       expect(find.text('Category *'), findsOneWidget);
       expect(key('composer-topic'), findsOneWidget);
+    });
+
+    testWidgets(
+      'photos and videos are picked several at once, uploaded and shown; photos go as imageIds, videos inline',
+      (tester) async {
+        await pumpComposer(
+          tester,
+          pickMedia: () async => const [
+            ForumFile(bytes: [1, 2, 3], name: 'site.png'),
+            ForumFile(bytes: [4, 5, 6], name: 'walk-down.mp4'),
+          ],
+        );
+        await chooseTopic(tester, 'TECHNOLOGY_INNOVATION');
+        await fill(tester, title: 'A title that is long enough', body: 'Some details');
+        await tester.ensureVisible(key('composer-media'));
+        await tester.tap(key('composer-media'));
+        await settle(tester);
+        expect(api.count('POST', '/uploads'), 2, reason: 'one upload per file');
+        expect(key('media-thumb-0'), findsOneWidget, reason: 'the photo');
+        expect(key('media-thumb-1'), findsOneWidget, reason: 'the video');
+        expect(find.text('Add More Photos or Videos'), findsOneWidget);
+
+        await post(tester);
+        final sent = api.bodyOf('POST', '/forum/threads');
+        final html = sent['bodyHtml'] as String;
+        // A photo is one of the post's own photos (the forum's `imageIds`), not a picture in the body.
+        expect(sent['imageIds'], ['abc123.png']);
+        expect(html, isNot(contains('<img')));
+        expect(html, contains('<video src="/uploads/abc123.png" controls></video>'));
+        expect(api.bodyOf('POST', '/forum/threads').containsKey('uploadId'), isFalse, reason: 'the file slot is free');
+      },
+    );
+
+    testWidgets('a photo or video over the forum\'s cap is refused before it is sent; the × takes one off', (
+      tester,
+    ) async {
+      await pumpComposer(
+        tester,
+        pickMedia: () async => [
+          const ForumFile(bytes: [1], name: 'ok.png'),
+          ForumFile(bytes: List.filled(forumImageMaxBytes + 1, 0), name: 'huge.png'),
+        ],
+      );
+      await tester.ensureVisible(key('composer-media'));
+      await tester.tap(key('composer-media'));
+      await settle(tester);
+      expect(api.count('POST', '/uploads'), 1);
+      expect(snack('huge.png is too large'), findsOneWidget);
+      await tester.tap(key('media-remove-0'));
+      await tester.pump();
+      expect(key('media-thumb-0'), findsNothing);
     });
 
     testWidgets('a photo or PDF is picked, uploaded and shown; its x takes it off; it is sent with the discussion', (
@@ -605,7 +651,7 @@ void main() {
       expect(picks, 1);
       expect(find.text('site.png · 2 KB'), findsOneWidget);
       expect(api.to('POST', '/uploads').single.queryParameters, {'purpose': 'forum-attachment'});
-      expect(find.text('Replace attachment'), findsOneWidget);
+      expect(find.text('Replace Attachment'), findsOneWidget);
       await tester.tap(key('attachment-remove'));
       await tester.pump();
       expect(key('composer-file'), findsNothing);
@@ -769,7 +815,7 @@ void main() {
       await fill(tester, title: 'Half written');
       await tester.tap(key('composer-close'));
       await tester.pumpAndSettle();
-      expect(find.text('Discard this draft?'), findsOneWidget);
+      expect(find.text('Discard This Draft?'), findsOneWidget);
       await tester.tap(key('confirm-cancel'));
       await tester.pumpAndSettle();
       expect(find.byType(NewThreadScreen), findsOneWidget);
@@ -848,7 +894,7 @@ void main() {
       tester,
     ) async {
       await pumpEdit(tester, existing());
-      expect(find.text('Edit discussion'), findsOneWidget);
+      expect(find.text('Edit Discussion'), findsOneWidget);
       expect(tester.widget<TextField>(key('composer-title')).controller!.text, 'Original title here');
       expect(tester.widget<TextField>(key('composer-body')).controller!.text, 'Words bold');
       expect(find.text('#hvac'), findsOneWidget);
@@ -946,7 +992,7 @@ void main() {
       await tester.tap(key('composer-bar-send'));
       await settle(tester);
       expect(api.count('PATCH', '/forum/threads/t-q'), 0);
-      expect(find.text('Add some details so people know what you mean.'), findsWidgets);
+      expect(find.text('Add details to explain your post.'), findsWidgets);
     });
 
     testWidgets('a file the discussion carries can only be replaced, never taken off; a new one is sent', (
@@ -961,7 +1007,7 @@ void main() {
       );
       expect(find.text('Old spec.pdf · 1 KB'), findsOneWidget);
       expect(key('attachment-remove'), findsNothing);
-      expect(find.text('Replace attachment'), findsOneWidget);
+      expect(find.text('Replace Attachment'), findsOneWidget);
       await tester.ensureVisible(key('composer-attach'));
       await tester.tap(key('composer-attach'));
       await settle(tester);
@@ -1002,7 +1048,7 @@ void main() {
       await tester.pump();
       await tester.tap(key('composer-close'));
       await tester.pumpAndSettle();
-      expect(find.text('Discard your changes?'), findsOneWidget);
+      expect(find.text('Discard Your Changes?'), findsOneWidget);
     });
   });
 }

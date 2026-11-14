@@ -63,7 +63,7 @@ class OfferingsTab extends StatelessWidget {
                 const SizedBox(width: 5.7),
                 Expanded(
                   child: Text(
-                    'Tap any offering to inspect curriculum breakdown & lock your schedule.',
+                    'Select an offering to view its curriculum and book your schedule.',
                     style: MentorText.info,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -77,7 +77,7 @@ class OfferingsTab extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 28, 18, 28),
             child: Text(
-              'Nothing here yet. This mentor has not listed anything under this filter.',
+              'This mentor has no offerings under this filter.',
               style: MentorText.body,
               textAlign: TextAlign.center,
             ),

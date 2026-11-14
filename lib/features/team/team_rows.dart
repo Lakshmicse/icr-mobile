@@ -199,7 +199,7 @@ class MemberRow extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Inbox: ${TeamWords.inbox(m.handlesTopics)}',
+            'Inbox Permissions: ${TeamWords.inbox(m.handlesTopics)}',
             key: Key('team.member.inbox.${m.id}'),
             style: AccountText.meta,
           ),

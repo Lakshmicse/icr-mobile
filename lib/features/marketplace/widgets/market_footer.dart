@@ -73,7 +73,7 @@ class MarketFooter extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Load more suppliers', style: MartText.loadMore),
+                        Text('View More', style: MartText.loadMore),
                         const SizedBox(width: 3.5),
                         const Icon(LucideIcons.chevronDown, size: 14, color: AppColors.primary),
                       ],

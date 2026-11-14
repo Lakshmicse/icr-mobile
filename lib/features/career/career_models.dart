@@ -12,9 +12,9 @@ export 'insights_models.dart';
 
 /// INTERVIEW mode: in person, video or phone.
 enum InterviewMode {
-  inPerson('In person'),
-  video('Video call'),
-  phone('Phone call');
+  inPerson('In Person'),
+  video('Video Call'),
+  phone('Phone Call');
 
   const InterviewMode(this.label);
   final String label;
@@ -92,7 +92,7 @@ class CareerInterview {
     'RESCHEDULED' => 'Rescheduled',
     'COMPLETED' => 'Completed',
     'CANCELLED' => 'Cancelled',
-    'NO_SHOW' => 'No-show',
+    'NO_SHOW' => 'No-Show',
     _ => status,
   };
 

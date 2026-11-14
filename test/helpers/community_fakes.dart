@@ -418,6 +418,10 @@ class FakeLibrary implements LibraryRepository {
   Future<void> delete(String id) => _call('delete', () => inner.delete(id), id);
 
   @override
+  Future<LibraryDocument> update(String id, {String? title, String? description}) =>
+      _call('update', () => inner.update(id, title: title, description: description), id);
+
+  @override
   Future<void> report(String id, DocumentReportReason reason, {String? note}) =>
       _call('report', () => inner.report(id, reason, note: note), '$id:${reason.api}');
 

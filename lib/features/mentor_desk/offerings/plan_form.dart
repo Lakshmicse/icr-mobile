@@ -145,7 +145,7 @@ class _PlanFormState extends State<PlanForm> {
     } else {
       final n = int.tryParse(_perMonth.text.trim());
       if (n == null || n < minSessionsPerMonth || n > maxSessionsPerMonth) {
-        return 'Say how many sessions a month the plan includes: $minSessionsPerMonth to $maxSessionsPerMonth.';
+        return 'Enter how many sessions a month the plan includes, from $minSessionsPerMonth to $maxSessionsPerMonth.';
       }
     }
     if (_length.text.trim().isNotEmpty) {
@@ -214,11 +214,11 @@ class _PlanFormState extends State<PlanForm> {
     final editing = widget.existing != null;
     return MentoringForm(
       title: editing
-          ? 'Edit ${_programme ? 'programme' : 'plan'}'
-          : (_programme ? 'Add a programme' : 'Add an ongoing plan'),
+          ? 'Edit ${_programme ? 'Programme' : 'Plan'}'
+          : (_programme ? 'Add a Programme' : 'Add an Ongoing Plan'),
       subtitle: _programme
-          ? 'A fixed run of sessions. A member asks, you accept, they pay, and the sessions are booked against your syllabus.'
-          : 'A prepaid term with sessions every month. Nothing is debited automatically: a renewal is a new purchase.',
+          ? 'A fixed series of sessions. A member asks, you accept, they pay, and the sessions are booked against your syllabus.'
+          : 'A prepaid term with sessions every month. Nothing is charged automatically. A renewal is a new purchase.',
       submitLabel: editing ? 'Save' : 'Add',
       busy: _busy,
       problem: _problem,
@@ -226,13 +226,13 @@ class _PlanFormState extends State<PlanForm> {
       children: [
         if (!editing)
           FieldBlock(
-            label: 'What are you offering?',
+            label: 'Offering Type',
             child: Wrap(
               spacing: 6,
               children: [
                 ChoiceChip(
                   key: const ValueKey('kind-recurring'),
-                  label: const Text('Ongoing plan'),
+                  label: const Text('Ongoing Plan'),
                   selected: !_programme,
                   onSelected: (_) => setState(() => _programme = false),
                 ),
@@ -258,7 +258,7 @@ class _PlanFormState extends State<PlanForm> {
           ),
         ),
         FieldBlock(
-          label: 'Description (optional)',
+          label: 'Description (Optional)',
           child: TextField(
             key: const ValueKey('offering-blurb'),
             controller: _blurb,
@@ -274,13 +274,11 @@ class _PlanFormState extends State<PlanForm> {
           onFree: (v) => setState(() => _free = v),
           price: _price,
           compareAt: _compare,
-          priceHelp: _programme
-              ? 'For the whole programme. Free, or ₹499 or more.'
-              : 'For one term. Free, or between ₹500 and ₹5,00,000.',
+          priceHelp: _programme ? 'For the whole programme.' : 'For one term.',
         ),
         if (!_programme) ...[
           FieldBlock(
-            label: 'How long is a term?',
+            label: 'Term Length',
             child: Wrap(
               spacing: 6,
               runSpacing: 6,
@@ -288,7 +286,7 @@ class _PlanFormState extends State<PlanForm> {
                 for (final m in planPeriods)
                   ChoiceChip(
                     key: ValueKey('period-$m'),
-                    label: Text(m == 1 ? '1 month' : '$m months'),
+                    label: Text(m == 1 ? '1 Month' : '$m Months'),
                     selected: _period == m,
                     onSelected: (_) => setState(() => _period = m),
                   ),
@@ -296,7 +294,7 @@ class _PlanFormState extends State<PlanForm> {
             ),
           ),
           FieldBlock(
-            label: 'Sessions a month ($minSessionsPerMonth to $maxSessionsPerMonth)',
+            label: 'Sessions per Month ($minSessionsPerMonth to $maxSessionsPerMonth)',
             child: TextField(
               key: const ValueKey('plan-per-month'),
               controller: _perMonth,
@@ -307,7 +305,7 @@ class _PlanFormState extends State<PlanForm> {
           ),
         ] else
           FieldBlock(
-            label: 'Months to use the sessions ($minAccessMonths to $maxAccessMonths)',
+            label: 'Months to Use the Sessions ($minAccessMonths to $maxAccessMonths)',
             child: TextField(
               key: const ValueKey('plan-access'),
               controller: _access,
@@ -317,7 +315,7 @@ class _PlanFormState extends State<PlanForm> {
             ),
           ),
         FieldBlock(
-          label: 'Usual session length (minutes, optional)',
+          label: 'Usual Session Length in Minutes (Optional)',
           child: TextField(
             key: const ValueKey('plan-length'),
             controller: _length,
@@ -337,7 +335,7 @@ class _PlanFormState extends State<PlanForm> {
               alignment: Alignment.centerLeft,
               child: QuietButton(
                 key: const ValueKey('module-add'),
-                label: 'Add a session',
+                label: 'Add a Session',
                 icon: LucideIcons.plus,
                 onPressed: () => setState(_addModule),
               ),
@@ -345,22 +343,22 @@ class _PlanFormState extends State<PlanForm> {
           const SizedBox(height: 14),
         ],
         FieldBlock(
-          label: 'What it includes (one line each, up to $maxInclusions)',
+          label: 'Inclusions (one per line, up to $maxInclusions)',
           child: TextField(
             key: const ValueKey('plan-inclusions'),
             controller: _inclusions,
             minLines: 3,
             maxLines: 8,
             style: MentoringText.formInput,
-            decoration: fieldDecoration('Notes after every session'),
+            decoration: fieldDecoration('Notes After Every Session'),
           ),
         ),
         FileRow(
-          label: 'Cover image (optional)',
+          label: 'Cover Image (Optional)',
           pickKey: 'offering-cover',
           name: _cover == null ? null : (_coverName ?? 'Current cover'),
           busy: _uploading,
-          pickLabel: _cover == null ? 'Choose an image' : 'Replace the image',
+          pickLabel: _cover == null ? 'Choose an Image' : 'Replace Image',
           onPick: _pickCover,
           onClear: () => setState(() {
             _cover = null;
@@ -368,14 +366,7 @@ class _PlanFormState extends State<PlanForm> {
             _coverChanged = true;
           }),
         ),
-        SwitchListTile.adaptive(
-          key: const ValueKey('offering-active'),
-          contentPadding: EdgeInsets.zero,
-          value: _active,
-          onChanged: (v) => setState(() => _active = v),
-          title: Text('Live on your storefront', style: MentoringText.formLabel),
-          subtitle: Text('Members see only what is live. Switch it off to pause it.', style: MentoringText.meta),
-        ),
+        // No "Live on your storefront" switch (owner, 7 Nov 2026): Pause / Resume on the list, once posted.
       ],
     );
   }
@@ -397,7 +388,7 @@ class _PlanFormState extends State<PlanForm> {
                   if (_modTitles.length > minPlanModules)
                     IconButton(
                       key: ValueKey('module-remove-$i'),
-                      tooltip: 'Remove session ${i + 1}',
+                      tooltip: 'Remove Session ${i + 1}',
                       onPressed: () => _removeModule(i),
                       icon: const Icon(LucideIcons.trash2, size: 16, color: AppColors.outline),
                     ),
@@ -418,7 +409,7 @@ class _PlanFormState extends State<PlanForm> {
                 maxLines: 4,
                 maxLength: maxModuleOutline,
                 style: MentoringText.formInput,
-                decoration: fieldDecoration('What it covers (optional)'),
+                decoration: fieldDecoration('Outline (Optional)'),
               ),
               const SizedBox(height: 6),
               TextField(
@@ -426,7 +417,7 @@ class _PlanFormState extends State<PlanForm> {
                 controller: _modMinutes[i],
                 keyboardType: TextInputType.number,
                 style: MentoringText.formInput,
-                decoration: fieldDecoration('Minutes (optional, $minSessionMinutes to $maxSessionMinutes)'),
+                decoration: fieldDecoration('Minutes (Optional, $minSessionMinutes to $maxSessionMinutes)'),
               ),
             ],
           ),

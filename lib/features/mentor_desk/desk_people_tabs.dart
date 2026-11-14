@@ -33,11 +33,11 @@ class DeskMenteesTab extends StatelessWidget {
       if (live.isEmpty && finished.isEmpty)
         const EmptyNote(
           icon: LucideIcons.users,
-          title: 'No mentees yet',
+          title: 'No Mentees Yet',
           body: 'When you accept a request, your mentee appears here, with their sessions, goals and notes.',
         ),
       if (live.isNotEmpty) ...[
-        GroupLabel('Mentoring now (${live.length})', top: 0),
+        GroupLabel('Mentoring Now (${live.length})', top: 0),
         for (final p in live)
           PairingCard(
             key: ValueKey('mentee-${p.id}'),
@@ -56,7 +56,7 @@ class DeskMenteesTab extends StatelessWidget {
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your mentees",
+      errorTitle: 'Unable to Load Your Mentees',
       onRefresh: () => c.refreshTab(DeskTab.mentees),
       children: loading || failed != null ? const [] : children,
     );
@@ -88,20 +88,20 @@ class DeskEarningsTab extends StatelessWidget {
     };
     final children = <Widget>[
       if (e != null) ...[
-        StatStrip(tiles: [(inr(e.unsettledPaisa), 'Awaiting payout'), (inr(e.settledPaisa), 'Paid out')]),
+        StatStrip(tiles: [(inr(e.unsettledPaisa), 'Awaiting Payout'), (inr(e.settledPaisa), 'Paid Out')]),
         Callout(
           tone: PillTone.grey,
           text:
-              'You keep what is left after ICR\'s fee. ICR pays out by bank transfer and records the reference here. '
-              'Nothing on this page can be changed from the app.',
+              'You receive the amount left after ICR\'s fee. ICR pays by bank transfer and records the reference here. '
+              'This page cannot be edited in the app.',
         ),
         const SectionTitle(title: 'Earnings'),
         if (e.entries.isEmpty)
           const EmptyNote(
             icon: LucideIcons.wallet,
             compact: true,
-            title: 'No earnings yet',
-            body: 'Paid sessions, resources, programmes and plans show up here as they are sold.',
+            title: 'No Earnings Yet',
+            body: 'Paid sessions, resources, programmes and plans will appear here as they are sold.',
           ),
         for (final entry in e.entries)
           MentoringCard(
@@ -156,7 +156,7 @@ class DeskEarningsTab extends StatelessWidget {
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your earnings",
+      errorTitle: 'Unable to Load Your Earnings',
       onRefresh: () => c.refreshTab(DeskTab.earnings),
       children: loading || failed != null ? const [] : children,
     );
@@ -183,10 +183,10 @@ class DeskReviewsTab extends StatelessWidget {
         tiles: [
           (profile == null || profile.ratingCount == 0 ? '-' : profile.rating.toStringAsFixed(1), 'Rating'),
           ('${profile?.ratingCount ?? 0}', 'Reviews'),
-          ('${profile?.menteesHelped ?? 0}', 'Mentees helped'),
+          ('${profile?.menteesHelped ?? 0}', 'Mentees Helped'),
         ],
       ),
-      const GroupLabel('From your mentees', top: 0),
+      const GroupLabel('From Your Mentees', top: 0),
       if (fb.isEmpty)
         Padding(
           padding: const EdgeInsets.only(bottom: 10),
@@ -215,12 +215,12 @@ class DeskReviewsTab extends StatelessWidget {
                 ),
               Padding(
                 padding: const EdgeInsets.only(top: 6),
-                child: Text('A mentee', style: MentoringText.meta),
+                child: Text('Anonymous mentee', style: MentoringText.meta),
               ),
             ],
           ),
         ),
-      const GroupLabel('On what you sell', top: 12),
+      const GroupLabel('On Your Offerings', top: 12),
       if (sr.isEmpty)
         Padding(
           padding: const EdgeInsets.only(bottom: 10),
@@ -259,7 +259,7 @@ class DeskReviewsTab extends StatelessWidget {
     return LoadedList(
       loading: loading,
       error: failed,
-      errorTitle: "Couldn't load your reviews",
+      errorTitle: 'Unable to Load Your Reviews',
       onRefresh: () => c.refreshTab(DeskTab.reviews),
       children: loading || failed != null ? const [] : children,
     );

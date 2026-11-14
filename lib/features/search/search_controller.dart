@@ -245,25 +245,27 @@ class GlobalSearchController extends ChangeNotifier {
     for (final kind in _needsFetch()) {
       final source = _sources[kind]!;
       _groups[kind] = SearchGroup(kind, status: GroupStatus.loading, query: q, hits: _groups[kind]!.hits);
-      source.search(q).then(
-        (page) {
-          if (gen != _generation) return;
-          _groups[kind] = SearchGroup(
-            kind,
-            status: GroupStatus.done,
-            hits: page.hits,
-            hasMore: page.hasMore,
-            page: 1,
-            query: q,
+      source
+          .search(q)
+          .then(
+            (page) {
+              if (gen != _generation) return;
+              _groups[kind] = SearchGroup(
+                kind,
+                status: GroupStatus.done,
+                hits: page.hits,
+                hasMore: page.hasMore,
+                page: 1,
+                query: q,
+              );
+              _notify();
+            },
+            onError: (Object _) {
+              if (gen != _generation) return;
+              _groups[kind] = SearchGroup(kind, status: GroupStatus.failed, query: q);
+              _notify();
+            },
           );
-          _notify();
-        },
-        onError: (Object _) {
-          if (gen != _generation) return;
-          _groups[kind] = SearchGroup(kind, status: GroupStatus.failed, query: q);
-          _notify();
-        },
-      );
     }
     _notify();
   }
