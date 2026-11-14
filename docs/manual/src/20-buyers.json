@@ -1,0 +1,38 @@
+{
+  "who": "Buyers, and sellers and company admins when they buy",
+  "overview": [
+    "A buyer posts what the company needs and decides among the answers. Use an **enquiry** when you want prices quickly from matching suppliers, and an **RFQ** when you need formal bids against criteria."
+  ],
+  "can": [
+    "Post an enquiry or an RFQ for your company.",
+    "Invite particular suppliers to answer.",
+    "Read replies and bids, message suppliers, shortlist and choose.",
+    "Edit, close or cancel a requirement, and post a similar one."
+  ],
+  "flows": {
+    "post": {
+      "rules": [
+        "Suppliers see your contact details only after they respond, and only on plans that include them.",
+        "An RFQ adds line items, criteria for suppliers to meet, and dates for each stage."
+      ]
+    },
+    "replies": {
+      "after": [
+        "The supplier you chose is told, and so are the others. Carry on with the supplier in **Messages**."
+      ]
+    }
+  },
+  "website": [
+    "Your company's own page and details."
+  ],
+  "menu": [
+    {
+      "row": "**Marketplace**",
+      "pages": "Post a requirement · Search suppliers"
+    },
+    {
+      "row": "**Company**",
+      "pages": "Add members · View enquiries & RFQs"
+    }
+  ]
+}

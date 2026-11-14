@@ -1,0 +1,25 @@
+{
+  "who": "Every member",
+  "overview": [
+    "Learning has three kinds of things: **courses** you attend, from ICR and its partner institutes; **papers** you sit to test yourself, which can earn a certificate; and **study aids**, the flash cards and the Knowledge Centre."
+  ],
+  "flows": {
+    "assess": {
+      "rules": [
+        "A level you opened stays open for good.",
+        "You can leave a paper and come back: your answers are saved and the timer keeps running.",
+        "**Pay now** pays for a level inside the app. Where a whole subject is cheaper as a bundle, the app shows the bundle."
+      ]
+    },
+    "course": {
+      "rules": [
+        "A free place is yours at once or after the institute confirms it. A paid place is paid for in your phone's browser; the app hands you over.",
+        "On the Learning tab itself, a course under **My courses** does not open in this version of the app. Open it from **My courses** in your profile menu, as shown."
+      ]
+    }
+  },
+  "website": [
+    "Paying for a place on a paid course.",
+    "Batch timetables, attendance and course materials for a course you are enrolled in."
+  ]
+}

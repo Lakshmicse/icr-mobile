@@ -1,0 +1,11 @@
+{
+  "name": "icr-mobile-manual",
+  "private": true,
+  "type": "module",
+  "description": "The mobile app's user manual: capture kit and Word builder. See README.md.",
+  "dependencies": {
+    "docx": "^9.5.1",
+    "image-size": "^1.2.1",
+    "sharp": "^0.34.3"
+  }
+}

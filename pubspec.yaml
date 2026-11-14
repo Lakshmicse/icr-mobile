@@ -38,6 +38,9 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # The user manual's driver (integration_test/manual_driver_test.dart); nothing in lib/ uses it.
+  integration_test:
+    sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
   webview_flutter_platform_interface: ^2.15.1

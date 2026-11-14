@@ -1,0 +1,14 @@
+{
+  "who": "Everyone",
+  "overview": [
+    "When something does not work, or you have a question about your account, a payment or a verification, raise a request. It reaches ICR's support team, and you follow it from the same screen."
+  ],
+  "flows": {
+    "request": {
+      "after": [
+        "ICR replies within the time your plan promises; the reply reaches your bell and your email.",
+        "Open the request to reply, add a file, reopen it if the answer did not solve it, and rate the help once it is resolved."
+      ]
+    }
+  }
+}

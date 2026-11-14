@@ -1,0 +1,18 @@
+{
+  "who": "Every member",
+  "overview": [
+    "The Marketplace is where companies find suppliers of facility services and products. Anyone can browse it and read a supplier's page. Asking for a quote and posting a requirement are done for a company you belong to."
+  ],
+  "flows": {
+    "quote": {
+      "rules": [
+        "The app asks for your mobile number the first time, so the supplier can call you back.",
+        "On your own company's page the quote button is not offered."
+      ]
+    }
+  },
+  "website": [
+    "Comparing several suppliers side by side.",
+    "Tenders published by public bodies."
+  ]
+}

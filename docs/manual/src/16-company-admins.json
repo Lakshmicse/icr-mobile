@@ -1,0 +1,46 @@
+{
+  "who": "Company admins",
+  "overview": [
+    "A company admin is in charge of the company's page and its people. In the app you manage the team and can act in any of the company's roles yourself: hire (see Recruiters and office admins), buy (see Buyers) and sell (see Sellers)."
+  ],
+  "can": [
+    "See the team, change a member's role or office, and remove a member.",
+    "Approve or decline people who asked to join.",
+    "Add someone who is on ICR, or invite someone by email.",
+    "Post and manage jobs, post requirements, and answer other companies' requirements.",
+    "Read and answer the company's inbox.",
+    "Switch between your companies and yourself, and create another company."
+  ],
+  "flows": {
+    "add": {
+      "rules": [
+        "Adding someone does not make them an admin: admin rights come only through an email invitation the person accepts.",
+        "Every member, pending add and pending invitation counts against the seats in your company's plan."
+      ]
+    },
+    "requests": {
+      "rules": [
+        "Declining removes the request; the person can ask again."
+      ]
+    }
+  },
+  "website": [
+    "The company's details, documents and verification. The app opens these website pages inside itself, from **My companies** and wherever an action needs the company verified.",
+    "Products and services, certifications, offices and locations.",
+    "The company's plans and invoices, advertising, reports and integrations."
+  ],
+  "menu": [
+    {
+      "row": "**Jobs**",
+      "pages": "Post & manage jobs · Assign team & add members · My applications · My saved jobs · Search jobs"
+    },
+    {
+      "row": "**Marketplace**",
+      "pages": "Post a requirement · Search suppliers"
+    },
+    {
+      "row": "**Company**",
+      "pages": "Add members · View enquiries & RFQs · Bid for enquiries & RFQs"
+    }
+  ]
+}

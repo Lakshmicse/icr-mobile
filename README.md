@@ -61,6 +61,22 @@ The app has two content sources, picked at launch:
 
 To make the live app show the designs' content too, `tool/seed/` has scripts that fill the **local** database with it (local only, idempotent, removable); see `tool/seed/README.md`.
 
+## Building for the App Store (iOS)
+
+The app is published by **Vinfraa Lab Private Limited** (team `8J7V7X5SZY`) as `org.icr.icrMobile`. The Runner target carries that team with automatic signing, and the App ID and its App Store profile exist on the team (Xcode created both on 4 Nov 2026). The Mac needs Xcode's iOS platform installed (Xcode > Settings > Components, or `xcodebuild -downloadPlatform iOS`) and the team's Apple Distribution certificate in its keychain.
+
+The team has no iOS device registered, and Xcode signs an archive with a *development* profile before re-signing it for the store, which needs one — so the one-step `flutter build ipa` stops with "Your team has no devices from which to generate a provisioning profile". Build the archive unsigned and let the export sign it:
+
+```bash
+flutter build ipa --release --no-codesign --dart-define=API_BASE_URL=https://icr.org.in/api/v1
+xcodebuild -exportArchive -archivePath build/ios/archive/Runner.xcarchive \
+  -exportOptionsPlist ios/ExportOptions.plist -exportPath build/ios/ipa -allowProvisioningUpdates
+```
+
+`ios/ExportOptions.plist` asks for an App Store Connect export with automatic signing under the team; the export signs the app and its frameworks with the Apple Distribution certificate and writes `build/ios/ipa/icr_mobile.ipa`. Pass the production `API_BASE_URL` — the default is the local backend. Once one iPhone is registered on the team (Certificates, Identifiers & Profiles → Devices, or plug it into the Mac and rerun), plain `flutter build ipa --release --dart-define=…` does both steps itself.
+
+Uploading needs the app's record in App Store Connect (name ICR, bundle `org.icr.icrMobile`); then send the IPA with Transporter, or change `destination` to `upload` in the export options.
+
 ## Tests
 
 ```

@@ -1,0 +1,10 @@
+{
+  "who": "ICR staff",
+  "overview": [
+    "ICR's own work, reviewing companies and mentors, moderating, setting plans and prices, granting roles, is done in the admin consoles on the website. The app gives a staff account a read of the member-facing side.",
+    "Staff with roles granted from the Role Management console, such as a support agent or a content reviewer, see an ordinary member's menu in the app; their consoles are on the website too."
+  ],
+  "website": [
+    "Every admin console: verification, approvals, subscriptions, roles and permissions, the audit trail, translations, and the rest of the Admin Portal."
+  ]
+}

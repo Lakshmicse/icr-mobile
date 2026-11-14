@@ -311,7 +311,7 @@ void main() {
       expect(code, matches(RegExp(r'^\d{6}$')));
       final wrong = await refusalOf(auth.verifyEmailCode(email, code == '000000' ? '111111' : '000000'));
       expect(wrong.statusCode, 401);
-      expect(wrong.message, 'That code is not right. Check the email and try again.');
+      expect(wrong.message, 'The OTP is incorrect. Please check your email and try again.');
 
       // No account until the code is right.
       expect(

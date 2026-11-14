@@ -1,0 +1,117 @@
+{
+  "member": {
+    "email": "bharat.joshi@techcorp.example",
+    "password": "Buyer@123",
+    "name": "Bharat Joshi",
+    "what": "The member the manual follows: no company, no mentor profile (the seeds' buyer@icr.dev, renamed by touchups.sql)"
+  },
+  "second": {
+    "email": "pooja.sharma@prestigeparks.example",
+    "name": "Pooja Sharma",
+    "what": "A second member, for two-sided steps",
+    "fixture": "professional@icr.test"
+  },
+  "newcomer": {
+    "email": "gita.nair@northgatecare.example",
+    "name": "Gita Nair",
+    "what": "A member with nothing set up",
+    "fixture": "guest@icr.test"
+  },
+  "examSitter": {
+    "email": "exam.sitter@learning-flows.icr.test",
+    "password": "Exam@12345",
+    "what": "Sits papers and redeems credits"
+  },
+  "studyCards": {
+    "email": "study.cards@learning-study.icr.test",
+    "password": "Study@12345",
+    "what": "Holds flash-card places"
+  },
+  "mentor": {
+    "email": "mentoring.anand@design.icr.test",
+    "password": "Password123!",
+    "name": "Anand Iyer",
+    "what": "An approved mentor with a full desk"
+  },
+  "companyAdmin": {
+    "email": "chetan.rao@meridianfs.example",
+    "name": "Chetan Rao",
+    "what": "Company admin of Meridian Facility Services",
+    "fixture": "companyadmin@icr.test"
+  },
+  "recruiter": {
+    "email": "rahul.verma@meridianfs.example",
+    "what": "Recruiter at Meridian",
+    "fixture": "recruiter@icr.test",
+    "name": "Rahul Verma"
+  },
+  "branchAdmin": {
+    "email": "bina.thomas@meridianfs.example",
+    "name": "Bina Thomas",
+    "what": "Office admin at Meridian",
+    "fixture": "branchadmin@icr.test"
+  },
+  "pipelineRecruiter": {
+    "email": "rohit.rao@career.icr.test",
+    "password": "Career@12345",
+    "name": "Rohit Rao",
+    "what": "Recruiter at Northwind with a nine-applicant pipeline"
+  },
+  "hiringAdmin": {
+    "email": "meera.iyer@career.icr.test",
+    "password": "Career@12345",
+    "what": "Company admin at Northwind"
+  },
+  "hiringManager": {
+    "email": "hema.iyer@meridianfs.example",
+    "what": "Interview feedback only",
+    "fixture": "hiringmanager@icr.test",
+    "name": "Hema Iyer"
+  },
+  "seller": {
+    "email": "vivek.menon@meridianfs.example",
+    "name": "Vivek Menon",
+    "what": "Seller at a supplier company",
+    "fixture": "vendor@icr.test"
+  },
+  "sellerDesign": {
+    "email": "rfq.bluedot@rfq-design.icr.test",
+    "password": "Rfq@12345",
+    "what": "A supplier persona with quotes on the free plan"
+  },
+  "buyer": {
+    "email": "bhavna.kapoor@meridianfs.example",
+    "name": "Bhavna Kapoor",
+    "what": "Buyer",
+    "fixture": "buyer@icr.test"
+  },
+  "buyerDesign": {
+    "email": "rfq.buyer@rfq-design.icr.test",
+    "password": "Rfq@12345",
+    "what": "A company buyer with requirements that have replies"
+  },
+  "superAdmin": {
+    "email": "sana.qureshi@icr.example",
+    "name": "Sana Qureshi",
+    "what": "ICR staff: Super Admin",
+    "fixture": "superadmin@icr.test"
+  },
+  "instituteAdmin": {
+    "email": "tara.joshi@career.icr.test",
+    "password": "Career@12345",
+    "name": "Tara Joshi",
+    "what": "Company admin of a partner institute (touchups.sql attaches the institute to her company)"
+  },
+  "learningAdmin": {
+    "email": "nadia.fernandes@icr.example",
+    "fixture": "contentadmin@icr.test",
+    "name": "Nadia Fernandes",
+    "what": "ICR staff: Learning Admin (made by touchups.sql)"
+  },
+  "partnerAdmin": {
+    "email": "sameer.kulkarni@harborinstitute.example",
+    "fixture": "supportagent@icr.test",
+    "name": "Sameer Kulkarni",
+    "what": "Partner Admin of the institute (made by touchups.sql)"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "who": "Every member",
+  "overview": [
+    "Membership is yearly. One plan covers you as a professional; companies, mentors and institutes have their own plans, bought for that company or profile."
+  ],
+  "flows": {
+    "plans": {
+      "rules": [
+        "Prices are per year, before GST.",
+        "A plan renews only when you renew it; ICR reminds you before it ends.",
+        "A plan marked **Contact sales** is priced for you by ICR's team."
+      ]
+    },
+    "refer": {
+      "rules": [
+        "A referral counts when the person you invited joins and, for the reward, makes their first payment."
+      ]
+    }
+  },
+  "website": [
+    "Plans for a company and for an institute.",
+    "Invoices with your GSTIN."
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "who": "Every member",
+  "overview": [
+    "A company on ICR is one page that can hire, buy and sell. You reach all three by belonging to a company: creating its page, asking to join it, or accepting an invitation from its admin."
+  ],
+  "flows": {
+    "create": {
+      "after": [
+        "**Get verified** is the company check: ICR confirms the company is real before it can publish jobs, contact candidates or bid. It opens the company page of the website inside the app.",
+        "**Sell on ICR** creates the supplier listing in one step, from the details you gave."
+      ],
+      "rules": [
+        "While you fill in the form, the app shows companies already on ICR with a similar name, so you can ask to join instead of making a second page.",
+        "You can create only a few company pages an hour."
+      ]
+    },
+    "join": {
+      "rules": [
+        "An invitation from a company's admin appears at the top of **My companies**, with **Accept** and **Decline**.",
+        "You can withdraw a request while it is waiting."
+      ]
+    },
+    "switch": {
+      "rules": [
+        "Switching reloads the app for that company: nothing of the other company stays on screen.",
+        "The only admin of a company cannot leave it until another admin is appointed."
+      ]
+    }
+  },
+  "website": [
+    "The company's details beyond the first screen, its documents and the verification itself. The app opens these pages of the website for you.",
+    "Offices and locations."
+  ]
+}
