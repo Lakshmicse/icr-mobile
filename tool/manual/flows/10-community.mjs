@@ -102,4 +102,37 @@ export default defineManual('10-community', 'Chapters, councils, events and the 
       await m.home();
     },
   ),
+
+  flow(
+    'pass',
+    'Your event pass',
+    { who: 'Every member', as: 'member' },
+    async (m) => {
+      await m.open('/events');
+      await m.wait({ text: 'All Events' });
+      await settle(m);
+      await m.shot('schedule', 'On **Events**, **My Schedule** shows the next event you have a place at. Select **Manage & View**.', { ring: { contains: 'Manage & View' } });
+      await m.tap({ contains: 'Manage & View' });
+      await settle(m, 1800);
+      await m.shot('booking', 'The event opens with your booking: your pass number, the time and the place. **Add to calendar** saves it to your phone, and **Cancel** gives the place back.', { ring: { contains: 'View Pass' } });
+      await m.tap({ contains: 'View Pass' }, { ensure: false });
+      await settle(m, 1500);
+      await m.shot('qr', '**View Pass & QR** shows the code to present at the door.');
+      await m.home();
+    },
+  ),
+
+  flow(
+    'join-chapter',
+    'Join a chapter',
+    { who: 'Every member', as: 'newcomer' },
+    async (m) => {
+      await m.open('/chapters');
+      await m.wait({ text: 'Regional Chapters' });
+      await settle(m);
+      await m.scrollTo({ text: 'Join Chapter' }, { align: 0.55 });
+      await m.shot('join', 'Scroll to the list of all chapters, or search for your city. On a chapter you do not belong to yet, select **Join Chapter**. **Preview Chapter** opens its page first. Membership of a chapter is free.', { ring: { text: 'Join Chapter', i: 0 } });
+      await m.home();
+    },
+  ),
 ]);

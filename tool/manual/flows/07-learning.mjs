@@ -191,4 +191,45 @@ export default defineManual('07-learning', 'Learning', [
       await m.home();
     },
   ),
+
+  flow(
+    'review',
+    'Review your answers and open a certificate',
+    { who: 'Every member', as: 'member' },
+    async (m) => {
+      await m.open('/learning/attempts');
+      await m.pause(1200);
+      await m.idle();
+      await m.tap({ contains: 'Capital Planning', i: 0 });
+      await m.wait({ text: 'Review answers' });
+      await m.shot('result', 'In **My attempts**, select a sitting to see its result again. **Retake test** starts a new sitting.', { ring: { text: 'Review answers' } });
+      await m.tap({ text: 'Review answers' });
+      await m.pause(1800);
+      await m.idle();
+      await m.shot('answers', '**Review answers** goes through the paper question by question: your answer, the right one, and why.');
+      await m.home();
+      await m.open('/learning/certificates');
+      await m.wait({ text: 'View certificate' });
+      await m.tap({ text: 'View certificate' });
+      await m.pause(2500);
+      await m.idle();
+      await m.shot('certificate', 'In **My certificates**, **View certificate** opens the certificate itself, with its credential number. Pinch to read it closely, **Share** its link, or download it as a PDF further down.');
+      await m.home();
+    },
+  ),
+
+  flow(
+    'mock-set',
+    'Open a mock exam',
+    { who: 'Every member', as: 'member' },
+    async (m) => {
+      await m.open('/learning/mock-tests');
+      await m.wait({ text: 'AEE CBCP' });
+      await m.tap({ text: 'AEE CBCP' });
+      await m.pause(1800);
+      await m.idle();
+      await m.shot('sets', 'Select a mock exam to see its sets. Each set opens with your plan, with ICR credits or by paying, and is sat like any other paper.');
+      await m.home();
+    },
+  ),
 ]);
