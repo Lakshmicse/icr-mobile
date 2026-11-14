@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/api/api_error.dart';
 import '../../mentorship_my/loader.dart';
+import 'group_schedule.dart' show BusyInterval, GroupComposerDefaults;
 import 'offerings_models.dart';
 import 'offerings_repository.dart';
 
@@ -151,6 +152,58 @@ class OfferingsController extends ChangeNotifier {
 
   /// One session with its roster. Throws the API's refusal as an [ApiError].
   Future<HostedSession> detail(HostedSession s) => repository.session(s.id);
+
+  // --- the group-session composer ----------------------------------------------------
+
+  /// The mentor's defaults for a new session, or null when they cannot be read (the composer starts plain).
+  Future<GroupComposerDefaults?> composerDefaults() async {
+    try {
+      return await repository.composerDefaults();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// The host's calendar in [from, to), or null when it cannot be read (no dots; the API still judges on save).
+  Future<List<BusyInterval>?> busyBetween(DateTime from, DateTime to, {String? except}) async {
+    try {
+      return await repository.busy(from, to, except: except);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// ICR's fee on the mentor's sale; the standard fee when the plan cannot be read (as the website's hook answers
+  /// before its data arrives).
+  Future<int> mentorFeeBps() async {
+    try {
+      return await repository.mentorFeeBps();
+    } catch (_) {
+      return platformFeeBps;
+    }
+  }
+
+  /// Saves what the group composer holds: a new session, an edit ([id]), or one session per date ([separate], the
+  /// batch). Null when it went through (the list is read again and the desk told), else the refusal.
+  Future<GroupSaveRefusal?> saveComposedSession(Map<String, Object?> body, {String? id, bool separate = false}) async {
+    try {
+      if (separate) {
+        await repository.createSessionBatch(body);
+      } else {
+        await repository.composeSession(body, id: id);
+      }
+    } catch (e) {
+      return GroupSaveRefusal.from(e);
+    }
+    try {
+      await sessions.load();
+    } catch (_) {
+      // The save went through; a list that fails to read again says so itself.
+    }
+    onChanged?.call();
+    _notify();
+    return null;
+  }
 
   Future<StoredUpload> upload(PickedUpload file, {required String purpose}) =>
       repository.upload(file, purpose: purpose);

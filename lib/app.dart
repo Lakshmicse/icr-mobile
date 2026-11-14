@@ -46,6 +46,7 @@ import 'features/career/company_insights_screen.dart' show openCompanyInsightsBy
 import 'features/shell/icr_bottom_nav.dart' show AppTab;
 import 'features/mentorship_my/mentoring_links.dart' show MentorshipLinks;
 import 'features/mentorship_my/programmes_screen.dart';
+import 'features/mentorship_my/session_join_source.dart';
 import 'features/messaging/messaging_launcher.dart';
 import 'features/rfq/rfq_navigation.dart';
 import 'features/mentor_profile/mentor_profile_screen.dart';
@@ -185,6 +186,8 @@ class _Home extends StatelessWidget {
     // The shared header's "+" and Messages (Home, Learning and Mentorship all show it).
     AppActions.composePost = (ctx) => _composePost(ctx);
     AppActions.openMessages = (ctx) => MessagingLauncher.openInbox(ctx);
+    // A thread's Join reads its session's call from the mentoring record (the booking, the pairing, the group).
+    MessagingLauncher.sessionJoin = (ctx, about) => loadSessionJoin(ctx, about);
     // A page the app has no screen for opens in its web view, signed in, rather than the browser.
     SiteRoutes.webView = (ctx, uri) => openInAppWeb(ctx, uri);
     // The header's search field opens the global search: people, jobs, courses, mentors, suppliers, events,

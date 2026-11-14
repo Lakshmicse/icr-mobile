@@ -163,8 +163,13 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
   }
 
   Future<void> _send() async {
-    // A tag typed and not yet added counts: the reader meant it.
-    if (_tag.text.trim().isNotEmpty) _addTag();
+    // A tag typed and not yet added counts: the reader meant it. A person in it that matched no member holds the
+    // post back, so nobody is tagged who would not be told.
+    if (_tag.text.trim().isNotEmpty && !await _addTag()) {
+      if (mounted && _tagNote != null) showMessage(context, _tagNote!);
+      return;
+    }
+    if (!mounted) return;
     // Only the people whose "@Name" is still in the details are tagged.
     _c.setMentions(_mentions.mentionsIn(_body.text));
     final saved = await _c.send();
@@ -177,10 +182,32 @@ class _NewThreadScreenState extends State<NewThreadScreen> {
     }
   }
 
-  void _addTag() {
-    final note = _c.addTags(_tag.text);
-    _tag.clear();
-    setState(() => _tagNote = note);
+  bool _matchingTag = false;
+
+  /// Adds what was typed. A person ("@divyacn") is matched to the member first (`addTypedTags`), so the post names
+  /// them by their handle and they are told; one nobody fits stays in the field with a note. True once nothing is
+  /// left in the field.
+  Future<bool> _addTag() async {
+    final typed = _tag.text;
+    if (!typed.contains('@')) {
+      final note = _c.addTags(typed);
+      _tag.clear();
+      setState(() => _tagNote = note);
+      return true;
+    }
+    if (_matchingTag) return false;
+    setState(() => _matchingTag = true);
+    final added = await _c.addTypedTags(typed);
+    if (!mounted) return false;
+    _tag.value = TextEditingValue(
+      text: added.rest,
+      selection: TextSelection.collapsed(offset: added.rest.length),
+    );
+    setState(() {
+      _matchingTag = false;
+      _tagNote = added.note;
+    });
+    return added.rest.trim().isEmpty;
   }
 
   /// A pick from the Tags field's "@" list: the person by their profile handle ("@vinay-kumar" — the API tells them,

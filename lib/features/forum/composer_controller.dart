@@ -7,6 +7,7 @@ import '../feed/forum_json.dart';
 import 'forum_file_picker.dart';
 import 'forum_models.dart';
 import 'forum_repository.dart';
+import 'mentions/tag_person.dart' show matchPersonTag;
 import 'rich_document.dart';
 
 /// What a new discussion is (the website's composer, 19 Oct 2026): a discussion, or a poll. An edit keeps its own
@@ -272,6 +273,56 @@ class ComposerController extends ChangeNotifier {
     }
     _changed();
     return refused ? 'A discussion can have at most ${ForumLimits.tags} tags.' : null;
+  }
+
+  /// Adds what was typed in the Tags field. A person's tag ("@divyacn", or two in one, "@bindhya-s @divyacn") is
+  /// first matched to the member it means ([matchPersonTag]) and stored as their handle, which is what the forum
+  /// notifies; anything else goes in as [addTags] adds it. A person nobody fits, or several do, is not added: the
+  /// sentence says so, and `rest` is what stays in the field for the reader to fix or pick from the list.
+  Future<({String? note, String rest})> addTypedTags(String raw) async {
+    final plain = <String>[];
+    final people = <String>[];
+    final person = RegExp(r'#?@([A-Za-z0-9._-]+)');
+    for (final part in raw.split(RegExp(r'[,\n]'))) {
+      if (!part.contains('@')) {
+        plain.add(part);
+        continue;
+      }
+      for (final m in person.allMatches(part)) {
+        final handle = m.group(1)!.replaceAll(RegExp(r'[-_.]+$'), '');
+        if (handle.isNotEmpty && !people.contains(handle)) people.add(handle);
+      }
+      final words = part.replaceAll(person, ' ').trim();
+      if (words.isNotEmpty) plain.add(words);
+    }
+    String? note = plain.isEmpty ? null : addTags(plain.join(','));
+    final left = <String>[];
+    final nobody = <String>[];
+    final several = <String>[];
+    for (final handle in people) {
+      try {
+        final match = await matchPersonTag(
+          handle,
+          byHandle: repository.memberIdByHandle,
+          search: repository.mentionable,
+        );
+        if (match.tag != null) {
+          note = addTags(match.tag!) ?? note;
+        } else {
+          left.add('@$handle');
+          (match.several ? several : nobody).add('@$handle');
+        }
+      } catch (_) {
+        left.add('@$handle');
+        note = "Unable to check @$handle. Try again.";
+      }
+    }
+    if (nobody.isNotEmpty) {
+      note = 'No member found for ${nobody.join(', ')}. Pick the person from the list so they are notified.';
+    } else if (several.isNotEmpty) {
+      note = 'More than one member matches ${several.join(', ')}. Pick the person from the list.';
+    }
+    return (note: note, rest: left.join(' '));
   }
 
   void removeTag(String tag) {

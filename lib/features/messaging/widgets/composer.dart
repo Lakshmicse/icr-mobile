@@ -8,9 +8,9 @@ import '../messaging_models.dart';
 import '../messaging_styles.dart';
 
 /// The box a message is written in, with what hangs off it, as the thread design draws it: a row of pills (the
-/// paperclip, "RFQ", "Meet", an emoji, and "Draft Saved" once a draft is kept), then the input as a grey pill and
-/// the send arrow. Above the input: the message being answered, a file waiting to go, "writing as the company",
-/// and the character count near the limit.
+/// paperclip, "RFQ", "Join", an emoji, and "Draft Saved" once a draft is kept), then the input as a slim grey pill
+/// with the send arrow centred beside it. Above the input: the message being answered, a file waiting to go,
+/// "writing as the company", and the character count near the limit.
 class Composer extends StatelessWidget {
   const Composer({
     super.key,
@@ -20,7 +20,7 @@ class Composer extends StatelessWidget {
     required this.onSend,
     this.onAttach,
     this.onShareRecord,
-    this.onMeet,
+    this.onJoin,
     this.onShareLocation,
     this.onEmoji,
     this.asCompany,
@@ -35,11 +35,12 @@ class Composer extends StatelessWidget {
   /// Null when the app has no file picker: no paperclip is drawn.
   final VoidCallback? onAttach;
 
-  /// The "RFQ" pill: "Share an ICR record", opened on Requirements.
+  /// The "RFQ" pill: "Share an ICR record", opened on Requirements. Null (a chat between members) draws none.
   final VoidCallback? onShareRecord;
 
-  /// The "Meet" pill: the thread's own session record. Null when the thread has none: no pill is drawn.
-  final VoidCallback? onMeet;
+  /// The "Join" pill: the thread's booked session and its call (owner, 14 Nov 2026: it said "Meet"). Null when no
+  /// session is still to come: no pill is drawn.
+  final VoidCallback? onJoin;
 
   /// The "Location" pill: sends where the phone is, as a map link (owner, 9 Nov 2026). Null draws none.
   final VoidCallback? onShareLocation;
@@ -82,7 +83,7 @@ class Composer extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
               child: Row(
                 children: [
-                  // The controls scroll sideways when a thread offers them all (RFQ, Meet, Location) on a narrow
+                  // The controls scroll sideways when a thread offers them all (RFQ, Join, Location) on a narrow
                   // phone, so the row never overflows (9 Nov 2026: 360 dp with the Location pill).
                   Expanded(
                     child: SingleChildScrollView(
@@ -109,13 +110,13 @@ class Composer extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                           ],
-                          if (onMeet != null) ...[
+                          if (onJoin != null) ...[
                             _Pill(
-                              key: const ValueKey('meet'),
-                              icon: LucideIcons.calendarClock,
-                              label: 'Meet',
-                              hint: "Open this conversation's session",
-                              onTap: onMeet!,
+                              key: const ValueKey('join'),
+                              icon: LucideIcons.video,
+                              label: 'Join',
+                              hint: "Join this conversation's session",
+                              onTap: onJoin!,
                             ),
                             const SizedBox(width: 8),
                           ],
@@ -200,16 +201,17 @@ class Composer extends StatelessWidget {
                 onClose: c.removeAttachment,
               ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(15, 10, 8, 8),
+              padding: const EdgeInsets.fromLTRB(15, 8, 8, 8),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                // The arrow sits on the box's middle line, not at its foot (owner, 14 Nov 2026).
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
                         color: ChatColors.search,
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: AppColors.outlineVariant),
                       ),
                       child: TextField(
@@ -222,11 +224,12 @@ class Composer extends StatelessWidget {
                         textCapitalization: TextCapitalization.sentences,
                         keyboardType: TextInputType.multiline,
                         decoration: InputDecoration(
-                          isCollapsed: false,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          // A slim box: one line is 36 dp tall, and it grows with the words.
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 8),
                           border: InputBorder.none,
-                          // The RFP is offered only where the RFQ pill is.
-                          hintText: onShareRecord == null ? 'Write a message...' : 'Write a message or attach RFP...',
+                          // Only "Write a message", in every thread (owner, 14 Nov 2026).
+                          hintText: 'Write a message...',
                           hintStyle: ChatText.composerHintDesign,
                         ),
                       ),
@@ -286,7 +289,7 @@ class Composer extends StatelessWidget {
   );
 }
 
-/// "RFQ" or "Meet": an icon and a word on a grey pill.
+/// "RFQ", "Join" or "Location": an icon and a word on a grey pill.
 class _Pill extends StatelessWidget {
   const _Pill({super.key, required this.icon, required this.label, required this.hint, required this.onTap});
 

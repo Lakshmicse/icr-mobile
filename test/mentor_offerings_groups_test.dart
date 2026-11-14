@@ -1,5 +1,13 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:icr_mobile/features/mentor_desk/offerings/group_form.dart';
+import 'package:icr_mobile/features/mentor_desk/offerings/offerings_controller.dart';
+import 'package:icr_mobile/features/mentor_desk/offerings/offerings_files.dart';
+import 'package:icr_mobile/features/mentor_desk/offerings/offerings_models.dart';
+import 'package:icr_mobile/features/mentor_desk/offerings/offerings_repository.dart';
 import 'package:icr_mobile/features/mentorship_my/mentoring_clock.dart';
 
 import 'helpers/fonts.dart';
@@ -28,13 +36,52 @@ Map<String, Object?> _programme({String id = 'plan-programme', bool active = tru
   active: active,
 );
 
-/// Opens the date and time pickers on their defaults (tomorrow, the same hour) and accepts them.
-Future<void> acceptPickers(WidgetTester tester) async {
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('OK'));
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('OK'));
-  await tester.pumpAndSettle();
+/// An instant on the Indian clock, as the composer turns a date and a wall time in Asia/Kolkata into one.
+String _kolkata(int month, int day, {int hour = 18, int minute = 0}) =>
+    DateTime.utc(2026, month, day, hour, minute).subtract(const Duration(hours: 5, minutes: 30)).toIso8601String();
+
+String _fieldText(WidgetTester tester, String key) =>
+    tester.widget<TextField>(find.byKey(ValueKey(key))).controller!.text;
+
+/// Opens the group composer over a bare page, as the desk's buttons do, on a controller over the fake API (its
+/// storefront read first, so the seller gate is known).
+Future<(FakeApi, OfferingsController, List<bool>)> pumpComposer(
+  WidgetTester tester,
+  OfferingsWorld w, {
+  HostedSession? existing,
+  HostedSession? copyFrom,
+  Map<String, Reply> extra = const {},
+  OfferingFilePicker? pickFile,
+}) async {
+  phone(tester, height: 16000);
+  final api = w.api(extra: extra);
+  final c = OfferingsController(OfferingsRepository(api: api.client()));
+  await tester.runAsync(c.storefront.load);
+  final results = <bool>[];
+  await pumpApp(
+    tester,
+    Scaffold(
+      body: Builder(
+        builder: (context) => Center(
+          child: TextButton(
+            key: const ValueKey('open-composer'),
+            onPressed: () async => results.add(
+              await openGroupComposer(
+                context,
+                controller: c,
+                existing: existing,
+                copyFrom: copyFrom,
+                pickFile: pickFile ?? ({required bool imageOnly}) async => pdfFile(name: 'cover.png'),
+              ),
+            ),
+            child: const Text('Open'),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tapKey(tester, 'open-composer');
+  return (api, c, results);
 }
 
 /// The Offerings panel's own tabs (owner, 7 Nov 2026): 1:1 mentoring, Group mentoring, Resources.
@@ -59,12 +106,12 @@ void main() {
       expect(find.text('Site to portfolio: a 3-session programme'), findsOneWidget);
       expect(find.text('Programme · ₹5,999 (was ₹8,999)'), findsOneWidget);
       expect(find.text('3 sessions · 3 months to use them'), findsOneWidget);
-      expect(find.text('No ongoing plans. A plan is a prepaid term with sessions every month.'), findsNothing);
+      expect(find.text('No Ongoing Plans Yet'), findsNothing);
     });
 
     testWidgets('an empty list says what a plan is', (tester) async {
       await pumpOfferings(tester, OfferingsWorld(plans: []));
-      expect(find.text('No ongoing plans. A plan is a prepaid term with sessions every month.'), findsOneWidget);
+      expect(find.text('No Ongoing Plans Yet'), findsOneWidget);
     });
 
     testWidgets('a plans list that fails says why and Try again asks again', (tester) async {
@@ -85,193 +132,27 @@ void main() {
       expect(api.count('GET /mentor-plans/mine'), 2);
     });
 
-    testWidgets('adding an ongoing plan: each field is checked as the API checks it, then the plan is sent as typed', (
+    testWidgets('Create a Plan opens the ongoing plan form; Edit opens a plan there and a programme in the composer', (
       tester,
     ) async {
-      final changes = <String>[];
-      final (api, _) = await pumpOfferings(tester, OfferingsWorld(plans: []), changes: changes);
-      await tapKey(tester, 'add-plan');
-      expect(find.text('Add an Ongoing Plan'), findsWidgets);
-      expect(find.byKey(const ValueKey('kind-recurring')), findsOneWidget);
-
-      await submit(tester, 'Add');
-      expect(find.text('Enter a title of at least 3 characters.'), findsOneWidget);
-      await typeKey(tester, 'offering-title', 'Monthly leadership coaching');
-      await submit(tester, 'Add');
-      expect(find.text('Enter the price in rupees, or turn on Free.'), findsOneWidget);
-      await typeKey(tester, 'offering-price', '499');
-      await submit(tester, 'Add');
-      expect(
-        find.text('An ongoing plan is either free, or priced between ₹500 and ₹5,00,000 per term.'),
-        findsOneWidget,
-      );
-      await typeKey(tester, 'offering-price', '2999');
-      await typeKey(tester, 'plan-per-month', '0');
-      await submit(tester, 'Add');
-      expect(find.text('Enter how many sessions a month the plan includes, from 1 to 12.'), findsOneWidget);
-      await typeKey(tester, 'plan-per-month', '2');
-      await typeKey(tester, 'plan-length', '10');
-      await submit(tester, 'Add');
-      expect(find.text('A session runs 15 to 480 minutes.'), findsOneWidget);
-      await typeKey(tester, 'plan-length', '45');
-      await typeKey(tester, 'plan-inclusions', List.generate(9, (i) => 'Line $i').join('\n'));
-      await submit(tester, 'Add');
-      expect(find.text('List up to 8 things the plan includes.'), findsOneWidget);
-      expect(api.count('POST /mentor-plans'), 0, reason: 'nothing was sent while a field was wrong');
-
-      await typeKey(tester, 'plan-inclusions', 'Two 45-minute calls a month\n\nChat support between calls');
-      await tapKey(tester, 'period-3');
-      await submit(tester, 'Add');
-      expect(api.bodyOf('POST /mentor-plans'), {
-        'title': 'Monthly leadership coaching',
-        'kind': 'RECURRING',
-        'pricePaisa': 299900,
-        'billingPeriodMonths': 3,
-        'sessionsPerMonth': 2,
-        'sessionDurationMin': 45,
-        'inclusions': ['Two 45-minute calls a month', 'Chat support between calls'],
-        'active': true,
-      });
-      expect(find.text('Added.'), findsOneWidget);
-      expect(find.text('Ongoing plan · ₹2,999 a month'), findsNothing, reason: 'a 3-month term is not "a month"');
-      expect(find.text('Ongoing plan · ₹2,999 every 3 months'), findsOneWidget);
-      expect(changes, ['changed']);
-    });
-
-    testWidgets('a free plan sends price 0, and the API\'s refusal keeps the sheet open', (tester) async {
-      final (api, _) = await pumpOfferings(
-        tester,
-        OfferingsWorld(plans: []),
-        extra: {'POST /mentor-plans': (_) => refuse('Accept the marketplace seller terms first.', status: 403)},
-      );
-      await tapKey(tester, 'add-plan');
-      await typeKey(tester, 'offering-title', 'Free office hours');
-      await tapKey(tester, 'offering-free');
-      await submit(tester, 'Add');
-      expect((api.bodyOf('POST /mentor-plans') as Map)['pricePaisa'], 0);
-      expect(find.text('Accept the marketplace seller terms first.'), findsOneWidget);
-      expect(find.byKey(const ValueKey('offering-title')), findsOneWidget, reason: 'the sheet stays open');
-    });
-
-    testWidgets(
-      'adding a programme: a syllabus of 2 to 24 sessions, no price floor of the app\'s own, and a body without a monthly cadence',
-      (tester) async {
-        final (api, _) = await pumpOfferings(tester, OfferingsWorld(plans: []));
-        await tapKey(tester, 'add-programme');
-        expect(find.text('Add a Programme'), findsWidgets);
-        expect(find.byKey(const ValueKey('module-0')), findsOneWidget);
-        expect(find.byKey(const ValueKey('module-1')), findsOneWidget);
-        expect(find.byKey(const ValueKey('module-remove-0')), findsNothing, reason: 'two sessions is the least');
-        expect(
-          find.byKey(const ValueKey('plan-per-month')),
-          findsNothing,
-          reason: 'a programme has no sessions a month',
-        );
-
-        await typeKey(tester, 'offering-title', 'Site to portfolio');
-        // No ₹499 floor of the app's own (owner, 7 Nov 2026): the API answers for its rule.
-        await typeKey(tester, 'offering-price', '5999');
-        await typeKey(tester, 'plan-access', '30');
-        await submit(tester, 'Add');
-        expect(find.text('Access: 1 to 24 months to use the sessions.'), findsOneWidget);
-        await typeKey(tester, 'plan-access', '3');
-        await submit(tester, 'Add');
-        expect(find.text('Session 1: enter a title of at least 3 characters.'), findsOneWidget);
-        await typeKey(tester, 'module-title-0', 'Where you are');
-        await typeKey(tester, 'module-outline-0', 'Scope and gaps');
-        await typeKey(tester, 'module-title-1', 'Vendor and SLA governance');
-        await typeKey(tester, 'module-minutes-1', '5');
-        await submit(tester, 'Add');
-        expect(find.text('Session 2: 15 to 480 minutes.'), findsOneWidget);
-        await typeKey(tester, 'module-minutes-1', '60');
-        await tapKey(tester, 'module-add');
-        expect(find.byKey(const ValueKey('module-2')), findsOneWidget);
-        expect(find.byKey(const ValueKey('module-remove-2')), findsOneWidget);
-        await submit(tester, 'Add');
-        expect(find.text('Session 3: enter a title of at least 3 characters.'), findsOneWidget);
-        await tapKey(tester, 'module-remove-2');
-        expect(find.byKey(const ValueKey('module-2')), findsNothing);
-        await typeKey(tester, 'plan-inclusions', 'Notes After Every Session');
-        expect(api.count('POST /mentor-plans'), 0);
-        await submit(tester, 'Add');
-        expect(api.bodyOf('POST /mentor-plans'), {
-          'title': 'Site to portfolio',
-          'kind': 'CURRICULUM',
-          'pricePaisa': 599900,
-          'accessMonths': 3,
-          'modules': [
-            {'title': 'Where you are', 'outline': 'Scope and gaps'},
-            {'title': 'Vendor and SLA governance', 'durationMin': 60},
-          ],
-          'inclusions': ['Notes After Every Session'],
-          'active': true,
-        });
-        expect(find.text('Programme · ₹5,999'), findsOneWidget);
-        expect(find.text('2 sessions · 3 months to use them'), findsOneWidget);
-      },
-    );
-
-    testWidgets('switching the kind in the form switches its fields', (tester) async {
-      await pumpOfferings(tester, OfferingsWorld(plans: []));
-      await tapKey(tester, 'add-plan');
-      expect(find.byKey(const ValueKey('plan-per-month')), findsOneWidget);
-      await tapKey(tester, 'kind-programme');
-      expect(find.byKey(const ValueKey('plan-per-month')), findsNothing);
-      expect(find.byKey(const ValueKey('plan-access')), findsOneWidget);
-      expect(find.byKey(const ValueKey('module-0')), findsOneWidget);
-      await tapKey(tester, 'kind-recurring');
-      expect(find.byKey(const ValueKey('plan-per-month')), findsOneWidget);
-    });
-
-    testWidgets('editing a programme starts from its syllabus and sends it back, without a kind', (tester) async {
-      final w = OfferingsWorld(plans: [_programme()]);
+      final w = OfferingsWorld(plans: [planJson('plan-coaching'), _programme()]);
       final (api, _) = await pumpOfferings(tester, w);
-      await tapIn(tester, 'plan-plan-programme', 'Edit');
-      expect(find.text('Edit Programme'), findsOneWidget);
-      expect(tester.widget<TextField>(find.byKey(const ValueKey('offering-price'))).controller!.text, '5999');
-      // No strikethrough field any more (owner, 9 Nov 2026); the listing's own stays as it is.
-      expect(find.byKey(const ValueKey('offering-compare')), findsNothing);
-      expect(tester.widget<TextField>(find.byKey(const ValueKey('plan-access'))).controller!.text, '3');
-      expect(
-        tester.widget<TextField>(find.byKey(const ValueKey('module-title-2'))).controller!.text,
-        'The portfolio business case',
-      );
-      expect(tester.widget<TextField>(find.byKey(const ValueKey('module-minutes-2'))).controller!.text, '90');
-      expect(find.byKey(const ValueKey('kind-programme')), findsNothing, reason: 'the API refuses a change of kind');
-      await typeKey(tester, 'module-title-1', 'Vendor governance');
-      await submit(tester, 'Save');
-      final body = api.bodyOf('PATCH /mentor-plans/plan-programme') as Map;
-      expect(body.containsKey('kind'), isFalse);
-      expect(body['compareAtPaisa'], 899900, reason: 'the strikethrough the plan already carries is kept');
-      expect(body['accessMonths'], 3);
-      expect(body['sessionDurationMin'], 60);
-      expect((body['modules'] as List).map((m) => (m as Map)['title']), [
-        'Where you are',
-        'Vendor governance',
-        'The portfolio business case',
-      ]);
-      expect((body['modules'] as List)[2], {'title': 'The portfolio business case', 'durationMin': 90});
-      expect(body.containsKey('sessionsPerMonth'), isFalse);
-      expect(find.text('Saved.'), findsOneWidget);
-      expect(find.text('Programme · ₹5,999 (was ₹8,999)'), findsOneWidget);
-    });
+      await tapKey(tester, 'add-plan');
+      expect(find.text('New Ongoing Plan'), findsOneWidget);
+      await typeKey(tester, 'plan-title', 'Quarterly review circle');
+      await tapKey(tester, 'composer-save');
+      expect((api.bodyOf('POST /mentor-plans') as Map)['kind'], 'RECURRING');
+      expect(find.text('Added.'), findsOneWidget);
+      // Let the message go: it sits over the foot of the next page while it shows.
+      await tester.pump(const Duration(seconds: 5));
+      await settle(tester);
 
-    testWidgets('editing an ongoing plan sends its cadence and leaves the strikethrough alone when it had none', (
-      tester,
-    ) async {
-      final (api, _) = await pumpOfferings(tester, OfferingsWorld());
       await tapIn(tester, 'plan-plan-coaching', 'Edit');
-      expect(find.text('Edit Plan'), findsOneWidget);
-      expect(tester.widget<TextField>(find.byKey(const ValueKey('plan-per-month'))).controller!.text, '2');
-      expect(tester.widget<TextField>(find.byKey(const ValueKey('plan-length'))).controller!.text, '45');
-      await typeKey(tester, 'plan-per-month', '4');
-      await submit(tester, 'Save');
-      final body = api.bodyOf('PATCH /mentor-plans/plan-coaching') as Map;
-      expect(body['sessionsPerMonth'], 4);
-      expect(body['billingPeriodMonths'], 1);
-      expect(body.containsKey('compareAtPaisa'), isFalse);
-      expect(body.containsKey('kind'), isFalse);
-      expect(find.text('4 sessions a month of 45 min'), findsOneWidget);
+      expect(find.text('Edit Ongoing Plan'), findsOneWidget);
+      await tapKey(tester, 'composer-cancel');
+
+      await tapIn(tester, 'plan-${_programme()['id']}', 'Edit');
+      expect(find.text('Edit 1:1 Mentoring'), findsOneWidget);
     });
 
     testWidgets('pausing and resuming a plan patch active alone', (tester) async {
@@ -373,187 +254,419 @@ void main() {
       fail = false;
       await tapText(tester, 'Try Again');
       expect(
-        find.text('No group sessions yet. A clinic is an hour with a group of members. Free sessions keep a waitlist.'),
+        find.text('No group sessions yet. Host a single clinic or a multi-day series, free or paid.'),
         findsOneWidget,
       );
       expect(api.count('GET /mentorship/group-sessions'), 2);
     });
   });
 
-  group('group sessions: hosting one', () {
-    testWidgets('each field is checked as the API checks it, then the session is sent as a draft', (tester) async {
-      final changes = <String>[];
-      final (api, _) = await pumpOfferings(tester, OfferingsWorld(sessions: []), changes: changes);
-      await openOfferingsTab(tester, 'Group Mentoring');
-      await tapKey(tester, 'add-group');
-      expect(find.text('Host a Group Session'), findsWidgets);
-      expect(find.text('Save Draft'), findsOneWidget);
+  group('group sessions: the composer', () {
+    testWidgets('each field is checked as the website checks it, then the session is sent as a draft', (tester) async {
+      final (api, _, results) = await pumpComposer(tester, OfferingsWorld(sessions: []));
+      expect(find.text('Host a Group Session'), findsOneWidget);
+      expect(
+        find.text('Host a group session with its own agenda and meeting room. Your 1:1 availability stays unaffected.'),
+        findsOneWidget,
+      );
+      for (final t in ['The Pitch', 'When', 'Where', 'The Room', 'The Price', 'Get Found']) {
+        expect(find.text(t), findsOneWidget, reason: t);
+      }
+      expect(
+        _fieldText(tester, 'group-link'),
+        'https://meet.google.com/icr-standing',
+        reason: 'the standing link on the profile fills a new session',
+      );
+      expect(_fieldText(tester, 'group-capacity'), '12');
+      expect(find.text('No Dates Selected Yet'), findsOneWidget);
+      expect(find.text('Select a Date'), findsOneWidget);
+      expect(
+        find.text('Publish opens registration right away. A draft stays invisible until you publish it.'),
+        findsOneWidget,
+      );
 
-      await submit(tester, 'Save Draft');
-      expect(find.text('Enter a title of at least 5 characters.'), findsOneWidget);
+      await submit(tester, 'Save as Draft');
+      expect(
+        find.text('Some details need fixing before this can be saved. They are highlighted below.'),
+        findsOneWidget,
+      );
+      expect(find.text('Give the session a title.'), findsOneWidget);
+      await typeKey(tester, 'group-title', 'Talk');
+      expect(find.text('Use at least 5 characters.'), findsOneWidget);
       await typeKey(tester, 'group-title', 'From site to portfolio: an open clinic');
+      expect(find.text('What people see when they browse the session list. · 38/160'), findsOneWidget);
       await typeKey(tester, 'group-link', 'not a link');
-      await submit(tester, 'Save Draft');
-      expect(find.textContaining('Enter a full web address'), findsOneWidget);
+      expect(find.text('Enter a full link, starting with https://'), findsOneWidget);
+      await typeKey(tester, 'group-link', '');
+      expect(find.text('Add the joining link people will use.'), findsOneWidget);
       await typeKey(tester, 'group-link', 'meet.google.com/abc-defg-hij');
-      await submit(tester, 'Save Draft');
-      expect(find.text('Select a date and time for every day.'), findsOneWidget);
-
-      await tapKey(tester, 'day-pick-0');
-      await acceptPickers(tester);
-      expect(find.textContaining('Tue 27 Oct'), findsOneWidget);
-      await typeKey(tester, 'day-minutes-0', '10');
-      await submit(tester, 'Save Draft');
-      expect(find.text('A day runs 15 to 480 minutes.'), findsOneWidget);
-      await typeKey(tester, 'day-minutes-0', '60');
+      await typeKey(tester, 'group-outcomes', List.generate(7, (i) => 'Outcome $i').join('\n'));
+      expect(find.text('Keep it to 6 lines.'), findsOneWidget);
+      await typeKey(tester, 'group-outcomes', 'Read a facilities budget\n\nFrame a portfolio case');
       await typeKey(tester, 'group-capacity', '1');
-      await submit(tester, 'Save Draft');
-      expect(find.textContaining('Enter seats as a number from 2 to 50'), findsOneWidget);
+      expect(find.text('Enter a whole number of seats from 2 to 50.'), findsOneWidget);
       await typeKey(tester, 'group-capacity', '25');
-      await typeKey(tester, 'group-price', '50001');
-      await submit(tester, 'Save Draft');
-      expect(find.text('Prices go up to ₹50,000.'), findsOneWidget);
-      await typeKey(tester, 'group-price', '');
-      expect(api.count('POST /mentorship/group-sessions'), 0, reason: 'nothing was sent while a field was wrong');
+      await submit(tester, 'Save as Draft');
+      expect(api.count('POST /mentorship/group-sessions'), 0, reason: 'nothing is sent without a date');
+
+      await tapKey(tester, 'cal-2026-10-27');
+      expect(find.text('1 Date'), findsOneWidget);
+      expect(find.text('Tue, 27 Oct · 6:00 PM–7:00 PM'), findsOneWidget);
+      expect(find.text('Free in your calendar'), findsOneWidget);
+      expect(find.text('Tuesday, 27 October 2026'), findsOneWidget, reason: 'the day in view');
+      expect(find.text('This session · free in your calendar'), findsOneWidget);
+      expect(find.text('Your usual hours: 5:00 PM–9:00 PM'), findsOneWidget);
 
       await typeKey(tester, 'group-summary', 'An hour on how to frame a portfolio case.');
+      expect(find.text('41/500'), findsOneWidget);
       await typeKey(tester, 'group-agenda', 'Bring a real case.\n\nWe start with scope.');
-      await submit(tester, 'Save Draft');
+      await tapKey(tester, 'group-topics');
+      await tapKey(tester, 'topic-Facility Management');
+      await tapKey(tester, 'topic-Workplace Strategy');
+      await tapKey(tester, 'topics-done');
+      expect(find.text('2 selected'), findsOneWidget);
+      expect(find.byKey(const ValueKey('topic-chip-Workplace Strategy')), findsOneWidget);
+
+      await submit(tester, 'Save as Draft');
       expect(api.bodyOf('POST /mentorship/group-sessions'), {
         'title': 'From site to portfolio: an open clinic',
         'summary': 'An hour on how to frame a portfolio case.',
+        'outcomes': ['Read a facilities budget', 'Frame a portfolio case'],
         'agendaHtml': '<p>Bring a real case.</p><p>We start with scope.</p>',
+        'coverUrl': null,
         'mode': 'VIDEO',
         'meetingLink': 'https://meet.google.com/abc-defg-hij',
-        'occurrences': [
-          {'scheduledAt': DateTime(2026, 10, 27, 10).toUtc().toIso8601String(), 'durationMin': 60},
-        ],
+        'timezone': 'Asia/Kolkata',
         'capacity': 25,
-        'pricePaisa': null,
         'waitlistEnabled': true,
+        'competencies': ['Facility Management', 'Workplace Strategy'],
+        'pricePaisa': null,
+        'publish': false,
+        'occurrences': [
+          {'title': null, 'scheduledAt': _kolkata(10, 27), 'durationMin': 60},
+        ],
       });
-      expect(find.text('Saved.'), findsOneWidget);
-      expect(find.text('Draft'), findsOneWidget);
-      expect(changes, ['changed']);
+      expect(results, [true]);
+      expect(find.text('Host a Group Session'), findsNothing, reason: 'the composer closed');
     });
 
-    testWidgets('open for registration now publishes in the same call', (tester) async {
-      final (api, _) = await pumpOfferings(tester, OfferingsWorld(sessions: []));
-      await openOfferingsTab(tester, 'Group Mentoring');
-      await tapKey(tester, 'add-group');
-      await typeKey(tester, 'group-title', 'An open clinic');
-      await typeKey(tester, 'group-link', 'https://meet.google.com/abc-defg-hij');
-      await tapKey(tester, 'day-pick-0');
-      await acceptPickers(tester);
-      await tapKey(tester, 'group-publish');
-      expect(find.text('Publish'), findsWidgets);
+    testWidgets('Publish opens it in the same call; the length chips, a day\'s own time and the start time', (
+      tester,
+    ) async {
+      final (api, _, _) = await pumpComposer(tester, OfferingsWorld(sessions: []));
+      await typeKey(tester, 'group-title', 'A two-evening bootcamp');
+      await tapKey(tester, 'cal-2026-10-27');
+      await tapKey(tester, 'cal-2026-10-29');
+      expect(find.text('2 Dates · 27 Oct – 29 Oct'), findsOneWidget);
+      expect(find.text('How People Register'), findsOneWidget, reason: 'several new dates ask how people register');
+      await tapKey(tester, 'length-90');
+      expect(find.text('Tue, 27 Oct · 6:00 PM–7:30 PM'), findsOneWidget);
+      expect(find.text('Thu, 29 Oct · 6:00 PM–7:30 PM'), findsOneWidget);
+
+      // Day 2 runs shorter: its own length, from its own sheet.
+      await tapKey(tester, 'date-time-1');
+      expect(find.text('Day 2 · Its Own Time'), findsOneWidget);
+      await tapKey(tester, 'row-length-45');
+      await tapKey(tester, 'row-time-done');
+      expect(find.text('Thu, 29 Oct · 6:00 PM–6:45 PM'), findsOneWidget);
+
+      // The shared start time moves every open date: 7:30 PM, typed into the clock's keyboard mode.
+      await tapKey(tester, 'group-start-time');
+      await tester.tap(find.byIcon(Icons.keyboard_outlined));
+      await tester.pumpAndSettle();
+      final fields = find.descendant(of: find.byType(Dialog), matching: find.byType(TextField));
+      await tester.enterText(fields.at(0), '7');
+      await tester.enterText(fields.at(1), '30');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.text('7:30 PM'), findsOneWidget);
+      expect(find.text('Tue, 27 Oct · 7:30 PM–9:00 PM'), findsOneWidget);
+      expect(find.text('Thu, 29 Oct · 7:30 PM–8:15 PM'), findsOneWidget);
+
+      await typeKey(tester, 'date-topic-0', 'Before the keys');
       await submit(tester, 'Publish');
-      expect((api.bodyOf('POST /mentorship/group-sessions') as Map)['publish'], isTrue);
-      expect(find.text('Open for Registration'), findsOneWidget);
+      final body = api.bodyOf('POST /mentorship/group-sessions') as Map;
+      expect(body['publish'], isTrue);
+      expect(body['occurrences'], [
+        {'title': 'Before the keys', 'scheduledAt': _kolkata(10, 27, hour: 19, minute: 30), 'durationMin': 90},
+        {'title': null, 'scheduledAt': _kolkata(10, 29, hour: 19, minute: 30), 'durationMin': 45},
+      ]);
     });
 
-    testWidgets(
-      'an in-person session needs a venue and sends no link; the joining link is the API\'s to judge when blank',
-      (tester) async {
-        final (api, _) = await pumpOfferings(
-          tester,
-          OfferingsWorld(sessions: []),
-          extra: {'POST /mentorship/group-sessions': (_) => refuse('Add the joining link people will use.')},
-        );
-        await openOfferingsTab(tester, 'Group Mentoring');
-        await tapKey(tester, 'add-group');
-        await typeKey(tester, 'group-title', 'A site visit morning');
-        await tapKey(tester, 'day-pick-0');
-        await acceptPickers(tester);
-        // Video with no link: the mentor's standing link may stand in, so the API decides.
-        await submit(tester, 'Save Draft');
-        expect(api.count('POST /mentorship/group-sessions'), 1);
-        expect(find.text('Add the joining link people will use.'), findsOneWidget);
-        expect((api.bodyOf('POST /mentorship/group-sessions') as Map).containsKey('meetingLink'), isFalse);
-
-        await tapKey(tester, 'mode-IN_PERSON');
-        expect(find.byKey(const ValueKey('group-link')), findsNothing);
-        await submit(tester, 'Save Draft');
-        expect(find.text('Add the venue where people will meet.'), findsOneWidget);
-        expect(api.count('POST /mentorship/group-sessions'), 1);
-        await typeKey(tester, 'group-venue', 'Prestige Tech Park, Bengaluru');
-        await submit(tester, 'Save Draft');
-        final body = api.bodyOf('POST /mentorship/group-sessions') as Map;
-        expect(body['mode'], 'IN_PERSON');
-        expect(body['location'], 'Prestige Tech Park, Bengaluru');
-        expect(body.containsKey('meetingLink'), isFalse);
-      },
-    );
-
-    testWidgets('a seat price needs seats, turns the waitlist off, and is sent in paisa', (tester) async {
-      final (api, _) = await pumpOfferings(tester, OfferingsWorld(sessions: []));
-      await openOfferingsTab(tester, 'Group Mentoring');
-      await tapKey(tester, 'add-group');
-      await typeKey(tester, 'group-title', 'Panel interview masterclass');
-      await typeKey(tester, 'group-link', 'https://meet.google.com/abc-defg-hij');
-      await tapKey(tester, 'day-pick-0');
-      await acceptPickers(tester);
-      expect(tester.widget<SwitchListTile>(find.byKey(const ValueKey('group-waitlist'))).onChanged, isNotNull);
-      await typeKey(tester, 'group-price', '499');
-      await typeKey(tester, 'group-capacity', '');
-      await submit(tester, 'Save Draft');
-      expect(find.text('A paid session needs a number of seats.'), findsOneWidget);
-      await typeKey(tester, 'group-capacity', '15');
+    testWidgets('several dates as separate sessions go through the batch, one draft each', (tester) async {
+      final w = OfferingsWorld(sessions: []);
+      final (api, c, results) = await pumpComposer(tester, w);
+      await typeKey(tester, 'group-title', 'Thursday office hours');
+      await tapKey(tester, 'cal-2026-10-29');
+      await tapKey(tester, 'cal-2026-11-05');
+      expect(find.text('Save as Draft'), findsOneWidget);
+      await tapKey(tester, 'registration-separate');
+      expect(find.text('Save 2 Drafts'), findsOneWidget);
+      expect(find.text('Publish 2 Sessions'), findsOneWidget);
       expect(
-        tester.widget<SwitchListTile>(find.byKey(const ValueKey('group-waitlist'))).onChanged,
-        isNull,
-        reason: 'a paid session keeps no waitlist',
+        find.text(
+          'Each date becomes its own listing. Publish opens registration for all 2. '
+          'Drafts stay invisible until you publish each one.',
+        ),
+        findsOneWidget,
       );
-      await submit(tester, 'Save Draft');
+      expect(find.byKey(const ValueKey('date-topic-0')), findsNothing, reason: 'a day topic belongs to a series');
+      await submit(tester, 'Save 2 Drafts');
+      expect(api.count('POST /mentorship/group-sessions'), 0);
+      final body = api.bodyOf('POST /mentorship/group-sessions/batch') as Map;
+      expect(body['dates'], [
+        {'scheduledAt': _kolkata(10, 29), 'durationMin': 60},
+        {'scheduledAt': _kolkata(11, 5), 'durationMin': 60},
+      ]);
+      expect(body.containsKey('occurrences'), isFalse);
+      expect(body['publish'], isFalse);
+      expect(body['title'], 'Thursday office hours');
+      expect(w.batched, hasLength(2));
+      expect(results, [true]);
+      expect(c.sessions.data, hasLength(2), reason: 'the list is read again');
+    });
+
+    testWidgets('Repeat builds the dates from the first one; a series holds ten; a custom repeat', (tester) async {
+      await pumpComposer(tester, OfferingsWorld(sessions: []));
+      expect(find.text('Select the first session date before setting a recurrence pattern.'), findsOneWidget);
+      await tapKey(tester, 'cal-2026-10-27');
+      await tapKey(tester, 'group-repeat');
+      expect(find.text('Weekly on Tuesday'), findsOneWidget);
+      expect(find.text('Every 2 Weeks on Tuesday'), findsOneWidget);
+      expect(find.text('Monthly on the Fourth Tuesday'), findsOneWidget);
+      await tapKey(tester, 'repeat-weekly');
+      expect(find.text('6 Dates · 27 Oct – 1 Dec'), findsOneWidget);
+      expect(find.text('Weekly on Tuesday'), findsOneWidget);
+      await tapKey(tester, 'repeat-ends-times-more');
+      expect(find.text('7 Dates · 27 Oct – 8 Dec'), findsOneWidget);
+      for (var i = 0; i < 5; i++) {
+        await tapKey(tester, 'repeat-ends-times-more');
+      }
+      expect(
+        tester.widget<Text>(find.byKey(const ValueKey('repeat-ends-times-value'))).data,
+        '10',
+        reason: 'a series holds ten dates',
+      );
+      expect(find.text('10 Dates · 27 Oct – 29 Dec'), findsOneWidget);
+
+      await tapKey(tester, 'group-repeat');
+      await tapKey(tester, 'repeat-custom');
+      expect(find.text('Custom Repeat'), findsOneWidget);
+      await tapKey(tester, 'custom-ends-times-less');
+      await tapKey(tester, 'custom-ends-times-less');
+      await tapKey(tester, 'custom-ends-times-less');
+      await tapKey(tester, 'custom-ends-times-less');
+      await tapKey(tester, 'custom-weekday-4');
+      await tapKey(tester, 'custom-done');
+      expect(find.text('Custom: Weekly on Tue, Thu'), findsOneWidget);
+      expect(find.text('6 Dates · 27 Oct – 12 Nov'), findsOneWidget);
+
+      // A date taken off by hand: the rule no longer describes the list.
+      await tapKey(tester, 'date-remove-1');
+      expect(find.text('5 Dates · 27 Oct – 12 Nov'), findsOneWidget);
+      expect(find.text('Does Not Repeat'), findsOneWidget);
+    });
+
+    testWidgets('the calendar shows what is booked; a date over it is refused; the API\'s clash lands on its day', (
+      tester,
+    ) async {
+      final w = OfferingsWorld(sessions: [])..busy = [busyJson(DateTime.utc(2026, 10, 27, 12, 30), 60)];
+      final (api, _, _) = await pumpComposer(
+        tester,
+        w,
+        extra: {
+          'POST /mentorship/group-sessions': (_) => (
+            409,
+            jsonEncode({
+              'statusCode': 409,
+              'message': 'Day 1 clashes with a paid session with Tanvi Joshi.',
+              'code': 'GROUP_DAY_CLASH',
+              'day': 1,
+              'kind': 'BOOKING',
+            }),
+          ),
+        },
+      );
+      expect(find.byKey(const ValueKey('cal-dot-2026-10-27')), findsOneWidget);
+      for (final t in ['This Session', 'Already Booked', 'Clash']) {
+        expect(find.text(t), findsOneWidget, reason: t);
+      }
+      final asked = api.queryOf('GET /mentorship/group-sessions/mine/busy')!;
+      expect(asked['from'], '2026-09-23T18:30:00.000Z', reason: 'the month on screen and a week either side');
+      expect(asked.containsKey('except'), isFalse);
+
+      await typeKey(tester, 'group-title', 'An open clinic');
+      await tapKey(tester, 'cal-2026-10-27');
+      expect(
+        find.text('Clashes with 1:1 session with Meera Nair, 6:00 PM–7:00 PM. Change the time or remove this date.'),
+        findsOneWidget,
+      );
+      expect(find.text('Day 1 clashes with a booking. Change its time or remove it.'), findsOneWidget);
+      expect(find.text('1:1 session with Meera Nair'), findsOneWidget, reason: 'the day in view lists the booking');
+      await submit(tester, 'Save as Draft');
+      expect(api.count('POST /mentorship/group-sessions'), 0, reason: 'a clash is refused before the API sees it');
+
+      await tapKey(tester, 'cal-2026-10-27');
+      await tapKey(tester, 'cal-2026-10-28');
+      expect(find.text('Free in your calendar'), findsOneWidget);
+      await submit(tester, 'Save as Draft');
+      expect(api.count('POST /mentorship/group-sessions'), 1);
+      expect(
+        find.text('Day 1 clashes with a paid session with Tanvi Joshi.'),
+        findsNWidgets(2),
+        reason: 'above the buttons, and on the day it names',
+      );
+      expect(find.text('Host a Group Session'), findsOneWidget, reason: 'the composer stays open');
+    });
+
+    testWidgets('a paid seat needs seats and turns the waitlist off; the price is whole rupees from ₹1', (
+      tester,
+    ) async {
+      final (api, _, _) = await pumpComposer(tester, OfferingsWorld(sessions: []));
+      await typeKey(tester, 'group-title', 'Panel interview masterclass');
+      await tapKey(tester, 'cal-2026-10-27');
+      expect(find.byKey(const ValueKey('group-waitlist')), findsOneWidget);
+      await tapKey(tester, 'group-price-paid');
+      expect(find.byKey(const ValueKey('group-waitlist')), findsNothing, reason: 'a paid session keeps no waitlist');
+      expect(find.text('At least ₹1. GST is added at checkout.'), findsOneWidget);
+      await submit(tester, 'Save as Draft');
+      expect(find.text('Enter a price per seat.'), findsOneWidget);
+      await typeKey(tester, 'group-price', '99.5');
+      expect(find.text('Enter the price in whole rupees.'), findsOneWidget);
+      await typeKey(tester, 'group-price', '0');
+      expect(find.text('Between ₹1 and ₹50,000.'), findsOneWidget);
+      await typeKey(tester, 'group-price', '50001');
+      expect(find.text('Between ₹1 and ₹50,000.'), findsOneWidget);
+      await typeKey(tester, 'group-price', '250');
+      expect(find.text('ICR keeps 20%. You receive ₹200 per seat.'), findsOneWidget);
+      await tapKey(tester, 'group-capped');
+      await submit(tester, 'Save as Draft');
+      expect(find.text('A paid session needs a number of seats.'), findsOneWidget);
+      expect(api.count('POST /mentorship/group-sessions'), 0);
+      await tapKey(tester, 'group-capped');
+      await typeKey(tester, 'group-capacity', '15');
+      await submit(tester, 'Save as Draft');
       final body = api.bodyOf('POST /mentorship/group-sessions') as Map;
-      expect(body['pricePaisa'], 49900);
+      expect(body['pricePaisa'], 25000);
       expect(body['capacity'], 15);
       expect(body['waitlistEnabled'], isFalse);
-      expect(find.text('₹499 · 0 of 15 seats'), findsOneWidget);
     });
 
-    testWidgets('no seat limit is sent as null, and a series of days must not overlap', (tester) async {
-      final (api, _) = await pumpOfferings(tester, OfferingsWorld(sessions: []));
-      await openOfferingsTab(tester, 'Group Mentoring');
-      await tapKey(tester, 'add-group');
-      await typeKey(tester, 'group-title', 'A two day bootcamp');
-      await typeKey(tester, 'group-link', 'https://meet.google.com/abc-defg-hij');
-      await typeKey(tester, 'group-capacity', '');
-      await tapKey(tester, 'day-pick-0');
-      await acceptPickers(tester);
-      await tapKey(tester, 'day-add');
-      expect(find.byKey(const ValueKey('day-pick-1')), findsOneWidget);
-      await tapKey(tester, 'day-pick-1');
-      await acceptPickers(tester);
-      await submit(tester, 'Save Draft');
-      expect(find.text('Days must not overlap.'), findsOneWidget, reason: 'the same start twice');
-      // The second day moves to the 28th.
-      await tapKey(tester, 'day-pick-1');
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('28'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
-      await submit(tester, 'Save Draft');
+    testWidgets('no seat limit is sent as null, and the waitlist switch goes with it', (tester) async {
+      final (api, _, _) = await pumpComposer(tester, OfferingsWorld(sessions: []));
+      await typeKey(tester, 'group-title', 'An open clinic');
+      await tapKey(tester, 'cal-2026-10-27');
+      await tapKey(tester, 'group-waitlist');
+      await tapKey(tester, 'group-capped');
+      expect(find.byKey(const ValueKey('group-capacity')), findsNothing);
+      expect(find.byKey(const ValueKey('group-waitlist')), findsNothing);
+      await submit(tester, 'Save as Draft');
       final body = api.bodyOf('POST /mentorship/group-sessions') as Map;
-      expect(body['capacity'], isNull);
       expect(body.containsKey('capacity'), isTrue);
-      expect((body['occurrences'] as List), hasLength(2));
-      expect(find.textContaining('and 1 more day'), findsOneWidget);
-      // A day can be taken out again.
+      expect(body['capacity'], isNull);
+      expect(body['waitlistEnabled'], isFalse, reason: 'switched off before the limit went');
     });
 
-    testWidgets('a day can be removed from a series while there are two', (tester) async {
-      await pumpOfferings(tester, OfferingsWorld(sessions: []));
-      await openOfferingsTab(tester, 'Group Mentoring');
-      await tapKey(tester, 'add-group');
-      expect(find.byKey(const ValueKey('day-remove-0')), findsNothing, reason: 'one day is the least');
-      await tapKey(tester, 'day-add');
-      expect(find.byKey(const ValueKey('day-remove-1')), findsOneWidget);
-      await tapKey(tester, 'day-remove-1');
-      expect(find.byKey(const ValueKey('day-pick-1')), findsNothing);
+    testWidgets('while the storefront is closed a seat cannot be priced, and it says why', (tester) async {
+      await pumpComposer(tester, OfferingsWorld(sessions: [], accepted: null));
+      expect(
+        find.text(
+          'Accept the seller terms to open your storefront. '
+          'Charging for seats needs the same seller terms as the rest of your storefront.',
+        ),
+        findsOneWidget,
+      );
+      await tapKey(tester, 'group-price-paid');
+      expect(find.byKey(const ValueKey('group-price')), findsNothing, reason: 'Paid stays off');
+    });
+
+    testWidgets('a cover is uploaded as a group-session image; one over 2 MB is refused before it is sent', (
+      tester,
+    ) async {
+      var big = true;
+      final (api, _, _) = await pumpComposer(
+        tester,
+        OfferingsWorld(sessions: []),
+        pickFile: ({required bool imageOnly}) async => big
+            ? PickedUpload(bytes: Uint8List(3 * 1024 * 1024), name: 'cover.png', mimeType: 'image/png')
+            : pdfFile(name: 'cover.png'),
+      );
+      await tapKey(tester, 'group-cover');
+      expect(find.text('The image is larger than 2 MB.'), findsOneWidget);
+      expect(api.count('POST /uploads'), 0);
+      big = false;
+      await tapKey(tester, 'group-cover');
+      expect(api.queryOf('POST /uploads')!['purpose'], 'group-session');
+      expect(find.text('Replace Image'), findsOneWidget);
+      await typeKey(tester, 'group-title', 'An open clinic');
+      await tapKey(tester, 'cal-2026-10-27');
+      await submit(tester, 'Save as Draft');
+      expect((api.bodyOf('POST /mentorship/group-sessions') as Map)['coverUrl'], '/uploads/group-session-stored.pdf');
+    });
+
+    testWidgets('an in-person session needs a venue in place of the joining link', (tester) async {
+      final (api, _, _) = await pumpComposer(tester, OfferingsWorld(sessions: []));
+      await typeKey(tester, 'group-title', 'A site visit morning');
+      await tapKey(tester, 'cal-2026-10-27');
+      await tapKey(tester, 'group-format');
+      await tester.tap(find.text('In Person').last);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('group-link')), findsNothing);
+      await submit(tester, 'Save as Draft');
+      expect(find.text('Add the venue where people will meet.'), findsOneWidget);
+      expect(api.count('POST /mentorship/group-sessions'), 0);
+      await typeKey(tester, 'group-venue', 'Prestige Tech Park, Bengaluru');
+      await submit(tester, 'Save as Draft');
+      final body = api.bodyOf('POST /mentorship/group-sessions') as Map;
+      expect(body['mode'], 'IN_PERSON');
+      expect(body['location'], 'Prestige Tech Park, Bengaluru');
+      expect(
+        body['meetingLink'],
+        'https://meet.google.com/icr-standing',
+        reason: 'the website sends the filled-in link whatever the format',
+      );
+    });
+
+    testWidgets('a new session starts from the mentor\'s stored defaults: seats, length and waitlist', (tester) async {
+      final w = OfferingsWorld(sessions: [])..mentorProfile = mentorMeJson(seats: 20, durationMin: 45, waitlist: false);
+      await pumpComposer(tester, w);
+      expect(_fieldText(tester, 'group-capacity'), '20');
+      expect(tester.widget<Switch>(find.byKey(const ValueKey('group-waitlist'))).value, isFalse);
+      await tapKey(tester, 'cal-2026-10-27');
+      expect(find.text('Tue, 27 Oct · 6:00 PM–6:45 PM'), findsOneWidget);
+    });
+
+    testWidgets('running a session again copies everything but its dates, and saves a new draft', (tester) async {
+      final past = HostedSession.fromJson({
+        ...hostedJson(
+          'grp-past',
+          title: 'Reading an SLA',
+          status: 'COMPLETED',
+          at: offeringsNow.subtract(const Duration(days: 12)),
+        ),
+        'outcomes': ['Spot the penalty clause'],
+      });
+      final (api, _, _) = await pumpComposer(tester, OfferingsWorld(sessions: []), copyFrom: past);
+      expect(find.text('Host a Group Session'), findsOneWidget);
+      expect(_fieldText(tester, 'group-title'), 'Reading an SLA');
+      expect(_fieldText(tester, 'group-outcomes'), 'Spot the penalty clause');
+      expect(
+        find.byKey(const ValueKey('date-undated-0')),
+        findsOneWidget,
+        reason: 'the day is copied without its date',
+      );
+      await tapKey(tester, 'cal-2026-10-28');
+      expect(find.byKey(const ValueKey('date-undated-0')), findsNothing);
+      expect(find.text('Wed, 28 Oct · 6:00 PM–7:00 PM'), findsOneWidget);
+      await submit(tester, 'Save as Draft');
+      expect(api.count('PATCH /mentorship/group-sessions/grp-past'), 0);
+      final body = api.bodyOf('POST /mentorship/group-sessions') as Map;
+      expect(body['title'], 'Reading an SLA');
+      expect(body['coverUrl'], '/uploads/cover.jpg');
+      expect(body['meetingLink'], 'https://meet.google.com/icr-demo');
+      expect(body['occurrences'], [
+        {'title': null, 'scheduledAt': _kolkata(10, 28), 'durationMin': 60},
+      ]);
     });
   });
 
@@ -605,49 +718,68 @@ void main() {
       expect(api.count('GET /mentorship/group-sessions/grp-clinic'), 2);
     });
 
-    testWidgets('editing keeps what the API would otherwise blank: its days, cover, zone, and the published state', (
+    testWidgets('editing keeps what the API would otherwise blank: days, cover, zone, topics, outcomes, waitlist', (
       tester,
     ) async {
-      final w = OfferingsWorld(sessions: [hostedJson('grp-clinic', taken: 2, attendees: roster)]);
+      final w = OfferingsWorld(
+        sessions: [
+          {
+            ...hostedJson('grp-clinic', taken: 2, attendees: roster),
+            'outcomes': ['Frame a portfolio case'],
+            'waitlistEnabled': true,
+          },
+        ],
+      );
       final (api, _) = await pumpOfferings(tester, w);
       await openOfferingsTab(tester, 'Group Mentoring');
       await tapIn(tester, 'session-grp-clinic', 'Details');
       await tapKey(tester, 'session-edit');
       expect(find.text('Edit Group Session'), findsOneWidget);
+      expect(_fieldText(tester, 'group-title'), 'From site to portfolio: an open clinic');
+      expect(_fieldText(tester, 'group-agenda'), 'Bring a real case.\n\nWe start with scope.');
+      expect(_fieldText(tester, 'group-link'), 'https://meet.google.com/icr-demo');
+      expect(_fieldText(tester, 'group-capacity'), '25');
+      expect(_fieldText(tester, 'group-outcomes'), 'Frame a portfolio case');
+      expect(find.text('Save Changes'), findsOneWidget);
+      expect(find.byKey(const ValueKey('composer-secondary')), findsNothing, reason: 'it is already published');
+      expect(find.text('Moving the date re-sends the reminders to everyone registered.'), findsOneWidget);
+      expect(find.text('One registration covers every date · 2 registered.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('registration-separate')), findsNothing, reason: 'an edit stays one series');
       expect(
-        tester.widget<TextField>(find.byKey(const ValueKey('group-title'))).controller!.text,
-        'From site to portfolio: an open clinic',
+        api.queryOf('GET /mentorship/group-sessions/mine/busy')!['except'],
+        'grp-clinic',
+        reason: 'its own days are not its clashes',
       );
-      expect(
-        tester.widget<TextField>(find.byKey(const ValueKey('group-agenda'))).controller!.text,
-        'Bring a real case.\n\nWe start with scope.',
-      );
-      expect(
-        tester.widget<TextField>(find.byKey(const ValueKey('group-link'))).controller!.text,
-        'https://meet.google.com/icr-demo',
-      );
-      expect(tester.widget<TextField>(find.byKey(const ValueKey('group-capacity'))).controller!.text, '25');
-      expect(find.byKey(const ValueKey('group-publish')), findsNothing, reason: 'it is already published');
-      expect(find.byKey(const ValueKey('group-waitlist')), findsNothing, reason: 'the waitlist is kept as it is');
       await typeKey(tester, 'group-title', 'Portfolio clinic, second edition');
-      await submit(tester, 'Save');
-      final body = api.bodyOf('PATCH /mentorship/group-sessions/grp-clinic') as Map;
-      expect(body['title'], 'Portfolio clinic, second edition');
-      expect(body['coverUrl'], '/uploads/cover.jpg');
-      expect(body['timezone'], 'Asia/Kolkata');
-      expect(body['capacity'], 25);
-      expect(body['pricePaisa'], isNull);
-      expect(body['meetingLink'], 'https://meet.google.com/icr-demo');
-      expect(body.containsKey('publish'), isFalse);
-      expect(body.containsKey('waitlistEnabled'), isFalse);
-      final occ = (body['occurrences'] as List).single as Map;
-      expect(occ['id'], 'grp-clinic-occ1');
-      expect(occ['scheduledAt'], iso(offeringsNow.add(const Duration(days: 6))));
+      await submit(tester, 'Save Changes');
+      expect(api.bodyOf('PATCH /mentorship/group-sessions/grp-clinic'), {
+        'title': 'Portfolio clinic, second edition',
+        'summary': 'An hour on how to frame a portfolio case.',
+        'outcomes': ['Frame a portfolio case'],
+        'agendaHtml': '<p>Bring a real case.</p><p>We start with scope.</p>',
+        'coverUrl': '/uploads/cover.jpg',
+        'mode': 'VIDEO',
+        'meetingLink': 'https://meet.google.com/icr-demo',
+        'timezone': 'Asia/Kolkata',
+        'capacity': 25,
+        'waitlistEnabled': true,
+        'competencies': ['Career transitions'],
+        'pricePaisa': null,
+        'publish': false,
+        'occurrences': [
+          {
+            'id': 'grp-clinic-occ1',
+            'title': null,
+            'scheduledAt': iso(offeringsNow.add(const Duration(days: 6))),
+            'durationMin': 60,
+          },
+        ],
+      });
       expect(find.text('Saved.'), findsOneWidget);
       expect(find.text('Portfolio clinic, second edition'), findsWidgets);
     });
 
-    testWidgets('a day that has run is shown and sent back untouched', (tester) async {
+    testWidgets('a day that has run is shown locked and sent back untouched', (tester) async {
       mentoringNow = () => _later;
       final held = offeringsNow.subtract(const Duration(days: 3));
       final next = _later.add(const Duration(days: 2));
@@ -687,38 +819,68 @@ void main() {
       await openOfferingsTab(tester, 'Group Mentoring');
       await tapIn(tester, 'session-grp-clinic', 'Details');
       await tapKey(tester, 'session-edit');
-      expect(find.byKey(const ValueKey('day-locked-0')), findsOneWidget);
-      expect(find.textContaining('Held'), findsWidgets);
-      expect(find.byKey(const ValueKey('day-pick-0')), findsNothing, reason: 'a closed day cannot be moved');
-      expect(find.byKey(const ValueKey('day-pick-1')), findsOneWidget);
-      await submit(tester, 'Save');
+      expect(find.text('Ran on Fri, 23 Oct. The date cannot change.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('date-remove-0')), findsNothing, reason: 'a day that ran cannot be removed');
+      expect(find.byKey(const ValueKey('date-time-0')), findsNothing, reason: 'nor moved');
+      expect(find.byKey(const ValueKey('date-remove-1')), findsOneWidget);
+      expect(
+        find.text('One registration covers every date · 1 registered. New dates are added after Day 1.'),
+        findsOneWidget,
+      );
+      // Tapping the day that ran does not take it away.
+      await tapKey(tester, 'cal-2026-10-23');
+      expect(find.text('Ran on Fri, 23 Oct. The date cannot change.'), findsOneWidget);
+      await submit(tester, 'Save Changes');
       final occ = (api.bodyOf('PATCH /mentorship/group-sessions/grp-clinic') as Map)['occurrences'] as List;
-      expect((occ[0] as Map)['id'], 'o1');
-      expect((occ[0] as Map)['scheduledAt'], iso(held));
-      expect((occ[1] as Map)['id'], 'o2');
+      expect(occ, [
+        {'id': 'o1', 'title': null, 'scheduledAt': iso(held), 'durationMin': 60},
+        {'id': 'o2', 'title': null, 'scheduledAt': iso(next), 'durationMin': 60},
+      ]);
     });
 
-    testWidgets('a refused save keeps the form and shows the API\'s sentence', (tester) async {
+    testWidgets('a refused save keeps the composer and shows the API\'s sentence', (tester) async {
       final w = OfferingsWorld(sessions: [hostedJson('grp-clinic', taken: 2, attendees: roster)]);
       final (api, _) = await pumpOfferings(
         tester,
         w,
         extra: {
           'PATCH /mentorship/group-sessions/grp-clinic': (_) =>
-              refuse('Seats are already sold at the current price — run this one and schedule another.'),
+              refuse('People have already registered for free — you cannot start charging for this one.'),
         },
       );
       await openOfferingsTab(tester, 'Group Mentoring');
       await tapIn(tester, 'session-grp-clinic', 'Details');
       await tapKey(tester, 'session-edit');
+      await tapKey(tester, 'group-price-paid');
       await typeKey(tester, 'group-price', '499');
-      await submit(tester, 'Save');
+      await submit(tester, 'Save Changes');
       expect(api.count('PATCH /mentorship/group-sessions/grp-clinic'), 1);
       expect(
-        find.text('Seats are already sold at the current price — run this one and schedule another.'),
+        find.text('People have already registered for free — you cannot start charging for this one.'),
         findsOneWidget,
       );
-      expect(find.byKey(const ValueKey('group-title')), findsOneWidget);
+      expect(find.text('Edit Group Session'), findsOneWidget);
+      expect(_fieldText(tester, 'group-price'), '499', reason: 'what was typed is kept');
+    });
+
+    testWidgets('a paid session with seats sold keeps its price locked', (tester) async {
+      final w = OfferingsWorld(
+        sessions: [
+          hostedJson('grp-paid', title: 'Panel masterclass', price: 29900, capacity: 15, taken: 2, attendees: roster),
+        ],
+      );
+      final (api, _) = await pumpOfferings(tester, w);
+      await openOfferingsTab(tester, 'Group Mentoring');
+      await tapIn(tester, 'session-grp-paid', 'Details');
+      await tapKey(tester, 'session-edit');
+      expect(find.text('Seats are already sold at this price.'), findsOneWidget);
+      expect(tester.widget<TextField>(find.byKey(const ValueKey('group-price'))).enabled, isFalse);
+      await tapKey(tester, 'group-price-free');
+      expect(find.byKey(const ValueKey('group-price')), findsOneWidget, reason: 'Free cannot be chosen either');
+      await submit(tester, 'Save Changes');
+      final body = api.bodyOf('PATCH /mentorship/group-sessions/grp-paid') as Map;
+      expect(body['pricePaisa'], 29900);
+      expect(body['waitlistEnabled'], isFalse);
     });
 
     testWidgets(
@@ -753,7 +915,7 @@ void main() {
       },
     );
 
-    testWidgets('a draft edited with the publish switch on goes live in the same save', (tester) async {
+    testWidgets('a draft is saved as a draft again, or published in the same save', (tester) async {
       final w = OfferingsWorld(
         sessions: [hostedJson('grp-draft', title: 'Salary negotiation circle', status: 'DRAFT')],
       );
@@ -761,11 +923,18 @@ void main() {
       await openOfferingsTab(tester, 'Group Mentoring');
       await tapIn(tester, 'session-grp-draft', 'Details');
       await tapKey(tester, 'session-edit');
-      expect(find.byKey(const ValueKey('group-publish')), findsOneWidget);
-      await tapKey(tester, 'group-publish');
+      expect(find.text('Save as Draft'), findsOneWidget);
       expect(find.text('Save and Publish'), findsOneWidget);
+      await submit(tester, 'Save as Draft');
+      expect((api.bodyOf('PATCH /mentorship/group-sessions/grp-draft') as Map)['publish'], isFalse);
+      expect(find.text('Saved.'), findsOneWidget);
+      // The "Saved." note covers the foot of any page for a few seconds: let it go before the composer opens again.
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pumpAndSettle();
+      await tapKey(tester, 'session-edit');
       await submit(tester, 'Save and Publish');
       expect((api.bodyOf('PATCH /mentorship/group-sessions/grp-draft') as Map)['publish'], isTrue);
+      expect(find.text('Open for Registration'), findsWidgets);
     });
 
     testWidgets('cancelling needs a reason of at least three characters, and tells the room', (tester) async {

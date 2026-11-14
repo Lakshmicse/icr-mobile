@@ -23,6 +23,54 @@ String? personTagHandle(String tag) {
   return handle.isEmpty ? null : handle;
 }
 
+/// What a hand-typed person tag came to: the tag to store (the member's own, "@divya-c-n"), or why there is none.
+typedef PersonTagMatch = ({String? tag, bool several});
+
+/// The member a person tag typed by hand means ("@divyacn", "@divya-c-n", "@Divya"), so the post carries their own
+/// handle and the forum tells them (owner, 14 Nov 2026: tagged people are told, as on WhatsApp; "@divyacn" matched
+/// no handle, since Divya C N's is "divya-c-n", and told no one). In turn: the exact handle ([byHandle]); then a
+/// member whose whole name or handle is the typed text once spaces and punctuation are dropped ("divyacn" is
+/// Divya C N), searching by the words typed and then by the first six, four and three letters, since the forum
+/// matches names from their start; then the only member the words find whose first name it is. Several who fit
+/// is `several`, nobody is a null tag.
+Future<PersonTagMatch> matchPersonTag(
+  String typed, {
+  required Future<String?> Function(String handle) byHandle,
+  required MentionSearch search,
+}) async {
+  final handle = (personTagHandle(typed) ?? typed.trim().toLowerCase()).replaceAll(RegExp(r'^[-_.]+|[-_.]+$'), '');
+  String compact(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+  final want = compact(handle);
+  if (want.length < 2) return (tag: null, several: false);
+  if (await byHandle(handle) != null) return (tag: '@$handle', several: false);
+
+  final words = handle.replaceAll(RegExp(r'[-_.]+'), ' ').trim();
+  final queries = <String>{
+    words,
+    for (final n in const [6, 4, 3])
+      if (want.length > n) want.substring(0, n),
+  };
+  var several = false;
+  for (final query in queries) {
+    final found = await search(query);
+    final byId = <String, MentionPerson>{};
+    for (final p in found) {
+      if (compact(p.name) == want || compact(p.slug ?? '') == want) byId[p.id] = p;
+    }
+    if (byId.length == 1) return (tag: tagForPerson(byId.values.single), several: false);
+    if (byId.length > 1) return (tag: null, several: true);
+    if (query == words) {
+      final first = [
+        for (final p in found)
+          if (compact(p.firstName) == want) p,
+      ];
+      if (first.length == 1 && found.length == 1) return (tag: tagForPerson(first.single), several: false);
+      if (first.length > 1) several = true;
+    }
+  }
+  return (tag: null, several: several);
+}
+
 /// Who [name] means among the people the forum [found]: the one whose first name, last name or whole name it is
 /// (any case, spaces ignored), else the only person found. Null when nobody fits, or several do.
 MentionPerson? personNamed(String name, List<MentionPerson> found) {

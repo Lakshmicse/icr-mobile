@@ -212,7 +212,12 @@ class _MentorDeskScreenState extends State<MentorDeskScreen> {
       case DeskTab.work:
         return DeskWorkTab(controller: _c, links: _links, onOpenPairing: _openPairing);
       case DeskTab.offerings:
-        return OfferingsPanel(api: _c.repository.api, links: _links, onChanged: _c.refresh);
+        return OfferingsPanel(
+          api: _c.repository.api,
+          links: _links,
+          onChanged: _c.refresh,
+          onOpenSettings: () => _select(DeskTab.settings),
+        );
       case DeskTab.hours:
         return DeskHoursTab(controller: _c);
       case DeskTab.earnings:

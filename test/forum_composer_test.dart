@@ -453,6 +453,44 @@ void main() {
       expect(find.byType(NewThreadScreen), findsNothing);
     });
 
+    group('a person typed in the Tags field (owner, 14 Nov 2026: tagged people are told, as on WhatsApp)', () {
+      Map<String, Handler> withPeople() => {
+        ...routes(),
+        'GET /members/mentionable': (o) {
+          final q = (o.queryParameters['search'] as String? ?? '').toLowerCase();
+          return [
+            if ('divya'.startsWith(q) || q.startsWith('divya'))
+              {'id': 'u-divya', 'firstName': 'Divya', 'lastName': 'C N', 'profileSlug': 'divya-c-n'},
+          ];
+        },
+      };
+
+      testWidgets('is matched to the member and posted under their handle, which the forum notifies', (tester) async {
+        await pumpComposer(tester, custom: withPeople());
+        await chooseTopic(tester, 'TECHNOLOGY_INNOVATION');
+        await fill(tester, title: 'A title that is long enough', body: 'Some details');
+        await tester.enterText(key('composer-tag'), '@divyacn, hvac,');
+        await tester.pumpAndSettle();
+        expect(find.text('#@divya-c-n'), findsOneWidget);
+        expect(find.text('#hvac'), findsOneWidget);
+        await post(tester);
+        expect(api.bodyOf('POST', '/forum/threads')['tags'], ['hvac', '@divya-c-n']);
+      });
+
+      testWidgets('one nobody matches stays in the field, says so, and holds the post back', (tester) async {
+        await pumpComposer(tester, custom: withPeople());
+        await chooseTopic(tester, 'TECHNOLOGY_INNOVATION');
+        await fill(tester, title: 'A title that is long enough', body: 'Some details');
+        await tester.enterText(key('composer-tag'), '@bindhyarajs');
+        await tester.pump();
+        await post(tester);
+        expect(api.count('POST', '/forum/threads'), 0);
+        expect(find.textContaining('No member found for @bindhyarajs'), findsWidgets);
+        expect(tester.widget<TextField>(key('composer-tag')).controller!.text, '@bindhyarajs');
+        expect(holder.closed, isFalse);
+      });
+    });
+
     testWidgets('a tag typed and not yet added is sent too, a tag chip can be taken off, and a sixth is refused', (
       tester,
     ) async {

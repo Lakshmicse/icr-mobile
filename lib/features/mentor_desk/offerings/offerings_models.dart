@@ -72,6 +72,10 @@ class OfferedService {
     this.rating = 0,
     this.ratingCount = 0,
     this.isBestSeller = false,
+    this.modes = const [],
+    this.location,
+    this.locationLat,
+    this.locationLng,
   });
 
   factory OfferedService.fromJson(Map<String, dynamic> j) => OfferedService(
@@ -93,6 +97,10 @@ class OfferedService {
     rating: (j['rating'] as num?)?.toDouble() ?? 0,
     ratingCount: asInt(j['ratingCount']),
     isBestSeller: j['isBestSeller'] == true,
+    modes: asStrings(j['modes']),
+    location: _text(j['location']),
+    locationLat: (j['locationLat'] as num?)?.toDouble(),
+    locationLng: (j['locationLng'] as num?)?.toDouble(),
   );
 
   final String id;
@@ -113,6 +121,13 @@ class OfferedService {
   final double rating;
   final int ratingCount;
   final bool isBestSeller;
+
+  /// Where a 1:1 session meets (`OfferingWhereFields`): the ways it allows (empty = every way the mentor meets in
+  /// Settings) and, in person, the venue line and its optional map pin.
+  final List<String> modes;
+  final String? location;
+  final double? locationLat;
+  final double? locationLng;
 
   bool get free => pricePaisa == 0;
 
@@ -167,6 +182,10 @@ class OfferedPlan {
     this.steps = const [],
     this.subscribersCount = 0,
     this.sortOrder = 0,
+    this.modes = const [],
+    this.location,
+    this.locationLat,
+    this.locationLng,
   });
 
   factory OfferedPlan.fromJson(Map<String, dynamic> j) => OfferedPlan(
@@ -195,6 +214,10 @@ class OfferedPlan {
     ],
     subscribersCount: asInt(j['subscribersCount']),
     sortOrder: asInt(j['sortOrder']),
+    modes: asStrings(j['modes']),
+    location: _text(j['location']),
+    locationLat: (j['locationLat'] as num?)?.toDouble(),
+    locationLng: (j['locationLng'] as num?)?.toDouble(),
   );
 
   final String id;
@@ -214,6 +237,12 @@ class OfferedPlan {
   final List<PlanStepInfo> steps;
   final int subscribersCount;
   final int sortOrder;
+
+  /// Where a programme meets, as on a 1:1 session (an ongoing plan sends none).
+  final List<String> modes;
+  final String? location;
+  final double? locationLat;
+  final double? locationLng;
 
   bool get free => pricePaisa == 0;
 }
@@ -292,6 +321,8 @@ class HostedSession {
     this.competencies = const [],
     this.cancelReason,
     this.roster,
+    this.outcomes = const [],
+    this.waitlistEnabled,
   });
 
   factory HostedSession.fromJson(Map<String, dynamic> j) {
@@ -330,6 +361,8 @@ class HostedSession {
       focusAreas: asStrings(j['focusAreas']),
       competencies: asStrings(j['competencies']),
       cancelReason: _text(j['cancelReason']),
+      outcomes: asStrings(j['outcomes']),
+      waitlistEnabled: j['waitlistEnabled'] is bool ? j['waitlistEnabled'] as bool : null,
       roster: attendees is List
           ? [
               for (final a in asMaps(attendees))
@@ -376,6 +409,12 @@ class HostedSession {
 
   /// The roster, only on a detail read.
   final List<RosterPerson>? roster;
+
+  /// "What people will learn", one line each (detail only).
+  final List<String> outcomes;
+
+  /// Whether a full room keeps a waitlist (detail only; always false on a paid session).
+  final bool? waitlistEnabled;
 
   bool get draft => status == 'DRAFT';
   bool get scheduled => status == 'SCHEDULED';

@@ -8,13 +8,14 @@ import '../../mentorship_my/mentoring_links.dart';
 import '../../mentorship_my/widgets/forms.dart';
 import '../../mentorship_my/widgets/kit.dart';
 import 'group_form.dart';
+import 'mentoring_composer.dart';
 import 'offering_rows.dart';
 import 'offerings_controller.dart';
 import 'offerings_files.dart';
 import 'offerings_models.dart';
 import 'offerings_repository.dart';
 import 'offerings_rules.dart';
-import 'plan_form.dart';
+import 'ongoing_plan_form.dart';
 import 'service_form.dart';
 import 'session_sheets.dart';
 
@@ -34,11 +35,15 @@ class OfferingsPanel extends StatefulWidget {
     required this.links,
     this.onChanged,
     this.pickFile = pickOfferingFile,
+    this.onOpenSettings,
   });
 
   final ApiClient api;
   final MentorshipLinks links;
   final VoidCallback? onChanged;
+
+  /// Opens the desk's Settings tab (the composer's "Manage in Settings" and "Change in Settings").
+  final VoidCallback? onOpenSettings;
 
   /// The phone's file chooser; a test stands in for it.
   final OfferingFilePicker pickFile;
@@ -182,30 +187,20 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
     if (!l.loaded) return const [];
     final live = _c.gates?.live ?? false;
     return [
-      const SectionTitle(title: '1:1 Mentoring', top: 8),
-      ActionWrap(
-        top: 0,
-        children: [
-          QuietButton(
-            key: const ValueKey('add-session'),
-            label: 'Add a 1:1 Session',
-            icon: LucideIcons.plus,
-            onPressed: () => _addService(context, ServiceKind.oneOnOne),
-          ),
-          QuietButton(
-            key: const ValueKey('add-programme'),
-            label: 'Add a Programme',
-            icon: LucideIcons.plus,
-            onPressed: () => _addPlan(context, programme: true),
-          ),
-        ],
+      _SectionHead(
+        top: 8,
+        title: '1:1 Mentoring',
+        count: _c.singles.length + _c.programmes.length,
+        description: 'Single sessions and programmes, one mentee at a time.',
+        action: 'Add 1:1 Mentoring',
+        actionKey: 'add-mentoring',
+        onAction: () => _addMentoring(context),
       ),
-      const SizedBox(height: 10),
       if (_c.singles.isEmpty && _c.programmes.isEmpty)
         _Hint(
           live
-              ? 'Nothing listed yet. A session is a single booking. A programme is a fixed series of sessions.'
-              : 'Open your storefront to list 1:1 mentoring.',
+              ? 'No 1:1 mentoring offerings yet. Offer a single session or a programme of up to 24 sessions.'
+              : 'Available once your storefront is live.',
         ),
       for (final s in _c.singles) _serviceRow(context, s),
       for (final p in _c.programmes) _planRow(context, p),
@@ -218,20 +213,16 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
     if (!l.loaded) return const [];
     final older = [..._c.legacySeats, ..._c.retired.where((r) => r.kind != ServiceKind.groupSeat)];
     return [
-      const SectionTitle(title: 'Resources', top: 8),
-      ActionWrap(
-        top: 0,
-        children: [
-          QuietButton(
-            key: const ValueKey('add-resource'),
-            label: 'Add a Resource',
-            icon: LucideIcons.plus,
-            onPressed: () => _addService(context, ServiceKind.resource),
-          ),
-        ],
+      _SectionHead(
+        top: 8,
+        title: 'Resources',
+        count: _c.resources.length,
+        description: 'Guides and templates mentees download after paying.',
+        action: 'Add Resource',
+        actionKey: 'add-resource',
+        onAction: () => _addService(context, ServiceKind.resource),
       ),
-      const SizedBox(height: 10),
-      if (_c.resources.isEmpty) const _Hint('No resources yet. Add a guide or a template, paid or free.'),
+      if (_c.resources.isEmpty) const _Hint('No resources yet. Add a downloadable guide or template, delivered on payment.'),
       for (final s in _c.resources) _serviceRow(context, s),
       if (older.isNotEmpty) ...[
         const SectionTitle(title: 'Older Listings'),
@@ -270,7 +261,30 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
     if (saved && context.mounted) showMessage(context, 'Added.');
   }
 
+  /// "Add 1:1 Mentoring": one session or a programme, decided by the count (the website's `MentoringComposer`).
+  Future<void> _addMentoring(BuildContext context) async {
+    if (!_openOrSay(context)) return;
+    final saved = await openMentoringComposer(
+      context,
+      controller: _c,
+      pickFile: widget.pickFile,
+      onOpenSettings: widget.onOpenSettings,
+    );
+    if (saved && context.mounted) showMessage(context, 'Added.');
+  }
+
   Future<void> _editService(BuildContext context, OfferedService s, {bool activate = false}) async {
+    if (s.kind == ServiceKind.oneOnOne) {
+      final saved = await openMentoringComposer(
+        context,
+        controller: _c,
+        pickFile: widget.pickFile,
+        service: s,
+        onOpenSettings: widget.onOpenSettings,
+      );
+      if (saved && context.mounted) showMessage(context, 'Saved.');
+      return;
+    }
     final saved = await showFormSheet(
       context,
       (_) => ServiceForm(controller: _c, pickFile: widget.pickFile, existing: s, activate: activate),
@@ -295,20 +309,19 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
       return [_SectionError(title: 'Unable to Load Your Plans', error: l.error!, onRetry: l.load)];
     }
     return [
-      const SectionTitle(title: 'Ongoing Plans'),
-      ActionWrap(
-        top: 0,
-        children: [
-          QuietButton(
-            key: const ValueKey('add-plan'),
-            label: 'Add an Ongoing Plan',
-            icon: LucideIcons.plus,
-            onPressed: () => _addPlan(context, programme: false),
-          ),
-        ],
+      _SectionHead(
+        title: 'Ongoing Plans',
+        count: _c.ongoing.length,
+        description: 'A set number of sessions a month for a term, booked as needed.',
+        action: 'Create a Plan',
+        actionKey: 'add-plan',
+        onAction: () => _addPlan(context),
       ),
-      const SizedBox(height: 10),
-      if (_c.ongoing.isEmpty) const _Hint('No ongoing plans. A plan is a prepaid term with sessions every month.'),
+      if (_c.ongoing.isEmpty)
+        const _Hint(
+          'No Ongoing Plans Yet',
+          body: 'For example, offer 2 sessions a month for 3 months. Plans do not count toward your listing limit.',
+        ),
       for (final p in _c.ongoing) _planRow(context, p),
     ];
   }
@@ -325,18 +338,28 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
     onDelete: () => _confirmDelete(context, p.title, () => _c.deletePlan(p)),
   );
 
-  Future<void> _addPlan(BuildContext context, {required bool programme}) async {
+  /// "Create a Plan": an ongoing plan (the website's `PlanFormDialog`).
+  Future<void> _addPlan(BuildContext context) async {
     if (!_openOrSay(context)) return;
-    final saved = await showFormSheet(
-      context,
-      (_) => PlanForm(controller: _c, pickFile: widget.pickFile, programme: programme),
-    );
+    final saved = await openOngoingPlanForm(context, controller: _c, pickFile: widget.pickFile);
     if (saved && context.mounted) showMessage(context, 'Added.');
   }
 
+  /// A programme is 1:1 mentoring of several sessions, edited in the composer; an ongoing plan in its own form.
   Future<void> _editPlan(BuildContext context, OfferedPlan p) async {
-    final saved = await showFormSheet(context, (_) => PlanForm(controller: _c, pickFile: widget.pickFile, existing: p));
-    if (saved && context.mounted) showMessage(context, 'Saved.');
+    final Future<bool> opened;
+    if (p.programme) {
+      opened = openMentoringComposer(
+        context,
+        controller: _c,
+        pickFile: widget.pickFile,
+        plan: p,
+        onOpenSettings: widget.onOpenSettings,
+      );
+    } else {
+      opened = openOngoingPlanForm(context, controller: _c, pickFile: widget.pickFile, existing: p);
+    }
+    if (await opened && context.mounted) showMessage(context, 'Saved.');
   }
 
   // --- group sessions --------------------------------------------------------------------------
@@ -345,29 +368,23 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
     final l = _c.sessions;
     final rows = l.data ?? const <HostedSession>[];
     return [
-      const SectionTitle(title: 'Group Sessions', top: 8),
-      ActionWrap(
-        top: 0,
-        children: [
-          QuietButton(
-            key: const ValueKey('add-group'),
-            label: 'Host a Group Session',
-            icon: LucideIcons.plus,
-            onPressed: () async {
-              final saved = await showFormSheet(context, (_) => GroupSessionForm(controller: _c));
-              if (saved && context.mounted) showMessage(context, 'Saved.');
-            },
-          ),
-        ],
+      _SectionHead(
+        top: 8,
+        title: 'Group Sessions',
+        count: rows.length,
+        description: 'Clinics and multi-day series you host for several mentees at once.',
+        action: 'Host a Group Session',
+        actionKey: 'add-group',
+        onAction: () async {
+          final saved = await openGroupComposer(context, controller: _c, pickFile: widget.pickFile);
+          if (saved && context.mounted) showMessage(context, 'Saved.');
+        },
       ),
-      const SizedBox(height: 10),
       if (!l.loaded && l.loading) const _Loading(),
       if (!l.loaded && l.error != null)
         _SectionError(title: 'Unable to Load Your Group Sessions', error: l.error!, onRetry: l.load),
       if (l.loaded && rows.isEmpty)
-        const _Hint(
-          'No group sessions yet. A clinic is an hour with a group of members. Free sessions keep a waitlist.',
-        ),
+        const _Hint('No group sessions yet. Host a single clinic or a multi-day series, free or paid.'),
       for (final s in rows)
         SessionRow(
           session: s,
@@ -476,13 +493,78 @@ class _SectionError extends StatelessWidget {
 }
 
 class _Hint extends StatelessWidget {
-  const _Hint(this.text);
+  const _Hint(this.text, {this.body});
 
+  /// The sentence, or the heading when there is a [body] under it.
   final String text;
+  final String? body;
 
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 10),
-    child: Text(text, style: MentoringText.body),
+    child: body == null
+        ? Text(text, style: MentoringText.body)
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(text, style: MentoringText.bodyStrong),
+              const SizedBox(height: 2),
+              Text(body!, style: MentoringText.body),
+            ],
+          ),
   );
+}
+
+/// A section of the tab, as the website's offerings workspace draws it: the title with how many it holds, the line
+/// that says what it is, and its add button.
+class _SectionHead extends StatelessWidget {
+  const _SectionHead({
+    required this.title,
+    required this.count,
+    required this.description,
+    required this.action,
+    required this.actionKey,
+    required this.onAction,
+    this.top = 18,
+  });
+
+  final String title;
+  final int count;
+  final String description;
+  final String action;
+  final String actionKey;
+  final VoidCallback onAction;
+  final double top;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(top: top, bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Flexible(child: Text(title, style: MentoringText.section)),
+              const SizedBox(width: 8),
+              Container(
+                key: ValueKey('$actionKey-count'),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+                decoration: BoxDecoration(color: AppColors.surfaceContainer, borderRadius: BorderRadius.circular(999)),
+                child: Text('$count', style: MentoringText.bodyStrong),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(description, style: MentoringText.body),
+          ActionWrap(
+            top: 8,
+            children: [
+              QuietButton(key: ValueKey(actionKey), label: action, icon: LucideIcons.plus, onPressed: onAction),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }

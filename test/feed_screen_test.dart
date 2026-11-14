@@ -428,6 +428,23 @@ void main() {
       expect(find.text('#ESG'), findsNothing, reason: 'no discussion carries it');
     });
 
+    testWidgets('people tagged in a post are not topic chips (owner, 14 Nov 2026)', (tester) async {
+      final w = FeedWorld();
+      w.threads = [
+        for (final t in w.threads)
+          if (t['id'] == 'iot')
+            {
+              ...t,
+              'tags': [...(t['tags'] as List), '@divya-c-n', '@bindhyarajs-@divyacn'],
+            }
+          else
+            t,
+      ];
+      await pumpHome(tester, custom: w);
+      expect(feed.topics.map((t) => t.tag), ['AMC', 'HVAC', 'PropTech', 'SmartBMS']);
+      expect(feed.topics.where((t) => t.tag.contains('@')), isEmpty);
+    });
+
     testWidgets('a topic chip loads that tag, and tapping it again goes back to All Feed', (tester) async {
       await pumpHome(tester);
       await tapChip(tester, '#HVAC');

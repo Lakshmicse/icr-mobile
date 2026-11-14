@@ -24,6 +24,7 @@ import 'messaging_repository.dart';
 import 'messaging_styles.dart';
 import 'widgets/composer.dart';
 import 'widgets/conversation_tile.dart' show kindIcon;
+import 'widgets/join_session_sheet.dart';
 import 'widgets/message_bubble.dart';
 import 'widgets/record_picker.dart';
 import 'widgets/states.dart';
@@ -88,6 +89,7 @@ class ConversationScreen extends StatefulWidget {
     this.repository,
     this.controller,
     this.pickAttachment,
+    this.loadSessionJoin,
     this.openAttachment = shareAttachment,
     this.poll = true,
     this.pollInterval = const Duration(seconds: 4),
@@ -113,6 +115,9 @@ class ConversationScreen extends StatefulWidget {
 
   /// Picks a file to send; defaults to [MessagingLauncher.attachmentPicker]. Without one there is no paperclip.
   final AttachmentPicker? pickAttachment;
+
+  /// Reads the booked session's call for the Join sheet; defaults to [MessagingLauncher.sessionJoin].
+  final SessionJoinLoader? loadSessionJoin;
   final AttachmentOpener openAttachment;
   final bool poll;
   final Duration pollInterval;
@@ -333,15 +338,42 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
   }
 
   /// "RFQ": the "Share an ICR record" sheet, on Requirements.
-  /// The "RFQ" pill shares a requirement: not in a mentoring, consultation or group-session thread (owner, 7 Nov
-  /// 2026: a mentee "should not have that option"), where nothing is bought or sold.
-  bool get _sharesRecords => switch (_c.context?.kind ?? _c.conversation?.kind) {
-    ConversationKind.mentorship || ConversationKind.consultation || ConversationKind.groupSession => false,
-    // A plain chat between two people, which is what "Connect" on a mentor's card opens (owner, 12 Nov 2026:
-    // "remove RFQ for the mentors"). Requirement, bid, enquiry and company threads keep it.
-    ConversationKind.direct => false,
-    _ => true,
-  };
+  /// The "RFQ" pill is for a thread a company takes part in: a requirement, bid or enquiry thread, or one where a
+  /// company is a party (its inbox). A chat between members — one to one, or a group of members only — has none
+  /// (owner, 14 Nov 2026: "Individual members, RFQ button should not be there … if the group consists of company then
+  /// RFQ is okay, only members then there should not be any RFQ button"). The kind alone cannot tell: the API calls
+  /// a chat with a colleague `COMPANY` because the other person belongs to one, and a course batch's room `BATCH`.
+  bool get _sharesRecords {
+    final conversation = _c.conversation;
+    if (conversation == null) return false;
+    if (conversation.rfqId != null) return true;
+    if ((_c.context?.kind ?? conversation.kind)?.isRequirement ?? false) return true;
+    return conversation.parties.isNotEmpty;
+  }
+
+  /// The Join sheet: the thread's booked session, with its call (owner, 14 Nov 2026: "Meet" became "Join", and it
+  /// must land on a page that has the Join).
+  void _openJoin(MeetingFacts f) {
+    final about = _c.context;
+    final loader = widget.loadSessionJoin ?? MessagingLauncher.sessionJoin;
+    final href = f.href;
+    unawaited(
+      showJoinSessionSheet(
+        context,
+        facts: f,
+        load: about == null || loader == null ? null : () => loader(context, about),
+        onJoin: (link) => unawaited(openUrl(context, link)),
+        onAddToCalendar: () => _addToCalendar(f),
+        onOpenRecord: href == null ? null : () => _openHref(href),
+        recordLabel: switch (href) {
+          final h? when h.startsWith('/mentorship/groups/') => 'View Group Session',
+          final h? when h.startsWith('/mentorship/my/') => 'View Mentorship',
+          _ => 'View Booking',
+        },
+        clock: _c.clock,
+      ),
+    );
+  }
 
   Future<void> _shareRecord() async {
     final picked = await showRecordPicker(context, _repository, initial: RecordType.requirement);
@@ -441,13 +473,13 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
     );
   }
 
-  /// "Join Meeting": the call when the session has a link, else the record it belongs to.
+  /// "Join Meeting": the call when the thread carries its link, else the Join sheet, which reads it from the record.
   void _join(MeetingFacts f) {
     final link = f.joinUrl;
     if (link != null) {
       unawaited(openUrl(context, link));
-    } else if (f.href != null) {
-      _openHref(f.href!);
+    } else {
+      _openJoin(f);
     }
   }
 
@@ -539,7 +571,8 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
             listenable: _c,
             builder: (context, _) {
               final about = contextStripModel(_c.context, _c.conversation?.title, now: _c.clock());
-              final sessionHref = sessionRecordHref(_c.context);
+              // A session still to come: the composer's Join opens it (none, and there is no Join).
+              final meeting = meetingOf(_c.context, _c.conversation, now: _c.clock());
               return Stack(
                 children: [
                   // The bar is drawn last, so its shadow falls on the contact card as the design's does.
@@ -570,7 +603,7 @@ class _ConversationScreenState extends State<ConversationScreen> with WidgetsBin
                                 ? null
                                 : _attach,
                             onShareRecord: _sharesRecords ? _shareRecord : null,
-                            onMeet: sessionHref == null ? null : () => _openHref(sessionHref),
+                            onJoin: meeting == null ? null : () => _join(meeting),
                             onShareLocation: _shareLocation,
                             onEmoji: _pickEmoji,
                             asCompany: _c.side == null ? null : _c.myParty?.name,

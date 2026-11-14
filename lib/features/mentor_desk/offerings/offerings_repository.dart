@@ -5,7 +5,35 @@ import 'package:dio/dio.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_error.dart';
 import '../../mentorship_my/mentoring_models.dart' show asMaps;
+import 'group_schedule.dart' show BusyInterval, GroupComposerDefaults;
 import 'offerings_models.dart';
+
+/// The standard platform fee on a mentor's sale (`PLATFORM_FEE_BPS`), before a plan's reduction.
+const platformFeeBps = 2000;
+
+/// A group-session save the API refused: its sentence, its code, and for the calendar gate (`GROUP_DAY_CLASH`) the
+/// 1-based day it named, so the composer can mark that row.
+class GroupSaveRefusal implements Exception {
+  const GroupSaveRefusal(this.message, {this.code, this.day});
+
+  factory GroupSaveRefusal.from(Object error) {
+    if (error is GroupSaveRefusal) return error;
+    final e = ApiError.from(error);
+    int? day;
+    if (error is DioException) {
+      final data = error.response?.data;
+      if (data is Map && data['day'] is num) day = (data['day'] as num).toInt();
+    }
+    return GroupSaveRefusal(e.message, code: e.code, day: day);
+  }
+
+  final String message;
+  final String? code;
+  final int? day;
+
+  @override
+  String toString() => message;
+}
 
 /// A file the phone picked, with its bytes read.
 class PickedUpload {
@@ -126,6 +154,57 @@ class OfferingsRepository {
             })
             as Map<String, dynamic>,
       );
+
+  // --- the group-session composer ----------------------------------------------------
+
+  /// What a new session starts from: the mentor's standing link, zone, weekly hours and group defaults (the same
+  /// read as the website's `useMyMentorProfile`, `GET /mentorship/mentors/me`).
+  Future<GroupComposerDefaults> composerDefaults() async =>
+      GroupComposerDefaults.fromJson(await _get('/mentorship/mentors/me'));
+
+  /// Everything already on the host's calendar in [from, to) (`GET /mentorship/group-sessions/mine/busy`, at most
+  /// `maxBusyRangeDays` a call). [except] is the session being edited, left out of the answer.
+  Future<List<BusyInterval>> busy(DateTime from, DateTime to, {String? except}) async {
+    final res = await _get('/mentorship/group-sessions/mine/busy', {
+      'from': from.toUtc().toIso8601String(),
+      'to': to.toUtc().toIso8601String(),
+      'except': ?except,
+    });
+    return [for (final b in asMaps(res['intervals'])) BusyInterval.fromJson(b)];
+  }
+
+  /// What ICR keeps from the mentor's sale, in basis points: the standard 20% less their plan's
+  /// `mentorship.feeReduction` (the website's `useMentorFeeBps` over `GET /subscriptions/entitlements`).
+  Future<int> mentorFeeBps() async {
+    final res = await _get('/subscriptions/entitlements');
+    final benefits = res['benefits'];
+    final v = benefits is Map ? benefits['mentorship.feeReduction'] : null;
+    final reduction = v is Map && v['kind'] == 'DISCOUNT' ? (v['bps'] as num?)?.toInt() ?? 0 : 0;
+    return (platformFeeBps - (reduction < 0 ? 0 : reduction)).clamp(0, platformFeeBps);
+  }
+
+  /// Creates ([id] null) or saves a session from the composer. A refusal is a [GroupSaveRefusal], which keeps the
+  /// day the calendar gate named.
+  Future<HostedSession> composeSession(Map<String, Object?> body, {String? id}) async => HostedSession.fromJson(
+    await _sendGroup(id == null ? 'POST' : 'PATCH', '/mentorship/group-sessions${id == null ? '' : '/$id'}', body)
+        as Map<String, dynamic>,
+  );
+
+  /// "Repeat" as separate sessions: one session per date, every other field shared, all or nothing
+  /// (`POST /mentorship/group-sessions/batch`). Answers the new sessions' ids in date order.
+  Future<List<String>> createSessionBatch(Map<String, Object?> body) async {
+    final res = await _sendGroup('POST', '/mentorship/group-sessions/batch', body);
+    return [for (final s in asMaps(res is Map ? res['sessions'] : null)) s['id'] as String? ?? ''];
+  }
+
+  Future<dynamic> _sendGroup(String method, String path, Map<String, Object?> body) async {
+    try {
+      final res = await api.dio.request<dynamic>(path, data: body, options: Options(method: method));
+      return res.data;
+    } catch (e) {
+      throw GroupSaveRefusal.from(e);
+    }
+  }
 
   // --- files -------------------------------------------------------------------------
 
