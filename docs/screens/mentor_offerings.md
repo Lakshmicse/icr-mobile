@@ -92,7 +92,7 @@ W = `mentor_offerings_test.dart` / `mentor_offerings_groups_test.dart` (widget, 
 
 ## Left out
 
-* "Repeat as separate sessions" (`POST group-sessions/batch`, up to 12 dated drafts at once): a series of up to 10 days in one session is built; the batch repeat is not.
+* ~~"Repeat as separate sessions"~~: built on 14 Nov 2026 (see below).
 * Cancelling one day of a series (`POST :id/occurrences/:occ/cancel`) and closing one day (`…/complete`): the session is cancelled or closed as a whole.
 * Seat-by-seat registration management, the room's thread and the host's feedback card (the group session's attendee view belongs to the group sessions screen).
 * Rich text for the agenda: plain paragraphs, stored as simple escaped HTML.
@@ -192,3 +192,14 @@ The client asked for the on-screen text to be refined "crisp, for global standar
 ## 14 Nov 2026: no price floor on a group seat
 
 * The owner, on a screenshot of "Priced seats start at ₹499." under a ₹250 seat: "why are we setting criteria for price set minimum, please remove the validation". `seatPriceProblem` no longer checks a floor (the ₹50,000 ceiling and "A paid session needs a number of seats" stay), and `minServicePricePaisa` is gone. The portal drops its ₹499 floor too (group seats, 1:1 sessions, services and programmes; branch `fix/no-mentor-price-floor`); until that is deployed the API still answers a seat under ₹499 with its own refusal. Ongoing plans keep their ₹500 floor.
+
+## 14 Nov 2026: the three composers, as the website's
+
+Owner, with screenshots of the website's 1:1 mentoring page, Host a group session and the Create a plan dialog: "implement these in the mentorship in the mobile app as it is fields with the mobile supportive width and design ... just implement how the web is working". The website on `origin/main` is the reference (`MentoringComposer` + `composer/sections.tsx`, `GroupSessionComposer` + `group-schedule/*`, `PlanFormDialog` + `plan-form.tsx`).
+
+* **One kit** (`composer_kit.dart`): `ComposerPage` (full screen, Back and title, lead line, a footer pinned to the foot with what still blocks the save, Cancel and Save; the API's refusal above it with what was typed kept), numbered `ComposerSection`s separated by hairlines (never boxed), `ComposerField`/`ComposerLabel` (red star, Optional badge), `FreePaidToggle`, `DurationPicker` (hours and minutes, 15 to 480), `CoverImageField`, `PublishedSwitch`, `LabelledSwitch`, `ComposerNote`. Opening one hides the last save's message so it never sits over the Save bar.
+* **Add 1:1 Mentoring** (`mentoring_composer.dart`, `openMentoringComposer`): Overview, Format (the number of sessions decides the engine: 1 is a ONE_ON_ONE service, 2 to 24 a CURRICULUM programme with a Syllabus section and Complete Within), Delivery (meeting formats from the mentor's settings, all picked sent as `modes: []`, a venue line when in person, the weekly hours note, Manage / Change in Settings open the desk's Settings tab), Pricing (Free or Paid, price from ₹1, Compare-at price at most 50% off), Visibility. Editing keeps an offering on its side of one session. It replaces the old "Add a 1:1 Session" and "Add a Programme" buttons; a 1:1 session's and a programme's Edit open it. Tests: `test/mentoring_composer_test.dart` (18).
+* **Host a Group Session** (`group_form.dart`, `openGroupComposer`, with `group_schedule.dart` and `group_schedule_view.dart`): The Pitch, When (a month calendar marking this session, what is already booked and a clash, from `GET /mentorship/group-sessions/mine/busy`; the start time, length chips, time zone, Repeat, each date with its own time; several new dates may be separate sessions, sent through `POST /mentorship/group-sessions/batch`), Where, The Room, The Price, Get Found. Save as Draft and Publish. Tests: the group-session groups of `test/mentor_offerings_groups_test.dart`.
+* **Create a Plan** (`ongoing_plan_form.dart`, `openOngoingPlanForm`): the website's dialog full screen: Title, Description, Cover Image, Free or Paid, Price per Term (at least ₹500), Billed Every, Sessions a Month, Session Length, What Else Is Included, Published. A new plan opens at ₹25,000 a month, 2 sessions of 1 hour, a draft. Tests: `test/ongoing_plan_form_test.dart` (6). `plan_form.dart` is gone.
+* **The tab's sections** carry the website's words: a count beside each title, the line under it, the button (Add 1:1 Mentoring, Host a Group Session, Add Resource, Create a Plan) and the empty sentence. The 7 Nov tabs stay.
+* **Not drawn on a phone:** the website's side cards (How it works, Summary, the live preview and the ready-to-publish checklist) and the map pin for a venue (a typed line; a saved pin is kept while the line is unchanged).

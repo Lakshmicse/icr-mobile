@@ -51,20 +51,20 @@ String dayLabel(DateTime at, {DateTime? now}) {
 }
 
 const _monthNames = [
-  'january',
-  'february',
-  'march',
-  'april',
-  'may',
-  'june',
-  'july',
-  'august',
-  'september',
-  'october',
-  'november',
-  'december',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
-const _weekdayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const _weekdayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 /// "10:14 AM": the time a message was sent, as the thread draws it.
 String messageTime(DateTime at) {
@@ -73,14 +73,14 @@ String messageTime(DateTime at) {
   return '$hour:${local.minute.toString().padLeft(2, '0')} ${local.hour < 12 ? 'AM' : 'PM'}';
 }
 
-/// The thread's day pill, in the design's lower case: "today, april 16", "yesterday, april 15", then
-/// "monday, 14 april" (with the year when it is not this one).
+/// The thread's day pill, capitalised (owner, 14 Nov 2026; the design wrote it in lower case): "Today, April 16",
+/// "Yesterday, April 15", then "Monday, 14 April" (with the year when it is not this one).
 String threadDayLabel(DateTime at, {DateTime? now}) {
   final current = (now ?? DateTime.now()).toLocal();
   final local = at.toLocal();
   final month = _monthNames[local.month - 1];
-  if (sameDay(local, current)) return 'today, $month ${local.day}';
-  if (sameDay(local, current.subtract(const Duration(days: 1)))) return 'yesterday, $month ${local.day}';
+  if (sameDay(local, current)) return 'Today, $month ${local.day}';
+  if (sameDay(local, current.subtract(const Duration(days: 1)))) return 'Yesterday, $month ${local.day}';
   final base = '${_weekdayNames[local.weekday - 1]}, ${local.day} $month';
   return local.year == current.year ? base : '$base ${local.year}';
 }

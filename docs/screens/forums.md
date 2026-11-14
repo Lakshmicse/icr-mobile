@@ -357,3 +357,14 @@ only should show not the whole backend data and the Spacing is not used the gaps
   (`ComposerBar.inset`), where it had sat 4 dp wider on each side.
 
 Tests: `test/forums_tab_test.dart`, group "My Forum: the reader's own discussions".
+
+
+## 14 Nov 2026: a person typed in Tags is matched before it is added
+
+The owner: a person mentioned in a post should be notified, "like WhatsApp". The forum already notifies (`forum.mentioned`) everyone mentioned with "@" in the details and everyone whose exact profile handle is a tag ("@divya-c-n"). Posts on dev carried hand-typed tags ("@divyacn", "@bindhyas", "@bindhyarajs-@divyacn") that are nobody's handle (Divya C N is "divya-c-n", Bindhya S "bindhya-s"), so nobody was told.
+
+- `ComposerController.addTypedTags`: a typed "@name" (or several in one, "@a @b") is matched by `matchPersonTag` (`mentions/tag_person.dart`): the exact handle, then a member whose name or handle is the typed text without spaces and punctuation (searching by the words, then the first six, four and three letters, since the forum's search matches names from their start), then the only member whose first name it is. The tag stored is their handle, which the forum notifies.
+- Nobody, or several people, fit: nothing is added, the text stays in the field with "No member found for @x. Pick the person from the list so they are notified." (or "More than one member matches @x..."), and Post is held back with that sentence.
+- A pick from the "@" list is unchanged (it already writes the handle). Plain tags are added as before, at once.
+- Tests: `person_tag_match_test.dart`, `forum_composer_test.dart` ("a person typed in the Tags field").
+- Not covered: the phone itself. The app has no push notifications, so a tagged person sees it in the bell, not as a phone notification. Posts already made with a dead tag told nobody and are not re-sent.

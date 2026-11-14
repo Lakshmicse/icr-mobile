@@ -172,7 +172,7 @@ class _SessionSheetState extends State<SessionSheet> {
                 label: 'Edit',
                 icon: LucideIcons.pencil,
                 onPressed: () async {
-                  final saved = await showFormSheet(context, (_) => GroupSessionForm(controller: c, existing: d));
+                  final saved = await openGroupComposer(context, controller: c, existing: d);
                   if (saved && context.mounted) {
                     showMessage(context, 'Saved.');
                     await _load();

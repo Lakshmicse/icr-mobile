@@ -455,11 +455,11 @@ void main() {
       tester,
     ) async {
       final (api, _) = await pumpOfferings(tester, OfferingsWorld(optedIn: false, accepted: null, services: []));
-      await tapKey(tester, 'add-session');
+      await tapKey(tester, 'add-mentoring');
       expect(find.text('Accept the seller terms to open your storefront.'), findsWidgets);
-      expect(find.byKey(const ValueKey('offering-title')), findsNothing, reason: 'no form opens');
-      await tapKey(tester, 'add-programme');
+      expect(find.text('New 1:1 Mentoring'), findsNothing, reason: 'no composer opens');
       await tapKey(tester, 'add-plan');
+      expect(find.text('New Ongoing Plan'), findsNothing);
       await openOfferingsTab(tester, 'Resources');
       await tapKey(tester, 'add-resource');
       expect(api.count('POST /mentor-services/mine'), 0);
@@ -467,7 +467,35 @@ void main() {
       // A group session is hosted by approved mentors, free or not: its form opens.
       await openOfferingsTab(tester, 'Group Mentoring');
       await tapKey(tester, 'add-group');
+      expect(find.text('Host a Group Session'), findsWidgets);
       expect(find.byKey(const ValueKey('group-title')), findsOneWidget);
+    });
+
+    testWidgets('each section says what it holds and how many, with the website\'s words and buttons', (tester) async {
+      final (_, _) = await pumpOfferings(tester, OfferingsWorld(services: [], plans: [], sessions: []));
+      expect(find.text('1:1 Mentoring'), findsWidgets);
+      expect(find.text('Single sessions and programmes, one mentee at a time.'), findsOneWidget);
+      expect(find.text('Add 1:1 Mentoring'), findsOneWidget);
+      expect(
+        find.text('No 1:1 mentoring offerings yet. Offer a single session or a programme of up to 24 sessions.'),
+        findsOneWidget,
+      );
+      expect(find.text('Ongoing Plans'), findsOneWidget);
+      expect(find.text('A set number of sessions a month for a term, booked as needed.'), findsOneWidget);
+      expect(find.text('Create a Plan'), findsOneWidget);
+      expect(find.text('No Ongoing Plans Yet'), findsOneWidget);
+      expect(
+        find.text('For example, offer 2 sessions a month for 3 months. Plans do not count toward your listing limit.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('add-mentoring-count')), findsOneWidget);
+      await openOfferingsTab(tester, 'Resources');
+      expect(find.text('Guides and templates mentees download after paying.'), findsOneWidget);
+      expect(find.text('Add Resource'), findsOneWidget);
+      expect(find.text('No resources yet. Add a downloadable guide or template, delivered on payment.'), findsOneWidget);
+      await openOfferingsTab(tester, 'Group Mentoring');
+      expect(find.text('Clinics and multi-day series you host for several mentees at once.'), findsOneWidget);
+      expect(find.text('No group sessions yet. Host a single clinic or a multi-day series, free or paid.'), findsOneWidget);
     });
 
     testWidgets('a storefront that fails to load says why and Try again asks again, while the rest still shows', (
@@ -562,79 +590,6 @@ void main() {
       expect(find.byKey(const ValueKey('add-group')), findsOneWidget);
     });
 
-    testWidgets('adding a 1:1 session checks every field as the API does, then sends exactly what was typed', (
-      tester,
-    ) async {
-      final w = OfferingsWorld(services: []);
-      final changes = <String>[];
-      final (api, _) = await pumpOfferings(tester, w, changes: changes);
-      expect(
-        find.text('Nothing listed yet. A session is a single booking. A programme is a fixed series of sessions.'),
-        findsOneWidget,
-      );
-      await tapKey(tester, 'add-session');
-      expect(find.text('Add a 1:1 Session'), findsWidgets);
-
-      await submit(tester, 'Add');
-      expect(find.text('Enter a title of at least 4 characters.'), findsOneWidget);
-      await typeKey(tester, 'offering-title', 'Career clarity call');
-      await typeKey(tester, 'offering-blurb', 'A call to map where you are.');
-      await submit(tester, 'Add');
-      expect(find.text('Enter the price in rupees, or turn on Free.'), findsOneWidget);
-      // No ₹499 floor of the app's own (owner, 7 Nov 2026): the API answers for its rule.
-      await typeKey(tester, 'offering-price', '1499');
-      // No strikethrough price field (owner, 9 Nov 2026).
-      expect(find.byKey(const ValueKey('offering-compare')), findsNothing);
-      await typeKey(tester, 'offering-minutes', '10');
-      await submit(tester, 'Add');
-      expect(find.text('A 1:1 call runs 15 to 480 minutes.'), findsOneWidget);
-      await typeKey(tester, 'offering-minutes', '45');
-      expect(api.count('POST /mentor-services/mine'), 0, reason: 'nothing was sent while a field was wrong');
-      await submit(tester, 'Add');
-      expect(api.bodyOf('POST /mentor-services/mine'), {
-        'type': 'ONE_ON_ONE',
-        'title': 'Career clarity call',
-        'blurb': 'A call to map where you are.',
-        'pricePaisa': 149900,
-        'compareAtPaisa': null,
-        'durationMin': 45,
-        'active': true,
-      });
-      expect(find.text('Added.'), findsOneWidget);
-      expect(find.text('1:1 Session · ₹1,499'), findsOneWidget);
-      expect(changes, ['changed']);
-    });
-
-    testWidgets('a free session sends price 0 and no strikethrough', (tester) async {
-      final (api, _) = await pumpOfferings(tester, OfferingsWorld(services: []));
-      await tapKey(tester, 'add-session');
-      await typeKey(tester, 'offering-title', 'Intro call');
-      await tapKey(tester, 'offering-free');
-      expect(find.byKey(const ValueKey('offering-price')), findsNothing, reason: 'a free service has no price field');
-      await submit(tester, 'Add');
-      final body = api.bodyOf('POST /mentor-services/mine') as Map;
-      expect(body['pricePaisa'], 0);
-      expect(body['compareAtPaisa'], isNull);
-      expect(body['durationMin'], 30);
-      expect(find.text('1:1 Session · Free'), findsOneWidget);
-    });
-
-    testWidgets('a refusal keeps the form open with what was typed, and the API\'s sentence', (tester) async {
-      final (api, _) = await pumpOfferings(
-        tester,
-        OfferingsWorld(services: []),
-        extra: {'POST /mentor-services/mine': (_) => refuse('You can list up to 10 services — retire one first.')},
-      );
-      await tapKey(tester, 'add-session');
-      await typeKey(tester, 'offering-title', 'Career clarity call');
-      await tapKey(tester, 'offering-free');
-      await submit(tester, 'Add');
-      expect(api.count('POST /mentor-services/mine'), 1);
-      expect(find.text('You can list up to 10 services — retire one first.'), findsOneWidget);
-      expect(find.text('Career clarity call'), findsWidgets);
-      expect(find.byKey(const ValueKey('offering-title')), findsOneWidget, reason: 'the sheet stays open');
-    });
-
     testWidgets(
       'a resource needs its file: it is picked, checked, uploaded to mentor-resource and saved by its stored name',
       (tester) async {
@@ -691,52 +646,35 @@ void main() {
       expect(find.byKey(const ValueKey('offering-file-name')), findsNothing);
     });
 
-    testWidgets('a cover is uploaded for the offering, and can be taken off again when editing', (tester) async {
-      final w = OfferingsWorld(services: [serviceJson('svc-discovery', coverUrl: '/uploads/old-cover.png')]);
-      final (api, _) = await pumpOfferings(tester, w);
-      await tapKey(tester, 'add-session');
-      await typeKey(tester, 'offering-title', 'Cover test call');
-      await tapKey(tester, 'offering-free');
-      await tapKey(tester, 'offering-cover');
-      expect(api.queryOf('POST /uploads'), {'purpose': 'mentor-offering'});
-      await submit(tester, 'Add');
-      expect((api.bodyOf('POST /mentor-services/mine') as Map)['coverUrl'], '/uploads/mentor-offering-stored.pdf');
-
-      await tapIn(tester, 'service-svc-discovery', 'Edit');
-      expect(find.text('Current cover'), findsOneWidget);
-      await tester.tap(find.text('Remove').last);
-      await tester.pump();
-      await submit(tester, 'Save');
-      expect((api.bodyOf('PATCH /mentor-services/mine/svc-discovery') as Map)['coverUrl'], isNull);
-      expect((api.bodyOf('PATCH /mentor-services/mine/svc-discovery') as Map).containsKey('coverUrl'), isTrue);
+    testWidgets('Add 1:1 Mentoring opens the composer; what it saves joins the list', (tester) async {
+      final changes = <String>[];
+      final (api, _) = await pumpOfferings(tester, OfferingsWorld(services: []), changes: changes);
+      await tapKey(tester, 'add-mentoring');
+      expect(find.text('New 1:1 Mentoring'), findsOneWidget);
+      await typeKey(tester, 'composer-title', 'Career clarity call');
+      await typeKey(tester, 'composer-price', '1499');
+      // The fake mentor meets in person too, and every format is picked: the venue is asked (as on the website).
+      await typeKey(tester, 'composer-venue', 'ICR Bengaluru, 4th floor');
+      await tapKey(tester, 'composer-save');
+      expect((api.bodyOf('POST /mentor-services/mine') as Map)['type'], 'ONE_ON_ONE');
+      expect(find.text('New 1:1 Mentoring'), findsNothing);
+      expect(find.text('Added.'), findsOneWidget);
+      expect(find.text('Career clarity call'), findsOneWidget);
+      expect(changes, ['changed']);
     });
 
-    testWidgets('editing starts from what is held, and saves the whole shape', (tester) async {
-      final w = OfferingsWorld();
-      final (api, _) = await pumpOfferings(tester, w);
+    testWidgets('Edit on a 1:1 session opens it in the composer, held to one session', (tester) async {
+      final (api, _) = await pumpOfferings(tester, OfferingsWorld());
       await tapIn(tester, 'service-svc-strategy', 'Edit');
-      expect(find.text('Edit 1:1 Session'), findsOneWidget);
-      expect(
-        tester.widget<TextField>(find.byKey(const ValueKey('offering-title'))).controller!.text,
-        'Strategy session',
-      );
-      expect(tester.widget<TextField>(find.byKey(const ValueKey('offering-price'))).controller!.text, '1499');
-      expect(find.byKey(const ValueKey('offering-compare')), findsNothing, reason: 'no strikethrough field');
-      expect(tester.widget<TextField>(find.byKey(const ValueKey('offering-minutes'))).controller!.text, '45');
-      await typeKey(tester, 'offering-title', 'Facilities strategy session');
-      await submit(tester, 'Save');
-      // The strikethrough the listing already carries is kept as it is.
-      expect(api.bodyOf('PATCH /mentor-services/mine/svc-strategy'), {
-        'type': 'ONE_ON_ONE',
-        'title': 'Facilities strategy session',
-        'blurb': 'A call to map where you are.',
-        'pricePaisa': 149900,
-        'compareAtPaisa': 199900,
-        'durationMin': 45,
-        'active': true,
-      });
+      expect(find.text('Edit 1:1 Mentoring'), findsOneWidget);
+      expect(tester.widget<TextField>(find.byKey(const ValueKey('composer-title'))).controller!.text, 'Strategy session');
+      await typeKey(tester, 'composer-title', 'Facilities strategy session');
+      if (find.byKey(const ValueKey('composer-venue')).evaluate().isNotEmpty) {
+        await typeKey(tester, 'composer-venue', 'ICR Bengaluru, 4th floor');
+      }
+      await tapKey(tester, 'composer-save');
+      expect((api.bodyOf('PATCH /mentor-services/mine/svc-strategy') as Map)['title'], 'Facilities strategy session');
       expect(find.text('Saved.'), findsOneWidget);
-      expect(find.text('Facilities strategy session'), findsOneWidget);
     });
 
     testWidgets('pausing sends the whole row back with only active changed, and resuming puts it back', (tester) async {

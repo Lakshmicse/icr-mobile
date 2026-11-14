@@ -193,6 +193,42 @@ Map<String, Object?> attendeeJson(
   'minutesCredited': null,
 };
 
+/// The mentor's own profile as `GET /mentorship/mentors/me` answers it, with what the group composer reads: the
+/// standing link, the zone, the weekly hours (Tuesday and Thursday evenings) and the stored group defaults.
+Map<String, Object?> mentorMeJson({
+  String? link = 'https://meet.google.com/icr-standing',
+  String timezone = 'Asia/Kolkata',
+  int? seats,
+  int? durationMin,
+  bool? waitlist,
+  List<Map<String, Object?>>? blocks,
+}) => {
+  'id': 'mp-anand',
+  'status': 'APPROVED',
+  'timezone': timezone,
+  'meetingLink': link,
+  'headline': 'Head of Workplace',
+  'availabilityBlocks':
+      blocks ??
+      [
+        {'weekday': 2, 'startMin': 17 * 60, 'endMin': 21 * 60},
+        {'weekday': 4, 'startMin': 17 * 60, 'endMin': 21 * 60},
+      ],
+  'defaultGroupSeats': seats,
+  'defaultGroupDurationMin': durationMin,
+  'defaultGroupWaitlist': ?waitlist,
+};
+
+/// Something on the mentor's calendar (`GroupBusyIntervalDto`).
+Map<String, Object?> busyJson(DateTime start, int minutes, {String kind = 'ONE_TO_ONE', String? title = 'Meera Nair', bool blocking = true}) => {
+  'start': iso(start),
+  'end': iso(start.add(Duration(minutes: minutes))),
+  'kind': kind,
+  'title': title,
+  'href': null,
+  'blocking': blocking,
+};
+
 class OfferingsWorld {
   OfferingsWorld({
     this.optedIn = true,
@@ -228,6 +264,14 @@ class OfferingsWorld {
   List<Map<String, Object?>> sessions;
   final String current = '2026.1';
   int _n = 0;
+
+  /// The group composer's reads: the mentor's own profile (`GET /mentorship/mentors/me`, the fields it uses) and
+  /// the calendar it judges dates against (`GET /mentorship/group-sessions/mine/busy`, `GroupBusyIntervalDto`s).
+  Map<String, Object?> mentorProfile = mentorMeJson();
+  List<Map<String, Object?>> busy = [];
+
+  /// The days `POST /mentorship/group-sessions/batch` was sent, one session each.
+  final List<String> batched = [];
 
   /// The gate state as the API words it (`storefrontState`).
   bool get live => !suspended && optedIn && accepted == current;
@@ -314,6 +358,31 @@ class OfferingsWorld {
         return p;
       },
       'GET /mentorship/group-sessions': (_) => page(sessions),
+      'GET /mentorship/mentors/me': (_) => mentorProfile,
+      'GET /mentorship/group-sessions/mine/busy': (_) => {'timezone': 'Asia/Kolkata', 'intervals': busy},
+      'POST /mentorship/group-sessions/batch': (o) {
+        final b = o.data as Map<String, dynamic>;
+        final made = <Map<String, Object?>>[];
+        for (final d in (b['dates'] as List).cast<Map<String, dynamic>>()) {
+          final s = hostedJson(
+            'newg-${++_n}',
+            title: b['title'] as String,
+            status: b['publish'] == true ? 'SCHEDULED' : 'DRAFT',
+            at: DateTime.parse(d['scheduledAt'] as String),
+            minutes: d['durationMin'] as int,
+            mode: b['mode'] as String,
+            capacity: b['capacity'] as int?,
+            price: b['pricePaisa'] as int?,
+            link: b['meetingLink'] as String?,
+            location: b['location'] as String?,
+            summary: b['summary'] as String?,
+          );
+          sessions = [...sessions, s];
+          batched.add(d['scheduledAt'] as String);
+          made.add({'id': s['id'], 'scheduledAt': d['scheduledAt']});
+        }
+        return {'sessions': made};
+      },
       'POST /mentorship/group-sessions': (o) {
         final b = o.data as Map<String, dynamic>;
         final occ = (b['occurrences'] as List).cast<Map<String, dynamic>>();

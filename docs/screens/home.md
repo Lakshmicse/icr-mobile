@@ -229,3 +229,8 @@ The owner: "The like button long press shows the options same to same should sho
 ## The comments sheet is as tall as its content; the reactions list is complete (13 Nov 2026)
 
 Owner: with no comments the sheet should sit low, grow to the set height, then scroll; and the likes should show everyone. `showCommentsSheet` keeps 94% of the screen as the most the sheet may be, but the sheet itself (`comments-sheet`) is now only as tall as what it holds: handle, order, the comments (or "No Comments Yet"), the box. At 94% the comments scroll. The space above it is see-through and a tap there (`comments-scrim`) closes the sheet. `ApiForumRepository.reactors` reads every page of `GET /forum/threads/:id/reactions` (50 at a time, up to 2,000 people) instead of the first 50, so the reactions sheet's tabs count everyone and its list scrolls through all of them. Proved by `test/comments_sheet_height_test.dart`.
+
+
+## 14 Nov 2026: no people among the topic chips
+
+The owner, showing the chips "#@bindhyas", "#@divyacn" and "#@bindhyarajs-divyacn": "these hashtags should be removed from the home page". A tag that names a person ("@...", `personTagHandle`) is not a topic: `FeedController._noteTags` leaves it out of the chips. It still shows on its post, where a tap opens the person. Test: `feed_screen_test.dart` ("people tagged in a post are not topic chips").

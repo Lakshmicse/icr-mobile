@@ -184,7 +184,7 @@ class _LinkedTextState extends State<LinkedText> {
 
 // --- day pill and events -------------------------------------------------------------------------------------------
 
-/// A day separator: a white pill with a calendar and the day in lower case ("today, april 16").
+/// A day separator: a white pill with a calendar and the day ("Today, April 16").
 class DayDivider extends StatelessWidget {
   const DayDivider({super.key, required this.date, this.now});
 
@@ -770,7 +770,8 @@ class MeetingFacts {
   /// The record the session belongs to (the pairing, the group session, the purchase).
   final String? href;
 
-  /// A link that opens the call itself. The API's context carries none yet, so the card then opens [href].
+  /// A link that opens the call itself. The API's context carries none yet, so the card then opens the Join sheet,
+  /// which reads the call from the record.
   final Uri? joinUrl;
 }
 
@@ -802,20 +803,6 @@ MeetingFacts? meetingOf(ConversationContext? context, Conversation? conversation
   }
   final g = c.groupSession;
   if (g != null) return at(g.nextAt, g.title, 'Group Session', groupSessionHref(g.id));
-  return null;
-}
-
-/// Where the thread's own session record opens (the pairing, the group session, the booked consultation); null
-/// when the thread has none.
-String? sessionRecordHref(ConversationContext? context) {
-  final c = context;
-  if (c == null) return null;
-  final k = c.consultation;
-  if (k != null && (k.oneOnOne || k.scheduledAt != null)) return consultationHref(buyer: k.buyer);
-  final m = c.mentorship;
-  if (m != null) return mentorshipHref(m.id);
-  final g = c.groupSession;
-  if (g != null) return groupSessionHref(g.id);
   return null;
 }
 

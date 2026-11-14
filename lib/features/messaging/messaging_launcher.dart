@@ -16,10 +16,15 @@ import 'demo_messaging_repository.dart';
 import 'inbox_screen.dart';
 import 'messaging_models.dart';
 import 'messaging_repository.dart';
+import 'widgets/join_session_sheet.dart';
 
 /// Picks a photo or a file to send (the paperclip). The default is the phone's
 /// own picker, `pickDeviceAttachment` (`file_picker`); null means "chose nothing".
 typedef AttachmentPicker = Future<PickedAttachment?> Function(BuildContext context);
+
+/// Reads a thread's booked session from its own record (the booking, the pairing's next session, the group session)
+/// for the Join sheet: the call's address and when it may be joined. Null when the thread has no session.
+typedef SessionJoinLoader = Future<SessionJoin?> Function(BuildContext context, ConversationContext about);
 
 /// How other screens open Messages. Each "Message" button opens its thread
 /// through the record's own endpoint, as the website does (a supplier's sales
@@ -29,6 +34,10 @@ typedef AttachmentPicker = Future<PickedAttachment?> Function(BuildContext conte
 abstract final class MessagingLauncher {
   /// What the composer's paperclip uses: the phone's picker. Set it to null to take the paperclip away.
   static AttachmentPicker? attachmentPicker = pickDeviceAttachment;
+
+  /// What the Join sheet reads the session's call from. The mentoring records live in another feature, so the app
+  /// sets it (`app.dart`); left null, the sheet offers the record's page instead of a Join.
+  static SessionJoinLoader? sessionJoin;
 
   static DemoMessagingRepository? _demo;
 

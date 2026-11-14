@@ -14,6 +14,11 @@ const maxSessionMinutes = 480;
 /// (owner, 7 and 14 Nov 2026: no ₹499 criteria on any price).
 const maxServicePricePaisa = 5000000;
 
+/// `MENTOR_SERVICE_LIMITS.minPricePaisa` / `ONE_TO_ONE_MIN_PRICE_PAISA`: ₹1, the least a paid 1:1 session, service or
+/// programme can cost. Not a floor on what a mentor charges (the ₹499 floor went on 14 Nov 2026): it only says that
+/// "Paid" means a price of at least a rupee.
+const minOneToOnePricePaisa = 100;
+
 /// The API's sentence for a resource that has no file behind it.
 const fileNeededMessage = 'Upload the file before publishing a resource.';
 
@@ -65,6 +70,19 @@ const minGroupSeats = 2;
 const maxGroupSeats = 50;
 const maxGroupDays = 10;
 
+/// Separate sessions one Repeat may create at once (`MAX_REPEAT_SESSIONS`), and the longest window the mentor's
+/// calendar is read for in one call (`MAX_BUSY_RANGE_DAYS`).
+const maxRepeatSessions = 12;
+const maxBusyRangeDays = 62;
+
+/// "What people will learn": how many lines, and how long one may be (`GROUP_SESSION_LIMITS.outcomesMax`, `outcomeMax`).
+const maxGroupOutcomes = 6;
+const maxGroupOutcome = 120;
+
+/// The least a paid seat costs (`MENTOR_SERVICE_LIMITS.minPricePaisa`, ₹1 since 14 Nov 2026): not a floor on what a
+/// mentor charges, only that a paid seat costs something.
+const minSeatPricePaisa = 100;
+
 /// A cancel reason (`CancelGroupSessionDto`).
 const minCancelReason = 3;
 const maxCancelReason = 500;
@@ -98,13 +116,13 @@ String? serviceTitleProblem(String title) {
 String? blurbProblem(String blurb, {required int max}) =>
     blurb.trim().length > max ? 'Keep the description under $max characters.' : null;
 
-/// The price rule of every service: free, or a price up to ₹50,000; the strikethrough price above it and the
-/// price at least half of it. The app sets no floor of its own (owner, 7 Nov 2026: "remove the criteria and text");
-/// the API's own answer shows if it refuses a price.
+/// The price rule of every service: free, or ₹1 to ₹50,000; the strikethrough price above it and the price at least
+/// half of it. There is no ₹499 floor (owner, 7 and 14 Nov 2026; main's `MENTOR_SERVICE_LIMITS.minPricePaisa` is ₹1).
 String? servicePriceProblem({required bool free, required String price, required String compareAt}) {
   if (free) return null;
   final p = paisaOf(price);
   if (p == null) return 'Enter the price in rupees, or turn on Free.';
+  if (p < minOneToOnePricePaisa) return 'Priced services start at ${inr(minOneToOnePricePaisa)}.';
   if (p > maxServicePricePaisa) return 'Prices go up to ${inr(maxServicePricePaisa)}.';
   return compareAtProblem(price: p, compareAt: compareAt);
 }
@@ -162,12 +180,13 @@ String? recurringPriceProblem({required bool free, required String price, requir
   return null;
 }
 
-/// A programme's price: free, or a price; the strikethrough above it and the price at least half of it. No floor
-/// of the app's own (owner, 7 Nov 2026); the API answers for its own.
+/// A programme's price: free, or at least ₹1 (`ONE_TO_ONE_MIN_PRICE_PAISA`; the ₹499 floor went on 14 Nov 2026);
+/// the strikethrough above it and the price at least half of it.
 String? programmePriceProblem({required bool free, required String price, required String compareAt}) {
   if (free) return null;
   final p = paisaOf(price);
   if (p == null) return 'Enter the price in rupees, or turn on Free.';
+  if (p < minOneToOnePricePaisa) return 'A paid programme is at least ${inr(minOneToOnePricePaisa)}.';
   if (p > maxPaisa) return 'That price is too large.';
   if (compareAt.trim().isNotEmpty) {
     final c = paisaOf(compareAt);
@@ -278,12 +297,14 @@ String? daysProblem(List<(DateTime, int)> days, DateTime now, {bool requireFutur
   return null;
 }
 
-/// A seat price (free when empty): at most ₹50,000, and a paid session needs a number of seats. No floor of the
-/// app's own (owner, 14 Nov 2026: "why are we setting criteria for price set minimum").
+/// A seat price (free when empty): ₹1 to ₹50,000, main's rule (`minPricePaisa` only says a paid seat costs
+/// something; owner, 14 Nov 2026: "why are we setting criteria for price set minimum"), and a paid session needs
+/// a number of seats.
 String? seatPriceProblem({required String price, required String capacity}) {
   if (price.trim().isEmpty) return null;
   final p = paisaOf(price);
   if (p == null) return 'Enter the seat price in rupees, or leave it empty for a free session.';
+  if (p < minSeatPricePaisa) return 'A paid seat costs at least ${inr(minSeatPricePaisa)}.';
   if (p > maxServicePricePaisa) return 'Prices go up to ${inr(maxServicePricePaisa)}.';
   if (capacity.trim().isEmpty) return 'A paid session needs a number of seats.';
   return null;
@@ -303,6 +324,104 @@ String? cancelReasonProblem(String raw) {
   if (r.length < minCancelReason) return 'Enter at least $minCancelReason characters.';
   if (r.length > maxCancelReason) return 'Keep the reason under $maxCancelReason characters.';
   return null;
+}
+
+// --- the group-session composer (the website's `groupSessionRules.ts`) ---------------------------------------
+
+/// The composer's fields in form order: the first with a problem is where the page scrolls (`GROUP_SESSION_FIELDS`).
+enum GroupField { title, summary, outcomes, agenda, meetingLink, location, capacity, price }
+
+/// "What people will learn" as the list the API stores: one line each, blanks dropped (`outcomeLines`).
+List<String> outcomeLines(String raw) => [
+  for (final l in raw.split('\n'))
+    if (l.trim().isNotEmpty) l.trim(),
+];
+
+/// An http(s) address with a host and no spaces: what the API's `@IsMeetingLink` takes for a joining link
+/// (`isJoiningLink`; typed without https:// it is sent with it).
+bool isJoiningLink(String raw) {
+  final link = normaliseLink(raw);
+  if (RegExp(r'\s').hasMatch(link)) return false;
+  final uri = Uri.tryParse(link);
+  return uri != null && (uri.scheme == 'http' || uri.scheme == 'https') && uri.host.isNotEmpty;
+}
+
+/// Why the paid seat price is refused, as the composer's helper says it ("Between ₹1 and ₹50,000.").
+String seatPriceRangeWords() => 'Between ${inr(minSeatPricePaisa)} and ${inr(maxServicePricePaisa)}.';
+
+/// The website's `groupSessionIssues`: the refusals `UpsertGroupSessionDto` makes, checked as the mentor types, in its
+/// words. The schedule is judged by the schedule's verdict, not here.
+Map<GroupField, String> groupSessionIssues({
+  required String title,
+  required String summary,
+  required String outcomes,
+  required String agenda,
+  required bool inPerson,
+  required String meetingLink,
+  required String location,
+  required bool capped,
+  required String capacity,
+  required bool paid,
+  required String priceRupees,
+}) {
+  final out = <GroupField, String>{};
+  String tooLong(int max) => 'Keep it to $max characters.';
+
+  final t = title.trim();
+  if (t.isEmpty) {
+    out[GroupField.title] = 'Give the session a title.';
+  } else if (t.length < minGroupTitle) {
+    out[GroupField.title] = 'Use at least $minGroupTitle characters.';
+  } else if (title.length > maxGroupTitle) {
+    out[GroupField.title] = tooLong(maxGroupTitle);
+  }
+
+  if (summary.length > maxGroupSummary) out[GroupField.summary] = tooLong(maxGroupSummary);
+  final lines = outcomeLines(outcomes);
+  if (lines.length > maxGroupOutcomes) {
+    out[GroupField.outcomes] = 'Keep it to $maxGroupOutcomes lines.';
+  } else if (lines.any((l) => l.length > maxGroupOutcome)) {
+    out[GroupField.outcomes] = 'Keep each line to $maxGroupOutcome characters.';
+  }
+  if (agenda.length > maxGroupAgenda) out[GroupField.agenda] = tooLong(maxGroupAgenda);
+
+  // The format decides which one people need on the day; only that one is judged.
+  if (inPerson) {
+    if (location.trim().isEmpty) {
+      out[GroupField.location] = 'Add the venue where people will meet.';
+    } else if (location.length > maxGroupLocation) {
+      out[GroupField.location] = tooLong(maxGroupLocation);
+    }
+  } else if (meetingLink.trim().isEmpty) {
+    out[GroupField.meetingLink] = 'Add the joining link people will use.';
+  } else if (meetingLink.length > maxGroupLink) {
+    out[GroupField.meetingLink] = tooLong(maxGroupLink);
+  } else if (!isJoiningLink(meetingLink)) {
+    out[GroupField.meetingLink] = 'Enter a full link, starting with https://';
+  }
+
+  // A paid room has to have a size, or it never sells out.
+  if (paid && !capped) {
+    out[GroupField.capacity] = 'A paid session needs a number of seats.';
+  } else if (capped) {
+    final seats = int.tryParse(capacity.trim());
+    if (seats == null || seats < minGroupSeats || seats > maxGroupSeats) {
+      out[GroupField.capacity] = 'Enter a whole number of seats from $minGroupSeats to $maxGroupSeats.';
+    }
+  }
+
+  if (paid) {
+    final raw = priceRupees.trim();
+    final rupees = num.tryParse(raw);
+    if (raw.isEmpty) {
+      out[GroupField.price] = 'Enter a price per seat.';
+    } else if (rupees == null || rupees != rupees.roundToDouble()) {
+      out[GroupField.price] = 'Enter the price in whole rupees.';
+    } else if (rupees * 100 < minSeatPricePaisa || rupees * 100 > maxServicePricePaisa) {
+      out[GroupField.price] = seatPriceRangeWords();
+    }
+  }
+  return out;
 }
 
 /// Plain paragraphs as the simple HTML the API stores an agenda as (`agendaHtml`), escaped.

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_error.dart';
+import '../forum/mentions/tag_person.dart' show personTagHandle;
 import 'feed_models.dart';
 import 'feed_repository.dart';
 import 'post_reactions.dart';
@@ -81,11 +82,13 @@ class FeedController extends ChangeNotifier {
     return top;
   }
 
+  /// The topics a post adds to the chips: its tags, less the people it tags ("#@divya-c-n"), which are not topics
+  /// (owner, 14 Nov 2026: such chips came off Home; the tag still shows on the post and opens the person).
   void _noteTags(Iterable<FeedPost> posts) {
     for (final post in posts) {
       _tagsByPost[post.id] = [
         for (final tag in post.tags)
-          if (tag.length > 1) tag.startsWith('#') ? tag.substring(1) : tag,
+          if (tag.length > 1 && personTagHandle(tag) == null) tag.startsWith('#') ? tag.substring(1) : tag,
       ];
     }
   }
