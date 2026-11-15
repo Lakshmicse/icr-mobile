@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_error.dart';
+import '../../core/store_rules.dart';
 import 'learning_models.dart';
 import 'learning_repository.dart';
 import 'notify_safely.dart';
@@ -112,10 +113,15 @@ class CourseSheetController extends ChangeNotifier with NotifySafely {
     if (_course.closed) return 'ENROLMENT CLOSED';
     final run = selectedRun;
     if (run?.full ?? _course.full) return (run?.waitlistEnabled ?? _course.waitlistEnabled) ? 'JOIN WAITLIST' : 'FULL';
+    if (paidPlace && !StoreRules.sellsDigitalGoods) return notSoldLabel;
     return 'ENROL NOW';
   }
 
-  bool get canAct => !_course.enrolled && !_course.closed && !_enrolling && ctaLabel != 'FULL';
+  /// A paid place in the App Store build, which sells none (see [StoreRules]): the button says so and does nothing.
+  static const notSoldLabel = 'NOT AVAILABLE IN THE APP';
+
+  bool get canAct =>
+      !_course.enrolled && !_course.closed && !_enrolling && ctaLabel != 'FULL' && ctaLabel != notSoldLabel;
 
   Future<void> load() async {
     _loading = true;

@@ -6,6 +6,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/api_error.dart';
+import '../../core/store_rules.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart' show showMessage;
 import '../payments/checkout_start.dart';
@@ -535,7 +536,8 @@ List<_Unlock> _unlocks(BuildContext context, BriefController brief) {
   final quote = brief.quote;
   final mock = paper.isMock;
   final redeemable = quote != null && quote.credits != null && !quote.alreadyOpen;
-  final buyable = quote != null && quote.priced && !quote.alreadyOpen;
+  // The App Store build sells no paper (see [StoreRules]); the plan and earned credits still open one.
+  final buyable = StoreRules.sellsDigitalGoods && quote != null && quote.priced && !quote.alreadyOpen;
   return [
     if (lock.planCanOpen)
       _Unlock(
