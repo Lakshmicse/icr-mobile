@@ -45,7 +45,7 @@ class BundleOffer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final inCredits = onRedeem == null ? null : quote.inCredits;
-    final money = quote.offered;
+    final money = quote.sold;
     if (!money && inCredits == null) return const SizedBox.shrink();
     final mock = quote.mock;
     final count = money ? quote.levels.length : quote.creditLevels.length;

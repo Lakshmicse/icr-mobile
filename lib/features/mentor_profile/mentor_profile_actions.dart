@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/store_rules.dart';
 import '../../core/util/links.dart';
 import 'mentor_profile_controller.dart';
 import 'mentor_profile_format.dart';
@@ -18,6 +19,10 @@ Future<bool> runOfferingAction(BuildContext context, MentorProfileController c, 
   // then the payment), not asked for a second time.
   if (o.isRequested && o.myOpenRequestId != null) {
     await c.navigation.purchases(context);
+    return false;
+  }
+  if (o.notSoldInApp) {
+    showMessage(context, StoreRules.notSoldInApp);
     return false;
   }
   switch (o.kind) {

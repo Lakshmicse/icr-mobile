@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_error.dart';
+import '../../core/store_rules.dart';
 import 'assess_models.dart';
 import 'assess_repository.dart';
 import 'catalogue_controller.dart';
@@ -43,7 +44,8 @@ class PaperEntry {
   int? get attemptsLeft => paper.attemptLimit == null ? null : (paper.attemptLimit! - progress.attempts).clamp(0, 9999);
 
   /// A price is on offer: the paper has one and the member would pay it.
-  bool get priced => quote != null && quote!.priced;
+  /// Never in the App Store build, which sells no paper (see [StoreRules]); credits and the plan still open it.
+  bool get priced => StoreRules.sellsDigitalGoods && quote != null && quote!.priced;
 
   /// ICR credits open it (and what they cost), when the API says so.
   int? get credits => quote?.credits;

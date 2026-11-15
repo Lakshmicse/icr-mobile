@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
+import '../../core/store_rules.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/join_window.dart';
 import '../../core/util/links.dart';
@@ -611,18 +612,22 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               QuoteBlock(quote: q),
-              ActionWrap(
-                children: [
-                  SolidButton(
-                    label: q.chargedPaisa == 0 ? 'Reserve a Seat' : 'Reserve a Seat · ${inr(q.chargedPaisa)}',
-                    icon: LucideIcons.ticket,
-                    onPressed: () async {
-                      final done = await showFormSheet(context, (_) => _SeatForm(controller: _c, links: _links));
-                      if (done && mounted) _c.load();
-                    },
-                  ),
-                ],
-              ),
+              // A seat that costs money is not sold in the App Store build (see [StoreRules]).
+              if (q.chargedPaisa > 0 && !StoreRules.sellsDigitalGoods)
+                Text(StoreRules.notSoldInApp, key: const ValueKey('seat-not-sold-in-app'), style: MentoringText.meta)
+              else
+                ActionWrap(
+                  children: [
+                    SolidButton(
+                      label: q.chargedPaisa == 0 ? 'Reserve a Seat' : 'Reserve a Seat · ${inr(q.chargedPaisa)}',
+                      icon: LucideIcons.ticket,
+                      onPressed: () async {
+                        final done = await showFormSheet(context, (_) => _SeatForm(controller: _c, links: _links));
+                        if (done && mounted) _c.load();
+                      },
+                    ),
+                  ],
+                ),
             ],
           ),
         ),

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/config.dart';
+import '../../core/store_rules.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
 import '../../core/widgets/buttons.dart';
@@ -178,6 +179,9 @@ class _MembershipScreenState extends State<MembershipScreen> {
         _Notice(key: const ValueKey('membership-message'), text: _c.message!, onDismiss: _c.dismissMessage),
       if (mine != null && !canBuy && mine.reason != null)
         _Notice(key: const ValueKey('membership-eligibility'), text: mine.reason!),
+      // The App Store build sells no plan (guideline 3.1.1): one line says so, and the cards carry no buttons.
+      if (canBuy && !StoreRules.sellsDigitalGoods)
+        const _Notice(key: ValueKey('membership-not-sold-in-app'), text: StoreRules.notSoldInApp),
       if (mine != null && canBuy)
         _YourPlanCard(mine: mine, busy: _c.busyPriceId != null, onRenew: _c.renew, onHistory: _history),
       if (_c.loading && _c.plans.isEmpty)
@@ -284,7 +288,12 @@ class _YourPlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final sub = mine.subscription;
     final renewal = mine.renewal;
-    final canRenew = sub != null && renewal != null && mine.nextTermPlanName == null && !mine.planRetired;
+    final canRenew =
+        StoreRules.sellsDigitalGoods &&
+        sub != null &&
+        renewal != null &&
+        mine.nextTermPlanName == null &&
+        !mine.planRetired;
     return Container(
       key: const ValueKey('membership-your-plan'),
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
@@ -485,6 +494,8 @@ class _PlanCard extends StatelessWidget {
       ];
     }
     if (!canBuy) return const [];
+    // The App Store build: only the current plan's quiet chip, never a way to buy (see [StoreRules]).
+    if (!StoreRules.sellsDigitalGoods && !current) return const [];
     final String label;
     VoidCallback? onPressed;
     if (current) {

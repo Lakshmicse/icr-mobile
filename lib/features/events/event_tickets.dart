@@ -1,8 +1,10 @@
 import 'package:flutter/widgets.dart';
 
 import '../../core/api/api_error.dart';
+import '../../core/store_rules.dart';
 import '../payments/checkout_start.dart';
 import '../payments/payment_screen.dart' show PaymentOutcome;
+import 'event_format.dart';
 import 'event_models.dart';
 import 'events_repository.dart';
 
@@ -15,6 +17,8 @@ Future<String> buyEventTicket(
   EventSummary event, {
   Future<void> Function()? onPaid,
 }) async {
+  // An online-only event is a live service sold to many, which the App Store build does not sell (see [StoreRules]).
+  if (!StoreRules.sellsDigitalGoods && formatOf(event) == EventFormat.online) return StoreRules.notSoldInApp;
   try {
     final start = await repository.buyTicket(event);
     if (!context.mounted) return '';

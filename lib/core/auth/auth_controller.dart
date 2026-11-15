@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../api/api_client.dart';
 import '../api/api_error.dart';
+import '../store_rules.dart';
 import 'session_user.dart';
 import 'social_sign_in.dart';
 import 'token_store.dart';
@@ -119,6 +120,8 @@ class AuthController extends ChangeNotifier {
   /// `GET /auth/social/providers`: the ones with keys on this server. The
   /// buttons for the others are drawn disabled, as on the website.
   Future<Set<SocialProvider>> configuredProviders() async {
+    // The App Store build offers none (guideline 4.8, until Sign in with Apple is built): see [StoreRules].
+    if (!StoreRules.socialSignIn) return const {};
     try {
       final res = await api.dio.get<Map<String, dynamic>>('/auth/social/providers');
       final names = (res.data?['providers'] as List? ?? const []).cast<String>().toSet();
