@@ -812,7 +812,7 @@ void main() {
       final w = PairingWorld(withPlan: true, programme: true)..slots = [DateTime(2026, 10, 28, 18)];
       final (api, _, _) = await pump(tester, world: w);
       expect(find.text('Programme'), findsOneWidget);
-      expect(find.text('Held'), findsWidgets);
+      expect(find.text('Completed'), findsWidgets);
       expect(find.text('Next to Book'), findsOneWidget);
       expect(find.text('No goals yet. A goal is what you both work towards.'), findsNothing);
       await tapText(tester, 'Request a Time');

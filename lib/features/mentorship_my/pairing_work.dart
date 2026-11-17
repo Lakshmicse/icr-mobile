@@ -121,7 +121,7 @@ class PlanSection extends StatelessWidget {
                         ),
                         Text(
                           s.done
-                              ? 'Held'
+                              ? 'Completed'
                               : s.booked
                               ? 'Booked'
                               : (s.isNext ? 'Next to Book' : 'Not Booked Yet'),

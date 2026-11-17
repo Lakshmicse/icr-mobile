@@ -299,7 +299,10 @@ class _MentoringComposerState extends State<MentoringComposer> {
 
   void _setCountText(String text) {
     if (_count.text == text) return;
-    _count.value = TextEditingValue(text: text, selection: TextSelection.collapsed(offset: text.length));
+    _count.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
   }
 
   void _onCountTyped(String raw) {
@@ -438,7 +441,8 @@ class _MentoringComposerState extends State<MentoringComposer> {
   List<String> get _available => _settings == null ? const [] : _offeringModes(const [], _settings!.preferredModes);
 
   List<String> get _modes =>
-      _picked ?? (_settings == null ? const [] : _offeringModes(_service?.modes ?? _plan?.modes, _settings!.preferredModes));
+      _picked ??
+      (_settings == null ? const [] : _offeringModes(_service?.modes ?? _plan?.modes, _settings!.preferredModes));
 
   bool get _inPerson => _modes.contains('IN_PERSON');
   bool get _everyWay => _available.isNotEmpty && _available.every(_modes.contains);
@@ -706,7 +710,9 @@ class _MentoringComposerState extends State<MentoringComposer> {
   }
 
   Widget _overview() {
-    final titleError = _isSingle && _titleShort && _title.text.isNotEmpty ? 'At least $minServiceTitle characters.' : null;
+    final titleError = _isSingle && _titleShort && _title.text.isNotEmpty
+        ? 'At least $minServiceTitle characters.'
+        : null;
     return ComposerSection(
       key: const ValueKey('composer-overview'),
       step: 1,
@@ -1017,7 +1023,8 @@ class _MentoringComposerState extends State<MentoringComposer> {
               ],
             ),
           )
-        else ..._whereFields(open),
+        else
+          ..._whereFields(open),
       ],
     );
   }
@@ -1096,7 +1103,10 @@ class _MentoringComposerState extends State<MentoringComposer> {
         icon: LucideIcons.clock,
         text: TextSpan(
           children: [
-            const TextSpan(text: 'Availability: ', style: TextStyle(fontWeight: FontWeight.w700)),
+            const TextSpan(
+              text: 'Availability: ',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
             TextSpan(text: hours),
           ],
         ),

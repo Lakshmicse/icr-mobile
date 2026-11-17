@@ -97,12 +97,19 @@ class _CandidateQuickViewState extends State<CandidateQuickView> {
     }
   }
 
+  /// Invitations go to open jobs only, each listed with what sets it apart from another of the same title.
+  List<JobOption> get _openJobs => [
+    for (final j in widget.jobs)
+      if (j.isOpen) j,
+  ];
+
   Future<void> _pickJob() async {
     final picked = await pickFromSheet<JobOption>(
       context,
       title: 'Select a Job',
-      options: widget.jobs,
+      options: _openJobs,
       label: (j) => j.title,
+      subtitle: (j) => j.details(),
       selected: _inviteJob,
     );
     if (picked != null && mounted) setState(() => _inviteJob = picked);
@@ -394,14 +401,21 @@ class _CandidateQuickViewState extends State<CandidateQuickView> {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 textStyle: SiteText.body,
                 trailing: const Icon(Icons.expand_more, size: 18, color: AppColors.onSurfaceVariant),
-                onTap: widget.jobs.isEmpty ? null : _pickJob,
+                onTap: _openJobs.isEmpty ? null : _pickJob,
               ),
             ),
           ],
         ),
+        if (_inviteJob case final job? when job.details().isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(job.details(), key: const ValueKey('qv-invite-job-details'), style: SiteText.meta),
+        ],
         if (widget.jobs.isEmpty) ...[
           const SizedBox(height: 4),
           Text('No jobs to invite candidates to yet. Post a job first.', style: SiteText.meta),
+        ] else if (_openJobs.isEmpty) ...[
+          const SizedBox(height: 4),
+          Text('None of your jobs is open. Candidates are invited to open jobs only.', style: SiteText.meta),
         ],
         const SizedBox(height: 8),
         SiteButton(

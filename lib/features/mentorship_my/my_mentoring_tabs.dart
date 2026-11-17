@@ -51,11 +51,22 @@ Future<void> respondToRequest(
 
 /// Requests, from the side they arrived on: what is asked of the member as a
 /// mentor (answer it here), and what they asked of others (withdraw it).
+///
+/// [side] keeps a page to one of them, as the website's tabs do: Mentor Engagements shows only the requests from
+/// people who want the member as their mentor; Mentoring Sessions only the member's own requests to mentors, with
+/// Find a Mentor. With no side (My mentoring opened on its own) both show, each under a heading that says whose it is.
 class RequestsTab extends StatelessWidget {
-  const RequestsTab({super.key, required this.controller, required this.links});
+  const RequestsTab({super.key, required this.controller, required this.links, this.side});
 
   final MyMentoringController controller;
   final MentorshipLinks links;
+  final MentoringSide? side;
+
+  /// The mentor's side shows while the member mentors anyone; a member who does not is never left with an empty page.
+  bool get _showReceived => controller.actsAsMentor && side != MentoringSide.mentee;
+  bool get _showSent =>
+      side == MentoringSide.mentee ||
+      (controller.actsAsMentee && (side != MentoringSide.mentor || !controller.actsAsMentor));
 
   @override
   Widget build(BuildContext context) {
@@ -66,14 +77,14 @@ class RequestsTab extends StatelessWidget {
     final sent = [...?c.sent.data]..sort(_pendingFirst);
     final quota = c.quota.data;
     final children = <Widget>[
-      if (c.actsAsMentor) ...[
-        const GroupLabel('Requests Received', top: 0),
+      if (_showReceived) ...[
+        const GroupLabel('Requests from Mentees', top: 0),
         if (received.isEmpty)
           const EmptyNote(
             icon: LucideIcons.inbox,
             compact: true,
-            title: 'No Requests Yet',
-            body: 'When a member asks you to mentor them, the request will appear here.',
+            title: 'No Requests Waiting',
+            body: 'Members who ask you to mentor them appear here.',
           ),
         for (final r in received)
           RequestCard(
@@ -91,8 +102,8 @@ class RequestsTab extends StatelessWidget {
                 : const [],
           ),
       ],
-      if (c.actsAsMentee) ...[
-        GroupLabel('Requests Sent', top: c.actsAsMentor ? 14 : 0),
+      if (_showSent) ...[
+        GroupLabel('My Requests to Mentors', top: _showReceived ? 14 : 0),
         if (quota != null && quota.pendingLimit != null)
           Callout(
             tone: quota.canRequest ? PillTone.blue : PillTone.amber,
@@ -373,7 +384,7 @@ class _CalendarRow extends StatelessWidget {
 
 String _statusWord(CalendarItem i) => switch (i.status) {
   'REQUESTED' => 'Awaiting',
-  'COMPLETED' => 'Held',
+  'COMPLETED' => 'Completed',
   'CANCELLED' => 'Cancelled',
   'NO_SHOW' => 'No-Show',
   'CONFIRMED' || 'PAID' || 'SCHEDULED' => i.kind == CalendarKind.group ? 'Going' : 'Booked',

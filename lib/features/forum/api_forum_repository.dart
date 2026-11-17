@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:dio/dio.dart' show DioMediaType, FormData, MultipartFile, Options;
 
 import '../../core/api/api_client.dart';
@@ -176,10 +174,10 @@ class ApiForumRepository implements ForumRepository {
       card: card.copyWith(
         body: ForumJson.plainText(html),
         mentions: mentionsInHtml(html),
-        images: [for (final url in photos.take(2)) FeedPicture.network(url)],
+        images: [for (final url in photos) FeedPicture.network(url)],
         videos: videos,
         imageCaption: photos.length == 1 && attachment != null ? ForumJson.caption(attachment.fileName) : null,
-        morePhotos: math.max(0, photos.length - 2),
+        morePhotos: 0,
         detailLoaded: true,
       ),
       bodyHtml: html,

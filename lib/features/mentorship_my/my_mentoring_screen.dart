@@ -59,9 +59,13 @@ class MyMentoringScreen extends StatefulWidget {
     this.onOpenMentor,
     this.onBell,
     this.onOpenWebsite,
+    this.side,
   });
 
   final MyTab initialTab;
+
+  /// The side the page is about (the drawer's Mentor Engagements or Mentoring Sessions); null shows both.
+  final MentoringSide? side;
   final VoidCallback? onBack;
   final MentorshipLinks? links;
 
@@ -128,7 +132,11 @@ class _MyMentoringScreenState extends State<MyMentoringScreen> {
         final badges = [
           for (final t in tabs)
             switch (t) {
-              MyTab.requests => _c.isMentor ? _c.pendingReceived.length : _c.pendingSent.length,
+              MyTab.requests => switch (widget.side) {
+                MentoringSide.mentee => _c.pendingSent.length,
+                MentoringSide.mentor => _c.actsAsMentor ? _c.pendingReceived.length : _c.pendingSent.length,
+                null => _c.isMentor ? _c.pendingReceived.length : _c.pendingSent.length,
+              },
               _ => 0,
             },
         ];
@@ -182,7 +190,7 @@ class _MyMentoringScreenState extends State<MyMentoringScreen> {
       case MyTab.mentoring:
         return MentoringOverview(controller: _c, links: _links, onOpenPairing: _openPairingId, onSelectTab: _select);
       case MyTab.requests:
-        return RequestsTab(controller: _c, links: _links);
+        return RequestsTab(controller: _c, links: _links, side: widget.side);
       case MyTab.calendar:
         return CalendarTab(
           controller: _c,

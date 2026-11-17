@@ -199,7 +199,11 @@ class OfferingsRepository {
 
   Future<dynamic> _sendGroup(String method, String path, Map<String, Object?> body) async {
     try {
-      final res = await api.dio.request<dynamic>(path, data: body, options: Options(method: method));
+      final res = await api.dio.request<dynamic>(
+        path,
+        data: body,
+        options: Options(method: method),
+      );
       return res.data;
     } catch (e) {
       throw GroupSaveRefusal.from(e);

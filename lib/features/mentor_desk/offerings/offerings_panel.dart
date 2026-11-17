@@ -222,7 +222,8 @@ class _OfferingsPanelState extends State<OfferingsPanel> {
         actionKey: 'add-resource',
         onAction: () => _addService(context, ServiceKind.resource),
       ),
-      if (_c.resources.isEmpty) const _Hint('No resources yet. Add a downloadable guide or template, delivered on payment.'),
+      if (_c.resources.isEmpty)
+        const _Hint('No resources yet. Add a downloadable guide or template, delivered on payment.'),
       for (final s in _c.resources) _serviceRow(context, s),
       if (older.isNotEmpty) ...[
         const SectionTitle(title: 'Older Listings'),

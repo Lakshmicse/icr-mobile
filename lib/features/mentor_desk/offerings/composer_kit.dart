@@ -332,7 +332,10 @@ class ComposerLabel extends StatelessWidget {
                       text: text,
                       children: [
                         if (required)
-                          TextSpan(text: ' *', style: ComposerText.label.copyWith(color: AppColors.error)),
+                          TextSpan(
+                            text: ' *',
+                            style: ComposerText.label.copyWith(color: AppColors.error),
+                          ),
                       ],
                     ),
                     style: ComposerText.label,
@@ -508,7 +511,9 @@ class FreePaidToggle extends StatelessWidget {
             options: const ['Free', 'Paid'],
             selected: paid ? 1 : 0,
             onChanged: (i) => onChanged(i == 1),
-            disabled: {if (!enabled) ...[0, 1] else if (!paidEnabled && !paid) 1},
+            disabled: {
+              if (!enabled) ...[0, 1] else if (!paidEnabled && !paid) 1,
+            },
           ),
           if (!paid && freeNote != null) ...[
             const SizedBox(height: 10),
@@ -523,7 +528,13 @@ class FreePaidToggle extends StatelessWidget {
 /// A session length picked as hours and minutes (the website's `DurationSelect`): 0 to 8 hours, minutes in steps
 /// of five, never outside 15 minutes to 8 hours. Callers deal in minutes.
 class DurationPicker extends StatelessWidget {
-  const DurationPicker({super.key, required this.minutes, required this.onChanged, this.keyPrefix = 'duration', this.enabled = true});
+  const DurationPicker({
+    super.key,
+    required this.minutes,
+    required this.onChanged,
+    this.keyPrefix = 'duration',
+    this.enabled = true,
+  });
 
   final int minutes;
   final ValueChanged<int> onChanged;
@@ -538,7 +549,9 @@ class DurationPicker extends StatelessWidget {
     final hours = total ~/ 60;
     final mins = total % 60;
     void pickHours(int h) {
-      final m = h == 0 ? (mins < kMinSessionMinutes ? kMinSessionMinutes : mins) : (h * 60 >= kMaxSessionMinutes ? 0 : mins);
+      final m = h == 0
+          ? (mins < kMinSessionMinutes ? kMinSessionMinutes : mins)
+          : (h * 60 >= kMaxSessionMinutes ? 0 : mins);
       onChanged(clamp(h * 60 + m));
     }
 
@@ -601,9 +614,7 @@ class _Select extends StatelessWidget {
       isDense: true,
       style: ComposerText.body,
       decoration: composerDecoration('').copyWith(labelText: label, labelStyle: ComposerText.help),
-      items: [
-        for (final i in items) DropdownMenuItem(value: i, enabled: enabledItem(i), child: Text(text(i))),
-      ],
+      items: [for (final i in items) DropdownMenuItem(value: i, enabled: enabledItem(i), child: Text(text(i)))],
       onChanged: onChanged == null ? null : (v) => v == null ? null : onChanged!(v),
     );
   }
@@ -722,7 +733,10 @@ class CoverImageField extends StatelessWidget {
                     icon: busy
                         ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(LucideIcons.upload, size: 16, color: AppColors.primary),
-                    label: Text(busy ? 'Uploading…' : (url == null ? 'Upload Image' : 'Replace Image'), style: ComposerText.link),
+                    label: Text(
+                      busy ? 'Uploading…' : (url == null ? 'Upload Image' : 'Replace Image'),
+                      style: ComposerText.link,
+                    ),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(0, 36),
                       side: const BorderSide(color: AppColors.primary),
@@ -774,7 +788,10 @@ class ComposerNote extends StatelessWidget {
   Widget build(BuildContext context) {
     final button = action == null
         ? null
-        : TextButton(onPressed: onAction, child: Text(action!, style: ComposerText.link));
+        : TextButton(
+            onPressed: onAction,
+            child: Text(action!, style: ComposerText.link),
+          );
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: EdgeInsets.fromLTRB(14, 12, 10, actionBelow && button != null ? 2 : 12),

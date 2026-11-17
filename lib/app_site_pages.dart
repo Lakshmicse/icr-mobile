@@ -100,7 +100,7 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
   }
   // The partner institute's enquiries (`?lead=` opens on one), the app's own since 7 Nov 2026.
   if (path == '/admin/learning/enquiries') return (ctx) => openPartnerEnquiries(ctx, focusId: q['lead']);
-  // The partner institute's console (the Learning Partner row), the app's own since 12 Nov 2026.
+  // The partner institute's console (in the Learning row since 16 Nov 2026), the app's own since 12 Nov 2026.
   if (path == '/admin/learning/courses') return (ctx) => openPartnerCourses(ctx);
   if (path == '/admin/learning/batches') return (ctx) => openPartnerBatches(ctx, courseId: q['course']);
   if (path == '/admin/learning/enrolments') return (ctx) => openPartnerEnrolments(ctx, courseId: q['course']);

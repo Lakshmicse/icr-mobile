@@ -4,6 +4,7 @@ import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/features/mentor_profile/demo_mentor_profile_repository.dart';
 import 'package:icr_mobile/features/mentor_profile/mentor_profile_controller.dart';
 import 'package:icr_mobile/features/mentor_profile/mentor_profile_screen.dart';
+import 'package:icr_mobile/features/mentor_profile/widgets/overview_sections.dart';
 import 'package:provider/provider.dart';
 
 import 'helpers/clipped_text.dart';
@@ -36,7 +37,8 @@ void main() {
       return controller;
     }
 
-    for (final width in [390.0, 360.0]) {
+    // A tablet too (owner, 16 Nov 2026): the designs' phone measures must give way, never cut or overflow.
+    for (final width in [390.0, 360.0, 1000.0]) {
       for (final tab in ProfileTab.values) {
         testWidgets('the ${tab.name} tab at ${width.toInt()} dp', (tester) async {
           final controller = await pump(tester, width: width);
@@ -47,5 +49,18 @@ void main() {
         });
       }
     }
+
+    testWidgets("on a tablet the About text runs the width of the page, not the phone design's 305 dp", (tester) async {
+      await pump(tester, width: 1000);
+      final about = find.descendant(of: find.byType(AboutSection), matching: find.byType(Text));
+      // The heading, then the bio's paragraphs.
+      expect(tester.getSize(about.at(1)).width, closeTo(1000 - 2 * 22.7, 0.5));
+    });
+
+    testWidgets("on a phone the About text keeps the design's 305 dp", (tester) async {
+      await pump(tester, width: 390);
+      final about = find.descendant(of: find.byType(AboutSection), matching: find.byType(Text));
+      expect(tester.getSize(about.at(1)).width, 305);
+    });
   });
 }

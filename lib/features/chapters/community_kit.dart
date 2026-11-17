@@ -921,6 +921,9 @@ Future<T?> pickFromSheet<T>(
   required List<T> options,
   required String Function(T) label,
   T? selected,
+
+  /// A second line under an option, when it needs one to be told apart from another of the same name.
+  String? Function(T)? subtitle,
 }) {
   return showModalBottomSheet<T>(
     context: context,
@@ -947,6 +950,10 @@ Future<T?> pickFromSheet<T>(
                   for (final option in options)
                     ListTile(
                       title: Text(label(option), style: CommunityText.sheetRow),
+                      subtitle: switch (subtitle?.call(option)) {
+                        final String line when line.isNotEmpty => Text(line, style: CommunityText.small),
+                        _ => null,
+                      },
                       trailing: option == selected
                           ? const Icon(LucideIcons.check, size: 18, color: AppColors.primary)
                           : null,

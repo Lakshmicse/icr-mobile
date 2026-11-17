@@ -226,12 +226,15 @@ class RequestCard extends StatelessWidget {
         children: [
           PersonRow(
             person: who,
+            // Whose request it is, in so many words (owner, 16 Nov 2026: "are they my mentors or mentee"): a mentee
+            // asked the member to mentor them, or the member asked a mentor.
             subline: received
                 ? [
+                    'Mentee',
                     if (r.careerStage != null) careerStages[r.careerStage] ?? r.careerStage,
-                    'asked ${dayLabel(r.createdAt)}',
+                    'Asked you on ${dayLabel(r.createdAt)}',
                   ].join(' · ')
-                : '${who.subline ?? 'Mentor'} · asked ${dayLabel(r.createdAt)}',
+                : '${who.subline ?? 'Mentor'} · You asked on ${dayLabel(r.createdAt)}',
             trailing: StatusPill(
               r.status.label,
               tone: switch (r.status) {

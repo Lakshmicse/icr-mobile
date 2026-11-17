@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../mentorship_my/mentoring_format.dart' show countLabel, minutesLabel;
+import '../../mentorship_my/mentoring_clock.dart';
 import '../../mentorship_my/widgets/kit.dart';
 import 'group_form.dart';
 import 'offering_fields.dart';
@@ -145,15 +146,7 @@ class SessionRow extends StatelessWidget {
           Row(
             children: [
               Expanded(child: Text(s.title, style: MentoringText.cardTitle)),
-              StatusPill(
-                s.statusLabel,
-                tone: switch (s.status) {
-                  'SCHEDULED' => PillTone.mint,
-                  'DRAFT' => PillTone.amber,
-                  'COMPLETED' => PillTone.blue,
-                  _ => PillTone.grey,
-                },
-              ),
+              StatusPill(s.stateAt(mentoringNow()).label, tone: s.stateAt(mentoringNow()).tone),
             ],
           ),
           MetaLine(icon: LucideIcons.calendarClock, text: seriesLine(s)),

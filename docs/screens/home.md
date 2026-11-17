@@ -234,3 +234,14 @@ Owner: with no comments the sheet should sit low, grow to the set height, then s
 ## 14 Nov 2026: no people among the topic chips
 
 The owner, showing the chips "#@bindhyas", "#@divyacn" and "#@bindhyarajs-divyacn": "these hashtags should be removed from the home page". A tag that names a person ("@...", `personTagHandle`) is not a topic: `FeedController._noteTags` leaves it out of the chips. It still shows on its post, where a tap opens the person. Test: `feed_screen_test.dart` ("people tagged in a post are not topic chips").
+
+
+## 14 Nov 2026: a post's photos as LinkedIn draws them
+
+The owner, with LinkedIn screenshots: "if the posts has multiple images show like the other screenshots and there also he can see the post description clicking on more".
+
+- **On the card** (`_PostImages` in `post_card.dart`): one photo fills the width; two sit side by side; three are a large tile with two beside it; four or more are a tall tile with three beside it, the last carrying a bare "+N" for those not drawn. A live post keeps every photo in `images` (the repositories no longer cut to two; `morePhotos` is only the sample content's).
+- **Full screen** (`post_photo_viewer.dart`, opened by `PostCard.onOpenPhoto` from `HomeScreen._openPhotos`): a dark page, the one screen that is dark by design, with the photos to swipe through and pinch, dots counting them, Like (hold for the reactions), Comment and Repost with their numbers down the right edge, and under the photo the author, Follow, Send, two lines of the post's words and the three dots. Every action is the card's own, on the post as it is then; the comments sheet and the menu open over the photos.
+- **"...more"** in the viewer opens the whole text in a white sheet over the photos (`showPostTextSheet`): age and topic, title, words with their tagged members and links, tags. On the card it still opens in place.
+- Not changed: the Forums tab's cards (they carry no photos) and the discussion page, which stacks its photos and opens the plain viewer.
+- Tests: `post_photo_viewer_test.dart`, `feed_screen_test.dart` ("a photo opens the post's photos full screen"), `feed_test.dart`; goldens `post_photos_card_3/4/6.png`, `post_photo_viewer.png`, `post_photo_text_sheet.png`.

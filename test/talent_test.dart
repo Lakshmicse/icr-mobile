@@ -523,6 +523,107 @@ void main() {
     });
   });
 
+  group('the jobs a candidate is invited to (testers, 16 Nov 2026)', () {
+    final now = DateTime(2026, 11, 16, 12);
+    JobOption job(
+      String id,
+      String title, {
+      String status = 'OPEN',
+      List<String> cities = const [],
+      int? min,
+      int? max,
+      String? mode,
+      String? type,
+      int? openings,
+      int daysAgo = 3,
+    }) => JobOption.fromJson({
+      'id': id,
+      'title': title,
+      'status': status,
+      'cities': cities,
+      'workMode': mode,
+      'employmentType': type,
+      'experienceMin': min,
+      'experienceMax': max,
+      'openings': openings,
+      'publishedAt': now.subtract(Duration(days: daysAgo)).toUtc().toIso8601String(),
+    });
+
+    test('a job reads its locations, work mode, type, experience, openings and age, so two of one title differ', () {
+      final chennai = job(
+        'a',
+        'Facility Manager',
+        cities: ['Chennai'],
+        min: 3,
+        max: 7,
+        mode: 'ONSITE',
+        type: 'FULL_TIME',
+        openings: 2,
+      );
+      final blr = job(
+        'b',
+        'Facility Manager',
+        cities: ['Bengaluru', 'Mysuru', 'Hubli'],
+        min: 8,
+        type: 'CONTRACT',
+        daysAgo: 0,
+      );
+      expect(chennai.details(now: now), 'Chennai · On-Site · Full-Time · 3–7 years · 2 Openings · Posted 3 Days Ago');
+      expect(blr.details(now: now), 'Bengaluru, Mysuru +1 · Contract · 8+ years · Posted Today');
+      expect(
+        job('c', 'Site Manager', status: 'CLOSED', cities: ['Pune']).details(now: now),
+        startsWith('Closed · Pune'),
+      );
+      expect(const JobOption(id: 'x', title: 'No details').details(), isEmpty);
+    });
+
+    testWidgets('only open jobs are offered, each with its details, and the pick shows them under the chip', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        repository: DemoTalentRepository(
+          jobs: [
+            job('fm-chennai', 'Facility Manager', cities: ['Chennai'], min: 3, max: 7, type: 'FULL_TIME'),
+            job('fm-blr', 'Facility Manager', cities: ['Bengaluru'], min: 8, type: 'FULL_TIME'),
+            job('site-closed', 'Site Manager', status: 'CLOSED', cities: ['Chennai']),
+          ],
+        ),
+      );
+      await openQuickView(tester, 'cand-priya');
+      await tester.scrollUntilVisible(find.byKey(const ValueKey('qv-invite')), 200, scrollable: inQuickView());
+      await tester.tap(find.byKey(const ValueKey('qv-invite-job')));
+      await tester.pumpAndSettle();
+      expect(find.text('Facility Manager'), findsNWidgets(2));
+      expect(find.textContaining('Chennai · Full-Time · 3–7 years'), findsOneWidget);
+      expect(find.textContaining('Bengaluru · Full-Time · 8+ years'), findsOneWidget);
+      expect(find.text('Site Manager'), findsNothing, reason: 'a closed job takes no invitations');
+
+      await tester.tap(find.textContaining('Bengaluru · Full-Time · 8+ years'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<Text>(find.byKey(const ValueKey('qv-invite-job-details'))).data,
+        startsWith('Bengaluru · Full-Time · 8+ years'),
+      );
+      await tester.tap(find.byKey(const ValueKey('qv-invite')));
+      await tester.pumpAndSettle();
+      expect(repo.sent, contains(equals({'op': 'invite', 'jobId': 'fm-blr', 'candidateId': 'cand-priya'})));
+    });
+
+    testWidgets('with no open job the picker is shut and says why', (tester) async {
+      await pump(
+        tester,
+        repository: DemoTalentRepository(jobs: [job('c', 'Site Manager', status: 'CLOSED')]),
+      );
+      await openQuickView(tester, 'cand-priya');
+      await tester.scrollUntilVisible(find.byKey(const ValueKey('qv-invite')), 200, scrollable: inQuickView());
+      expect(find.text('None of your jobs is open. Candidates are invited to open jobs only.'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('qv-invite-job')));
+      await tester.pumpAndSettle();
+      expect(find.text('Select a Job'), findsOneWidget, reason: 'the chip only; no sheet opens');
+    });
+  });
+
   group('who may source', () {
     testWidgets('a member acting as themselves with companies is told to switch', (tester) async {
       await pump(

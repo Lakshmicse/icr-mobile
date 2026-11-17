@@ -93,6 +93,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
   late final MentionController _mentions = MentionController(
     search: (q) => widget.host.searchPeople?.call(q) ?? Future.value(const <MentionPerson>[]),
   );
+
   /// The room the sheet keeps for "No Comments Yet" and for the spinner, so it does not jump between the two.
   static const _restHeight = 148.0;
 

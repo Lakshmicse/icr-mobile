@@ -86,7 +86,7 @@ enum RfqVisibility {
 enum BidStatus {
   pending('PENDING', 'New'),
   shortlisted('SHORTLISTED', 'Shortlisted'),
-  rejected('REJECTED', 'Declined'),
+  rejected('REJECTED', 'Not Shortlisted'),
   awarded('AWARDED', 'Awarded');
 
   const BidStatus(this.wire, this.label);

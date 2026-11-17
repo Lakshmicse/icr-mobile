@@ -40,7 +40,7 @@ import 'features/mentorship/find_mentors_screen.dart';
 import 'features/mentorship/mentorship_controller.dart';
 import 'features/mentorship_my/group_sessions_screen.dart';
 import 'features/mentorship_my/mentoring_links.dart';
-import 'features/mentorship_my/my_mentoring_controller.dart' show MyTab;
+import 'features/mentorship_my/my_mentoring_controller.dart' show MentoringSide, MyTab;
 import 'features/mentorship_my/my_mentoring_screen.dart';
 import 'features/mentorship_my/programmes_screen.dart';
 import 'features/messaging/inbox_screen.dart';
@@ -205,6 +205,8 @@ Widget? workspacePage(
           'goals' => MyTab.goals,
           _ => MyTab.mentoring,
         },
+        // The drawer's Mentor Engagements is the mentor's side; Mentoring Sessions (the calendar) the mentee's.
+        side: tab == 'calendar' ? MentoringSide.mentee : MentoringSide.mentor,
         onBack: back,
         links: links(),
       );
@@ -284,7 +286,7 @@ Widget? workspacePage(
     // The partner institute's enquiries (the Partner Institute row), the app's own since 7 Nov 2026.
     case '/admin/learning/enquiries':
       return PartnerEnquiriesScreen(onBack: back);
-    // The rest of the partner institute's console (the Learning Partner row), the app's own since 12 Nov 2026.
+    // The rest of the partner institute's console (in the Learning row since 16 Nov 2026), the app's own since 12 Nov 2026.
     case '/admin/learning/courses':
       return ManageCoursesScreen(onBack: back);
     case '/admin/learning/batches':

@@ -177,7 +177,7 @@ void main() {
     testWidgets('Decline and Restore', (tester) async {
       await open(tester, security);
       await tapKey(tester, 'bid-decline-demo-bid-securetech');
-      expect(pillOf(tester, 'demo-bid-securetech'), 'Declined');
+      expect(pillOf(tester, 'demo-bid-securetech'), 'Not Shortlisted');
       expect(bidOrder(tester).last, 'demo-bid-securetech', reason: 'declined ones go last');
       expect(key('bid-award-demo-bid-securetech'), findsNothing);
       await tapKey(tester, 'bid-restore-demo-bid-securetech');
@@ -209,7 +209,7 @@ void main() {
       await settle(tester, 12);
       expect(find.text('BlueDot selected. The other suppliers have been notified.'), findsOneWidget);
       expect(pillOf(tester, 'demo-bid-bluedot'), 'Selected');
-      expect(pillOf(tester, 'demo-bid-innowork'), 'Declined');
+      expect(pillOf(tester, 'demo-bid-innowork'), 'Not Shortlisted');
       expect(key('bid-award-demo-bid-innowork'), findsNothing, reason: 'a settled requirement takes no more decisions');
       expect(find.text('Awarded. Close it once the work has started.'), findsOneWidget);
     });

@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text.dart';
 
+/// A tablet or an unfolded phone. The designs are a 390 dp phone's, and their text blocks carry that phone's
+/// measures; on a wide screen those blocks take the page's width instead (owner, 16 Nov 2026, on a tablet whose
+/// About text sat in a narrow column beside empty space). A phone keeps the designed measures exactly.
+bool mentorWideLayout(BuildContext context) => MediaQuery.sizeOf(context).width >= 600;
+
 /// Colours the Mentor Profile designs add to the palette.
 class MentorColors {
   MentorColors._();

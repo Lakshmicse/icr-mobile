@@ -40,8 +40,12 @@ class _OngoingPlanFormState extends State<OngoingPlanForm> {
 
   late final _title = TextEditingController(text: _plan?.title ?? '');
   late final _blurb = TextEditingController(text: _plan?.blurb ?? '');
-  late final _price = TextEditingController(text: _plan == null ? '25000' : rupeesOf(_plan!.pricePaisa == 0 ? null : _plan!.pricePaisa));
-  late final _perMonth = TextEditingController(text: '${(_plan?.sessionsPerMonth ?? 0) > 0 ? _plan!.sessionsPerMonth : 2}');
+  late final _price = TextEditingController(
+    text: _plan == null ? '25000' : rupeesOf(_plan!.pricePaisa == 0 ? null : _plan!.pricePaisa),
+  );
+  late final _perMonth = TextEditingController(
+    text: '${(_plan?.sessionsPerMonth ?? 0) > 0 ? _plan!.sessionsPerMonth : 2}',
+  );
   late final _inclusions = TextEditingController(text: (_plan?.inclusions ?? const []).join('\n'));
   late bool _paid = _plan == null || _plan!.pricePaisa > 0;
   late int _period = planPeriods.contains(_plan?.billingPeriodMonths) ? _plan!.billingPeriodMonths : 1;
@@ -86,7 +90,8 @@ class _OngoingPlanFormState extends State<OngoingPlanForm> {
     if (title.isEmpty) return 'Enter a title.';
     if (title.length < minPlanTitle) return 'Enter a title (at least $minPlanTitle characters).';
     if (_paid && _rupees * 100 < minPlanPricePaisa) return 'A priced plan starts at ${inr(minPlanPricePaisa)}.';
-    if (_paid && _rupees * 100 > maxPlanPricePaisa) return 'A priced plan is at most ${inr(maxPlanPricePaisa)} per term.';
+    if (_paid && _rupees * 100 > maxPlanPricePaisa)
+      return 'A priced plan is at most ${inr(maxPlanPricePaisa)} per term.';
     final perMonth = int.tryParse(_perMonth.text.trim());
     if (perMonth == null || perMonth < minSessionsPerMonth || perMonth > maxSessionsPerMonth) {
       return 'Set sessions a month to $minSessionsPerMonth–$maxSessionsPerMonth.';

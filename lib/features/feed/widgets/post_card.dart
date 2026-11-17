@@ -39,6 +39,7 @@ class PostCard extends StatelessWidget {
     this.onReactions,
     this.onPickReaction,
     this.onOpenAuthor,
+    this.onOpenPhoto,
     this.onTag,
     this.onOpenMention,
     this.isOwn = false,
@@ -100,6 +101,10 @@ class PostCard extends StatelessWidget {
   /// The photo and the name: the author's profile.
   final VoidCallback? onOpenAuthor;
 
+  /// A photo on the card: gets its place among the post's photos, and opens them full screen. Absent, a photo is
+  /// only a picture.
+  final ValueChanged<int>? onOpenPhoto;
+
   /// A tag chip: show the discussions with that tag (without the "#"). Absent, the chips are plain.
   final ValueChanged<String>? onTag;
 
@@ -146,7 +151,7 @@ class PostCard extends StatelessWidget {
                     _Openable(
                       id: '${post.id}-body',
                       onOpen: onOpen,
-                      child: _ClampedText(
+                      child: ClampedText(
                         text: body,
                         style: HomeType.body,
                         moreStyle: HomeType.more,
@@ -173,7 +178,7 @@ class PostCard extends StatelessWidget {
           // The quoted original carries its own photos; a repost's copy of them is not drawn twice.
           if (poll == null && quote == null && (post.images.isNotEmpty || post.videos.isNotEmpty)) ...[
             const SizedBox(height: 10),
-            _PostImages(post: post, onOpenVideo: onOpenVideo),
+            _PostImages(post: post, onOpenVideo: onOpenVideo, onOpenPhoto: onOpenPhoto),
           ],
           _Footer(
             post: post,
@@ -318,14 +323,18 @@ class _Openable extends StatelessWidget {
 
 /// The first [maxLines] lines of a text, with "…more" closing the last line when there is more, as LinkedIn
 /// cuts a post. A text that fits is drawn whole. Tapping "…more" opens the rest in place, in the feed itself; a tap
-/// anywhere else on the words is the card's own (the discussion's page).
-class _ClampedText extends StatefulWidget {
-  const _ClampedText({
+/// anywhere else on the words is the card's own (the discussion's page). With [onMore], "…more" calls it instead
+/// and the text stays cut: the photo viewer opens the whole text in a sheet.
+class ClampedText extends StatefulWidget {
+  const ClampedText({
+    super.key,
     required this.text,
     required this.style,
     required this.moreStyle,
     this.mentions = const [],
     this.onOpenMention,
+    this.maxLines = 3,
+    this.onMore,
   });
 
   final String text;
@@ -336,17 +345,25 @@ class _ClampedText extends StatefulWidget {
   final List<Mention> mentions;
   final ValueChanged<String>? onOpenMention;
 
-  static const maxLines = 3;
+  final int maxLines;
+
+  /// "…more", when the rest opens somewhere else.
+  final VoidCallback? onMore;
 
   @override
-  State<_ClampedText> createState() => _ClampedTextState();
+  State<ClampedText> createState() => _ClampedTextState();
 }
 
-class _ClampedTextState extends State<_ClampedText> {
+class _ClampedTextState extends State<ClampedText> {
   static const _more = '…more';
 
   bool _expanded = false;
-  late final TapGestureRecognizer _open = TapGestureRecognizer()..onTap = () => setState(() => _expanded = true);
+  late final TapGestureRecognizer _open = TapGestureRecognizer()
+    ..onTap = () {
+      final onMore = widget.onMore;
+      if (onMore != null) return onMore();
+      setState(() => _expanded = true);
+    };
   final _mentions = MentionSpans();
   final _links = LinkSpans();
 
@@ -427,7 +444,7 @@ class _ClampedTextState extends State<_ClampedText> {
           text: TextSpan(text: text, style: style),
           textDirection: TextDirection.ltr,
           textScaler: scale,
-          maxLines: _ClampedText.maxLines,
+          maxLines: widget.maxLines,
         )..layout(maxWidth: width);
         if (!whole.didExceedMaxLines) {
           return linked ? Text.rich(TextSpan(style: style, children: spansOf(text))) : Text(text, style: style);
@@ -457,7 +474,7 @@ class _ClampedTextState extends State<_ClampedText> {
             ],
           ),
           key: const ValueKey('post-body-more'),
-          maxLines: _ClampedText.maxLines,
+          maxLines: widget.maxLines,
           overflow: TextOverflow.ellipsis,
         );
       },
@@ -624,13 +641,20 @@ class _Tags extends StatelessWidget {
   }
 }
 
-/// The photos and videos, across the whole card, as LinkedIn lays a post's media: one alone fills the width, more
-/// sit two across with "+N" on the second; a video tile carries a play glyph and opens the player.
+/// The photos and videos, across the whole card, as LinkedIn lays a post's media (owner, 14 Nov 2026): one alone
+/// fills the width; two sit side by side; three or more are one large tile with a column of smaller ones beside it
+/// (two for three, three for four or more), the last carrying "+N" for those not drawn. A photo opens the post's
+/// photos full screen at that photo; a video tile carries a play glyph and opens the player.
 class _PostImages extends StatelessWidget {
-  const _PostImages({required this.post, this.onOpenVideo});
+  const _PostImages({required this.post, this.onOpenVideo, this.onOpenPhoto});
 
   final FeedPost post;
   final ValueChanged<String>? onOpenVideo;
+  final ValueChanged<int>? onOpenPhoto;
+
+  /// The most tiles a card draws: the large one and three beside it.
+  static const maxTiles = 4;
+  static const _gap = 2.0;
 
   @override
   Widget build(BuildContext context) {
@@ -638,6 +662,18 @@ class _PostImages extends StatelessWidget {
       for (final i in post.images) _Media(picture: i),
       for (final v in post.videos) _Media(video: v),
     ];
+    // The photos come first, so a photo's place among the tiles is its place among the photos.
+    Widget tile(int i, {int more = 0, String moreLabel = '', bool large = false}) => _Tile(
+      media: media[i],
+      more: more,
+      moreLabel: moreLabel,
+      largeLabel: large,
+      onOpenVideo: onOpenVideo,
+      onOpenPhoto: media[i].picture == null || onOpenPhoto == null ? null : () => onOpenPhoto!(i),
+      photoKey: ValueKey('post-photo:${post.id}:$i'),
+      label: 'Open photo ${i + 1} of ${post.images.length + post.morePhotos}',
+    );
+
     if (media.length == 1) {
       final m = media.first;
       return AspectRatio(
@@ -645,29 +681,57 @@ class _PostImages extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            _MediaView(media: m, onOpenVideo: onOpenVideo),
+            tile(0),
             if (m.picture != null && post.imageCaption != null)
-              Positioned(right: 12, bottom: 12, child: _Caption(text: post.imageCaption!)),
+              Positioned(
+                right: 12,
+                bottom: 12,
+                child: IgnorePointer(child: _Caption(text: post.imageCaption!)),
+              ),
           ],
         ),
       );
     }
-    final more = media.length - 2 + post.morePhotos;
-    return Row(
-      children: [
-        Expanded(
-          child: _Tile(media: media[0], onOpenVideo: onOpenVideo),
-        ),
-        const SizedBox(width: 2),
-        Expanded(
-          child: _Tile(
-            media: media[1],
-            more: more,
-            moreLabel: post.videos.isEmpty ? '+$more photos' : '+$more more',
-            onOpenVideo: onOpenVideo,
+    if (media.length == 2) {
+      final more = post.morePhotos;
+      return Row(
+        children: [
+          Expanded(child: AspectRatio(aspectRatio: 1, child: tile(0))),
+          const SizedBox(width: _gap),
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: tile(1, more: more, moreLabel: post.videos.isEmpty ? '+$more photos' : '+$more more'),
+            ),
           ),
-        ),
-      ],
+        ],
+      );
+    }
+    final shown = media.length > maxTiles ? maxTiles : media.length;
+    final more = media.length - shown + post.morePhotos;
+    return AspectRatio(
+      // Three: the large tile is square beside two squares. Four or more: it stands tall beside three squares.
+      aspectRatio: shown == 3 ? 3 / 2 : 1,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(flex: 2, child: tile(0)),
+          const SizedBox(width: _gap),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 1; i < shown; i++) ...[
+                  if (i > 1) const SizedBox(height: _gap),
+                  Expanded(
+                    child: i == shown - 1 ? tile(i, more: more, moreLabel: '+$more', large: true) : tile(i),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -715,28 +779,55 @@ class _MediaView extends StatelessWidget {
   }
 }
 
+/// One tile of a card's media, filling the room it is given: the photo or the video, dimmed under "+N" when it
+/// stands for those not drawn. A photo with [onOpenPhoto] is a button that opens the photos.
 class _Tile extends StatelessWidget {
-  const _Tile({required this.media, this.more = 0, this.moreLabel = '', this.onOpenVideo});
+  const _Tile({
+    required this.media,
+    this.more = 0,
+    this.moreLabel = '',
+    this.largeLabel = false,
+    this.onOpenVideo,
+    this.onOpenPhoto,
+    this.photoKey,
+    this.label = 'Open photo',
+  });
 
   final _Media media;
   final int more;
   final String moreLabel;
+
+  /// A bare "+N" on a small tile is written larger, as LinkedIn writes it.
+  final bool largeLabel;
   final ValueChanged<String>? onOpenVideo;
+  final VoidCallback? onOpenPhoto;
+  final Key? photoKey;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          _MediaView(media: media, onOpenVideo: onOpenVideo),
-          if (more > 0) ...[
-            const ColoredBox(color: AppColors.imageDim),
-            Center(child: Text(moreLabel, style: HomeType.morePhotos)),
-          ],
+    final tile = Stack(
+      fit: StackFit.expand,
+      children: [
+        _MediaView(media: media, onOpenVideo: onOpenVideo),
+        if (more > 0) ...[
+          const IgnorePointer(child: ColoredBox(color: AppColors.imageDim)),
+          IgnorePointer(
+            child: Center(
+              child: Text(
+                moreLabel,
+                style: largeLabel ? HomeType.morePhotos.copyWith(fontSize: 22, height: 26 / 22) : HomeType.morePhotos,
+              ),
+            ),
+          ),
         ],
-      ),
+      ],
+    );
+    if (onOpenPhoto == null) return tile;
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(key: photoKey, behavior: HitTestBehavior.opaque, onTap: onOpenPhoto, child: tile),
     );
   }
 }

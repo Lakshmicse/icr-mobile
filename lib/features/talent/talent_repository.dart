@@ -230,7 +230,7 @@ class ApiTalentRepository implements TalentRepository {
     final rows = _map(res.data)['data'];
     return [
       for (final j in rows is List ? rows : const [])
-        if (j is Map && j['id'] != null) JobOption(id: '${j['id']}', title: '${j['title'] ?? ''}'),
+        if (j is Map && j['id'] != null) JobOption.fromJson(j.cast<String, dynamic>()),
     ];
   });
 

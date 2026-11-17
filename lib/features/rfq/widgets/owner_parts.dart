@@ -18,7 +18,7 @@ String ownerBidLabel(Bid b, {required bool enquiry}) => switch (b.status) {
   BidStatus.awarded => enquiry ? 'Selected' : 'Awarded',
   BidStatus.pending => 'New',
   BidStatus.shortlisted => 'Shortlisted',
-  BidStatus.rejected => 'Declined',
+  BidStatus.rejected => 'Not Shortlisted',
 };
 
 /// One supplier's response, with what the owner can decide about it: message, shortlist (and take it back),

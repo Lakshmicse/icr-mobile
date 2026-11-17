@@ -182,7 +182,10 @@ class OfferingRow extends StatelessWidget {
                 // second line at the app's 13 sp).
                 if (o.blurb != null)
                   ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: _blurbTwoLines, maxWidth: 319),
+                    constraints: BoxConstraints(
+                      minHeight: _blurbTwoLines,
+                      maxWidth: mentorWideLayout(context) ? double.infinity : 319,
+                    ),
                     child: Text(
                       o.blurb!,
                       style: MentorText.offeringBlurb,

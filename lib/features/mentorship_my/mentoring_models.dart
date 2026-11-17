@@ -176,7 +176,7 @@ class MentoringRequest {
 enum SessionStatus {
   requested('Awaiting Mentor'),
   scheduled('Scheduled'),
-  completed('Held'),
+  completed('Completed'),
   cancelled('Cancelled'),
   noShow('No-Show');
 

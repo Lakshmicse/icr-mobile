@@ -156,23 +156,26 @@ class AboutSection extends StatelessWidget {
   final bool expanded;
   final VoidCallback onExpand;
 
-  static const _width = 305.0;
+  /// The design's text measure on a phone, and the section's left margin (kept on the right too on a wide screen).
+  static const _phoneWidth = 305.0;
+  static const _margin = 22.7;
 
   @override
   Widget build(BuildContext context) {
     final paragraphs = bioParagraphs(bioHtml);
     if (paragraphs.isEmpty) return const SizedBox.shrink();
+    final width = mentorWideLayout(context) ? MediaQuery.sizeOf(context).width - 2 * _margin : _phoneWidth;
     final lead = paragraphs.length > 1 ? 4 : 6;
     final folds = !expanded;
     final shown = folds ? paragraphs.take(2).toList() : paragraphs;
     var more = folds && paragraphs.length > 2;
     if (folds) {
       for (final (i, text) in shown.indexed) {
-        more = more || _overflows(text, i == 0 ? lead : 2);
+        more = more || _overflows(text, i == 0 ? lead : 2, width);
       }
     }
     return Padding(
-      padding: const EdgeInsets.fromLTRB(22.7, 15.9, 0, 0),
+      padding: const EdgeInsets.fromLTRB(_margin, 15.9, 0, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -181,8 +184,8 @@ class AboutSection extends StatelessWidget {
           for (final (i, text) in shown.indexed) ...[
             if (i > 0) const SizedBox(height: 9),
             SizedBox(
-              width: _width,
-              child: Text(folds ? _clampWords(text, i == 0 ? lead : 2) : text, style: MentorText.body),
+              width: width,
+              child: Text(folds ? _clampWords(text, i == 0 ? lead : 2, width) : text, style: MentorText.body),
             ),
           ],
           if (more) ...[
@@ -211,14 +214,14 @@ class AboutSection extends StatelessWidget {
 
   /// The text cut at a word so that it and "..." fit in [maxLines]; the whole
   /// text when it already fits.
-  static String _clampWords(String text, int maxLines) {
-    if (!_overflows(text, maxLines)) return text;
+  static String _clampWords(String text, int maxLines, double width) {
+    if (!_overflows(text, maxLines, width)) return text;
     final words = text.split(' ');
     var low = 0;
     var high = words.length;
     while (low < high) {
       final mid = (low + high + 1) ~/ 2;
-      if (_overflows('${words.take(mid).join(' ')}...', maxLines)) {
+      if (_overflows('${words.take(mid).join(' ')}...', maxLines, width)) {
         high = mid - 1;
       } else {
         low = mid;
@@ -227,12 +230,12 @@ class AboutSection extends StatelessWidget {
     return '${words.take(low).join(' ')}...';
   }
 
-  static bool _overflows(String text, int maxLines) {
+  static bool _overflows(String text, int maxLines, double width) {
     final painter = TextPainter(
       text: TextSpan(text: text, style: MentorText.body),
       maxLines: maxLines,
       textDirection: TextDirection.ltr,
-    )..layout(maxWidth: _width);
+    )..layout(maxWidth: width);
     return painter.didExceedMaxLines;
   }
 }
@@ -485,6 +488,20 @@ class _EducationRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final e = education;
     final batch = [?e.batch, ?e.field].join(' • ');
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(e.institution, style: MentorText.school, maxLines: 3, overflow: TextOverflow.ellipsis),
+        if (e.degree != null) ...[
+          const SizedBox(height: 4),
+          Text(e.degree!, style: MentorText.degree, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ],
+        if (batch.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(batch, style: MentorText.batch, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ],
+      ],
+    );
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -500,23 +517,13 @@ class _EducationRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10.5),
-        SizedBox(
-          width: 241,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(e.institution, style: MentorText.school, maxLines: 3, overflow: TextOverflow.ellipsis),
-              if (e.degree != null) ...[
-                const SizedBox(height: 4),
-                Text(e.degree!, style: MentorText.degree, maxLines: 1, overflow: TextOverflow.ellipsis),
-              ],
-              if (batch.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(batch, style: MentorText.batch, maxLines: 1, overflow: TextOverflow.ellipsis),
-              ],
-            ],
-          ),
-        ),
+        // The design's 241 dp column on a phone; the row's width on a tablet.
+        if (mentorWideLayout(context))
+          Expanded(
+            child: Padding(padding: const EdgeInsets.only(right: 11.4), child: details),
+          )
+        else
+          SizedBox(width: 241, child: details),
       ],
     );
   }
@@ -725,7 +732,14 @@ class _ReviewCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 7.2),
-                    SizedBox(width: 317, child: Text('"${r.quote}"', style: MentorText.quote)),
+                    // The design's 317 dp measure on a phone; the card's width on a tablet.
+                    if (mentorWideLayout(context))
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12.5),
+                        child: Text('"${r.quote}"', style: MentorText.quote),
+                      )
+                    else
+                      SizedBox(width: 317, child: Text('"${r.quote}"', style: MentorText.quote)),
                   ],
                 ),
               ),

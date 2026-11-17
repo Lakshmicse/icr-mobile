@@ -203,3 +203,13 @@ Owner, with screenshots of the website's 1:1 mentoring page, Host a group sessio
 * **Create a Plan** (`ongoing_plan_form.dart`, `openOngoingPlanForm`): the website's dialog full screen: Title, Description, Cover Image, Free or Paid, Price per Term (at least ₹500), Billed Every, Sessions a Month, Session Length, What Else Is Included, Published. A new plan opens at ₹25,000 a month, 2 sessions of 1 hour, a draft. Tests: `test/ongoing_plan_form_test.dart` (6). `plan_form.dart` is gone.
 * **The tab's sections** carry the website's words: a count beside each title, the line under it, the button (Add 1:1 Mentoring, Host a Group Session, Add Resource, Create a Plan) and the empty sentence. The 7 Nov tabs stay.
 * **Not drawn on a phone:** the website's side cards (How it works, Summary, the live preview and the ready-to-publish checklist) and the map pin for a venue (a typed line; a saved pin is kept while the line is unchanged).
+
+
+## 16 Nov 2026: "Completed" and "In Progress", never "Held"
+
+The owner, on the Offerings tab's group sessions (three read "Held"): "the text has to be Completed if all the sessions are done; if not completed but sessions have started, show In Progress."
+
+- `seriesState` (`mentorship_my/series_status.dart`) reads a series from its own status and its days: Draft; Open for Registration (no day begun); In Progress (a day done or begun, days still to come); Completed (closed by the mentor, or every remaining day done; a cancelled day counts for neither); Cancelled. Each has its pill colour (`SeriesState.tone`): In Progress blue, Completed grey.
+- The mentor's offering cards and session sheet read it at `mentoringNow()`, and so do the member's group session card and page (`_seriesStateOf`), so both sides say the same.
+- A single finished session now reads "Completed" wherever it said "Held": a series' day, a 1:1 session (`SessionStatus.completed`), the calendar, a pairing's plan.
+- Tests: `series_status_test.dart`, `mentor_offerings_groups_test.dart` ("a series under way reads In Progress…").

@@ -241,3 +241,8 @@ real-screens cases).
 ## 14 Nov 2026: Company first, then Jobs
 
 The owner: "Change the Side drawer First Company and then Jobs." A member's rows now read Company, Jobs, Learning, Mentorship, Marketplace (Learning Partner for partner staff), Account (`role_workspaces.dart`; the Company row moved above Jobs, its contents unchanged). Staff rows are as they were. Tests: `role_workspaces_test.dart`; golden `profile_menu.png`.
+
+
+## 16 Nov 2026: no Learning Partner row
+
+The owner: "We don't have to give separate tab, if they are learning partner make the admin modules details reflect else it will be only 3 tabs My Courses, My Attempts and My Certificates." The separate Learning Partner row is gone. For a partner institute's staff (a learning role there, or the admin of an approved partner company) the Learning row opens with Manage Courses, Manage Team, Manage Batches, Enrolment and Enquiries, then the three everyone has; for everyone else it is only My Courses, My Attempts and My Certificates (`role_workspaces.dart`). Tests: `role_workspaces_test.dart`.

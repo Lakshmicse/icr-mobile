@@ -291,3 +291,11 @@ upload row's small "Retry".
 
 Goldens re-recorded (wording only, each diff looked at first): `rfq_board.png`, `rfq_my_bids.png`,
 `rfq_my_rfqs.png`, `rfq_alerts.png`, `rfq_posted.png`.
+
+## 17 Nov 2026: "Not Shortlisted", never "Declined", for a bid
+
+The owner, on an enquiry's Supplier Responses: "Its not Declined ---> Not Shortlisted". A bid the owner turns
+down, or one left over when another is awarded or selected, reads **Not Shortlisted** on the owner's response card
+(`ownerBidLabel`) and in `BidStatus.rejected.label`, the website's own word for it (`rfq.json` →
+`bidStatuses.REJECTED`). The card's button is still "Decline" and the supplier's side still reads "Not Selected";
+"Declined" stays only where a supplier turned an invitation down ("You Declined", "Invitation Declined").

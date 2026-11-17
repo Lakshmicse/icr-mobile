@@ -235,8 +235,8 @@ void main() {
       expect([sarah, david, marcus, elena].every((p) => p.detailLoaded), isTrue);
       expect(david.images, hasLength(1));
       expect(david.imageCaption, 'BIM Feasibility Lab');
-      expect(elena.images, hasLength(2));
-      expect(elena.morePhotos, 3);
+      expect(elena.images, hasLength(5), reason: 'every photo is kept (14 Nov 2026)');
+      expect(elena.morePhotos, 0);
       expect(sarah.images, isEmpty);
       // And the whole text, not the list's 220-character excerpt.
       final sarahPage = await me.thread(_sarah);
@@ -704,7 +704,7 @@ void main() {
       expect(find.text('184'), findsWidgets, reason: "Sarah's reactions, a bare count beside the thumb");
       expect(find.text('52'), findsWidgets, reason: 'her comments');
       expect(find.text('BIM Feasibility Lab'), findsOneWidget);
-      expect(find.text('+3 photos'), findsOneWidget);
+      expect(find.text('+1'), findsOneWidget, reason: 'four tiles drawn, the fifth photo counted');
       await tester.scrollUntilVisible(
         find.text('Archibus (Your vote)'),
         300,

@@ -4,6 +4,7 @@
 library;
 
 import '../../mentorship_my/mentoring_models.dart' show asInt, asMaps, asStrings, parseDate;
+import '../../mentorship_my/series_status.dart';
 
 /// `MentorServiceType`.
 enum ServiceKind {
@@ -433,13 +434,13 @@ class HostedSession {
   /// A day has started and the series is not closed: attendance can be recorded.
   bool startedBy(DateTime now) => scheduled && openDays.any((d) => !d.at.isAfter(now));
 
-  String get statusLabel => switch (status) {
-    'DRAFT' => 'Draft',
-    'SCHEDULED' => 'Open for Registration',
-    'COMPLETED' => 'Held',
-    'CANCELLED' => 'Cancelled',
-    _ => status,
-  };
+  /// Where the series stands at [now], read from its days (`seriesState`): Completed once every session is done,
+  /// In Progress once one has started.
+  SeriesState stateAt(DateTime now) => seriesState(status, [
+    if (days.isEmpty) (at: at, status: status) else for (final d in days) (at: d.at, status: d.status),
+  ], now);
+
+  String statusLabelAt(DateTime now) => stateAt(now).label;
 }
 
 String? _text(Object? v) => v is String && v.trim().isNotEmpty ? v.trim() : null;

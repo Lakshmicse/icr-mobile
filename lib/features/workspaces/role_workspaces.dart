@@ -91,18 +91,23 @@ List<Workspace> workspacesFor(SessionUser user, {required bool Function(String p
       const WorkspaceItem('My Saved Jobs', Icons.bookmark_border, '/career/saved'),
     ]);
 
-    add(
-      'learning',
-      'Learning',
-      LucideIcons500.graduationCap,
-      'Your courses, attempts and certificates',
-      _violet,
-      const [
-        WorkspaceItem('My Courses', Icons.school_outlined, '/learning?mine=1'),
-        WorkspaceItem('My Attempts', Icons.history, '/learning/attempts'),
-        WorkspaceItem('My Certificates', Icons.workspace_premium_outlined, '/learning/certificates'),
+    // Learning: a partner institute's staff run it from here, with no row of their own (owner, 16 Nov 2026: "We
+    // don't have to give separate tab, if they are learning partner make the admin modules details reflect else it
+    // will be only 3 tabs My Courses, My Attempts and My Certificates"). The institute's pages come first, as the
+    // company's hiring does in Jobs; the member's own three follow.
+    add('learning', 'Learning', LucideIcons500.graduationCap, 'Your courses, attempts and certificates', _violet, [
+      if (partnerStaff) ...const [
+        WorkspaceItem('Manage Courses', Icons.menu_book_outlined, '/admin/learning/courses'),
+        WorkspaceItem('Manage Team', Icons.group_add_outlined, '/manage/team'),
+        WorkspaceItem('Manage Batches', Icons.event_outlined, '/admin/learning/batches'),
+        WorkspaceItem('Enrolment', Icons.how_to_reg_outlined, '/admin/learning/enrolments'),
+        // The enquiries from its course pages and its own page (the website's Enquiries console), native.
+        WorkspaceItem('Enquiries', Icons.mark_email_unread_outlined, '/admin/learning/enquiries'),
       ],
-    );
+      const WorkspaceItem('My Courses', Icons.school_outlined, '/learning?mine=1'),
+      const WorkspaceItem('My Attempts', Icons.history, '/learning/attempts'),
+      const WorkspaceItem('My Certificates', Icons.workspace_premium_outlined, '/learning/certificates'),
+    ]);
 
     add('mentorship', 'Mentorship', LucideIcons500.users, 'Your sessions and mentors', _blue, [
       // A mentor's own desk first; then everyone's engagements (My mentoring: pairings, requests, goals) and
@@ -125,24 +130,6 @@ List<Workspace> workspacesFor(SessionUser user, {required bool Function(String p
       if (sells) ..._myCatalogue,
       const WorkspaceItem('Enquiries and RFQ', Icons.list_alt_outlined, '/rfq'),
     ]);
-
-    if (partnerStaff) {
-      add(
-        'partner',
-        'Learning Partner',
-        LucideIcons500.school,
-        'Courses, batches and the teaching team',
-        _violet,
-        const [
-          WorkspaceItem('Manage Courses', Icons.menu_book_outlined, '/admin/learning/courses'),
-          WorkspaceItem('Manage Team', Icons.group_add_outlined, '/manage/team'),
-          WorkspaceItem('Manage Batches', Icons.event_outlined, '/admin/learning/batches'),
-          WorkspaceItem('Enrolment', Icons.how_to_reg_outlined, '/admin/learning/enrolments'),
-          // The enquiries from its course pages and its own page (the website's Enquiries console), native.
-          WorkspaceItem('Enquiries', Icons.mark_email_unread_outlined, '/admin/learning/enquiries'),
-        ],
-      );
-    }
 
     // Account among the main rows (owner, 6 Nov 2026): the member's membership pages and Refer & Earn as its tabs.
     add('account', 'Account', LucideIcons500.user, 'Your membership and Refer & Earn', _blue, [

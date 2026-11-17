@@ -65,7 +65,7 @@ void main() {
       };
       final (api, rec) = await pumpMyMentoring(tester, routes);
       await openTab(tester, 'Requests');
-      expect(find.text('Requests Sent'.toUpperCase()), findsOneWidget);
+      expect(find.text('My Requests to Mentors'.toUpperCase()), findsOneWidget);
       expect(find.text('You have 1 of 3 open requests on your plan.'), findsOneWidget);
       expect(find.text('Neha Kapoor'), findsOneWidget);
       expect(find.text('Awaiting Reply'), findsOneWidget);
@@ -112,10 +112,10 @@ void main() {
       routes['POST /mentorship/requests/r-isha/accept'] = (_) => {'id': 'pair-isha'};
       final (api, _) = await pumpMyMentoring(tester, routes);
       await openTab(tester, 'Requests');
-      expect(find.text('REQUESTS RECEIVED'), findsOneWidget);
-      expect(find.text('REQUESTS SENT'), findsNothing, reason: 'a mentor only sees the mentee side when they are one');
+      expect(find.text('REQUESTS FROM MENTEES'), findsOneWidget);
+      expect(find.text('MY REQUESTS TO MENTORS'), findsNothing, reason: 'a mentor only sees the mentee side when they are one');
       expect(find.text('Isha Verma'), findsOneWidget);
-      expect(find.textContaining('Mid Career'), findsOneWidget);
+      expect(find.textContaining('Mentee · Mid Career · Asked you on'), findsOneWidget);
 
       await tester.tap(find.text('Accept'));
       await tester.pumpAndSettle();
@@ -129,6 +129,33 @@ void main() {
         'cadence': 'WEEKLY',
       });
       expect(find.textContaining("You are now Isha's mentor."), findsOneWidget);
+    });
+
+    testWidgets('Mentor Engagements shows only who asks the mentor; Mentoring Sessions only what the member asked', (
+      tester,
+    ) async {
+      // Owner, 16 Nov 2026, on Mentor Engagements → Requests: "are they my mentors or mentee ... down search should
+      // not be search mentors". A mentor who also asked a mentor sees each side on its own page.
+      final routes = _mentorRoutes();
+      routes['GET /mentorship/requests/mine'] = (_) => page([requestJson('req-neha', status: 'PENDING', mentor: _neha)]);
+      routes['GET /mentorship/summary'] = (_) =>
+          summaryJson(asMentor: 1, asMentee: 0, incoming: 1, outgoing: 1, isMentor: true, mentorStatus: 'APPROVED');
+      await pumpMyMentoring(tester, routes, side: MentoringSide.mentor);
+      await openTab(tester, 'Requests');
+      expect(find.text('REQUESTS FROM MENTEES'), findsOneWidget);
+      expect(find.text('Isha Verma'), findsOneWidget);
+      expect(find.text('MY REQUESTS TO MENTORS'), findsNothing);
+      expect(find.text('Neha Kapoor'), findsNothing);
+      expect(find.text('Find a Mentor'), findsNothing);
+      expect(find.textContaining('open requests on your plan'), findsNothing);
+
+      await pumpMyMentoring(tester, routes, side: MentoringSide.mentee);
+      await openTab(tester, 'Requests');
+      expect(find.text('REQUESTS FROM MENTEES'), findsNothing);
+      expect(find.text('Isha Verma'), findsNothing);
+      expect(find.text('MY REQUESTS TO MENTORS'), findsOneWidget);
+      expect(find.text('Neha Kapoor'), findsOneWidget);
+      expect(find.textContaining('You asked on'), findsOneWidget);
     });
 
     testWidgets('declining sends the note, and a refusal keeps the sheet and what was typed', (tester) async {

@@ -9,6 +9,7 @@ import '../../core/util/join_window.dart';
 import '../../core/util/links.dart';
 import 'group_session_controller.dart';
 import 'mentoring_clock.dart';
+import 'series_status.dart';
 import 'mentoring_format.dart';
 import 'mentoring_links.dart';
 import 'mentoring_models.dart';
@@ -293,8 +294,8 @@ class GroupSessionCard extends StatelessWidget {
                   s.myStatus == 'WAITLISTED' ? 'Waitlisted' : (s.myStatus == 'ATTENDED' ? 'Attended' : 'Seat Held'),
                   tone: s.myStatus == 'WAITLISTED' ? PillTone.amber : PillTone.mint,
                 )
-              else if (s.status != 'SCHEDULED')
-                StatusPill(_statusLabel(s.status), tone: PillTone.grey),
+              else if (_seriesStateOf(s) case final state when state != SeriesState.open)
+                StatusPill(state.label, tone: state.tone),
             ],
           ),
           MetaLine(icon: LucideIcons.calendarClock, text: whenSeries(s)),
@@ -311,8 +312,16 @@ class GroupSessionCard extends StatelessWidget {
   }
 }
 
+/// Where a series stands for the member (`seriesState`): In Progress once a day has begun, Completed when all are done.
+SeriesState _seriesStateOf(GroupSession s) => seriesState(s.status, [
+  if (s.occurrences.isEmpty)
+    (at: s.scheduledAt, status: s.status)
+  else
+    for (final o in s.occurrences) (at: o.scheduledAt, status: o.status),
+], mentoringNow());
+
 String _statusLabel(String s) => switch (s) {
-  'COMPLETED' => 'Held',
+  'COMPLETED' => completedWord,
   'CANCELLED' => 'Cancelled',
   'DRAFT' => 'Draft',
   _ => 'Open',
@@ -428,8 +437,8 @@ class _GroupSessionScreenState extends State<GroupSessionScreen> {
       Row(
         children: [
           Expanded(child: Text(s.title, style: MentoringText.hero)),
-          if (s.status != 'SCHEDULED')
-            StatusPill(_statusLabel(s.status), tone: s.status == 'CANCELLED' ? PillTone.red : PillTone.grey),
+          if (_seriesStateOf(s) case final state when state != SeriesState.open)
+            StatusPill(state.label, tone: state == SeriesState.cancelled ? PillTone.red : state.tone),
         ],
       ),
       const SizedBox(height: 10),

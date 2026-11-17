@@ -110,6 +110,7 @@ class _TalentScreenState extends State<TalentScreen> {
       title: 'Match Candidates to This Job',
       options: _c.jobs,
       label: (j) => j.title,
+      subtitle: (j) => j.details(),
       selected: _c.matchJob,
     );
     if (picked != null && mounted) await _c.setMatchJob(picked.id);

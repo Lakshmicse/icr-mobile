@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:dio/dio.dart' show Options;
 
 import '../../core/api/api_client.dart';
@@ -153,11 +151,11 @@ class ApiFeedRepository implements FeedRepository {
     return FeedPostDetail(
       body: ForumJson.plainText(html),
       mentions: mentionsInHtml(html),
-      images: [for (final url in urls.take(2)) FeedPicture.network(url)],
+      // Every photo: the card lays them out, and its viewer swipes through them all.
+      images: [for (final url in urls) FeedPicture.network(url)],
       videos: [for (final src in ForumJson.videoSources(html)) ?AppConfig.absoluteUrl(src, apiBase: base)],
       // A caption is drawn on a lone photo only.
       caption: urls.length == 1 ? caption : null,
-      morePhotos: math.max(0, urls.length - 2),
     );
   }
 

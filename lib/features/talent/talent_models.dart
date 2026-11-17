@@ -4,6 +4,8 @@
 /// `GET /talent`, `/talent/match`, `/talent/:id`, `/talent/:id/notes|tags`, `/talent/searches` and `/talent/access`.
 library;
 
+import '../jobs/job_format.dart' show postedAgo;
+import '../jobs/job_models.dart' show EmploymentType, WorkMode;
 import 'talent_labels.dart';
 
 /// Who is sourcing: their role, the company they act for, and how many companies they belong to when acting as
@@ -387,11 +389,94 @@ class ParsedQuery {
 }
 
 /// One of the company's jobs, for "Match to a job", "Invite to apply" and the exclusions' scope.
+/// One of the company's jobs, as the talent screens offer it (`GET /jobs/company`): enough to tell apart two
+/// postings that share a title (testers, 16 Nov 2026: "multiple positions with the same name, different locations,
+/// dates or experience are difficult to select from").
 class JobOption {
-  const JobOption({required this.id, required this.title});
+  const JobOption({
+    required this.id,
+    required this.title,
+    this.status,
+    this.cities = const [],
+    this.workMode,
+    this.employmentType,
+    this.experienceMin,
+    this.experienceMax,
+    this.openings,
+    this.postedAt,
+  });
+
+  factory JobOption.fromJson(Map<String, dynamic> json) {
+    DateTime? date(Object? v) => v is String ? DateTime.tryParse(v)?.toLocal() : null;
+    final cities = [
+      for (final c in (json['cities'] as List? ?? const []))
+        if ('$c'.trim().isNotEmpty) '$c'.trim(),
+    ];
+    final city = (json['city'] as String?)?.trim();
+    return JobOption(
+      id: '${json['id']}',
+      title: '${json['title'] ?? ''}',
+      status: json['status'] as String?,
+      cities: cities.isNotEmpty ? cities : [if (city != null && city.isNotEmpty) city],
+      workMode: WorkMode.fromApi(json['workMode'] as String?),
+      employmentType: EmploymentType.fromApi(json['employmentType'] as String?),
+      experienceMin: (json['experienceMin'] as num?)?.toInt(),
+      experienceMax: (json['experienceMax'] as num?)?.toInt(),
+      openings: (json['openings'] as num?)?.toInt(),
+      postedAt: date(json['publishedAt']) ?? date(json['createdAt']),
+    );
+  }
 
   final String id;
   final String title;
+
+  /// The API's status (`OPEN`, `DRAFT`, `IN_REVIEW`, `PAUSED`, `CLOSED`…); null when not known (sample content).
+  final String? status;
+  final List<String> cities;
+  final WorkMode? workMode;
+  final EmploymentType? employmentType;
+  final int? experienceMin;
+  final int? experienceMax;
+  final int? openings;
+
+  /// When it went live, else when it was made.
+  final DateTime? postedAt;
+
+  /// Taking applications now: the only jobs a candidate is invited to.
+  bool get isOpen => status == null || status == 'OPEN';
+
+  /// "Chennai, Bengaluru · On-Site · Full-Time · 3–7 years · 2 Openings · Posted 3 Days Ago", what sets this job
+  /// apart from another of the same title; a job not open says so first ("Closed · …").
+  String details({DateTime? now}) {
+    final shownCities = cities.length > 2 ? '${cities.take(2).join(', ')} +${cities.length - 2}' : cities.join(', ');
+    final min = experienceMin;
+    final max = experienceMax;
+    final experience = min != null && max != null && max > min
+        ? '$min–$max years'
+        : min != null && min > 0
+        ? '$min+ years'
+        : max != null
+        ? 'Up to $max years'
+        : null;
+    final notOpen = isOpen ? null : _statusLabels[status] ?? status;
+    return [
+      ?notOpen,
+      if (shownCities.isNotEmpty) shownCities,
+      ?workMode?.label,
+      ?employmentType?.label,
+      ?experience,
+      if (openings != null && openings! > 1) '$openings Openings',
+      ?postedAgo(postedAt, now),
+    ].join(' · ');
+  }
+
+  static const _statusLabels = {
+    'DRAFT': 'Draft',
+    'IN_REVIEW': 'In Review',
+    'PAUSED': 'Paused',
+    'CLOSED': 'Closed',
+    'REJECTED': 'Not Approved',
+  };
 }
 
 /// Result ordering (`CandidateQueryDto.sort`), with the website's words.

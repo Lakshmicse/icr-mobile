@@ -181,6 +181,41 @@ void main() {
   });
 
   group('group sessions: the list', () {
+    testWidgets('a series under way reads In Progress, one with every day done reads Completed (owner, 16 Nov 2026)', (
+      tester,
+    ) async {
+      Map<String, Object?> occ(String id, int seq, int days, String status) => {
+        'id': id,
+        'seq': seq,
+        'title': null,
+        'scheduledAt': iso(offeringsNow.add(Duration(days: days))),
+        'durationMin': 60,
+        'status': status,
+      };
+      final w = OfferingsWorld(
+        sessions: [
+          hostedJson(
+            'grp-running',
+            title: 'ESG - 2030',
+            at: offeringsNow.subtract(const Duration(days: 14)),
+            occurrences: [occ('r1', 1, -14, 'COMPLETED'), occ('r2', 2, -7, 'COMPLETED'), occ('r3', 3, 7, 'SCHEDULED')],
+          ),
+          hostedJson(
+            'grp-done',
+            title: 'CRE Strategy',
+            at: offeringsNow.subtract(const Duration(days: 20)),
+            occurrences: [occ('d1', 1, -20, 'COMPLETED'), occ('d2', 2, -13, 'COMPLETED')],
+          ),
+        ],
+      );
+      await pumpOfferings(tester, w);
+      await openOfferingsTab(tester, 'Group Mentoring');
+      expect(find.text('In Progress'), findsOneWidget);
+      expect(find.text('Completed'), findsOneWidget);
+      expect(find.text('Open for Registration'), findsNothing);
+      expect(find.text('Held'), findsNothing);
+    });
+
     testWidgets('a draft, an open session, a held one and a cancelled one each read as what they are', (tester) async {
       final w = OfferingsWorld(
         sessions: [
@@ -201,7 +236,7 @@ void main() {
       await openOfferingsTab(tester, 'Group Mentoring');
       expect(find.text('Draft'), findsOneWidget);
       expect(find.text('Open for Registration'), findsNWidgets(2));
-      expect(find.text('Held'), findsOneWidget);
+      expect(find.text('Completed'), findsOneWidget);
       expect(find.text('Cancelled'), findsOneWidget);
       expect(find.text('Free · 3 of 25 seats · 2 waiting'), findsOneWidget);
       expect(find.text('₹299 · 0 of 15 seats'), findsOneWidget);
@@ -986,7 +1021,7 @@ void main() {
         'note': 'Good questions',
       });
       expect(find.text('Attendance recorded.'), findsOneWidget);
-      expect(find.text('Held'), findsWidgets);
+      expect(find.text('Completed'), findsWidgets);
       expect(find.byKey(const ValueKey('session-attendance')), findsNothing);
     });
 

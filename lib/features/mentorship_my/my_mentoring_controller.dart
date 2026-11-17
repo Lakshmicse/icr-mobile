@@ -7,6 +7,12 @@ import 'mentoring_repository.dart';
 import 'purchases_controller.dart';
 import 'mentoring_clock.dart';
 
+/// Which side of mentoring a page shows, as the website splits My mentoring: "Mentor Engagements" is the mentor's
+/// side (the people they mentor and who asks them to), "Mentoring Sessions" the mentee's (their mentors, what they
+/// asked for and bought). Owner, 16 Nov 2026, on Mentor Engagements → Requests: "are they my mentors or mentee ...
+/// down search should not be search mentors".
+enum MentoringSide { mentor, mentee }
+
 /// The tabs of "My mentoring", in the order the website lists them.
 enum MyTab {
   mentoring('Mentoring'),

@@ -9,6 +9,7 @@ import 'package:icr_mobile/core/util/app_actions.dart';
 import 'package:icr_mobile/features/feed/feed_controller.dart';
 import 'package:icr_mobile/features/feed/feed_models.dart';
 import 'package:icr_mobile/features/feed/home_screen.dart';
+import 'package:icr_mobile/features/feed/widgets/post_photo_viewer.dart';
 import 'package:icr_mobile/features/feed/widgets/comments_sheet.dart';
 import 'package:icr_mobile/features/feed/widgets/composer_and_filters.dart';
 import 'package:icr_mobile/features/forum/new_thread_screen.dart';
@@ -103,6 +104,9 @@ void main() {
           'control-room.jpg': 'post_control_room.jpg',
           'green-tower.jpg': 'post_green_tower.jpg',
           'rooftop.jpg': 'post_rooftop_hvac.jpg',
+          'a.jpg': 'post_control_room.jpg',
+          'b.jpg': 'post_green_tower.jpg',
+          'c.jpg': 'post_rooftop_hvac.jpg',
         },
       ),
     );
@@ -508,11 +512,54 @@ void main() {
       expect(post('photo').images, hasLength(1));
       expect(post('photo').imageCaption, 'BIM Feasibility Lab');
       expect(find.text('BIM Feasibility Lab'), findsOneWidget);
-      // Five photos: the attachment and four images in the body; two drawn, three counted.
-      expect(post('audit').images, hasLength(2));
-      expect(post('audit').morePhotos, 3);
+      // Five photos: the attachment and four images in the body. All are kept; the card draws four, the last
+      // counting the one left (owner, 14 Nov 2026: a post's photos as LinkedIn lays them out).
+      expect(post('audit').images, hasLength(5));
+      expect(post('audit').morePhotos, 0);
       expect(post('audit').imageCaption, isNull);
-      expect(find.text('+3 photos'), findsOneWidget);
+      expect(find.byKey(const ValueKey('post-photo:audit:3')), findsOneWidget);
+      expect(find.byKey(const ValueKey('post-photo:audit:4')), findsNothing);
+      expect(
+        find.descendant(of: find.byKey(const ValueKey('post-photo:audit:3')), matching: find.text('+1')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a photo opens the post\'s photos full screen, where Like, the comments and the words work', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+      await tester.ensureVisible(find.byKey(const ValueKey('post-photo:audit:1')));
+      await tapKey(tester, 'post-photo:audit:1');
+      expect(find.byType(PostPhotoViewer), findsOneWidget);
+      expect(find.bySemanticsLabel('Photo 2 of 5'), findsOneWidget, reason: 'the photo tapped, of all five');
+      expect(find.byType(ThreadScreen), findsNothing, reason: 'a photo does not open the discussion page');
+
+      // Like acts on the post itself: the feed's card has it too.
+      final likes = post('audit').reactions;
+      await tapKey(tester, 'viewer-like');
+      expect(post('audit').myReaction, ReactionKind.like);
+      expect(post('audit').reactions, likes + 1);
+      expect(find.byKey(const ValueKey('viewer-my-reaction')), findsOneWidget);
+      expect(api.to('POST', '/forum/threads/audit/vote').single.data, {'value': 1, 'reaction': 'LIKE'});
+
+      // The comments open over the photos.
+      await tapKey(tester, 'viewer-comments');
+      expect(find.byKey(const ValueKey('comments-sheet')), findsOneWidget);
+      await tester.tapAt(const Offset(10, 10));
+      await settle(tester);
+      expect(find.byKey(const ValueKey('comments-sheet')), findsNothing);
+      expect(find.byType(PostPhotoViewer), findsOneWidget);
+
+      // The three dots are the post's own menu, over the photos.
+      await tapKey(tester, 'viewer-more');
+      expect(find.byKey(const ValueKey('menu-copy')), findsOneWidget);
+      await tester.tapAt(const Offset(10, 10));
+      await settle(tester);
+
+      await tapKey(tester, 'viewer-back');
+      expect(find.byType(PostPhotoViewer), findsNothing);
+      expect(find.byKey(const ValueKey('my-reaction:audit')), findsOneWidget, reason: 'the card shows the like');
     });
 
     testWidgets("Like reacts at once, again takes it back, and the reader's own post is liked like any other", (

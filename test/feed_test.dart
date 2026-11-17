@@ -401,20 +401,23 @@ void main() {
       expect(d.caption, isNull);
     });
 
-    test(
-      'images in the body follow the attachment: two are drawn, the rest counted, and a caption only on one',
-      () async {
-        final d = await repo({
-          'bodyHtml':
-              '<p>x</p><img src="/uploads/a.jpg" alt="a"><IMG alt="b" SRC=\'/uploads/b.png\'><img src="https://cdn.test/c.webp">',
-          'attachment': {'uploadId': 'main.jpg', 'fileName': 'Green tower.jpg', 'fileSize': 1},
-        }).detail(post);
-        expect(d!.images.map((p) => p.url), ['http://api.test/uploads/main.jpg', 'http://api.test/uploads/a.jpg']);
-        expect(d.morePhotos, 2);
-        expect(d.caption, isNull, reason: 'a caption is drawn on a lone photo');
-        expect(d.body, 'x', reason: 'the images are not text');
-      },
-    );
+    test('images in the body follow the attachment: every photo is kept, in order, and a caption only on one', () async {
+      final d = await repo({
+        'bodyHtml':
+            '<p>x</p><img src="/uploads/a.jpg" alt="a"><IMG alt="b" SRC=\'/uploads/b.png\'><img src="https://cdn.test/c.webp">',
+        'attachment': {'uploadId': 'main.jpg', 'fileName': 'Green tower.jpg', 'fileSize': 1},
+      }).detail(post);
+      // All four: the card lays them out and its viewer swipes through them (owner, 14 Nov 2026).
+      expect(d!.images.map((p) => p.url), [
+        'http://api.test/uploads/main.jpg',
+        'http://api.test/uploads/a.jpg',
+        'http://api.test/uploads/b.png',
+        'https://cdn.test/c.webp',
+      ]);
+      expect(d.morePhotos, 0);
+      expect(d.caption, isNull, reason: 'a caption is drawn on a lone photo');
+      expect(d.body, 'x', reason: 'the images are not text');
+    });
 
     test('a failing page is an ApiError, and the controller keeps the list\'s excerpt', () async {
       final api = FakeForum({

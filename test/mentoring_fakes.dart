@@ -397,11 +397,12 @@ Future<(FakeApi, LinkRecorder)> pumpMyMentoring(
   Map<String, Reply> routes, {
   MyTab tab = MyTab.mentoring,
   double height = 2200,
+  MentoringSide? side,
 }) async {
   phone(tester, height: height);
   final api = FakeApi(routes);
   final rec = LinkRecorder();
-  await pumpApp(tester, MyMentoringScreen(repository: repoOf(api), initialTab: tab, links: rec.links));
+  await pumpApp(tester, MyMentoringScreen(repository: repoOf(api), initialTab: tab, links: rec.links, side: side));
   return (api, rec);
 }
 

@@ -21,6 +21,7 @@ import 'widgets/home_header.dart';
 import 'widgets/post_card.dart';
 import 'widgets/comment_widgets.dart';
 import 'widgets/comments_sheet.dart';
+import 'widgets/post_photo_viewer.dart';
 
 /// The Home feed.
 class HomeScreen extends StatefulWidget {
@@ -109,6 +110,31 @@ class _HomeScreenState extends State<HomeScreen> {
     ).whenComplete(follows.dispose);
   }
 
+  /// A photo on a card: the post's photos full screen, as LinkedIn opens them (owner, 14 Nov 2026), with the card's
+  /// own Like, Comment, Repost, Send and three dots beside them. Each acts on the post as it is then.
+  void _openPhotos(FeedPost post, int index) {
+    final feed = context.read<FeedController>();
+    FeedPost now() => feed.postById(post.id) ?? post;
+    final openMember = widget.callbacks.onOpenMember;
+    showPostPhotoViewer(
+      context,
+      initial: index,
+      host: PhotoViewerHost(
+        listenable: feed,
+        post: () => feed.postById(post.id),
+        onLike: (at) => _run(feed.toggleLike(now()), at: at),
+        onPickReaction: (at, rect) => _pickReaction(now(), rect),
+        onComments: (_) => _openComments(now()),
+        onRepost: (_) => _repost(now()),
+        onShare: (_) => _share(now()),
+        onMore: (at) => _postMenu(now(), at: at),
+        onFollow: (at) => _run(feed.follow(now()), at: at),
+        onOpenAuthor: openMember == null ? null : () => openMember(post.author.id),
+        onOpenMention: openMember,
+      ),
+    );
+  }
+
   /// The three dots on a post, or on a reply: open the discussion, copy its link, report it (not one's own), and
   /// take back a reply of one's own.
   void _menu(
@@ -152,11 +178,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _postMenu(FeedPost post) => _menu(
+  void _postMenu(FeedPost post, {BuildContext? at}) => _menu(
     context.read<FeedController>().repository.link(post),
     title: post.title,
     onOpen: () => _openThread(post),
     onReport: post.author.id == widget.viewer.id ? null : () => _report(post),
+    at: at,
   );
 
   void _replyMenu(FeedPost post, FeedReply reply, {BuildContext? at}) {
@@ -457,6 +484,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onQuotedVote: (original, option) => _run(feed.voteQuoted(original, option)),
             onOpenQuoted: _openThread,
             onOpenVideo: (url) => openVideo(context, url),
+            onOpenPhoto: (index) => _openPhotos(post, index),
             onVoters: () => _voters(post),
             afterPlacement: i == 2,
           ),

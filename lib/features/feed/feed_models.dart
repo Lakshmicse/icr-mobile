@@ -292,7 +292,7 @@ class FeedPostDetail {
   /// The members tagged in it.
   final List<Mention> mentions;
 
-  /// The first two photos, drawn as the design draws them.
+  /// Every photo, in order: the card lays them out and its viewer swipes through them.
   final List<FeedPicture> images;
 
   /// The videos (each a URL the player opens), after the photos.
@@ -301,7 +301,7 @@ class FeedPostDetail {
   /// The photo's caption, when there is one photo and its file name reads as words.
   final String? caption;
 
-  /// Photos beyond the two drawn ("+3 photos").
+  /// Photos the discussion has beyond [images]: none for a live post, whose [images] is all of them.
   final int morePhotos;
 }
 
@@ -370,7 +370,7 @@ class FeedPost {
   final List<String> videos;
   final String? imageCaption;
 
-  /// Photos beyond the two shown ("+3 photos").
+  /// Photos the post has beyond [images] ("+3 photos"): the sample content's; a live post carries them all.
   final int morePhotos;
   final int reactions;
 

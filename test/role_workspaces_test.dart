@@ -291,32 +291,41 @@ void main() {
       );
     });
 
-    test("a partner institute's staff get the Learning Partner row", () {
-      final w = workspacesFor(user('COMPANY_ADMIN', learningRoles: ['TRAINER']), opens: everything);
-      expect(labels(w), ['Company', 'Jobs', 'Learning', 'Mentorship', 'Marketplace', 'Learning Partner', 'Account']);
-      expect(pages(w, 'Learning Partner'), [
+    test("a partner institute's staff run it from the Learning row; there is no Learning Partner row", () {
+      // Owner, 16 Nov 2026: no separate row. The institute's pages sit in Learning, before the member's own three.
+      const own = ['/learning?mine=1', '/learning/attempts', '/learning/certificates'];
+      const institute = [
         '/admin/learning/courses',
         '/manage/team',
         '/admin/learning/batches',
         '/admin/learning/enrolments',
         '/admin/learning/enquiries',
-      ]);
-      expect(w.firstWhere((x) => x.label == 'Learning Partner').sections.single.items.map((i) => i.label), [
+      ];
+      final w = workspacesFor(user('COMPANY_ADMIN', learningRoles: ['TRAINER']), opens: everything);
+      expect(labels(w), ['Company', 'Jobs', 'Learning', 'Mentorship', 'Marketplace', 'Account']);
+      expect(pages(w, 'Learning'), [...institute, ...own]);
+      expect(w.firstWhere((x) => x.label == 'Learning').sections.single.items.map((i) => i.label), [
         'Manage Courses',
         'Manage Team',
         'Manage Batches',
         'Enrolment',
         'Enquiries',
+        'My Courses',
+        'My Attempts',
+        'My Certificates',
       ]);
       // The admin of a company ICR approved as a partner holds no learning role of their own, but runs it.
       final admin = workspacesFor(user('COMPANY_ADMIN', learningPartner: true), opens: everything);
-      expect(labels(admin), contains('Learning Partner'));
+      expect(pages(admin, 'Learning'), [...institute, ...own]);
+      expect(labels(admin), isNot(contains('Learning Partner')));
+      // Everyone else has only the three.
       expect(
-        labels(workspacesFor(user('RECRUITER', learningPartner: true), opens: everything)),
-        isNot(contains('Learning Partner')),
+        pages(workspacesFor(user('RECRUITER', learningPartner: true), opens: everything), 'Learning'),
+        own,
         reason: 'only the admin, as the website gives learning roles',
       );
-      expect(labels(workspacesFor(user('COMPANY_ADMIN'), opens: everything)), isNot(contains('Learning Partner')));
+      expect(pages(workspacesFor(user('COMPANY_ADMIN'), opens: everything), 'Learning'), own);
+      expect(pages(workspacesFor(user('PROFESSIONAL', companyId: null), opens: everything), 'Learning'), own);
     });
 
     test("ICR staff get their consoles and none of the member's rows", () {

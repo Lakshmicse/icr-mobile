@@ -8,6 +8,7 @@ import '../../mentorship_my/mentoring_clock.dart';
 import '../../mentorship_my/mentoring_format.dart' show countLabel, inr, minutesLabel, whenLabel;
 import '../../mentorship_my/widgets/blocks.dart' show GroupLabel;
 import '../../mentorship_my/widgets/forms.dart';
+import '../../mentorship_my/series_status.dart';
 import '../../mentorship_my/widgets/kit.dart';
 import 'group_form.dart';
 import 'offerings_controller.dart';
@@ -107,15 +108,7 @@ class _SessionSheetState extends State<SessionSheet> {
             Expanded(
               child: Text(d.title, key: const ValueKey('session-title'), style: MentoringText.hero),
             ),
-            StatusPill(
-              d.statusLabel,
-              tone: switch (d.status) {
-                'SCHEDULED' => PillTone.mint,
-                'DRAFT' => PillTone.amber,
-                'COMPLETED' => PillTone.blue,
-                _ => PillTone.grey,
-              },
-            ),
+            StatusPill(d.stateAt(mentoringNow()).label, tone: d.stateAt(mentoringNow()).tone),
           ],
         ),
         if (d.summary != null)
@@ -146,7 +139,7 @@ class _SessionSheetState extends State<SessionSheet> {
                 ),
                 StatusPill(
                   switch (day.status) {
-                    'COMPLETED' => 'Held',
+                    'COMPLETED' => completedWord,
                     'CANCELLED' => 'Cancelled',
                     _ => 'Scheduled',
                   },
