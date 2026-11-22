@@ -57,4 +57,46 @@ export default defineManual('11-profile', 'Your profile and network', [
       await m.home();
     },
   ),
+
+  flow(
+    'edit',
+    'Edit your profile',
+    { who: 'Every member', as: 'member' },
+    async (m) => {
+      await m.open('/profile');
+      await m.wait({ text: 'Add section' });
+      await settle(m);
+      await m.tap({ tooltip: 'Edit intro' });
+      await settle(m, 1000);
+      await m.shot('intro', 'The pencil beside your name edits the introduction: your name, your headline, and where you are based.');
+      await m.back();
+      await settle(m, 600);
+      await m.tap({ tooltip: 'Edit about' });
+      await settle(m, 1000);
+      await m.shot('about', 'The pencil on **About** edits the few lines that say who you are, your strengths and what you are looking for. Recruiters read this first.');
+      await m.back();
+      await settle(m, 600);
+      await m.tap({ tooltip: 'Add experience' });
+      await settle(m, 1000);
+      await m.shot('experience', 'The **+** on **Experience** adds a role: the title, the company, the dates and what you did. Pick the company from the list if it is on ICR, and the role links to its page.');
+      await m.back();
+      await m.home();
+    },
+  ),
+
+  flow(
+    'member',
+    'Another member’s profile',
+    { who: 'Every member', as: 'member' },
+    async (m) => {
+      await m.tab('learning');
+      await m.tab('home');
+      await m.scrollTo('author:design-home-thread-sarah', { step: 200, align: 0.4 });
+      await m.shot('author', 'Select a member’s name or photo wherever you see it: on a post, a reply, a search result.', { ring: 'author:design-home-thread-sarah' });
+      await m.tap('author:design-home-thread-sarah');
+      await settle(m, 2000);
+      await m.shot('profile', 'Their profile shows what they chose to make public. **Follow** adds their posts to your **Following** feed, and **Message** starts a conversation.');
+      await m.home();
+    },
+  ),
 ]);

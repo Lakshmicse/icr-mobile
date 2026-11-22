@@ -117,4 +117,27 @@ export default defineManual('16-company-admins', 'Company admins', [
       await m.home();
     },
   ),
+
+  flow(
+    'pending',
+    'People you added who have not answered yet',
+    { who: 'Company admins', as: 'companyAdmin' },
+    async (m) => {
+      resetTeam(m);
+      await m.open('/manage/team');
+      await m.wait('team.add');
+      await m.tap('team.add');
+      await m.wait('add.search');
+      await m.enter('add.search', 'Pooja Sharma', { keep: true });
+      await settle(m);
+      await m.tap({ keyPrefix: 'add.hit.', i: 0 }, { ensure: false });
+      await settle(m, 1000);
+      await m.tap({ text: 'Ask them to join', last: true }, { ensure: false });
+      await settle(m, 2000);
+      await m.tap({ contains: 'Pending' });
+      await settle(m, 1200);
+      await m.shot('pending', '**Pending** lists the people you asked to join and the invitations you emailed that have not been answered. Cancel one to free its seat.');
+      await m.home();
+    },
+  ),
 ]);

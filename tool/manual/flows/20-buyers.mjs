@@ -118,4 +118,49 @@ export default defineManual('20-buyers', 'Buyers', [
       await m.home();
     },
   ),
+
+  flow(
+    'rfq',
+    'Post an RFQ',
+    { who: 'Buyers, sellers and company admins', as: 'buyer', intro: 'An RFQ asks for the same things as an enquiry and adds what a formal comparison needs.' },
+    async (m) => {
+      await m.open('/rfq/new');
+      await m.wait('send');
+      await settle(m);
+      await m.tap('kind-rfq');
+      await settle(m, 1000);
+      await m.shot('kind', 'On **Post your requirement**, choose **RFQ**. The form grows the parts a formal process needs.', { ring: 'kind-rfq' });
+      await m.scrollTo('criteria-toggle', { align: 0.3 });
+      await m.shot('criteria', 'Besides the place, the service and the description, an RFQ takes the items to be priced, a budget, the dates of each stage, and the criteria a supplier must meet to take part.');
+      await m.back();
+      await settle(m, 800);
+      if (await m.exists({ text: 'Discard' })) await m.tap({ text: 'Discard' });
+      await m.home();
+    },
+  ),
+
+  flow(
+    'invite',
+    'Invite suppliers and select one',
+    { who: 'Buyers, sellers and company admins', as: 'buyerDesign' },
+    async (m) => {
+      await m.open('/manage/requirements');
+      await settle(m, 1500);
+      await m.shot('invite-button', 'On a requirement in **My RFQ’s**, **Invite suppliers** asks particular suppliers to answer.', { ring: { text: 'Invite suppliers', i: 0 } });
+      await m.tap({ text: 'Invite suppliers', i: 0 });
+      await settle(m, 1500);
+      await m.shot('invite', 'The requirement opens on **Suppliers**: who was invited and how each answered. **Invite companies** adds more; each one is told, and the requirement appears under **Invited** on their work board.');
+      await m.back();
+      await m.home();
+      await m.open('/manage/requirements');
+      await settle(m, 1500);
+      await m.tap({ text: 'CCTV refresh: 48 cameras, Pune campus', i: 0 });
+      await settle(m, 2000);
+      await m.tap({ text: 'Select' }, { ensure: true });
+      await settle(m, 1200);
+      await m.shot('select', 'On a reply, **Select** chooses that supplier. The app asks you to confirm, because the other suppliers are then told the requirement has been decided.');
+      await m.back();
+      await m.home();
+    },
+  ),
 ]);

@@ -150,4 +150,45 @@ export default defineManual('08-mentorship', 'Mentorship', [
       await m.home();
     },
   ),
+
+  flow(
+    'group-seat',
+    'Take a seat in a group session',
+    { who: 'Every member', as: 'member' },
+    async (m) => {
+      await m.tab('home');
+      await m.tap('home-search');
+      await m.wait('search.field');
+      await m.enter('search.field', 'Group sessions', { keep: true });
+      await m.action('search');
+      await m.pause(1500);
+      await m.idle();
+      await m.tap({ text: 'Group sessions', last: true });
+      await m.wait({ text: 'Open sessions' });
+      await m.pause(1200);
+      await m.idle();
+      await m.tap({ contains: 'Running a smart campus', i: 0 });
+      await m.pause(2000);
+      await m.idle();
+      await m.shot('session', 'Select a group session to read it: who holds it, when, what it covers, and how many seats are left. Add a question for the host if you have one and select **Reserve my seat**. A free seat is yours at once; a paid one is paid for first.');
+      await m.home();
+    },
+  ),
+
+  flow(
+    'programme',
+    'Apply to a programme',
+    { who: 'Every member', as: 'member' },
+    async (m) => {
+      await m.open('/mentorship/programmes');
+      await m.wait({ text: 'Programmes' });
+      await m.pause(1200);
+      await m.idle();
+      await m.tap({ text: 'FM Leadership & ESG Masterclass' });
+      await m.pause(2000);
+      await m.idle();
+      await m.shot('programme', 'Select a programme to read it: who runs it, how long it lasts, what it covers and who it is for. While applications are open, select **Apply to join**, as a mentee or, if you are a mentor, as a mentor.');
+      await m.home();
+    },
+  ),
 ]);

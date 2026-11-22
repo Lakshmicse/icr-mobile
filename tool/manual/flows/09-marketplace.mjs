@@ -118,4 +118,35 @@ export default defineManual('09-marketplace', 'Marketplace', [
       await m.home();
     },
   ),
+
+  flow(
+    'product',
+    'Read a product or a service',
+    { who: 'Every member', as: 'member' },
+    async (m) => {
+      await openSupplier(m);
+      await m.tap({ keyPrefix: 'tab-', i: 1 });
+      await m.wait({ keyPrefix: 'product-' });
+      await m.tap({ keyPrefix: 'product-', i: 0 });
+      await m.pause(1800);
+      await m.idle();
+      await m.shot('product', 'On a supplier’s **Products & services**, select an item to open its page: the price, whether it is in stock, the supplier’s terms, and who sells it. **Request a quote** asks the supplier for a price for the quantity you need.');
+      await m.home();
+    },
+  ),
+
+  flow(
+    'alerts',
+    'Marketplace alerts',
+    { who: 'Every member', as: 'member' },
+    async (m) => {
+      await marketTab(m);
+      await m.shot('chip', 'On the Marketplace tab, **Alerts** collects what happened on your requirements and quotes. The number shows how many are new.', { ring: { text: 'Alerts' } });
+      await m.tap({ text: 'Alerts' }, { ensure: false });
+      await m.pause(1800);
+      await m.idle();
+      await m.shot('alerts', 'Select an alert to open the requirement or the reply it is about. **Mark all read** clears the count.');
+      await m.home();
+    },
+  ),
 ]);

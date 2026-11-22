@@ -127,4 +127,39 @@ export default defineManual('15-mentors', 'Mentors', [
       await m.home();
     },
   ),
+
+  flow(
+    'more-offerings',
+    'Resources, plans, programmes and group sessions',
+    { who: 'Mentors', as: 'mentor', intro: 'Beyond one-to-one sessions, a mentor can sell a resource to download, an ongoing plan, a programme of several sessions, and seats in a group session.' },
+    async (m) => {
+      await desk(m, 'Offerings');
+      await m.scrollTo('add-resource', { align: 0.5 });
+      await m.tap('add-resource');
+      await settle(m, 1200);
+      await m.shot('resource', '**Add a resource** sells a file: a template, a guide, a question bank. Give it a title and a price, and upload the file. Buyers download it at once.');
+      await m.back();
+      await settle(m, 600);
+      await m.scrollTo('add-plan', { align: 0.5 });
+      await m.tap('add-plan');
+      await settle(m, 1200);
+      await m.shot('plan', '**Add an ongoing plan** is mentoring by the month, paid for a term at a time: what it includes, the price of a term, and how long a term is.');
+      await m.back();
+      await settle(m, 600);
+      await m.scrollTo('add-plan', { align: 0.5 });
+      await m.tap('add-plan');
+      await settle(m, 1200);
+      await m.tap('kind-programme');
+      await settle(m, 900);
+      await m.shot('programme', 'In the same form, **Programme** turns the plan into a fixed course of sessions with an outline: add each module with its title and length.');
+      await m.back();
+      await settle(m, 600);
+      await m.scrollTo({ text: 'Host a group session' }, { align: 0.5 });
+      await m.tap({ text: 'Host a group session' });
+      await settle(m, 1200);
+      await m.shot('group', '**Host a group session** sets one up for several people: the title, the date, how many seats, the price of a seat, and the joining link or the venue. A session starts as a draft; **Publish** opens it for registration.');
+      await m.back();
+      await m.home();
+    },
+  ),
 ]);
