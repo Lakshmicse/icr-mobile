@@ -521,6 +521,8 @@ class OfferingSheetBar extends StatelessWidget {
     final requested = o.myOpenRequestId != null;
     final label = requested
         ? 'Requested'
+        : o.notSoldInApp
+        ? 'Not Available in the App'
         : trial
         ? 'Book Trial (₹0)'
         : o.free
@@ -626,12 +628,12 @@ class OfferingSheetBar extends StatelessWidget {
                       ],
                     ),
                     child: Material(
-                      color: requested || onPrimary == null
+                      color: requested || onPrimary == null || o.notSoldInApp
                           ? AppColors.primary.withValues(alpha: 0.5)
                           : AppColors.primary,
                       borderRadius: BorderRadius.circular(8),
                       child: InkWell(
-                        onTap: requested ? null : onPrimary,
+                        onTap: requested || o.notSoldInApp ? null : onPrimary,
                         borderRadius: BorderRadius.circular(8),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,

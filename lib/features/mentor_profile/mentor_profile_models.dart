@@ -3,6 +3,7 @@
 /// the demo source holds the designs' sample content.
 library;
 
+import '../../core/store_rules.dart';
 import '../feed/feed_models.dart' show FeedPicture;
 import '../payments/checkout_start.dart' show CheckoutStart;
 
@@ -516,6 +517,14 @@ class MentorOffering {
   final int? termMonths;
 
   bool get free => pricePaisa == 0;
+
+  /// A paid resource, group session or programme in the App Store build, which sells none (see [StoreRules]).
+  /// 1:1 mentoring with the mentor and their ongoing plan stay on sale (guideline 3.1.3(d)).
+  bool get notSoldInApp =>
+      !free &&
+      !StoreRules.sellsDigitalGoods &&
+      (kind == OfferingKind.resource || kind == OfferingKind.groupSession || kind == OfferingKind.program);
+
   bool get isPlan => kind == OfferingKind.plan || kind == OfferingKind.program;
 
   /// A session the mentor has to accept before anything is paid.

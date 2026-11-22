@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../core/store_rules.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/config.dart';
 import '../../../core/util/links.dart' show showMessage;
@@ -649,7 +650,8 @@ class _JobCard extends StatelessWidget {
                   },
                   itemBuilder: (_) => [
                     const PopupMenuItem(value: _JobAction.edit, child: Text('Edit Job')),
-                    if (job.status == PostingStatus.open && !job.promoted)
+                    // A promotion is bought on the website; the App Store build points to no purchase (see [StoreRules]).
+                    if (job.status == PostingStatus.open && !job.promoted && StoreRules.sellsDigitalGoods)
                       const PopupMenuItem(value: _JobAction.promote, child: Text('Promote')),
                     if (job.status == PostingStatus.open)
                       const PopupMenuItem(value: _JobAction.pause, child: Text('Pause')),

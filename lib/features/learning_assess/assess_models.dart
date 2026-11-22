@@ -5,6 +5,7 @@
 /// little sample content.
 library;
 
+import '../../core/store_rules.dart';
 import '../feed/feed_models.dart' show FeedPicture;
 import '../learning_exam/exam_models.dart' show ExamCertificate;
 
@@ -509,10 +510,13 @@ class BundleQuote {
   int? get inCredits => creditsOffered && credits != null ? credits : null;
 
   /// Something is on offer: money, credits, or both.
-  bool get hasOffer => offered || inCredits != null;
+  /// The paid bundle may be bought here: [offered], and never in the App Store build (see [StoreRules]).
+  bool get sold => offered && StoreRules.sellsDigitalGoods;
+
+  bool get hasOffer => sold || inCredits != null;
 
   /// The levels or sets the offer names: the priced ones when it is paid for, else every closed one.
-  List<String> get shownTitles => offered ? levels : [for (final l in creditLevels) l.title];
+  List<String> get shownTitles => sold ? levels : [for (final l in creditLevels) l.title];
   int get count => shownTitles.length;
 }
 
