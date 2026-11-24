@@ -171,9 +171,9 @@ const _undecidedMember = [
 const _moduleSuggestions = <IcrModule, List<AssistantSuggestion>>{
   IcrModule.supplierMart: [
     AssistantSuggestion.page('Request a Quote', '/rfq/new'),
-    AssistantSuggestion.ask('Sell on ICR', 'How do I list my business on Supplier Mart?'),
+    AssistantSuggestion.ask('Sell on ICR', 'How do I list my business on Market Place?'),
     AssistantSuggestion.ask('Supplier Verification', 'How does supplier verification work?'),
-    AssistantSuggestion.page('Marketplace Plans', '/pricing/supplier'),
+    AssistantSuggestion.page('Market Place Plans', '/pricing/supplier'),
   ],
   IcrModule.jobs: [
     AssistantSuggestion.page('Browse Jobs', '/jobs'),
@@ -195,7 +195,8 @@ const _moduleSuggestions = <IcrModule, List<AssistantSuggestion>>{
     AssistantSuggestion.ask('Write an Article', 'How do I write an article?'),
   ],
   IcrModule.library: [
-    AssistantSuggestion.page('Resources', '/resources'),
+    // The website's chip is Resources (`/resources`), a page the app has no screen for, so it never showed here.
+    AssistantSuggestion.page('Digital Library', '/documents'),
     AssistantSuggestion.ask("What's in the library?", 'What is in the Digital Library?'),
   ],
   IcrModule.chaptersCouncils: [

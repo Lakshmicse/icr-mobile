@@ -83,11 +83,11 @@ class DemoAssistantRepository implements AssistantRepository {
         lower.contains('requirement') ||
         lower.contains('sell')) {
       return (
-        'Supplier Mart is where buyers find verified suppliers. Post a requirement to receive quotes, or list your '
+        'Market Place is where buyers find verified suppliers. Post a requirement to receive quotes, or list your '
             'business to be found and bid on requirements.',
         const [
           QuickAction(label: 'Post a requirement', href: '/rfq/new'),
-          QuickAction(label: 'Supplier Mart', href: '/vendors'),
+          QuickAction(label: 'Market Place', href: '/vendors'),
         ],
       );
     }
@@ -107,7 +107,7 @@ class DemoAssistantRepository implements AssistantRepository {
             'learn and get certified, join discussions, chapters and councils, and attend events.',
         const [
           QuickAction(label: 'Jobs', href: '/jobs'),
-          QuickAction(label: 'Supplier Mart', href: '/vendors'),
+          QuickAction(label: 'Market Place', href: '/vendors'),
           QuickAction(label: 'Mentorship', href: '/mentorship'),
         ],
       );

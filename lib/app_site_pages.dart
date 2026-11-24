@@ -34,6 +34,7 @@ import 'features/learning_assess/assess_models.dart' show PaperKind;
 import 'features/learning_assess/open_group.dart';
 import 'features/learning_hub/learning_doors.dart';
 import 'features/marketplace/catalog_pages.dart' show showProductPage;
+import 'features/mentor_desk/mentor_desk_controller.dart' show DeskTab;
 import 'features/mentor_desk/mentor_desk_screen.dart';
 import 'features/mentorship/find_mentors_screen.dart';
 import 'features/mentorship_my/my_mentoring_controller.dart' show MyTab;
@@ -263,7 +264,19 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
       onOpenMentor: (c, id) => openMentorProfile(c, id),
     );
   }
-  if (path == '/mentorship/my') return (ctx) => openMyMentoring(ctx, tab: _myTab(q['tab']));
+  if (path == '/mentorship/my') {
+    // The website folded its mentor dashboard into My mentoring (8 Nov 2026), so its links to a mentor's own
+    // pages are `/mentorship/my?tab=services|plans|sales|settings|work`: the app's mentor desk on that tab.
+    final desk = switch (q['tab']) {
+      'services' || 'plans' => DeskTab.offerings,
+      'sales' => DeskTab.earnings,
+      'settings' => q['section'] == 'availability' ? DeskTab.hours : DeskTab.settings,
+      'work' => DeskTab.work,
+      _ => null,
+    };
+    if (desk != null) return (ctx) => openMentorDesk(ctx, tab: desk);
+    return (ctx) => openMyMentoring(ctx, tab: _myTab(q['tab']));
+  }
   if (path == '/mentorship/mentor-desk' || path == '/mentorship/desk') return (ctx) => openMentorDesk(ctx);
   if (path == '/mentorship/cpd') {
     return (ctx) => AppShell.push<void>(
@@ -286,12 +299,16 @@ SiteRouteOpener? appSitePage(Uri uri, String path, {required FeedAuthor viewer, 
       case 'products':
         if (shell != null) return (ctx) => quietly(ctx, () => showProductPage(shell, parts[1]));
       case 'chapters':
+        // `/chapters/apply` is the website's "Start or lead a chapter" form, not a chapter called "apply".
+        if (parts[1] == 'apply') return null;
         return (ctx) => _openChapter(ctx, parts[1]);
       case 'councils':
         // A council's own page is native since 2 Nov 2026 (`council_screen.dart`: overview, events, leadership,
         // members, knowledge, updates; `?tab=` opens on one). Until then the app had no page per council, so this
         // opened the councils directory, and a joined card, its Meeting link and Manage all looked like the same
         // screen (the owner's report).
+        // `/councils/propose` is the website's "Propose a council" form, not a council called "propose".
+        if (parts[1] == 'propose') return null;
         return (ctx) => _openCouncil(ctx, parts[1], tab: q['tab']);
       case 'rfq':
         return (ctx) async => openRfqRecord(ctx, parts[1], owner: false, section: q['section']);
