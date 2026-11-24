@@ -93,6 +93,25 @@ void main() {
     },
   );
 
+  test('Saathi\'s mentoring links open the mentor desk; the chapter and council forms are not a chapter or a council', () {
+    final me = DemoFeedRepository.me;
+    bool native(String path) => inAppSiteRoute(Uri.parse('https://icr.org.in$path'), viewer: me, shell: null) != null;
+    for (final path in [
+      '/mentorship/my',
+      '/mentorship/my?tab=services',
+      '/mentorship/my?tab=sales',
+      '/mentorship/my?tab=settings&section=availability',
+      '/mentorship/mentor?tab=services',
+      '/chapters/bengaluru',
+      '/councils/workplace',
+    ]) {
+      expect(native(path), isTrue, reason: path);
+    }
+    // The website's application forms, which the app has no screen for: Saathi hides a link it cannot open.
+    expect(native('/chapters/apply'), isFalse);
+    expect(native('/councils/propose'), isFalse);
+  });
+
   testWidgets('Working Councils opens from the profile menu without a framework error', (tester) async {
     await _pumpShell(tester);
     await tester.tap(find.text('open menu'));
