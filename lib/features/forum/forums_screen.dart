@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../account/members/block_member.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
 import '../../core/widgets/search_field.dart';
@@ -195,6 +196,15 @@ class _ForumsScreenState extends State<ForumsScreen> {
             label: 'Report',
             icon: LucideIcons.flag,
             onTap: () => _report(post),
+          ),
+        if (!mine)
+          SheetAction(
+            key: const ValueKey('menu-block'),
+            label: 'Block ${post.author.name}',
+            icon: LucideIcons.ban,
+            destructive: true,
+            // The list drops their posts as soon as the block is made (`ForumsController` hears it).
+            onTap: () => confirmBlock(context, memberId: post.author.id, name: post.author.name),
           ),
       ],
     );

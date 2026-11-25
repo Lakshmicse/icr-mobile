@@ -4,6 +4,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../account/members/block_member.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
 import '../forum/forum_callbacks.dart';
@@ -117,6 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required VoidCallback onOpen,
     VoidCallback? onReport,
     VoidCallback? onDelete,
+    ({String label, VoidCallback onTap})? block,
     BuildContext? at,
   }) {
     showActionSheet(
@@ -140,6 +142,14 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         if (onReport != null)
           SheetAction(key: const ValueKey('menu-report'), label: 'Report', icon: Symbols.flag, onTap: onReport),
+        if (block != null)
+          SheetAction(
+            key: const ValueKey('menu-block'),
+            label: block.label,
+            icon: Symbols.block,
+            destructive: true,
+            onTap: block.onTap,
+          ),
         if (onDelete != null)
           SheetAction(
             key: const ValueKey('menu-delete'),
@@ -157,7 +167,14 @@ class _HomeScreenState extends State<HomeScreen> {
     title: post.title,
     onOpen: () => _openThread(post),
     onReport: post.author.id == widget.viewer.id ? null : () => _report(post),
+    block: post.author.id == widget.viewer.id ? null : (label: 'Block ${post.author.name}', onTap: () => _block(post.author)),
   );
+
+  /// Blocks a post's or a comment's author (App Store guideline 1.2); the feed drops their posts and comments as
+  /// soon as the block is made (`FeedController` hears it).
+  Future<void> _block(FeedAuthor author, {BuildContext? at}) async {
+    await confirmBlock(_over(at), memberId: author.id, name: author.name);
+  }
 
   void _replyMenu(FeedPost post, FeedReply reply, {BuildContext? at}) {
     final feed = context.read<FeedController>();
@@ -172,6 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _openThread(post, reply: reply);
       },
       onReport: own ? null : () => _report(post, reply: reply, at: at),
+      block: own ? null : (label: 'Block ${reply.author.name}', onTap: () => _block(reply.author, at: at)),
       onDelete: own ? () => _confirmDelete(post, reply, at: at) : null,
     );
   }

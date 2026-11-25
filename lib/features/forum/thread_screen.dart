@@ -10,6 +10,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/util/links.dart';
 import '../../core/util/screen_trail.dart';
 import '../../core/widgets/title_bar.dart';
+import '../account/account_repository.dart';
+import '../account/members/block_member.dart';
 import '../feed/feed_models.dart';
 import '../feed/forum_json.dart';
 import '../feed/widgets/comment_widgets.dart';
@@ -78,9 +80,13 @@ class ThreadScreen extends StatefulWidget {
     this.callbacks = const ForumCallbacks(),
     this.onEdit,
     this.scrollToReplies = false,
+    this.accounts,
   });
 
   final int unread;
+
+  /// What a block goes through; the signed-in API when absent (a test passes the demo).
+  final AccountRepository? accounts;
   final ForumCallbacks callbacks;
 
   /// Opens with the replies in view, as the speech bubble on a card asks.
@@ -198,6 +204,17 @@ class _ThreadScreenState extends State<ThreadScreen> {
     if (sent && mounted) showMessage(context, 'Thank you. A moderator will review it.');
   }
 
+  /// Blocks the discussion's author, or a reply's (App Store guideline 1.2). The replies leave at once (the
+  /// controller hears the block); blocking the author leaves the discussion, which is no longer theirs to read.
+  Future<void> _blockAuthor({FeedReply? reply}) async {
+    final author = reply?.author ?? _c.thread?.card.author;
+    if (author == null) return;
+    final done = await confirmBlock(context, memberId: author.id, name: author.name, repository: widget.accounts);
+    if (!done || !mounted || reply != null) return;
+    _deleted = true;
+    Navigator.of(context).pop(_result());
+  }
+
   Future<void> _deleteThread() async {
     final sure = await confirm(
       context,
@@ -249,6 +266,14 @@ class _ThreadScreenState extends State<ThreadScreen> {
         SheetAction(key: const ValueKey('menu-viewers'), label: 'Who Viewed', icon: LucideIcons.eye, onTap: _viewers),
         if (!c.isOwn)
           SheetAction(key: const ValueKey('menu-report'), label: 'Report', icon: LucideIcons.flag, onTap: _report),
+        if (!c.isOwn)
+          SheetAction(
+            key: const ValueKey('menu-block'),
+            label: 'Block ${thread.card.author.name}',
+            icon: LucideIcons.ban,
+            destructive: true,
+            onTap: _blockAuthor,
+          ),
       ],
     );
   }
@@ -379,6 +404,14 @@ class _ThreadScreenState extends State<ThreadScreen> {
             label: 'Report',
             icon: LucideIcons.flag,
             onTap: () => _report(reply: reply),
+          ),
+        if (!mine)
+          SheetAction(
+            key: const ValueKey('reply-menu-block'),
+            label: 'Block ${reply.author.name}',
+            icon: LucideIcons.ban,
+            destructive: true,
+            onTap: () => _blockAuthor(reply: reply),
           ),
       ],
     );

@@ -132,4 +132,12 @@ class MemberProfileController extends ChangeNotifier {
       _notify();
     }
   }
+
+  /// Marks the page as blocked or not after the block sheet did it (`confirmBlock` / `confirmUnblock`).
+  void markBlocked(bool value) {
+    final m = member;
+    if (m == null) return;
+    member = m.withBlocked(value);
+    _notify();
+  }
 }

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_error.dart';
+import '../account/members/block_events.dart';
 import '../feed/feed_models.dart';
 import '../feed/forum_json.dart';
 import '../feed/post_reactions.dart';
@@ -19,7 +22,16 @@ class ThreadController extends ChangeNotifier {
     required this.viewer,
     this.preview,
     this.focusReplyId,
-  });
+  }) {
+    // Replies by a member blocked from this page (or anywhere) leave it at once.
+    _blocks = BlockEvents.stream.listen((change) {
+      if (!change.blocked) return;
+      _replies = withoutAuthor(_replies, change.memberId);
+      notifyListeners();
+    });
+  }
+
+  late final StreamSubscription<BlockChange> _blocks;
 
   final ForumRepository repository;
   final String slug;
@@ -107,6 +119,7 @@ class ThreadController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _blocks.cancel();
     super.dispose();
   }
 

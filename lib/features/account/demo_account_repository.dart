@@ -3,6 +3,7 @@ import 'dart:async';
 import '../../core/api/api_error.dart';
 import 'account_models.dart';
 import 'account_repository.dart';
+import 'members/block_events.dart';
 
 /// The account screens with no API: the design's sample member (Nikhil
 /// Majjagi, the profile menu's), kept in memory so edits stick for the session.
@@ -305,6 +306,37 @@ class DemoAccountRepository implements AccountRepository {
     members[id] = m.withFollow(next);
     return next;
   }
+
+  /// Who the demo viewer blocked, by id.
+  final Set<String> blockedIds = {};
+
+  @override
+  Future<void> block(String memberId) => _run('block', () {
+    final m = members[memberId];
+    if (m != null && m.isOwner) throw ApiError('You cannot block yourself.', statusCode: 400);
+    blockedIds.add(memberId);
+    if (m != null) members[memberId] = m.withBlocked(true);
+    BlockEvents.note(memberId, blocked: true);
+  }, memberId);
+
+  @override
+  Future<void> unblock(String memberId) => _run('unblock', () {
+    blockedIds.remove(memberId);
+    final m = members[memberId];
+    if (m != null) members[memberId] = m.withBlocked(false);
+    BlockEvents.note(memberId, blocked: false);
+  }, memberId);
+
+  @override
+  Future<List<BlockedMember>> blockedMembers() => _run('blockedMembers', () => [
+    for (final id in blockedIds)
+      BlockedMember(
+        id: id,
+        firstName: members[id]?.firstName ?? 'Blocked',
+        lastName: members[id]?.lastName ?? 'Member',
+        headline: members[id]?.headline,
+      ),
+  ]);
 
   @override
   Future<List<ForumPost>> memberPosts(String userId, {int limit = 5}) =>

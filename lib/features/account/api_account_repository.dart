@@ -5,6 +5,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
 import 'account_models.dart';
 import 'account_repository.dart';
+import 'members/block_events.dart';
 
 /// The account screens against the ICR API, through the signed-in client.
 /// Every failure comes out as an [ApiError] carrying the API's own sentence.
@@ -168,6 +169,24 @@ class ApiAccountRepository implements AccountRepository {
     FollowEvents.note(memberId, follows: true);
     return state;
   }
+
+  @override
+  Future<void> block(String memberId) async {
+    await _call((dio) => dio.post<void>('/members/$memberId/block'));
+    // A block ends any follow between the two, and their posts leave every list on screen.
+    FollowEvents.note(memberId, follows: false);
+    BlockEvents.note(memberId, blocked: true);
+  }
+
+  @override
+  Future<void> unblock(String memberId) async {
+    await _call((dio) => dio.delete<void>('/members/$memberId/block'));
+    BlockEvents.note(memberId, blocked: false);
+  }
+
+  @override
+  Future<List<BlockedMember>> blockedMembers() async =>
+      (await _getList('/members/me/blocked')).map(BlockedMember.fromJson).toList();
 
   @override
   Future<FollowState> unfollow(String memberId) async {

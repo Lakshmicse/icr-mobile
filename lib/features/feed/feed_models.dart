@@ -216,6 +216,22 @@ List<FeedReply> mapReplies(List<FeedReply> replies, String id, FeedReply Functio
 
 /// The tree without one reply (and the answers under it).
 /// [replies] with every one [who] wrote drawn with their name and photo as they are now ([FeedAuthor.drawnOver]).
+/// [replies] without any written by [authorId] (a member the reader just blocked). A removed reply's answers move up
+/// to its place, as the API's reply tree does for a reply it no longer shows.
+List<FeedReply> withoutAuthor(List<FeedReply> replies, String authorId) => [
+  for (final r in replies)
+    if (r.author.id == authorId)
+      ...withoutAuthor(r.children, authorId)
+    else
+      r.children.isEmpty ? r : r.copyWith(children: withoutAuthor(r.children, authorId)),
+];
+
+/// [posts] without [authorId]'s, and without their replies under anyone else's.
+List<FeedPost> postsWithoutAuthor(List<FeedPost> posts, String authorId) => [
+  for (final p in posts)
+    if (p.author.id != authorId) p.replies.isEmpty ? p : p.copyWith(replies: withoutAuthor(p.replies, authorId)),
+];
+
 List<FeedReply> restampReplies(List<FeedReply> replies, FeedAuthor who) => [
   for (final r in replies)
     r.copyWith(

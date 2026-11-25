@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_error.dart';
+import '../account/members/block_events.dart';
 import '../feed/feed_models.dart';
 import '../feed/forum_json.dart';
 import '../feed/post_reactions.dart';
@@ -12,7 +15,16 @@ import 'forum_repository.dart';
 /// a card shows at once and is put back when the API refuses; each returns the refusal's sentence, or null.
 class ForumsController extends ChangeNotifier {
   ForumsController(this.repository, {ForumView initialView = ForumView.all, this.ownTopics = false})
-    : _query = ForumQuery(view: initialView);
+    : _query = ForumQuery(view: initialView) {
+    // A member blocked anywhere leaves the list at once (the API hides them from every later read).
+    _blocks = BlockEvents.stream.listen((change) {
+      if (!change.blocked) return;
+      _posts = postsWithoutAuthor(_posts, change.memberId);
+      notifyListeners();
+    });
+  }
+
+  late final StreamSubscription<BlockChange> _blocks;
 
   /// My Forum: [topics] is only the topics the reader has posted in, each with the number of their own posts there,
   /// never the whole forum's list and counts (owner, 13 Nov 2026).
@@ -91,6 +103,7 @@ class ForumsController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _blocks.cancel();
     super.dispose();
   }
 

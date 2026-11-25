@@ -83,6 +83,16 @@ abstract class AccountRepository {
   /// `DELETE /members/:id/follow`.
   Future<FollowState> unfollow(String memberId);
 
+  /// `POST /members/:id/block` (App Store guideline 1.2): neither sees the other's posts, replies or profile, neither
+  /// can message the other, and any follow or connection between them ends. They are not told.
+  Future<void> block(String memberId);
+
+  /// `DELETE /members/:id/block`.
+  Future<void> unblock(String memberId);
+
+  /// `GET /members/me/blocked`: the members the viewer blocked, newest first.
+  Future<List<BlockedMember>> blockedMembers();
+
   /// The member's latest discussions (`GET /forum/threads?authorId=`).
   Future<List<ForumPost>> memberPosts(String userId, {int limit = 5});
 

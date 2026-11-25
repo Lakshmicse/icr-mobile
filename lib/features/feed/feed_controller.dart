@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_error.dart';
+import '../account/members/block_events.dart';
 import '../forum/mentions/tag_person.dart' show personTagHandle;
 import 'feed_models.dart';
 import 'feed_repository.dart';
@@ -9,7 +12,16 @@ import 'post_reactions.dart';
 /// The Home feed's state: the chosen chip, the loaded posts, and the
 /// reader's actions on them (applied at once, rolled back if the API refuses).
 class FeedController extends ChangeNotifier {
-  FeedController(this.repository) : _open = {...repository.initiallyOpen};
+  FeedController(this.repository) : _open = {...repository.initiallyOpen} {
+    // A member blocked anywhere leaves the feed at once: their posts, and their replies under anyone else's.
+    _blocks = BlockEvents.stream.listen((change) {
+      if (!change.blocked) return;
+      _posts = postsWithoutAuthor(_posts, change.memberId);
+      notifyListeners();
+    });
+  }
+
+  late final StreamSubscription<BlockChange> _blocks;
 
   final FeedRepository repository;
 
@@ -42,6 +54,7 @@ class FeedController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _blocks.cancel();
     super.dispose();
   }
 

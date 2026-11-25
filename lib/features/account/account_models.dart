@@ -679,6 +679,7 @@ class MemberProfile {
     this.isOwner = false,
     this.signedIn = false,
     this.readyForNextRole = false,
+    this.blocked = false,
   });
 
   final String id;
@@ -717,6 +718,10 @@ class MemberProfile {
 
   /// The page was read with a session (`viewer` set).
   final bool signedIn;
+
+  /// The viewer blocked this member (`viewer.blocked`, Nov 2026): the page then
+  /// offers Unblock instead of Follow and Message.
+  final bool blocked;
   final bool readyForNextRole;
 
   String get fullName {
@@ -773,11 +778,16 @@ class MemberProfile {
       follow: FollowState.fromJson(json['follow']),
       isOwner: viewer?['isOwner'] == true,
       signedIn: viewer != null,
+      blocked: viewer?['blocked'] == true,
       readyForNextRole: json['nextRole'] is Map,
     );
   }
 
-  MemberProfile withFollow(FollowState next) => MemberProfile(
+  MemberProfile withFollow(FollowState next) => _with(follow: next);
+
+  MemberProfile withBlocked(bool value) => _with(blocked: value);
+
+  MemberProfile _with({FollowState? follow, bool? blocked}) => MemberProfile(
     id: id,
     firstName: firstName,
     lastName: lastName,
@@ -805,10 +815,11 @@ class MemberProfile {
     chapters: chapters,
     councils: councils,
     mentorProfileId: mentorProfileId,
-    follow: next,
+    follow: follow ?? this.follow,
     isOwner: isOwner,
     signedIn: signedIn,
     readyForNextRole: readyForNextRole,
+    blocked: blocked ?? this.blocked,
   );
 }
 
@@ -1163,5 +1174,41 @@ class NotificationPreference {
     inApp: inApp ?? this.inApp,
     email: email ?? this.email,
     locked: locked,
+  );
+}
+
+/// A member the viewer blocked (`GET /members/me/blocked`), as Settings → Blocked Members lists them.
+class BlockedMember {
+  const BlockedMember({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    this.profileSlug,
+    this.avatarUrl,
+    this.headline,
+    this.blockedAt,
+  });
+
+  final String id;
+  final String firstName;
+  final String lastName;
+  final String? profileSlug;
+  final String? avatarUrl;
+  final String? headline;
+  final DateTime? blockedAt;
+
+  String get name {
+    final n = '$firstName $lastName'.trim();
+    return n.isEmpty ? 'ICR member' : n;
+  }
+
+  factory BlockedMember.fromJson(Map<String, dynamic> j) => BlockedMember(
+    id: j['id'] as String,
+    firstName: (j['firstName'] as String?) ?? '',
+    lastName: (j['lastName'] as String?) ?? '',
+    profileSlug: j['profileSlug'] as String?,
+    avatarUrl: j['avatarUrl'] as String?,
+    headline: (j['designation'] as String?)?.trim().isEmpty ?? true ? null : (j['designation'] as String).trim(),
+    blockedAt: DateTime.tryParse((j['blockedAt'] as String?) ?? ''),
   );
 }
