@@ -17,6 +17,8 @@ import '../profile/intro_line.dart' show introLine;
 import '../profile/my_profile_screen.dart' show ShareText, shareWithPhone;
 import '../profile/profile_kit.dart';
 import '../widgets/account_kit.dart';
+import '../../forum/widgets/forum_sheets.dart' show SheetAction, showActionSheet;
+import 'block_member.dart';
 import 'member_profile_controller.dart';
 import '../../../core/util/screen_trail.dart';
 
@@ -109,6 +111,35 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     }
   }
 
+  /// Block or unblock from the bar's More menu (App Store guideline 1.2).
+  void _more(MemberProfile m) => showActionSheet(
+    context,
+    title: m.fullName,
+    actions: [
+      if (m.blocked)
+        SheetAction(key: const ValueKey('member.unblock-menu'), label: 'Unblock ${m.fullName}', icon: Symbols.block, onTap: () => _unblock(m))
+      else
+        SheetAction(
+          key: const ValueKey('member.block'),
+          label: 'Block ${m.fullName}',
+          icon: Symbols.block,
+          destructive: true,
+          onTap: () => _block(m),
+        ),
+    ],
+  );
+
+  Future<void> _block(MemberProfile m) async {
+    if (await confirmBlock(context, memberId: m.id, name: m.fullName, repository: _c.repository)) _c.markBlocked(true);
+  }
+
+  Future<void> _unblock(MemberProfile m) async {
+    if (await confirmUnblock(context, memberId: m.id, name: m.fullName, repository: _c.repository)) {
+      _c.markBlocked(false);
+      if (mounted) showMessage(context, '${m.fullName} is unblocked.');
+    }
+  }
+
   Future<void> _share(MemberProfile m) =>
       widget.share('${m.fullName} on ICR\n${AppConfig.sitePage(m.sitePath)}', '${m.fullName} on ICR');
 
@@ -132,6 +163,13 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                   tooltip: 'Share Profile',
                   onPressed: () => _share(m),
                   icon: const Icon(Symbols.ios_share, size: 22, color: AppColors.onSurfaceVariant),
+                ),
+              if (m != null && !m.isOwner && m.signedIn)
+                IconButton(
+                  key: const Key('member.more'),
+                  tooltip: 'More',
+                  onPressed: () => _more(m),
+                  icon: const Icon(Symbols.more_vert, size: 22, color: AppColors.onSurfaceVariant),
                 ),
             ],
           ),
@@ -200,6 +238,8 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
         if (m.readyForNextRole)
           const AccountChip(label: 'Ready for a New Role', color: Color(0xFFECFDF5), ink: Color(0xFF047857)),
         if (m.yearsExperience != null) AccountChip(label: '${m.yearsExperience} yrs experience'),
+        if (m.blocked)
+          const AccountChip(label: 'Blocked by you', color: Color(0xFFFFE4E6), ink: AppColors.rose600, icon: Symbols.block),
       ],
       actions: m.isOwner
           ? [
@@ -211,6 +251,17 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                   filled: true,
                   onPressed: widget.onEditProfile,
                 ),
+            ]
+          : m.blocked
+          // A blocked member can be neither followed nor messaged: the one thing to do here is unblock.
+          ? [
+              PillAction(
+                key: const Key('member.unblock'),
+                label: 'Unblock',
+                icon: Symbols.block,
+                filled: true,
+                onPressed: () => _unblock(m),
+              ),
             ]
           : [
               PillAction(

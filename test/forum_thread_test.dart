@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:icr_mobile/core/theme/app_theme.dart';
 import 'package:icr_mobile/core/util/links.dart' show SiteRoutes;
+import 'package:icr_mobile/features/account/account_repository.dart';
+import 'package:icr_mobile/features/account/demo_account_repository.dart';
 import 'package:icr_mobile/features/feed/feed_models.dart';
 import 'package:icr_mobile/features/feed/widgets/post_card.dart' show ReactionBadge;
 import 'package:icr_mobile/features/feed/widgets/comment_widgets.dart';
@@ -99,6 +101,7 @@ void main() {
     bool start = true,
     double height = 6000,
     Future<ForumThread?> Function(ForumThread)? onEdit,
+    AccountRepository? accounts,
   }) async {
     tester.view.physicalSize = Size(780, height);
     tester.view.devicePixelRatio = 2;
@@ -135,6 +138,7 @@ void main() {
                         child: ThreadScreen(
                           unread: 2,
                           onEdit: onEdit,
+                          accounts: accounts,
                           callbacks: ForumCallbacks(
                             onBell: () => bells++,
                             onOpenMember: members.add,
@@ -1000,6 +1004,43 @@ void main() {
       });
       expect(find.text('Report This Reply'), findsNothing);
       expect(snack('A moderator will review it.'), findsOneWidget);
+    });
+
+    testWidgets('Block on a reply asks first, blocks its author and takes their replies off the page at once', (
+      tester,
+    ) async {
+      final accounts = DemoAccountRepository();
+      await pumpThread(tester, accounts: accounts);
+      expect(find.text('Pilot on one floor first.'), findsOneWidget);
+      await tapKey(tester, 'reply-more:r4');
+      expect(find.text('Block Anita Raghavan'), findsOneWidget);
+      await tester.tap(key('reply-menu-block'));
+      await settle(tester);
+      expect(find.text('Block Anita Raghavan?'), findsOneWidget);
+      await tester.tap(key('confirm-yes'));
+      await settle(tester);
+      expect(accounts.calls, contains('block:u-anita'));
+      expect(find.text('Pilot on one floor first.'), findsNothing);
+      expect(snack('Anita Raghavan is blocked.'), findsOneWidget);
+    });
+
+    testWidgets('Cancel on the block question blocks nobody', (tester) async {
+      final accounts = DemoAccountRepository();
+      await pumpThread(tester, accounts: accounts);
+      await tapKey(tester, 'reply-more:r4');
+      await tester.tap(key('reply-menu-block'));
+      await settle(tester);
+      await tester.tap(key('confirm-cancel'));
+      await settle(tester);
+      expect(accounts.calls.where((c) => c.startsWith('block')), isEmpty);
+      expect(find.text('Pilot on one floor first.'), findsOneWidget);
+    });
+
+    testWidgets('the discussion menu offers Block for someone else\'s discussion, never for one\'s own', (tester) async {
+      await pumpThread(tester);
+      await tapKey(tester, 'thread-menu');
+      expect(key('menu-block'), findsOneWidget);
+      expect(find.text('Block Sarah Jenkins'), findsOneWidget);
     });
 
     testWidgets('Report on the discussion names the discussion, with no note when none is typed', (tester) async {

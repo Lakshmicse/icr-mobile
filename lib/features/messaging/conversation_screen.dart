@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../account/members/block_member.dart';
 import '../../core/api/api_error.dart';
 import '../../core/config.dart';
 import '../../core/theme/app_colors.dart';
@@ -916,6 +917,10 @@ class _ContactCardState extends State<_ContactCard> {
                           widget.onToggle(c.assignToMe);
                         case 'unassign':
                           widget.onToggle(c.unassign);
+                        case 'block':
+                          final who = display.person;
+                          // After a block the API refuses any message here either way (App Store guideline 1.2).
+                          if (who != null) confirmBlock(context, memberId: who.id, name: display.name);
                       }
                     },
                     itemBuilder: (_) => [
@@ -935,6 +940,18 @@ class _ContactCardState extends State<_ContactCard> {
                           const PopupMenuItem(value: 'assign', child: Text('Assign to Me'))
                         else
                           const PopupMenuItem(value: 'unassign', child: Text('Unassign')),
+                      ],
+                      // A conversation between two people, with no company or requirement in it: its member can be blocked.
+                      if (display.avatar == AvatarKind.person &&
+                          display.person != null &&
+                          conversation.parties.isEmpty &&
+                          conversation.rfqId == null) ...[
+                        const PopupMenuDivider(),
+                        PopupMenuItem(
+                          key: const ValueKey('thread-menu-block'),
+                          value: 'block',
+                          child: Text('Block ${display.name}', style: const TextStyle(color: AppColors.rose600)),
+                        ),
                       ],
                     ],
                     child: const SizedBox(

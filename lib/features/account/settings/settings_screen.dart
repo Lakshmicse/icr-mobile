@@ -16,6 +16,7 @@ import '../profile/my_profile_screen.dart';
 import '../saved/saved_items_screen.dart';
 import '../widgets/account_kit.dart';
 import '../widgets/account_session.dart';
+import 'blocked_members_screen.dart';
 import 'notification_preferences_screen.dart';
 import 'security_screen.dart';
 import 'settings_sheets.dart';
@@ -270,6 +271,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Symbols.download,
                 title: 'Download My Data',
                 onTap: () => showExportSheet(context, repository: _repository, share: widget.share),
+              ),
+              _Row(
+                key: const Key('settings.blocked'),
+                icon: Symbols.block,
+                title: 'Blocked Members',
+                onTap: () => _push(BlockedMembersScreen(repository: _repository)),
               ),
               _Row(
                 key: const Key('settings.delete'),
